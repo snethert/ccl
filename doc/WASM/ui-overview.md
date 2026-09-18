@@ -1,0 +1,1061 @@
+# IDE Design Goals
+
+Status: draft. Companion to `doc/stream-spec.md`.
+
+Revised 18 September 2026 after review against the twenty-three reference
+screens and against `decisions.md` and `outline.md` on this branch. The
+revision changed constraints 8 and 9, G7, G8, G20, G27, G38, G39, G60, the
+§29 targets budget, and added §33.
+
+This document records the design decisions taken for the CLIM-based IDE and
+the applications built with it, and states them as goals that can be checked
+against an implementation. It is written to be argued with: every goal is
+phrased so that a screen either satisfies it or does not.
+
+A set of twenty-three reference screens accompanies this document. Where a
+goal names a screen, that screen is the worked example. §33 lists the places
+where the screens currently disagree with the text or with each other.
+
+---
+
+## 1. Thesis
+
+The Lisp Machine's reputation for discoverability did not come from its
+graphics. It came from one property: **everything is a first-class object,
+all the way down**, so the clipboard, the file system, the error, the
+documentation and the settings are all the same kind of thing. Presentations
+— objects drawn on screen that remember what they are — are a consequence of
+that property, not a UI layer bolted on top.
+
+Emacs's model (buffers, windows, rings, modes) is good and worth reusing. Its
+opacity is not: the nouns are real but invisible and oddly named, learned out
+of band from another person. A presentation system closes exactly that gap,
+because "what is this and what can I do with it" becomes a computed answer
+rather than a documented one.
+
+The goal is therefore not a prettier Emacs. It is: **the nouns are on screen,
+and the verbs are derived from them.**
+
+Two things this design faces that the Lisp Machine did not: history lives in a
+distributed repository other people push to (§5), and the interface must show
+material the image cannot read (§12). Both are boundaries, and both are drawn
+explicitly rather than hidden.
+
+---
+
+## 2. Architecture the interface assumes
+
+The interface is designed against these constraints. They are stated here
+because several of the goals below only make sense in their light. The target
+is the browser; no native mobile build is in scope.
+
+1. **Thin client, thick image.** The front end — JavaScript in the page —
+   renders presentations and captures keystrokes, pointer events and commands.
+   Everything else happens in CCL running in WASM.
+2. **The wire carries objects and events, never code.** No streamed value is
+   ever evaluated by the client: no handler thunks, no computed layout
+   expressions. Gestures identify a presentation by id and send it back; the
+   image decides what that means. G36 restates this for content that the
+   client fetches itself.
+3. **The image runs in a worker; the page renders.** Dynamic compilation stays
+   available — the browser's JIT compiles the modules the Lisp compiler emits —
+   so no flatten or ahead-of-time step is needed.
+4. **The constraint is blocking, not latency.** Worker crossings are
+   `postMessage`, not process IPC: tens of microseconds plus serialisation,
+   cheap enough that per-command traffic is free. The hazard is that a Worker
+   running Lisp can be unreachable for a while — inside a no-safepoint region,
+   waiting out a collection rendezvous, or simply mid-computation — while the
+   user is still moving the pointer. The page's own thread never runs Lisp,
+   and the interface must stay live through all of it, which is why the next
+   constraint exists.
+5. **The client holds the output-record tree.** Repaint, scroll, pointer
+   highlighting, documentation-line updates and drag feedback are local
+   operations that work while the image is busy or absent. Only the resulting
+   command crosses.
+6. **The same design serves a remote client.** CLIM's port/sheet/medium seam
+   is where the transport goes; incremental redisplay is already a diff
+   algorithm. The two places the classic design assumes locality — pointer-
+   motion translator testing, and the input editor — are addressed in G7 and
+   G8.
+7. **Published history is git, hosted on GitHub.** The image holds a local
+   clone so that editing, comparing and browsing history work offline and at
+   pointer speed; the network is used for fetch and push only. The clone is
+   persisted in browser storage.
+8. **The host proxies git traffic, and the proxy protects the credential, not
+   its use.** The image evaluates whatever the user writes, so it must never
+   hold a credential: a token in page context is readable by any form typed
+   into the listener. Fetch and push therefore go out through a host-side
+   proxy holding the credential, and the image can only ask for a transfer,
+   never read the token. That is the whole of what the proxy guarantees. It
+   does not stop a form typed into the listener from asking the image to push
+   as the signed-in author; G79 says what the grant model does about that.
+   That the smart-HTTP endpoints also send no CORS headers is a second, weaker
+   reason for the same arrangement. The cost is deliberate and worth naming:
+   the web deployment is not a static page — it needs a server, and that
+   server is an auth surface.
+9. **Shared memory is the full profile's requirement, not the interface's.**
+   The Wasm port's collector rendezvous uses an atomically accessed shared
+   pending word per thread, and its host crossings use an Atomics mailbox
+   (`doc/WASM/decisions.md`, `doc/WASM/outline.md`, on the `wasm2` branch), so
+   cross-origin isolation — COOP and COEP from the server of constraint 8 — is
+   a condition of the full profile running at all. The port also defines a
+   deferred single-thread profile built for unshared memory, which would not
+   have it; this interface targets the full profile and inherits its
+   isolation, asking for nothing further. This is what makes §13 possible: a
+   Worker in a tight loop never reaches its message queue, but it does read
+   that word.
+
+**Measured risks, not design questions:**
+
+- **Heap ceiling.** A wasm32 linear memory tops out at 4 GiB and practically
+  lower in a browser tab. That is a hard bound on image size, independent of
+  tuning, until memory64 is worth using.
+- **Cold start.** Module instantiation plus image load, on the slowest target.
+- **Save cost.** See G10.1: how expensive a recoverable save actually is.
+
+## 3. The screen contract
+
+**G1. Three persistent surfaces, and no others.**
+A work area, one command line, one documentation line. No toolbar, no icon
+rail, no global menu bar, no status bar separate from the documentation line.
+Anything else is summoned and dismissed.
+
+**G2. Panes carry a name and a fact, nothing more.**
+No title bars, close boxes, minimise buttons or resize grips. Panes are
+separated by a one-pixel divider. A pane header may carry the pane's name, the
+object it is showing, and one relevant count.
+
+**G3. Density is budgeted.**
+Adding a persistent surface is a design change requiring justification, not an
+increment. Transient surfaces are free.
+
+*Reference: screen 1 (At rest), screen 11 (Views live inline).*
+
+---
+
+## 4. Presentations
+
+**G4. No chrome at rest.**
+A presentation is undecorated until it is relevant. Source code looks like
+source code; a directory listing looks like a list. Sensitivity costs zero
+permanent pixels.
+
+**G5. One thing is marked at a time, and it is the thing under the pointer.**
+Highlighting is latent and singular. The documentation line reads that one
+object: what it is, and what the click, modified-click and right-click
+gestures will do to it.
+
+**G6. Type-directed narrowing is the primary discovery mechanism.**
+When a command wants an argument of a presentation type, every presentation of
+that type on screen lights up and everything else recedes. On-screen and
+in-image match counts are shown. This replaces documentation with computation
+and is the single largest departure from mainstream editors.
+
+**G7. Applicable commands are computed, never authored, and computed per
+input context.**
+Pointing at an object yields the commands that apply to it, grouped by where
+they come from (the object, its class, its package), with counts that are real
+facts about the image. There is no hand-written context menu anywhere in the
+system. Which translators apply depends on the input context — what type the
+command line is currently asking for — and that context changes each time a
+command starts reading an argument, so a record cannot carry its answer in
+advance. The client therefore asks once per input context, not once per
+record: one round trip at the start of a command, inside the §29 budget,
+returning the applicable set for every record on screen; G6's highlighting is
+drawn from that answer. At rest, the null-context set is attached to each
+record when it is sent, so pointer documentation never waits on the image.
+
+**G8. Pointing and typing are the same act.**
+A pending argument accepts a pointer gesture or typed text interchangeably.
+The editing of the input line runs on the client; completion is an
+asynchronous request, never a synchronous one. How much of the rest of the
+input editor moves to the client is open question 4.
+
+**G9. Selection feeds the command line.**
+Multiple selected objects are an argument like any other; commands take object
+sets, not just single objects.
+
+*Reference: screens 1, 2, 3, 4.*
+
+---
+
+## 5. Objects the system must present
+
+Everything in this list is a presentation with its own type and verbs. The
+list is a requirement, not an illustration.
+
+| Object | Notable verbs / facts |
+| --- | --- |
+| Functions, classes, variables, packages | edit definition, describe, callers, methods |
+| Files, directories | edit, compare with previous, compile, staleness against derived files |
+| Commits, branches, tags, pull requests | show diff, check out, revert, blame, compare, merge, open review |
+| Output records | inspect, replay full size, replay into a new sheet |
+| Conditions and restarts | invoke, supply a value, continue |
+| Stack frames and their locals | inspect, edit and resume |
+| Processes | inspect, interrupt, kill, show its debugger |
+| Layouts | switch, rename, save current arrangement |
+| Settings and key bindings | edit value, edit declaration, revert a layer |
+| Differences between versions | apply, revert |
+| Ring entries | insert object, insert printed form, drop |
+| Systems, modules, dependencies | compile, load, plan, add component, add dependency |
+| Documents and citations (§12) | open at page, cite, attach to a definition, yank the text |
+| Forms and buffers | select, evaluate, compile, indent, transpose, wrap, raise (§20) |
+| Search results and apropos matches | go to it, replace here, replace all, narrow (§21) |
+| Breakpoints, traces and profiles | enable, disable, show hits, time and space by definition (§22) |
+| Tests and test runs | run, run failed, open the failure in the debugger (§23) |
+| Dependencies and deliverables | pin, update, show what changed, build, open the bundle (§24) |
+
+**G10. File versions are first class, and git is where they live.**
+A version is a `(path, commit)` pair, not a per-file counter. The history of a
+path is read from the repository, renames followed, and `compare with
+previous` is one gesture from any file. Derived files state their staleness as
+"compiled from commit X, source now at Y" rather than by timestamp.
+
+**G10.1. Two layers, and only the upper one is git.**
+Git records history when you commit; the Lisp Machine's value came from every
+*save* being recoverable. These are different jobs and should not share a
+mechanism. Saves append to a local, per-session version log — cheap, ordered,
+disposable — and an explicit commit promotes the current state into git. The
+log is what "compare with previous" reads between commits; git is what
+collaborators, review and CI read. Writing every save into git refs instead
+was considered and rejected: it makes a tree and a commit object per
+keystroke-scale event, and it puts editor autosave traffic into the artefact
+other people consume.
+
+This layering is also what covers the things that are not in any repository —
+scratch buffers, the settings file, generated output. They get the log; they
+do not get commits.
+
+**G10.2. History is a graph, not a stack.**
+A file's versions belong to branches. A version presentation carries its
+commit, branch and author, and the listing shows the current branch's history
+with the others reachable, never flattened into a single numbered sequence.
+
+**G10.3. Git objects are presentations like any other.**
+Commits, branches, tags and pull requests are presented objects with computed
+verbs (show diff, check out, revert, blame, compare, merge, open review). They
+enter the system through G7, not through a separate version-control tool.
+
+**G10.4. Divergence is a state the interface designs for, not an error dialog.**
+A git-backed IDE is a distributed system: branches diverge, pushes are
+rejected, merges conflict, the remote moves under you. These are conditions
+with restarts (rebase, merge, force with lease, keep mine, keep theirs, stop),
+and conflicts are presentations with verbs, in the same debugger-shaped
+surface as any other break. No modal alert, no separate "source control" mode.
+The image contributes what it alone knows — which of two conflicting symbols
+is actually bound, and how many callers it has — so resolving a conflict is
+not guesswork over text.
+
+*Reference: screens 4, 5, 6, 10, 11.*
+
+---
+
+## 6. The ring
+
+**G11. The ring holds objects, not text.**
+Entries are live objects with their types and a rendered view — a hash table
+shows entries, a condition shows its report, a record shows itself. Each entry
+records its provenance: which pane it came from and when.
+
+**G12. Insertion preserves identity.**
+`↩` inserts the object; `⇧↩` inserts its printed form. The insertion point
+shows which one is about to land, as a chip rather than as text.
+
+*Reference: screen 5.*
+
+---
+
+## 7. The debugger
+
+**G13. An error is a place to stand, not a report to read.**
+The condition, the restarts, the frames and their locals, and the source at
+the point of failure are all on one surface, and all of them are objects.
+
+**G14. Restarts are commands.**
+A restart that takes an argument reads it through the ordinary command line,
+with the ordinary narrowing. Invoking it resumes the frame.
+
+**G15. A break halts one process, not the system.**
+Other processes keep running and the fact is visible in the documentation
+line.
+
+*Reference: screen 6.*
+
+---
+
+## 8. Documentation
+
+**G16. Documentation is generated from the image.**
+Signature, argument types, methods, callers, source location and compilation
+time are facts read out of the running system, not prose maintained beside it.
+
+**G17. There is no boundary between the system's code and yours.**
+System sources are present. `edit definition` on anything leads somewhere,
+including into CCL itself. Callers inside the implementation are shown and
+labelled, not hidden.
+
+**G18. Examples are executable.**
+A documented example inserts into the transcript as a form, ready to run.
+
+*Reference: screen 7.*
+
+---
+
+## 9. Windows and layout
+
+**G19. Arrangements are named and switched, not dragged.**
+A frame defines several named layouts; `⌘1`–`⌘n` switch between them and
+`⌘⇧L` saves the current arrangement as a new one. Layouts are objects, so the
+picker is the same type-directed narrowing as everything else.
+
+**G20. We do not write a window manager.**
+When a pane must genuinely float — ad hoc comparison, spatial memory, a size
+independent of the frame, a second display — it tears off into a **host**
+window. The OS draws the frame and handles z-order, focus, resize,
+multi-monitor and accessibility. `⌘⇧T` re-docks it. Same image, same objects.
+In the browser a host window is a popup: it needs a user gesture to open, and
+it reaches the image only through the page that owns the Worker, so it lives
+exactly as long as that page does. Anything longer-lived than that depends on
+open question 9.
+
+**G21. Ad hoc comparison is a command, not an act of window arrangement.**
+`Compare Versions` takes two objects and produces a two-pane layout. Each
+difference is a presentation with its own verbs.
+
+**G22. Prefer an inline view to a new surface.**
+Most historical window-need is only "somewhere to put a view of this object".
+A table, a replayed record at scale, a process list — all are drawn in place
+in the transcript. A new pane or window must earn itself against this.
+
+**G23. Overlays are summoned and dismissed.**
+The ring, the layout picker and the applicable-command list appear over the
+work area and leave no residue. They are the only place shadow is used.
+
+*Reference: screens 8, 9, 10, 11.*
+
+---
+
+## 10. Configuration
+
+**G24. A setting is a variable with a declared type, a default and a
+docstring.** There is no configuration schema and no configuration file
+format.
+
+**G25. Setting editors are generated from types.**
+An integer range yields a range editor, a member type yields a choice, a
+pathname yields a pathname reader — using the same machinery that reads a
+command argument. No settings pane is hand-built.
+
+**G26. Values show their provenance.**
+Every setting displays which layer it came from (default, user, project,
+session), what it overrode, and the file and line of each layer. Each layer is
+revertible in place. "Why is it this?" is answered without going to look.
+
+**G27. Two files, one of them ours; the project layer is source.**
+Defaults load first, then a machine-written user settings file, then the
+project's settings file from the repository, then the user's own init file.
+Hand-written code always wins because it loads last. The machine-written user
+file is never jointly owned. The project file cannot be machine-owned, because
+git shares it with everyone who clones the repository: it is ordinary source,
+checked in and merged like any other file, and the setting editor changes it
+the way G33 changes a system definition — by rewriting the one form in place
+and leaving the rest of the file alone. A conflict in it is a conflict between
+two settings and resolves through G10.4 like any other.
+
+**G28. Customisation is code, and it is the same code the system is made of.**
+No plugin API: `defmethod`, `defcommand`, add a translator. The affordance is
+`edit definition`, which already exists.
+
+**G29. No setting can make the system unstartable.**
+A bad value surfaces as a condition with a *use the default and continue*
+restart, not as a parse failure before the system exists.
+
+*Reference: screen 12.*
+
+---
+
+## 11. Projects
+
+**G30. The project is a system, not a directory.**
+The primary browser shows systems: their modules in dependency order, each
+module's load and compile state, and their dependencies with the versions
+actually loaded. A file browser remains — directories hold plenty that is not
+a module — but it is the secondary view, and neither replaces the other.
+
+**G31. The image tracks what it has changed, and says where those changes
+live.** Git knows what changed in the files; the image knows what changed in
+*itself*, and the two diverge the moment a definition is evaluated in the
+listener without being saved. Every changed definition is a presentation
+carrying what it is, where the change came from (editor or listener), when,
+and which of three states it is in:
+
+- in the image only — lost on restart;
+- in a file and the session log — not shared;
+- committed — other people can have it.
+
+Moving between those states is a command over a set of definitions
+(*write changed definitions to files*), not a separate save ritual. Nothing
+should be able to sit in the first state unnoticed.
+
+**G32. Module state is per module, not per repository.**
+Loaded, compiled, stale against its source, and the commit it was built from
+are facts about a module, shown on the module. A system knows how to bring
+itself up to date without the user tracking which files changed.
+
+**G33. The system definition stays source; what is derived gets the screen.**
+The `.asd` is ordinary, authoritative, hand-editable source — a
+machine-owned project file would be the `custom-set-variables` mistake at
+project scale (G27). The interface is built on what the definition *computes
+to*:
+
+- **the plan** — the operations `Compile System` would perform, in order, each
+  with the reason it is there and each skip explained, before anything runs;
+- **the dependency graph** as a presentation, with what is missing or cyclic
+  drawn rather than discovered by a build failure;
+- **findings only a live image can make** — a component whose file does not
+  exist, a module using a symbol from a system it does not depend on, an order
+  that works today by accident;
+- **structural edits as commands** — add a component, add a dependency, remove
+  one — which rewrite the `defsystem` form in place and leave comments and
+  formatting alone.
+
+This is what Genera actually offered around systems: a presented view of the
+system object, commands taking it as an argument, and a plan you could read
+before committing to it. It did not offer a form editor for `defsystem`, and
+neither should this.
+
+---
+
+## 12. Foreign material
+
+The image cannot read a PDF, decode a video, or lay out a web page, and should
+not try. The interface still has to show them.
+
+**G34. The client may display what the image cannot.**
+A pane can hold a foreign view — a PDF, an image, a video, a rendered page —
+which the client fetches (through the host proxy, or from a file the user
+picked) and renders with its own machinery. The image places the view, knows
+what it is and what state it is in, and never receives the bytes. A 41 MB
+manual must not enter a heap with a 4 GiB ceiling (§2).
+
+**G35. The object is presented; its interior is not.**
+The document is a presentation with a type and verbs — open at page, search,
+cite, attach. Its pages and words are opaque to the image, with one bridge:
+when the user selects, a **citation** crosses back — document, page, range and
+the selected text — as a presented object that can be yanked into the ring,
+attached to a definition, or written into a docstring. That bridge is what
+makes a viewer part of the system rather than an embedded app beside it.
+
+**G36. Foreign material is marked, and it is inert.**
+It is drawn as visibly foreign — different surface, a stated origin — because
+its provenance is not the image. It never executes in the application's
+origin, nothing inside it can become a command, and a link in a document is a
+request the user confirms, not an action. This is constraint 2 restated for
+content: no code arrives over the wire, including inside a document. An
+embedded page that could script is a hole in that rule, so arbitrary HTML is
+either sandboxed with no access to the application, or not embedded at all.
+
+**G37. References are stored, not copies.**
+What persists is the citation — the resource's identity, a content hash, the
+page and range — so the reference survives, can be re-opened, and can go in
+the repository. The bytes stay where they came from.
+
+---
+
+## 13. Running and interrupting
+
+**G38. Every computation can be interrupted, using the polls the port
+specifies.** The Wasm backend is cooperative by design: its decisions place
+polls at function entries, loop back-edges and allocation slow paths, reading
+a shared pending word whose bit updates are specified to preserve unrelated
+interrupt bits (`doc/WASM/decisions.md`, "Safepoints and explicit stacks").
+Those polls are specified, not yet emitted: the accepted Stage 1 backend
+contains none, and its unit records say so ("no safepoint or collection is
+introduced"). The interface assumes they arrive with the collector work that
+needs them and adds no poll site of its own. Interruption is then one more bit
+in that word, set by the client. At the next safepoint the image signals an
+`interrupt-request` condition and enters the debugger with the stack intact —
+an ordinary condition with restarts, not a mode, so §7 already describes what
+follows. Stage 0 of the port proves the underlying capability: interrupt a
+computation at a cooperative safepoint, run nested code, then resume or
+transfer through it.
+
+Interruption is therefore not instantaneous and should not pretend to be.
+Allocation and designated store sequences are declared no-safepoint regions,
+so the delay is bounded by time-to-safepoint — a quantity the port measures
+and bounds, and the only latency the interface has to account for.
+
+**G39. The same word carries a heartbeat.**
+A sample request is another bit. The client sets it on a timer; at the next
+safepoint the image writes what is running, for how long, and its allocation
+and collection counts into shared memory, then carries on. Nothing is added to
+the fast path, and the client can give a live account of a busy image without
+the image answering a message. A blocked system shows facts, not a spinner.
+The age of the last sample tells the client whether the Worker is answering
+at all; it is not a measurement of time-to-safepoint, which is set-to-service
+and which the port measures separately.
+
+**What this costs the port.** Less than a mechanism, more than nothing, and it
+is a request against the port's decisions that must be logged there before
+the interface builds on it (open question 11):
+
+- a second bit in the pending word whose meaning is *write and continue*,
+  where today a pending bit means *publish roots and stop*;
+- a shared sample record with a declared schema, written at the safepoint
+  slow path and read by the page;
+- a way for the slow path to name the current function, which the port
+  publishes today only as roots and only when a collection is pending.
+
+The polls themselves and the interrupt bit cost nothing extra: the polls
+exist for the collector, the pending word exists for the rendezvous, and the
+reserved interrupt bits are named in the port's own decisions.
+
+**G40. A running computation is an object.**
+It is presented in the command line while it runs and carries its own
+applicable commands, so stopping it needs no special affordance — it is G7
+applied to a process.
+
+**G41. Three graduated actions, and the destructive one states its cost.**
+*Interrupt* at the next safepoint; *abort* to unwind to this activity's
+command loop; *force quit*, which ends the image. The third names exactly what
+will be lost — the definitions that exist in no file, the history — and when
+the last snapshot was taken. It exists because it is the only one that works
+when safepoints stop answering, and it ends the whole image rather than one
+Worker: terminating a single Worker mid-rendezvous would leave the collector
+waiting on a thread that no longer exists.
+
+---
+
+## 14. Activities
+
+**G42. An activity is a context with its own process, panes, layout and
+history.** Created on demand, switched with a keystroke, and preserved exactly
+as left. Layouts (G19) rearrange panes *within* an activity; they do not give
+you a second project, a second listener, or a debugger you can step away from.
+
+**G43. Activities share one image.**
+An activity's process is a CCL process, which the port may place on its own
+Worker; they are contexts, not sandboxes: a definition changed in one is changed for
+all, which is the Lisp Machine's arrangement and the useful one. Isolation, if
+it is ever wanted, means a second image, never an activity.
+
+**G44. The activity list is where attention is claimed.**
+A break, a finished run, or output written while you were elsewhere marks its
+activity in the list. A process that needs you becomes visible without
+stealing the screen — which is what §15 hangs its policy on.
+
+---
+
+## 15. Attention
+
+**G45. Background output is never lost.**
+Output written to a pane the current layout does not show is retained and its
+activity marked. A pane is not a place output can fall out of.
+
+**G46. A break does not take the screen.**
+A process that breaks halts, marks its activity, and waits. What you are
+looking at changes when you change it, never because something else wanted
+you. There is no exception for urgency.
+
+**G47. Attention has one channel.**
+The activity list (G44) and the right end of the documentation line. No toast,
+no notification centre, no second queue to check.
+
+---
+
+## 16. Warnings
+
+**G48. A warning is a presentation on a source range.**
+Compilation produces conditions about specific places, so they are drawn
+there, with verbs — go to it, explain it, define the missing thing, mute it
+here. Not a log that scrolls past.
+
+**G49. Warnings are a set you can walk.**
+Per compilation, grouped by file and definition, with a position in the set
+and a count. Muting is recorded where the warning applies, carries a reason,
+and survives recompilation — so a mute is a statement someone made, not a
+setting hidden elsewhere.
+
+---
+
+## 17. The image itself
+
+**G50. The image is an object with a surface.**
+Heap headroom against the wasm32 ceiling, collection rate and pause,
+rendezvous health, Worker states, and the storage the clone, the session log
+and the snapshots occupy. These are facts before they are failures, and the
+ceiling is what makes headroom worth a permanent place.
+
+**G51. Snapshots are objects.**
+Taken automatically before anything that can destroy the image, hourly, and on
+demand; each labelled with what it contains — systems loaded, definitions that
+exist in no file, history depth — and resumable, pinnable, deletable.
+
+**G52. A snapshot is what makes the image survivable.**
+It is the answer to G31's "in the image only" and the reason G41's force quit
+can name what a restart would recover. Without snapshots, both are just
+warnings about loss.
+
+---
+
+## 18. History, dialogs and inspection
+
+**G53. Commands are re-executable objects.**
+A past command keeps its arguments as live objects, not printed text. Edit one
+and run it again; the ring (G11) holds values, the command history holds
+invocations, and they are different lists on purpose.
+
+**G54. A command with more arguments than the line carries gets a dialog.**
+Derived from the argument types by the same machinery as a setting's editor
+(G25) — CLIM's `accepting-values` — with defaults shown, values fillable by
+pointing at a presentation, and a complaint attached to the argument that is
+wrong rather than to the dialog.
+
+**G55. A dialog can hand you the form instead of running it.**
+The assembled call goes into the transcript, where it is ordinary source you
+can keep, edit, or put in a file. A dialog is a form-builder that happens to
+be able to execute.
+
+**G56. Inspection keeps a trail.**
+Descending into a slot replaces the pane and extends a visible trail; back and
+forward restore exactly what was there. It does not open a window (G22), and a
+deep exploration can be retraced rather than reconstructed.
+
+---
+
+## 19. Undo
+
+**G57. Undo is per substrate, and the interface says which.**
+Editor text undoes. A definition compiled into the image reverts to the loaded
+one (G31). A setting drops a layer (G26). A commit resets or reverts. A
+deleted file comes back from the session log (G10.1). Four mechanisms, named
+where they apply.
+
+**G58. What cannot be taken back says so, before and after.**
+A push others have pulled is not undoable; the honest offer is to revert
+forward. The interface never presents a single undo stack, because there
+isn't one — and a snapshot (G51) is the only thing that takes back everything
+the image holds at once.
+
+---
+
+## 20. Editing
+
+The document has said a great deal about what surrounds the editor and almost
+nothing about editing. These goals close that.
+
+**G59. The client owns the text; the image owns the meaning.**
+Buffer text lives in the client, so typing, selection, scrolling and
+structural motion never wait on a Worker (constraint 4). The image receives
+text when asked — to compile, to evaluate, to index, to save — and never edits
+a buffer behind the client's back. A refactoring the image performs (rename,
+extract) comes back as a set of edits presented to the client, applied there,
+and undoable there (G57).
+
+**G60. Forms are presentations, which means the client has a reader.**
+A Lisp editor is form-aware or it is a text editor with parentheses. Every
+form under the pointer is an object with verbs: evaluate, compile, macroexpand,
+indent, transpose, wrap, raise, splice. Structural editing is therefore G7
+applied to source, not a mode you enable. Character editing remains available
+underneath it. Because G59 says structural motion never waits on the Worker,
+the client must find form boundaries by itself: it carries a reader of its
+own that understands strings, line and block comments, `#+` and `#-`, piped
+symbols, character and string syntax and the standard dispatch characters,
+and it asks the image about anything a user readtable adds. That is a second
+reader, and its scope is a decision registered in §27, not an implementation
+detail.
+
+**G61. Indentation is the image's, not a table's.**
+Indentation rules come from the definitions the image actually has — a macro's
+lambda list decides how its body indents — so a new macro indents correctly
+the moment it is defined. The client caches what the image tells it and asks
+when it does not know.
+
+**G62. A buffer's state is visible where the buffer is.**
+Unsaved, uncompiled, compiled-but-not-saved, saved-but-uncommitted (G31): the
+pane header carries which, in words. There is no modified-star convention to
+learn.
+
+**Decision needed:** the default key model. The Emacs bindings are the obvious
+inheritance and the conversation has assumed them; a modal set and a CUA set
+are both feasible over the same command table (G24 makes bindings settings).
+Nothing above depends on the answer, and it should be made once, deliberately.
+
+---
+
+## 21. Search, navigation and completion
+
+**G63. One search, several substrates.**
+Text in the open buffer, text across the repository, and `apropos` over the
+image are one command with a scope argument, not three tools. Results are
+presentations grouped by where they came from, and a result from the image
+knows whether it is a function, a variable or a class before you open it.
+
+**G64. Replacement is a set of edits you can see.**
+Replace-all produces the edits as presentations first and applies them on
+confirmation; each is revertible on its own. Replace-here is the same thing
+one at a time.
+
+**G65. Navigation keeps a trail, like inspection.**
+Every jump — edit definition, go to a caller, open a search result, follow a
+citation — pushes onto one trail per activity, and back returns exactly.
+This is G56's trail extended to the whole activity, and it is the answer to
+"how did I get here" that Emacs's mark ring only half gives.
+
+**G66. Completion is typed and asynchronous.**
+What completes depends on what is being read: symbols in code, pathnames in a
+pathname argument, commands in the command line, members of a member type,
+anything of the presentation type currently wanted (G6). Completion is a
+request to the image that may arrive late or not at all; the client never
+blocks on it (G8).
+
+**G67. Where is this open?**
+The set of buffers and views an activity holds is a presented list, with each
+entry's state (G62), reachable from the command line by name. It is not a tab
+strip (G22) and it is not persistent chrome (G1).
+
+---
+
+## 22. Debugging beyond the break
+
+The debugger (§7) covers what happens once execution has stopped. These cover
+getting it to stop, and watching it while it runs.
+
+**G68. Breakpoints are set on definitions, not lines.**
+A breakpoint is an object attached to a function, a method, or a form within
+one, and it survives recompilation because it follows the definition. Line
+numbers are how a text editor thinks; the image has better nouns.
+
+**G69. Stepping happens in the debugger you already have.**
+Step into, over and out are restarts on the current frame, so §7's surface is
+the stepping surface. Locals stay live objects while stepping; there is no
+separate watch window because the inspector (G56) is already open beside it.
+
+**G70. Trace output is presentations, not text.**
+A traced call shows its arguments and values as objects, nested by call depth,
+in the transcript. A trace is itself an object with verbs — untrace, show the
+last twenty, trace callers too — and the screen-2 command `Trace` that reads a
+function name is the front of this.
+
+**G71. Profiles attribute time and space to definitions.**
+A profile run is an object; its result is a presentation of definitions with
+their share of time or allocation, each one clickable to its source, callers
+and callees. Sampling uses the safepoint mechanism the port already has
+(§13), so profiling does not need its own instrumentation.
+
+---
+
+## 23. Tests
+
+**G72. Tests are definitions, and runs are objects.**
+A test is presented like any other definition — edit, run, show its last
+result — and a test run is a presentation carrying what passed, what failed,
+and how long it took. Screen 14's `84 of 84, 2 h ago` is this object shown in
+the system list.
+
+**G73. A failing test is a break you can stand in.**
+Running a test does not swallow its condition into a report. A failure lands in
+the debugger (§7) with the test's frame, its fixtures as locals, and the
+assertion as the condition, so fixing it is the same act as fixing anything
+else. Reporting is what happens when you choose to run the whole suite
+non-interactively, and even then each failure is a presentation that reopens
+in the debugger on demand.
+
+**G74. Tests know what they cover.**
+The image can record which definitions a test exercised, so a changed
+definition (G31) can name the tests that touch it and *run affected tests* is
+one command.
+
+---
+
+## 24. Delivery and dependencies
+
+This is where the conversation began: applications built with the thing.
+
+**G75. Delivery is a snapshot plus a shell.**
+A delivered application is an image snapshot (G51) — with the systems it needs
+loaded and nothing else — wrapped in the client shell, minus the listener, the
+compiler and the editor unless the application asks for them. No flattening or
+ahead-of-time step is involved (§2); the browser compiles what the image ships.
+`Deliver` is a command over a system, and its result is an object you can open,
+size, and diff against the last delivery.
+
+**G76. A delivered application keeps the debugger.**
+An error in a delivered application is still a condition with restarts; what
+changes is who is expected to answer. The application decides which restarts
+its users see. The developer, connected to it (constraint 6), sees all of
+them.
+
+**G77. Dependencies are objects with provenance, like settings.**
+Each dependency shows the version loaded, where it was pinned, and what
+changed since — as screen 14 already shows `alexandria 1.4.0 · pinned`.
+Updating one is a command whose result is a plan (G33) before it is a change.
+
+**Decision needed:** the source of dependencies — a Quicklisp dist, an
+Ultralisp feed, git submodules, or a lockfile of commits — and whether the pin
+lives in the `.asd` or beside it. G77 holds whichever is chosen.
+
+---
+
+## 25. Session, host and identity
+
+**G78. A page reload does not lose work.**
+The image runs in a Worker that dies with the page, so a snapshot is written
+on unload, and the next load resumes it. A reload should feel like waking the
+machine, not rebooting it. Whether a `SharedWorker` can keep the image alive
+across a reload is worth measuring (§31); the snapshot path is required
+regardless.
+
+**G79. The image has no ambient authority over the host.**
+Every capability the image uses — a file on the user's disk, a network
+request, the clipboard — is granted by a user gesture and visible while it
+holds. The host proxy holds credentials (constraint 8); the image holds
+grants it can show you. A push is the case that matters: constraint 8 keeps
+the token out of the image but not out of its reach, so a push is granted by
+a gesture the client makes and the image cannot synthesise — the user runs
+the push command, or confirms one the image asked for — and the image's
+request names what it would send. Fetch needs no such gesture, because it
+writes nothing anyone else reads. This is constraint 2 and G36 from the other
+direction: code never comes in over the wire, and the image never reaches out
+on its own.
+
+**G80. Identity is stated, once, where it applies.**
+Commits carry the author the proxy is signed in as, and the status line says
+who that is. Switching identity is a command; there is no account panel.
+
+---
+
+## 26. Reach
+
+**G81. Every presentation is reachable without a pointer.**
+Sensitivity moves with the keyboard as well as the mouse: next and previous
+presentation, next of the wanted type during narrowing (G6), activate, and the
+applicable-commands list (G7). G8 says pointing and typing are the same act;
+this says pointing itself does not require a pointer.
+
+**G82. A presentation announces what it is.**
+Because every object on screen has a type and a set of verbs, a screen reader
+can be told exactly that — "function, pop-record, 11 commands" — rather than
+"text". Accessibility here is a consequence of the model, and the budget in
+§29 is the floor, not the design.
+
+**G83. A presentation can be dragged.**
+Dragging one onto a pending argument, a pane, or another presentation is
+pointing with a destination, and resolves through the same translators as a
+click. CLIM defines this; the design should not lose it.
+
+**G84. Output records export as drawings.**
+A record replays to SVG or PDF as readily as to a sheet (G10.3's model of
+replay), so a transcript, a diff, or a diagram can be handed to someone who
+has no image. What leaves is a picture, never a live object.
+
+---
+
+## 27. Still undecided
+
+Registered, with the question stated rather than a guess recorded.
+
+- **Default key model** (§20).
+- **Dependency source and pinning** (§24).
+- **Scope of the client-side reader** (G60): which of the standard reader
+  syntax the client understands by itself, what it does with a reader macro
+  it does not know, and whether it ever asks the image for a boundary.
+- **A light variant of the visual system.** The screens are dark and the
+  `theme` setting exists; the tokens have not been drawn for light.
+- **Connecting to a remote image.** Constraint 6 makes it possible and G76
+  needs it; the connection, its authentication and what the client shows
+  about which image it is on are undesigned.
+- **History depth and transcript growth.** `record-history-depth` exists as a
+  setting; what happens at the limit, and how a long-running listener stays
+  fast, does not.
+
+---
+
+## 28. Visual system
+
+- **Two typefaces.** One for interface text, one monospace for code and data.
+- **One ground, one panel, one divider.** Separation is a single pixel line;
+  panels do not get borders, gradients or fills to distinguish them.
+- **Two accents with fixed meaning.** Warm: *the object you are pointing at or
+  have chosen*. Cool: *candidates matching the type being asked for*, and
+  healthy status. A third hue appears only for error state, and only as a thin
+  bar and a label.
+- **De-emphasis is a colour, not an opacity.** Recessed text is recoloured to
+  stay above the contrast floor; it is never faded below it. The current
+  screens do fade below it in places (§33).
+- **Shadow marks transience.** Only summoned surfaces cast one.
+- **Motion is not decoration.** Nothing animates that does not correspond to a
+  state change the user caused.
+
+---
+
+## 29. Budgets
+
+- **Interaction:** no interaction may require a client↔image round trip per
+  animation frame. Highlighting, scrolling, pointer documentation and drag
+  feedback are client-local.
+- **Latency:** one round trip per command or keystroke is the design target;
+  batch the presentation stream rather than sending per-presentation messages.
+  G7's per-context applicable set is one such round trip, at command start.
+- **Contrast:** body text at 4.5:1 or better against its ground, including
+  de-emphasised text; large text at 3:1.
+- **Targets:** controls — buttons, chips, rows in a summoned list, the command
+  line — at least 44 px on their smaller axis. Inline presentations are the
+  size of the text they are: a symbol in a source pane is a target at text
+  height, and that is the design, not an exception. The keyboard path (G81)
+  is what makes those reachable without precision.
+- **Semantics:** real buttons, links, inputs and labels, including in static
+  mock-ups. Never a click handler on a `div`.
+
+---
+
+## 30. Non-goals and rejected alternatives
+
+- **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
+  the elisp ecosystem are not.
+- **Per-window command loops.** Genera gave every window its own command area
+  and paid for it in visual noise. One retargeting command line instead.
+- **Tool windows you must already know about.** The LispWorks failure: the
+  capability exists but there is no path from an object to it. Every verb is
+  reachable from a noun.
+- **An in-app window manager.** See G20.
+- **Toolbars, ribbons, and authored context menus.** See G7.
+- **A settings schema.** See G24.
+- **A plugin API.** See G28.
+- **A native mobile build.** Out of scope. With it go the ahead-of-time
+  flattening of the compiler's output, the embedded-runtime fallback and the
+  App Store questions that went with them.
+- **Autosave as commits.** See G10.1.
+- **Real-time collaboration.** Two people in one image at once is not a goal;
+  git is the collaboration mechanism (§5), and G76's developer connection is
+  one developer at a time.
+- **Localisation.** The interface is English for now; the presentation model
+  does not preclude it, and nothing here should be built to.
+
+---
+
+## 31. Open questions
+
+1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
+   and backgrounding? This decides whether the embedded-runtime fallback is
+   needed at all. Measure first.
+2. **Cold start.** Page load, module instantiation and image load, on the
+   slowest target device.
+3. **Per-context applicable sets.** G7 answers once per input context for
+   every record on screen. Measure the size and latency of that answer
+   against a large transcript history, and whether the at-rest set attached
+   to each record is worth its wire cost.
+4. **Client-side input editing.** How much of the input editor must move to the
+   client before typing feels local, and what stays asynchronous.
+5. **Version-log storage and retention** (G10.1): what the log costs per save
+   on a large file, how long it is kept, and what survives a browser storage
+   eviction with unpushed work in it.
+6. **Clone persistence.** Where the local clone lives (OPFS or IndexedDB), how
+   large a repository that supports, and how the working copy is reconstructed
+   after an eviction.
+7. **Felt interrupt latency.** Time-to-safepoint is bounded and measured by
+   the port; what matters here is how long `⌘.` takes to bite in practice,
+   and what the interface shows in the meantime.
+8. **Interrupting a blocked thread.** A Worker waiting on host I/O through the
+   Atomics mailbox or JSPI is not running Lisp and will not reach a poll. The
+   port has a completion/cancellation path for that case; the interface needs
+   to know which of its three actions applies to a thread that is waiting
+   rather than computing.
+9. **Reload persistence.** Whether a `SharedWorker` keeps the image alive
+   across a page reload on the target browsers, and at what cost; the
+   snapshot-on-unload path (G78) is required either way. G20's torn-off
+   windows depend on the same answer.
+10. **Definition-level history.** Git versions text; the system presents
+   definitions. Mapping commits onto "this function last changed here" needs a
+   source-range-to-definition mapping, and it is not free. Whether the
+   Examiner earns it is undecided.
+11. **The sample bit.** G39 asks the port for a pending bit that does not
+   stop the thread, a shared sample record, and a current-function name at
+   the safepoint slow path. Whether the port accepts that request, and in
+   which stage, is the port's decision to record; until it does, G39 is a
+   design and the heartbeat on screen 17 is a mock.
+
+---
+
+## 32. Reference screens
+
+1. At rest — the three surfaces; nothing marked but the pointer's object.
+2. Type-directed narrowing — `Trace` wants a function name.
+3. Verbs from nouns — applicable commands for a class.
+4. Files as objects — versions, staleness, multi-selection into a command.
+5. The ring — objects with provenance; inserting keeps identity.
+6. Break, fix, resume — condition, restarts, frames, locals, source.
+7. The image explains itself — generated documentation, system sources.
+8. Named layouts — arrangements as objects.
+9. Tear off to the host — the only window frames in the system are the OS's.
+10. Compare without windows — comparison as a command.
+11. Views live inline — tables, replayed records, process lists in place.
+12. Settings with provenance — generated editors, layered values.
+13. Divergence as a break — a rejected push as a condition with restarts.
+14. Systems, not directories — modules in dependency order, and what only the
+    image knows it has changed.
+15. The definition and its plan — the .asd as source, beside the graph, the
+    ordered plan and the findings derived from it.
+16. Foreign material — a PDF manual in a pane, and a citation crossing back
+    into the image.
+17. Interrupting a computation — the running computation as an object, with a
+    heartbeat and three graduated ways to stop it.
+18. Activities — six contexts, one image, and where a process claims attention.
+19. Warnings as presentations — anchored, walkable, mutable with a reason.
+20. The inspector keeps a trail — descend in place, step back.
+21. A dialog from the argument types — six arguments, generated editors.
+22. The image, and its snapshots — headroom, Workers, and what a restart
+    recovers.
+23. Undo, honestly — four substrates, four reversals, one with none.
+
+---
+
+## 33. Corrections owed to the screens
+
+The screens are worked examples, so where they disagree with the text or
+with each other the disagreement is a defect in the example. These are the
+ones found in the 18 September review. The text above is already corrected;
+the screens are not.
+
+**One fixture, one story.** The screens share a fixture (the `clim-web`
+system, the `runner` class, the scan-limit setting) and should tell one
+consistent story about it.
+
+- Screens 12 and 23 put the change to `*scan-limit*` in the project settings
+  file. Screen 14 marks the same variable "in no file, set in the listener".
+  These are two of G31's three states, and the screen that exists to show the
+  distinction is the one that gets it wrong. Pick one; screen 14 is the one to
+  change.
+- Screen 4 names `7b20e14` "Validate records before replay" and shows the
+  branch two ahead. Screen 13 gives that title to `9c1e77a`, makes `7b20e14`
+  the common ancestor, and shows four ahead. Screen 22 pins a snapshot
+  labelled "clean load, a3f1c9d" from yesterday evening while screen 4 dates
+  that commit two hours ago.
+- Screen 6 offers "Abort — kill process runner-2". G41 defines abort as
+  unwinding to the activity's command loop; killing the process is a
+  different verb and should be listed as one.
+- Screen 17 titles the third action "Force quit the runner" and its body
+  says it terminates the Worker and loses the image. G41 says force quit ends
+  the whole image, and "runner" is the fixture's application class, not a
+  name for the image. Retitle it "Force quit the image".
+- Screen 17's heartbeat panel shows the port supplying what G39 asks for. It
+  is a mock until open question 11 is answered.
+
+**Contrast.** §29 requires 4.5:1 for de-emphasised text. Measured against
+the rendered screens, taking the brightest pixel of each run of text so the
+figure is an upper bound:
+
+| Screen | Text | Measured |
+| --- | --- | --- |
+| 5, the ring | provenance line "from Transcript · 2 min ago" | 4.1 |
+| 12, settings | layer column "default" | 4.1 |
+| 4, files | "19 earlier commits" | 4.3 |
+| 17, interrupt | footnote under the actions | 5.0 |
+| 1, documentation line | "— function, clim-web" | 5.2 |
+
+The recessed grey used for provenance, layer names and collapsed history
+measures about `#747783`, which gives 4.1 on the panel ground `#131419` and
+3.2 on the highlighted ring row. Lifting it to about `#8e939d` gives 6.0 on
+the panel and 4.6 on the highlighted row, clearing the floor everywhere it is
+used. The three rows under 4.5 are the same token; one change fixes all
+three.

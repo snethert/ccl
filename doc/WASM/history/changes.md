@@ -1903,3 +1903,21 @@ Wasm keyword admission and matching sites change; loader, reader, stub and kerne
 are unchanged. The record carries Claude's portability observation: this matches
 native CCL, and makes no portable Common Lisp guarantee for repeated aliases.
 Stage 1 remains eight accepted, 23 missing and zero unreviewed inventory records.
+
+## 2026-09-18 — IDE design goals reviewed and revised; saved as ui-overview.md
+
+Claude reviewed the CLIM IDE design-goals document and its twenty-three
+reference screens against `decisions.md`, `outline.md` and the accepted
+Stage 1 backend, then applied the review's corrections and saved the result
+as `doc/WASM/ui-overview.md`. Changes: G7 now computes applicable sets per
+input context rather than per record; constraint 8 and G79 state that the
+proxy protects the credential, not its use, and require a client gesture for
+push; constraint 9 scopes cross-origin isolation to the full profile; G38
+says the safepoint polls are specified but not yet emitted by the accepted
+backend; G39 lists what the heartbeat costs the port and registers it as open
+question 11; G27 makes the project settings layer source; G60 names the
+client-side reader as a decision; G20 states the popup dependency; the §29
+target budget applies to controls, not inline presentations. §33 records the
+fixture and contrast discrepancies found in the screens, with measured
+ratios. The document is a draft and no Stage 1 record, gate count or
+acceptance changes.
