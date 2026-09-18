@@ -200,7 +200,9 @@ rejected, merges conflict, the remote moves under you. These are conditions
 with restarts (rebase, merge, force with lease, keep mine, keep theirs, stop),
 and conflicts are presentations with verbs, in the same debugger-shaped
 surface as any other break. No modal alert, no separate "source control" mode.
-This is the largest piece of the design not yet drawn.
+The image contributes what it alone knows — which of two conflicting symbols
+is actually bound, and how many callers it has — so resolving a conflict is
+not guesswork over text.
 
 *Reference: screens 4, 5, 6, 10, 11.*
 
@@ -410,3 +412,4 @@ restart, not as a parse failure before the system exists.
 10. Compare without windows — comparison as a command.
 11. Views live inline — tables, replayed records, process lists in place.
 12. Settings with provenance — generated editors, layered values.
+13. Divergence as a break — a rejected push as a condition with restarts.
