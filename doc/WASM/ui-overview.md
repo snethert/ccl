@@ -1080,8 +1080,10 @@ Registered, with the question stated rather than a guess recorded.
   healthy status. A third hue appears only for error state, and only as a thin
   bar and a label.
 - **De-emphasis is a colour, not an opacity.** Recessed text is recoloured to
-  stay above the contrast floor; it is never faded below it. The current
-  screens do fade below it in places (§33).
+  stay above the contrast floor; it is never faded below it. The screens use
+  three tiers: near-white for what you are reading, a muted grey for column
+  values and provenance, and a dimmer grey for section labels and collapsed
+  history, the last at the floor (§33).
 - **Shadow marks transience.** Only summoned surfaces cast one.
 - **Motion is not decoration.** Nothing animates that does not correspond to a
   state change the user caused.
@@ -1302,12 +1304,16 @@ figure is an upper bound:
 | 17, interrupt | footnote under the actions | 5.0 |
 | 1, documentation line | "— function, clim-web" | 5.2 |
 
-The recessed grey used for provenance, layer names and collapsed history
-measures about `#747783`, which gives 4.1 on the panel ground `#131419` and
-3.2 on the highlighted ring row. Lifting it to about `#8e939d` gives 6.0 on
-the panel and 4.6 on the highlighted row, clearing the floor everywhere it is
-used. The three rows under 4.5 are the same token; one change fixes all
-three.
+The redrawn screens keep the original palette — near-white text at
+`#f4f4f2`, code at `#d8d7d4`, the muted tier at `#979aa5` (6.6:1 on the
+panel), the cool accent at `#82c0da`, strings at `#d4b57f` — and change one
+token: the dimmest tier, used for section labels and collapsed history,
+moves from about `#747783` (4.1:1) to `#7f828d` (4.8:1 on the panel, 4.5:1
+on an overlay). That is the smallest lift that clears the floor, and it is
+not visible beside the original. The first redraw lifted the muted tier to
+`#8e939d` instead, which flattened the hierarchy between what you are
+reading and what is around it; the user preferred the original, and the
+budget is met the other way.
 
 ---
 

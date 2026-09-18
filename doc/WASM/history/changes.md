@@ -1994,3 +1994,13 @@ matches its body; §20 gives the insert-only set an ⌥Space leader and orders
 Escape by focus. The screen source now uses real links, buttons, inputs,
 labels and groups per §29, with renders unchanged. No Stage 1 record
 changes.
+
+## 2026-09-18 — IDE screens: original palette restored
+
+At the user's direction the redrawn screens return to the original PDF's
+tones: near-white text, code slightly dimmer, the muted tier at `#979aa5`,
+the cool accent and string colours as sampled from the originals. Only the
+dimmest tier (section labels, collapsed history) is lifted from `#747783` to
+`#7f828d`, the smallest change that meets §29's contrast floor. §28 and §33
+record the three tiers and the measurement; the files screen sets sizes and
+dates in the sans face as the original did. No Stage 1 record changes.
