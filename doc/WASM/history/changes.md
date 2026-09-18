@@ -2044,3 +2044,20 @@ prototype implements is named; the rings are a proposed transport
 consistent with D5, not D5. Milestone 0 is a transport skeleton with five
 demonstrations and boundary tests, and the six-step path is walked frame
 by frame. No Stage 1 record changes.
+
+## 2026-09-18 — IDE prototype specification, draft 3
+
+Claude revised `ui-prototype-spec.md` after Codex's review of draft 2
+(9886496b). Frames are 16-byte aligned so the header is the alignment
+unit and a pad header always fits at the wrap; the control block gains a
+Bridge-owned completion generation stored last, after the pending bit is
+cleared, so an acknowledgement is authenticated and cannot race a new
+request; rings are never reset in a session, and a replaced activity
+connection is an epoch carried in every frame header; each activity
+connection is credited by the Bridge and the credits relayed by the
+Host, so socket receive stays bounded while a ring is full (D3 and a new
+M13 check it); and partial operations — one form evaluated, changed
+definitions written — answer with per-definition state and never advance
+the buffer's compiled or saved revision, with `:text` split into buffer
+and range kinds. The walkthrough, Milestone 0 table and decisions list
+follow. No Stage 1 record changes.
