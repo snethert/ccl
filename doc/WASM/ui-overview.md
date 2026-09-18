@@ -10,7 +10,9 @@ review and the key-model decision: constraint 1, G1, G5, G7, G10.4, G16, G25,
 G51, G52, G60, G62, G73, G78 and G82 changed; G9.1 and G9.2 (what a
 presentation refers to, and chips in files) were added; the ring became the
 shelf (§6); §20 records the editing decision; §33 lists the screen changes it
-implies; §34 defines the first prototype.
+implies; §34 defines the first prototype. §35, added the same day, makes the
+agent a client and defines how a model reads the stream and how its text
+becomes commands; G31, G53 and G79 each gained a sentence for it.
 
 This document records the design decisions taken for the CLIM-based IDE and
 the applications built with it, and states them as goals that can be checked
@@ -472,8 +474,8 @@ a module — but it is the secondary view, and neither replaces the other.
 live.** Git knows what changed in the files; the image knows what changed in
 *itself*, and the two diverge the moment a definition is evaluated in the
 listener without being saved. Every changed definition is a presentation
-carrying what it is, where the change came from (editor or listener), when,
-and which of three states it is in:
+carrying what it is, where the change came from (editor, listener, or an
+agent, named — §35), when, and which of three states it is in:
 
 - in the image only — lost on restart;
 - in a file and the session log — not shared;
@@ -694,7 +696,9 @@ what it was doing. Without snapshots, both are just warnings about loss.
 **G53. Commands are re-executable objects.**
 A past command keeps its arguments as live objects, not printed text. Edit one
 and run it again; the shelf (G11) holds values, the command history holds
-invocations, and they are different lists on purpose.
+invocations, and they are different lists on purpose. An agent's commands
+(§35) are in the same history, marked with the agent's name, so what it did
+can be read, replayed and reverted like anything a person did.
 
 **G54. A command with more arguments than the line carries gets a dialog.**
 Derived from the argument types by the same machinery as a setting's editor
@@ -977,7 +981,9 @@ the token out of the image but not out of its reach, so a push is granted by
 a gesture the client makes and the image cannot synthesise — the user runs
 the push command, or confirms one the image asked for — and the image's
 request names what it would send. Fetch needs no such gesture, because it
-writes nothing anyone else reads. This is constraint 2 and G36 from the other
+writes nothing anyone else reads. An agent (§35) is a client under the same
+rule: it holds grants the human can see, never a credential, and cannot
+supply the gesture a push needs. This is constraint 2 and G36 from the other
 direction: code never comes in over the wire, and the image never reaches out
 on its own.
 
@@ -1024,6 +1030,9 @@ Registered, with the question stated rather than a guess recorded.
 - **The client editor component** that carries the modal layer, the reader
   and the record tree (§20, G59). A decision about a dependency, made once,
   after the prototype (§34) has tried one.
+- **Which agent harness comes first** (§35): the IDE as a server the
+  vendors' own harnesses connect to, or a harness of our own that calls the
+  model directly. The section recommends an order; the prototype decides.
 - **Scope of the client-side reader** (G60): which of the standard reader
   syntax the client understands by itself, what it does with a reader macro
   it does not know, and whether it ever asks the image for a boundary.
@@ -1145,6 +1154,10 @@ Registered, with the question stated rather than a guess recorded.
    window plus pins. Measure what a long listener session holds under that
    rule, and whether weak records outside the window cost more than they
    save.
+13. **Model decoding.** How much of the model view (§35) a model needs per
+   turn to act correctly, how often its commands fail validation, and
+   whether the manifest alone is enough documentation or the protocol note
+   has to be in context too. Measured with Fable and Codex on the §34 path.
 
 ---
 
@@ -1299,4 +1312,132 @@ Worker transport when the port has conditions and restarts. Until then the
 busy-Worker case is simulated on the socket, and the prototype says so. What
 it measures is discoverability, comfort, the retention rule of G9.1 in a long
 session (§31, item 12), and the accessibility floor of §29.
+
+The same path is walked a fourth way, by a model (§35): given the model view
+of the activity and the command manifest, and nothing else, it edits the
+definition, evaluates it, meets the condition, chooses the restart and
+writes the file, with a person watching from another activity. What that
+measures is §31, item 13.
+
+---
+
+## 35. The agent as a client
+
+An agent — Fable, Codex, or whatever comes next — is a second client of the
+image. It is not a plugin, a chat panel, or a feature. Constraint 2 says the
+wire carries objects and events and never code; constraint 6 says the same
+design serves a remote client. An agent is that remote client without a
+renderer, and every rule in this document already applies to it. What this
+section adds is the four things an agent needs that a page does not: a view
+of the stream it can read, a way for its text to become commands, a place
+to live, and the limits on what it may do.
+
+**G85. The agent reads the model view, not the pixels and not the records.**
+The output-record tree is for drawing. A model does not need geometry; it
+needs the objects. So the stream has a second projection beside the one the
+page renders: the **model view**, a textual rendering of an activity in
+which every presentation appears once, as its id, its presentation type, its
+printed form, and — where it has one — its provenance and state (G9.1). The
+transcript's text appears as text. Nothing is summarised by a person and
+nothing is described in prose: the view is generated from the same records
+the page draws, so it is never stale and never editorialised. It is written
+in S-expressions, because the reader is a model that reads Lisp and the
+objects are Lisp objects, and because a person can read it too. Two rules
+keep it inside a context window: the view is windowed like the transcript
+(G9.1), and an object's interior is not in it. Descending into an object is
+a command (*inspect* by id, G56), so the inspector's trail is the model's
+pagination.
+
+**G86. Text becomes action through the command table, and nowhere else.**
+A model answers in text. Only one kind of text acts: a structured command,
+in the shape the command line already reads — the command's name and its
+arguments, where an argument is a presentation id or a typed literal. The
+harness (G87) validates every such command against the command table as the
+command line would validate a typed one: the command must be applicable in
+the current context (G7), each id must name a live presentation (G9.1), each
+literal must read as its declared type. A command that fails validation is
+not executed; the failure goes back to the model as a condition, with the
+reason, and the model tries again. Everything else the model says is a
+message, shown in the activity's transcript to whoever is watching. No text
+from a model is ever evaluated as code. When the model wants to evaluate a
+form, it invokes *evaluate* with the form as a string argument; the image
+reads it, compiles it and runs it in the agent's own process, under the same
+interrupt (G38), conditions (G13) and restarts (G14) as anything a person
+types. A condition the model raises lands in the model's debugger, and its
+restarts arrive in the next model view as commands it may invoke.
+
+**G87. The harness is a program, not a chat loop.**
+Between the model and the image sits a small program that does five things
+in order, every turn: project the model view of the agent's activity;
+attach the applicable-command manifest, generated by G7 for that view, with
+each command's declared explanation and consequence; send both to the model
+with the person's prompt if there is one; parse the reply into commands and
+messages; execute the commands through the command line, one at a time,
+returning each result's presentations into the next view. The manifest is
+the tool list, regenerated each turn, so documentation stays short: a
+one-page protocol note says what a model view is and what a command looks
+like, and the manifest says what can be done right now. The consequence
+field gates execution: a command whose declaration names a consequence in
+G58's list of what cannot be taken back is not executed until the person
+confirms it, and a snapshot (G51) is taken before any command that can
+destroy the image.
+
+**G88. The person talks to the agent in an activity, with objects.**
+An agent lives in its own activity (G42): its own process, panes, layout
+and history. Its transcript is the conversation. The activity's input line
+takes a prompt the way a listener takes a form, and a prompt is a message
+to the model with the current model view attached. Pointing while typing
+works as it does for any argument (G8, G9): a presentation the person points
+at or has selected goes into the prompt as the object, by id, not as pasted
+text, so "fix this" carries the frame, and "these three" carries the three
+files. From any other activity, *Ask agent* is a command that takes a string
+and an optional object set and switches nothing: the answer arrives in the
+agent's activity and claims attention through the activity list (G44),
+never by taking the screen (G46). A person can also run the agent's commands
+by hand: every command the model issued is in the history (G53), with its
+arguments as live objects, and can be edited and re-run.
+
+**G89. What the agent may do is what the person granted, shown while it
+holds it.**
+An agent is a client that can evaluate anything, so constraint 8 and G79
+apply without exception: no credential, no push without a person's gesture,
+and every capability it holds — which files, which systems, whether it may
+compile into the image or only propose — is a grant the person made and can
+see and revoke in the image surface (G50). Its changes carry its name in
+G31's three states, its commits carry its name as author (G80), and the
+things it changed in the image only are visible in the same list as anyone
+else's, so nothing it did can sit unnoticed.
+
+**Can Fable and Codex decode this?** Yes, and the shape is not speculative:
+it is how those models already work in their own harnesses, which feed them
+tool results as text and read commands back as structured calls. The model
+view is easier to read than a shell transcript, because every object in it
+is typed, addressed and provenanced, and the manifest is easier than a tool
+schema written by hand, because it is generated from the image and cannot
+drift. The failure modes are known and the design meets each one: an
+invented id is rejected by validation and reported; an ambiguous printed
+form is never the address, the id is; a too-large view is windowed and
+descended into rather than dumped; a runaway evaluation is interrupted at
+the next safepoint; a wrong command is one command in the history, reverted
+per substrate (G57). What is not known is the budget — how much view a model
+needs per turn, and how often it fails validation — and §31, item 13,
+measures it.
+
+**Two ways to build it, in order.** First, the IDE as a server the vendors'
+harnesses connect to: the model view as resources, the manifest as tools,
+G86's validation and G87's gates enforced on the server side. This gets
+Fable and Codex working with the harnesses they already have, at the cost
+that those harnesses also carry their own file and shell tools, which bypass
+the object model and must be disabled or sandboxed for the session. Second,
+a harness of our own that calls the model directly, which owns the whole
+loop and can hold the model to the command table alone. The first proves the
+model view; the second is the product. The order is registered in §27.
+
+**What not to do.** No screenshot or DOM agents: the model view exists so
+nobody needs them. No agent API beside the command table: a verb a model can
+invoke that a person cannot discover breaks G7 in both directions. No
+autonomy over the irreversible: G58's list is the list of what an agent
+asks about. And no prose documentation of the objects: the manifest and the
+model view are generated, and a document about them would be the stale
+documentation §8 was written to abolish.
 

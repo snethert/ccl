@@ -1962,3 +1962,19 @@ consistent fixture story. The screens are now HTML source (`src/screens.html`,
 `src/screens.css`, vendored IBM Plex) rendered by `src/render.sh` with
 headless Chrome at 3×; the first set's JPEGs remain in history at d51d6d35.
 §33 of the document records the list as applied. No Stage 1 record changes.
+
+## 2026-09-18 — IDE design goals: the agent as a client (§35)
+
+Claude added §35 to `ui-overview.md` at the user's direction: an agent
+(Fable, Codex) is a second client of the image. G85 defines the model view,
+a windowed S-expression projection of an activity in which every
+presentation is id, type, printed form, provenance and state; G86 makes the
+command table the only path from model text to action, with validation,
+conditions on failure and no evaluation of model text as code; G87 defines
+the harness as a program with the G7 manifest as its regenerated tool list
+and the consequence field as the confirmation gate; G88 gives the agent an
+activity and gives the person a prompt line that carries objects by id, plus
+an Ask-agent command from anywhere; G89 applies the grant model. G31, G53
+and G79 each gained a sentence; §34 walks the prototype path by a model;
+§31 item 13 measures decoding; §27 registers which harness comes first. No
+Stage 1 record changes.
