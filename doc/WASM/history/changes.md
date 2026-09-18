@@ -1930,3 +1930,22 @@ for byte, with an index mapping each screen to the goals it illustrates and
 the PDF's hash. The user directed that the stream specification on `master`
 not be brought onto `wasm2` or reconciled now; `ui-overview.md` still names
 it as a companion. No Stage 1 record changes.
+
+## 2026-09-18 — IDE design goals: Codex review applied, editing decided
+
+Claude applied Codex's review of `ui-overview.md` and the user's key-model
+decision. Constraint 1 no longer calls the client thin; G1 gives the command
+line a visible way in; G5 states the gesture rule (caret in insert mode,
+activation in output, argument selection while reading); G7 separates
+computed applicability from declared presentation; G10.4 and G16 state image
+facts as facts of this image with known callers; G25 puts typed entry before
+sliders; G51, G52 and G78 make snapshots quiescent restores and drop the
+unload dependency; G73 says rerun under debugger; G82 makes announcement a
+prerequisite. New G9.1 defines the four states a presentation can refer to
+and bounds strong references; G9.2 makes chips session-only. The ring is
+renamed the shelf. §20 records the decision: modal editing with vi's
+grammar, forms as text objects, a space leader opening the computed command
+menu, insert mode in input lines and dialogs, a non-modal alternative as a
+setting, and every screen chord rebound under the leader. §33 lists the
+screen changes; §34 defines the first prototype, built against native CCL
+over a socket. No Stage 1 record changes.

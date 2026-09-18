@@ -5,7 +5,12 @@ Status: draft. Companion to `doc/stream-spec.md`.
 Revised 18 September 2026 after review against the twenty-three reference
 screens and against `decisions.md` and `outline.md` on this branch. The
 revision changed constraints 8 and 9, G7, G8, G20, G27, G38, G39, G60, the
-§29 targets budget, and added §33.
+§29 targets budget, and added §33. Revised again the same day after Codex's
+review and the key-model decision: constraint 1, G1, G5, G7, G10.4, G16, G25,
+G51, G52, G60, G62, G73, G78 and G82 changed; G9.1 and G9.2 (what a
+presentation refers to, and chips in files) were added; the ring became the
+shelf (§6); §20 records the editing decision; §33 lists the screen changes it
+implies; §34 defines the first prototype.
 
 This document records the design decisions taken for the CLIM-based IDE and
 the applications built with it, and states them as goals that can be checked
@@ -49,9 +54,14 @@ The interface is designed against these constraints. They are stated here
 because several of the goals below only make sense in their light. The target
 is the browser; no native mobile build is in scope.
 
-1. **Thin client, thick image.** The front end — JavaScript in the page —
-   renders presentations and captures keystrokes, pointer events and commands.
-   Everything else happens in CCL running in WASM.
+1. **Lisp semantics stay in the image; the client is not thin.** The front
+   end — JavaScript in the page — renders presentations, holds the record
+   tree, owns buffer text and the editor over it, finds form boundaries,
+   caches indentation, and handles focus, keyboard modes and accessibility.
+   Everything that gives an object its meaning — reading, evaluation,
+   compilation, applicability, documentation — happens in CCL running in
+   WASM. Calling the client thin understates its work; what is true is that
+   nothing about Lisp is decided there.
 2. **The wire carries objects and events, never code.** No streamed value is
    ever evaluated by the client: no handler thunks, no computed layout
    expressions. Gestures identify a presentation by id and send it back; the
@@ -118,7 +128,11 @@ is the browser; no native mobile build is in scope.
 **G1. Three persistent surfaces, and no others.**
 A work area, one command line, one documentation line. No toolbar, no icon
 rail, no global menu bar, no status bar separate from the documentation line.
-Anything else is summoned and dismissed.
+Anything else is summoned and dismissed. The command line is also the visible
+way in: when it is empty it offers *Commands*, *Open views* and *Activities*
+as clickable words, and on first use a line of guidance, so a newcomer has
+somewhere to start without a toolbar being added for them. The leader key
+(§20) opens the same three lists from the keyboard.
 
 **G2. Panes carry a name and a fact, nothing more.**
 No title bars, close boxes, minimise buttons or resize grips. Panes are
@@ -140,10 +154,22 @@ A presentation is undecorated until it is relevant. Source code looks like
 source code; a directory listing looks like a list. Sensitivity costs zero
 permanent pixels.
 
-**G5. One thing is marked at a time, and it is the thing under the pointer.**
+**G5. One thing is marked at a time, and what a gesture does depends on
+where it lands.**
 Highlighting is latent and singular. The documentation line reads that one
 object: what it is, and what the click, modified-click and right-click
-gestures will do to it.
+gestures will do to it. Three rules decide what a gesture does, and they
+never overlap:
+
+- in an editable buffer in insert mode (§20), a click places the caret and a
+  drag selects text; presentations in source are reached by modified click,
+  or from normal mode, where the caret already sits on a form;
+- in output panes, inspectors and lists, a click activates the presentation;
+- while a command is reading an argument, a click anywhere selects that
+  argument and does nothing else.
+
+The first rule is what keeps the presentation system out of the way of the
+most frequent activity there is.
 
 **G6. Type-directed narrowing is the primary discovery mechanism.**
 When a command wants an argument of a presentation type, every presentation of
@@ -151,12 +177,17 @@ that type on screen lights up and everything else recedes. On-screen and
 in-image match counts are shown. This replaces documentation with computation
 and is the single largest departure from mainstream editors.
 
-**G7. Applicable commands are computed, never authored, and computed per
-input context.**
+**G7. Applicability is computed, per input context; presentation is
+declared.**
 Pointing at an object yields the commands that apply to it, grouped by where
 they come from (the object, its class, its package), with counts that are real
 facts about the image. There is no hand-written context menu anywhere in the
-system. Which translators apply depends on the input context — what type the
+system, but computing which commands apply does not by itself produce a
+useful menu. A command's declaration carries what cannot be computed: its
+label, its priority, its group, a one-line explanation, its consequence when
+that is not obvious, and its key path under the leader (§20). This is what
+CLIM's translators already do, and screen 3's ordering and grouping are
+those declarations, not editorial afterthoughts. Which translators apply depends on the input context — what type the
 command line is currently asking for — and that context changes each time a
 command starts reading an argument, so a record cannot carry its answer in
 advance. The client therefore asks once per input context, not once per
@@ -174,6 +205,39 @@ input editor moves to the client is open question 4.
 **G9. Selection feeds the command line.**
 Multiple selected objects are an argument like any other; commands take object
 sets, not just single objects.
+
+**G9.1. A presentation refers to its object in one of four states, and says
+which.**
+A transcript that showed a hash table an hour ago, and a program that has
+changed it since, force the question the Lisp Machine never answered well.
+The answer here is a contract with four states:
+
+- **a historical rendering** — what was drawn. Replay never recomputes it
+  (G84, screen 16), so the picture is always what you saw;
+- **a live reference** — the object itself, reachable through the
+  presentation, with its verbs. A presentation is live while its record is
+  inside the transcript's retention window (`record-history-depth`) or while
+  something pins it;
+- **a pinned object** — retained on purpose: on the shelf (§6), in a command
+  history entry the user kept, or pinned explicitly. Pins are the only
+  unbounded strong references the interface holds, and the image surface
+  (G50) counts them;
+- **an expired reference** — the record is older than the window and nothing
+  pins it, or the object's dynamic extent has ended. The rendering stays
+  readable, the documentation line says *expired*, and the only verbs left
+  are *show as it was* and *re-evaluate*.
+
+Restarts and frames expire when their dynamic extent ends, whatever the
+window says. Outside the window a record holds its object weakly, so keeping
+the history readable does not keep the reachable graph alive.
+
+**G9.2. A chip is session-only.**
+Inserting an object into a buffer (G12) puts a live reference into text that
+may be saved as a `.lisp` file. Identity cannot survive that, so the rule is
+explicit: saving a buffer that holds a chip complains on the chip, the way a
+dialog complains on the argument that is wrong (G54), and offers *replace
+with printed form*. Nothing is ever written as a `#.` form or as an opaque
+reference the file cannot read back.
 
 *Reference: screens 1, 2, 3, 4.*
 
@@ -196,9 +260,9 @@ list is a requirement, not an illustration.
 | Layouts | switch, rename, save current arrangement |
 | Settings and key bindings | edit value, edit declaration, revert a layer |
 | Differences between versions | apply, revert |
-| Ring entries | insert object, insert printed form, drop |
+| Shelf entries | insert object, insert printed form, drop |
 | Systems, modules, dependencies | compile, load, plan, add component, add dependency |
-| Documents and citations (§12) | open at page, cite, attach to a definition, yank the text |
+| Documents and citations (§12) | open at page, cite, attach to a definition, copy the text |
 | Forms and buffers | select, evaluate, compile, indent, transpose, wrap, raise (§20) |
 | Search results and apropos matches | go to it, replace here, replace all, narrow (§21) |
 | Breakpoints, traces and profiles | enable, disable, show hits, time and space by definition (§22) |
@@ -243,23 +307,34 @@ with restarts (rebase, merge, force with lease, keep mine, keep theirs, stop),
 and conflicts are presentations with verbs, in the same debugger-shaped
 surface as any other break. No modal alert, no separate "source control" mode.
 The image contributes what it alone knows — which of two conflicting symbols
-is actually bound, and how many callers it has — so resolving a conflict is
-not guesswork over text.
+is bound *in this image*, and how many known callers it has here — stated as
+facts about this image and never as a verdict on the other branch. A symbol
+absent from this image is not wrong; it is absent. So resolving a conflict is
+not guesswork over text, and it is not the image guessing either.
 
 *Reference: screens 4, 5, 6, 10, 11.*
 
 ---
 
-## 6. The ring
+## 6. The shelf
 
-**G11. The ring holds objects, not text.**
+The earlier draft called this the ring and its verb *yank*. Both are Emacs
+vocabulary learned out of band, which is the opacity §1 sets out to remove,
+so the surface is now the **shelf**: a place you put objects to use later.
+Screen 5 still carries the old name (§33).
+
+**G11. The shelf holds objects, not text.**
 Entries are live objects with their types and a rendered view — a hash table
 shows entries, a condition shows its report, a record shows itself. Each entry
-records its provenance: which pane it came from and when.
+records its provenance: which pane it came from and when. Shelf entries are
+pinned in the sense of G9.1: they hold their objects until dropped.
 
 **G12. Insertion preserves identity.**
 `↩` inserts the object; `⇧↩` inserts its printed form. The insertion point
-shows which one is about to land, as a chip rather than as text.
+shows which one is about to land, as a chip rather than as text, and a chip
+in a file is governed by G9.2. In a source buffer the editor's registers
+(§20) are shelf slots: putting a form in a register puts it on the shelf with
+its provenance, and the shelf's own commands see it there.
 
 *Reference: screen 5.*
 
@@ -285,9 +360,16 @@ line.
 
 ## 8. Documentation
 
-**G16. Documentation is generated from the image.**
+**G16. Documentation is generated from the image, and says how well the
+image knows.**
 Signature, argument types, methods, callers, source location and compilation
 time are facts read out of the running system, not prose maintained beside it.
+Some of those facts are partial by nature: CCL's cross-reference is optional
+and does not see calls through `funcall`, `apply` or a symbol, and a caller
+list is only as complete as what was loaded with recording on. So the
+Examiner says *known callers* and labels where each came from — recorded
+cross-reference, observed at load, or unavailable — and never presents a
+partial list as the whole.
 
 **G17. There is no boundary between the system's code and yours.**
 System sources are present. `edit definition` on anything leads somewhere,
@@ -328,7 +410,7 @@ A table, a replayed record at scale, a process list — all are drawn in place
 in the transcript. A new pane or window must earn itself against this.
 
 **G23. Overlays are summoned and dismissed.**
-The ring, the layout picker and the applicable-command list appear over the
+The shelf, the layout picker and the applicable-command list appear over the
 work area and leave no residue. They are the only place shadow is used.
 
 *Reference: screens 8, 9, 10, 11.*
@@ -341,10 +423,14 @@ work area and leave no residue. They are the only place shadow is used.
 docstring.** There is no configuration schema and no configuration file
 format.
 
-**G25. Setting editors are generated from types.**
-An integer range yields a range editor, a member type yields a choice, a
-pathname yields a pathname reader — using the same machinery that reads a
-command argument. No settings pane is hand-built.
+**G25. Setting editors are generated from types, and typed entry comes
+first.**
+An integer range yields a numeric field that reads and checks the value, a
+member type yields a choice, a pathname yields a pathname reader — using the
+same machinery that reads a command argument. No settings pane is hand-built.
+A type alone does not say whether a slider helps: a range of one to ten
+thousand needs a field you can type into, and a slider or stepper only
+supplements it where the range is small enough to make dragging useful.
 
 **G26. Values show their provenance.**
 Every setting displays which layer it came from (default, user, project,
@@ -442,7 +528,7 @@ manual must not enter a heap with a 4 GiB ceiling (§2).
 The document is a presentation with a type and verbs — open at page, search,
 cite, attach. Its pages and words are opaque to the image, with one bridge:
 when the user selects, a **citation** crosses back — document, page, range and
-the selected text — as a presented object that can be yanked into the ring,
+the selected text — as a presented object that can be put on the shelf,
 attached to a definition, or written into a docstring. That bridge is what
 makes a viewer part of the system rather than an embedded app beside it.
 
@@ -586,15 +672,20 @@ rendezvous health, Worker states, and the storage the clone, the session log
 and the snapshots occupy. These are facts before they are failures, and the
 ceiling is what makes headroom worth a permanent place.
 
-**G51. Snapshots are objects.**
+**G51. Snapshots are objects, taken at quiescent points.**
 Taken automatically before anything that can destroy the image, hourly, and on
 demand; each labelled with what it contains — systems loaded, definitions that
-exist in no file, history depth — and resumable, pinnable, deletable.
+exist in no file, history depth — and restorable, pinnable, deletable. A
+snapshot is taken only when every Worker is at a safepoint with no host
+request outstanding, which is the port's own save contract, and it holds
+definitions and heap objects. It never holds active frames, a pending host
+operation or an open debugger, and the interface does not pretend otherwise:
+the verb is *restore*, not *resume*.
 
 **G52. A snapshot is what makes the image survivable.**
 It is the answer to G31's "in the image only" and the reason G41's force quit
-can name what a restart would recover. Without snapshots, both are just
-warnings about loss.
+can name what a restart would recover. It restores what the image held, not
+what it was doing. Without snapshots, both are just warnings about loss.
 
 ---
 
@@ -602,7 +693,7 @@ warnings about loss.
 
 **G53. Commands are re-executable objects.**
 A past command keeps its arguments as live objects, not printed text. Edit one
-and run it again; the ring (G11) holds values, the command history holds
+and run it again; the shelf (G11) holds values, the command history holds
 invocations, and they are different lists on purpose.
 
 **G54. A command with more arguments than the line carries gets a dialog.**
@@ -654,10 +745,12 @@ and undoable there (G57).
 
 **G60. Forms are presentations, which means the client has a reader.**
 A Lisp editor is form-aware or it is a text editor with parentheses. Every
-form under the pointer is an object with verbs: evaluate, compile, macroexpand,
-indent, transpose, wrap, raise, splice. Structural editing is therefore G7
-applied to source, not a mode you enable. Character editing remains available
-underneath it. Because G59 says structural motion never waits on the Worker,
+form under the caret or pointer is an object with verbs: evaluate, compile,
+macroexpand, indent, transpose, wrap, raise, splice. Structural editing is
+therefore G7 applied to source, not a mode you enable: in the editor of §20
+a form is a text object, and the verbs are operators applied to it.
+Character editing remains available underneath it, in insert mode, where G5's
+first rule holds. Because G59 says structural motion never waits on the Worker,
 the client must find form boundaries by itself: it carries a reader of its
 own that understands strings, line and block comments, `#+` and `#-`, piped
 symbols, character and string syntax and the standard dispatch characters,
@@ -673,13 +766,73 @@ when it does not know.
 
 **G62. A buffer's state is visible where the buffer is.**
 Unsaved, uncompiled, compiled-but-not-saved, saved-but-uncommitted (G31): the
-pane header carries which, in words. There is no modified-star convention to
-learn.
+pane header carries which, in words. So does the editor's mode (§20), beside
+it, because a mode is state and state is shown. There is no modified-star
+convention to learn.
 
-**Decision needed:** the default key model. The Emacs bindings are the obvious
-inheritance and the conversation has assumed them; a modal set and a CUA set
-are both feasible over the same command table (G24 makes bindings settings).
-Nothing above depends on the answer, and it should be made once, deliberately.
+**Decision (18 September 2026): modal editing with vi's grammar, and a leader
+key.** The earlier draft assumed the Emacs bindings as the obvious
+inheritance. They are not; they are the vocabulary §1 rejects, and the
+browser reserves the modifier chords both inherited sets depend on. The
+editor is modal, in the shape Spacemacs gave vi, for four reasons that are
+about this design rather than habit:
+
+- **Forms are text objects.** An operator applied to a text object is a verb
+  applied to a noun, which is this document's thesis in editing form. `d`,
+  `y`, `c` and `>` apply to *a form*, *inner form*, *top-level form* and *the
+  string under the caret* exactly as they apply to a word. Spacemacs's lisp
+  state, vim-sexp and evil-cleverparens are the precedents, including the
+  rule that operators keep parentheses balanced.
+- **It settles G5.** Insert mode is ordinary text editing, so a click places
+  the caret and a drag selects. Normal mode puts the caret on a form, and the
+  documentation line reads that form as a presentation.
+- **The leader menu is the discovery route.** After the leader, a popup
+  lists the commands under that prefix with their letters — the applicable
+  command list of screen 3, filtered by prefix — so G1's way in exists from
+  the keyboard and no persistent surface is added. Every command declares
+  its key path (G7).
+- **It sidesteps the browser.** Every collision found in the screens uses a
+  modifier: Chrome and Firefox reserve ⌘1 to ⌘8 for tabs and Safari can be
+  set to; ⌘⇧T reopens a closed tab in all three; ⌘. stops loading in Safari;
+  ⌘T, ⌘N, ⌘W and ⌘L cannot be captured by a page at all. Normal mode uses
+  unmodified keys and the leader, all of which a page may take. Modifier
+  chords survive only inside insert mode, where few are needed.
+
+The decision has these parts:
+
+- **Where modes apply.** Source buffers are modal. The transcript's input
+  line and dialog fields open in insert mode, because a modal listener is the
+  mistake modal-editor users spend the most time undoing. Non-editable panes
+  — transcript output, the inspector, every list — have only normal mode:
+  `j` and `k` move sensitivity between presentations, `↩` activates, and the
+  leader is always the leader. That is G81's keyboard reach.
+- **The leader.** Space in normal mode by default; a setting (G24) makes it
+  another key. In insert mode space types a space. The leader tree is
+  mnemonic and shallow, and its first level is the three lists of G1 plus
+  the object under the caret.
+- **Escape.** Insert to normal is one use; cancelling a pending command or
+  dismissing an overlay is another. In normal mode with nothing pending,
+  Escape does nothing. The command line's *Esc cancel* chips stay.
+- **How much of vi.** The grammar, not the program: operators, motions, text
+  objects, counts, marks and registers. No ex commands and no scripting
+  language; `:` opens the command line, which is what ex was for.
+- **Registers are shelf slots.** vi's `y` is kept as a key, not as a word:
+  copying in a source buffer copies text, as a form with its printed form;
+  copying in an output pane copies the object. Both land on the shelf (§6)
+  with their provenance.
+- **A non-modal alternative is a setting.** Bindings are settings, so an
+  insert-only set with familiar chords exists for people who want it, the
+  way Spacemacs keeps its holy mode. It gets the same leader and the same
+  command line.
+- **The screens rebind.** Every ⌘-chord on the screens becomes a leader
+  sequence (§33). Interrupt moves under the leader too, and stays
+  client-local so it works while the Worker is busy.
+
+Two things the decision does not fix, and says so: modal editing is also
+learned out of band, which is why the leader menu and the mode indicator
+exist; and the vi layer is client work (G59). A modal layer over a browser
+editor component is a known quantity rather than research, but it is not
+free, and the component is registered in §27.
 
 ---
 
@@ -754,12 +907,14 @@ and how long it took. Screen 14's `84 of 84, 2 h ago` is this object shown in
 the system list.
 
 **G73. A failing test is a break you can stand in.**
-Running a test does not swallow its condition into a report. A failure lands in
-the debugger (§7) with the test's frame, its fixtures as locals, and the
-assertion as the condition, so fixing it is the same act as fixing anything
-else. Reporting is what happens when you choose to run the whole suite
-non-interactively, and even then each failure is a presentation that reopens
-in the debugger on demand.
+Running a test interactively does not swallow its condition into a report. A
+failure lands in the debugger (§7) with the test's frame, its fixtures as
+locals, and the assertion as the condition, so fixing it is the same act as
+fixing anything else. Reporting is what happens when you choose to run the
+whole suite non-interactively. A completed failure is then a report: always
+inspectable, never resumable, because its execution state is gone. Its verb
+is *rerun under debugger*, which runs the test again with the break enabled,
+and the label says exactly that.
 
 **G74. Tests know what they cover.**
 The image can record which definitions a test exercised, so a changed
@@ -799,12 +954,19 @@ lives in the `.asd` or beside it. G77 holds whichever is chosen.
 
 ## 25. Session, host and identity
 
-**G78. A page reload does not lose work.**
-The image runs in a Worker that dies with the page, so a snapshot is written
-on unload, and the next load resumes it. A reload should feel like waking the
-machine, not rebooting it. Whether a `SharedWorker` can keep the image alive
-across a reload is worth measuring (§31); the snapshot path is required
-regardless.
+**G78. A page reload does not lose work, and unload is not how.**
+The image runs in a Worker that dies with the page. Browsers do not reliably
+deliver `unload`, so nothing here depends on it. Instead: editor text
+persists continuously on the client as it changes; the image is checkpointed
+at quiescent points (G51) on a timer and before any destructive command; and
+the image surface (G50) shows what the latest checkpoint recovers and how old
+it is. `pagehide` and `unload` are extra opportunities to checkpoint, never
+the guarantee. A reload restores data — buffers, and the last checkpoint's
+definitions and heap — not a computation that was running and not an open
+debugger; it should feel like waking the machine with the desk as you left
+it, and it does not pretend the machine never stopped. Whether a
+`SharedWorker` can keep the image alive across a reload is worth measuring
+(§31); the checkpoint path is required regardless.
 
 **G79. The image has no ambient authority over the host.**
 Every capability the image uses — a file on the user's disk, a network
@@ -836,8 +998,11 @@ this says pointing itself does not require a pointer.
 **G82. A presentation announces what it is.**
 Because every object on screen has a type and a set of verbs, a screen reader
 can be told exactly that — "function, pop-record, 11 commands" — rather than
-"text". Accessibility here is a consequence of the model, and the budget in
-§29 is the floor, not the design.
+"text". That is what the model makes computable, which mainstream editors
+cannot say; it is a prerequisite, not a delivery. Usable keyboard navigation,
+focus order and screen-reader behaviour are tested in the prototype (§34),
+including at increased text size, and the budget in §29 is the floor, not the
+design.
 
 **G83. A presentation can be dragged.**
 Dragging one onto a pending argument, a pane, or another presentation is
@@ -855,8 +1020,10 @@ has no image. What leaves is a picture, never a live object.
 
 Registered, with the question stated rather than a guess recorded.
 
-- **Default key model** (§20).
 - **Dependency source and pinning** (§24).
+- **The client editor component** that carries the modal layer, the reader
+  and the record tree (§20, G59). A decision about a dependency, made once,
+  after the prototype (§34) has tried one.
 - **Scope of the client-side reader** (G60): which of the standard reader
   syntax the client understands by itself, what it does with a reader macro
   it does not know, and whether it ever asks the image for a boundary.
@@ -974,6 +1141,10 @@ Registered, with the question stated rather than a guess recorded.
    the safepoint slow path. Whether the port accepts that request, and in
    which stage, is the port's decision to record; until it does, G39 is a
    design and the heartbeat on screen 17 is a mock.
+12. **Retention cost.** G9.1 bounds strong references to the transcript's
+   window plus pins. Measure what a long listener session holds under that
+   rule, and whether weak records outside the window cost more than they
+   save.
 
 ---
 
@@ -986,7 +1157,8 @@ per screen, numbered as below.
 2. Type-directed narrowing — `Trace` wants a function name.
 3. Verbs from nouns — applicable commands for a class.
 4. Files as objects — versions, staleness, multi-selection into a command.
-5. The ring — objects with provenance; inserting keeps identity.
+5. The shelf — objects with provenance; inserting keeps identity. (The
+   screen is still titled *Ring*; §33.)
 6. Break, fix, resume — condition, restarts, frames, locals, source.
 7. The image explains itself — generated documentation, system sources.
 8. Named layouts — arrangements as objects.
@@ -1039,10 +1211,46 @@ consistent story about it.
   different verb and should be listed as one.
 - Screen 17 titles the third action "Force quit the runner" and its body
   says it terminates the Worker and loses the image. G41 says force quit ends
-  the whole image, and "runner" is the fixture's application class, not a
-  name for the image. Retitle it "Force quit the image".
+  the whole image, and a runner is one Worker, not the image. Retitle it
+  "Force quit the image", and change "restart would resume from it" to
+  "restore", per G51.
 - Screen 17's heartbeat panel shows the port supplying what G39 asks for. It
   is a mock until open question 11 is answered.
+
+**Changes the second revision implies.** These follow from Codex's review
+and the §20 decision, and they touch most screens.
+
+- Every ⌘-chord becomes a leader sequence: screen 3's ⌘E and ⌘D; screen 8's
+  ⌘1 to ⌘5 and ⌘⇧L; screen 9's ⌘⇧T; screen 12's ⌘E and ⌥Y; screen 17's ⌘.
+  and ⌘⇧.; screen 18's ⌘E, ⌘D, ⌘B, ⌘L, ⌘T, ⌘K and ⌘N, and its footer "⌘ and
+  a letter" becomes "space and a letter". ⌘Z on screen 23 may stay for
+  insert mode; normal mode has `u`.
+- Screen 1's documentation line says "click edit definition" over an
+  editable buffer. Under G5 a click places the caret; the line should read
+  the modified-click and the normal-mode verb instead.
+- Every screen with an editable pane (1, 4, 10, 15, 19) shows the editor's
+  mode in the pane header, beside the buffer state (G62).
+- Screen 3 gains the declared explanation and consequence lines for each
+  command (G7), which the menu now has room for.
+- Screen 5 is retitled *Shelf*, its footer verbs lose *yank*, and its "⌥Y
+  cycles" becomes a leader sequence. Screen 16's "yank the text" becomes
+  "copy the text".
+- Screen 6 lists only restarts the program established. The fixture's loop
+  establishes none of *Skip this record and continue the loop*, so either
+  the fixture gains a `with-simple-restart` or the row goes. "Abort — kill
+  process" is not G41's abort and is relabelled *Kill process runner-2*.
+- Screen 7's *callers* heading becomes *known callers*, with the source of
+  each row (G16).
+- Screens 12 and 21 make the numeric field primary and the slider a
+  supplement (G25).
+- Screen 13's "What the image knows" gains "in this image" and loses any
+  reading that the other branch's symbol is wrong (G10.4).
+- Screen 22's snapshot labels use *restore*, not *resume* (G51), and the
+  surface gains a row for pinned objects (G9.1) and for the age of the last
+  checkpoint (G78).
+- Any presentation older than the retention window, on any screen, shows
+  the expired state of G9.1; screen 11's transcript is the natural place to
+  show one.
 
 **Contrast.** §29 requires 4.5:1 for de-emphasised text. Measured against
 the rendered screens, taking the brightest pixel of each run of text so the
@@ -1050,7 +1258,7 @@ figure is an upper bound:
 
 | Screen | Text | Measured |
 | --- | --- | --- |
-| 5, the ring | provenance line "from Transcript · 2 min ago" | 4.1 |
+| 5, the shelf | provenance line "from Transcript · 2 min ago" | 4.1 |
 | 12, settings | layer column "default" | 4.1 |
 | 4, files | "19 earlier commits" | 4.3 |
 | 17, interrupt | footnote under the actions | 5.0 |
@@ -1062,3 +1270,31 @@ measures about `#747783`, which gives 4.1 on the panel ground `#131419` and
 the panel and 4.6 on the highlighted row, clearing the floor everywhere it is
 used. The three rows under 4.5 are the same token; one change fixes all
 three.
+
+---
+
+## 34. The first prototype
+
+Static screens have said what they can. The next evidence comes from one
+working path, built before any second screen is drawn, and used to decide
+which of this document's absolute rules improve daily work and which are
+only preferences:
+
+> edit a definition → evaluate it → inspect its result → hit a condition →
+> choose a restart the program really established → save the changed
+> definition and see it move between G31's states.
+
+The path is walked three ways: with the pointer, keyboard-only in normal
+mode and through the leader, and with a screen reader at twice the text
+size. It is walked with the image busy, so the client's liveness under
+constraint 4 is felt rather than asserted.
+
+The prototype does not wait for the port. The wire carries objects and events
+only (constraint 2), and constraint 6 already says the same design serves a
+remote image, so the client is built against native CCL over a socket, with
+the same presentation stream and the same event stream, and moves to the
+Worker transport when the port has conditions and restarts. Until then the
+busy-Worker case is simulated on the socket, and the prototype says so. What
+it measures is discoverability, comfort, the retention rule of G9.1 in a long
+session (§31, item 12), and the accessibility floor of §29.
+
