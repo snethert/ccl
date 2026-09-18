@@ -374,7 +374,43 @@ itself up to date without the user tracking which files changed.
 
 ---
 
-## 12. Visual system
+## 12. Foreign material
+
+The image cannot read a PDF, decode a video, or lay out a web page, and should
+not try. The interface still has to show them.
+
+**G34. The client may display what the image cannot.**
+A pane can hold a foreign view — a PDF, an image, a video, a rendered page —
+which the client fetches (through the host proxy, or from a file the user
+picked) and renders with its own machinery. The image places the view, knows
+what it is and what state it is in, and never receives the bytes. A 41 MB
+manual must not enter a heap with a 4 GiB ceiling (§2).
+
+**G35. The object is presented; its interior is not.**
+The document is a presentation with a type and verbs — open at page, search,
+cite, attach. Its pages and words are opaque to the image, with one bridge:
+when the user selects, a **citation** crosses back — document, page, range and
+the selected text — as a presented object that can be yanked into the ring,
+attached to a definition, or written into a docstring. That bridge is what
+makes a viewer part of the system rather than an embedded app beside it.
+
+**G36. Foreign material is marked, and it is inert.**
+It is drawn as visibly foreign — different surface, a stated origin — because
+its provenance is not the image. It never executes in the application's
+origin, nothing inside it can become a command, and a link in a document is a
+request the user confirms, not an action. This is constraint 2 restated for
+content: no code arrives over the wire, including inside a document. An
+embedded page that could script is a hole in that rule, so arbitrary HTML is
+either sandboxed with no access to the application, or not embedded at all.
+
+**G37. References are stored, not copies.**
+What persists is the citation — the resource's identity, a content hash, the
+page and range — so the reference survives, can be re-opened, and can go in
+the repository. The bytes stay where they came from.
+
+---
+
+## 13. Visual system
 
 - **Two typefaces.** One for interface text, one monospace for code and data.
 - **One ground, one panel, one divider.** Separation is a single pixel line;
@@ -391,7 +427,7 @@ itself up to date without the user tracking which files changed.
 
 ---
 
-## 13. Budgets
+## 14. Budgets
 
 - **Interaction:** no interaction may require a client↔image round trip per
   animation frame. Highlighting, scrolling, pointer documentation and drag
@@ -406,7 +442,7 @@ itself up to date without the user tracking which files changed.
 
 ---
 
-## 14. Non-goals and rejected alternatives
+## 15. Non-goals and rejected alternatives
 
 - **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
   the elisp ecosystem are not.
@@ -426,7 +462,7 @@ itself up to date without the user tracking which files changed.
 
 ---
 
-## 15. Open questions
+## 16. Open questions
 
 1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
    and backgrounding? This decides whether the embedded-runtime fallback is
@@ -450,7 +486,7 @@ itself up to date without the user tracking which files changed.
 
 ---
 
-## 16. Reference screens
+## 17. Reference screens
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
@@ -469,3 +505,5 @@ itself up to date without the user tracking which files changed.
     image knows it has changed.
 15. The definition and its plan — the .asd as source, beside the graph, the
     ordered plan and the findings derived from it.
+16. Foreign material — a PDF manual in a pane, and a citation crossing back
+    into the image.
