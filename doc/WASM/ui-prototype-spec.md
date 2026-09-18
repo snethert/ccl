@@ -1,6 +1,6 @@
 # IDE Prototype — Technical Specification
 
-Status: draft 3, 18 September 2026. Implements §34 of [ui-overview.md](ui-overview.md).
+Status: draft 4, 18 September 2026. Implements §34 of [ui-overview.md](ui-overview.md).
 Companion: [ui-screens/](ui-screens/README.md).
 
 Draft 2 follows Codex's review of draft 1 (ae61ac8f): socket-owning
@@ -189,9 +189,15 @@ of 16, each with a frame one unit larger than the remainder.
 **Epochs.** An activity's connection can be replaced (the socket drops
 and the Host reconnects, or the Image restarts the activity). Each
 replacement increments the activity's epoch; the Bridge announces it on
-S with `(:activity :id a :epoch n)` before any frame from the new
-connection, and every frame carries the epoch it belongs to. Sequence
-numbers restart at 0 per epoch. A consumer that sees a frame whose epoch
+activity **0**, channel S, with `(:activity :id a :epoch n)` before any frame
+from the new connection. The announcement's header epoch is 0; its payload
+identifies the activity and its new epoch. This session channel has one
+Bridge-owned sequence, shared with session errors. Only these session
+announcements advance the Page's connection epochs; Image metadata does not.
+Every Image frame carries its own activity's epoch. Each Image channel starts
+at sequence 0 per connection, including S. The Bridge relays those frames
+without changing their bytes or reserving a sequence number for itself.
+This draft-4 clarification separates connection metadata from Image output. A consumer that sees a frame whose epoch
 is older than the activity's current one drops it, and on an epoch change
 discards any partial reassembly for that activity. Nothing else in the
 ring is touched.

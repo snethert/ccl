@@ -2061,3 +2061,7 @@ definitions written — answer with per-definition state and never advance
 the buffer's compiled or saved revision, with `:text` split into buffer
 and range kinds. The walkthrough, Milestone 0 table and decisions list
 follow. No Stage 1 record changes.
+
+## 2026-09-18 — separate IDE session announcements from Image output
+
+Following the user-supplied review of prototype commit 426f1c9, draft 4 places epoch announcements on activity 0, channel S, sharing the Bridge's session-error sequence. Image channels retain their own sequence numbers and unchanged frame bytes. This is a transport clarification; no Wasm acceptance criteria or shared compiler source changes.
