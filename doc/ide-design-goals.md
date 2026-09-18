@@ -322,7 +322,37 @@ restart, not as a parse failure before the system exists.
 
 ---
 
-## 11. Visual system
+## 11. Projects
+
+**G30. The project is a system, not a directory.**
+The primary browser shows systems: their modules in dependency order, each
+module's load and compile state, and their dependencies with the versions
+actually loaded. A file browser remains — directories hold plenty that is not
+a module — but it is the secondary view, and neither replaces the other.
+
+**G31. The image tracks what it has changed, and says where those changes
+live.** Git knows what changed in the files; the image knows what changed in
+*itself*, and the two diverge the moment a definition is evaluated in the
+listener without being saved. Every changed definition is a presentation
+carrying what it is, where the change came from (editor or listener), when,
+and which of three states it is in:
+
+- in the image only — lost on restart;
+- in a file and the session log — not shared;
+- committed — other people can have it.
+
+Moving between those states is a command over a set of definitions
+(*write changed definitions to files*), not a separate save ritual. Nothing
+should be able to sit in the first state unnoticed.
+
+**G32. Module state is per module, not per repository.**
+Loaded, compiled, stale against its source, and the commit it was built from
+are facts about a module, shown on the module. A system knows how to bring
+itself up to date without the user tracking which files changed.
+
+---
+
+## 12. Visual system
 
 - **Two typefaces.** One for interface text, one monospace for code and data.
 - **One ground, one panel, one divider.** Separation is a single pixel line;
@@ -339,7 +369,7 @@ restart, not as a parse failure before the system exists.
 
 ---
 
-## 12. Budgets
+## 13. Budgets
 
 - **Interaction:** no interaction may require a client↔image round trip per
   animation frame. Highlighting, scrolling, pointer documentation and drag
@@ -354,7 +384,7 @@ restart, not as a parse failure before the system exists.
 
 ---
 
-## 13. Non-goals and rejected alternatives
+## 14. Non-goals and rejected alternatives
 
 - **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
   the elisp ecosystem are not.
@@ -374,7 +404,7 @@ restart, not as a parse failure before the system exists.
 
 ---
 
-## 14. Open questions
+## 15. Open questions
 
 1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
    and backgrounding? This decides whether the embedded-runtime fallback is
@@ -398,7 +428,7 @@ restart, not as a parse failure before the system exists.
 
 ---
 
-## 15. Reference screens
+## 16. Reference screens
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
@@ -413,3 +443,5 @@ restart, not as a parse failure before the system exists.
 11. Views live inline — tables, replayed records, process lists in place.
 12. Settings with provenance — generated editors, layered values.
 13. Divergence as a break — a rejected push as a condition with restarts.
+14. Systems, not directories — modules in dependency order, and what only the
+    image knows it has changed.
