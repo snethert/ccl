@@ -426,19 +426,30 @@ the repository. The bytes stay where they came from.
 
 ## 13. Running and interrupting
 
-**G38. Every computation can be interrupted.**
-The compiler emits a safepoint poll at function entry and at every loop
-back-edge. The client raises a flag in shared memory; at the next poll the
-image signals an `interrupt-request` condition and enters the debugger with
-the stack intact. An interrupt is an ordinary condition with restarts, not a
-mode — so §7 already describes what happens next.
+**G38. Every computation can be interrupted, by poisoning a check that already
+exists.** A WASM backend cannot take signals, so it already needs explicit
+checks: a stack-overflow test at function entry and a poll at loop back-edges
+so a non-allocating loop can still yield. Interruption reuses them rather than
+adding its own. The client writes a poison value into the word those checks
+read — the stack or allocation limit — so the existing comparison fails; the
+slow path then asks why, finds the interrupt flag in shared memory, signals an
+`interrupt-request` condition, and enters the debugger with the stack intact.
+Nothing is added to the fast path. An interrupt is an ordinary condition with
+restarts, not a mode, so §7 already describes what follows.
 
-**G39. The poll publishes a heartbeat.**
-Each safepoint also writes what is running, for how long, and the allocation
-and collection counts into that shared memory. The client can therefore give a
-live account of a busy image without the image answering a message: a blocked
-system shows facts, not a spinner, and the time since the last safepoint says
-whether it is answering at all.
+The requirement this places on the compiler is **coverage, not instructions**:
+checks triggered by allocation alone are not enough, because a loop that
+allocates nothing never reaches one, and that is exactly the computation a
+user needs to stop. Function entry plus every loop back-edge is the bar.
+
+**G39. The same mechanism publishes a heartbeat.**
+The client poisons the word on a timer as well as on demand. On that slow path
+the image writes what is running, for how long, and its allocation and
+collection counts into shared memory, then carries on. Sampling therefore
+costs nothing in the common case — no store per safepoint — and the client can
+give a live account of a busy image without the image answering a message: a
+blocked system shows facts, not a spinner, and the time since the last sample
+says whether it is answering at all.
 
 **G40. A running computation is an object.**
 It is presented in the command line while it runs and carries its own
@@ -452,8 +463,9 @@ the image. The third names exactly what will be lost — the definitions that
 exist in no file, the history — and when the last snapshot was taken. Only the
 third works when the safepoints stop answering, which is why it exists.
 
-**Cost to measure:** the poll is a load and a branch per back-edge. Its
-overhead is an open question (§18), not a free lunch.
+**What to verify** is therefore not the cost of a new poll but whether the
+backend's existing checks already cover function entry and loop back-edges
+(§19).
 
 ---
 
@@ -600,8 +612,11 @@ become failures.
 6. **Clone persistence.** Where the local clone lives (OPFS or IndexedDB), how
    large a repository that supports, and how the working copy is reconstructed
    after an eviction.
-7. **Safepoint overhead.** What a poll per function entry and loop back-edge
-   actually costs on representative Lisp code (G38).
+7. **Safepoint coverage.** Do the WASM backend's existing checks — stack
+   overflow at function entry, yield polls at loop back-edges — already cover
+   every loop, including one that allocates nothing? If they do, G38 costs
+   nothing; if they are allocation-triggered only, the gap is where hangs will
+   live.
 8. **Definition-level history.** Git versions text; the system presents
    definitions. Mapping commits onto "this function last changed here" needs a
    source-range-to-definition mapping, and it is not free. Whether the
