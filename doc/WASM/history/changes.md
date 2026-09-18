@@ -2065,3 +2065,11 @@ follow. No Stage 1 record changes.
 ## 2026-09-18 — separate IDE session announcements from Image output
 
 Following the user-supplied review of prototype commit 426f1c9, draft 4 places epoch announcements on activity 0, channel S, sharing the Bridge's session-error sequence. Image channels retain their own sequence numbers and unchanged frame bytes. This is a transport clarification; no Wasm acceptance criteria or shared compiler source changes.
+
+## 2026-09-18 — IDE prototype specification, draft 4 tidied
+
+Claude added the missing draft 4 header note, joined the spliced sentence
+in §3.3, and split the §4.2 activity line: the Image's own `:activity`
+frame no longer lists an epoch, and the Bridge's session announcement on
+activity 0 is listed separately with a pointer to §3.3. No transport
+change; no Stage 1 record changes.

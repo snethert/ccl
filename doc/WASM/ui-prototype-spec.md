@@ -21,6 +21,11 @@ receive is bounded by per-activity credits that the Host relays; and
 partial operations (one form evaluated, changed definitions written) carry
 per-definition state and never advance the buffer's whole revisions.
 
+Draft 4 follows Claude's review of prototype commit 426f1c9 in `clim-web`:
+epoch announcements are session frames on activity 0, sharing the Bridge's
+session sequence with its errors, so the Bridge relays every Image frame
+unchanged and reserves no sequence number in any activity's channels.
+
 This document specifies the first working path of the IDE against native
 CCL. It is written to be built from: every section names a component, its
 contract, and how it is checked. Where the design document states a goal,
@@ -197,10 +202,9 @@ announcements advance the Page's connection epochs; Image metadata does not.
 Every Image frame carries its own activity's epoch. Each Image channel starts
 at sequence 0 per connection, including S. The Bridge relays those frames
 without changing their bytes or reserving a sequence number for itself.
-This draft-4 clarification separates connection metadata from Image output. A consumer that sees a frame whose epoch
-is older than the activity's current one drops it, and on an epoch change
-discards any partial reassembly for that activity. Nothing else in the
-ring is touched.
+A consumer that sees a frame whose epoch is older than the activity's
+current one drops it, and on an epoch change discards any partial
+reassembly for that activity. Nothing else in the ring is touched.
 
 Channels:
 
@@ -372,7 +376,9 @@ does the rest.
 (:pane :id p :name "presentations.lisp" :chips ("clim-web") :fact "edited 4 m ago"
        :editable t :buffer b :rev v :saved-rev v2 :compiled-rev v3)
 (:layout :current "three-up" :available ("single" …))
-(:activity :id a :name "clim-web" :status "…" :wants-you nil :tier :trusted|:restricted :epoch n)
+(:activity :id a :name "clim-web" :status "…" :wants-you nil :tier :trusted|:restricted
+           :version "…")             ; the Image's own metadata; carries no epoch authority
+(:activity :id a :epoch n)           ; session announcement from the Bridge, activity 0 only (§3.3)
 (:definition :name scan-buffer :buffer b :rev v :range (from to)
              :compiled t|nil :written t|nil :state :in-image-only|…)   ; per-definition state (G31)
 (:attention :activity a :reason :break|:finished|:output)
