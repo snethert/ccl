@@ -30,6 +30,11 @@ rather than a documented one.
 The goal is therefore not a prettier Emacs. It is: **the nouns are on screen,
 and the verbs are derived from them.**
 
+Two things this design faces that the Lisp Machine did not: history lives in a
+distributed repository other people push to (§5), and the interface must show
+material the image cannot read (§12). Both are boundaries, and both are drawn
+explicitly rather than hidden.
+
 ---
 
 ## 2. Architecture the interface assumes
@@ -44,7 +49,8 @@ is the browser; no native mobile build is in scope.
 2. **The wire carries objects and events, never code.** No streamed value is
    ever evaluated by the client: no handler thunks, no computed layout
    expressions. Gestures identify a presentation by id and send it back; the
-   image decides what that means.
+   image decides what that means. G36 restates this for content that the
+   client fetches itself.
 3. **The image runs in a worker; the page renders.** Dynamic compilation stays
    available — the browser's JIT compiles the modules the Lisp compiler emits —
    so no flatten or ahead-of-time step is needed.
@@ -162,6 +168,8 @@ list is a requirement, not an illustration.
 | Settings and key bindings | edit value, edit declaration, revert a layer |
 | Differences between versions | apply, revert |
 | Ring entries | insert object, insert printed form, drop |
+| Systems, modules, dependencies | compile, load, plan, add component, add dependency |
+| Documents and citations (§12) | open at page, cite, attach to a definition, yank the text |
 
 **G10. File versions are first class, and git is where they live.**
 A version is a `(path, commit)` pair, not a per-file counter. The history of a
@@ -345,6 +353,11 @@ Moving between those states is a command over a set of definitions
 (*write changed definitions to files*), not a separate save ritual. Nothing
 should be able to sit in the first state unnoticed.
 
+**G32. Module state is per module, not per repository.**
+Loaded, compiled, stale against its source, and the commit it was built from
+are facts about a module, shown on the module. A system knows how to bring
+itself up to date without the user tracking which files changed.
+
 **G33. The system definition stays source; what is derived gets the screen.**
 The `.asd` is ordinary, authoritative, hand-editable source — a
 machine-owned project file would be the `custom-set-variables` mistake at
@@ -366,11 +379,6 @@ This is what Genera actually offered around systems: a presented view of the
 system object, commands taking it as an argument, and a plan you could read
 before committing to it. It did not offer a form editor for `defsystem`, and
 neither should this.
-
-**G32. Module state is per module, not per repository.**
-Loaded, compiled, stale against its source, and the commit it was built from
-are facts about a module, shown on the module. A system knows how to bring
-itself up to date without the user tracking which files changed.
 
 ---
 
@@ -410,7 +418,76 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 13. Visual system
+## 13. Not yet addressed
+
+Lisp Machine properties this design wants and does not yet have. These are
+gaps, not rejections: nothing here has been argued against, and several are
+load-bearing for goals already stated.
+
+**13.1 Interrupting a running computation.** Any Lisp Machine computation
+could be stopped from the keyboard and left in the debugger. Here the image is
+single-threaded in a worker with no preemption, and a loop that allocates
+nothing may never yield. Constraint 4 says the interface stays live while the
+image is busy — true of the pointer and the display, but the user currently
+has no way to *stop* what is blocking. This needs a decision about safepoints,
+runtime interrupt checks, or a watchdog that can terminate the worker and lose
+the heap. It is the most consequential gap in the list.
+
+**13.2 Notifications and background attention.** A process that breaks,
+finishes, or wants to print while its pane is not on screen. Genera posted a
+notification, and output to a hidden window was a decision the window made
+(permit, notify, expose), never silently lost. G15 halts one process without
+stopping the system, but nothing carries that break to the user, and nothing
+says what happens to output written to a pane the current layout does not
+show.
+
+**13.3 Compiler warnings as presentations.** The design never says where a
+warning goes. Compilation produces conditions about specific source ranges,
+and they should be presentations anchored there with verbs — go to it, explain
+it, mute this one — and walkable as a set, not a log that scrolls past. This
+is the natural companion to G31's changed-definition list.
+
+**13.4 Activities.** `SELECT-L`, `SELECT-E`: several concurrent contexts, each
+with its own process and state, created on demand and switched by a keystroke.
+Layouts (G19) rearrange panes within one context; they do not give you two
+projects open at once, two listeners, or a debugger you can step away from and
+come back to. Nothing in the design covers this, and 13.2 depends on it.
+
+**13.5 Image snapshot and resume.** The band. Save the heap, come back to it.
+In a browser this is both feasible — persist the linear memory — and
+load-bearing: screen 14's "in the image only, lost on restart" stops being a
+hazard the moment the image survives a restart. It interacts with the wasm32
+ceiling and with storage eviction (§17).
+
+**13.6 Command history as re-executable objects.** The ring holds objects
+(G11); commands are not in it. Past commands should be presentations you can
+edit and re-run, with their arguments still live objects rather than printed
+text.
+
+**13.7 Generated dialogs for whole argument sets.** G25 derives an editor for
+one setting from its type. CLIM's `accepting-values` does the same for a set
+of typed values at once, which is the right answer for commands with more
+arguments than a single command line carries comfortably. Stated for settings,
+not yet for commands.
+
+**13.8 The inspector as a place with history.** Inspection verbs exist and
+views render inline, but there is no navigable inspector: descend into a slot,
+go back, keep the trail. Deep exploration without a trail loses its way.
+
+**13.9 Undo, and its honest limits.** No goal addresses it. Three substrates
+behave differently: editor text is undoable; image state largely is not,
+though G31's record of changed definitions supports *revert to loaded*; git
+has revert. The design should say plainly which is which rather than implying
+a single undo stack.
+
+**13.10 Live system health.** Peek showed processes, storage and network,
+updating continuously. With a hard heap ceiling and a single worker, headroom,
+collection activity and worker liveness are facts the user needs before they
+become failures.
+
+---
+
+## 14. Visual system
 
 - **Two typefaces.** One for interface text, one monospace for code and data.
 - **One ground, one panel, one divider.** Separation is a single pixel line;
@@ -427,7 +504,7 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 14. Budgets
+## 15. Budgets
 
 - **Interaction:** no interaction may require a client↔image round trip per
   animation frame. Highlighting, scrolling, pointer documentation and drag
@@ -442,7 +519,7 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 15. Non-goals and rejected alternatives
+## 16. Non-goals and rejected alternatives
 
 - **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
   the elisp ecosystem are not.
@@ -462,7 +539,7 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 16. Open questions
+## 17. Open questions
 
 1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
    and backgrounding? This decides whether the embedded-runtime fallback is
@@ -486,7 +563,7 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 17. Reference screens
+## 18. Reference screens
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
