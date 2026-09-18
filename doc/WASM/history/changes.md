@@ -1949,3 +1949,16 @@ menu, insert mode in input lines and dialogs, a non-modal alternative as a
 setting, and every screen chord rebound under the leader. §33 lists the
 screen changes; §34 defines the first prototype, built against native CCL
 over a socket. No Stage 1 record changes.
+
+## 2026-09-18 — IDE reference screens redrawn from source
+
+The twenty-three screens under `doc/WASM/ui-screens/` are redrawn to the
+second revision of `ui-overview.md`: leader sequences replace every ⌘-chord,
+editable panes show the editor's mode, the gesture rule, declared command
+presentation, known callers, the shelf, an expired presentation, restarts the
+fixture really establishes, image facts stated as such, typed entry before
+sliders, quiescent restore wording, the lifted de-emphasis grey, and one
+consistent fixture story. The screens are now HTML source (`src/screens.html`,
+`src/screens.css`, vendored IBM Plex) rendered by `src/render.sh` with
+headless Chrome at 3×; the first set's JPEGs remain in history at d51d6d35.
+§33 of the document records the list as applied. No Stage 1 record changes.

@@ -1150,15 +1150,14 @@ Registered, with the question stated rather than a guess recorded.
 
 ## 32. Reference screens
 
-The screens are committed in [ui-screens/](ui-screens/README.md), one JPEG
-per screen, numbered as below.
+The screens are committed in [ui-screens/](ui-screens/README.md), one PNG
+per screen, numbered as below, rendered from the HTML source beside them.
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
 3. Verbs from nouns — applicable commands for a class.
 4. Files as objects — versions, staleness, multi-selection into a command.
-5. The shelf — objects with provenance; inserting keeps identity. (The
-   screen is still titled *Ring*; §33.)
+5. The shelf — objects with provenance; inserting keeps identity.
 6. Break, fix, resume — condition, restarts, frames, locals, source.
 7. The image explains itself — generated documentation, system sources.
 8. Named layouts — arrangements as objects.
@@ -1218,7 +1217,10 @@ consistent story about it.
   is a mock until open question 11 is answered.
 
 **Changes the second revision implies.** These follow from Codex's review
-and the §20 decision, and they touch most screens.
+and the §20 decision, and they touch most screens. They have been applied:
+the screens in `ui-screens/` are the redrawn set, kept as HTML source and
+rendered from it, and every item below and every fixture discrepancy above
+is fixed in them. The list stays as the record of what changed.
 
 - Every ⌘-chord becomes a leader sequence: screen 3's ⌘E and ⌘D; screen 8's
   ⌘1 to ⌘5 and ⌘⇧L; screen 9's ⌘⇧T; screen 12's ⌘E and ⌥Y; screen 17's ⌘.
@@ -1228,7 +1230,7 @@ and the §20 decision, and they touch most screens.
 - Screen 1's documentation line says "click edit definition" over an
   editable buffer. Under G5 a click places the caret; the line should read
   the modified-click and the normal-mode verb instead.
-- Every screen with an editable pane (1, 4, 10, 15, 19) shows the editor's
+- Every screen with an editable pane (1, 2, 3, 9, 10, 15, 19) shows the editor's
   mode in the pane header, beside the buffer state (G62).
 - Screen 3 gains the declared explanation and consequence lines for each
   command (G7), which the menu now has room for.
