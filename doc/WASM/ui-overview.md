@@ -979,6 +979,9 @@ Registered, with the question stated rather than a guess recorded.
 
 ## 32. Reference screens
 
+The screens are committed in [ui-screens/](ui-screens/README.md), one JPEG
+per screen, numbered as below.
+
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
 3. Verbs from nouns — applicable commands for a class.

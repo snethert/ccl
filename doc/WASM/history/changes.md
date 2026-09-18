@@ -1921,3 +1921,12 @@ target budget applies to controls, not inline presentations. §33 records the
 fixture and contrast discrepancies found in the screens, with measured
 ratios. The document is a draft and no Stage 1 record, gate count or
 acceptance changes.
+
+## 2026-09-18 — IDE reference screens added
+
+The twenty-three reference screens for `ui-overview.md` are committed under
+`doc/WASM/ui-screens/` as the source PDF's own page images, extracted byte
+for byte, with an index mapping each screen to the goals it illustrates and
+the PDF's hash. The user directed that the stream specification on `master`
+not be brought onto `wasm2` or reconciled now; `ui-overview.md` still names
+it as a companion. No Stage 1 record changes.
