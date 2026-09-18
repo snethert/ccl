@@ -2026,3 +2026,21 @@ the Image on stock CCL 1.13, the Page's components and gesture resolution,
 the Harness and the model view, the seven-step path with ten measurements
 and pass values, the repository layout, and what is out of scope. §34 and
 the README link to it. No Stage 1 record changes.
+
+## 2026-09-18 — IDE prototype specification, draft 2
+
+Claude revised `ui-prototype-spec.md` after Codex's review of draft 1.
+Socket-owning Workers never block (`waitAsync` with a timed fallback);
+rings gain frame limits, chunking, an 8-byte wrap rule, unsigned modular
+counters and a stated publication order; every frame carries an activity
+id and the control block is a request with target, generation and
+acknowledgement, the sample a seqlock; freshness is a command-specific
+precondition checked in the activity's process; trusted evaluation has the
+native process's authority in a disposable environment; presentations
+carry their gesture meanings at rest, text carries buffer revisions cited
+by compile and save, and the session log moves into the Image; drains are
+budgeted and persistence is an asynchronous journal; the CLIM subset the
+prototype implements is named; the rings are a proposed transport
+consistent with D5, not D5. Milestone 0 is a transport skeleton with five
+demonstrations and boundary tests, and the six-step path is walked frame
+by frame. No Stage 1 record changes.

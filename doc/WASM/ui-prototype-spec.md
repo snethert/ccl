@@ -1,7 +1,17 @@
 # IDE Prototype — Technical Specification
 
-Status: draft, 18 September 2026. Implements §34 of [ui-overview.md](ui-overview.md).
+Status: draft 2, 18 September 2026. Implements §34 of [ui-overview.md](ui-overview.md).
 Companion: [ui-screens/](ui-screens/README.md).
+
+Draft 2 follows Codex's review of draft 1 (ae61ac8f): socket-owning
+Workers no longer block; rings have frame limits, chunking, an 8-byte wrap
+rule and unsigned arithmetic; frames carry an activity id and the control
+block is a request with a target and an acknowledgement; freshness is a
+command-specific precondition, not a printed-form hash; trusted evaluation
+has the native process's authority; the wire carries what the
+documentation line needs at rest; drains have a budget and persistence is
+asynchronous; the CLIM subset is named; the rings are a proposed transport
+consistent with D5, not D5 itself; and a transport skeleton comes first.
 
 This document specifies the first working path of the IDE against native
 CCL. It is written to be built from: every section names a component, its
@@ -16,9 +26,11 @@ is structural and stated in §3.2: the browser offers no way to hand a
 `SharedArrayBuffer` to a Worker except one `postMessage` at creation, so the
 bootstrap sends exactly one, carrying the buffers and nothing else, and no
 message is ever sent again in either direction. Every other byte moves
-through the rings. This is the port's own arrangement (an Atomics mailbox
-over shared memory, `decisions.md` D5) applied to the interface, so the
-transport the prototype exercises is the transport the port will use.
+through the rings. The rings are a proposed transport consistent with the
+port's architecture — an Atomics mailbox over shared memory,
+`decisions.md` D5 — and are not that mailbox; D5 specifies the image's
+requests to its host, and this document specifies the interface's stream
+to its page. When the image runs in the Worker, both exist side by side.
 
 ---
 
@@ -34,23 +46,24 @@ transport only.
 
 It does not measure interrupt latency, the heap ceiling, cold start,
 snapshot cost or collector behaviour. Those are the port's (§31, items 1, 2,
-7, 8), and the prototype's busy-image case is simulated (§8.3).
+7, 8), and the prototype's busy-image case is simulated (§8.4).
 
 ## 2. Architecture
 
-Four processes, three of them in the browser's process model:
+Four components, three of them in the browser's process model:
 
 | Component | Runs in | Owns | Talks to |
 | --- | --- | --- | --- |
 | **Page** | the document's main thread | rendering, the record tree, the editor, input, focus, accessibility | the Bridge, through rings |
-| **Bridge** | a dedicated Worker | the rings' far ends, the connection to the image, the control word | the Page through rings; the Host through one WebSocket per activity plus one control socket |
-| **Host** | a Node process on the developer's machine | the static files with cross-origin isolation headers, the relay between WebSocket and TCP, later the git proxy of constraint 8 | the Bridge and the Image |
-| **Image** | native CCL, one process | everything Lisp: presentations, commands, conditions, definitions, the model view | the Host over TCP, one connection per activity |
+| **Bridge** | one dedicated Worker | the rings' far ends, one WebSocket per activity, the control socket, the control block | the Page through rings; the Host through sockets |
+| **Host** | a Node process on the developer's machine | static files with cross-origin isolation headers; the relay between WebSocket and TCP; later the git proxy of constraint 8 | the Bridge and the Image |
+| **Image** | native CCL, one process | everything Lisp: presentations, commands, conditions, definitions, the session log, the model view | the Host over TCP, one connection per activity plus one control connection |
 
 The Bridge is the seam. Today it relays frames between rings and sockets;
 when the port is ready it is the Worker the image runs in, and the rings
 become the image's own output and input streams. The Page never changes.
-The Host never runs Lisp and never sees the heap.
+The Host never runs Lisp, never sees the heap and never interprets a
+frame.
 
 A fifth component, the **Harness** (§7), is a Node process that speaks the
 same frames to the Image over TCP for the agent path. It does not use the
@@ -59,6 +72,9 @@ rings; it is the remote client of constraint 6.
 ### 2.1 What never happens
 
 - The Page never blocks. It never calls `Atomics.wait`.
+- A Worker that owns a socket never calls `Atomics.wait` without a timeout,
+  because a blocked Worker cannot run the task that delivers the socket's
+  next message. The Bridge owns sockets, so the Bridge never blocks (§3.4).
 - The Bridge never receives a message after bootstrap and never posts one.
 - The Host never interprets a frame; it relays bytes.
 - No frame carries code, and no frame is evaluated (constraint 2, G86).
@@ -73,149 +89,220 @@ carries bytes in one direction between one producer and one consumer.
 ```
 offset  size  field        owner      meaning
 0       4     magic        static     0x434C494D ("CLIM")
-4       4     version      static     1
+4       4     version      static     2
 8       4     capacity     static     data region size in bytes, a power of two ≥ 65536
-12      4     head         producer   bytes written, monotonic u32 (mod 2^32)
+12      4     head         producer   bytes published, monotonic u32 (mod 2^32)
 16      4     tail         consumer   bytes consumed, monotonic u32 (mod 2^32)
-20      4     generation   producer   incremented on reset; a consumer seeing a change discards state
+20      4     generation   producer   incremented on reset
 24      4     closed       producer   1 when no more bytes will be written
 28      4     dropped      producer   frames dropped for lack of space (page→bridge ring only)
 32      32    reserved
 64      cap   data
 ```
 
-All header words are accessed with `Atomics` on an `Int32Array` view.
-Position of byte index *i* is `i mod capacity`. Free space is
-`capacity − (head − tail)`; readable bytes are `head − tail`.
+Header words are accessed with `Atomics` on an `Int32Array` view, because
+`wait` and `notify` require one. Every value read from `head` or `tail` is
+converted to unsigned (`x >>> 0`) before arithmetic, and differences are
+taken modulo 2^32: readable bytes are `(head − tail) >>> 0`, free bytes are
+`capacity − readable`. Ordinary signed subtraction of the raw words is a
+defect once either counter crosses 2^31, and a boundary test (§8.1, B4)
+starts the counters at 2^31 − 64 to prove the arithmetic.
 
-### 3.2 The rings and the control word
+Position of byte index *i* is `i mod capacity`.
 
-| Buffer | Direction | Capacity | Purpose |
-| --- | --- | --- | --- |
-| `out` | Bridge → Page | 4 MiB | presentation stream, documentation line, command-line state, panes, activities, answers |
-| `in` | Page → Bridge | 256 KiB | gestures, commands, argument acceptance, queries, buffer text for evaluate and compile |
-| `ctl` | both | 64 bytes | the control word (§3.5), the heartbeat sample (§3.6) |
+**Publication order.** The producer writes the frame's bytes, then stores
+`head` with `Atomics.store`, then calls `Atomics.notify` on `head`. The
+consumer reads `head`, reads the bytes up to it, then stores `tail` and
+notifies on `tail`. Bytes are never read past a published `head` and never
+overwritten before `tail` has passed them.
+
+**Reset.** The producer increments `generation`, then sets `head` and
+`tail` to 0, then notifies both. A consumer that observes a changed
+`generation` discards its partial frame state and re-reads from `tail`.
+Reset is used only when an activity's connection is replaced; it is not a
+flow-control mechanism.
+
+### 3.2 The rings and the control block
+
+| Buffer | Direction | Capacity | Frame limit | Purpose |
+| --- | --- | --- | --- | --- |
+| `out` | Bridge → Page | 4 MiB | 1 MiB | presentation stream, surface state, answers |
+| `in` | Page → Bridge | 1 MiB | 256 KiB | gestures, commands, queries, buffer text |
+| `ctl` | both | 128 bytes | — | the pending word, the control request, the sample (§3.5, §3.6) |
+
+The frame limit is one quarter of capacity. A payload larger than the limit
+is chunked (§3.3). A payload larger than 16 MiB is refused by the sender
+with a condition; nothing in the prototype approaches it.
 
 At bootstrap the Page allocates all three, starts the Bridge Worker, and
-posts them once. The Bridge acknowledges by writing `version` into `out`'s
+posts them once. The Bridge acknowledges by storing `version` into `out`'s
 header. From then on there is no message traffic; a debug build asserts
-that `onmessage` is never invoked again on either side.
+that `onmessage` is never invoked again on either side (M9).
 
 ### 3.3 Frames
 
-A frame is a length-prefixed payload:
+Every frame begins on an 8-byte boundary and is padded to one:
 
 ```
 u32   length      payload bytes, not counting this header
+u32   activity    activity id; 0 for frames about the session itself
 u8    channel     see below
-u8    flags       bit 0: payload is a continuation of the previous frame (unused in v1)
-u16   sequence    per-channel, wraps
+u8    flags       bit 0: more chunks follow; bit 1: this is a continuation chunk
+u16   sequence    per activity and channel, wraps
+u32   reserved    0
 bytes payload
-pad   to a 4-byte boundary
+pad   to an 8-byte boundary
 ```
 
-If a frame would not fit before the end of the data region, the producer
-writes a pad frame (`channel 0xFF`, payload of whatever length reaches the
-end) and continues at position 0. A consumer skips pad frames. Frames are
-never split across the wrap.
+**Chunking.** A payload larger than the ring's frame limit is sent as
+chunks of at most the limit, the first with bit 0 set, the middle ones with
+bits 0 and 1 set, the last with bit 1 only. Chunks of one payload carry
+consecutive sequence numbers on the same activity and channel, and no other
+frame on that activity and channel is interleaved. The consumer reassembles
+before parsing. A payload within the limit has both bits clear.
+
+**Wrap.** Because frames are 8-byte aligned and the data region's size is a
+multiple of 8, the space left before the end of the region is always a
+multiple of 8, so a pad frame header always fits. If a frame would not fit
+before the end, the producer writes a pad frame (`channel 0xFF`, length set
+so the frame ends exactly at the region's end, which may be zero) and
+continues at position 0. Frames are never split across the wrap. A
+consumer skips pad frames. Boundary tests B1–B3 (§8.1) place a frame at
+every remainder from 0 to 56 bytes.
 
 Channels:
 
 | channel | ring | content |
 | --- | --- | --- |
 | `0x01 P` | out | presentation stream (§4.1) |
-| `0x02 S` | out | surface state: documentation line, command line, panes, layouts, activities, attention (§4.2) |
+| `0x02 S` | out | surface state (§4.2) |
 | `0x03 A` | out | answers to queries (§4.4) |
 | `0x11 E` | in | gestures and events (§4.3) |
 | `0x12 C` | in | commands and argument acceptance (§4.3) |
 | `0x13 Q` | in | queries (§4.4) |
-| `0x14 T` | in | text: buffer contents for evaluate, compile, save (§4.3) |
+| `0x14 T` | in | text: buffer contents with revisions (§4.3) |
 | `0xFF` | both | pad |
 
 Payloads are UTF-8 S-expressions in the restricted grammar of §4.5.
 
 ### 3.4 Waking and waiting
 
-The producer, after advancing `head`, calls `Atomics.notify` on `head`. The
-consumer, after advancing `tail`, calls `Atomics.notify` on `tail`.
+After publishing `head` the producer notifies on `head`; after storing
+`tail` the consumer notifies on `tail`.
 
-- The **Bridge** consumes `in` by `Atomics.wait(in.head, seen)` and produces
-  `out` by `Atomics.wait(out.tail, seen)` when the ring is full. It blocks;
-  that is what Workers are for.
-- The **Page** consumes `out` by `Atomics.waitAsync(out.head, seen)` where
-  the browser provides it, and otherwise by reading `head` once per
-  animation frame. Either way it drains everything readable in one pass and
-  applies it before painting. It produces `in` without waiting: if free
-  space is short, the frame goes into a bounded local queue (256 frames)
-  and pointer-motion events in the queue are coalesced to the newest; if the
-  queue is full, the frame is dropped and `dropped` is incremented. A
-  dropped command is an error the Page shows; a dropped pointer event is
-  not.
+- The **Bridge** owns sockets, so it never blocks. It consumes `in` with
+  `Atomics.waitAsync(in.head, seen)` and, when `out` is full, waits for
+  space with `Atomics.waitAsync(out.tail, seen)`. Where `waitAsync` is
+  unavailable, it uses `Atomics.wait` with a 4 ms timeout inside an
+  `await`ed macrotask loop, so socket tasks run between waits. Socket
+  messages arriving while the Bridge is inside a ring operation are queued
+  by the event loop and handled on the next turn; nothing is lost.
+- The **Page** consumes `out` with `Atomics.waitAsync(out.head, seen)`
+  where available and otherwise reads `head` once per animation frame.
+  Each drain has a budget: at most 256 KiB or 4 ms, whichever comes first,
+  after which it yields and continues on the next frame, so sustained
+  output cannot monopolise the thread (M1, M2 under load). It produces `in`
+  without waiting: if free space is short, the frame goes into a bounded
+  local queue (256 frames); pointer-motion events in the queue are
+  coalesced to the newest; if the queue is full, the frame is dropped and
+  `dropped` is incremented. A dropped command or query is an error the Page
+  shows; a dropped pointer event is not.
 
 Budget (§29): the Page's per-frame cost with nothing to read is one atomic
-load. Measured in §8.
+load. Measured as M1.
 
-### 3.5 The control word
+### 3.5 The control block
 
-`ctl` offset 0 is the pending word, with the bit layout the port reserves
-(`decisions.md`, "Safepoints and explicit stacks"): bit 0 collection
-pending (unused here), bit 1 interrupt requested, bit 2 sample requested.
-The Page sets a bit with `Atomics.or` and notifies; the Bridge waits on the
-word in a second thread of control (a `setInterval`-free loop is not
-possible in one Worker, so the Bridge uses two Workers internally: one
-blocked on `in`, one blocked on `ctl`, sharing the same buffers). On
-interrupt the control Worker sends `(:interrupt :activity a)` over the
-control socket, which the Image services with `process-interrupt` on the
-activity's process, entering the debugger at the next safe point in Lisp
-terms. The bit is cleared by the Image's acknowledgement frame.
+`ctl` is a request block in the shape of the port's own (`decisions.md`,
+"Mailbox and lazy-install requests"): a target, an opcode, a generation, and
+a status word that is waited on.
 
-This is G38 with native CCL's interrupt in place of the port's safepoint.
-The latency it measures is the socket's, not the port's, and §8 says so.
+```
+offset  size  field        owner    meaning
+0       4     pending      Page     bit 1 interrupt requested, bit 2 sample requested (bit 0 reserved for the port)
+4       4     generation   Page     incremented for each request; the Bridge echoes it
+8       4     target       Page     activity id the request is for
+12      4     opcode       Page     1 interrupt, 2 sample
+16      4     status       Bridge   0 idle, 1 posted, 2 acknowledged by the Image, 3 failed (reason in 20)
+20      4     reason       Bridge   0 none, 1 no such activity, 2 connection lost, 3 refused
+24      8     reserved
+32      64    sample       Bridge   §3.6
+96      32    reserved
+```
+
+The Page makes a request by writing `target`, `opcode` and a fresh
+`generation`, then setting the pending bit with `Atomics.or`, then
+notifying on `pending`. One request is outstanding at a time; a second
+before acknowledgement is refused by the Page with reason 3. The Bridge
+waits on `pending` with `waitAsync`, sends `(:interrupt :activity a
+:generation g)` or `(:sample …)` on the control connection, stores
+`status` 1, and on the Image's `(:ack :generation g)` stores 2 and clears
+the bit; on socket loss it stores 3 with reason 2. The Page reads `status`
+and `generation` together and acts only when the generation is its own.
+
+Interrupt on the Image is `process-interrupt` on the activity's process
+with a function that signals `interrupt-request` (§5). This is G38 with
+native CCL's interrupt in place of the port's safepoint; the latency it
+measures is the socket's, and M7 says so.
 
 ### 3.6 The heartbeat sample
 
-`ctl` offset 16 holds the sample record G39 asks for: `u32 sequence`,
-`u32 activity`, `u32 ms-running`, `u32 bytes-allocated-kb`, `u32 gc-count`,
-`u32 current-function-id` (a symbol id from the P channel's symbol table).
-When bit 2 is set the Image writes a sample frame on the control socket,
-the control Worker copies it into `ctl` and clears the bit. The Page reads
-`ctl` when it wants to draw screen 17's panel and never waits for it. In
-the prototype the values come from CCL's `ccl::total-bytes-allocated`,
-`ccl::gccount` and the interrupted process's top frame; they are real, and
-the mechanism is the one open question 11 asks the port for.
+The sample at offset 32 is a seqlock:
+
+```
+u32 seq            odd while the Bridge is writing, even when complete
+u32 activity
+u32 ms-running
+u32 bytes-allocated-kb
+u32 gc-count
+u32 current-function   symbol id in the activity's table
+u32 reserved × 10
+```
+
+The Bridge writes `seq + 1` (odd), the fields, then `seq + 2` (even),
+with `Atomics.store` in that order. The Page reads `seq`, the fields, and
+`seq` again, and retries if the two differ or the first was odd, so it
+never combines fields from two samples. Values come from CCL's
+`ccl::total-bytes-allocated`, `ccl::gccount` and the top frame of the
+sampled process; they are real, and the mechanism is the one open question
+11 asks the port for.
 
 ## 4. The wire
 
 ### 4.1 The presentation stream (channel P)
 
-Output is a tree of records. The Image writes the tree as it draws it, and
-the Page holds it (constraint 5). Every record has an id unique for the
-activity's lifetime.
+Output is a tree of records per activity. The Image writes the tree as it
+draws it, and the Page holds it (constraint 5). Record and symbol ids are
+unique within an activity; the Page keys everything by `(activity, id)`.
 
 ```
-(:open :id r :parent p :kind k [:type t :obj o :state s :rev v :verbs n])
+(:open :id r :parent p :kind k
+       [:type t :obj o :state s :rev v
+        :gestures ("edit definition" "describe" "11 commands")])
 (:text :id r :s "…")
 (:close :id r)
 (:erase :id r)                      ; the record and its subtree are gone
 (:replace :id r)                    ; incremental redisplay: what follows until :close replaces r's subtree
 (:pin :id r :on t|nil)              ; G9.1 pinned state changed
 (:expire :ids (r …))                ; G9.1: these records left the window and nothing pins them
+(:sym :id n :name "…" :package "…") ; interned once per activity; referred to by id thereafter
 ```
 
 `kind` is `:text`, `:presentation`, `:group`, `:table`, `:row`, `:cell`,
-`:code` (a source form; the Page renders it in the code face), `:chip`.
-For `:presentation`: `:type` is the presentation type name, `:obj` is the
-object id (stable across records for the same object while it is live),
-`:state` is `:live`, `:historical`, `:pinned` or `:expired`, `:rev` is the
-inspection revision (§4.4), `:verbs` is the count of applicable commands in
-the null context. Symbols are interned once per activity by
-`(:sym :id n :name "…" :package "…")` and referred to by id thereafter, so
-a frame never repeats a package prefix.
+`:code`, `:chip`. For `:presentation`, `:type` is the presentation type,
+`:obj` the object id (stable across records for the same object while it
+is live), `:state` one of `:live`, `:historical`, `:pinned`, `:expired`,
+`:rev` the object's inspection revision (§4.4), and `:gestures` the three
+strings the documentation line shows for click, modified click and right
+click in the null context, computed by the Image when the record is
+written. With them the Page draws the documentation line for any record
+without asking (G5, M2), including while the Image is busy. What it cannot
+draw offline is the applicable set under a non-null context, which is a
+query (§4.4).
 
-Geometry is not on the wire. The Page lays out records; the Image's
-`formatting-table` and `formatting-item-list` become `:table` and `:group`
-records, and the Page's CSS does the rest. The port will draw to a canvas
-one day; the prototype does not, and the wire does not care.
+Geometry is not on the wire. The Page lays out; `:table` and `:group`
+come from the Image's table and item-list formatting, and the Page's CSS
+does the rest.
 
 ### 4.2 Surface state (channel S)
 
@@ -223,51 +310,67 @@ one day; the prototype does not, and the wire does not care.
 (:doc :left ((:b "pop-record") " — function, clim-web") :right "…")
 (:cmd :state :idle|:reading|:running :verb "Trace" :args ((:arg "runner" :obj o) …)
       :prompt "function-name" :type t :context c)
-(:pane :id p :name "presentations.lisp" :chips ("clim-web") :fact "edited 4 m ago" :editable t)
+(:pane :id p :name "presentations.lisp" :chips ("clim-web") :fact "edited 4 m ago"
+       :editable t :buffer b :rev v :saved-rev v2 :compiled-rev v3)
 (:layout :current "three-up" :available ("single" …))
-(:activity :id a :name "clim-web" :status "editing presentations.lisp" :wants-you nil)
+(:activity :id a :name "clim-web" :status "…" :wants-you nil :tier :trusted|:restricted)
 (:attention :activity a :reason :break|:finished|:output)
-(:mode-hint :pane p :insert t)      ; the Image asks the Page to open in insert mode (input lines, dialogs)
-(:grant :activity a :may (:evaluate :compile "clim-web" :files "/lisp/clim-web/") :tier :trusted)
+(:mode-hint :pane p :insert t)
+(:grant :activity a :may (…))
+(:ack :generation g)                ; control request acknowledged (§3.5), also echoed here for the transcript
 ```
 
-The command line's `:context` is the input-context id the Page must quote
-when it answers with a gesture or queries applicability (G7).
+A `:pane` that is editable names its buffer and three revisions, which is
+how G62 is drawn: unsaved when `:rev` > `:saved-rev`, uncompiled when
+`:rev` > `:compiled-rev`. The Page is the source of `:rev` (§4.3); the
+Image is the source of the other two.
 
 ### 4.3 Events, commands and text (channels E, C, T)
 
 ```
 (:gesture :record r :obj o :gesture :click|:alt-click|:right|:activate :context c)
-(:pointer :record r)                ; the pointer's record changed; coalesced; drives the documentation line locally and asks nothing
-(:key :pane p :key "…")             ; only for keys the Page does not own: none in v1
-(:command :name "trace" :args ((:obj o) (:string "…") (:integer 500)) :context c :rev v :seq n)
-(:accept :context c :arg (:obj o)|(:string "…"))
+(:pointer :record r)                ; coalesced; local only in v1, sent for the busy-image measurement
+(:command :name "…" :args (…) :context c :seq n [:pre (…)])
+(:accept :context c :arg (:obj o)|(:string "…")|(:integer n))
 (:cancel :context c)
-(:text :buffer b :range (from to) :s "…")   ; for :evaluate, :compile-buffer, :save
-(:leader :path ("l" "3"))           ; a leader sequence the Page could not resolve locally
+(:text :buffer b :rev v :range (from to) :s "…" :complete t|nil)
+(:leader :path ("l" "3"))
 ```
 
-`:rev` on a command that edits an object is the revision the Page or
-Harness last inspected it at (G86). The Image re-inspects before running
-and answers `(:stale …)` if the state differs.
+`:pre` is the command's precondition (§5, "Freshness"): what the sender
+believes about the state it is about to change. The Image checks it in the
+activity's process immediately before applying the change; a mismatch
+answers `(:stale …)` with the current value and applies nothing.
+
+`:text` carries the buffer's revision. A sequence of `:text` frames with
+ranges and `:complete nil` followed by one with `:complete t` transfers a
+whole buffer at one revision; the Image discards a partial transfer whose
+revision changes midway. `compile-buffer` and `save-buffer` name the
+revision they act on, and their answers cite it, which is what updates
+`:compiled-rev` and `:saved-rev` in the next `:pane` frame.
 
 ### 4.4 Queries and answers (channels Q, A)
 
 ```
-(:query :id q :applicable :context c)            → (:answer :id q :applicable ((r (v1 v2 …)) …))
-(:query :id q :verbs :obj o :context c)           → (:answer :id q :verbs ((:name "edit-definition" :key "e" :label "Edit Definition"
-                                                       :why "opens …" :consequence nil|"rewrites two files" :group :object|:class|:package) …))
-(:query :id q :inspect :obj o)                    → (:answer :id q :inspect :obj o :rev v :printed "…" :type t :slots ((name (:obj o2) …)))
+(:query :id q :applicable :context c :records (r …))
+   → (:answer :id q :applicable ((r (v …)) …))
+(:query :id q :verbs :obj o :context c)
+   → (:answer :id q :verbs ((:name "edit-definition" :key "e" :label "Edit Definition"
+        :why "opens …" :consequence nil|"rewrites two files" :group :object|:class|:package) …))
+(:query :id q :inspect :obj o)
+   → (:answer :id q :inspect :obj o :rev v :printed "…" :type t
+        :slots ((name :value (:obj o2)|(:string …)|… :rev v2) …))
 (:query :id q :complete :context c :prefix "…")   → (:answer :id q :complete ("…" …))
-(:query :id q :indent :form "(defmacro …)")       → (:answer :id q :indent ((name kind depth) …))
-(:query :id q :view :activity a :window n)        → (:answer :id q :view :rev v :items (…))       ; the model view, §7
+(:query :id q :indent :symbols (n …))            → (:answer :id q :indent ((n kind depth) …))
+(:query :id q :view :activity a :window n)        → (:answer :id q :view …)         ; §7
 (:query :id q :callers :obj o)                    → (:answer :id q :callers ((o2 :source :xref|:load) …) :complete nil)
+(:query :id q :log :path "…")                     → (:answer :id q :log ((time sha256 bytes) …))
 ```
 
-Every answer may instead be `(:error :id q :condition "…" :restarts (…))`,
-which the Page shows as a condition and the Harness receives as one (G86).
-Applicability is asked once per context change, never per record (G7);
-the Page caches the answer until `:cmd` announces a new context.
+Every answer may instead be `(:error :id q :condition "…" :restarts (…))`
+or `(:stale :id q :current …)`. Applicability is asked once per context
+change for the records the Page has on screen, never per record (G7); the
+Page caches the answer until `:cmd` announces a new context.
 
 ### 4.5 The grammar
 
@@ -275,34 +378,49 @@ Payloads are read on both sides by a hand-written reader that accepts
 exactly: lists, symbols (`[A-Za-z0-9*+!?<>=/_-]+`, case preserved, keywords
 with a leading colon), strings with `\"` and `\\` escapes, integers,
 decimal floats, `t` and `nil`. Nothing else: no `#`, no `'`, no `|`, no
-backquote, no packages on the wire (symbols are ids, §4.1). The Lisp side
-does not use `read`; it uses this reader, which cannot evaluate (G86). A
-payload that fails to parse is dropped and counted; a debug build logs it.
-
-Frame size limit 1 MiB. Text larger than that (a buffer to compile) is sent
-as several `:text` frames with ranges.
+backquote, no packages on the wire. The Lisp side does not use `read`; it
+uses this reader, which cannot evaluate (G86). A payload that fails to
+parse is dropped and counted; a debug build logs it.
 
 ## 5. The Image (native CCL)
 
-A system `clim-web` loaded into a stock CCL 1.13 on macOS, the project's
-reference host. It uses what CCL has and adds no kernel change.
+A system `clim-web` loaded into stock CCL 1.13 on macOS, the project's
+reference host. Stock CCL has no CLIM. The prototype implements the subset
+it needs and nothing more, in `image/present.lisp`:
+
+- presentation types: `define-presentation-type` with `:inherit-from` and
+  `presentation-subtypep` over a single-inheritance lattice; no type
+  parameters in v1;
+- presentations: `with-output-as-presentation` binding an object to a
+  record id, and the object table below;
+- translators: `define-presentation-to-command-translator` with `:gesture`
+  (`:click`, `:alt-click`, `:right`), `:tester`, `:documentation`, and the
+  declared `:why`, `:consequence`, `:key` and `:group` of G7;
+- commands: `define-command` with typed arguments, into a per-activity
+  command table; `accept` that reads a typed argument from a gesture or a
+  string;
+- input contexts: a per-activity stack with ids, pushed by `accept`.
+
+McCLIM is not used: its value is in backends that draw, and the prototype
+draws nothing on the Image side. If a later stage adopts it, the wire does
+not change.
 
 | Concern | Mechanism |
 | --- | --- |
-| Activities | one CCL process each, created by `(:command :name "new-activity")`; the listener activity exists at start |
-| Connection | one TCP connection per activity to the Host (`ccl:make-socket`), a reader thread and a writer thread per connection; frames as §3.3 without the pad rule |
-| Output | a `presentation-stream` class whose `stream-write-string` and `with-output-as-presentation` emit P frames; `formatting-table` emits `:table`; every form the listener prints is a `:code` record |
-| Presentations | `define-presentation-type` and `define-presentation-to-command-translator` as in CLIM II, over the image's own objects; the null-context translator set is computed when a record is written and its count sent as `:verbs` |
-| Applicability | the input-context stack per activity; `(:query :applicable)` walks the visible records the Page named and tests translators against the context; declared `:why`, `:consequence`, `:key` and `:group` come from the command's `define-command` options |
-| Objects | an `eq` weak hash table from object to id and a bounded strong table for the retention window (`record-history-depth` records) plus pins (G9.1); an object outside both is `:expired` and its id still names its last printed form |
-| Revisions | `(:query :inspect)` records `(obj . printed-form-hash)` under a monotonic revision; an editing command compares before running (G86) |
-| Conditions | `handler-bind` around every command and evaluation; the debugger surface is `compute-restarts`, `ccl::map-call-frames` for frames, `ccl::frame-named-variables` for locals; a `:condition` presentation, `:restart` presentations with `:state :live` until the dynamic extent ends, then `:expired` |
-| Interrupt | `process-interrupt` on the activity's process with a function that signals `interrupt-request`, from the control connection (§3.5) |
-| Definitions | `ccl:*record-source-file*` and `ccl::xref` on for the loaded systems; G31's three states from the image's definition record, the session log (§6.3) and `git status` |
-| Callers | `ccl::who-calls` when recorded, labelled `:xref`; observed callers from load, labelled `:load`; `:complete nil` always in the prototype |
-| Evaluation | `(:command :name "evaluate" :args ((:string "…")))` reads with the standard reader in the activity's package and `*read-eval*` bound to nil, in the activity's process; only for a `:trusted` activity (G89) |
-| Model view | §7 |
-| Grants | per activity, set at creation, enforced for files by wrapping `open` and `probe-file` in the activity's dynamic extent; the socket and the git proxy are the Host's to enforce |
+| Activities | one CCL process each, created by the `new-activity` command; the listener activity exists at start; each has an id, a tier, a package, a command table, an object table and a symbol table |
+| Connections | one TCP connection per activity to the Host (`ccl:make-socket`), a reader thread and a writer thread per connection; the control connection carries only `:interrupt`, `:sample` and `:ack` |
+| Output | a `presentation-stream` class whose `stream-write-string` and `with-output-as-presentation` emit P frames; every form the listener prints is a `:code` record |
+| Gestures at rest | when a `:presentation` record is written, the null-context translators for the three gestures are computed and their documentation strings sent as `:gestures` |
+| Applicability | `(:query :applicable)` tests each named record's object against the context's translators |
+| Objects | an `eq` weak table from object to id plus a bounded strong table for the retention window (`record-history-depth` records) and pins (G9.1); an object outside both is `:expired` and its id still names its last printed form |
+| Freshness | preconditions, per command: `edit-buffer` and `save-buffer` carry `(:buffer b :rev v)`; `redefine` carries `(:definition name :identity h)` where `h` hashes the current source form recorded for the name; `set-slot` carries `(:obj o :slot s :was (…))`; `store-value` and restart invocation carry the restart's id and are refused once its extent has ended. The check and the change run in the activity's process, so within an activity there is no interleaving. For an arbitrary mutable object touched from another activity there is no strong guarantee, and `(:inspect)` says so with `:rev` only |
+| Conditions | `handler-bind` around every command and evaluation; the debugger surface is `compute-restarts`, `ccl::map-call-frames`, `ccl::frame-named-variables`; a `:condition` presentation and `:restart` presentations `:live` until the dynamic extent ends, then `:expired` |
+| Interrupt | `process-interrupt` on the activity's process with a function that signals `interrupt-request`; `(:ack)` on the control connection |
+| Definitions | `ccl:*record-source-file*` and `ccl::xref` on for the loaded systems; G31's states from the definition record, the session log and `git status` run by the Image |
+| Session log | owned by the Image: every `save-buffer` appends `(path time sha256 bytes)` under `~/.clim-web/log/` and copies the bytes; `(:query :log)` reads it |
+| Callers | `ccl::who-calls` when recorded, labelled `:xref`; observed callers from load, `:load`; `:complete nil` always |
+| Evaluation | `evaluate` reads with the standard reader in the activity's package with `*read-eval*` nil, in the activity's process; only in a `:trusted` activity |
+| Authority | a `:trusted` activity has the native process's authority: everything CCL can do, it can do. The prototype therefore runs the Image in a disposable environment — a throwaway user account or container with only the project checkout — and says so on the image surface. A `:restricted` activity has its permitted commands and nothing else; `evaluate`, `compile-buffer`, `save-buffer` and `redefine` are absent from its table. Anything stronger is an external boundary and out of scope |
 
 The Image has no knowledge of rings, Workers or the page. It reads and
 writes frames on sockets.
@@ -313,16 +431,16 @@ writes frames on sockets.
 
 | Component | Contract |
 | --- | --- |
-| Ring client | §3; exposes `drain(handler)` and `send(channel, sexp)`; asserts no `onmessage` |
-| Record tree | a map from id to node with parent, kind, state and DOM element; applies P frames incrementally; `:replace` swaps a subtree without re-creating siblings |
-| Renderer | DOM elements per record; `:code` in the monospace face with the screens' tokens (`ui-screens/src/screens.css` is the stylesheet); presentations are real buttons or links with the accessible name "type, printed form, n commands" (G82) |
-| Editor | CodeMirror 6 with the vim extension for the prototype, chosen to be replaced (§27); modal, leader on space in normal mode, ⌥Space in the insert-only set; forms as text objects from the client reader |
-| Client reader | form boundaries for strings, comments, `#+`/`#-`, piped symbols, character and string syntax; asks `(:query :indent)` for indentation and caches by symbol id |
-| Input line | the command line as a real `<input>`; reads typed text or a gesture; the pending argument's type from `:cmd` |
-| Leader menu | the applicable list from `(:query :verbs)` filtered by prefix, drawn as screen 3; every row a button with the letter |
-| Documentation line | computed locally from the record under the pointer or caret and the cached applicable set; asks nothing |
+| Ring client | §3; `drain(handler, budget)` and `send(activity, channel, sexp)`; chunking and reassembly; asserts no `onmessage` |
+| Record tree | per activity, a map from id to node with parent, kind, state, gestures and DOM element; applies P frames incrementally; `:replace` swaps a subtree without re-creating siblings |
+| Renderer | DOM elements per record; the screens' stylesheet (`ui-screens/src/screens.css`); presentations are real buttons or links whose accessible name is "type, printed form, n commands" (G82) |
+| Editor | CodeMirror 6 with the vim extension for the prototype, chosen to be replaced (§27); modal; leader on space in normal mode, ⌥Space in the insert-only set; forms as text objects from the client reader; the buffer revision `:rev` increments on every change |
+| Client reader | form boundaries for strings, comments, `#+`/`#-`, piped symbols, character and string syntax; asks `(:query :indent)` for unknown symbols and caches by id |
+| Input line | a real `<input>`; reads typed text or a gesture; the pending argument's type from `:cmd` |
+| Leader menu | the applicable list from `(:query :verbs)` filtered by prefix, drawn as screen 3; every row a button with its letter |
+| Documentation line | from the record under the pointer or caret: its `:gestures` at rest, or the cached applicable answer while reading; asks nothing |
 | Activities and layouts | from S frames; switching is a command; layouts are CSS grid templates |
-| Persistence | editor text to `localStorage` on every change, keyed by buffer id, restored on load (G78's client half) |
+| Persistence | an asynchronous journal in IndexedDB: each buffer change appends `(buffer rev delta)`; a compaction every 200 entries; the pane header shows the persisted revision beside G62's states; a quota failure is shown as a condition with *keep going without persistence* as the restart, never a silent stop |
 | Keyboard reach | `j`/`k` move sensitivity between presentations in non-editable panes, `↩` activates, Escape by the §20 order |
 
 ### 6.2 Gestures
@@ -330,14 +448,8 @@ writes frames on sockets.
 The Page resolves gestures by G5 before sending anything: in an editable
 pane in insert mode a click places the caret and sends nothing; ⌥click and
 normal-mode `↩` send `(:gesture :activate)`; in output panes a click sends
-`:click`; while `:cmd` says `:reading`, any click on a record of the wanted
+`:click`; while `:cmd` says `:reading`, a click on a record of the wanted
 type sends `(:accept …)` and other clicks do nothing.
-
-### 6.3 What the Page keeps that the Image does not
-
-The session log of G10.1 lives on the Host in the prototype: every save
-appends `(path, time, sha256, bytes)` to `~/.clim-web/log/` and the Image
-reads it over a `:query`. The Page never writes files.
 
 ## 7. The Harness and the model view
 
@@ -345,16 +457,18 @@ The Harness is a Node process: it connects to the Host as a client of one
 activity, issues `(:query :view)`, formats the answer and the `(:query
 :verbs)` manifest for the model, sends the person's prompt with them, parses
 the reply, validates each command against the manifest and the grammar,
-and sends it as `(:command …)` with the view's `:rev`. Messages that are
-not commands go to the activity's transcript as `(:command :name "say"
-:args ((:string "…")))`, which the Image prints with the agent's name.
+and sends it as `(:command …)` with the precondition the view supplied.
+Messages that are not commands go to the activity's transcript as `say`,
+which the Image prints with the agent's name.
 
 The model view answer is:
 
 ```
 (:view :rev v :activity a :window n
   :items (((:id r :kind :code :s "(scan-buffer *runner*)")
-           (:id r :kind :presentation :type hash-table :obj o :printed "#<HASH-TABLE eql, 14 entries>" :state :live :rev v2 :verbs 8 :from "Transcript 2 min ago")
+           (:id r :kind :presentation :type hash-table :obj o
+            :printed "#<HASH-TABLE eql, 14 entries>" :state :live :rev v2 :verbs 8
+            :from "Transcript 2 min ago")
            (:id r :kind :text :s "14") …)
   :cmd (:state :idle) :doc "…" :activities (…) :grants (…))
 ```
@@ -364,91 +478,156 @@ window, with interiors omitted; the Harness descends with `(:query
 :inspect)`. Two harnesses are built in that order: first an MCP server that
 exposes the view as resources and the manifest as tools to the vendors'
 harnesses, with their file and shell tools disabled for the session; second
-a direct API loop under the Harness's own control (§35).
+a direct API loop under the Harness's own control (§35). A `:restricted`
+activity's manifest never contains `evaluate`, `compile-buffer`,
+`save-buffer` or `redefine`, and the Image refuses them if asked anyway.
 
-Tiers (G89): the activity's `:tier` is set at creation; a `:restricted`
-activity's manifest never contains `evaluate` or `compile`, and the Image
-refuses them if asked anyway.
+## 8. Milestones, the path, and what is measured
 
-## 8. The path, and what is measured
+### 8.1 Milestone 0: the transport skeleton
 
-### 8.1 The path
+Before any editor exists, a skeleton of Page, Bridge, Host and a stub Image
+that echoes commands as records demonstrates, with tests that fail before
+and pass after:
 
-1. Open `presentations.lisp` in the clim-web activity. Edit `scan-buffer`
-   in normal mode using form text objects.
-2. Evaluate the definition from the editor (`SPC e v`). See it appear in
-   *Changed since load* as "in the image only".
-3. Inspect the result in the transcript; descend one slot; step back.
-4. Call it with input that fails the `check-type`. Land in the debugger
-   with the three restarts the fixture establishes.
-5. Choose *Skip this record and continue the loop*. See the process resume
-   and the debugger record expire.
-6. Write changed definitions to files. See the state move to "in a file and
-   the session log".
-7. Repeat 1–6 keyboard-only; with a screen reader at 200% text; from the
-   Harness with Fable and with Codex; and with the image busy (§8.3).
+| # | Demonstration | Passes when |
+| --- | --- | --- |
+| D1 | One request and response with idle input | a `:command` is answered while `in` is otherwise empty and the Page's drain cost stays at one atomic load per frame |
+| D2 | Two simultaneous activities | records with the same id in two activities render in the right panes; commands route to the right socket; closing one activity leaves the other's frames intact |
+| D3 | Full-ring backpressure | with the Page not draining, the Bridge waits for space without blocking its sockets, and a control request during the wait is acknowledged; when draining resumes no frame is lost or duplicated |
+| D4 | Wrap boundaries | frames placed to leave every remainder from 0 to 56 bytes before the wrap, chunked payloads at the limit, and counters started at 2^31 − 64, all read back byte-identical |
+| D5 | Interrupt during congestion | with `out` full and the stub Image looping, a control request reaches the Image and is acknowledged within the socket's round trip |
 
-### 8.2 Measurements
+Boundary tests B1–B4 are D4's four cases run under `node host/test.js`
+without a browser, against the ring library alone.
+
+### 8.2 The path, frame by frame
+
+The six steps of §34, with every frame that crosses. `A` is the clim-web
+activity, `L` the listener activity.
+
+1. **Edit `scan-buffer`.** The Page opens the buffer: `(:command :name
+   "open-buffer" :args ((:string "presentations.lisp")))` → the Image
+   answers with `:pane` (buffer `b`, `:rev 0`, `:saved-rev 0`,
+   `:compiled-rev 0`) and `:text` frames on channel S carrying the file.
+   Every keystroke increments `:rev` locally and appends to the journal;
+   nothing crosses. Normal-mode `daf` on a form is local.
+2. **Evaluate the definition.** `SPC e v` sends `(:text :buffer b :rev 17
+   :range (from to) :s "(defun scan-buffer …)" :complete t)` then
+   `(:command :name "evaluate-form" :args ((:buffer b :rev 17 :range (from
+   to))) :context c)`. The Image reads the form, compiles it in A's process,
+   records the definition as changed from the editor at revision 17, and
+   answers on P with a `:code` record of the form and a `:presentation` of
+   the function (`:gestures ("edit definition" "describe" "9 commands")`),
+   and on S with `:pane` (`:compiled-rev 17`) and the *Changed since load*
+   pane's records: `scan-buffer` in state "in the image only".
+3. **Inspect.** A click on the function's record in the transcript sends
+   `(:gesture :record r :obj o :gesture :click :context c0)`; the Image
+   answers with the inspector pane's records. `↩` on the `pending-forms`
+   slot sends `(:query :inspect :obj o2)`; the answer carries the slots
+   with `:rev`s; the Page replaces the pane and extends the trail locally.
+   `h` restores the previous records from the Page's own tree; nothing
+   crosses.
+4. **Fail the check-type.** `(scan-buffer *runner*)` typed in A's input
+   line is `(:command :name "evaluate" :args ((:string "(scan-buffer
+   *runner*)")))`. The Image's handler catches the `type-error`, computes
+   the restarts, and sends the debugger pane: the condition presentation,
+   three `:restart` presentations (`:live`), the frames, the locals as
+   presentations, and `:attention :reason :break` on S. The `:cmd` frame
+   announces context `c1` reading a restart.
+5. **Choose a restart.** `↩` on the second restart sends `(:command :name
+   "invoke-restart" :args ((:obj restart-1)) :context c1 :pre (:restart
+   restart-1 :extent-live t))`. The Image checks the extent is live,
+   invokes it, the process resumes, and it sends `(:expire :ids (…))` for
+   the debugger's records and `:cmd :state :idle`.
+6. **Write to files.** `(:command :name "write-changed-definitions" :args
+   ((:definitions (scan-buffer))))`: the Image rewrites the form in
+   `presentations.lisp` in place, appends to the session log, runs `git
+   status`, and answers with `:pane` (`:saved-rev 17`) and the *Changed
+   since load* records now "in a file and the session log". The Page's
+   journal notes the persisted revision.
+
+Any step's answer may be `:stale` or `:error`, and the Page shows both as
+conditions on the command that asked.
+
+### 8.3 Measurements
 
 | # | What | How | Pass |
 | --- | --- | --- | --- |
 | M1 | Page idle cost | `performance.measure` around the per-frame drain with nothing to read, 10 000 frames | median < 50 µs |
-| M2 | Gesture to documentation line | pointer moves onto a record → text updated, no ring traffic | median < 1 frame; zero frames sent |
+| M2 | Gesture to documentation line | pointer moves onto a record → text updated from `:gestures`, no ring traffic; repeated with the Image held (§8.4) | median < 1 frame; zero frames sent |
 | M3 | Command round trip | `:command` sent → first P frame received, 1 000 commands | median < 20 ms on localhost |
-| M4 | Applicability answer size | bytes of `(:answer :applicable)` for a 2 000-record transcript | < 64 KiB; time < 30 ms |
+| M4 | Applicability answer size | bytes and time of `(:answer :applicable)` for 2 000 named records | < 64 KiB; < 30 ms |
 | M5 | Retention | heap held by the object table after 10 000 forms with window 2 000 | bounded: grows with pins only |
 | M6 | Model view budget | tokens of `(:view)` at window 200 and 2 000; commands failing validation per 100 turns, per model | recorded; no pass value yet (§31, item 13) |
-| M7 | Interrupt bite | bit set → `interrupt-request` signalled, native CCL over the socket | recorded; not the port's number |
-| M8 | Dropped frames | `dropped` after the path with pointer motion at 120 Hz | 0 commands dropped |
-| M9 | No messages | debug assertion that `onmessage` fires once | holds for the whole session |
-| M10 | Accessibility | the path completed with VoiceOver at 200% text | completed, with the list of what was announced wrong |
+| M7 | Interrupt bite | pending bit set → `interrupt-request` signalled, native CCL over the socket | recorded; not the port's number |
+| M8 | Dropped frames | `dropped` after the path with pointer motion at 120 Hz | 0 commands or queries dropped |
+| M9 | No messages | debug assertion that `onmessage` fires once per side | holds for the whole session |
+| M10 | Drain budget | longest single drain during sustained 4 MB/s output | < 4 ms |
+| M11 | Typing latency under persistence | keystroke to paint with a 2 MB buffer and the journal on | median < 1 frame |
+| M12 | Accessibility | the path completed with VoiceOver at 200% text | completed, with the list of what was announced wrong |
 
-### 8.3 The busy image
+### 8.4 The busy image
 
 The Bridge can be told to hold `out` closed for *n* milliseconds while the
 Image keeps writing, which fills the socket buffer and then the Image's
 writer thread blocks. During the hold the Page must keep scrolling,
-highlighting and updating the documentation line (M2 under hold), and the
-command line must accept a command that is delivered when the hold ends.
-This simulates constraint 4; it does not simulate a Worker in a no-safepoint
-region, and the number it produces is not a port number.
+highlighting and drawing the documentation line from `:gestures` (M2 under
+hold), and the command line must accept a command that is delivered when
+the hold ends. This simulates constraint 4; it does not simulate a Worker
+in a no-safepoint region, and its number is not a port number.
 
 ## 9. Repository and build
 
 The prototype is a separate system, not part of the port's tree:
-`clim-web` as a sibling repository, with `image/` (the CCL system),
-`page/` (the client), `host/` (the Node server and relay), `harness/` and
-`spec/` holding a copy of this document at the revision built. The port
-repository keeps this specification and the screens; the prototype
-references them by commit. The Host serves `page/` with
-`Cross-Origin-Opener-Policy: same-origin` and
+`clim-web` as a sibling repository, with `image/` (the CCL system,
+including `present.lisp`), `page/` (the client), `host/` (the Node server
+and relay), `harness/` and `spec/` holding a copy of this document at the
+revision built. The port repository keeps this specification and the
+screens; the prototype references them by commit. The Host serves `page/`
+with `Cross-Origin-Opener-Policy: same-origin` and
 `Cross-Origin-Embedder-Policy: require-corp`, without which
 `SharedArrayBuffer` does not exist in the page.
 
 Build: `node host/serve.js` starts the Host and launches CCL with
-`--load image/start.lisp`; the page opens at `http://localhost:8080/`. No
-bundler; ES modules; CodeMirror from a pinned copy under `page/vendor/`.
-Tests: `node host/test.js` runs M1, M3, M4, M5, M8 and M9 headless with the
-same Chrome the screens are rendered with, and writes `results.json` the
-design document's §31 can cite.
+`--load image/start.lisp` in the disposable environment; the page opens at
+`http://localhost:8080/`. No bundler; ES modules; CodeMirror from a pinned
+copy under `page/vendor/`. Tests: `node host/test.js` runs B1–B4, D1–D5,
+M1, M3, M4, M5, M8, M9 and M10 headless with the same Chrome the screens
+are rendered with, and writes `results.json` the design document's §31 can
+cite.
 
 ## 10. Out of scope
 
 Canvas rendering, tear-off windows (G20), snapshots and image checkpoints
 (G51), git through the proxy (constraint 8; the Host has the seam and no
-credential), foreign material (§12), delivery (§24), a light theme, and
-anything that needs the port.
+credential), foreign material (§12), delivery (§24), a light theme,
+confinement stronger than a disposable environment, and anything that
+needs the port.
 
 ## 11. Decisions this specification makes
 
-- Rings, not messages, for everything but the one bootstrap post.
-- Two Workers inside the Bridge so a blocked data wait never delays an
-  interrupt.
+- Rings, not messages, for everything but the one bootstrap post; the
+  rings are a proposed transport consistent with D5, not D5.
+- No Worker that owns a socket ever blocks; `waitAsync` with a timed
+  fallback.
+- 8-byte frame alignment, a frame limit of a quarter of capacity,
+  chunking with two flag bits, unsigned modular counters, a stated
+  publication order.
+- An activity id in every frame header; a control request block with
+  target, generation and acknowledgement; a seqlock on the sample.
+- Freshness as command-specific preconditions checked in the activity's
+  process; no guarantee for arbitrary objects across activities, said so.
+- Trusted evaluation has the native process's authority in a disposable
+  environment; restricted activities have permitted commands only.
+- Gesture meanings on every presentation at rest; buffer revisions on text
+  and cited by compile and save; the session log in the Image.
+- Drains budgeted; persistence as an asynchronous journal with a visible
+  persisted revision.
+- A named CLIM subset of our own; McCLIM not used.
 - S-expressions in a restricted grammar with a hand-written reader on both
-  sides.
-- Symbols interned per activity and sent by id.
-- Geometry off the wire; the Page lays out.
+  sides; symbols interned per activity and sent by id; geometry off the
+  wire.
 - CodeMirror 6 with vim for the editor, as a trial.
-- The session log on the Host, not in the Image.
-- Native CCL's `process-interrupt` as the interrupt, and the socket's
-  latency as a number that is labelled as such.
+- Milestone 0 is the transport skeleton, with its five demonstrations,
+  before any editor.
