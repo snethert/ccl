@@ -1978,3 +1978,19 @@ an Ask-agent command from anywhere; G89 applies the grant model. G31, G53
 and G79 each gained a sentence; §34 walks the prototype path by a model;
 §31 item 13 measures decoding; §27 registers which harness comes first. No
 Stage 1 record changes.
+
+## 2026-09-18 — IDE design goals: Codex's §35 review applied; screens made semantic
+
+Claude applied Codex's review of §35. G89 now splits agents into a
+restricted tier with no evaluation in the shared image (proposals, granted
+commands, a second image for code) and a trusted tier that is a person at
+the listener, with host-side enforcement of file, network and push grants
+per process. G85 gives model views revisions and marks fresh inspections
+against historical renderings; G86 adds a restricted reader for envelopes
+and literals and re-inspects before an edit runs. G9.2 offers the printed
+form only when it reads back; G51 admits a checkpoint needs a quiescent
+point and force quit proceeds from the last completed one; G78's heading
+matches its body; §20 gives the insert-only set an ⌥Space leader and orders
+Escape by focus. The screen source now uses real links, buttons, inputs,
+labels and groups per §29, with renders unchanged. No Stage 1 record
+changes.

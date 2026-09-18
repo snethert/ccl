@@ -12,7 +12,13 @@ presentation refers to, and chips in files) were added; the ring became the
 shelf (§6); §20 records the editing decision; §33 lists the screen changes it
 implies; §34 defines the first prototype. §35, added the same day, makes the
 agent a client and defines how a model reads the stream and how its text
-becomes commands; G31, G53 and G79 each gained a sentence for it.
+becomes commands; G31, G53 and G79 each gained a sentence for it. A third
+pass the same day, after Codex's review of §35: G89 splits agents into
+restricted and trusted tiers at the evaluation boundary; G85 and G86 add
+view revisions and a restricted reader; G9.2 limits the printed-form offer
+to what reads back; G51 and G78 stop promising a checkpoint that needs a
+quiescent point; §20 gives the insert-only set a chord leader and orders
+Escape.
 
 This document records the design decisions taken for the CLIM-based IDE and
 the applications built with it, and states them as goals that can be checked
@@ -237,9 +243,15 @@ the history readable does not keep the reachable graph alive.
 Inserting an object into a buffer (G12) puts a live reference into text that
 may be saved as a `.lisp` file. Identity cannot survive that, so the rule is
 explicit: saving a buffer that holds a chip complains on the chip, the way a
-dialog complains on the argument that is wrong (G54), and offers *replace
-with printed form*. Nothing is ever written as a `#.` form or as an opaque
-reference the file cannot read back.
+dialog complains on the argument that is wrong (G54), and offers what can
+honestly be offered. *Replace with printed form* is offered only when the
+object prints readably and the editor can wrap that text as an expression
+that reads back to the intended value — a quoted list, a string, a number, a
+pathname. A hash table, a stream, a condition or a record cannot be offered
+that way, and the complaint says so; the choices are then a named binding
+the person picks, a construction form the person writes, or removal.
+Nothing is ever written as a `#.` form or as an opaque reference the file
+cannot read back.
 
 *Reference: screens 1, 2, 3, 4.*
 
@@ -682,7 +694,12 @@ snapshot is taken only when every Worker is at a safepoint with no host
 request outstanding, which is the port's own save contract, and it holds
 definitions and heap objects. It never holds active frames, a pending host
 operation or an open debugger, and the interface does not pretend otherwise:
-the verb is *restore*, not *resume*.
+the verb is *restore*, not *resume*. Because it needs a quiescent point, it
+cannot be promised before every destructive act: when the safepoints do not
+answer, force quit (G41) proceeds from the last completed checkpoint and
+names what that checkpoint does not hold. "Before anything that can destroy
+the image" means whenever a quiescent point can be reached first, and the
+image surface (G50) shows how old the last completed one is.
 
 **G52. A snapshot is what makes the image survivable.**
 It is the answer to G31's "in the image only" and the reason G41's force quit
@@ -815,8 +832,11 @@ The decision has these parts:
   mnemonic and shallow, and its first level is the three lists of G1 plus
   the object under the caret.
 - **Escape.** Insert to normal is one use; cancelling a pending command or
-  dismissing an overlay is another. In normal mode with nothing pending,
-  Escape does nothing. The command line's *Esc cancel* chips stay.
+  dismissing an overlay is another. Escape acts on what has focus, in one
+  order: an open overlay first, then the command line while it is reading
+  an argument, then the editor's mode. In normal mode with nothing open and
+  nothing pending, Escape does nothing. The command line's *Esc cancel*
+  chips stay.
 - **How much of vi.** The grammar, not the program: operators, motions, text
   objects, counts, marks and registers. No ex commands and no scripting
   language; `:` opens the command line, which is what ex was for.
@@ -826,8 +846,10 @@ The decision has these parts:
   with their provenance.
 - **A non-modal alternative is a setting.** Bindings are settings, so an
   insert-only set with familiar chords exists for people who want it, the
-  way Spacemacs keeps its holy mode. It gets the same leader and the same
-  command line.
+  way Spacemacs keeps its holy mode. It gets the same leader menu and the
+  same command line, but space types a space in a set that is always
+  inserting, so that set's leader is a chord: ⌥Space by default, which no
+  browser reserves, and a setting like the other leader.
 - **The screens rebind.** Every ⌘-chord on the screens becomes a leader
   sequence (§33). Interrupt moves under the leader too, and stays
   client-local so it works while the Worker is busy.
@@ -958,7 +980,8 @@ lives in the `.asd` or beside it. G77 holds whichever is chosen.
 
 ## 25. Session, host and identity
 
-**G78. A page reload does not lose work, and unload is not how.**
+**G78. A reload loses at most what the last checkpoint does not hold, and
+unload is not how.**
 The image runs in a Worker that dies with the page. Browsers do not reliably
 deliver `unload`, so nothing here depends on it. Instead: editor text
 persists continuously on the client as it changes; the image is checkpointed
@@ -1340,7 +1363,13 @@ which every presentation appears once, as its id, its presentation type, its
 printed form, and — where it has one — its provenance and state (G9.1). The
 transcript's text appears as text. Nothing is summarised by a person and
 nothing is described in prose: the view is generated from the same records
-the page draws, so it is never stale and never editorialised. It is written
+the page draws, so it is never editorialised. It can be stale, and it says
+so: every view carries a revision, and every presentation in it says which
+of G9.1's states it is in, so a model can tell a historical rendering from a
+value it inspected a moment ago. Lisp objects carry no version numbers, so
+freshness is a property of the inspection, not the object: a presentation's
+entry records the revision at which it was last inspected, and a command
+that edits names that revision (G86). It is written
 in S-expressions, because the reader is a model that reads Lisp and the
 objects are Lisp objects, and because a person can read it too. Two rules
 keep it inside a context window: the view is windowed like the transcript
@@ -1355,16 +1384,24 @@ arguments, where an argument is a presentation id or a typed literal. The
 harness (G87) validates every such command against the command table as the
 command line would validate a typed one: the command must be applicable in
 the current context (G7), each id must name a live presentation (G9.1), each
-literal must read as its declared type. A command that fails validation is
+literal must read as its declared type. Envelopes and literals are read by a
+restricted reader — no `#.`, no dispatch macros beyond the ones the declared
+types need, read-eval off — before any type check runs, because the ordinary
+reader would execute `#.` first and the local reader implements exactly that.
+A command that edits an object also names the view revision at which the
+model inspected it (G85); at execution the harness re-inspects, and if the
+state differs the command is not run and the current state comes back for
+reconsideration. A command that fails validation is
 not executed; the failure goes back to the model as a condition, with the
 reason, and the model tries again. Everything else the model says is a
 message, shown in the activity's transcript to whoever is watching. No text
-from a model is ever evaluated as code. When the model wants to evaluate a
-form, it invokes *evaluate* with the form as a string argument; the image
-reads it, compiles it and runs it in the agent's own process, under the same
-interrupt (G38), conditions (G13) and restarts (G14) as anything a person
-types. A condition the model raises lands in the model's debugger, and its
-restarts arrive in the next model view as commands it may invoke.
+from a model is ever evaluated as code. When a model that is allowed to (G89)
+wants to evaluate a form, it invokes *evaluate* with the form as a string
+argument; the image reads it, compiles it and runs it in the agent's own
+process, under the same interrupt (G38), conditions (G13) and restarts (G14)
+as anything a person types. A condition the model raises lands in the
+model's debugger, and its restarts arrive in the next model view as commands
+it may invoke.
 
 **G87. The harness is a program, not a chat loop.**
 Between the model and the image sits a small program that does five things
@@ -1397,16 +1434,33 @@ never by taking the screen (G46). A person can also run the agent's commands
 by hand: every command the model issued is in the history (G53), with its
 arguments as live objects, and can be edited and re-run.
 
-**G89. What the agent may do is what the person granted, shown while it
-holds it.**
-An agent is a client that can evaluate anything, so constraint 8 and G79
-apply without exception: no credential, no push without a person's gesture,
-and every capability it holds — which files, which systems, whether it may
-compile into the image or only propose — is a grant the person made and can
-see and revoke in the image surface (G50). Its changes carry its name in
-G31's three states, its commits carry its name as author (G80), and the
-things it changed in the image only are visible in the same list as anyone
-else's, so nothing it did can sit unnoticed.
+**G89. Two tiers of agent, and the boundary is evaluation.**
+A grant that says "compile only these systems" or "only propose" is
+decorative if the agent can evaluate: one *evaluate* redefines whatever the
+denied command would have, and the agent's own process isolates nothing,
+because the image is shared (G43). So there are two tiers, and the person
+chooses one when the agent's activity is made:
+
+- A **restricted** agent has no evaluation in the shared image at all. It
+  proposes definitions as edit presentations a person accepts (G59, G64),
+  runs the commands it was granted through the command table, and reads
+  everything. If it must run code, it runs it in a second image, which is
+  what G43 says isolation means; that image's results come back as
+  presentations, never as effects.
+- A **trusted** agent has full-image evaluation and is, exactly, a person
+  at the listener. Its grants over the image are shown, not enforced,
+  because nothing inside the image can enforce them against evaluated code.
+
+What is enforced for both tiers is enforced where the effect happens: files,
+network and push are host endpoints, the mailbox is per Worker so the host
+knows which process asked, and a grant attaches to that process. Evaluated
+code that reaches for a file it was not granted is refused by the host, not
+by the image. Constraint 8 and G79 apply without exception: no credential,
+no push without a person's gesture. Every grant is visible and revocable in
+the image surface (G50); the agent's changes carry its name in G31's three
+states, its commits carry its name as author (G80), and the things it
+changed in the image only are visible in the same list as anyone else's, so
+nothing it did can sit unnoticed.
 
 **Can Fable and Codex decode this?** Yes, and the shape is not speculative:
 it is how those models already work in their own harnesses, which feed them

@@ -66,6 +66,24 @@ body.single .frame > .cap { display: none; }
 .pane-h .fact { color: var(--muted); font-size: 13px; }
 .pane-b { padding: 22px 24px; overflow: hidden; flex: 1; min-height: 0; }
 
+/* semantic controls: real buttons, links and inputs, drawn as before */
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: left; cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--cool); outline-offset: 2px; }
+a { color: inherit; text-decoration: none; }
+input { font: inherit; color: inherit; background: none; border: 0; margin: 0; }
+.blk { display: block; }
+button.row { width: 100%; box-sizing: border-box; }
+.cmd .ways a { border-bottom: 1px solid var(--chipb); padding-bottom: 1px; }
+input.field { box-sizing: content-box; }
+input.field[style*="display:block"] { width: calc(100% - 30px); }
+input.arg.pending::placeholder { color: var(--cool); opacity: 1; }
+input.arg.pending { caret-color: var(--cool); }
+.check { appearance: none; width: 18px; height: 18px; border-radius: 4px; background: #f0f0f2; margin: 0; }
+input.slider { appearance: none; -webkit-appearance: none; display: block; width: calc(100% - 8px); height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--warm) 0 5%, #262730 5% 100%); }
+input.slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--warm-2); border: 0; }
+button.more { text-align: left; }
+.expired .verbs a { border-bottom: 1px solid var(--chipb); margin-right: 14px; }
+
 /* chips and keys */
 .chip { display: inline-block; border: 1px solid var(--chipb); border-radius: 3px; padding: 1px 7px; font: 500 11px/16px var(--mono); color: var(--muted); letter-spacing: .02em; text-transform: uppercase; vertical-align: middle; }
 .chip.lc { text-transform: none; }
@@ -124,7 +142,7 @@ pre.code.dim { color: var(--muted); }
 .cmd .sep { color: var(--muted); font-size: 14px; }
 .cmd .sp { flex: 1; }
 .cmd .ways { display: flex; gap: 22px; color: var(--muted); font-size: 14px; margin-left: 12px; }
-.cmd .ways span { border-bottom: 1px solid var(--chipb); padding-bottom: 1px; }
+.cmd .ways .k { border: 0; }
 .arg { border: 1px solid var(--warm-dim); background: var(--warm-bg); color: var(--warm-2); font: 14px var(--mono); padding: 6px 12px; border-radius: 4px; }
 .arg.pending { border: 1px dashed var(--cool-dim); background: var(--cool-bg); color: var(--cool); font-family: var(--sans); font-size: 15px; }
 .arg.pending .ibeam { margin-left: 6px; }
@@ -199,4 +217,4 @@ pre.code.dim { color: var(--muted); }
 .expired { color: var(--muted); }
 .expired .tag { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--chipb); border-radius: 3px; padding: 1px 6px; margin-left: 10px; }
 .expired .verbs { color: var(--muted); font-family: var(--sans); font-size: 13px; }
-.expired .verbs u { text-decoration: none; border-bottom: 1px solid var(--chipb); margin-right: 14px; }
+

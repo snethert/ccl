@@ -49,7 +49,7 @@
 <div class="in"><span class="cursor"></span></div></div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span><span class="k"><b>SPC</b> from the keyboard</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a><span class="k"><b>SPC</b> from the keyboard</span></nav></div>
 <div class="doc"><span><b>pop-record</b> — function, clim-web<span class="sep">·</span><b>↩</b> or ⌥click edit definition<span class="sep">·</span><b>SPC d</b> describe<span class="sep">·</span><b>SPC o</b> 11 commands</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -91,7 +91,7 @@
 <div class="out">  <span class="lbl">state</span>:running</div></div>
  </div>
 </div>
-<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Trace</span><span class="sep">›</span><span class="arg pending">function-name<span class="ibeam"></span></span><span class="sp"></span><span class="btn"><span class="key">Esc</span>cancel</span></div>
+<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Trace</span><span class="sep">›</span><input type="text" class="arg pending" placeholder="function-name" aria-label="function-name" size="14"><span class="sp"></span><button type="button" class="btn"><span class="key">Esc</span>cancel</button></div>
 <div class="doc"><span>Point at a function, or type its name<span class="sep">·</span>10 matches on screen, 312 in image<span class="sep">·</span><b>]n</b> next match, <b>↩</b> takes it</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -136,20 +136,20 @@
 <div class="panel menu" style="left:96px;top:196px;width:470px">
  <div class="panel-h" style="display:block"><div class="name mono">runner</div><div class="muted small" style="margin-top:4px">standard-class · clim-web · 11 applicable commands · each row is a declaration: label, key, why, and what it changes</div></div>
  <div class="rows" style="padding:6px 10px">
-  <div class="row sel"><span class="key">e</span><span><div class="lbl">Edit Definition</div><div class="why">opens presentations.lisp at the defclass, in this pane</div></span><span></span></div>
-  <div class="row"><span class="key">d</span><span><div class="lbl">Describe</div><div class="why">slots, methods and metaclass, read from the image</div></span><span></span></div>
-  <div class="row"><span class="key">i</span><span><div class="lbl">Inspect Instances</div><div class="why">the live instances reachable right now</div></span><span class="r">3</span></div>
+  <button type="button" class="row sel"><span class="key">e</span><span><span class="blk lbl">Edit Definition</span><span class="blk why">opens presentations.lisp at the defclass, in this pane</span></span><span></span></button>
+  <button type="button" class="row"><span class="key">d</span><span><span class="blk lbl">Describe</span><span class="blk why">slots, methods and metaclass, read from the image</span></span><span></span></button>
+  <button type="button" class="row"><span class="key">i</span><span><span class="blk lbl">Inspect Instances</span><span class="blk why">the live instances reachable right now</span></span><span class="r">3</span></button>
   <div class="grp">class</div>
-  <div class="row"><span class="key">s</span><span><div class="lbl">Show Subclasses</div><div class="why">direct subclasses, as presentations</div></span><span class="r">2</span></div>
-  <div class="row"><span class="key">t</span><span><div class="lbl">Trace All Methods</div><div class="why">every method specialised on runner · <span class="cons">adds 7 traces</span></div></span><span class="r">7</span></div>
-  <div class="row"><span class="key">c</span><span><div class="lbl">Find Known Callers</div><div class="why">from recorded cross-reference; funcall is not seen</div></span><span class="r">17</span></div>
+  <button type="button" class="row"><span class="key">s</span><span><span class="blk lbl">Show Subclasses</span><span class="blk why">direct subclasses, as presentations</span></span><span class="r">2</span></button>
+  <button type="button" class="row"><span class="key">t</span><span><span class="blk lbl">Trace All Methods</span><span class="blk why">every method specialised on runner · <span class="cons">adds 7 traces</span></span></span><span class="r">7</span></button>
+  <button type="button" class="row"><span class="key">c</span><span><span class="blk lbl">Find Known Callers</span><span class="blk why">from recorded cross-reference; funcall is not seen</span></span><span class="r">17</span></button>
   <div class="grp">package</div>
-  <div class="row"><span class="key">x</span><span><div class="lbl">Export Symbol</div><div class="why">edits the defpackage form in packages.lisp · <span class="cons">changes a file</span></div></span><span></span></div>
-  <div class="row"><span class="key">m</span><span><div class="lbl">Move to File…</div><div class="why">asks for a file, then moves the form · <span class="cons">rewrites two files</span></div></span><span></span></div>
+  <button type="button" class="row"><span class="key">x</span><span><span class="blk lbl">Export Symbol</span><span class="blk why">edits the defpackage form in packages.lisp · <span class="cons">changes a file</span></span></span><span></span></button>
+  <button type="button" class="row"><span class="key">m</span><span><span class="blk lbl">Move to File…</span><span class="blk why">asks for a file, then moves the form · <span class="cons">rewrites two files</span></span></span><span></span></button>
  </div>
  <div class="panel-f"><span>type a letter · or type to filter · <b class="k">j k</b> move</span><span class="sp"></span><span>2 more below</span></div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="arg">runner</span><span class="sep">›</span><span class="hint">choose a command</span><span class="sp"></span><span class="btn"><span class="key">Esc</span>cancel</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="arg">runner</span><span class="sep">›</span><span class="hint">choose a command</span><span class="sp"></span><button type="button" class="btn"><span class="key">Esc</span>cancel</button></div>
 <div class="doc"><span><b>runner</b> — standard-class, clim-web · 3 slots, 7 methods, 2 subclasses<span class="sep">·</span>opened with <b>SPC o</b></span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -162,22 +162,22 @@
   <div class="pane-b" style="padding-top:12px">
    <div class="hdr" style="grid-template-columns:1fr 130px 100px 120px"><span>name</span><span class="r" style="text-align:right">commit</span><span class="r" style="text-align:right">size</span><span class="r" style="text-align:right">changed</span></div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span class="cool">Backends/</span><span class="r">—</span><span class="r">4 items</span><span class="r">Mar 4</span></div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span class="cool">Documentation/</span><span class="r">—</span><span class="r">9 items</span><span class="r">Mar 2</span></div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>clim-web.asd <span class="chip ok" style="margin-left:10px">system</span></span><span class="r">f01b8c4</span><span class="r">1.2 KB</span><span class="r">Mar 8</span></div>
-    <div class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>packages.lisp</span><span class="r warm">f01b8c4</span><span class="r warm">2.9 KB</span><span class="r warm">Mar 8</span></div>
-    <div class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>presentations.lisp</span><span class="r warm">uncommitted</span><span class="r warm">41.6 KB</span><span class="r warm">2 min ago</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span class="cool">Backends/</span><span class="r">—</span><span class="r">4 items</span><span class="r">Mar 4</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span class="cool">Documentation/</span><span class="r">—</span><span class="r">9 items</span><span class="r">Mar 2</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>clim-web.asd <span class="chip ok" style="margin-left:10px">system</span></span><span class="r">f01b8c4</span><span class="r">1.2 KB</span><span class="r">Mar 8</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>packages.lisp</span><span class="r warm">f01b8c4</span><span class="r warm">2.9 KB</span><span class="r warm">Mar 8</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>presentations.lisp</span><span class="r warm">uncommitted</span><span class="r warm">41.6 KB</span><span class="r warm">2 min ago</span></button>
     <div class="rows" style="margin-left:26px;border-left:1px solid var(--divider);padding-left:8px;color:var(--muted);font-size:13px">
-     <div class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px"><span>4 saves <span class="chip cool" style="margin-left:10px">session log</span></span><span class="r">not in git</span><span class="r"></span><span class="r">2 – 38 min</span></div>
-     <div class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>Scan limit from project settings</span><span class="r">a3f1c9d</span><span class="r">41.2 KB</span><span class="r">2 h ago</span></div>
-     <div class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>Validate records before replay</span><span class="r">9c1e77a</span><span class="r">39.8 KB</span><span class="r">yesterday</span></div>
-     <div class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>19 earlier commits</span><span class="r">…7b20e14</span><span class="r"></span><span class="r">since Jan 9</span></div>
+     <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px"><span>4 saves <span class="chip cool" style="margin-left:10px">session log</span></span><span class="r">not in git</span><span class="r"></span><span class="r">2 – 38 min</span></button>
+     <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>Scan limit from project settings</span><span class="r">a3f1c9d</span><span class="r">41.2 KB</span><span class="r">2 h ago</span></button>
+     <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>Validate records before replay</span><span class="r">9c1e77a</span><span class="r">39.8 KB</span><span class="r">yesterday</span></button>
+     <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px;min-height:30px;font-family:var(--sans)"><span>19 earlier commits</span><span class="r">…7b20e14</span><span class="r"></span><span class="r">since Jan 9</span></button>
     </div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>presentations.fasl <span class="chip warm" style="margin-left:10px">built from 7b20e14</span></span><span class="r">2 behind</span><span class="r">88.4 KB</span><span class="r">yesterday</span></div>
-    <div class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>streams.lisp</span><span class="r warm">a3f1c9d</span><span class="r warm">18.3 KB</span><span class="r warm">2 h ago</span></div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>runner.lisp</span><span class="r">7b20e14</span><span class="r">26.1 KB</span><span class="r">yesterday</span></div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>runner.fasl <span class="chip ok" style="margin-left:10px">current</span></span><span class="r">7b20e14</span><span class="r">54.0 KB</span><span class="r">yesterday</span></div>
-    <div class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>scratch.lisp <span class="chip cool" style="margin-left:10px">untracked</span></span><span class="r">log only</span><span class="r">1.7 KB</span><span class="r">Mar 1</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>presentations.fasl <span class="chip warm" style="margin-left:10px">built from 7b20e14</span></span><span class="r">2 behind</span><span class="r">88.4 KB</span><span class="r">yesterday</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:1fr 130px 100px 120px"><span>streams.lisp</span><span class="r warm">a3f1c9d</span><span class="r warm">18.3 KB</span><span class="r warm">2 h ago</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>runner.lisp</span><span class="r">7b20e14</span><span class="r">26.1 KB</span><span class="r">yesterday</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>runner.fasl <span class="chip ok" style="margin-left:10px">current</span></span><span class="r">7b20e14</span><span class="r">54.0 KB</span><span class="r">yesterday</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 130px 100px 120px"><span>scratch.lisp <span class="chip cool" style="margin-left:10px">untracked</span></span><span class="r">log only</span><span class="r">1.7 KB</span><span class="r">Mar 1</span></button>
    </div>
   </div>
  </div>
@@ -188,7 +188,7 @@
 <div class="in">(history #P"presentations.lisp")</div><div class="out">(#&lt;SAVE 4 uncommitted&gt;</div><div class="out"> #&lt;COMMIT a3f1c9d "Scan limit…"&gt;</div><div class="out"> #&lt;COMMIT 9c1e77a "Validate…"&gt;</div><div class="out"> …20 more)</div><div class="gap"></div><div class="in"><span class="cursor"></span></div></div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compile File</span><span class="sep">›</span><span class="arg">3 source files</span><span class="sp"></span><span class="btn"><span class="key">↩</span>run</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compile File</span><span class="sep">›</span><span class="arg">3 source files</span><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>run</button></div>
 <div class="doc"><span><b>presentations.lisp</b> — source file, 41.6 KB, 4 saves since a3f1c9d<span class="sep">·</span>click <b>edit</b><span class="sep">·</span>⌥click <b>compare with a3f1c9d</b><span class="sep">·</span><b>SPC o</b> 14 commands</span><span class="right"><span class="dot"></span>main ↑2 · ccl-web.image · connected</span></div>
 </section></div>
 
@@ -216,12 +216,12 @@
 <div class="panel" style="left:400px;top:96px;width:660px">
  <div class="panel-h"><span class="name">Shelf</span><span class="muted">8 objects · kept until dropped</span><span class="sp"></span><span class="k"><b>j k</b> move</span></div>
  <div class="rows" style="padding:8px 10px">
-  <div class="row coolsel" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">1</span><span class="chip cool" style="margin-top:2px">hash-table</span><span class="mono" style="font-size:13.5px">#&lt;HASH-TABLE eql, 14 entries&gt;<div class="muted small" style="margin-top:3px">3 → #&lt;BYTE-STREAM sid 3&gt; · 4 → #&lt;CHAR-STREAM sid 4&gt; · +12</div><div class="muted small" style="font-family:var(--sans)">from Transcript · 2 min ago</div></span></div>
-  <div class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">2</span><span class="chip err" style="margin-top:2px">condition</span><span class="mono" style="font-size:13.5px">#&lt;TYPE-ERROR&gt;<div class="muted small" style="font-family:var(--sans);margin-top:3px">The value NIL is not of type OUTPUT-RECORD</div><div class="muted small" style="font-family:var(--sans)">from Debugger · 6 min ago</div></span></div>
-  <div class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">3</span><span class="chip" style="margin-top:2px">pathname</span><span class="mono" style="font-size:13.5px">#P"/lisp/clim-web/presentations.lisp.14"<div class="muted small" style="font-family:var(--sans);margin-top:3px">from Files · 8 min ago</div></span></div>
-  <div class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">4</span><span class="chip" style="margin-top:2px">runner</span><span class="mono" style="font-size:13.5px">#&lt;RUNNER lem-image&gt;<div class="muted small" style="font-family:var(--sans);margin-top:3px">14 streams · 3 pending records · :running</div><div class="muted small" style="font-family:var(--sans)">from Inspector · 11 min ago</div></span></div>
-  <div class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">5</span><span class="chip" style="margin-top:2px">list</span><span class="mono" style="font-size:13.5px">(#&lt;RECORD text 2193&gt; #&lt;RECORD line 88&gt; +1)<div class="muted small" style="font-family:var(--sans);margin-top:3px">from Transcript · 14 min ago</div></span></div>
-  <div class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">6</span><span class="chip" style="margin-top:2px">string</span><span class="mono" style="font-size:13.5px">"~A — ~D streams"<div class="muted small" style="font-family:var(--sans);margin-top:3px">from Editor, register a · 22 min ago</div></span></div>
+  <button type="button" class="row coolsel" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">1</span><span class="chip cool" style="margin-top:2px">hash-table</span><span class="mono" style="font-size:13.5px">#&lt;HASH-TABLE eql, 14 entries&gt;<span class="blk muted small" style="margin-top:3px">3 → #&lt;BYTE-STREAM sid 3&gt; · 4 → #&lt;CHAR-STREAM sid 4&gt; · +12</span><span class="blk muted small" style="font-family:var(--sans)">from Transcript · 2 min ago</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">2</span><span class="chip err" style="margin-top:2px">condition</span><span class="mono" style="font-size:13.5px">#&lt;TYPE-ERROR&gt;<span class="blk muted small" style="font-family:var(--sans);margin-top:3px">The value NIL is not of type OUTPUT-RECORD</span><span class="blk muted small" style="font-family:var(--sans)">from Debugger · 6 min ago</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">3</span><span class="chip" style="margin-top:2px">pathname</span><span class="mono" style="font-size:13.5px">#P"/lisp/clim-web/presentations.lisp.14"<span class="blk muted small" style="font-family:var(--sans);margin-top:3px">from Files · 8 min ago</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">4</span><span class="chip" style="margin-top:2px">runner</span><span class="mono" style="font-size:13.5px">#&lt;RUNNER lem-image&gt;<span class="blk muted small" style="font-family:var(--sans);margin-top:3px">14 streams · 3 pending records · :running</span><span class="blk muted small" style="font-family:var(--sans)">from Inspector · 11 min ago</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">5</span><span class="chip" style="margin-top:2px">list</span><span class="mono" style="font-size:13.5px">(#&lt;RECORD text 2193&gt; #&lt;RECORD line 88&gt; +1)<span class="blk muted small" style="font-family:var(--sans);margin-top:3px">from Transcript · 14 min ago</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:24px 110px 1fr;padding:10px 14px;align-items:start"><span class="muted small">6</span><span class="chip" style="margin-top:2px">string</span><span class="mono" style="font-size:13.5px">"~A — ~D streams"<span class="blk muted small" style="font-family:var(--sans);margin-top:3px">from Editor, register a · 22 min ago</span></span></button>
  </div>
  <div class="panel-f"><span><kbd class="cool">↩</kbd> insert the object</span><span><kbd class="cool">⇧↩</kbd> insert its printed form</span><span><kbd>⌫</kbd> drop</span><span class="sp"></span><span>2 more</span></div>
 </div>
@@ -239,9 +239,9 @@
    <div style="border-left:3px solid var(--err);padding:6px 0 6px 18px;margin-bottom:22px"><div style="font-size:19px">The value <span class="p err mono" style="font-size:15px">NIL</span> is not of type <span class="p err mono" style="font-size:15px">CLIM:OUTPUT-RECORD</span></div><div class="muted small" style="margin-top:6px">signalled by <span class="mono">check-type</span> in <span class="mono">replay-output-record</span> · presentations.lisp.14:112</div></div>
    <div class="sect">Restarts · only those the program established</div>
    <div class="rows">
-    <div class="row sel2" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">0</span><span style="font-size:15px">Store a new value for <span class="mono">record</span></span><span class="muted small">established by check-type in replay-output-record</span><span class="r warm" style="font-family:var(--sans)">in progress</span></div>
-    <div class="row" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">1</span><span style="font-size:15px">Skip this record and continue the loop</span><span class="muted small">established by with-simple-restart in scan-buffer</span><span></span></div>
-    <div class="row" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">2</span><span style="font-size:15px">Kill process runner-2</span><span class="muted small">established by the process</span><span></span></div>
+    <button type="button" class="row sel2" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">0</span><span style="font-size:15px">Store a new value for <span class="mono">record</span></span><span class="muted small">established by check-type in replay-output-record</span><span class="r warm" style="font-family:var(--sans)">in progress</span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">1</span><span style="font-size:15px">Skip this record and continue the loop</span><span class="muted small">established by with-simple-restart in scan-buffer</span><span></span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 1fr 310px 90px;min-height:44px"><span class="muted mono small">2</span><span style="font-size:15px">Kill process runner-2</span><span class="muted small">established by the process</span><span></span></button>
    </div>
    <div class="sect">Backtrace</div>
    <div class="box" style="background:#15202a;border-color:var(--cool-dim);padding:10px 14px;margin-bottom:10px"><div class="mono" style="font-size:13.5px"><span class="muted">0</span>&nbsp;&nbsp;(replay-output-record <span class="err">NIL</span> #&lt;WEB-SHEET canvas0&gt;)</div>
@@ -271,7 +271,7 @@ limit  <span class="muted">→</span>  200
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Store a value</span><span class="sep">›</span><span class="arg pending" style="font-family:var(--mono);color:var(--warm-2);border-color:var(--warm-dim);background:var(--warm-bg)">(make-instance 'text-output-record)<span class="ibeam" style="background:var(--warm)"></span></span><span class="sp"></span><span class="btn"><span class="key">↩</span>resume frame 0</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Store a value</span><span class="sep">›</span><input type="text" class="arg pending" style="font-family:var(--mono);color:var(--warm-2);border-color:var(--warm-dim);background:var(--warm-bg)" value="(make-instance 'text-output-record)" aria-label="argument" size="36"><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>resume frame 0</button></div>
 <div class="doc"><span><b>frame 0</b> — replay-output-record, 3 locals<span class="sep">·</span>click <b>inspect</b><span class="sep">·</span>⌥click <b>edit and resume</b><span class="sep">·</span><b>SPC o</b> 9 commands</span><span class="right"><span class="dot err"></span>1 of 4 processes halted · others running</span></div>
 </section></div>
 
@@ -310,7 +310,7 @@ with-output-recording</pre></div>
   <div class="pane-b tr"><div class="in">(replay-output-record</div><div class="out">   (car (runner-pending *runner*))</div><div class="out">   (runner-sheet *runner*))</div><div class="out">NIL</div><div class="gap"></div><div class="in">(describe #'replay-output-record)</div><div class="out">#&lt;STANDARD-GENERIC-FUNCTION</div><div class="out">   replay-output-record&gt;</div><div class="out">  <span class="lbl">methods</span>3</div><div class="out">  <span class="lbl">callers</span>4 known</div><div class="out">  <span class="lbl">source</span>present</div><div class="out">  <span class="lbl">compiled</span>2 min ago</div><div class="gap"></div><div class="in"><span class="cursor"></span></div></div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a></nav></div>
 <div class="doc"><span><b>output-record</b> — presentation type, clim-web · 2 subtypes<span class="sep">·</span>click <b>describe</b><span class="sep">·</span>⌥click <b>edit definition</b><span class="sep">·</span><b>SPC o</b> 11 commands</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -339,15 +339,15 @@ with-output-recording</pre></div>
 <div class="panel" style="left:440px;top:186px;width:560px">
  <div class="panel-h"><span class="name">Layouts</span><span class="muted">5 of this frame</span></div>
  <div class="rows" style="padding:8px 10px">
-  <div class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span class="lay"><i style="display:inline-block;width:52px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i></span><span style="font-size:15px">Single</span><span class="k"><b>SPC l 1</b></span></div>
-  <div class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Source + Transcript</span><span class="k"><b>SPC l 2</b></span></div>
-  <div class="row coolsel" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px"></i><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px;margin-left:2px"></i><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Three-up</span><span class="k"><b>SPC l 3</b> · <span class="cool">in use</span></span></div>
-  <div class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:24px;height:17px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px;vertical-align:top"></i></span><span style="font-size:15px">Source + Debugger</span><span class="k"><b>SPC l 4</b></span></div>
-  <div class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:12px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:38px;height:38px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Reading</span><span class="k"><b>SPC l 5</b></span></div>
+  <button type="button" class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span class="lay"><i style="display:inline-block;width:52px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i></span><span style="font-size:15px">Single</span><span class="k"><b>SPC l 1</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Source + Transcript</span><span class="k"><b>SPC l 2</b></span></button>
+  <button type="button" class="row coolsel" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px"></i><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px;margin-left:2px"></i><i style="display:inline-block;width:15px;height:38px;border:1px solid var(--cool);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Three-up</span><span class="k"><b>SPC l 3</b> · <span class="cool">in use</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:24px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:24px;height:17px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px;vertical-align:top"></i></span><span style="font-size:15px">Source + Debugger</span><span class="k"><b>SPC l 4</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:70px 1fr auto;min-height:60px"><span><i style="display:inline-block;width:12px;height:38px;border:1px solid var(--chipb);border-radius:3px"></i><i style="display:inline-block;width:38px;height:38px;border:1px solid var(--chipb);border-radius:3px;margin-left:2px"></i></span><span style="font-size:15px">Reading</span><span class="k"><b>SPC l 5</b></span></button>
  </div>
  <div class="panel-f"><span><b class="k">SPC l s</b> save the current arrangement as a layout</span><span class="sp"></span><span>layouts are objects</span></div>
 </div>
-<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Layout</span><span class="sep">›</span><span class="arg pending">layout-name<span class="ibeam"></span></span><span class="sp"></span><span class="btn"><span class="key">Esc</span>cancel</span></div>
+<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Layout</span><span class="sep">›</span><input type="text" class="arg pending" placeholder="layout-name" aria-label="layout-name" size="12"><span class="sp"></span><button type="button" class="btn"><span class="key">Esc</span>cancel</button></div>
 <div class="doc"><span><b>three-up</b> — layout, 3 panes, in use<span class="sep">·</span><b>↩</b> switch<span class="sep">·</span>⌥click <b>rename</b><span class="sep">·</span><b>SPC o</b> 6 commands</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -416,7 +416,7 @@ with-output-recording</pre></div>
    #'replay-output-record</span>   (sheet-history sheet)))</pre></div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compare Versions</span><span class="sep">›</span><span class="arg">presentations.lisp @ working</span><span class="arg">a3f1c9d</span><span class="sp"></span><span class="btn"><span class="key">SPC l 2</span>back to one pane</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compare Versions</span><span class="sep">›</span><span class="arg">presentations.lisp @ working</span><span class="arg">a3f1c9d</span><span class="sp"></span><button type="button" class="btn"><span class="key">SPC l 2</span>back to one pane</button></div>
 <div class="doc"><span><b>difference 2</b> — pop-record, 2 lines added<span class="sep">·</span>click <b>revert this hunk</b><span class="sep">·</span>⌥click <b>blame these lines</b><span class="sep">·</span><b>SPC o</b> 7 commands</span><span class="right"><span class="dot"></span>main ↑2 · ccl-web.image · connected</span></div>
 </section></div>
 
@@ -427,10 +427,10 @@ with-output-recording</pre></div>
  <div class="pane">
   <div class="pane-h"><span class="name">Transcript</span><span class="chip lc">single layout</span><span class="sp"></span><span class="fact">5 forms · nothing opened a window · window 2000 records</span></div>
   <div class="pane-b tr">
-   <div class="expired"><div class="in" style="color:var(--muted)">(all-runners)<span class="tag">expired</span></div><div class="out" style="color:var(--muted)">(#&lt;RUNNER lem-image&gt;)</div><div class="verbs">older than the window and nothing pins it · <u>show as it was</u><u>re-evaluate</u></div></div>
+   <div class="expired"><div class="in" style="color:var(--muted)">(all-runners)<span class="tag">expired</span></div><div class="out" style="color:var(--muted)">(#&lt;RUNNER lem-image&gt;)</div><div class="verbs">older than the window and nothing pins it · <a href="#show">show as it was</a><a href="#re-evaluate">re-evaluate</a></div></div>
    <div class="gap"></div>
    <div class="in">(runner-streams *runner*)</div>
-   <div class="box" style="display:inline-block;margin:6px 0 10px;padding:4px 0"><table class="tbl"><tr><th>sid</th><th>kind</th><th>owner</th><th class="r">bytes</th></tr><tr><td>0</td><td>:char</td><td>#&lt;REPL listener-1&gt;</td><td class="r">12 480</td></tr><tr><td>1</td><td>:char</td><td>#&lt;REPL listener-1&gt;</td><td class="r">3 118</td></tr><tr><td>3</td><td>:byte</td><td>#&lt;FASL-LOADER&gt;</td><td class="r">88 402</td></tr></table><div class="muted small" style="padding:6px 12px 2px;border-top:1px solid var(--divider);font-family:var(--sans)">11 more — click to page through</div></div>
+   <div class="box" style="display:inline-block;margin:6px 0 10px;padding:4px 0"><table class="tbl"><tr><th>sid</th><th>kind</th><th>owner</th><th class="r">bytes</th></tr><tr><td>0</td><td>:char</td><td>#&lt;REPL listener-1&gt;</td><td class="r">12 480</td></tr><tr><td>1</td><td>:char</td><td>#&lt;REPL listener-1&gt;</td><td class="r">3 118</td></tr><tr><td>3</td><td>:byte</td><td>#&lt;FASL-LOADER&gt;</td><td class="r">88 402</td></tr></table><button type="button" class="muted small more" style="padding:6px 12px 2px;border-top:1px solid var(--divider);font-family:var(--sans);width:100%">11 more — page through</button></div>
    <div class="gap"></div>
    <div class="in">(car (runner-pending *runner*))</div>
    <div style="display:flex;gap:20px;align-items:center;margin:8px 0 10px"><div class="box" style="width:280px;height:92px;padding:12px 14px;box-sizing:border-box"><div class="muted" style="font-size:10px;font-family:var(--mono)">lem-image — 14 streams</div><div style="margin-top:12px;height:5px;width:170px;background:#3a3b44;border-radius:2px"></div><div style="margin-top:8px;height:5px;width:220px;background:#3a3b44;border-radius:2px"></div><div style="margin-top:8px;height:5px;width:130px;background:#3a3b44;border-radius:2px"></div></div><div><div class="out">#&lt;RECORD text 2193&gt;</div><div class="muted small" style="font-family:var(--sans)">replayed here at 1:3 · 280 × 92 of 840 × 276 · live</div></div></div>
@@ -444,7 +444,7 @@ with-output-recording</pre></div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a></nav></div>
 <div class="doc"><span><b>#&lt;RECORD text 2193&gt;</b> — output-record, 840 × 276, live<span class="sep">·</span>click <b>inspect</b><span class="sep">·</span>⌥click <b>replay full size</b><span class="sep">·</span><b>SPC o</b> 8 commands</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -457,28 +457,28 @@ with-output-recording</pre></div>
   <div class="pane-b" style="padding-top:14px">
    <div class="sect">Display</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>theme</span><span class="r" style="color:var(--text-2)">:dark</span><span class="r">user</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>documentation-line</span><span class="r" style="color:var(--text-2)">:verbose</span><span class="r">user</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>pane-divider-width</span><span class="r" style="color:var(--text-2)">1</span><span class="r">default</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>theme</span><span class="r" style="color:var(--text-2)">:dark</span><span class="r">user</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>documentation-line</span><span class="r" style="color:var(--text-2)">:verbose</span><span class="r">user</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>pane-divider-width</span><span class="r" style="color:var(--text-2)">1</span><span class="r">default</span></button>
    </div>
    <div class="sect">Editing</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>key-model</span><span class="r" style="color:var(--text-2)">:modal</span><span class="r">default</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>leader-key</span><span class="r" style="color:var(--text-2)">#\Space</span><span class="r">default</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>indent-width</span><span class="r" style="color:var(--text-2)">2</span><span class="r">project</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>auto-compile-on-save</span><span class="r" style="color:var(--text-2)">t</span><span class="r">user</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>key-model</span><span class="r" style="color:var(--text-2)">:modal</span><span class="r">default</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>leader-key</span><span class="r" style="color:var(--text-2)">#\Space</span><span class="r">default</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>indent-width</span><span class="r" style="color:var(--text-2)">2</span><span class="r">project</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>auto-compile-on-save</span><span class="r" style="color:var(--text-2)">t</span><span class="r">user</span></button>
    </div>
    <div class="sect">Runner</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row sel" style="grid-template-columns:1fr 120px 90px"><span>*scan-limit*</span><span class="r warm">500</span><span class="r warm">project</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>runner-pool-size</span><span class="r" style="color:var(--text-2)">4</span><span class="r">default</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>record-history-depth</span><span class="r" style="color:var(--text-2)">2000</span><span class="r">user</span></div>
+    <button type="button" class="row sel" style="grid-template-columns:1fr 120px 90px"><span>*scan-limit*</span><span class="r warm">500</span><span class="r warm">project</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>runner-pool-size</span><span class="r" style="color:var(--text-2)">4</span><span class="r">default</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>record-history-depth</span><span class="r" style="color:var(--text-2)">2000</span><span class="r">user</span></button>
    </div>
    <div class="sect">Keys</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>edit-definition</span><span class="r" style="color:var(--text-2)">SPC e</span><span class="r">default</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>insert-from-shelf</span><span class="r" style="color:var(--text-2)">SPC s i</span><span class="r">default</span></div>
-    <div class="row" style="grid-template-columns:1fr 120px 90px"><span>interrupt</span><span class="r" style="color:var(--text-2)">SPC r i</span><span class="r">default</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>edit-definition</span><span class="r" style="color:var(--text-2)">SPC e</span><span class="r">default</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>insert-from-shelf</span><span class="r" style="color:var(--text-2)">SPC s i</span><span class="r">default</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 120px 90px"><span>interrupt</span><span class="r" style="color:var(--text-2)">SPC r i</span><span class="r">default</span></button>
    </div>
   </div>
  </div>
@@ -490,21 +490,21 @@ with-output-recording</pre></div>
    <div class="muted small" style="margin:4px 0 14px">integer 1–10 000 · clim-web · presentations.lisp.14:41</div>
    <p style="margin:0 0 20px;line-height:1.5;font-size:14.5px">Output records drained per scan. Lower keeps the client responsive under heavy output; higher cuts round trips.</p>
    <div class="box" style="padding:18px 20px 16px">
-    <div style="display:flex;align-items:center;gap:14px"><span class="field big">500</span><span class="muted">records</span><span class="sp" style="flex:1"></span><span class="muted small">integer editor · type a value</span></div>
-    <div class="slider" style="margin:20px 4px 6px"><i style="width:14%"></i><b style="left:14%"></b></div>
+    <div style="display:flex;align-items:center;gap:14px"><input type="text" class="field big" value="500" aria-label="scan-limit" size="4"><span class="muted">records</span><span class="sp" style="flex:1"></span><span class="muted small">integer editor · type a value</span></div>
+    <input type="range" class="slider" min="1" max="10000" value="500" aria-label="scan-limit, drag to supplement typing" style="margin:20px 4px 6px">
     <div class="muted small" style="display:flex;justify-content:space-between;font-family:var(--mono)"><span>1</span><span>drag supplements typing</span><span>10 000</span></div>
    </div>
    <div class="sect" style="margin-top:26px">Layers</div>
    <div class="rows" style="font-size:13.5px">
-    <div class="row sel" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot warm"></span><span>project</span><span class="mono">500</span><span class="mono muted small">.clim/settings.lisp:12 · source</span><span class="btn">revert</span></div>
-    <div class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>user</span><span class="mono" style="text-decoration:line-through;color:var(--muted)">200</span><span class="mono muted small">~/.clim/settings.lisp:88 · ours</span><span class="btn">use this</span></div>
-    <div class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>session</span><span class="mono muted">—</span><span class="mono muted small">not bound in this runner</span><span class="btn">set here</span></div>
-    <div class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>default</span><span class="mono muted">1000</span><span class="mono muted small">presentations.lisp.14:41</span><span></span></div>
+    <div role="group" class="row sel" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot warm"></span><span>project</span><span class="mono">500</span><span class="mono muted small">.clim/settings.lisp:12 · source</span><button type="button" class="btn">revert</button></div>
+    <div role="group" class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>user</span><span class="mono" style="text-decoration:line-through;color:var(--muted)">200</span><span class="mono muted small">~/.clim/settings.lisp:88 · ours</span><button type="button" class="btn">use this</button></div>
+    <div role="group" class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>session</span><span class="mono muted">—</span><span class="mono muted small">not bound in this runner</span><button type="button" class="btn">set here</button></div>
+    <button type="button" class="row" style="grid-template-columns:20px 80px 60px 1fr auto;min-height:46px;gap:8px"><span class="dot idle"></span><span>default</span><span class="mono muted">1000</span><span class="mono muted small">presentations.lisp.14:41</span><span></span></button>
    </div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a></nav></div>
 <div class="doc"><span><b>*scan-limit*</b> — setting, integer 1–10 000, in effect from project<span class="sep">·</span>click <b>edit value</b><span class="sep">·</span>⌥click <b>edit declaration</b><span class="sep">·</span><b>SPC o</b> 8 commands</span><span class="right"><span class="dot"></span>ccl-web.image · 41 MB · connected</span></div>
 </section></div>
 
@@ -518,10 +518,10 @@ with-output-recording</pre></div>
    <div style="border-left:3px solid var(--err);padding:6px 0 6px 18px;margin-bottom:22px"><div style="font-size:19px">Push rejected — <span class="p err mono" style="font-size:15px">origin/main</span> has 3 commits that <span class="p err mono" style="font-size:15px">main</span> does not</div><div class="muted small" style="margin-top:6px">signalled in <span class="mono">push</span> · proxy reports non-fast-forward · nothing was sent</div></div>
    <div class="sect">Restarts · established by push</div>
    <div class="rows">
-    <div class="row sel2" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">0</span><span style="font-size:15px">Rebase your 4 commits onto origin/main</span><span class="r warm" style="font-family:var(--sans)">in progress</span></div>
-    <div class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">1</span><span style="font-size:15px">Merge origin/main into main</span><span></span></div>
-    <div class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">2</span><span style="font-size:15px">Push with lease, discarding their 3 commits</span><span></span></div>
-    <div class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">3</span><span style="font-size:15px">Keep the fetch and stop here</span><span></span></div>
+    <button type="button" class="row sel2" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">0</span><span style="font-size:15px">Rebase your 4 commits onto origin/main</span><span class="r warm" style="font-family:var(--sans)">in progress</span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">1</span><span style="font-size:15px">Merge origin/main into main</span><span></span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">2</span><span style="font-size:15px">Push with lease, discarding their 3 commits</span><span></span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 1fr 90px;min-height:44px"><span class="muted mono small">3</span><span style="font-size:15px">Keep the fetch and stop here</span><span></span></button>
    </div>
    <div class="sect">Divergence</div>
    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 40px;font:13px/24px var(--mono)">
@@ -531,8 +531,8 @@ with-output-recording</pre></div>
    <div class="muted mono small" style="margin-top:14px">common ancestor&nbsp;&nbsp; 7b20e14&nbsp;&nbsp; yesterday</div>
    <div class="sect">Conflicts while rebasing 2af9410</div>
    <div class="rows">
-    <div class="row sel" style="grid-template-columns:1fr auto;min-height:40px"><span class="mono">presentations.lisp</span><span class="r">1 hunk · scan-buffer</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;min-height:40px"><span class="mono">runner.lisp</span><span class="r">1 hunk · runner-sheet</span></div>
+    <button type="button" class="row sel" style="grid-template-columns:1fr auto;min-height:40px"><span class="mono">presentations.lisp</span><span class="r">1 hunk · scan-buffer</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:40px"><span class="mono">runner.lisp</span><span class="r">1 hunk · runner-sheet</span></button>
    </div>
   </div>
  </div>
@@ -557,7 +557,7 @@ with-output-recording</pre></div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Resolve</span><span class="sep">›</span><span class="arg">conflict 1 of 2</span><span class="sep">›</span><span class="arg pending">resolution<span class="ibeam"></span></span><span class="sp"></span><span class="btn"><span class="key">Esc</span>back to the restarts</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Resolve</span><span class="sep">›</span><span class="arg">conflict 1 of 2</span><span class="sep">›</span><input type="text" class="arg pending" placeholder="resolution" aria-label="resolution" size="11"><span class="sp"></span><button type="button" class="btn"><span class="key">Esc</span>back to the restarts</button></div>
 <div class="doc"><span><b>conflict 1 of 2</b> — scan-buffer, 1 line differs<span class="sep">·</span>click <b>keep yours</b><span class="sep">·</span>⌥click <b>keep theirs</b><span class="sep">·</span><b>SPC o</b> 6 commands</span><span class="right"><span class="dot err"></span>main ↑4 ↓3 · rebasing · nothing pushed</span></div>
 </section></div>
 
@@ -570,16 +570,16 @@ with-output-recording</pre></div>
   <div class="pane-b" style="padding-top:22px">
    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span class="mono" style="font-size:18px">clim-web</span><span class="chip ok">loaded 09:12</span><span class="muted small">a3f1c9d +4 saves · <span class="warm">4 definitions changed since load</span></span></div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>packages.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">f01b8c4</span></div>
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>streams.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">a3f1c9d</span></div>
-    <div class="row sel" style="grid-template-columns:1fr 150px 130px 130px"><span>presentations.lisp</span><span class="warm">loaded · 4 changed</span><span class="warm">stale</span><span class="r warm">uncommitted</span></div>
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>runner.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">7b20e14</span></div>
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>Backends/web.lisp</span><span class="muted">not loaded</span><span class="muted">—</span><span class="r">7b20e14</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>packages.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">f01b8c4</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>streams.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">a3f1c9d</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:1fr 150px 130px 130px"><span>presentations.lisp</span><span class="warm">loaded · 4 changed</span><span class="warm">stale</span><span class="r warm">uncommitted</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>runner.lisp</span><span class="muted">loaded</span><span class="muted">compiled</span><span class="r">7b20e14</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>Backends/web.lisp</span><span class="muted">not loaded</span><span class="muted">—</span><span class="r">7b20e14</span></button>
    </div>
    <div class="sect" style="margin-left:14px">Depends on</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>alexandria</span><span class="muted">loaded</span><span class="muted">1.4.0</span><span class="r">pinned</span></div>
-    <div class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>babel</span><span class="muted">loaded</span><span class="muted">0.5.0</span><span class="r">pinned</span></div>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>alexandria</span><span class="muted">loaded</span><span class="muted">1.4.0</span><span class="r">pinned</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr 150px 130px 130px"><span>babel</span><span class="muted">loaded</span><span class="muted">0.5.0</span><span class="r">pinned</span></button>
    </div>
    <div style="border-top:1px solid var(--divider);margin:22px 0 18px"></div>
    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span class="mono" style="font-size:16px">clim-web/tests</span><span class="chip">not loaded</span><span class="muted small">9 modules · last run 2 h ago, 84 of 84</span></div>
@@ -591,10 +591,10 @@ with-output-recording</pre></div>
   <div class="pane-h"><span class="name">Changed since load</span><span class="sp"></span><span class="fact warm">2 exist only in the image</span></div>
   <div class="pane-b">
    <div class="rows">
-    <div class="row sel" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><div class="mono" style="font-size:14.5px">runner-step</div><div class="muted small">function · redefined in the listener 6 min ago</div></span><span class="chip err">in no file</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><div class="mono" style="font-size:14.5px">present-object</div><div class="muted small">method (runner stream-endpoint) · evaluated in the listener 41 min ago</div></span><span class="chip err">in no file</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><div class="mono" style="font-size:14.5px">scan-buffer</div><div class="muted small">function · edited and compiled 2 min ago</div></span><span class="chip">saved, uncommitted</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><div class="mono" style="font-size:14.5px">pop-record</div><div class="muted small">function · edited and compiled 38 min ago</div></span><span class="chip">saved, uncommitted</span></div>
+    <button type="button" class="row sel" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><span class="blk mono" style="font-size:14.5px">runner-step</span><span class="blk muted small">function · redefined in the listener 6 min ago</span></span><span class="chip err">in no file</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><span class="blk mono" style="font-size:14.5px">present-object</span><span class="blk muted small">method (runner stream-endpoint) · evaluated in the listener 41 min ago</span></span><span class="chip err">in no file</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><span class="blk mono" style="font-size:14.5px">scan-buffer</span><span class="blk muted small">function · edited and compiled 2 min ago</span></span><span class="chip">saved, uncommitted</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:58px;align-items:start;padding:10px 14px"><span><span class="blk mono" style="font-size:14.5px">pop-record</span><span class="blk muted small">function · edited and compiled 38 min ago</span></span><span class="chip">saved, uncommitted</span></button>
    </div>
    <div style="border-top:1px solid var(--divider);margin:18px 0"></div>
    <div class="sect">The three states</div>
@@ -602,7 +602,7 @@ with-output-recording</pre></div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Write Changed Definitions to Files</span><span class="sep">›</span><span class="arg">2 definitions</span><span class="sp"></span><span class="btn"><span class="key">↩</span>run</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Write Changed Definitions to Files</span><span class="sep">›</span><span class="arg">2 definitions</span><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>run</button></div>
 <div class="doc"><span><b>presentations.lisp</b> — module of clim-web, loaded 09:12, 4 definitions changed since<span class="sep">·</span>click <b>edit</b><span class="sep">·</span>⌥click <b>recompile module</b><span class="sep">·</span><b>SPC o</b> 12 commands</span><span class="right"><span class="dot"></span>main ↑2 · clim-web a3f1c9d +4</span></div>
 </section></div>
 
@@ -638,19 +638,19 @@ with-output-recording</pre></div>
    <div class="muted small" style="margin-top:14px">Backends is a module: web and canvas are its components</div>
    <div class="sect" style="margin-top:26px">Operations, in order</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">1</span><span class="muted">packages</span><span class="muted">unchanged — skipped</span></div>
-    <div class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">2</span><span class="muted">streams</span><span class="muted">unchanged — skipped</span></div>
-    <div class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">3</span><span>presentations</span><span>compile — source newer than fasl</span></div>
-    <div class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">4</span><span>presentations</span><span>load</span></div>
-    <div class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">5</span><span>runner</span><span>compile — depends on presentations</span></div>
-    <div class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">6</span><span>runner</span><span>load</span></div>
-    <div class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">7</span><span>Backends/web</span><span class="err">blocked — sibling component has no file</span></div>
+    <button type="button" class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">1</span><span class="muted">packages</span><span class="muted">unchanged — skipped</span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">2</span><span class="muted">streams</span><span class="muted">unchanged — skipped</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">3</span><span>presentations</span><span>compile — source newer than fasl</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">4</span><span>presentations</span><span>load</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">5</span><span>runner</span><span>compile — depends on presentations</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">6</span><span>runner</span><span>load</span></button>
+    <button type="button" class="row" style="grid-template-columns:24px 140px 1fr;min-height:32px"><span class="muted small">7</span><span>Backends/web</span><span class="err">blocked — sibling component has no file</span></button>
    </div>
    <div class="muted small" style="margin:14px 0 0 14px">4 operations would run, 2 skipped, 1 blocked.</div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compile System</span><span class="sep">›</span><span class="arg">clim-web</span><span class="sp"></span><span class="btn"><span class="key">↩</span>run this plan</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Compile System</span><span class="sep">›</span><span class="arg">clim-web</span><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>run this plan</button></div>
 <div class="doc"><span><b>(:file "canvas")</b> — component of Backends, declared, no file<span class="sep">·</span><b>↩</b> create canvas.lisp<span class="sep">·</span>⌥click <b>remove component</b><span class="sep">·</span><b>SPC o</b> 5 commands</span><span class="right"><span class="dot"></span>main ↑2 · clim-web a3f1c9d +4</span></div>
 </section></div>
 
@@ -677,9 +677,9 @@ with-output-recording</pre></div>
    <p style="margin:0 0 18px;line-height:1.5">Draws a record onto a stream, clipped to a region. Replaying never recomputes the record's contents.</p>
    <div class="sect">References</div>
    <div class="rows">
-    <div class="row sel" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:64px"><span><div>CLIM II Specification, p. 412</div><div class="muted small">§16.4.2 — "replay … is free of side effects on the record itself"</div><div class="muted small">citation · attached just now</div></span><span class="chip cool">foreign</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:56px"><span><div>doc/stream-spec.md</div><div class="muted small">§4.1 — byte streams and record loading</div><div class="muted small">in the repository · a3f1c9d</div></span><span></span></div>
-    <div class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:56px"><span><div class="mono">repaint-sheet</div><div class="muted small">known caller · runner.lisp:88</div><div class="muted small">in the image</div></span><span></span></div>
+    <button type="button" class="row sel" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:64px"><span><span class="blk">CLIM II Specification, p. 412</span><span class="blk muted small">§16.4.2 — "replay … is free of side effects on the record itself"</span><span class="blk muted small">citation · attached just now</span></span><span class="chip cool">foreign</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:56px"><span><span class="blk">doc/stream-spec.md</span><span class="blk muted small">§4.1 — byte streams and record loading</span><span class="blk muted small">in the repository · a3f1c9d</span></span><span></span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:56px"><span><span class="blk mono">repaint-sheet</span><span class="blk muted small">known caller · runner.lisp:88</span><span class="blk muted small">in the image</span></span><span></span></button>
    </div>
    <div style="border-top:1px solid var(--divider);margin:16px 0"></div>
    <div class="sect">What crossed</div>
@@ -687,7 +687,7 @@ with-output-recording</pre></div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Attach Citation</span><span class="sep">›</span><span class="arg">CLIM II Spec p. 412 §16.4.2</span><span class="sep">›</span><span class="arg">replay-output-record</span><span class="sp"></span><span class="btn"><span class="key">↩</span>run</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="verb">Attach Citation</span><span class="sep">›</span><span class="arg">CLIM II Spec p. 412 §16.4.2</span><span class="sep">›</span><span class="arg">replay-output-record</span><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>run</button></div>
 <div class="doc"><span><b>citation</b> — CLIM II Specification, p. 412, 2 lines selected<span class="sep">·</span>click <b>open at page</b><span class="sep">·</span>⌥click <b>copy the text</b><span class="sep">·</span><b>SPC o</b> 6 commands</span><span class="right"><span class="dot"></span>foreign material · fetched by the client · inert</span></div>
 </section></div>
 
@@ -712,14 +712,14 @@ with-output-recording</pre></div>
   <span class="muted" style="font-family:var(--sans)">heap</span><span>1.9 GB of 4.0 GB</span>
  </div>
  <div class="rows" style="padding:14px 10px 4px">
-  <div class="row sel2" style="grid-template-columns:1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span><div style="font-size:15px">Interrupt</div><div class="muted small">signals at the next safepoint — the debugger opens with the stack intact</div></span><span class="k"><b>SPC r i</b></span></div>
-  <div class="row" style="grid-template-columns:1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span><div style="font-size:15px">Abort</div><div class="muted small">unwinds to this activity's command loop — the partial compile is discarded</div></span><span class="k"><b>SPC r a</b></span></div>
+  <button type="button" class="row sel2" style="grid-template-columns:1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span><span class="blk" style="font-size:15px">Interrupt</span><span class="blk muted small">signals at the next safepoint — the debugger opens with the stack intact</span></span><span class="k"><b>SPC r i</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span><span class="blk" style="font-size:15px">Abort</span><span class="blk muted small">unwinds to this activity's command loop — the partial compile is discarded</span></span><span class="k"><b>SPC r a</b></span></button>
   <div style="border-top:1px solid var(--divider);margin:6px 4px"></div>
-  <div class="row" style="grid-template-columns:1fr auto;min-height:74px;align-items:start;padding:10px 14px"><span><div style="font-size:15px">Force quit the image</div><div class="err small">ends every Worker and loses the image: 2 definitions that exist in no file, 41 forms of history</div><div class="muted small">last checkpoint 6 min ago — a restart would restore it, not resume this compile</div></span><span class="k"><b>SPC r q</b></span></div>
+  <button type="button" class="row" style="grid-template-columns:1fr auto;min-height:74px;align-items:start;padding:10px 14px"><span><span class="blk" style="font-size:15px">Force quit the image</span><span class="blk err small">ends every Worker and loses the image: 2 definitions that exist in no file, 41 forms of history</span><span class="blk muted small">last checkpoint 6 min ago — a restart would restore it, not resume this compile</span></span><span class="k"><b>SPC r q</b></span></button>
  </div>
  <div class="panel-f"><span>Only the last of these works if the safepoints stop answering.</span></div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="dot warm"></span><span class="verb">Compile System</span><span class="sep">›</span><span class="arg">clim-web</span><span class="warm">running 14.2 s</span><span class="sp"></span><span class="btn"><span class="key">SPC r i</span>interrupt</span></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="dot warm"></span><span class="verb">Compile System</span><span class="sep">›</span><span class="arg">clim-web</span><span class="warm">running 14.2 s</span><span class="sp"></span><button type="button" class="btn"><span class="key">SPC r i</span>interrupt</button></div>
 <div class="doc"><span><b>computation</b> — running 14.2 s in process compile-1<span class="sep">·</span>click <b>interrupt at the next safepoint</b><span class="sep">·</span><b>SPC o</b> 3 commands</span><span class="right"><span class="dot warm"></span>safepoints live · last 12 ms ago</span></div>
 </section></div>
 
@@ -741,12 +741,12 @@ with-output-recording</pre></div>
 <div class="panel" style="left:340px;top:130px;width:760px">
  <div class="panel-h"><span class="name">Activities</span><span class="muted">6 · one image</span><span class="sp"></span><span class="k"><b>SPC a</b>, then a letter</span></div>
  <div class="rows" style="padding:8px 10px">
-  <div class="row sel" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">clim-web</span><span class="warm small">editing presentations.lisp · 4 changed definitions</span><span class="k"><b>SPC a e</b></span></div>
-  <div class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span class="dot err"></span><span style="font-size:15px">Debugger: runner-2</span><span class="err small">halted in type-error · waiting 6 min</span><span class="k"><b>SPC a d</b></span></div>
-  <div class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span class="dot warm"></span><span style="font-size:15px">Compile: clim-web</span><span class="warm small">running 14.2 s · output since you left</span><span class="k"><b>SPC a b</b></span></div>
-  <div class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Listener</span><span class="muted small">idle · 41 forms of history</span><span class="k"><b>SPC a l</b></span></div>
-  <div class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Tests</span><span class="muted small">84 of 84, 2 h ago</span><span class="k"><b>SPC a t</b></span></div>
-  <div class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Reading</span><span class="muted small">CLIM II Specification, p. 412</span><span class="k"><b>SPC a k</b></span></div>
+  <button type="button" class="row sel" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">clim-web</span><span class="warm small">editing presentations.lisp · 4 changed definitions</span><span class="k"><b>SPC a e</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span class="dot err"></span><span style="font-size:15px">Debugger: runner-2</span><span class="err small">halted in type-error · waiting 6 min</span><span class="k"><b>SPC a d</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span class="dot warm"></span><span style="font-size:15px">Compile: clim-web</span><span class="warm small">running 14.2 s · output since you left</span><span class="k"><b>SPC a b</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Listener</span><span class="muted small">idle · 41 forms of history</span><span class="k"><b>SPC a l</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Tests</span><span class="muted small">84 of 84, 2 h ago</span><span class="k"><b>SPC a t</b></span></button>
+  <button type="button" class="row" style="grid-template-columns:20px 200px 1fr auto;min-height:48px"><span></span><span style="font-size:15px">Reading</span><span class="muted small">CLIM II Specification, p. 412</span><span class="k"><b>SPC a k</b></span></button>
  </div>
  <div class="panel-f"><span>each keeps its own panes, layout and history</span><span class="sp"></span><span><b class="k">SPC a n</b> new listener</span></div>
 </div>
@@ -776,20 +776,20 @@ with-output-recording</pre></div>
   <div class="pane-b">
    <div class="sect">presentations.lisp · 3</div>
    <div class="rows">
-    <div class="row sel" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot err" style="margin-top:6px"></span><span><div style="font-size:15px">Undefined function <span class="mono">validate-record</span></div><div class="muted small">in pop-record · called, defined nowhere in the image or the system</div></span></div>
-    <div class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><div style="font-size:15px">Unused variable <span class="mono">region</span></div><div class="muted small">in replay-output-record · the method ignores its clipping region</div></span></div>
-    <div class="row" style="grid-template-columns:20px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="dot idle" style="margin-top:6px"></span><span><div style="font-size:15px;color:var(--muted)"><span class="mono">runner-sheet</span> is deprecated, use <span class="mono">sheet</span></div><div class="muted small">muted here 2 days ago — "renaming lands with e77b204"</div></span><span class="chip">muted</span></div>
+    <button type="button" class="row sel" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot err" style="margin-top:6px"></span><span><span class="blk" style="font-size:15px">Undefined function <span class="mono">validate-record</span></span><span class="blk muted small">in pop-record · called, defined nowhere in the image or the system</span></span></button>
+    <button type="button" class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><span class="blk" style="font-size:15px">Unused variable <span class="mono">region</span></span><span class="blk muted small">in replay-output-record · the method ignores its clipping region</span></span></button>
+    <button type="button" class="row" style="grid-template-columns:20px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="dot idle" style="margin-top:6px"></span><span><span class="blk" style="font-size:15px;color:var(--muted)"><span class="mono">runner-sheet</span> is deprecated, use <span class="mono">sheet</span></span><span class="blk muted small">muted here 2 days ago — "renaming lands with e77b204"</span></span><span class="chip">muted</span></button>
    </div>
    <div class="sect">runner.lisp · 4</div>
    <div class="rows">
-    <div class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><div style="font-size:15px">Inline declaration ignored for <span class="mono">pop-record</span></div><div class="muted small">in runner-step · the function is not yet defined at this point</div></span></div>
-    <div class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><div style="font-size:15px">Redefining <span class="mono">runner-step</span> already in the image</div><div class="muted small">the running definition differs from the file's</div></span></div>
+    <button type="button" class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><span class="blk" style="font-size:15px">Inline declaration ignored for <span class="mono">pop-record</span></span><span class="blk muted small">in runner-step · the function is not yet defined at this point</span></span></button>
+    <button type="button" class="row" style="grid-template-columns:20px 1fr;min-height:60px;align-items:start;padding:10px 14px"><span class="dot warm" style="margin-top:6px"></span><span><span class="blk" style="font-size:15px">Redefining <span class="mono">runner-step</span> already in the image</span><span class="blk muted small">the running definition differs from the file's</span></span></button>
    </div>
    <div class="muted small" style="margin:14px 0 0 14px">3 more in runner.lisp · <b class="k">]w</b> <b class="k">[w</b> walk the set</div>
   </div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a></nav></div>
 <div class="doc"><span><b>undefined function</b> — warning, pop-record, presentations.lisp:118<span class="sep">·</span><b>↩</b> go to it<span class="sep">·</span>⌥click <b>define it</b><span class="sep">·</span><b>SPC o</b> 6 commands</span><span class="right"><span class="dot"></span>main ↑2 · clim-web a3f1c9d +4</span></div>
 </section></div>
 
@@ -803,12 +803,12 @@ with-output-recording</pre></div>
    <div class="mono" style="font-size:22px">#&lt;FASL-LOADER "presentations.fasl"&gt;</div>
    <div class="muted small" style="margin:6px 0 22px">standard-object · clim-web · 6 slots · reached from the stream that owns it</div>
    <div class="rows mono" style="font-size:13.5px">
-    <div class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">pathname</span><span>#P"Backends/presentations.fasl"</span></div>
-    <div class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">built-from</span><span>#&lt;COMMIT 7b20e14&gt;</span></div>
-    <div class="row sel" style="grid-template-columns:170px 1fr;min-height:40px"><span class="warm">pending-forms</span><span>(#&lt;FORM defun 41&gt; #&lt;FORM defmethod 42&gt; +6)</span></div>
-    <div class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">stream</span><span>#&lt;BYTE-STREAM sid 3&gt;</span></div>
-    <div class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">position</span><span>88402 of 88402</span></div>
-    <div class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">state</span><span>:finished</span></div>
+    <button type="button" class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">pathname</span><span>#P"Backends/presentations.fasl"</span></button>
+    <button type="button" class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">built-from</span><span>#&lt;COMMIT 7b20e14&gt;</span></button>
+    <button type="button" class="row sel" style="grid-template-columns:170px 1fr;min-height:40px"><span class="warm">pending-forms</span><span>(#&lt;FORM defun 41&gt; #&lt;FORM defmethod 42&gt; +6)</span></button>
+    <button type="button" class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">stream</span><span>#&lt;BYTE-STREAM sid 3&gt;</span></button>
+    <button type="button" class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">position</span><span>88402 of 88402</span></button>
+    <button type="button" class="row" style="grid-template-columns:170px 1fr;min-height:40px"><span class="muted">state</span><span>:finished</span></button>
    </div>
   </div>
  </div>
@@ -823,7 +823,7 @@ with-output-recording</pre></div>
    <p class="muted" style="margin:22px 0 0;line-height:1.55;max-width:52ch">Descending replaces this pane and extends the trail. Nothing opens a window, and stepping back restores exactly what was here.</p></div>
  </div>
 </div>
-<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><div class="ways"><span>Commands</span><span>Open views</span><span>Activities</span></div></div>
+<div class="cmd"><span class="prompt">&gt;_</span><span class="hint">Type a command, or point at something</span><span class="sp"></span><nav class="ways" aria-label="ways in"><a href="#Commands">Commands</a><a href="#Open views">Open views</a><a href="#Activities">Activities</a></nav></div>
 <div class="doc"><span><b>pending-forms</b> — slot of #&lt;FASL-LOADER&gt;, a list of 8<span class="sep">·</span><b>↩</b> descend<span class="sep">·</span>⌥click <b>set the slot</b><span class="sep">·</span><b>SPC o</b> 9 commands</span><span class="right"><span class="dot"></span>trail kept · <b>h</b> returns to #&lt;BYTE-STREAM 3&gt;</span></div>
 </section></div>
 
@@ -837,12 +837,12 @@ with-output-recording</pre></div>
 <div class="panel" style="left:400px;top:100px;width:640px">
  <div class="panel-h"><span class="name">Make Runner</span><span class="muted">6 arguments</span></div>
  <div style="padding:14px 24px 4px;display:grid;grid-template-columns:150px 1fr;row-gap:16px;align-items:start">
-  <span style="padding-top:8px">name<div class="muted small">string</div></span><span class="field" style="display:block">lem-image-2</span>
-  <span style="padding-top:8px">image<div class="muted small">pathname</div></span><span class="field" style="display:block">images/ccl-web.image</span>
-  <span style="padding-top:8px">kind<div class="muted small">member</div></span><span style="display:flex;gap:8px"><span class="field" style="background:var(--warm-row);border-color:var(--warm-dim)">:byte</span><span class="field">:char</span><span class="field">:both</span></span>
-  <span style="padding-top:8px">scan-limit<div class="muted small">integer 1–10 000</div></span><span><span style="display:flex;align-items:center;gap:12px"><span class="field" style="width:90px">500</span><span class="muted small">default from *scan-limit* · type a value</span></span><div class="slider" style="margin:14px 4px 0;width:300px"><i style="width:14%"></i><b style="left:14%"></b></div></span>
-  <span style="padding-top:8px">sheet<div class="muted small">sheet, or nil</div></span><span><span class="field err" style="display:block">#&lt;WEB-SHEET canvas9&gt;</span><div class="err small" style="margin-top:6px">no sheet named canvas9 in this image — ⌥click a sheet to fill this in</div></span>
-  <span style="padding-top:2px">start<div class="muted small">boolean</div></span><span style="display:flex;align-items:center;gap:10px"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#f0f0f2"></span>run it as soon as it is made</span>
+  <span style="padding-top:8px">name<div class="muted small">string</div></span><input type="text" class="field" style="display:block" value="lem-image-2" aria-label="name" size="12">
+  <span style="padding-top:8px">image<div class="muted small">pathname</div></span><input type="text" class="field" style="display:block" value="images/ccl-web.image" aria-label="image" size="21">
+  <span style="padding-top:8px">kind<div class="muted small">member</div></span><span style="display:flex;gap:8px" role="radiogroup" aria-label="kind"><button type="button" role="radio" aria-checked="true" class="field" style="background:var(--warm-row);border-color:var(--warm-dim)">:byte</button><button type="button" role="radio" aria-checked="false" class="field">:char</button><button type="button" role="radio" aria-checked="false" class="field">:both</button></span>
+  <span style="padding-top:8px">scan-limit<div class="muted small">integer 1–10 000</div></span><span><span style="display:flex;align-items:center;gap:12px"><input type="text" class="field" style="width:90px" value="500" aria-label="scan-limit" size="4"><span class="muted small">default from *scan-limit* · type a value</span></span><input type="range" class="slider" min="1" max="10000" value="500" aria-label="scan-limit, drag to supplement typing" style="margin:14px 4px 0;width:300px"></span>
+  <span style="padding-top:8px">sheet<div class="muted small">sheet, or nil</div></span><span><input type="text" class="field err" style="display:block" value="#&lt;WEB-SHEET canvas9&gt;" aria-label="sheet" size="21" aria-invalid="true"><div class="err small" style="margin-top:6px">no sheet named canvas9 in this image — ⌥click a sheet to fill this in</div></span>
+  <span style="padding-top:2px">start<div class="muted small">boolean</div></span><span style="display:flex;align-items:center;gap:10px"><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="check" aria-label="start">run it as soon as it is made</label></span>
  </div>
  <div class="panel-f"><span><kbd class="cool">↩</kbd> run it</span><span><kbd class="cool">⌥↩</kbd> put the form in the transcript instead</span><span class="sp"></span><span>Esc cancels</span></div>
 </div>
@@ -873,16 +873,16 @@ with-output-recording</pre></div>
   <div class="pane-h"><span class="name">Snapshots</span><span class="sp"></span><span class="fact">4 kept</span></div>
   <div class="pane-b">
    <div class="rows">
-    <div class="row sel" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><div style="font-size:15px">6 minutes ago</div><div class="warm small">automatic, before Compile System · quiescent</div><div class="muted small">clim-web loaded · 2 definitions that exist in no file · 41 forms</div></span><span class="mono muted small">412 MB</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><div style="font-size:15px">1 h 40 m ago</div><div class="muted small">automatic, hourly</div><div class="muted small">clim-web loaded · nothing unsaved</div></span><span class="mono muted small">388 MB</span></div>
-    <div class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><div style="font-size:15px">yesterday, 18:20 <span class="chip ok" style="margin-left:8px">pinned</span></div><div class="muted small">"clean load, 7b20e14"</div><div class="muted small">systems loaded, nothing changed in the image</div></span><span class="mono muted small">301 MB</span></div>
+    <button type="button" class="row sel" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><span class="blk" style="font-size:15px">6 minutes ago</span><span class="blk warm small">automatic, before Compile System · quiescent</span><span class="blk muted small">clim-web loaded · 2 definitions that exist in no file · 41 forms</span></span><span class="mono muted small">412 MB</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><span class="blk" style="font-size:15px">1 h 40 m ago</span><span class="blk muted small">automatic, hourly</span><span class="blk muted small">clim-web loaded · nothing unsaved</span></span><span class="mono muted small">388 MB</span></button>
+    <button type="button" class="row" style="grid-template-columns:1fr auto;align-items:start;padding:10px 14px;min-height:74px"><span><span class="blk" style="font-size:15px">yesterday, 18:20 <span class="chip ok" style="margin-left:8px">pinned</span></span><span class="blk muted small">"clean load, 7b20e14"</span><span class="blk muted small">systems loaded, nothing changed in the image</span></span><span class="mono muted small">301 MB</span></button>
    </div>
    <div style="border-top:1px solid var(--divider);margin:18px 0"></div>
    <p class="muted" style="margin:0;line-height:1.55;max-width:56ch">A snapshot is taken at a quiescent point before anything that can destroy the image. It restores what the image held — definitions, objects, history — never what it was doing: no frame, no pending host request and no open debugger survives. That is what makes <b style="color:var(--text-2);font-weight:500">force quit</b> and <b style="color:var(--text-2);font-weight:500">in the image only</b> survivable.</p>
   </div>
  </div>
 </div>
-<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Save Image</span><span class="sep">›</span><span class="arg pending">label<span class="ibeam"></span></span><span class="sp"></span><span class="btn"><span class="key">↩</span>save · ~4 s</span></div>
+<div class="cmd" style="border-top-color:var(--cool-dim)"><span class="prompt">&gt;_</span><span class="verb">Save Image</span><span class="sep">›</span><input type="text" class="arg pending" placeholder="label" aria-label="label" size="6"><span class="sp"></span><button type="button" class="btn"><span class="key">↩</span>save · ~4 s</button></div>
 <div class="doc"><span><b>snapshot</b> — 6 min ago, 412 MB, automatic<span class="sep">·</span>click <b>restore from it</b><span class="sep">·</span>⌥click <b>pin</b><span class="sep">·</span><b>SPC o</b> 5 commands</span><span class="right"><span class="dot err"></span>1.9 of 4.0 GB · 2 h 14 m up</span></div>
 </section></div>
 
@@ -899,12 +899,12 @@ with-output-recording</pre></div>
 <div class="panel" style="left:340px;top:110px;width:800px">
  <div class="panel-h"><span class="name">Recent actions</span><span class="muted">newest first</span><span class="sp"></span><span class="muted">4 of 6 can be taken back</span></div>
  <div class="rows" style="padding:8px 10px">
-  <div class="row sel" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">EDITOR</span><span><div style="font-size:15px">Edited scan-buffer in presentations.lisp</div><div class="warm small">2 min ago · 3 lines</div></span><span class="small" style="text-align:right;padding-top:3px"><b class="k">u</b> restores the text<div class="muted">⌘Z in insert mode</div></span></div>
-  <div class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">IMAGE</span><span><div style="font-size:15px">Compiled scan-buffer into the image</div><div class="muted small">2 min ago · the running definition changed</div></span><span class="small" style="padding-top:3px">revert to the loaded one</span></div>
-  <div class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">SETTINGS</span><span><div style="font-size:15px">Set *scan-limit* to 500 in the project layer</div><div class="muted small">6 min ago · was 200 from the user layer</div></span><span class="small" style="padding-top:3px">drop the layer</span></div>
-  <div class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">FILES</span><span><div style="font-size:15px">Deleted Backends/canvas.lisp</div><div class="muted small">22 min ago · never committed, but the session log has it</div></span><span class="small" style="padding-top:3px">restore from the log</span></div>
-  <div class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">GIT</span><span><div style="font-size:15px">Committed a3f1c9d</div><div class="muted small">2 h ago · not pushed yet</div></span><span class="small" style="padding-top:3px">reset, or revert with a commit</span></div>
-  <div class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px;color:var(--err)">SHARED</span><span><div style="font-size:15px">Pushed 7b20e14 to origin/main</div><div class="warm small">yesterday · other people have it</div></span><span class="err small" style="padding-top:3px">no undo — revert forward instead</span></div>
+  <button type="button" class="row sel" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">EDITOR</span><span><span class="blk" style="font-size:15px">Edited scan-buffer in presentations.lisp</span><span class="blk warm small">2 min ago · 3 lines</span></span><span class="small" style="text-align:right;padding-top:3px"><b class="k">u</b> restores the text<span class="blk muted">⌘Z in insert mode</span></span></button>
+  <button type="button" class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">IMAGE</span><span><span class="blk" style="font-size:15px">Compiled scan-buffer into the image</span><span class="blk muted small">2 min ago · the running definition changed</span></span><span class="small" style="padding-top:3px">revert to the loaded one</span></button>
+  <button type="button" class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">SETTINGS</span><span><span class="blk" style="font-size:15px">Set *scan-limit* to 500 in the project layer</span><span class="blk muted small">6 min ago · was 200 from the user layer</span></span><span class="small" style="padding-top:3px">drop the layer</span></button>
+  <button type="button" class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">FILES</span><span><span class="blk" style="font-size:15px">Deleted Backends/canvas.lisp</span><span class="blk muted small">22 min ago · never committed, but the session log has it</span></span><span class="small" style="padding-top:3px">restore from the log</span></button>
+  <button type="button" class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px">GIT</span><span><span class="blk" style="font-size:15px">Committed a3f1c9d</span><span class="blk muted small">2 h ago · not pushed yet</span></span><span class="small" style="padding-top:3px">reset, or revert with a commit</span></button>
+  <button type="button" class="row" style="grid-template-columns:110px 1fr auto;min-height:60px;align-items:start;padding:10px 14px"><span class="k" style="padding-top:3px;color:var(--err)">SHARED</span><span><span class="blk" style="font-size:15px">Pushed 7b20e14 to origin/main</span><span class="blk warm small">yesterday · other people have it</span></span><span class="err small" style="padding-top:3px">no undo — revert forward instead</span></button>
  </div>
  <div class="panel-f"><span>four substrates, four reversals</span><span class="sp"></span><span>a snapshot takes back everything the image holds at once</span></div>
 </div>
