@@ -18,8 +18,14 @@
   --warm: #da7757;
   --warm-2: #f9e9e2;
   --warm-dim: #5a3327;
-  --warm-row: #271e21;
-  --warm-row-2: #322424;
+  --warm-row: #271e21;       /* chosen: part of a selection */
+  --warm-hover: #3a2826;     /* pointed at: the row under the pointer or the caret */
+  --warm-row-2: #322424;     /* in progress: the restart or warning being acted on */
+  --warm-row-3: #2e2222;     /* chosen, in a secondary pane */
+  --menu-sel: #352929;       /* the current item of a summoned menu */
+  --plan-row: #2a2021;       /* operations the plan would run */
+  --act-row: #3c211a;        /* the current activity */
+  --undo-row: #322829;       /* the newest action */
   --warm-bg: #1b1512;
   --cool: #82c0da;
   --cool-dim: #27424e;
@@ -119,8 +125,8 @@ pre.code.dim { color: var(--muted); }
 .p { border-radius: 3px; padding: 1px 3px; margin: 0 -3px; }
 .p.hover { background: var(--hl); }
 .p.cool { background: var(--cool-dim); color: #d6e6ee; }
-.p.warm { background: var(--warm-dim); color: var(--warm-2); }
-.p.caret { background: var(--warm); color: #1a0f0a; }
+.p.warm { background: #362626; color: #f2e3dd; }
+.p.caret { background: #362626; color: #f2e3dd; box-shadow: 0 0 0 1px var(--warm-dim); }
 .p.err { background: #4a2626; color: #f0c7c7; }
 .p.exp { color: var(--muted); border-bottom: 1px dashed var(--chipb); }
 .cursor { display: inline-block; width: 9px; height: 18px; background: var(--warm); vertical-align: -3px; }
@@ -161,7 +167,13 @@ pre.code.dim { color: var(--muted); }
 .rows { display: flex; flex-direction: column; }
 .row { display: grid; align-items: center; padding: 0 14px; border-radius: 4px; min-height: 36px; }
 .row.sel { background: var(--warm-row); }
+.row.hover { background: var(--warm-hover); }
 .row.sel2 { background: var(--warm-row-2); }
+.row.sel3 { background: var(--warm-row-3); }
+.row.plan { background: var(--plan-row); }
+.row.act { background: var(--act-row); }
+.row.undo { background: var(--undo-row); }
+.menu .row.sel { background: var(--menu-sel); }
 .row.coolsel { background: var(--cool-row); }
 .row .r { text-align: right; color: var(--muted); font-family: var(--mono); font-size: 13px; }
 .row .r.warm { color: var(--warm); }

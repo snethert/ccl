@@ -1079,6 +1079,14 @@ Registered, with the question stated rather than a guess recorded.
   have chosen*. Cool: *candidates matching the type being asked for*, and
   healthy status. A third hue appears only for error state, and only as a thin
   bar and a label.
+- **The warm accent has tints, and each tint means one thing.** Chosen —
+  part of a selection — is the dimmest row tint (`#271e21`, or `#2e2222` in
+  a secondary pane). Pointed at — the row under the pointer or the caret —
+  is brighter (`#3a2826`), so a chosen row you are also pointing at reads as
+  both. In progress — the restart or warning being acted on — is `#322424`;
+  the current item of a summoned menu is `#352929`; a highlighted form in
+  source is a `#362626` chip with light text. These are the original
+  screens' values, adopted exactly; the screen source names them as tokens.
 - **De-emphasis is a colour, not an opacity.** Recessed text is recoloured to
   stay above the contrast floor; it is never faded below it. The screens use
   three tiers: near-white for what you are reading, a muted grey for column

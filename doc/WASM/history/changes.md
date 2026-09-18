@@ -2004,3 +2004,12 @@ dimmest tier (section labels, collapsed history) is lifted from `#747783` to
 `#7f828d`, the smallest change that meets §29's contrast floor. §28 and §33
 record the three tiers and the measurement; the files screen sets sizes and
 dates in the sans face as the original did. No Stage 1 record changes.
+
+## 2026-09-18 — IDE screens: the original highlight tints adopted exactly
+
+At the user's direction the warm row tints are the original PDF's, sampled
+per screen and adopted exactly: chosen rows `#271e21` (`#2e2222` in a
+secondary pane), the row under the pointer `#3a2826`, the restart or
+warning in progress `#322424`, the current menu item `#352929`, and the
+highlighted form chip `#362626` with light text. §28 records what each tint
+means; the screen source names them as tokens. No Stage 1 record changes.
