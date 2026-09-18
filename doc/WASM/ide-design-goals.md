@@ -63,6 +63,14 @@ because several of the goals below only make sense in their light.
    motion translator testing, and the input editor — are addressed in G7 and
    G8.
 
+7. **Version storage is a repository, not a file system.** History comes from
+   git, hosted on GitHub. The image holds a local clone so that editing,
+   comparing and browsing history work offline and at pointer speed; network
+   access is limited to fetch and push. Since the image runs in WebKit with no
+   local file system, the clone is persisted in browser storage, and git over
+   HTTPS reaches GitHub through a native-side scheme handler on iOS (no CORS
+   path exists to the smart-HTTP endpoints from page context).
+
 **Measured risks, not design questions:** WebContent process memory and jetsam
 behaviour with a realistic Lisp heap; cold-start time (page load, instantiate,
 image load). Both are to be measured early with a real image, and both can
@@ -137,7 +145,8 @@ list is a requirement, not an illustration.
 | Object | Notable verbs / facts |
 | --- | --- |
 | Functions, classes, variables, packages | edit definition, describe, callers, methods |
-| Files, directories, **file versions** | edit, compare with previous, compile, staleness against derived files |
+| Files, directories | edit, compare with previous, compile, staleness against derived files |
+| Commits, branches, tags, pull requests | show diff, check out, revert, blame, compare, merge, open review |
 | Output records | inspect, replay full size, replay into a new sheet |
 | Conditions and restarts | invoke, supply a value, continue |
 | Stack frames and their locals | inspect, edit and resume |
@@ -147,10 +156,28 @@ list is a requirement, not an illustration.
 | Differences between versions | apply, revert |
 | Ring entries | insert object, insert printed form, drop |
 
-**G10. File versions are first class.**
-The file system keeps versions and the interface shows them. `compare with
-previous` is one gesture from any file, and derived files (fasls) display
-their staleness against their source.
+**G10. File versions are first class, and git is where they live.**
+A version is a `(path, commit)` pair, not a per-file counter. The history of a
+path is read from the repository, renames followed, and `compare with
+previous` is one gesture from any file. Derived files state their staleness as
+"compiled from commit X, source now at Y" rather than by timestamp.
+
+**G10.1. Working versions are continuous.**
+Git only records history when you commit, but the Lisp Machine's value came
+from every save being recoverable. Saves therefore write to a per-session
+working ref — a shadow branch the user never sees in their history — which an
+explicit commit promotes. "Compare with previous" always has something to
+compare against, and the published history stays clean.
+
+**G10.2. History is a graph, not a stack.**
+A file's versions belong to branches. A version presentation carries its
+commit, branch and author, and the listing shows the current branch's history
+with the others reachable, never flattened into a single numbered sequence.
+
+**G10.3. Git objects are presentations like any other.**
+Commits, branches, tags and pull requests are presented objects with computed
+verbs (show diff, check out, revert, blame, compare, merge, open review). They
+enter the system through G7, not through a separate version-control tool.
 
 *Reference: screens 4, 5, 6, 10, 11.*
 
@@ -332,9 +359,12 @@ restart, not as a parse failure before the system exists.
 4. **Client-side input editing.** How much of the input editor must move to the
    client before typing feels local, and what stays asynchronous.
 5. **Multi-scene behaviour on iPad** for the tear-off path (G20).
-6. **Version storage.** File versioning (G10) is assumed; where it is
-   implemented — the host file system, a content-addressed store, or git —
-   is undecided.
+6. **Clone persistence and sync.** Versioning is git on GitHub (G10). Open:
+   where the local clone lives in each target (OPFS, IndexedDB, native file
+   system), how large a repository that supports, and what happens to unpushed
+   working refs when browser storage is evicted.
+7. **Working-ref hygiene.** How long per-session working refs (G10.1) are kept,
+   whether they sync to the remote at all, and how they are garbage collected.
 
 ---
 
