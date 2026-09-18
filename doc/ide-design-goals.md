@@ -56,10 +56,12 @@ is the browser; no native mobile build is in scope.
    so no flatten or ahead-of-time step is needed.
 4. **The constraint is blocking, not latency.** Worker crossings are
    `postMessage`, not process IPC: tens of microseconds plus serialisation,
-   cheap enough that per-command traffic is free. The real hazard is that the
-   image is single-threaded and will sit in a long compile or a collection
-   while the user is still moving the pointer. The interface must stay live
-   through that, which is why the next constraint exists.
+   cheap enough that per-command traffic is free. The hazard is that a Worker
+   running Lisp can be unreachable for a while — inside a no-safepoint region,
+   waiting out a collection rendezvous, or simply mid-computation — while the
+   user is still moving the pointer. The page's own thread never runs Lisp,
+   and the interface must stay live through all of it, which is why the next
+   constraint exists.
 5. **The client holds the output-record tree.** Repaint, scroll, pointer
    highlighting, documentation-line updates and drag feedback are local
    operations that work while the image is busy or absent. Only the resulting
@@ -82,12 +84,14 @@ is the browser; no native mobile build is in scope.
    weaker reason for the same arrangement. The cost is deliberate and worth
    naming: the web deployment is not a static page — it needs a server, and
    that server is an auth surface.
-9. **Page and worker share memory, or nothing can be interrupted.** The
-   interrupt flag and the heartbeat (§13) live in a `SharedArrayBuffer`,
-   because a worker in a tight loop never reaches its message queue. That
-   requires cross-origin isolation, so the server of constraint 8 must also
-   serve the COOP and COEP headers. Without it there is no way to stop a
-   running computation short of destroying the image.
+9. **Shared memory is already the port's requirement, not the interface's.**
+   The Wasm port's collector rendezvous uses an atomically accessed shared
+   pending word per thread, and its host crossings use an Atomics mailbox
+   (`doc/WASM/decisions.md`, `doc/WASM/outline.md`, on the `wasm2` branch), so
+   cross-origin isolation — COOP and COEP from the server of constraint 8 — is
+   a condition of the port running at all. The interface inherits it and asks
+   for nothing further. This is what makes §13 possible: a Worker in a tight
+   loop never reaches its message queue, but it does read that word.
 
 **Measured risks, not design questions:**
 
@@ -426,30 +430,31 @@ the repository. The bytes stay where they came from.
 
 ## 13. Running and interrupting
 
-**G38. Every computation can be interrupted, by poisoning a check that already
-exists.** A WASM backend cannot take signals, so it already needs explicit
-checks: a stack-overflow test at function entry and a poll at loop back-edges
-so a non-allocating loop can still yield. Interruption reuses them rather than
-adding its own. The client writes a poison value into the word those checks
-read — the stack or allocation limit — so the existing comparison fails; the
-slow path then asks why, finds the interrupt flag in shared memory, signals an
-`interrupt-request` condition, and enters the debugger with the stack intact.
-Nothing is added to the fast path. An interrupt is an ordinary condition with
-restarts, not a mode, so §7 already describes what follows.
+**G38. Every computation can be interrupted, using the polls the port already
+emits.** The Wasm backend is cooperative by design: it polls at function
+entries, loop back-edges and allocation slow paths, reading a shared pending
+word whose bit updates are specified to preserve unrelated interrupt bits
+(`doc/WASM/decisions.md`, "Safepoints and explicit stacks"). Interruption is
+therefore one more bit in that word, set by the client. At the next safepoint
+the image signals an `interrupt-request` condition and enters the debugger
+with the stack intact — an ordinary condition with restarts, not a mode, so §7
+already describes what follows. Stage 0 of the port proves the underlying
+capability: interrupt a computation at a cooperative safepoint, run nested
+code, then resume or transfer through it.
 
-The requirement this places on the compiler is **coverage, not instructions**:
-checks triggered by allocation alone are not enough, because a loop that
-allocates nothing never reaches one, and that is exactly the computation a
-user needs to stop. Function entry plus every loop back-edge is the bar.
+Interruption is therefore not instantaneous and should not pretend to be.
+Allocation and designated store sequences are declared no-safepoint regions,
+so the delay is bounded by time-to-safepoint — a quantity the port measures
+and bounds, and the only latency the interface has to account for.
 
-**G39. The same mechanism publishes a heartbeat.**
-The client poisons the word on a timer as well as on demand. On that slow path
-the image writes what is running, for how long, and its allocation and
-collection counts into shared memory, then carries on. Sampling therefore
-costs nothing in the common case — no store per safepoint — and the client can
-give a live account of a busy image without the image answering a message: a
-blocked system shows facts, not a spinner, and the time since the last sample
-says whether it is answering at all.
+**G39. The same word carries a heartbeat.**
+A sample request is another bit. The client sets it on a timer; at the next
+safepoint the image writes what is running, for how long, and its allocation
+and collection counts into shared memory, then carries on. Nothing is added to
+the fast path, and the client can give a live account of a busy image without
+the image answering a message. A blocked system shows facts, not a spinner,
+and the age of the last sample is the observed time-to-safepoint — which is
+also how the interface knows whether the Worker is answering at all.
 
 **G40. A running computation is an object.**
 It is presented in the command line while it runs and carries its own
@@ -458,14 +463,17 @@ applied to a process.
 
 **G41. Three graduated actions, and the destructive one states its cost.**
 *Interrupt* at the next safepoint; *abort* to unwind to this activity's
-command loop; *force quit the runner*, which terminates the worker and loses
-the image. The third names exactly what will be lost — the definitions that
-exist in no file, the history — and when the last snapshot was taken. Only the
-third works when the safepoints stop answering, which is why it exists.
+command loop; *force quit*, which ends the image. The third names exactly what
+will be lost — the definitions that exist in no file, the history — and when
+the last snapshot was taken. It exists because it is the only one that works
+when safepoints stop answering, and it ends the whole image rather than one
+Worker: terminating a single Worker mid-rendezvous would leave the collector
+waiting on a thread that no longer exists.
 
-**What to verify** is therefore not the cost of a new poll but whether the
-backend's existing checks already cover function entry and loop back-edges
-(§19).
+**What this costs the port: nothing.** The polls exist for the collector; the
+pending word exists for the rendezvous; the reserved interrupt bits are named
+in its own decisions. The interface is a consumer of a mechanism already
+specified.
 
 ---
 
@@ -477,7 +485,8 @@ as left. Layouts (G19) rearrange panes *within* an activity; they do not give
 you a second project, a second listener, or a debugger you can step away from.
 
 **G43. Activities share one image.**
-They are contexts, not sandboxes: a definition changed in one is changed for
+An activity's process is a CCL process, which the port may place on its own
+Worker; they are contexts, not sandboxes: a definition changed in one is changed for
 all, which is the Lisp Machine's arrangement and the useful one. Isolation, if
 it is ever wanted, means a second image, never an activity.
 
@@ -612,12 +621,15 @@ become failures.
 6. **Clone persistence.** Where the local clone lives (OPFS or IndexedDB), how
    large a repository that supports, and how the working copy is reconstructed
    after an eviction.
-7. **Safepoint coverage.** Do the WASM backend's existing checks — stack
-   overflow at function entry, yield polls at loop back-edges — already cover
-   every loop, including one that allocates nothing? If they do, G38 costs
-   nothing; if they are allocation-triggered only, the gap is where hangs will
-   live.
-8. **Definition-level history.** Git versions text; the system presents
+7. **Felt interrupt latency.** Time-to-safepoint is bounded and measured by
+   the port; what matters here is how long `⌘.` takes to bite in practice,
+   and what the interface shows in the meantime.
+8. **Interrupting a blocked thread.** A Worker waiting on host I/O through the
+   Atomics mailbox or JSPI is not running Lisp and will not reach a poll. The
+   port has a completion/cancellation path for that case; the interface needs
+   to know which of its three actions applies to a thread that is waiting
+   rather than computing.
+9. **Definition-level history.** Git versions text; the system presents
    definitions. Mapping commits onto "this function last changed here" needs a
    source-range-to-definition mapping, and it is not free. Whether the
    Examiner earns it is undecided.
