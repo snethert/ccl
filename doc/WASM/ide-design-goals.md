@@ -35,53 +35,55 @@ and the verbs are derived from them.**
 ## 2. Architecture the interface assumes
 
 The interface is designed against these constraints. They are stated here
-because several of the goals below only make sense in their light.
+because several of the goals below only make sense in their light. The target
+is the browser; no native mobile build is in scope.
 
-1. **Thin client, thick image.** The front end — JavaScript in a browser,
-   Swift on iOS — renders presentations and captures keystrokes, pointer
-   events and commands. Everything else happens in CCL running in WASM.
+1. **Thin client, thick image.** The front end — JavaScript in the page —
+   renders presentations and captures keystrokes, pointer events and commands.
+   Everything else happens in CCL running in WASM.
 2. **The wire carries objects and events, never code.** No streamed value is
    ever evaluated by the client: no handler thunks, no computed layout
    expressions. Gestures identify a presentation by id and send it back; the
-   image decides what that means. This keeps the client simple and keeps the
-   iOS build inside App Store rule 2.5.2 without argument.
-3. **The image runs inside WebKit.** In a browser that is the page; on iOS it
-   is a WKWebView — offscreen when the front end is native. WebKit's content
-   process holds the JIT entitlement, so dynamic compilation stays available
-   and no flatten/AOT step is required. Embedding a standalone WASM runtime in
-   the app process is the fallback path, and only then does ahead-of-time
-   translation (wasm2c) become necessary.
-4. **Crossings are expensive; frames are not.** A WKWebView round trip is
-   roughly 0.5–2 ms. One crossing per keystroke or command is free. One
-   crossing per animation frame is not.
+   image decides what that means.
+3. **The image runs in a worker; the page renders.** Dynamic compilation stays
+   available — the browser's JIT compiles the modules the Lisp compiler emits —
+   so no flatten or ahead-of-time step is needed.
+4. **The constraint is blocking, not latency.** Worker crossings are
+   `postMessage`, not process IPC: tens of microseconds plus serialisation,
+   cheap enough that per-command traffic is free. The real hazard is that the
+   image is single-threaded and will sit in a long compile or a collection
+   while the user is still moving the pointer. The interface must stay live
+   through that, which is why the next constraint exists.
 5. **The client holds the output-record tree.** Repaint, scroll, pointer
-   highlighting and drag feedback are local operations. Only the resulting
+   highlighting, documentation-line updates and drag feedback are local
+   operations that work while the image is busy or absent. Only the resulting
    command crosses.
 6. **The same design serves a remote client.** CLIM's port/sheet/medium seam
    is where the transport goes; incremental redisplay is already a diff
    algorithm. The two places the classic design assumes locality — pointer-
    motion translator testing, and the input editor — are addressed in G7 and
    G8.
+7. **Published history is git, hosted on GitHub.** The image holds a local
+   clone so that editing, comparing and browsing history work offline and at
+   pointer speed; the network is used for fetch and push only. The clone is
+   persisted in browser storage.
+8. **The host proxies git traffic, because the sandbox runs user code.** The
+   image evaluates whatever the user writes, so it must never hold a
+   credential: a token in page context is readable by any form typed into the
+   listener. Fetch and push therefore go out through a host-side proxy holding
+   the credential, and the image can only ask for a transfer, never authorise
+   one. That the smart-HTTP endpoints also send no CORS headers is a second,
+   weaker reason for the same arrangement. The cost is deliberate and worth
+   naming: the web deployment is not a static page — it needs a server, and
+   that server is an auth surface.
 
-7. **Version storage is a repository, not a file system.** History comes from
-   git, hosted on GitHub. The image holds a local clone so that editing,
-   comparing and browsing history work offline and at pointer speed; network
-   access is limited to fetch and push. Since the image runs in WebKit with no
-   local file system, the clone is persisted in browser storage.
-8. **The host proxies git traffic; the sandbox never talks to GitHub.** Page
-   context cannot reach the smart-HTTP endpoints — they send no CORS headers —
-   so every fetch and push goes out through the host: a custom scheme handler
-   backed by the native HTTP client in an app, a server-side proxy in a pure
-   browser deployment. Credentials live with the proxy, in the Keychain or on
-   the server, and are never handed to the sandbox. The image asks for a
-   transfer; it does not hold the means to authorise one.
+**Measured risks, not design questions:**
 
-**Measured risks, not design questions:** WebContent process memory and jetsam
-behaviour with a realistic Lisp heap; cold-start time (page load, instantiate,
-image load). Both are to be measured early with a real image, and both can
-force the embedded-runtime fallback.
-
----
+- **Heap ceiling.** A wasm32 linear memory tops out at 4 GiB and practically
+  lower in a browser tab. That is a hard bound on image size, independent of
+  tuning, until memory64 is worth using.
+- **Cold start.** Module instantiation plus image load, on the slowest target.
+- **Save cost.** See G10.1: how expensive a recoverable save actually is.
 
 ## 3. The screen contract
 
@@ -167,12 +169,20 @@ path is read from the repository, renames followed, and `compare with
 previous` is one gesture from any file. Derived files state their staleness as
 "compiled from commit X, source now at Y" rather than by timestamp.
 
-**G10.1. Working versions are continuous.**
-Git only records history when you commit, but the Lisp Machine's value came
-from every save being recoverable. Saves therefore write to a per-session
-working ref — a shadow branch the user never sees in their history — which an
-explicit commit promotes. "Compare with previous" always has something to
-compare against, and the published history stays clean.
+**G10.1. Two layers, and only the upper one is git.**
+Git records history when you commit; the Lisp Machine's value came from every
+*save* being recoverable. These are different jobs and should not share a
+mechanism. Saves append to a local, per-session version log — cheap, ordered,
+disposable — and an explicit commit promotes the current state into git. The
+log is what "compare with previous" reads between commits; git is what
+collaborators, review and CI read. Writing every save into git refs instead
+was considered and rejected: it makes a tree and a commit object per
+keystroke-scale event, and it puts editor autosave traffic into the artefact
+other people consume.
+
+This layering is also what covers the things that are not in any repository —
+scratch buffers, the settings file, generated output. They get the log; they
+do not get commits.
 
 **G10.2. History is a graph, not a stack.**
 A file's versions belong to branches. A version presentation carries its
@@ -183,6 +193,14 @@ with the others reachable, never flattened into a single numbered sequence.
 Commits, branches, tags and pull requests are presented objects with computed
 verbs (show diff, check out, revert, blame, compare, merge, open review). They
 enter the system through G7, not through a separate version-control tool.
+
+**G10.4. Divergence is a state the interface designs for, not an error dialog.**
+A git-backed IDE is a distributed system: branches diverge, pushes are
+rejected, merges conflict, the remote moves under you. These are conditions
+with restarts (rebase, merge, force with lease, keep mine, keep theirs, stop),
+and conflicts are presentations with verbs, in the same debugger-shaped
+surface as any other break. No modal alert, no separate "source control" mode.
+This is the largest piece of the design not yet drawn.
 
 *Reference: screens 4, 5, 6, 10, 11.*
 
@@ -347,8 +365,10 @@ restart, not as a parse failure before the system exists.
 - **Toolbars, ribbons, and authored context menus.** See G7.
 - **A settings schema.** See G24.
 - **A plugin API.** See G28.
-- **A flatten/AOT build step for the IDE.** Unnecessary while the image runs
-  inside WebKit; kept in reserve for an embedded-runtime target only.
+- **A native mobile build.** Out of scope. With it go the ahead-of-time
+  flattening of the compiler's output, the embedded-runtime fallback and the
+  App Store questions that went with them.
+- **Autosave as commits.** See G10.1.
 
 ---
 
@@ -363,13 +383,16 @@ restart, not as a parse failure before the system exists.
    every record has a size cost on the wire; measure against a large history.
 4. **Client-side input editing.** How much of the input editor must move to the
    client before typing feels local, and what stays asynchronous.
-5. **Multi-scene behaviour on iPad** for the tear-off path (G20).
-6. **Clone persistence and sync.** Versioning is git on GitHub (G10). Open:
-   where the local clone lives in each target (OPFS, IndexedDB, native file
-   system), how large a repository that supports, and what happens to unpushed
-   working refs when browser storage is evicted.
-7. **Working-ref hygiene.** How long per-session working refs (G10.1) are kept,
-   whether they sync to the remote at all, and how they are garbage collected.
+5. **Version-log storage and retention** (G10.1): what the log costs per save
+   on a large file, how long it is kept, and what survives a browser storage
+   eviction with unpushed work in it.
+6. **Clone persistence.** Where the local clone lives (OPFS or IndexedDB), how
+   large a repository that supports, and how the working copy is reconstructed
+   after an eviction.
+7. **Definition-level history.** Git versions text; the system presents
+   definitions. Mapping commits onto "this function last changed here" needs a
+   source-range-to-definition mapping, and it is not free. Whether the
+   Examiner earns it is undecided.
 
 ---
 
