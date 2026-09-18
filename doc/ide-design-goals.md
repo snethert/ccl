@@ -345,6 +345,28 @@ Moving between those states is a command over a set of definitions
 (*write changed definitions to files*), not a separate save ritual. Nothing
 should be able to sit in the first state unnoticed.
 
+**G33. The system definition stays source; what is derived gets the screen.**
+The `.asd` is ordinary, authoritative, hand-editable source — a
+machine-owned project file would be the `custom-set-variables` mistake at
+project scale (G27). The interface is built on what the definition *computes
+to*:
+
+- **the plan** — the operations `Compile System` would perform, in order, each
+  with the reason it is there and each skip explained, before anything runs;
+- **the dependency graph** as a presentation, with what is missing or cyclic
+  drawn rather than discovered by a build failure;
+- **findings only a live image can make** — a component whose file does not
+  exist, a module using a symbol from a system it does not depend on, an order
+  that works today by accident;
+- **structural edits as commands** — add a component, add a dependency, remove
+  one — which rewrite the `defsystem` form in place and leave comments and
+  formatting alone.
+
+This is what Genera actually offered around systems: a presented view of the
+system object, commands taking it as an argument, and a plan you could read
+before committing to it. It did not offer a form editor for `defsystem`, and
+neither should this.
+
 **G32. Module state is per module, not per repository.**
 Loaded, compiled, stale against its source, and the commit it was built from
 are facts about a module, shown on the module. A system knows how to bring
@@ -445,3 +467,5 @@ itself up to date without the user tracking which files changed.
 13. Divergence as a break — a rejected push as a condition with restarts.
 14. Systems, not directories — modules in dependency order, and what only the
     image knows it has changed.
+15. The definition and its plan — the .asd as source, beside the graph, the
+    ordered plan and the findings derived from it.
