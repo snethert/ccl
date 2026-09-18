@@ -1343,9 +1343,12 @@ constraint 4 is felt rather than asserted.
 
 The prototype does not wait for the port. The wire carries objects and events
 only (constraint 2), and constraint 6 already says the same design serves a
-remote image, so the client is built against native CCL over a socket, with
-the same presentation stream and the same event stream, and moves to the
-Worker transport when the port has conditions and restarts. Until then the
+remote image, so the client is built against native CCL, with the same
+presentation stream and the same event stream, and the image moves into the
+Worker when the port has conditions and restarts. The page and the Worker
+communicate through shared-memory rings from the first day, never through
+messages, so the transport the client is built on is the port's own;
+[ui-prototype-spec.md](ui-prototype-spec.md) specifies it. Until then the
 busy-Worker case is simulated on the socket, and the prototype says so. What
 it measures is discoverability, comfort, the retention rule of G9.1 in a long
 session (§31, item 12), and the accessibility floor of §29.

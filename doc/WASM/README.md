@@ -9,7 +9,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [Stage 0 decisions v1.8](decisions.md): D1–D7, phased experiments and initial contract references.
 - [Stage 0 work plan](stage0/plan.md): subgates, dependencies, deliverables and execution commands.
 - [Workflow](workflow.md): independent census and architecture tracks.
-- [IDE design goals](ui-overview.md): the CLIM-based IDE and its reference screens, stated as checkable goals against the port's constraints, with the [reference screens](ui-screens/README.md). Draft; not a Stage 1 obligation.
+- [IDE design goals](ui-overview.md): the CLIM-based IDE and its reference screens, stated as checkable goals against the port's constraints, with the [reference screens](ui-screens/README.md) and the [prototype specification](ui-prototype-spec.md). Draft; not a Stage 1 obligation.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
 - [Attempt-1 reference survey](history/attempt1-reference.md): what the archived first port established and got wrong, mapped to Stage 0 and Stage 1 obligations. Reference only.
 - [Bootstrap design review](stage0/bootstrap-design-review.md): dated implications for initialization phases, provisional packaging, image identity and reuse assumptions; existing architecture decisions remain in force.

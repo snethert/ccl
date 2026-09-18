@@ -2013,3 +2013,16 @@ secondary pane), the row under the pointer `#3a2826`, the restart or
 warning in progress `#322424`, the current menu item `#352929`, and the
 highlighted form chip `#362626` with light text. §28 records what each tint
 means; the screen source names them as tokens. No Stage 1 record changes.
+
+## 2026-09-18 — IDE prototype specification
+
+Claude wrote `doc/WASM/ui-prototype-spec.md` at the user's direction: the
+§34 prototype against native CCL, designed around shared-memory buffered
+streams with no message traffic after the single bootstrap post. It
+specifies the ring layout, frames and channels, waking without blocking
+the page, the control word and heartbeat sample, the wire (presentation
+stream, surface state, events, commands, queries, the restricted grammar),
+the Image on stock CCL 1.13, the Page's components and gesture resolution,
+the Harness and the model view, the seven-step path with ten measurements
+and pass values, the repository layout, and what is out of scope. §34 and
+the README link to it. No Stage 1 record changes.
