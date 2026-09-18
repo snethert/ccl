@@ -67,9 +67,14 @@ because several of the goals below only make sense in their light.
    git, hosted on GitHub. The image holds a local clone so that editing,
    comparing and browsing history work offline and at pointer speed; network
    access is limited to fetch and push. Since the image runs in WebKit with no
-   local file system, the clone is persisted in browser storage, and git over
-   HTTPS reaches GitHub through a native-side scheme handler on iOS (no CORS
-   path exists to the smart-HTTP endpoints from page context).
+   local file system, the clone is persisted in browser storage.
+8. **The host proxies git traffic; the sandbox never talks to GitHub.** Page
+   context cannot reach the smart-HTTP endpoints — they send no CORS headers —
+   so every fetch and push goes out through the host: a custom scheme handler
+   backed by the native HTTP client in an app, a server-side proxy in a pure
+   browser deployment. Credentials live with the proxy, in the Keychain or on
+   the server, and are never handed to the sandbox. The image asks for a
+   transfer; it does not hold the means to authorise one.
 
 **Measured risks, not design questions:** WebContent process memory and jetsam
 behaviour with a realistic Lisp heap; cold-start time (page load, instantiate,
