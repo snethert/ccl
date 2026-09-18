@@ -82,6 +82,12 @@ is the browser; no native mobile build is in scope.
    weaker reason for the same arrangement. The cost is deliberate and worth
    naming: the web deployment is not a static page — it needs a server, and
    that server is an auth surface.
+9. **Page and worker share memory, or nothing can be interrupted.** The
+   interrupt flag and the heartbeat (§13) live in a `SharedArrayBuffer`,
+   because a worker in a tight loop never reaches its message queue. That
+   requires cross-origin isolation, so the server of constraint 8 must also
+   serve the COOP and COEP headers. Without it there is no way to stop a
+   running computation short of destroying the image.
 
 **Measured risks, not design questions:**
 
@@ -418,22 +424,66 @@ the repository. The bytes stay where they came from.
 
 ---
 
-## 13. Not yet addressed
+## 13. Running and interrupting
+
+**G38. Every computation can be interrupted.**
+The compiler emits a safepoint poll at function entry and at every loop
+back-edge. The client raises a flag in shared memory; at the next poll the
+image signals an `interrupt-request` condition and enters the debugger with
+the stack intact. An interrupt is an ordinary condition with restarts, not a
+mode — so §7 already describes what happens next.
+
+**G39. The poll publishes a heartbeat.**
+Each safepoint also writes what is running, for how long, and the allocation
+and collection counts into that shared memory. The client can therefore give a
+live account of a busy image without the image answering a message: a blocked
+system shows facts, not a spinner, and the time since the last safepoint says
+whether it is answering at all.
+
+**G40. A running computation is an object.**
+It is presented in the command line while it runs and carries its own
+applicable commands, so stopping it needs no special affordance — it is G7
+applied to a process.
+
+**G41. Three graduated actions, and the destructive one states its cost.**
+*Interrupt* at the next safepoint; *abort* to unwind to this activity's
+command loop; *force quit the runner*, which terminates the worker and loses
+the image. The third names exactly what will be lost — the definitions that
+exist in no file, the history — and when the last snapshot was taken. Only the
+third works when the safepoints stop answering, which is why it exists.
+
+**Cost to measure:** the poll is a load and a branch per back-edge. Its
+overhead is an open question (§18), not a free lunch.
+
+---
+
+## 14. Activities
+
+**G42. An activity is a context with its own process, panes, layout and
+history.** Created on demand, switched with a keystroke, and preserved exactly
+as left. Layouts (G19) rearrange panes *within* an activity; they do not give
+you a second project, a second listener, or a debugger you can step away from.
+
+**G43. Activities share one image.**
+They are contexts, not sandboxes: a definition changed in one is changed for
+all, which is the Lisp Machine's arrangement and the useful one. Isolation, if
+it is ever wanted, means a second image, never an activity.
+
+**G44. The activity list is where attention is claimed.**
+A break, a finished run, or output written while you were elsewhere marks its
+activity in the list. A process that needs you becomes visible without
+stealing the screen — which is the structure §15.1 needs to hang a
+notification policy on.
+
+---
+
+## 15. Not yet addressed
 
 Lisp Machine properties this design wants and does not yet have. These are
-gaps, not rejections: nothing here has been argued against, and several are
-load-bearing for goals already stated.
+gaps, not rejections: nothing here has been argued against. Two former
+entries — interrupting a computation, and activities — became §13 and §14.
 
-**13.1 Interrupting a running computation.** Any Lisp Machine computation
-could be stopped from the keyboard and left in the debugger. Here the image is
-single-threaded in a worker with no preemption, and a loop that allocates
-nothing may never yield. Constraint 4 says the interface stays live while the
-image is busy — true of the pointer and the display, but the user currently
-has no way to *stop* what is blocking. This needs a decision about safepoints,
-runtime interrupt checks, or a watchdog that can terminate the worker and lose
-the heap. It is the most consequential gap in the list.
-
-**13.2 Notifications and background attention.** A process that breaks,
+**15.1 Notifications and background attention.** A process that breaks,
 finishes, or wants to print while its pane is not on screen. Genera posted a
 notification, and output to a hidden window was a decision the window made
 (permit, notify, expose), never silently lost. G15 halts one process without
@@ -441,53 +491,47 @@ stopping the system, but nothing carries that break to the user, and nothing
 says what happens to output written to a pane the current layout does not
 show.
 
-**13.3 Compiler warnings as presentations.** The design never says where a
+**15.2 Compiler warnings as presentations.** The design never says where a
 warning goes. Compilation produces conditions about specific source ranges,
 and they should be presentations anchored there with verbs — go to it, explain
 it, mute this one — and walkable as a set, not a log that scrolls past. This
 is the natural companion to G31's changed-definition list.
 
-**13.4 Activities.** `SELECT-L`, `SELECT-E`: several concurrent contexts, each
-with its own process and state, created on demand and switched by a keystroke.
-Layouts (G19) rearrange panes within one context; they do not give you two
-projects open at once, two listeners, or a debugger you can step away from and
-come back to. Nothing in the design covers this, and 13.2 depends on it.
-
-**13.5 Image snapshot and resume.** The band. Save the heap, come back to it.
+**15.3 Image snapshot and resume.** The band. Save the heap, come back to it.
 In a browser this is both feasible — persist the linear memory — and
 load-bearing: screen 14's "in the image only, lost on restart" stops being a
 hazard the moment the image survives a restart. It interacts with the wasm32
 ceiling and with storage eviction (§17).
 
-**13.6 Command history as re-executable objects.** The ring holds objects
+**15.4 Command history as re-executable objects.** The ring holds objects
 (G11); commands are not in it. Past commands should be presentations you can
 edit and re-run, with their arguments still live objects rather than printed
 text.
 
-**13.7 Generated dialogs for whole argument sets.** G25 derives an editor for
+**15.5 Generated dialogs for whole argument sets.** G25 derives an editor for
 one setting from its type. CLIM's `accepting-values` does the same for a set
 of typed values at once, which is the right answer for commands with more
 arguments than a single command line carries comfortably. Stated for settings,
 not yet for commands.
 
-**13.8 The inspector as a place with history.** Inspection verbs exist and
+**15.6 The inspector as a place with history.** Inspection verbs exist and
 views render inline, but there is no navigable inspector: descend into a slot,
 go back, keep the trail. Deep exploration without a trail loses its way.
 
-**13.9 Undo, and its honest limits.** No goal addresses it. Three substrates
+**15.7 Undo, and its honest limits.** No goal addresses it. Three substrates
 behave differently: editor text is undoable; image state largely is not,
 though G31's record of changed definitions supports *revert to loaded*; git
 has revert. The design should say plainly which is which rather than implying
 a single undo stack.
 
-**13.10 Live system health.** Peek showed processes, storage and network,
+**15.8 Live system health.** Peek showed processes, storage and network,
 updating continuously. With a hard heap ceiling and a single worker, headroom,
 collection activity and worker liveness are facts the user needs before they
 become failures.
 
 ---
 
-## 14. Visual system
+## 16. Visual system
 
 - **Two typefaces.** One for interface text, one monospace for code and data.
 - **One ground, one panel, one divider.** Separation is a single pixel line;
@@ -504,7 +548,7 @@ become failures.
 
 ---
 
-## 15. Budgets
+## 17. Budgets
 
 - **Interaction:** no interaction may require a client↔image round trip per
   animation frame. Highlighting, scrolling, pointer documentation and drag
@@ -519,7 +563,7 @@ become failures.
 
 ---
 
-## 16. Non-goals and rejected alternatives
+## 18. Non-goals and rejected alternatives
 
 - **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
   the elisp ecosystem are not.
@@ -539,7 +583,7 @@ become failures.
 
 ---
 
-## 17. Open questions
+## 19. Open questions
 
 1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
    and backgrounding? This decides whether the embedded-runtime fallback is
@@ -556,14 +600,16 @@ become failures.
 6. **Clone persistence.** Where the local clone lives (OPFS or IndexedDB), how
    large a repository that supports, and how the working copy is reconstructed
    after an eviction.
-7. **Definition-level history.** Git versions text; the system presents
+7. **Safepoint overhead.** What a poll per function entry and loop back-edge
+   actually costs on representative Lisp code (G38).
+8. **Definition-level history.** Git versions text; the system presents
    definitions. Mapping commits onto "this function last changed here" needs a
    source-range-to-definition mapping, and it is not free. Whether the
    Examiner earns it is undecided.
 
 ---
 
-## 18. Reference screens
+## 20. Reference screens
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
@@ -584,3 +630,6 @@ become failures.
     ordered plan and the findings derived from it.
 16. Foreign material — a PDF manual in a pane, and a citation crossing back
     into the image.
+17. Interrupting a computation — the running computation as an object, with a
+    heartbeat and three graduated ways to stop it.
+18. Activities — six contexts, one image, and where a process claims attention.
