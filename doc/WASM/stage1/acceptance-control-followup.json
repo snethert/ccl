@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T16:41:32.878233+00:00",
+  "authorization": {
+    "quote": "accept",
+    "provenance": "User to Codex after supplying Claude audit 89 and Codex identifying the LL19 follow-up as the pending disposition. Applies to the auxiliary follow-up, not the unreviewed LL17 proposal."
+  },
+  "review_commit": "ccc6370f67fe7a6a6caf5e65726d0c648db24c4f",
+  "review_sha256": "a9037ba4d8dee932e8b6cef51026636dcb731ab0f8b9af1cc1d502e02419bfb3",
+  "packet": {
+    "id": "STAGE1-CONTROL-FOLLOWUP-R1",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-followup-r1/packet.json",
+    "sha256": "595f1a2ce00c3f2d127acba5642a8d619a2e097c7f861fad2ecc8f9b50eefb45"
+  },
+  "scope": "Accept the LL19 audit-88 follow-up at its reviewed scope: compatible TCR v2 field names, explicit shared reserve policy and ordinary-service declined-hook diagnostics. No compiler/runtime integration or additional slot credit.",
+  "observations": [
+    "Code 5 is labelled TYPE for the follow-up CAR failure; the earlier DESIGNATOR label belongs to its distinct call-error context.",
+    "The ordinary fatal record carries the code without the datum; adding a datum is outside this accepted boundary."
+  ],
+  "ledger_effect": "None: Stage 1 remains 9 accepted, 21 missing, 1 unreviewed; S1-LL17-a awaits independent review and acceptance."
+}

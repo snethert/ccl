@@ -2169,3 +2169,7 @@ native post-hook boundary matches the pinned readloop source. No defect. Two
 notes, neither a defect: the code-5 label differs between corpora for a
 documented reason, and the ordinary-mode fatal record carries no datum. Record
 only; no shared compiler, runtime, kernel or ledger-count change.
+
+## 2026-09-19 — accept the LL19 auxiliary follow-up
+
+On the user’s “accept”, Codex records acceptance of STAGE1-CONTROL-FOLLOWUP-R1 against Claude’s eighty-ninth audit at ccc6370f. The decision pins the reviewed packet and audit and carries the code-5 label and datum-free fatal-record observations. The index now marks the packet ACCEPTED_AUXILIARY. No compiler, runtime, evidence bytes or ledger records change; Stage 1 remains 9 accepted, 21 missing and 1 unreviewed. LL17 still awaits its own review and acceptance.
