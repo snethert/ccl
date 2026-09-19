@@ -4291,6 +4291,16 @@
       "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "superseded_by": "STAGE1-CONTROL-R1"
+    },
+    {
+      "id": "STAGE1-CONTROL-FOLLOWUP-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-followup-r1/packet.json",
+      "sha256": "595f1a2ce00c3f2d127acba5642a8d619a2e097c7f861fad2ecc8f9b50eefb45",
+      "scope": "Audit 88 follow-up: compatible TCR v2 names persistent reserve/depth fields without moving any field; shared reserve policy explicit. Four native ordinary-service decline cases, 16 comparisons and fatal diagnostics, six controls. Fresh replay: 45 deterministic files identical. Accepted compiler/runtime unchanged, exact R6/R6a reused. No slot credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

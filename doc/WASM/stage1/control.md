@@ -41,3 +41,8 @@ full symbol/class installation, cross-Worker publication and host re-entry.
 failures. `coverage.json` maps the inventory assertion to concrete retained
 observations; the original result remains NOT_REVIEWED; a separate acceptance envelope
 preserves the execution and records the user’s decision.
+
+The [audit-88 follow-up](../../../tests/wasm/stage1/control-followup/README.md)
+executes ordinary-service decline (four native cases, sixteen comparisons)
+and names the persistent words in compatible [TCR v2](../contracts/tcr.v2.md).
+The shared reserve policy is explicit. Compiler and loader bytes stay unchanged.

@@ -1,0 +1,1467 @@
+{
+  "schema": "tcr",
+  "version": 2,
+  "size_bytes": 256,
+  "alignment": 16,
+  "reserved": [
+    204,
+    256
+  ],
+  "classifications": {
+    "tagged-root": "tagged Lisp reference updated by the collector",
+    "raw-address": "raw wasm32 address, rederived after movement where interior",
+    "bounded": "bounded index or count, never a tagged value",
+    "atomic-state": "accessed only with sequentially consistent atomics",
+    "code-identifier": "logical code ID or entry kind",
+    "raw-scalar": "unboxed scalar, never scanned"
+  },
+  "owners": {
+    "thread": "the owning thread while admitted",
+    "registry": "the process-wide registry under admission",
+    "collector": "the collection owner while the thread is stopped or admitted",
+    "host": "the host through stable request storage only"
+  },
+  "groups": [
+    {
+      "group": "identity_and_lifetime",
+      "d5": "thread/Worker identity and lifetime generation",
+      "fields": [
+        "tcr_index",
+        "worker_id",
+        "lifetime_generation",
+        "registry_next",
+        "registry_prev",
+        "tcr_address"
+      ]
+    },
+    {
+      "group": "atomic_state_and_pending",
+      "d5": "atomic state and pending bits",
+      "fields": [
+        "state",
+        "pending",
+        "stop_generation"
+      ]
+    },
+    {
+      "group": "allocation_area",
+      "d5": "allocation-area bounds",
+      "fields": [
+        "alloc_pointer",
+        "alloc_limit",
+        "alloc_base",
+        "allocation_quantum_log2"
+      ]
+    },
+    {
+      "group": "explicit_stacks",
+      "d5": "VSP/TSP/CSP and bounds",
+      "fields": [
+        "vsp",
+        "vsp_base",
+        "vsp_limit",
+        "tsp",
+        "tsp_base",
+        "tsp_limit",
+        "csp",
+        "csp_base",
+        "csp_limit",
+        "stack_reserve_bytes"
+      ]
+    },
+    {
+      "group": "dynamic_bindings",
+      "d5": "dynamic-binding-vector pointer",
+      "fields": [
+        "tlb_pointer",
+        "tlb_limit",
+        "db_link"
+      ]
+    },
+    {
+      "group": "multiple_values",
+      "d5": "multiple-value descriptor",
+      "fields": [
+        "mv_count",
+        "mv_base",
+        "mv_owner_top"
+      ]
+    },
+    {
+      "group": "roots_and_frames",
+      "d5": "published root-frame/foreign-call descriptor",
+      "fields": [
+        "root_head",
+        "frame_head",
+        "frame_generation",
+        "handler_checkpoint",
+        "foreign_descriptor",
+        "unwind_state"
+      ]
+    },
+    {
+      "group": "mailbox",
+      "d5": "mailbox identity",
+      "fields": [
+        "active_request",
+        "request_block_base",
+        "request_count",
+        "mailbox_id"
+      ]
+    },
+    {
+      "group": "runtime_private",
+      "d5": "runtime-private stack/TLS descriptors and policy words",
+      "fields": [
+        "c_stack_pointer",
+        "tls_base",
+        "tls_size",
+        "stack_reserve_flags",
+        "debugger_depth",
+        "next_method_context",
+        "error_service_mode",
+        "debug_policy",
+        "fp_control"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "name": "tcr_index",
+      "offset": 0,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "index into the process-wide TCR registry; a different namespace from any symbol binding index",
+      "update": "written once at publication by the admitted creator",
+      "origin": "native-thread-info",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "id",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "worker_id",
+      "offset": 4,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "owning Worker identity",
+      "update": "written once at publication",
+      "origin": "osid",
+      "native_origins": [
+        "native-thread-id",
+        "native-thread-info",
+        "osid"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "lifetime_generation",
+      "offset": 8,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "TCR lifetime generation; advanced before storage reuse, exhaustion refused, never compared by parity",
+      "update": "registry advances under admission; reclamation requires a completed collection and terminal host outcomes",
+      "origin": "native-thread-info",
+      "native_origins": [
+        "native-thread-info",
+        "shutdown-count",
+        "termination-semaphore"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "lifetime",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        },
+        {
+          "field": "retire_serial",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "registry_next",
+      "offset": 12,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "next TCR in the registry list",
+      "update": "admitted creator or collector under D5 membership closure",
+      "origin": "next",
+      "native_origins": [
+        "next"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "registry_prev",
+      "offset": 16,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "previous TCR in the registry list",
+      "update": "as registry_next",
+      "origin": "prev",
+      "native_origins": [
+        "prev"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "tcr_address",
+      "offset": 20,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "identity_and_lifetime",
+      "description": "this record's own address; the current-TCR selector is instance-private, never a shared C global",
+      "update": "written once",
+      "origin": "linear",
+      "native_origins": [
+        "allocated",
+        "linear"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "state",
+      "offset": 32,
+      "width": 4,
+      "alignment": 4,
+      "classification": "atomic-state",
+      "owner": "thread",
+      "group": "atomic_state_and_pending",
+      "description": "CREATING, PARKED, RUNNING, FOREIGN, STOPPED_GC or TERMINATING; the probe-then-load admission store",
+      "update": "owning thread stores; collector loads; sequentially consistent",
+      "origin": "valence",
+      "native_origins": [
+        "activate",
+        "flags",
+        "gc-context",
+        "reset-completion",
+        "suspend-count",
+        "termination-semaphore",
+        "valence"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "state",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pending",
+      "offset": 36,
+      "width": 4,
+      "alignment": 4,
+      "classification": "atomic-state",
+      "owner": "collector",
+      "group": "atomic_state_and_pending",
+      "description": "GC and INTERRUPT bits; unrelated bits preserved by every update",
+      "update": "collector sets GC; interrupter sets INTERRUPT; the thread claims and clears its own bits atomically",
+      "origin": "interrupt-pending",
+      "native_origins": [
+        "flags",
+        "interrupt-pending",
+        "suspend-count"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "pending",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stop_generation",
+      "offset": 40,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "atomic_state_and_pending",
+      "description": "gc_gen value observed at the last STOPPED_GC record, for wait expectation and diagnostics",
+      "update": "thread, at its own stop",
+      "origin": "gc-context",
+      "native_origins": [
+        "gc-context"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "alloc_pointer",
+      "offset": 48,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "allocation_area",
+      "description": "next free byte of the owned allocation area",
+      "update": "thread inside no-safepoint allocation sequences",
+      "origin": "save-allocptr",
+      "native_origins": [
+        "last-allocptr",
+        "save-allocptr"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "alloc_limit",
+      "offset": 52,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "collector",
+      "group": "allocation_area",
+      "description": "end of the owned allocation area; the slow path checks capacity here",
+      "update": "collector or allocator on area assignment while the thread is stopped or admitted",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "alloc_base",
+      "offset": 56,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "collector",
+      "group": "allocation_area",
+      "description": "start of the owned allocation area",
+      "update": "as alloc_limit",
+      "origin": "save-allocbase",
+      "native_origins": [
+        "save-allocbase"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "allocation_quantum_log2",
+      "offset": 60,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "collector",
+      "group": "allocation_area",
+      "description": "log2 of the allocation quantum",
+      "update": "as alloc_limit",
+      "origin": "log2-allocation-quantum",
+      "native_origins": [
+        "log2-allocation-quantum"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "vsp",
+      "offset": 64,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "explicit_stacks",
+      "description": "value stack pointer; grows upward; B places every Lisp argument here",
+      "update": "generated code; checkpointed by every frame",
+      "origin": "save-vsp",
+      "native_origins": [
+        "save-vsp"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "vsp",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "vsp_base",
+      "offset": 68,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned value-stack region start",
+      "update": "per-Worker setup",
+      "origin": "vs-area",
+      "native_origins": [
+        "vs-area"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "stack_base",
+          "tests": [
+            "S0-LL05-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "vsp_limit",
+      "offset": 72,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned value-stack region end; explicit bound, no guard page",
+      "update": "per-Worker setup",
+      "origin": "vs-area",
+      "native_origins": [
+        "vs-area"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "stack_limit",
+          "tests": [
+            "S0-LL05-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tsp",
+      "offset": 76,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "explicit_stacks",
+      "description": "temporary stack pointer for frame and root records",
+      "update": "generated code; checkpointed by every frame",
+      "origin": "save-tsp",
+      "native_origins": [
+        "next-tsp",
+        "save-tsp"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "tsp",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tsp_base",
+      "offset": 80,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned temporary-stack region start",
+      "update": "per-Worker setup",
+      "origin": "ts-area",
+      "native_origins": [
+        "ts-area"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "frame_base",
+          "tests": [
+            "S0-LL23-b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tsp_limit",
+      "offset": 84,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned temporary-stack region end",
+      "update": "per-Worker setup",
+      "origin": "ts-area",
+      "native_origins": [
+        "ts-area"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "frame_limit",
+          "tests": [
+            "S0-LL23-b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "csp",
+      "offset": 88,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "explicit_stacks",
+      "description": "control stack pointer for handler and cleanup records",
+      "update": "generated code; checkpointed by every frame",
+      "origin": "foreign-sp",
+      "native_origins": [
+        "foreign-sp"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "csp",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "csp_base",
+      "offset": 92,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned control-stack region start",
+      "update": "per-Worker setup",
+      "origin": "cs-area",
+      "native_origins": [
+        "cs-area"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "csp_limit",
+      "offset": 96,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "owned control-stack region end",
+      "update": "per-Worker setup",
+      "origin": "cs-area",
+      "native_origins": [
+        "cs-area",
+        "cs-limit"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "stack_reserve_bytes",
+      "offset": 100,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "explicit_stacks",
+      "description": "capacity kept in reserve on each explicit stack for the condition path after a checked exhaustion",
+      "update": "per-Worker setup",
+      "origin": "cs-limit",
+      "native_origins": [
+        "cs-limit"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "tlb_pointer",
+      "offset": 104,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "dynamic_bindings",
+      "description": "thread-local binding vector; indexed by a symbol's binding index, not by tcr_index",
+      "update": "thread on binding-vector growth under admission",
+      "origin": "tlb-pointer",
+      "native_origins": [
+        "tlb-pointer"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "tlb_limit",
+      "offset": 108,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "dynamic_bindings",
+      "description": "binding-vector capacity in entries",
+      "update": "as tlb_pointer",
+      "origin": "tlb-limit",
+      "native_origins": [
+        "tlb-limit"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "db_link",
+      "offset": 112,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "dynamic_bindings",
+      "description": "head of the special-binding chain; the frame binding checkpoint",
+      "update": "generated code on bind/unbind; restored on every exit path",
+      "origin": "db-link",
+      "native_origins": [
+        "db-link"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "binding_depth",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        },
+        {
+          "field": "binding_cookie",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mv_count",
+      "offset": 116,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "multiple_values",
+      "description": "count of the complete ordered value sequence in the owned VSP result region, value0 included; the accepted B contract copies the whole sequence into that region and scans with this count (abi/dynamic-call.v0.md)",
+      "update": "callee on return; reset with the descriptor before any stop",
+      "origin": "none",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "nvalues",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mv_base",
+      "offset": 120,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "multiple_values",
+      "description": "caller-owned VSP result region holding the complete ordered value sequence; no separate backing buffer",
+      "update": "caller before dispatch",
+      "origin": "none",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "mv_base",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mv_owner_top",
+      "offset": 124,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "multiple_values",
+      "description": "extent of the owned result region; exactly one scanner per physical slot",
+      "update": "caller before dispatch",
+      "origin": "none",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "mv_owner_top",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "root_head",
+      "offset": 128,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "head of the published root-record chain; complete before every legal stopping boundary",
+      "update": "thread at publication; collector updates the tagged slots the records point at",
+      "origin": "gc-context",
+      "native_origins": [
+        "gc-context"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "root_head",
+          "tests": [
+            "S0-LL13-c",
+            "S0-LL20-a"
+          ]
+        },
+        {
+          "field": "root_slot",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "frame_head",
+      "offset": 132,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "head of the logical frame chain (contracts/debug-frames.md)",
+      "update": "generated code at frame push/pop; restored on every exit path",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "frame_head",
+          "tests": [
+            "S0-LL05-a",
+            "S0-LL23-b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "frame_generation",
+      "offset": 136,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "next logical frame generation; exhaustion refused",
+      "update": "thread at frame construction",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "frame_serial",
+          "tests": [
+            "S0-LL05-a",
+            "S0-LL23-b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "handler_checkpoint",
+      "offset": 140,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "head of the handler and cleanup record chain",
+      "update": "generated code; restored on every exit path",
+      "origin": "catch-top",
+      "native_origins": [
+        "catch-top",
+        "xframe"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "handler_cookie",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "foreign_descriptor",
+      "offset": 144,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "published root-frame/foreign-call descriptor while FOREIGN; zero otherwise",
+      "update": "thread before entering FOREIGN; cleared after admission and root reload",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "unwind_state",
+      "offset": 148,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "roots_and_frames",
+      "description": "exception transfer in progress; distinguishes ordinary and nonlocal exits during cleanup",
+      "update": "generated code",
+      "origin": "unwinding",
+      "native_origins": [
+        "unwinding"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "active_request",
+      "offset": 152,
+      "width": 4,
+      "alignment": 4,
+      "classification": "atomic-state",
+      "owner": "thread",
+      "group": "mailbox",
+      "description": "address of the descriptor currently waited on, or zero; interrupt delivery targets it",
+      "update": "thread saves/restores around nested waits; restored by the nonlocal-exit adapter",
+      "origin": "pending-io-info",
+      "native_origins": [
+        "pending-io-info",
+        "resume",
+        "suspend"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "active_request",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "request_block_base",
+      "offset": 156,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "mailbox",
+      "description": "owned stable request descriptors; the host writes only inside them",
+      "update": "per-Worker setup",
+      "origin": "io-datum",
+      "native_origins": [
+        "io-datum",
+        "pending-io-info"
+      ],
+      "fixture_witnesses": [
+        {
+          "field": "requests",
+          "tests": [
+            "S0-LL20-a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "request_count",
+      "offset": 160,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "mailbox",
+      "description": "number of owned descriptors",
+      "update": "per-Worker setup",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "mailbox_id",
+      "offset": 164,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "mailbox",
+      "description": "identity the host uses to notify this thread's status words",
+      "update": "per-Worker setup",
+      "origin": "suspend",
+      "native_origins": [
+        "resume",
+        "suspend"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "c_stack_pointer",
+      "offset": 168,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "C stack pointer saved at the emitted/C boundary; restored on ordinary and exceptional exit",
+      "update": "emitted adapter",
+      "origin": "foreign-sp",
+      "native_origins": [
+        "foreign-sp"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "tls_base",
+      "offset": 172,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-address",
+      "owner": "registry",
+      "group": "runtime_private",
+      "description": "per-Worker C TLS region start",
+      "update": "per-Worker setup",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "tls_size",
+      "offset": 176,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "registry",
+      "group": "runtime_private",
+      "description": "per-Worker C TLS region size",
+      "update": "per-Worker setup",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "stack_reserve_flags",
+      "offset": 180,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-scalar",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "Persistent recovery state: bit 0 suppresses soft-limit checks on all three stacks while a condition handler uses reserve capacity; other bits are preserved.",
+      "update": "Owning thread sets before soft-overflow signalling and restores on transfer. Hard limits remain checked.",
+      "origin": "unboxed0",
+      "native_origins": [
+        "unboxed0"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "debugger_depth",
+      "offset": 184,
+      "width": 4,
+      "alignment": 4,
+      "classification": "raw-scalar",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "Persistent debugger-hook nesting depth, never a Lisp root.",
+      "update": "Owning thread saves/increments on hook entry and restores on normal or exceptional return.",
+      "origin": "unboxed1",
+      "native_origins": [
+        "unboxed1"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "next_method_context",
+      "offset": 188,
+      "width": 4,
+      "alignment": 4,
+      "classification": "tagged-root",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "tagged method context for CLOS dispatch; NIL until Stage 1 uses it",
+      "update": "generated code; a declared root",
+      "origin": "next-method-context",
+      "native_origins": [
+        "next-method-context"
+      ],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "error_service_mode",
+      "offset": 192,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "EARLY while only the fatal diagnostic path exists, FULL after ordinary error services activate",
+      "update": "bootstrap activation initializer",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    },
+    {
+      "name": "debug_policy",
+      "offset": 196,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "debug availability policy for logical frames",
+      "update": "bootstrap or debugger",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": [
+        {
+          "field": "debug_policy",
+          "tests": [
+            "S0-LL05-a",
+            "S0-LL23-b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fp_control",
+      "offset": 200,
+      "width": 4,
+      "alignment": 4,
+      "classification": "bounded",
+      "owner": "thread",
+      "group": "runtime_private",
+      "description": "logical floating-point control word, the ARM model (D6, 16 September 2026): enable bits invalid 1, division-by-zero 2, overflow 4, underflow 8, inexact 16, rounding mode nearest only; default 7. Emitted checks compare the status they compute against these bits; nothing in hardware traps. Takes the role of native tcr.lisp_fpscr on ARM and tcr.lisp_mxcsr on x86, whose register-format images stay unsupported",
+      "update": "thread creation copies the default; set-fpu-mode writes the owning thread's word",
+      "origin": "new",
+      "native_origins": [],
+      "fixture_witnesses": []
+    }
+  ],
+  "native_origins": {
+    "next": [
+      "registry_next"
+    ],
+    "prev": [
+      "registry_prev"
+    ],
+    "linear": [
+      "tcr_address"
+    ],
+    "db-link": [
+      "db_link"
+    ],
+    "catch-top": [
+      "handler_checkpoint"
+    ],
+    "save-vsp": [
+      "vsp"
+    ],
+    "save-tsp": [
+      "tsp"
+    ],
+    "foreign-sp": [
+      "csp",
+      "c_stack_pointer"
+    ],
+    "cs-area": [
+      "csp_base",
+      "csp_limit"
+    ],
+    "vs-area": [
+      "vsp_base",
+      "vsp_limit"
+    ],
+    "ts-area": [
+      "tsp_base",
+      "tsp_limit"
+    ],
+    "cs-limit": [
+      "csp_limit",
+      "stack_reserve_bytes"
+    ],
+    "log2-allocation-quantum": [
+      "allocation_quantum_log2"
+    ],
+    "interrupt-pending": [
+      "pending"
+    ],
+    "xframe": [
+      "handler_checkpoint"
+    ],
+    "osid": [
+      "worker_id"
+    ],
+    "valence": [
+      "state"
+    ],
+    "native-thread-info": [
+      "worker_id",
+      "lifetime_generation"
+    ],
+    "native-thread-id": [
+      "worker_id"
+    ],
+    "last-allocptr": [
+      "alloc_pointer"
+    ],
+    "save-allocptr": [
+      "alloc_pointer"
+    ],
+    "save-allocbase": [
+      "alloc_base"
+    ],
+    "reset-completion": [
+      "state"
+    ],
+    "activate": [
+      "state"
+    ],
+    "suspend-count": [
+      "state",
+      "pending"
+    ],
+    "suspend": [
+      "active_request",
+      "mailbox_id"
+    ],
+    "resume": [
+      "active_request",
+      "mailbox_id"
+    ],
+    "flags": [
+      "state",
+      "pending"
+    ],
+    "gc-context": [
+      "state",
+      "root_head",
+      "stop_generation"
+    ],
+    "termination-semaphore": [
+      "state",
+      "lifetime_generation"
+    ],
+    "unwinding": [
+      "unwind_state"
+    ],
+    "tlb-limit": [
+      "tlb_limit"
+    ],
+    "tlb-pointer": [
+      "tlb_pointer"
+    ],
+    "shutdown-count": [
+      "lifetime_generation"
+    ],
+    "next-tsp": [
+      "tsp"
+    ],
+    "unboxed0": [
+      "stack_reserve_flags"
+    ],
+    "unboxed1": [
+      "debugger_depth"
+    ],
+    "next-method-context": [
+      "next_method_context"
+    ],
+    "allocated": [
+      "tcr_address"
+    ],
+    "pending-io-info": [
+      "active_request",
+      "request_block_base"
+    ],
+    "io-datum": [
+      "request_block_base"
+    ],
+    "total-bytes-allocated-low": "deferred",
+    "total-bytes-allocated-high": "deferred"
+  },
+  "fixture_map": {
+    "token": {
+      "production": null,
+      "reason": "fixture identity token"
+    },
+    "frame_address": {
+      "production": null,
+      "reason": "observed C frame address"
+    },
+    "tcr_before": {
+      "production": null,
+      "reason": "observation"
+    },
+    "tcr_after": {
+      "production": null,
+      "reason": "observation"
+    },
+    "stack_ok": {
+      "production": null,
+      "reason": "observation"
+    },
+    "post_exit_effect": {
+      "production": null,
+      "reason": "observation counter"
+    },
+    "root_head": [
+      "root_head"
+    ],
+    "binding_depth": [
+      "db_link"
+    ],
+    "vsp": [
+      "vsp"
+    ],
+    "tsp": [
+      "tsp"
+    ],
+    "csp": [
+      "csp"
+    ],
+    "nvalues": [
+      "mv_count"
+    ],
+    "mv_base": [
+      "mv_base"
+    ],
+    "mv_owner_top": [
+      "mv_owner_top"
+    ],
+    "ready": {
+      "production": null,
+      "reason": "supervisor handshake"
+    },
+    "release": {
+      "production": null,
+      "reason": "supervisor handshake"
+    },
+    "boundary_cleanup": {
+      "production": null,
+      "reason": "observation counter"
+    },
+    "cleanup_effect": {
+      "production": null,
+      "reason": "observation counter"
+    },
+    "catch_reason": {
+      "production": null,
+      "reason": "observation"
+    },
+    "observed_c_frame": {
+      "production": null,
+      "reason": "observation"
+    },
+    "observed_sp": {
+      "production": null,
+      "reason": "observation"
+    },
+    "state": [
+      "state"
+    ],
+    "pending": [
+      "pending"
+    ],
+    "id": [
+      "tcr_index"
+    ],
+    "lifetime": [
+      "lifetime_generation"
+    ],
+    "admitted": {
+      "production": null,
+      "reason": "admission counter"
+    },
+    "requests": [
+      "request_block_base"
+    ],
+    "root_slot": [
+      "root_head"
+    ],
+    "stops": {
+      "production": null,
+      "reason": "counter"
+    },
+    "interrupts": {
+      "production": null,
+      "reason": "counter"
+    },
+    "reloads": {
+      "production": null,
+      "reason": "counter"
+    },
+    "allocation_checks": {
+      "production": null,
+      "reason": "counter"
+    },
+    "cleanup": {
+      "production": null,
+      "reason": "counter"
+    },
+    "nested": {
+      "production": null,
+      "reason": "counter"
+    },
+    "retire_serial": [
+      "lifetime_generation"
+    ],
+    "reclaimed": {
+      "production": null,
+      "reason": "observation"
+    },
+    "mode": {
+      "production": null,
+      "reason": "fixture schedule mode"
+    },
+    "active_request": [
+      "active_request"
+    ],
+    "old_root": {
+      "production": null,
+      "reason": "observation"
+    },
+    "observed_root": {
+      "production": null,
+      "reason": "observation"
+    },
+    "observed_raw": {
+      "production": null,
+      "reason": "observation"
+    },
+    "continuation": {
+      "production": null,
+      "reason": "fixture continuation token"
+    },
+    "handler_cookie": [
+      "handler_checkpoint"
+    ],
+    "binding_cookie": [
+      "db_link"
+    ],
+    "progress": {
+      "production": null,
+      "reason": "counter"
+    },
+    "frame_head": [
+      "frame_head"
+    ],
+    "frame_serial": [
+      "frame_generation"
+    ],
+    "abi_state": {
+      "production": null,
+      "reason": "fixture ABI state"
+    },
+    "frame_cursor": {
+      "production": null,
+      "reason": "fixture frame allocator"
+    },
+    "frame_base": [
+      "tsp_base"
+    ],
+    "frame_limit": [
+      "tsp_limit"
+    ],
+    "stack_base": [
+      "vsp_base"
+    ],
+    "stack_limit": [
+      "vsp_limit"
+    ],
+    "reply_cursor": {
+      "production": null,
+      "reason": "host reply buffer cursor"
+    },
+    "reply_limit": {
+      "production": null,
+      "reason": "host reply buffer limit"
+    },
+    "debug_policy": [
+      "debug_policy"
+    ]
+  },
+  "inputs": {
+    "layout": {
+      "path": "doc/WASM/contracts/wasm32-layout.v1.json",
+      "sha256": "216237406b2907e5e1791746bb5677ad78f1d8a09b0988577abd6441e50a8daa"
+    },
+    "join": {
+      "path": "doc/WASM/contracts/runtime-contracts.v1.json",
+      "sha256": "90c5bd38e80a26cb560c27f2c8f43a0b5c8e9c1b68749ba57343dedbfb43cb54"
+    }
+  },
+  "counts": {
+    "fields": 48,
+    "by_class": {
+      "tagged-root": 1,
+      "raw-address": 26,
+      "bounded": 16,
+      "atomic-state": 3,
+      "code-identifier": 0,
+      "raw-scalar": 2
+    },
+    "by_owner": {
+      "thread": 26,
+      "registry": 18,
+      "collector": 4,
+      "host": 0
+    },
+    "native_cells_mapped": 41,
+    "native_cells_deferred": 2,
+    "native_cells_unsupported": 18,
+    "fixture_fields_mapped": 25,
+    "fixture_fields_private": 31,
+    "fields_without_native_origin": 14
+  },
+  "rules": [
+    "every field is assigned exactly once; the fixtures' aliased extension offsets are resolved by this schema",
+    "atomic-state fields are read and written only with sequentially consistent atomics; unrelated bits are preserved",
+    "raw-address fields are rederived after movement where they point into movable storage; none is a tagged value",
+    "the multiple-value descriptor points at the owned VSP result region; no separate backing buffer exists",
+    "the host never writes a TCR field; it writes only inside owned request descriptors",
+    "tcr_index and a symbol binding index are different namespaces",
+    "stack_reserve_flags and debugger_depth must not be reused as scratch storage",
+    "reserve-in-use is shared across VSP/TSP/CSP, unlike native per-stack guards; hard limits remain active on each stack"
+  ],
+  "compatibility": {
+    "layout": "Identical size, offsets, widths, alignment, classification and ownership to v1. Names replace the historical scratch labels. Existing generated architecture aliases remain valid at the same offsets.",
+    "v1_sha256": "ef3c2b85c963fb5750553bd0f8e05913b32414ad5fe7f1168662d56efa41ef59",
+    "aliases": {
+      "scratch0": "stack_reserve_flags",
+      "scratch1": "debugger_depth"
+    }
+  }
+}

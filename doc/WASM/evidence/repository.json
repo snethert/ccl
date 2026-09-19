@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "4e05d9ed93eec03fb73b73b035b9e00523806af3",
+  "commit": "ce3c41fb8b497fe6142ebe9d3af9b2a6bdb35ba0",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "3d31619d171661c578f767d945ac27fd51c96c105bdb85d99553a2aa7f95c488",
-  "immutable_evidence_files": 223635,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll19-acceptance.json",
-  "source_index_sha256": "96fdffa3803853aaeb420ad09bf655360ae21c81f2776faca0bc71af2adfe9e0",
-  "verification": "Unchanged acceptance producer, bound to Claude audit 88 and explicit user instruction; eight prior records preserved. Integrated bytes equal reviewed proposal and retained R6/R6a; no new native execution. Incremental catalog only.",
+  "catalog_sha256": "a5db54633782cdec1a59ebe8d69e64fab63f5a2484d6f35ea303b03617cb8265",
+  "immutable_evidence_files": 223647,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-control-followup.json",
+  "source_index_sha256": "eebff7daf232e99bb822a2b78abfa00fe39f459085bfb9dd9b927617c5bf8491",
+  "verification": "Fresh focused native/target replay: 45 deterministic files identical, six controls reject. Exact accepted compiler pins hold; native R6/R6a reused. Incremental catalog.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: nine accepted, 22 missing, zero unreviewed. Reviewed LL19 accepted and integrated.",
+  "scope": "Stage 0 48 accepted; Stage 1 nine accepted, 22 missing. Auxiliary LL19 review follow-up executed; no compiler change or extra slot.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-ll19-acceptance-r1",
-    "files": 417,
-    "bytes": 100738803
+    "directory": "2026-09-19-stage1-control-followup-r1",
+    "files": 12,
+    "bytes": 1583082
   },
   "prior_indexed_references_verified": 19055
 }

@@ -2126,3 +2126,15 @@ accepted objects. The gate now has nine accepted, 22 missing and none unreviewed
 Integrated only the reviewed compiler and runtime bytes, checked against the
 retained proposal, native R6/R6a and preceding integration hashes. All three
 audit observations are carried explicitly; no new execution is claimed.
+
+## 2026-09-19 — LL19 audit-88 follow-up (Codex)
+
+After the user's acceptance and exact integration, name the persistent reserve
+and debugger-depth fields in layout-compatible TCR v2. Keep v1 and every
+accepted binding unchanged. Record that reserve use suppresses all three soft
+checks together, with independent hard checks. Execute the ordinary-service
+decline boundary with returning, 130-value, NIL and post-handler hooks: four
+native cases, sixteen comparisons and ordinary fatal diagnostics, six controls.
+Fresh replay reproduces 45 deterministic files; exact accepted compiler and
+R6/R6a reused. Both original development failures retained. Auxiliary packet
+STAGE1-CONTROL-FOLLOWUP-R1 awaits review, no additional slot credit.

@@ -54,7 +54,8 @@ binding-vector growth, debugger and collector integration remain later subgates.
 audit 88. Its proposal adds bootstrap condition
 instances, restarts, the debugger-hook boundary, recoverable stack limits and
 interrupt masking. The exact reviewed proposal is integrated. S1-LL17-a binding-vector growth
-is the next runtime unit, after closing the debugger-boundary coverage note. General CLOS and
+is the next runtime unit. The debugger-boundary follow-up now executes ordinary
+service decline and names the persistent fields in compatible TCR v2. General CLOS and
 moving-collector work retain their own slots.
 
 

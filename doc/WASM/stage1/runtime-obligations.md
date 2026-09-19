@@ -36,7 +36,10 @@ executed Stage 1 tests.
   invoking the condition machinery, unwind safely and re-arm the soft limit
   after recovery. Cover control, value and temporary stacks, recursive handler
   exhaustion, and failure to restore the reserve. A bare engine trap does not
-  satisfy this obligation.
+  satisfy this obligation. The accepted LL19 implementation uses one reserve-in-use
+  bit for all three soft checks; hard limits remain independent. This is not
+  native per-stack guard parity. [TCR v2](../contracts/tcr.v2.md) names this
+  persistent state and the debugger depth; neither may be reused as scratch.
 - **Trap lowering (1C).** Cross-reference the retained x86 sites with ARM's
   UUO list in `compiler/ARM/arm-asm.lisp`. Record continuable versus fatal
   checks, slot-unbound, missing throw tag, undefined function, unavailable
