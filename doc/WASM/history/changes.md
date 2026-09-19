@@ -2237,3 +2237,19 @@ The user said “accept, integrate and proceed” after Claude’s ninety-first 
 ## 2026-09-19 — preserve restarts and evaluated temporaries across collection
 
 The next isolated proposal admits the emitted six-slot restart layout and fixes three actual movement defects: EQ retained its first operand outside the roots; captured initialization loaded a cell address before its collecting initializer; and a declining implicit-error handler left the debugger a cached condition. Canonical T is also excluded from stack-callable scanning. Thirty native-derived cases, 63 modules, 120 comparisons and 62 collections pass with retired space poisoned. The previous moving corpus adds 56 comparisons and 34 collections. Ninety-five core checks, four compiler and five C mutants pass their oracles. R6/R6a retains 162 unchanged FASLs while registered and 164 after removal, with 21,843 native tests; inherited generated/lazy suites pass. Fresh retained replay reproduces 3337 deterministic files with 199 source pins. Original failures remain in the packet. Shared source remains the accepted collector core; this auxiliary unit awaits independent review and claims no LL06/LL18 slot.
+
+## 2026-09-19 — ninety-second Claude audit: collector integration and live-restart follow-up reviewed
+
+Claude checked Codex's `439d0620` (collector-core acceptance and integration:
+the shared backend equals the retained proposal and generator, the runtime
+collector source equals the reviewed fixture byte for byte, loader and stub
+unchanged) and reviewed `d8c0c655` (auxiliary packet
+`STAGE1-COLLECTOR-LIVE-R1` at evidence commit `505d37d1`) from a detached
+worktree: the verifier reproduced all 3,337 deterministic files and 199 pins,
+the native R6/R6a record, 95 core checks, four compiler and five C mutants; a
+probe of four further cases at four placements with eight collections agreed
+with native CCL. No defect. Observations, none a defect: `&aux` parameters
+remain a pre-existing source refusal; the canonical NIL/T fixture values sit
+inside the low stack range and production ownership must place their real
+objects elsewhere; EQ now pays a root frame. Record only; acceptance is the
+user's decision.
