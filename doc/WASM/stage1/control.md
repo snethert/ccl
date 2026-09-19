@@ -1,7 +1,9 @@
 # S1-LL19-a — generated control and recovery
 
-19 September 2026. Executed proposal, pending Claude review and project
-acceptance. Shared compiler/runtime files and the upstream kernel are unchanged.
+19 September 2026. Accepted and integrated after Claude audit 88 on the user’s
+“Accept, intgrate and proceed.” Exact reviewed compiler/runtime bytes are in
+shared source; the upstream kernel is unchanged. See [acceptance](acceptance-ll19.json)
+and [integration](integration-ll19.json).
 
 The compiler now connects checked type, bounds, arity and unbound errors to
 Lisp handlers and active restarts. Improper APPLY tails carry the native datum;
@@ -37,4 +39,5 @@ explicitly excludes general restart options/condition association, moving GC,
 full symbol/class installation, cross-Worker publication and host re-entry.
 `STAGE1-CONTROL-R1` retains execution, controls, exact compiler and original
 failures. `coverage.json` maps the inventory assertion to concrete retained
-observations; the result is NOT_REVIEWED, not an acceptance.
+observations; the original result remains NOT_REVIEWED; a separate acceptance envelope
+preserves the execution and records the user’s decision.

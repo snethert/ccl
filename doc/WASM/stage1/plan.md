@@ -50,11 +50,11 @@ stub/tail slots, including implicit arity/designator signalling before unwind.
 Both are accepted after Claude’s eighty-fourth audit under [the LL05 acceptance](acceptance-ll05.json); [the exact reviewed implementation is integrated](integration-ll05.json). **Subgate 1B is accepted and integrated, including S1-LL10-a constants after Claude audits 85 and 86.** The [constant-pool plan and qualification](ll10-plan.md) cover shared pools, generated loads, fresh-Worker persistence and the inherited corpus. The [acceptance](acceptance-ll10.json) and [integration](integration-ll10.json) bind the exact reviewed bytes. Production CLOS condition construction, other implicit errors,
 binding-vector growth, debugger and collector integration remain later subgates.
 
-**1C current:** [S1-LL19-a](control.md) is executed as one control/recovery
-qualification and awaits Claude review. Its proposal adds bootstrap condition
+**1C current:** [S1-LL19-a](control.md) is accepted and integrated after Claude
+audit 88. Its proposal adds bootstrap condition
 instances, restarts, the debugger-hook boundary, recoverable stack limits and
-interrupt masking. After review and acceptance, integrate the exact proposal;
-then S1-LL17-a binding-vector growth is the next runtime unit. General CLOS and
+interrupt masking. The exact reviewed proposal is integrated. S1-LL17-a binding-vector growth
+is the next runtime unit, after closing the debugger-boundary coverage note. General CLOS and
 moving-collector work retain their own slots.
 
 

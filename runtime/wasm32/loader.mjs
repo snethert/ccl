@@ -4,7 +4,7 @@ export const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const need=(ok,reason)=>{if(!ok)throw Error(reason);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const B={params:['i32','i32'],results:['i32','i32']},TAIL={params:['i32','i32','i32'],results:['i32','i32']};
-export const PROFILE='wasm32-shared-B-exnref-tail-mv-storage-constants-v1';
+export const PROFILE='wasm32-shared-B-exnref-control-v1';
 
 export function validate(bytes,record) {
   need(sha(bytes)===record.sha256,'BINARY_DIGEST');

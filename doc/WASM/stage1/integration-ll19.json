@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T15:42:26.919040+00:00",
+  "user_authorization": "Accept, intgrate and proceed.",
+  "review_commit": "9f2a5f6c03b8a88fb1796e3a21654e62c771ed00",
+  "review": "Claude audit 88; no defect.",
+  "acceptance": "acceptance-ll19.json",
+  "acceptance_sha256": "dba902ac9db0f510c389319203b017b7ec65cf405ffebc86f2287c49893c2002",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "fa875a194d7e0117f81c06210684a960b0ab694237d63cd5d96bbbfad65c9de7",
+      "after": "8b2a6d807eda49342100eeae71a4744b6ed72781a904018c8950be07b48b2f2d",
+      "proposal_locator": "2026-09-19-stage1-control-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "9e2be62e027a22c198be51eb464119174544f92f3f5212bb7a69ae38e0296c33",
+      "after": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224",
+      "proposal_locator": "2026-09-19-stage1-control-r1/inherited.tar.gz!harness/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-19-stage1-control-r1/inherited.tar.gz!harness/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-19-stage1-control-r1/inherited.tar.gz!harness/stub.wat"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-control-r1/packet.json",
+      "sha256": "cbc45d17644c10253a6133df81a213dc8ef813cba9873d1d08de1090be918849"
+    }
+  ],
+  "previous_integration": "integration-b-repeated-keywords.json",
+  "previous_integration_sha256": "26a73f0e5ac95bf6e0d738413408a2d9dc4967d18c972074be3cb3c8ede23546",
+  "scope": "Exact accepted LL19 compiler and compatible control profile; sealed bootstrap condition registry and remaining boundaries as reviewed.",
+  "observations": [
+    "Debugger depth occupies schema scratch1 and reserve-in-use occupies scratch0; give these persistent runtime states explicit schema names without changing offsets.",
+    "One reserve flag suppresses soft checks on all three stacks while recovery runs; this differs from native per-stack guards and must remain explicit.",
+    "Add an executed ordinary-service declined-hook fatal case before the debugger boundary is relied upon."
+  ],
+  "verification": "Every integrated file equals reviewed retained bytes; compiler also equals its generator and native R6/R6a proposal. Reuse both verified replays; no native rebuild for byte-identical integration.",
+  "reverse": "Restore changed files from 9f2a5f6c03b8a88fb1796e3a21654e62c771ed00 at their before hashes."
+}

@@ -1988,6 +1988,26 @@
       "test_ids": [
         "S1-LL19-a"
       ]
+    },
+    {
+      "id": "STAGE1-LL19-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll19-acceptance-r1/accepted-results.json",
+      "sha256": "b85c2586530891c2d8aa5d071282d35fad442f7a9e044c40990964904ceb20b1",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "e18e1277c31b95b5a57b0f3d150028a72dde2faad650b5ec2022682189250ce8",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll19-acceptance-r1/packet.json",
+      "packet_sha256": "974c37ec05cdf7173d2388dc9be85bf912879625fcee9760c5f637de172c55fd",
+      "scope": "Accept S1-LL19-a at its reviewed bounded generated control/recovery scope; preserve declared exclusions and carry audit observations into integration/follow-up.",
+      "test_ids": [
+        "S1-LL19-a"
+      ]
     }
   ],
   "auxiliary_records": [

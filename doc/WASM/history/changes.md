@@ -2116,3 +2116,13 @@ the declined or unhandled path in ordinary error-service mode, so the
 structured fatal record is only demonstrated in bootstrap mode. Acceptance is
 the user's decision; the ledger is unchanged at 8 accepted, 22 missing and 1
 unreviewed.
+
+
+## 2026-09-19 — Codex: accept and integrate LL19 after audit 88
+
+Recorded the user’s “Accept, intgrate and proceed.” against 9f2a5f6c;
+the acceptance producer preserves original execution and all eight previous
+accepted objects. The gate now has nine accepted, 22 missing and none unreviewed.
+Integrated only the reviewed compiler and runtime bytes, checked against the
+retained proposal, native R6/R6a and preceding integration hashes. All three
+audit observations are carried explicitly; no new execution is claimed.

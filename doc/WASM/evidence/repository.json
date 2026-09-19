@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "99f3084686289342bfcfeebb3ac6d54ff481902a",
+  "commit": "4e05d9ed93eec03fb73b73b035b9e00523806af3",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4f577a29a2cae7fd6c3bf08ca77f597245006987832c56bdfbd7b3bc6ba1cf74",
-  "immutable_evidence_files": 223218,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-control.json",
-  "source_index_sha256": "bd6fe2630e9b4d808e42b33f769d6241a0ba6cc10c692dbd8fdc06dbd1f8db1e",
-  "verification": "LL19 fresh verifier PASS: 152 source pins, 7,592 deterministic files reproduced, native R6/R6a; production gate preserves eight accepted records and reports only 22 missing / one unreviewed. Incremental catalog: 518 new rows, all 222,700 prior rows unchanged. No historical archive rescan.",
+  "catalog_sha256": "3d31619d171661c578f767d945ac27fd51c96c105bdb85d99553a2aa7f95c488",
+  "immutable_evidence_files": 223635,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll19-acceptance.json",
+  "source_index_sha256": "96fdffa3803853aaeb420ad09bf655360ae21c81f2776faca0bc71af2adfe9e0",
+  "verification": "Unchanged acceptance producer, bound to Claude audit 88 and explicit user instruction; eight prior records preserved. Integrated bytes equal reviewed proposal and retained R6/R6a; no new native execution. Incremental catalog only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 22 missing, one unreviewed (S1-LL19-a). Generated control/recovery proposal awaits Claude review and user acceptance; shared implementation unchanged.",
+  "scope": "Stage 0: 48 accepted. Stage 1: nine accepted, 22 missing, zero unreviewed. Reviewed LL19 accepted and integrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-control-r1 and retained APPLY prerequisite",
-    "files": 518,
-    "bytes": 188574185
+    "directory": "2026-09-19-stage1-ll19-acceptance-r1",
+    "files": 417,
+    "bytes": 100738803
   },
   "prior_indexed_references_verified": 19055
 }
