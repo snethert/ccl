@@ -2229,3 +2229,7 @@ live restart object refuses collection with code 2 because its header kind is
 outside the allowlist; temporaries in Wasm locals across a poll remain LL06;
 capture access reloads through the context on every access. Record only;
 acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate the reviewed collector core
+
+The user said “accept, integrate and proceed” after Claude’s ninety-first audit (67f243c7). The compiler and new runtime/wasm32/collector.c equal the reviewed proposal and C source exactly; native R6/R6a and both packet replays apply to these bytes. The integration record carries restart admission, live temporary protection and capture reload cost as open obligations. Auxiliary acceptance only: Stage 1 remains 10 accepted, 21 missing, zero unreviewed.

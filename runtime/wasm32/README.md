@@ -30,3 +30,11 @@ offset 24; logical pool index zero is vector offset 4. Owners must provide objec
 and catalogs for this layout. Prior-profile declarations are refused. The
 [retained layout](../../tests/wasm/stage1/constants/function-layout.json) and
 [acceptance](../../doc/WASM/stage1/acceptance-ll10.json) bind the representation.
+
+The accepted [collector core](../../tests/wasm/stage1/collector-core/README.md)
+is integrated as `collector.c`, exactly as reviewed. It is a separate owner-installed
+Wasm service with imported shared memory, not a lazy Lisp module. The fixture
+runner retains its qualified compile flags and owner configuration. Only its
+listed layouts and roots are admitted; general poll temporaries, restart scanning,
+allocator retry and memory growth remain open. See the
+[integration record](../../doc/WASM/stage1/integration-collector-core.json).

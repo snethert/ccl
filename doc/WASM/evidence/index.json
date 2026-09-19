@@ -4348,11 +4348,13 @@
       "id": "STAGE1-COLLECTOR-CORE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-core-r1/packet.json",
       "sha256": "3f105584d02cd677e9a6ab2d5e84a3e79c876a7ad504b7929892c0985a61aee7",
-      "scope": "Auxiliary moving Wasm collector kernel service over 22 CCL-generated modules: 56 native comparisons, 34 collections, 75 independent core checks, eight C mutants and three compiler controls. Non-growing unbind, rooted capture/self reloads; v_many executed. Native R6/R6a and inherited/lazy pass; fresh replay 2499 deterministic files, 189 source pins. Static image objects pinned, complete root admission/allocator retry/growth and general temporary reloads remain open. No LL18 slot credit; shared implementation remains accepted LL17.",
+      "scope": "Auxiliary moving Wasm collector kernel service over 22 CCL-generated modules: 56 native comparisons, 34 collections, 75 independent core checks, eight C mutants and three compiler controls. Non-growing unbind, rooted capture/self reloads; v_many executed. Native R6/R6a and inherited/lazy pass; fresh replay 2499 deterministic files, 189 source pins. Static image objects pinned, complete root admission/allocator retry/growth and general temporary reloads remain open. No LL18 slot credit; Exact reviewed compiler and collector C source accepted and integrated.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "review_commit": "67f243c79d603389a1bc0530bfff1da875d319c8",
+      "integration": "doc/WASM/stage1/integration-collector-core.json"
     }
   ]
 }

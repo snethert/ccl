@@ -63,10 +63,9 @@ needed for LL06’s legal-collection temporary tests (LL18-a is an explicit
 prerequisite). The [collector core](../../../tests/wasm/stage1/collector-core/README.md) now
 executes `v_many`, uses a non-growing unbind lookup, and moves live objects at
 explicit poll-service entries. Movement exposed cached capture/self addresses;
-the isolated proposal reloads both through rooted SELF. It has no LL18 credit.
-Next: complete owner root admission and allocator retry/growth, then qualify
-LL18 and the general temporary reloads under LL06. The reviewed LL17
-integration itself remains byte-identical.
+the accepted integrated core reloads both through rooted SELF. It has no LL18 credit.
+Next: admit live restart objects and exercise temporaries across actual movement,
+then complete owner root admission and allocator retry/growth for LL18 and LL06.
 
 
 ## What Stage 1 delivers
