@@ -4483,10 +4483,30 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-installation-r1-results.json",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-installation-r1/packet.json",
       "packet_sha256": "b854364f1fa528b25250a189d69154bfffdd05b97e6b78747cb2149716c6aed3",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "scope": "LL11-a: nine generated modules,16 native signature comparisons,48 invocations and eight transactions across two Workers below/above2 GiB. Exact package/case bindings, identical code aliases, distinct mutable environments and saved functions after redefinition.64 atomic refusals,seven installer mutants,11 publication and12 role controls. Fresh41-file replay and334 source pins; native R6/R6a reused by unchanged accepted compiler hash. New owner installer isolated pending review.",
       "sha256": "8c43c0399ad2987d8297c5cd78ac7f0d153587c184c7a86ffa8a2844155eaef4",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "test_ids": [
+        "S1-LL11-a"
+      ]
+    },
+    {
+      "id": "STAGE1-LL11A-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll11a-acceptance-r1/accepted-results.json",
+      "sha256": "151ca41facbc485dd76ecb2f1dfcd13df57dedf1b36c47989d8c593b0e6b56b6",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "27ac604d90c196468d86f05be8ac57eef804f4e0c54eca4afec90ac6ab184817",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll11a-acceptance-r1/packet.json",
+      "packet_sha256": "364820cd6b99d8010721d721bbf44ed7f2c836eaf3ecf41c854d3b031982c8cf",
+      "scope": "User acceptance after Claude audit 101; no new execution.",
       "test_ids": [
         "S1-LL11-a"
       ]

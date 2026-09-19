@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T23:12:58.002967+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "review_commit": "9e01ac928a8f41add3da8e4fcb96b65c726875b7",
+  "review": "Claude audit 101; no defect.",
+  "acceptance": "acceptance-ll11a.json",
+  "acceptance_sha256": "d0fea2918fdb7c5da502871a32e9668aff02d8ed43da3a57b30a35f66901b4fa",
+  "files": [
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "before": null,
+      "after": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d",
+      "proposal_locator": "2026-09-19-stage1-binding-installation-r1/installer.mjs"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "before": null,
+      "after": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0",
+      "proposal_locator": "2026-09-19-stage1-binding-installation-r1/ranges.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "a303b8658339e4858e41121ed55af4c86b4471354a0c37d3db7befbaec3d30be"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-binding-installation-r1/packet.json",
+      "sha256": "b854364f1fa528b25250a189d69154bfffdd05b97e6b78747cb2149716c6aed3"
+    }
+  ],
+  "previous_integration": "integration-ll12.json",
+  "previous_integration_sha256": "188857773ec8cda9c4a0d9e541065eba3e5b85bcc1ce17f3a2101c6eae1210f9",
+  "scope": "Exact reviewed LL11-a owner installer and range reader; compiler and existing runtime unchanged.",
+  "observations": [
+    "Manifest module rows match by name; their order does not affect admission.",
+    "Completeness is measured against the trusted owner's expected list. An owner omitting an alias from both lists is outside this control's authority.",
+    "Failed transactions discard their compiled instances and loader; rolled-back slots can be reused. Retained old module slots are never reused."
+  ],
+  "verification": "Both additions equal reviewed fixture and packet bytes. Fresh independent replay covers these exact bytes; native R6/R6a reused for the unchanged compiler.",
+  "reverse": "Remove the two new files after their consumers are withdrawn."
+}

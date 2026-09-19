@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T23:12:53.797982+00:00",
+  "authorization": {
+    "quote": "Accept, integrate and proceed",
+    "provenance": "User to Codex after supplying Claude audit 101, no defect in 1c1a3468."
+  },
+  "review_commit": "9e01ac928a8f41add3da8e4fcb96b65c726875b7",
+  "review_sha256": "92a10776c60b3099adc363371cfdb15620beebe9a7813c59566a316d29713111",
+  "source_report_sha256": "8c43c0399ad2987d8297c5cd78ac7f0d153587c184c7a86ffa8a2844155eaef4",
+  "scope": "Accept S1-LL11-a at its reviewed binding-installation scope.",
+  "exclusions": [
+    "Manifest module rows match by name; their order does not affect admission.",
+    "Completeness is measured against the trusted owner's expected list. An owner omitting an alias from both lists is outside this control's authority.",
+    "Failed transactions discard their compiled instances and loader; rolled-back slots can be reused. Retained old module slots are never reused.",
+    "Single Worker, synchronous trusted-owner transaction with Lisp execution and collection excluded. The byte provider must not re-enter installation or mutate owner memory. This is catalog integrity, not code signing or cross-Worker atomic publication.",
+    "The owner supplies existing D1 symbols, keyword identities, independently expected bindings, catalog and materialized function/pool objects. This is not a package allocator or the LL14 production cross-loader. Top-level metadata words must already equal pool elements zero and one; absent words refuse rather than being repaired.",
+    "Only the accepted non-retrying shared B profile is admitted here. The allocator-retry profile, bootstrap image ownership, generic-function method changes and code retirement are separate obligations. Old code is deliberately retained indefinitely; no unload or slot reuse policy is claimed.",
+    "Catalog metadata is trusted. Validation checks counts, keyword identities, record shapes and captures, not all nested debug contents. Keyword names are the admitted keyword-symbol subset; capture indices follow environment-slot order.",
+    "Entry ranges are complete binary function-body extents, including local declarations, joined to engine-validated export indices. They are not native machine-code addresses or inferred instruction entrypoints.",
+    "The compiler and integrated runtime are unchanged from accepted LL12. Native R6/R6a is reused by exact hashes while every native signature/behavior oracle and generated module is recompiled. The new installer remains an isolated proposal pending review and acceptance. No timing claim is made."
+  ],
+  "records": [
+    {
+      "id": "S1-LL11-a",
+      "variant": "generated",
+      "test_revision": "856331bf88841fe4189cccf533b54dad0b34511bcf387d7757b167dc132f8dd6",
+      "contract_sha256": "a9a0d38bb253ff9558e673224050f142993e9023c19eaf06f597a973907d0b48",
+      "scope": "Reviewed LL11-a, Claude audit 101."
+    }
+  ]
+}

@@ -110,3 +110,12 @@ Top-level function objects are materialized by the owner. LL14 must copy pool el
 Metadata validation is a per-call cost. It checks shape, identity and fixed counts, not all key-vector/debug contents. No timing claim.
 
 Only keyword-symbol key names are admitted. Capture debug records follow environment-slot order, not source order; indices are explicit.
+
+
+## Binding publication (Claude audit 101)
+
+Manifest module rows match by name; their order does not affect admission.
+
+Completeness is measured against the trusted owner's expected list. An owner omitting an alias from both lists is outside this control's authority.
+
+Failed transactions discard their compiled instances and loader; rolled-back slots can be reused. Retained old module slots are never reused.

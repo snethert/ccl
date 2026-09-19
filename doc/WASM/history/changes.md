@@ -2520,3 +2520,7 @@ module rows are matched by name, so row order is immaterial; the completeness
 check is against the owner's own expected list and cannot detect an owner that
 omits an alias from both; instances compiled in a refused transaction are
 discarded, not reused. Record only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate LL11-a
+
+The user directed “Accept, integrate and proceed” after Claude audit 101. The acceptance binds that audit and preserves all thirteen earlier accepted records. The installer and binary range reader are byte-identical to the reviewed proposal; the compiler and six existing runtime files are unchanged. Name-based module matching, trusted-owner completeness and rollback/retained-slot lifetimes are carried in the integration and runtime obligations. Ledger: 14 accepted, 17 missing, zero unreviewed. Next is LL11-b empty generic dispatch.

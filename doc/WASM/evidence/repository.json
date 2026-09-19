@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "f90b1530e675696b8ff70ef291b0a1c8fc03d65df78de3b462bc94a0141d99f0",
-  "commit": "4328fdc76568662b5408425fd7ba3a5e769d3a80",
-  "immutable_evidence_files": 224973,
+  "catalog_sha256": "400657259c28cb86a06b6e5bc66ec680032c2df589751e94d8b219053a7a55c2",
+  "commit": "91a1d8093d7f61ce824a7a152ea9c507967685c9",
+  "immutable_evidence_files": 225027,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-binding-installation-r1",
-    "files": 55,
-    "bytes": 6258514
+    "directory": "2026-09-19-stage1-ll11a-acceptance-r1",
+    "files": 54,
+    "bytes": 6078944
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 25508,
   "remote": null,
-  "scope": "Stage 0: 48 accepted. Stage 1: 13 accepted, 17 missing, one unreviewed. LL12 metadata integrated; LL11 aliases and redefinition qualified and pending review.",
-  "source_index_sha256": "d32d9060c117d05cbe4815bdf9fc7488042e3db982f614d910111767ac5b562a",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-binding-installation.json",
-  "verification": "Fresh replay PASS: 41 identical deterministic files, 334 source pins; unchanged accepted compiler native R6/R6a reused by hash. Scoped catalog append with prior records preserved.",
+  "scope": "Stage 0:48 accepted. Stage 1:14 accepted,17 missing,zero unreviewed.",
+  "source_index_sha256": "2738046e74342d72f965a64d567800e82a68439de9b80dccaac5130ae96d7e79",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll11a-acceptance.json",
+  "verification": "Unchanged acceptance producer; thirteen prior records preserved; installer and range reader byte-equal to reviewed proposal. Incremental catalog only.",
   "version": 1
 }
