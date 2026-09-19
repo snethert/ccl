@@ -4374,9 +4374,11 @@
       "sha256": "c893cdd78d4fdd47efc0ab568d6126eaa393cc41e83f36c1cff3905621d8d8dd",
       "scope": "Single-Worker copying owner proposal: disjoint canonical/image/stack ownership, four external root families and TCR next-method root, collection before growth, refreshed views and real 2 GiB growth. 41 owner checks, eight rejected mutants, eight generated native comparisons and 25 generated owner comparisons. Compiler/C bytes unchanged; reviewed R6/R6a reused. Public-boundary allocation only; internal retry remains open. No LL06/LL18 credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "acceptance": "USER_ACCEPTED_AUXILIARY",
+      "integration": "doc/WASM/stage1/integration-collector-owner.json"
     }
   ]
 }

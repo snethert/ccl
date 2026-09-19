@@ -70,7 +70,7 @@ EQ operands, captured initializers and implicit conditions across declining
 handlers. It is accepted and integrated after Claude’s ninety-second audit. The [owner boundary](../../../tests/wasm/stage1/collector-owner/README.md)
 now executes explicit image/callback/registry/host and TCR root admission,
 collection before allocation growth and refreshed host views, including real
-memory growth beyond 2 GiB. It remains an auxiliary proposal pending review.
+memory growth beyond 2 GiB. It is accepted and integrated after Claude’s ninety-third audit.
 Next: connect generated internal allocation slow paths to the owner boundary
 with rooted operands and reloaded addresses, qualify LL18, then finish the
 complete LL06 temporary/control matrix.

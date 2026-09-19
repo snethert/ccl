@@ -39,3 +39,9 @@ listed layouts and roots are admitted; general poll coverage, allocator retry an
 The accepted [follow-up](../../tests/wasm/stage1/collector-live/README.md) adds
 restart scanning and fixes the reviewed moving-temporary paths. See the
 [integration record](../../doc/WASM/stage1/integration-collector-live.json).
+
+The accepted [collector owner](../../tests/wasm/stage1/collector-owner/README.md)
+is integrated as `collector-owner.mjs`. It admits memory ownership and roots,
+collects before growth and refreshes host views. See its
+[integration record](../../doc/WASM/stage1/integration-collector-owner.json).
+Internal generated allocation retry remains separate work.

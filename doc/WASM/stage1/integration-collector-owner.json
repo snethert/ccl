@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-19T18:50:55.866765+00:00",
+  "user_authorization": "yes",
+  "authorization_question": "Shall I accept and integrate the owner unit, then proceed?",
+  "review_commit": "312c926952f8081d01aff9bcaa562970b894cbbc",
+  "review": "Claude ninety-third audit; no defect in 62c26b37.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "2366e9295f1f18a796ea0eea52971ced18e7455367855f38c18209c7a2c0af5f",
+  "files": [
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "before": null,
+      "after": "e6988e248d0564d408e3ac46449013fca07f22f24edb276daa9fec92ac7fe15d",
+      "proposal_locator": "tests/wasm/stage1/collector-owner/owner.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "f12ca4fe1b1386ae75ee9bb3c0a480215eaa3d8c234cbbca62dec06d126500dd"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "8af4e9018c8fd1d55ecd34e2accce38c28df874e56420677ccf168a43cb01ee5"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-collector-owner-r1/packet.json",
+      "sha256": "c893cdd78d4fdd47efc0ab568d6126eaa393cc41e83f36c1cff3905621d8d8dd"
+    }
+  ],
+  "previous_integration": "integration-collector-live.json",
+  "previous_integration_sha256": "b8f6c5914c3c99b11c69534bb9ff5b5382401c06e885889c02b4cdcd82131d20",
+  "scope": "Exact reviewed owner admission/growth module; auxiliary only, no LL06/LL18 credit.",
+  "observations": [
+    "Growth appends fresh semispace pairs; retired space is not reused. Production reuse policy remains open.",
+    "Failed assurance may have collected or grown. Callers must reload current roots even after refusal.",
+    "Generated composition reaches owner only at public boundaries; internal allocation retry is next."
+  ],
+  "verification": "Integrated module equals retained execution and pinned source. Reuse both independent reviewed replays for identical bytes.",
+  "reverse": "Remove runtime/wasm32/collector-owner.mjs; compiler and C service unchanged."
+}

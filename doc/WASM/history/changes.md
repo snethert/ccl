@@ -2275,3 +2275,7 @@ defect. Observations, none a defect: growth appends a new semispace pair and
 retires the old one without reuse; `ensure` is not a transaction; the
 generated composition covers only the public boundary. Record only; acceptance
 is the user's decision.
+
+## 2026-09-19 — accept and integrate collector owner
+
+The user answered “yes” to accepting and integrating the owner after Claude audit 93. `runtime/wasm32/collector-owner.mjs` equals the reviewed proposal and retained execution byte for byte. The integration record carries the growth high-water, non-rollback and public-boundary-only limits. Compiler, collector and loader are unchanged; the ledger remains 10 accepted and 21 missing. Next is generated internal allocation retry.
