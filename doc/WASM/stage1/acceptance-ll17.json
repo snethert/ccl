@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T16:50:13.389353+00:00",
+  "authorization": {
+    "quote": "Accept, integrate and proceed",
+    "provenance": "User to Codex after supplying Claude audit 90, no defect in c9c94639."
+  },
+  "review_commit": "152f18b43f32381d2b803daa3246e12ce5c2429a",
+  "review_sha256": "cca8ccab37926edfe832ca9166b0a135d33a4c54f7359465896c307a91d50f64",
+  "source_report_sha256": "b071de69c60fca1b87d86ed817c4cc94f36eab95974aa405bd303140c2930603",
+  "scope": "Accept S1-LL17-a at its reviewed generated binding-vector and symbol-access scope.",
+  "exclusions": [
+    "v_many is compiled but absent from the original execution corpus; Claude independently executed it. Add a retained execution case in the next derivative.",
+    "Unbinding currently uses the growing lookup. Capacity cannot shrink and failed growth pushes no binding, so it cannot allocate today; use a non-growing lookup in the next runtime derivative to make this invariant explicit.",
+    "SETF of SYMBOL-VALUE and the first-class SYMBOL-VALUE function are outside this source subset and refuse at compile time; idiomatic SETF support remains future work.",
+    "Owner-installed D1 symbols with immutable nonnegative binding indices. Index zero has global value only; dynamic binding requires a positive index. Reads/SET beyond the vector fall back to the global cell without allocation. NIL/T and registered keyword constants are protected. Package installation and assigning a new symbol index remain LL09.",
+    "TCR binding-vector element pointer/capacity is a raw interior root; scan all live element values except immediate markers. Saved binding symbol and old value remain in rooted binding records; unbinding recomputes the current slot from symbol/index. The source never stores a TLB slot address in a binding record.",
+    "Old heap vectors become unreachable after publication and must be reclaimed by LL18's collector. They are not reused by this bump-allocation implementation. Initial bootstrap vector storage remains owner-managed. The test collector copies the complete vector at legal GC-service entries and poisons the abandoned vector; it does not implement general heap collection.",
+    "A real Node Worker blocks in Atomics.wait at an entry-observation host import while compiled special bindings and roots stay live. The supervisor independently reads the shared state and resumes it. No host re-entry, JSPI or general foreign callback is claimed.",
+    "Owner-capacity exhaustion is checked refusal code 3, malformed owner metadata code 11; no engine trap or partial publication. General allocator retry/collection and recoverable heap exhaustion remain LL18."
+  ],
+  "records": [
+    {
+      "id": "S1-LL17-a",
+      "variant": "generated",
+      "test_revision": "24d96e4fc68c682f2e71069d206ded23c25c8ff20df73696f21cb004adba4ad0",
+      "contract_sha256": "fdfc6470728a9a717e7b3ee68767f6a745f2f5eb5b27a338f8b90a8dcbdf2e41",
+      "scope": "Reviewed LL17 generated bindings, Claude audit 90."
+    }
+  ]
+}

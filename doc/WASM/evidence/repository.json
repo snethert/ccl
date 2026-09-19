@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b69d478fc0ac7d7025fcd3a1ddd8d1cfca553d66",
+  "commit": "7f49394ff1bc0d57586995f1eeea4c8f1b2ada3c",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "42b791943a03383dab636f95fe369cf285d705d55940ef0342983ac095568bc8",
-  "immutable_evidence_files": 223933,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-binding-vector.json",
-  "source_index_sha256": "0751441417226784f6cefd06efa28c915ced507f2e5b669acd7598091f509f76",
-  "verification": "Complete LL17 retained replay: compiler mutants, native R6/R6a, generated/native comparisons, owner-resource tests, suspensions, vector evacuation, inherited/lazy; new artifact catalog rows checked only. Nine accepted rows unchanged.",
+  "catalog_sha256": "0733f972944a273d5287e5330f8ac1d5775e5d03e73fce8c35d7f522b0717a43",
+  "immutable_evidence_files": 224178,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll17-acceptance.json",
+  "source_index_sha256": "ed04a592c1b2cca8bbdd59d9d51630c43b3f57b031f27a1b8b9e19bc7289ccf4",
+  "verification": "Unchanged acceptance producer, bound to Claude audit 90 and explicit user instruction; nine prior records preserved. Integrated bytes equal reviewed proposal and retained R6/R6a; no new native execution. Incremental catalog only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0 48 accepted; Stage 1 9 accepted, 21 missing, 1 unreviewed. LL17 executed proposal, not integrated.",
+  "scope": "Stage 0: 48 accepted. Stage 1: ten accepted, 21 missing, zero unreviewed. Reviewed LL17 accepted and integrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-binding-vector-r1",
-    "files": 286,
-    "bytes": 78224058
+    "directory": "2026-09-19-stage1-ll17-acceptance-r1",
+    "files": 245,
+    "bytes": 74522137
   },
   "prior_indexed_references_verified": 19055
 }

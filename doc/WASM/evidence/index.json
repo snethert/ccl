@@ -2028,6 +2028,26 @@
         "S1-LL17-a"
       ],
       "scope": "Generated SYMBOL-VALUE/SET and owned binding-vector growth; 40 native cases /160 comparisons, 96 resource checks, twelve compiler mutants, two actual Worker suspensions, eight forced TLB evacuations, six publication controls, complete inherited/lazy and native R6/R6a. Proposal, shared implementation unchanged. See binding-vector scope for allocator, collector and symbol-installation bounds."
+    },
+    {
+      "id": "STAGE1-LL17-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll17-acceptance-r1/accepted-results.json",
+      "sha256": "baa412d1ef9475e9bb46d87f547d34b193a3d01ef728bede4f6f96f530c0ae45",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "eb55e37bd4798c14478659fcbc83cb35253d8491c64264b31c8002a9051876f3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll17-acceptance-r1/packet.json",
+      "packet_sha256": "d30e9be3270ec38f25b79b12d1fb1a294a1b60de7da822065f6193d6acf89581",
+      "scope": "User acceptance after Claude audit 90; no new execution.",
+      "test_ids": [
+        "S1-LL17-a"
+      ]
     }
   ],
   "auxiliary_records": [

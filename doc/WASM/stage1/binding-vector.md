@@ -1,7 +1,8 @@
 # S1-LL17-a: generated dynamic bindings
 
-19 September 2026. Executed proposal, pending Claude review and acceptance.
-The shared backend, runtime and upstream kernel are unchanged.
+19 September 2026. Accepted and integrated after Claude’s ninetieth audit.
+The shared backend equals the reviewed proposal; runtime and upstream kernel
+are unchanged. See [acceptance](acceptance-ll17.json) and [integration](integration-ll17.json).
 
 Generated SYMBOL-VALUE and SET use the D1 symbol's immutable binding index and
 the owning thread's binding vector. A missing slot reads or writes the global
@@ -47,4 +48,5 @@ existing architectures and seventeen target module profiles remain unchanged.
 symbol installation, raw interior-root treatment, retired storage, resource
 refusal, host suspension without re-entry, and remaining general collector work.
 The package retains the original failed attempts and a fresh replay. No
-acceptance is inferred from successful execution.
+acceptance was inferred from successful execution; the separate user decision
+is bound to the independent review.

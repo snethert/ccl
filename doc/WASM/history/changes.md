@@ -2187,3 +2187,13 @@ but never executed; `$unbind_to` now resolves through the growing slot lookup,
 a latent allocation path that no unbind can reach today; `setf` of
 `symbol-value` is outside the claimed scope. Record only; acceptance is the
 user's decision.
+
+## 2026-09-19 — accept and integrate LL17 after audit 90
+
+Codex records the user’s “Accept, integrate and proceed” against Claude’s
+ninetieth audit at 152f18b4. The unchanged producer accepts LL17 and the combined
+envelope preserves all nine earlier accepted objects. The shared backend equals
+the reviewed proposal, its generator and native R6/R6a bytes; runtime files are
+unchanged. The three observations are carried in the integration record. Stage 1
+is 10 accepted, 21 missing and none unreviewed. The next collector derivative
+will make unbinding non-growing and retain a v_many execution case.

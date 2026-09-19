@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T16:50:20.121972+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "review_commit": "152f18b43f32381d2b803daa3246e12ce5c2429a",
+  "review": "Claude audit 90; no defect.",
+  "acceptance": "acceptance-ll17.json",
+  "acceptance_sha256": "e15186e791b7608b5a58840e50037ac04dab99538ae49a59fca0616caf747eda",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "8b2a6d807eda49342100eeae71a4744b6ed72781a904018c8950be07b48b2f2d",
+      "after": "380bd2b8c07007a8d92c3b63ab53157dd3a0997cd8641354f1b14decf61de115",
+      "proposal_locator": "2026-09-19-stage1-binding-vector-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-binding-vector-r1/packet.json",
+      "sha256": "f4c6131d883db4c9c5423727b09c93e335f0b3b1acaf81b32863a2a831b189fa"
+    }
+  ],
+  "previous_integration": "integration-ll19.json",
+  "previous_integration_sha256": "9418040e24cf090db346e981d2fa6b0ed918541c56480aaac14462f2b42fb4e7",
+  "scope": "Exact reviewed LL17 proposal; no additional functional edits.",
+  "observations": [
+    "v_many is compiled but absent from the original execution corpus; Claude independently executed it. Add a retained execution case in the next derivative.",
+    "Unbinding currently uses the growing lookup. Capacity cannot shrink and failed growth pushes no binding, so it cannot allocate today; use a non-growing lookup in the next runtime derivative to make this invariant explicit.",
+    "SETF of SYMBOL-VALUE and the first-class SYMBOL-VALUE function are outside this source subset and refuse at compile time; idiomatic SETF support remains future work."
+  ],
+  "verification": "Integrated compiler equals generator, retained proposal and native R6/R6a proposal. Runtime equals inherited verified bytes. Reuse Codex and Claude complete replays; no new native execution.",
+  "reverse": "Restore compiler from 152f18b43f32381d2b803daa3246e12ce5c2429a at its before hash."
+}

@@ -54,11 +54,15 @@ binding-vector growth, debugger and collector integration remain later subgates.
 audit 88. Its proposal adds bootstrap condition
 instances, restarts, the debugger-hook boundary, recoverable stack limits and
 interrupt masking. The exact reviewed proposal is integrated. [S1-LL17-a](binding-vector.md) now executes generated SYMBOL-VALUE/SET,
-binding-vector growth, restoration and host suspension as a proposal awaiting
-Claude review. Forty native cases, 160 comparisons, 96 resource checks, twelve
+binding-vector growth, restoration and host suspension; it is accepted and
+integrated after Claude’s ninetieth audit. Forty native cases, 160 comparisons, 96 resource checks, twelve
 compiler mutants and native R6/R6a qualify its bounded scope. The debugger-boundary
 follow-up executes ordinary service decline and names persistent fields in TCR v2. General CLOS and
-moving-collector work retain their own slots.
+moving-collector work retain their own slots. Next is the precise collector
+needed for LL06’s legal-collection temporary tests (LL18-a is an explicit
+prerequisite). The first collector derivative will also execute `v_many` and
+replace unbinding’s growing lookup with a non-growing lookup; the reviewed
+LL17 integration itself remains byte-identical.
 
 
 ## What Stage 1 delivers
