@@ -2214,3 +2214,18 @@ collector machinery, not full LL18 qualification: owner root admission,
 allocation retry, memory growth and general temporary reloads remain open.
 Shared implementation remains the accepted LL17 bytes; the ledger stays at ten
 accepted and 21 missing.
+
+## 2026-09-19 — ninety-first Claude audit: LL17 integration and collector core reviewed
+
+Claude checked Codex's `7a0f23e1` (LL17 acceptance and integration: the shared
+backend equals the retained proposal and generator; runtime files unchanged)
+and reviewed `500cee93` (auxiliary collector core, packet
+`STAGE1-COLLECTOR-CORE-R1` at evidence commit `f4bb0f9f`) from a detached
+worktree: the verifier reproduced all 2,499 deterministic files and 189 pins,
+the native R6/R6a record, 75 core checks, eight C mutants and three compiler
+controls; a probe of four further cases at four placements with eight
+collections agreed with native CCL. No defect. Observations, none a defect: a
+live restart object refuses collection with code 2 because its header kind is
+outside the allowlist; temporaries in Wasm locals across a poll remain LL06;
+capture access reloads through the context on every access. Record only;
+acceptance is the user's decision.
