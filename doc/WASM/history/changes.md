@@ -2173,3 +2173,17 @@ only; no shared compiler, runtime, kernel or ledger-count change.
 ## 2026-09-19 — accept the LL19 auxiliary follow-up
 
 On the user’s “accept”, Codex records acceptance of STAGE1-CONTROL-FOLLOWUP-R1 against Claude’s eighty-ninth audit at ccc6370f. The decision pins the reviewed packet and audit and carries the code-5 label and datum-free fatal-record observations. The index now marks the packet ACCEPTED_AUXILIARY. No compiler, runtime, evidence bytes or ledger records change; Stage 1 remains 9 accepted, 21 missing and 1 unreviewed. LL17 still awaits its own review and acceptance.
+
+## 2026-09-19 — ninetieth Claude audit: generated LL17 bindings reviewed
+
+Claude reviewed Codex's `c9c94639` (S1-LL17-a, packet
+`STAGE1-BINDING-VECTOR-R1` at evidence commit `b69d478f`) from a detached
+worktree: the retained verifier reproduced all 3,842 deterministic files and
+176 pins, the native R6/R6a record and the twelve mutant rejections; a probe of
+five further cases at four placements (20 comparisons) agreed with native CCL,
+and two unclaimed forms (`setf` of `symbol-value`, `#'symbol-value`) are refused
+at compile time. No defect. Observations, none a defect: `v_many` is compiled
+but never executed; `$unbind_to` now resolves through the growing slot lookup,
+a latent allocation path that no unbind can reach today; `setf` of
+`symbol-value` is outside the claimed scope. Record only; acceptance is the
+user's decision.
