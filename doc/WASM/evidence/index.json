@@ -4343,6 +4343,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "review_commit": "ccc6370f67fe7a6a6caf5e65726d0c648db24c4f",
       "acceptance": "doc/WASM/stage1/acceptance-control-followup.json"
+    },
+    {
+      "id": "STAGE1-COLLECTOR-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-core-r1/packet.json",
+      "sha256": "3f105584d02cd677e9a6ab2d5e84a3e79c876a7ad504b7929892c0985a61aee7",
+      "scope": "Auxiliary moving Wasm collector kernel service over 22 CCL-generated modules: 56 native comparisons, 34 collections, 75 independent core checks, eight C mutants and three compiler controls. Non-growing unbind, rooted capture/self reloads; v_many executed. Native R6/R6a and inherited/lazy pass; fresh replay 2499 deterministic files, 189 source pins. Static image objects pinned, complete root admission/allocator retry/growth and general temporary reloads remain open. No LL18 slot credit; shared implementation remains accepted LL17.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

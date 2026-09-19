@@ -2197,3 +2197,20 @@ the reviewed proposal, its generator and native R6/R6a bytes; runtime files are
 unchanged. The three observations are carried in the integration record. Stage 1
 is 10 accepted, 21 missing and none unreviewed. The next collector derivative
 will make unbinding non-growing and retain a v_many execution case.
+
+## 2026-09-19 — first moving collector service over generated code
+
+Codex built an isolated freestanding Wasm copying service, invoked at explicit
+poll-service entries in real CCL-generated Lisp. Fourteen native cases / 56
+comparisons and 34 collections retain cycles, closures, bindings, pending exits
+and inline/arena results after retired space is poisoned. Seventy-five core
+checks and eleven mutation controls cover relocation, raw widths, refusal
+atomicity, stack environments, capture/self reloads and non-growing unbinding.
+The live-closure and recursive-self cases exposed cached Wasm addresses; the
+proposal now reads the updated continuation root. Native R6/R6a and inherited
+generated/lazy execution pass; fresh replay reproduces 2,499 deterministic files
+with 189 source pins. The original failures remain retained. This is
+collector machinery, not full LL18 qualification: owner root admission,
+allocation retry, memory growth and general temporary reloads remain open.
+Shared implementation remains the accepted LL17 bytes; the ledger stays at ten
+accepted and 21 missing.

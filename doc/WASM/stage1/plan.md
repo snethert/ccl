@@ -60,9 +60,13 @@ compiler mutants and native R6/R6a qualify its bounded scope. The debugger-bound
 follow-up executes ordinary service decline and names persistent fields in TCR v2. General CLOS and
 moving-collector work retain their own slots. Next is the precise collector
 needed for LL06’s legal-collection temporary tests (LL18-a is an explicit
-prerequisite). The first collector derivative will also execute `v_many` and
-replace unbinding’s growing lookup with a non-growing lookup; the reviewed
-LL17 integration itself remains byte-identical.
+prerequisite). The [collector core](../../../tests/wasm/stage1/collector-core/README.md) now
+executes `v_many`, uses a non-growing unbind lookup, and moves live objects at
+explicit poll-service entries. Movement exposed cached capture/self addresses;
+the isolated proposal reloads both through rooted SELF. It has no LL18 credit.
+Next: complete owner root admission and allocator retry/growth, then qualify
+LL18 and the general temporary reloads under LL06. The reviewed LL17
+integration itself remains byte-identical.
 
 
 ## What Stage 1 delivers
