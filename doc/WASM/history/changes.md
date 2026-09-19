@@ -2487,3 +2487,7 @@ function objects receive their metadata words from the owner's
 materialization, not from generated code; entry validation is a per-call cost
 that checks fixed counts but not key vectors; non-keyword key names never reach
 an arity record. Record only; acceptance of the slot is the user's decision.
+
+## 2026-09-19 — accept and integrate LL12-a
+
+The user directed “accept, integrate and proceed” after Claude audit 100. The acceptance binds the audit commit and review hash and preserves all twelve earlier accepted objects. The compiler equals the reviewed proposal and native R6/R6a input; runtime sources are unchanged. Owner materialization must populate the metadata fields; keyword-only admission, capture slot order and per-entry validation cost are carried into the integration and runtime obligations. Ledger: 13 accepted,18 missing,zero unreviewed. Corrected the next-item label: LL11-a is aliases and redefinition; numerics is LL16-a.

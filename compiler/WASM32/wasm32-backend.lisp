@@ -2,6 +2,7 @@
 (defpackage "WASM32-COMPILER" (:use "CL"))
 (defpackage "WASM32-OS" (:use))
 (in-package "WASM32-COMPILER")
+(defvar *b-callable-metadata* nil)
 (defvar *pool-layouts* nil)
 (defvar *pool-current* nil)
 (defvar *module-result-tag* nil)
@@ -1282,7 +1283,7 @@
            (implicit-runtime (b-implicit-runtime))
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
            (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first opt) (third opt) (list rest) (second keys) (third keys)))))
-           (code (let ((prepare (concatenate 'string (or (b-environment-entry) "") (b-initialize-cells)))
+           (code (let ((prepare (concatenate 'string (metadata-entry afunc) (or (b-environment-entry) "") (b-initialize-cells)))
                        (key-scan (or (b-keyword-scan arity opt keys) "")))
                    (flet ((emit-body () (concatenate 'string
                       (with-output-to-string (s)
@@ -1613,8 +1614,8 @@
     (b-at (funcall (if *b-stack-closure* #'b-stack-block #'b-heap-block) bytes
       (lambda (base)
         (with-output-to-string (s)
-          (format s "(i32.store ~a (i32.const 1578)) (i32.store offset=4 ~a (global.get $code_~a)) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a (i32.const 4)) (i32.store offset=16 ~a (i32.const 77825)) (i32.store offset=20 ~a (i32.const 77825))"
-            base base (second entry) base (if (zerop n) "(i32.const 77825)" (b-at base 38)) base base base)
+          (format s "(i32.store ~a (i32.const 1578)) (i32.store offset=4 ~a (global.get $code_~a)) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a (i32.const 4)) (i32.store offset=16 ~a ~a) (i32.store offset=20 ~a ~a)"
+            base base (second entry) base (if (zerop n) "(i32.const 77825)" (b-at base 38)) base base (metadata-child-load afunc 0) base (metadata-child-load afunc 1))
           (format s "(i32.store offset=24 ~a ~a) (i32.store offset=28 ~a (i32.const 0))" base (pool-child-load afunc) base)
           (when (plusp n)
             (format s "(i32.store offset=32 ~a (i32.const ~d))" base (+ 250 (* 256 n)))
@@ -1631,8 +1632,9 @@
     (setq *b-functions* (nreverse *b-functions*))
     (dolist (entry (rest *b-functions*))
       (when (find (second entry) *b-call-links* :key #'second :test #'equal) (refuse :b-closure-name-collision)))
+    (when *b-callable-metadata* (b-plan-local-environments))
     (pool-plan)
-    (b-plan-local-environments)
+    (unless *b-callable-metadata* (b-plan-local-environments))
     (let ((modules (mapcar (lambda (entry) (let ((*module-name* (second entry))) (b-one-module (first entry)))) *b-functions*)))
       (setf (getf (first modules) :children) (rest modules))
       (throw *module-result-tag* (first modules)))))
@@ -2387,7 +2389,7 @@
 (defun pool-plan ()
   (setf *pool-layouts* nil)
   (dolist (entry (reverse *b-functions*))
-    (let ((values nil) (children nil))
+    (let ((values (when *b-callable-metadata* (list (metadata-arity (first entry)) (metadata-debug (first entry))))) (children nil))
       (labels ((visit (x)
                  (cond ((ccl::acode-p x)
                         (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
@@ -2987,3 +2989,45 @@
                (write-string "))" s)))))
       (b-wat "(local.set ~a (i32.const 0)) (loop ~a ~a) ~a"
         pc label body (b-multiple (make-b-raw-code :text "(i32.const 77825)"))))))
+
+(in-package :wasm32-compiler)
+;;; All data uses the existing graph encoder; names retain package identity.
+(defun metadata-symbol (s)
+  (vector (and (symbol-package s) (package-name (symbol-package s))) (symbol-name s)))
+(defun metadata-arity (afunc)
+  (let* ((args (ccl::acode-operands (ccl::afunc-acode afunc)))
+         (keys (fourth args)))
+    (vector 1 (length (first args)) (length (first (second args)))
+            (not (null (third args))) (not (null keys)) (not (null (first keys)))
+            (copy-seq (or (fifth keys) #())))))
+(defun metadata-debug (afunc)
+  (let ((entry (assoc afunc *b-functions* :test #'eq))
+        (vars (cdr (assoc afunc *b-environments* :test #'eq))))
+    (vector 1 (second entry)
+            (coerce (loop for v in vars for i from 0 collect
+                      (vector i (metadata-symbol (ccl::var-name (ccl::nx-root-var v))))) 'vector))))
+(defun metadata-child-load (afunc index)
+  (if (not *b-callable-metadata*) "(i32.const 77825)"
+    (let ((pool (cdr (assoc afunc *pool-layouts* :test #'eq))))
+      (unless (and pool (>= (length pool) 2)) (refuse :callable-metadata-pool))
+      (b-wat "(i32.load offset=~d (call $object_base ~a (i32.const ~d) (i32.const ~d)))"
+        (+ 4 (* 4 index)) (pool-child-load afunc)
+        (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool)))))))
+(defun metadata-entry (afunc)
+  (if (not *b-callable-metadata*) ""
+    (let* ((pool (cdr (assoc afunc *pool-layouts* :test #'eq)))
+           (self (temporary)) (p (temporary)) (arity (temporary)) (debug (temporary))
+           (a (metadata-arity afunc)))
+      (b-wat "(local.set ~a (call $object_base (i32.load offset=40 (local.get $context)) (i32.const 32) (i32.const 1578)))
+        (local.set ~a (call $object_base (i32.load offset=24 (local.get ~a)) (i32.const ~d) (i32.const ~d)))
+        (if (i32.or (i32.ne (i32.load offset=16 (local.get ~a)) (i32.load offset=4 (local.get ~a))) (i32.ne (i32.load offset=20 (local.get ~a)) (i32.load offset=8 (local.get ~a)))) (then (throw $call_error (i32.const 4))))
+        (local.set ~a (call $object_base (i32.load offset=16 (local.get ~a)) (i32.const 32) (i32.const 2042)))
+        (local.set ~a (call $object_base (i32.load offset=20 (local.get ~a)) (i32.const 16) (i32.const 1018)))
+        (if (i32.or (i32.ne (i32.load offset=4 (local.get ~a)) (i32.const 4)) (i32.ne (i32.load offset=4 (local.get ~a)) (i32.const 4))) (then (throw $call_error (i32.const 4))))
+        (if (i32.or (i32.ne (i32.load offset=8 (local.get ~a)) (i32.const ~d)) (i32.ne (i32.load offset=12 (local.get ~a)) (i32.const ~d))) (then (throw $call_error (i32.const 4))))"
+        self p self (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool)))
+        self p self p arity self debug self arity debug arity (* 4 (aref a 1)) arity (* 4 (aref a 2))))))
+(defun compile-metadata-call-form (form name links)
+  (let ((*b-callable-metadata* t)) (compile-call-form form name links)))
+(defun compile-metadata-call-module (source name links)
+  (let ((*b-callable-metadata* t)) (compile-call-module source name links)))

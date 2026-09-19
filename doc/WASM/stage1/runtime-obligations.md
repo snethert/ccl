@@ -101,3 +101,12 @@ covers soft VSP/TSP/CSP exhaustion and explicit interrupt masking/re-enable with
 independent collector service. These are executed claims, not accepted or
 integrated changes. General class/symbol installation, moving collection and
 host re-entry keep their separate obligations.
+
+
+## Callable materialization (Claude audit 100)
+
+Top-level function objects are materialized by the owner. LL14 must copy pool elements zero and one into the arity/debug words; only closure constructors initialize them in generated code.
+
+Metadata validation is a per-call cost. It checks shape, identity and fixed counts, not all key-vector/debug contents. No timing claim.
+
+Only keyword-symbol key names are admitted. Capture debug records follow environment-slot order, not source order; indices are explicit.

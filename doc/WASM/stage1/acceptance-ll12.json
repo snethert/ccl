@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T22:36:01.364598+00:00",
+  "authorization": {
+    "quote": "accept, integrate and proceed",
+    "provenance": "User to Codex after supplying Claude audit 100, no defect in 1058a409."
+  },
+  "review_commit": "aaf915456ee29234a4bd0b7b4a6f67d0ac4abe26",
+  "review_sha256": "12ed133094e7fc9ff739ed8a71cccd5f4c494d7adbbd6dd56c5a17b49d85046f",
+  "source_report_sha256": "19802f58749b2ed92cdb1c00386deaba43344f9dc043948d747f2ce53c13eede",
+  "scope": "Accept S1-LL12-a at its reviewed callable-metadata scope.",
+  "exclusions": [
+    "Top-level function objects are materialized by the owner. LL14 must copy pool elements zero and one into the arity/debug words; only closure constructors initialize them in generated code.",
+    "Metadata validation is a per-call cost. It checks shape, identity and fixed counts, not all key-vector/debug contents. No timing claim.",
+    "Only keyword-symbol key names are admitted. Capture debug records follow environment-slot order, not source order; indices are explicit.",
+    "The flag is off at existing entry points, which retain reviewed output byte for byte. Enabling metadata for production bootstrap materialization is an owner/compiler entry choice after review.",
+    "Debug records provide code names and capture names/slot indices; they are not full debugger source maps or live variable liveness records. Native signature count fields are modulo 64; this corpus uses smaller lambda lists.",
+    "Snapshot transport is the accepted fixture image mechanism extended for this exact six-word function layout. It is not the production cross-fasloader, which remains LL14 work. No CLOS dispatch or unadmitted function kind is claimed.",
+    "Keyword identity and catalog entries are supplied by the trusted owner. Entry validation checks structural shape and the module's fixed counts, not every nested string or symbol in malicious owner memory.",
+    "Metadata adds pool objects and entry validations. There is no timing claim. Movement of these new metadata graphs through the production collector is not newly claimed; this unit exercises fresh-Worker relocation, and the accepted moving corpora are replayed with the new flag off.",
+    "The proposal is isolated pending Claude's review and user acceptance. Shared compiler and runtime files remain at the accepted closed-GO integration. Native R6/R6a is newly executed for the exact proposal."
+  ],
+  "records": [
+    {
+      "id": "S1-LL12-a",
+      "variant": "generated",
+      "test_revision": "324dc2992e7a5026a845862d8889eed3b47499f0f180c4dbd0ba1ea4381bbc0c",
+      "contract_sha256": "8a5ad8c4469c8a31df3bb073b7bbc8a606119e0a0c79b14a91c86efcfa91d20a",
+      "scope": "Reviewed LL12-a, Claude audit 100."
+    }
+  ]
+}

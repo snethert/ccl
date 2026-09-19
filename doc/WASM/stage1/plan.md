@@ -85,7 +85,7 @@ and slot are accepted and integrated after audit 96. [LL06-a qualification](../.
 now executes temporary lifetime, evaluation order and actual TAGBODY loops, with
 300 legal collections and independent stack/control checks. Its compiler proposal
 and slot are accepted and integrated after audits 97/98. Next:
-LL12-a callable metadata is executed and awaits review; hash-table movement remains LL18-b.
+LL12-a callable metadata is accepted and integrated after audit 100; hash-table movement remains LL18-b.
 
 The [closed-transfer proposal](../../../tests/wasm/stage1/closure-transfers/README.md)
 now executes closed GO through captured control state, including HANDLER-BIND
@@ -99,8 +99,8 @@ use both catch and exit frames and a catch-search THROW; branch eligibility is
 all-or-nothing per TAGBODY. The [LL12-a metadata qualification](../../../tests/wasm/stage1/callable-metadata/README.md)
 now fills the existing arity/debug words in an isolated opt-in compiler mode,
 with native signatures, actual capture-cell checks, cold installation and fresh-Worker
-restoration. It awaits review and acceptance; the integrated default mode is unchanged.
-Next after review/integration: LL11-a arithmetic and type checks; LL18-b hash-table
+restoration. It is accepted and integrated after audit 100; default-mode output is unchanged.
+Next: LL11-a package-qualified aliases, installation validation and redefinition; LL18-b hash-table
 movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98

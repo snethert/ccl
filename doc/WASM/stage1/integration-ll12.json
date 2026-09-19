@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T22:36:06.682879+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "aaf915456ee29234a4bd0b7b4a6f67d0ac4abe26",
+  "review": "Claude audit 100; no defect.",
+  "acceptance": "acceptance-ll12.json",
+  "acceptance_sha256": "9e2b3dc03616a2fa1109f972a669ee16019c2579392ac77b197413dd4e0f8214",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "7fc03d629827770c976ccbe63e108431db653147231f6ab99ff08540efa56839",
+      "after": "a303b8658339e4858e41121ed55af4c86b4471354a0c37d3db7befbaec3d30be",
+      "proposal_locator": "2026-09-19-stage1-callable-metadata-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-callable-metadata-r1/packet.json",
+      "sha256": "4cfbbc5925e2d32a4b5e21b473017ecf4a302b6d775de3ed7d3c12fce90b5cfa"
+    }
+  ],
+  "previous_integration": "integration-closure-transfers.json",
+  "previous_integration_sha256": "0c09e11915d0efa09ad67aa1f53763149c29f7376036fb87838a219514c5b08c",
+  "scope": "Exact reviewed LL12-a proposal; runtime unchanged.",
+  "observations": [
+    "Top-level function objects are materialized by the owner. LL14 must copy pool elements zero and one into the arity/debug words; only closure constructors initialize them in generated code.",
+    "Metadata validation is a per-call cost. It checks shape, identity and fixed counts, not all key-vector/debug contents. No timing claim.",
+    "Only keyword-symbol key names are admitted. Capture debug records follow environment-slot order, not source order; indices are explicit."
+  ],
+  "verification": "Compiler equals reviewed proposal and generator. Native R6/R6a and independent replay cover these exact bytes.",
+  "reverse": "Restore compiler to its recorded before hash."
+}
