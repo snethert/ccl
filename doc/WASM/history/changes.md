@@ -2495,3 +2495,28 @@ The user directed “accept, integrate and proceed” after Claude audit 100. Th
 ## 2026-09-19 — qualify LL11-a aliases and redefinition
 
 A new isolated owner installer validates complete case-sensitive package bindings, hash-linked boot/runtime manifests, unreserved fresh code slots, exact exported body extents and arity metadata before publishing symbol cells. Nine unchanged-compiler modules run in Workers below and above 2 GiB; native CCL supplies signatures and mutable-closure/redefinition values. Saved functions keep their own code and environments. All 64 refusals preserve cells, registry, tables, heap and TCR, including an import failure after seven modules install. Seven executable installer faults, 11 publication controls and 12 artifact-role omissions are rejected. A fresh replay reproduces 41 deterministic files against 334 source pins. Native R6/R6a is reused by exact accepted compiler/runtime hashes. No shared compiler or runtime source changed; LL11-a is executed and pending review. Ledger: 13 accepted, 17 missing, one unreviewed.
+
+## 2026-09-19 — hundred-and-first Claude audit: LL12-a integration and LL11-a qualification reviewed
+
+Claude reviewed `0bba1054` and `1c1a3468` from the detached worktree. The
+integration commit's compiler equals the reviewed LL12-a proposal by hash,
+every runtime file is unchanged, the acceptance binds the audit-100 commit and
+review hash, and the ledger moves to 13 accepted. The LL11-a verifier replay
+from the detached worktree passed with 41 identical deterministic files and
+334 source pins, equal to Codex's record; the assessment counts nine modules,
+two Worker placements, 16 native signature comparisons, 48 invocations, eight
+transactions, 64 atomic refusals and seven installer mutants. A probe drove the
+retained installer at both placements through 21 refusal shapes outside the
+corpus (wrong module claims on identical bytes and on a closure's parent,
+foreign arity records, corrupted symbol and function headers, unregistered key
+addresses, bad arity flags and debug versions, unregistered or duplicate
+expected bindings, a two-generation-stale predecessor, registry capacity and
+dirty rows, occupied tail slots, closure environment and capture-cell faults, a
+capability mismatch after registry rows are journaled, and boot-slot reuse in a
+fifth generation): every refusal carried the expected diagnostic and left
+memory, tables and installer state identical, and the four publications
+reproduced the native redefinition values. No defect. Observations: manifest
+module rows are matched by name, so row order is immaterial; the completeness
+check is against the owner's own expected list and cannot detect an owner that
+omits an alias from both; instances compiled in a refused transaction are
+discarded, not reused. Record only; acceptance is the user's decision.
