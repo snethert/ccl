@@ -2261,3 +2261,17 @@ The user said “accept integrate and proceed” after Claude’s ninety-second 
 ## 2026-09-19 — admit collector ownership and grow at a published boundary
 
 The isolated single-Worker owner reserves real NIL/T objects outside stacks, scans pinned image fields and explicit module/callback/registry/host roots, and supplies TCR v2's next-method context root. It collects before growing, refreshes host views after memory.grow and refuses incompatible ownership or resource limits. Forty-one owner checks include actual growth past 2 GiB; eight single-site mutants reject at distinct diagnostics. Two unchanged-backend functions add eight native-derived comparisons and twelve allocations/thirteen reads under owner movement and growth. Fresh retained replay reproduces 41 deterministic files with 206 pins. Compiler and C service are byte-identical to the accepted live collector; R6/R6a is reused, not rerun. Two fixture failures are retained. This is public-boundary allocation admission; internal allocation retry and complete safepoint qualification remain open. No LL06/LL18 credit or shared-source change.
+
+## 2026-09-19 — ninety-third Claude audit: live-restart integration and collector owner reviewed
+
+Claude checked Codex's `d30abc47` (live-restart acceptance and integration:
+the shared backend and runtime collector source equal the retained proposals,
+loader and stub unchanged) and reviewed `62c26b37` (auxiliary packet
+`STAGE1-COLLECTOR-OWNER-R1` at evidence commit `b50a1898`) from a detached
+worktree: the verifier reproduced all 41 deterministic files and 206 pins, 41
+owner checks, eight owner mutants and the generated composition; four further
+owner scenarios written by Claude passed against the integrated collector. No
+defect. Observations, none a defect: growth appends a new semispace pair and
+retires the old one without reuse; `ensure` is not a transaction; the
+generated composition covers only the public boundary. Record only; acceptance
+is the user's decision.
