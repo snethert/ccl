@@ -100,8 +100,12 @@ all-or-nothing per TAGBODY. The [LL12-a metadata qualification](../../../tests/w
 now fills the existing arity/debug words in an isolated opt-in compiler mode,
 with native signatures, actual capture-cell checks, cold installation and fresh-Worker
 restoration. It is accepted and integrated after audit 100; default-mode output is unchanged.
-Next: LL11-a package-qualified aliases, installation validation and redefinition; LL18-b hash-table
-movement remains an independent obligation.
+The [LL11-a aliases and redefinition qualification](../../../tests/wasm/stage1/binding-installation/README.md)
+now validates complete package-qualified binding manifests and publishes fresh
+code slots transactionally, keeping saved functions and environments callable.
+The compiler is unchanged; the isolated owner installer awaits review.
+Next after acceptance/integration: LL11-b generic dispatch and the empty-registry
+condition. LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps

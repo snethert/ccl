@@ -1,0 +1,15 @@
+{
+  "test": "S1-LL11-a",
+  "variant": "generated",
+  "scope": "Atomic installation of package-qualified aliases and redefinitions over real compiler-generated B functions and mutable lexical closures.",
+  "implementation": "An isolated owner installer validates a complete expected binding set, generation/hash-linked boot and runtime manifests, distinct unreserved code slots, exact public/internal export indices and body extents, function/pool metadata identity and arity before publication. The unchanged accepted lazy loader authenticates bytes/imports and installs both entries. A journal restores code rows, tables and cells on any failed transaction. Fresh code slots and retained instances keep old function objects callable.",
+  "oracle": "Native CCL compiles two byte-identical target functions and a mutable closure factory, binds real case-sensitive symbols in two packages, and supplies behavior before and after rebinding. Native function-args/key vectors provide signatures. Generated calls dispatch through actual symbol cells and saved function objects, below and above 2 GiB. Python independently decodes exported body extents and joins every successful installation to binary digests and manifest history.",
+  "exclusions": [
+    "Single Worker, synchronous trusted-owner transaction with Lisp execution and collection excluded. The byte provider must not re-enter installation or mutate owner memory. This is catalog integrity, not code signing or cross-Worker atomic publication.",
+    "The owner supplies existing D1 symbols, keyword identities, independently expected bindings, catalog and materialized function/pool objects. This is not a package allocator or the LL14 production cross-loader. Top-level metadata words must already equal pool elements zero and one; absent words refuse rather than being repaired.",
+    "Only the accepted non-retrying shared B profile is admitted here. The allocator-retry profile, bootstrap image ownership, generic-function method changes and code retirement are separate obligations. Old code is deliberately retained indefinitely; no unload or slot reuse policy is claimed.",
+    "Catalog metadata is trusted. Validation checks counts, keyword identities, record shapes and captures, not all nested debug contents. Keyword names are the admitted keyword-symbol subset; capture indices follow environment-slot order.",
+    "Entry ranges are complete binary function-body extents, including local declarations, joined to engine-validated export indices. They are not native machine-code addresses or inferred instruction entrypoints.",
+    "The compiler and integrated runtime are unchanged from accepted LL12. Native R6/R6a is reused by exact hashes while every native signature/behavior oracle and generated module is recompiled. The new installer remains an isolated proposal pending review and acceptance. No timing claim is made."
+  ]
+}

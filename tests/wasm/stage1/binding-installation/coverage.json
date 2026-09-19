@@ -1,0 +1,12 @@
+{
+  "S1-LL11-a:aliases": {
+    "status": "PASS",
+    "identical_code_all_bindings": ["compile.lisp:one and two compiled separately", "execute.mjs:binary digest equality, four exact package/case identities, all actual symbol-cell values", "assessment/inputs.json:execution.rows[].initial"],
+    "distinct_mutable_environments": ["compile.lisp:native package bindings and closure mutation oracle", "execute.mjs:two generated factory calls share code and differ in environment", "assessment/inputs.json:before, mutate, replaced, after"],
+    "entry_ranges_and_arity": ["ranges.mjs:engine-validated export body extents", "assessment.py:independent binary section reader", "compile.lisp:native function-args and key vector", "execution/mutants/partial-entry-range/execution.log", "execution/mutants/wrong-arity-admitted/execution.log"],
+    "boot_manifest_alias_reserved_conflict": ["installer.mjs:expected bindings, hash-linked generations, fresh code rows and table slots", "execute.mjs:32 refusals at each placement, exact state equality on refusal", "execution/mutants/missing-alias-admitted/execution.log", "execution/mutants/stale-manifest-admitted/execution.log", "execution/mutants/lost-alias-publication/execution.log"],
+    "rollback_and_old_functions": ["execute.mjs:late failure after earlier modules install, saved closures and old top function after replacement", "execution/mutants/missing-rollback/execution.log", "execution/mutants/old-code-overwritten/execution.log"],
+    "native_and_publication": ["native-reuse.json", "inputs.json", "assessment/controls.json", "role-controls.json"],
+    "locator_rule": "execution/ names members of execution.tar.gz; fixture sources are in source.tar.gz under binding-installation. assessment/inputs.json retains the complete native and target join inputs."
+  }
+}

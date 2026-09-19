@@ -4470,6 +4470,26 @@
       "test_ids": [
         "S1-LL12-a"
       ]
+    },
+    {
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "currency": "CURRENT",
+      "envelope_version": 2,
+      "execution_status": "PASS",
+      "id": "STAGE1-BINDING-INSTALLATION-R1",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "27ac604d90c196468d86f05be8ac57eef804f4e0c54eca4afec90ac6ab184817",
+      "inventory_version": 1,
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-installation-r1-results.json",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-installation-r1/packet.json",
+      "packet_sha256": "b854364f1fa528b25250a189d69154bfffdd05b97e6b78747cb2149716c6aed3",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "LL11-a: nine generated modules,16 native signature comparisons,48 invocations and eight transactions across two Workers below/above2 GiB. Exact package/case bindings, identical code aliases, distinct mutable environments and saved functions after redefinition.64 atomic refusals,seven installer mutants,11 publication and12 role controls. Fresh41-file replay and334 source pins; native R6/R6a reused by unchanged accepted compiler hash. New owner installer isolated pending review.",
+      "sha256": "8c43c0399ad2987d8297c5cd78ac7f0d153587c184c7a86ffa8a2844155eaef4",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "test_ids": [
+        "S1-LL11-a"
+      ]
     }
   ],
   "historical_records": [

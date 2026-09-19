@@ -444,8 +444,8 @@
           "description": "Differently named functions sharing identical code keep every package-qualified binding and distinct closure environments; entry ranges, arity and boot manifests are validated; a missing alias, a reused reserved slot or a conflicting record fails installation; redefinition leaves old function objects callable with their own code and environments."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/binding-installation/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
