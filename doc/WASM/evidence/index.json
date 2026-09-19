@@ -4386,9 +4386,11 @@
       "sha256": "f7df6fda7178ff2781d5c96b2724c2bb5078d6089ce8f987bf92e02009e408e0",
       "scope": "Opt-in internal fixed-heap and rest-list allocation retry. 41 modules, 189 native comparisons, one failure-after-movement resource case, 302 collections, 68 growths and six compiled mutants. Default profile comparison: 129 identical Wasm/WAT files. Final native R6/R6a PASS; accepted owner/C unchanged. Binding-vector/restart/condition retry and new lazy-loader admission remain open. No LL06/LL18 credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "acceptance": "USER_ACCEPTED_AUXILIARY",
+      "integration": "doc/WASM/stage1/integration-allocation-retry.json"
     }
   ]
 }

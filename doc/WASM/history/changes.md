@@ -2299,3 +2299,7 @@ to the condition-system specials, so condition and restart cases cannot be
 composed with the owner there; the three raw constructor paths still refuse
 on exhaustion; the owner service refuses when entered from inside a boundary.
 Record only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate internal allocation retry
+
+The user directed “accept, integrate and proceed” after Claude audit 94. The integrated backend and allocation service equal the retained proposal by hash; owner, C collector and loader files are unchanged. The integration record carries the raw-constructor/harness gap, nested-owner refusal and non-rollback assurance contract. No slot credit is claimed; the ledger remains 10 accepted, 21 missing.

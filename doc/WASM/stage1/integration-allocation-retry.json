@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-19T19:25:07.209490+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "de30eafd7a6800f78079d63e24b5a380495f3e3b",
+  "review": "Claude ninety-fourth audit; no defect in 0653f1f4.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "0f6a365ec0aedcb440478a9f83f27b70e182ef9365d9d40f03c0d7982cc33694",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "f12ca4fe1b1386ae75ee9bb3c0a480215eaa3d8c234cbbca62dec06d126500dd",
+      "after": "abde6263f3afdb71e7e97ab96a4bbc250436e357c53ddb1616b57763e66eee56",
+      "proposal_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-allocation-retry-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "before": null,
+      "after": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb",
+      "proposal_locator": "/Users/buildsomething/Source/ccl/tests/wasm/stage1/allocation-retry/allocation-service.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "e6988e248d0564d408e3ac46449013fca07f22f24edb276daa9fec92ac7fe15d"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "8af4e9018c8fd1d55ecd34e2accce38c28df874e56420677ccf168a43cb01ee5"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-allocation-retry-r1/packet.json",
+      "sha256": "f7df6fda7178ff2781d5c96b2724c2bb5078d6089ce8f987bf92e02009e408e0"
+    }
+  ],
+  "previous_integration": "integration-collector-owner.json",
+  "previous_integration_sha256": "aa67f9b838140021f89a3660a9974e70bc1df3849ce93b31314824b02117c86a",
+  "scope": "Exact reviewed opt-in internal allocation retry and owner service; auxiliary only, no LL06/LL18 credit.",
+  "observations": [
+    "Condition/restart composition needs condition-system binding indices and qualification of the three raw constructor slow paths.",
+    "The owner capability refuses nested entry from an active owner boundary. Loader admission must preserve and state this contract.",
+    "A refused assurance preserves live objects and roots; heap layout may already have changed."
+  ],
+  "verification": "Integrated compiler equals retained proposal and generator; service equals retained execution and source pin. Reuse reviewed native R6/R6a and both independent replays for identical bytes.",
+  "reverse": "Restore compiler from collector-live packet; remove runtime/wasm32/allocation-service.mjs."
+}

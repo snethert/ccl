@@ -45,3 +45,9 @@ is integrated as `collector-owner.mjs`. It admits memory ownership and roots,
 collects before growth and refreshes host views. See its
 [integration record](../../doc/WASM/stage1/integration-collector-owner.json).
 Internal generated allocation retry remains separate work.
+
+The accepted internal allocation retry is integrated in the compiler and
+`allocation-service.mjs`; see [the integration record](../../doc/WASM/stage1/integration-allocation-retry.json).
+Retry remains opt-in and the existing lazy profile refuses its owner import.
+An assurance may move live data before refusing; invoke generated code outside
+an active owner boundary. Raw constructor retry and loader admission follow.

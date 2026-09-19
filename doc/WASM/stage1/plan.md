@@ -74,7 +74,7 @@ memory growth beyond 2 GiB. It is accepted and integrated after Claude’s ninet
 The [internal retry proposal](../../../tests/wasm/stage1/allocation-retry/README.md)
 now connects fixed heap construction and rest lists to the owner, with rooted
 operands, reloaded addresses, failure after movement and native R6/R6a tested.
-It is opt-in and pending review; the current lazy loader refuses its new service
+It is accepted, integrated and opt-in; the current lazy loader refuses its new service
 capability. Next: qualify binding-vector, restart and condition allocation slow
 paths and admit the owner capability in the loader; complete LL18 and then the
 LL06 temporary/control matrix.
