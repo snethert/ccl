@@ -414,8 +414,8 @@
           "description": "Escaping mutable closures with shared and distinct captured cells, keyword functions and callable metadata keep their environments, key vectors and debug records through installation; a truncated function object fails validation; no function is repaired with global state."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/callable-metadata/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

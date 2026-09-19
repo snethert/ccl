@@ -1,0 +1,14 @@
+{
+  "S1-LL12-a:closures": {
+    "status": "PASS",
+    "escaping_mutable_shared_distinct": ["compile.lisp:factory, twins, multi", "execution/compiled/native-behavior.json", "execution/execution.json:observations", "execute.mjs:stack overwrite, shared cell and separate environment checks"],
+    "key_vectors": ["metadata.lisp:metadata-arity", "compile.lisp:native function-args and lfun-keyvect over closure-function", "execute.mjs:native signatures and fresh owner keyword identities", "execution/mutants/key-alias-collapse/execution.log"],
+    "debug_records": ["metadata.lisp:metadata-debug", "execute.mjs:source names and two-capture slot-to-value checks", "execution/mutants/capture-name/execution.log", "execution/mutants/capture-slot/execution.log"],
+    "installation_and_restore": ["execution/execution.json:48 catalog-bound installations", "execute.mjs:whole owned heap unchanged across installation", "execution/compiled/snapshot.json", "execution/runtime-mutants/controls.json", "execution/snapshot-controls.json"],
+    "truncated_function": ["execute.mjs:truncated-header refusal at all three placements", "execution/mutants/truncated-self/execution.log"],
+    "no_global_repair": ["backend.py:constructor fields and literal pool ownership", "execution/compiled/pools.json", "execution/runtime-mutants/installation-repair/execution.log"],
+    "native_and_compatibility": ["qualification/summary.json", "execution/compatibility/default-compatibility.json", "execution/compatibility/generated/execution.json", "execution/compatibility/inherited/execution.json"],
+    "controls": ["assessment/controls.json", "role-controls.json"],
+    "locator_rule": "execution/ names members of execution.tar.gz; source files are under callable-metadata in source.tar.gz. Closed GO coverage remains the separately reviewed integrated closure-transfers packet."
+  }
+}

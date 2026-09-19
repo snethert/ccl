@@ -4430,6 +4430,26 @@
       "test_ids": [
         "S1-LL06-a"
       ]
+    },
+    {
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "currency": "CURRENT",
+      "envelope_version": 2,
+      "execution_status": "PASS",
+      "id": "STAGE1-CALLABLE-METADATA-R1",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "98a9f452321da3c4ea95ee3fad9d71c1ce8e5b5c1c6c1527577f1f2324ee0464",
+      "inventory_version": 1,
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-callable-metadata-r1-results.json",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-callable-metadata-r1/packet.json",
+      "packet_sha256": "4cfbbc5925e2d32a4b5e21b473017ecf4a302b6d775de3ed7d3c12fce90b5cfa",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "LL12-a: 16 modules, 33 native signature comparisons, shared/distinct escaping cells and capture debug slots through 48 cold installations and two fresh-Worker restores (including 2 GiB). Seven compiler/two runtime mutants, six snapshot refusals, eleven publication and twelve role controls. 256 default-mode files unchanged; 240 inherited comparisons/430 collections; new native R6/R6a and 614-file replay pass. Isolated opt-in compiler proposal.",
+      "sha256": "19802f58749b2ed92cdb1c00386deaba43344f9dc043948d747f2ce53c13eede",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "test_ids": [
+        "S1-LL12-a"
+      ]
     }
   ],
   "historical_records": [

@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_QUALIFICATION_PENDING_REVIEW",
   "date": "2026-09-19",
-  "basis": "User accepts LL06-a after Claude audits 97/98; eleven prior accepted records unchanged.",
+  "basis": "LL12-a callable metadata qualified; twelve accepted objects preserved, no acceptance implied.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S1-LL18-b [hash-tables]",
-      "missing S1-LL12-a [generated]",
+      "unreviewed S1-LL12-a [generated]",
       "missing S1-LL11-a [generated]",
       "missing S1-LL11-b [dispatch]",
       "missing S1-LL16-a [generated]",
@@ -29,20 +29,24 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "45aaa3e2e37ec602169b10585ece7349dd5fdfa9c1b9a6f2e0a5569f6c4311b0"
+    "sha256": "98a9f452321da3c4ea95ee3fad9d71c1ce8e5b5c1c6c1527577f1f2324ee0464"
   },
   "active_results": [
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll06-accepted-results.json",
       "sha256": "91d01dcbc2e2c1c54a3fd0d51bbf80a5f4a59c5b1d1476cf0bda8a89c0bb13a9"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-callable-metadata-r1-results.json",
+      "sha256": "19802f58749b2ed92cdb1c00386deaba43344f9dc043948d747f2ce53c13eede"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll06-accepted-results.json",
-  "combined_results_sha256": "91d01dcbc2e2c1c54a3fd0d51bbf80a5f4a59c5b1d1476cf0bda8a89c0bb13a9",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-callable-metadata-results.json",
+  "combined_results_sha256": "b11dc9d4281c58be1681c85a34b20b9ab95441024e8c5d8baefe527e7b9318c5",
   "counts": {
     "accepted": 12,
-    "missing": 19,
-    "unreviewed": 0,
+    "missing": 18,
+    "unreviewed": 1,
     "required": 31
   }
 }

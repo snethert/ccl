@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "fc94aa8de079b4eff73dd0039aad9cbf0b8c5f2c5b70fe8722c4b28e092c5158",
-  "commit": "d3adf0bd72e3c5725d8ac210d80832427d72d590",
-  "immutable_evidence_files": 224719,
+  "catalog_sha256": "5107311444a965cdc4bc3ea0e5cc1c06e4d6bcca0e6f52e68f79694f28bf939e",
+  "commit": "aa99ae9347031c9faa175b94dd6325da1ac7f7be",
+  "immutable_evidence_files": 224840,
   "last_scoped_addition": {
-    "bytes": 32744829,
-    "directory": "2026-09-19-stage1-closure-transfers-r1",
-    "files": 84
+    "directory": "2026-09-19-stage1-callable-metadata-r1",
+    "files": 121,
+    "bytes": 32255331
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 19055,
+  "prior_indexed_references_verified": 24775,
   "remote": null,
-  "scope": "Stage 0: 48 accepted. Stage 1: 12 accepted,19 missing,zero unreviewed. LL06 accepted/integrated; auxiliary closure-control proposal awaits review.",
-  "source_index_sha256": "efb9cd5af9ce24c43d4fb854750a41d6ae749a019b365a1451f1bcf47af4bbf2",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-closure-transfers.json",
-  "verification": "Fresh replay PASS: 1301 identical deterministic files, 299 source pins; exact new compiler native R6/R6a. Incremental catalog only.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 12 accepted,18 missing,one unreviewed. Closed GO integrated; LL12 callable metadata qualified and pending review.",
+  "source_index_sha256": "4cb41eee5de6643c464fe1f60914c9948c7e5beeeb17c0b6a63a30ee19172e80",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-callable-metadata.json",
+  "verification": "Fresh replay PASS: 614 identical deterministic files, 321 source pins; exact new compiler native R6/R6a. Scoped catalog append with prior records preserved.",
   "version": 1
 }

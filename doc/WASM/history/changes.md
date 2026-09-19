@@ -2455,3 +2455,7 @@ index was re-serialized. Record only; acceptance is the user's decision.
 ## 2026-09-19 — accept and integrate closed GO and ordinary loop branches
 
 The user directed “Accept, integrate and proceed” after Claude audit 99. The integrated compiler equals the reviewed proposal and generator byte for byte; every runtime file is unchanged. The integration carries the catch-plus-exit-frame cost of closed transfers and all-or-nothing branch proof, without a speed claim. The evidence index retains its existing serialization. No slot credit; ledger remains 12 accepted,19 missing,zero unreviewed. Callable metadata qualification is next.
+
+## 2026-09-19 — qualify LL12-a callable metadata
+
+The isolated compiler now builds arity, exact keyword-vector and capture debug records into function literal pools and initializes the existing function-object fields. Sixteen generated modules preserve shared and distinct mutable closure environments across cold installation and fresh-Worker restoration below and above 2 GiB. Native CCL supplies signatures after its own closure trampoline unwrap. Seven compiled faults and two runtime faults have focused oracles; six snapshots refuse without publication. Default mode reproduces all 256 reviewed module/template/installed files, with 240 inherited comparisons and 430 collections. New native R6/R6a and a fresh 614-file replay pass. LL12-a is executed, not accepted or integrated: 12 accepted,18 missing,one unreviewed. The evidence index preserves its existing serialization.

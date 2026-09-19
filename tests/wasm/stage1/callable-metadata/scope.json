@@ -1,0 +1,15 @@
+{
+  "test": "S1-LL12-a",
+  "variant": "generated",
+  "scope": "Escaping mutable closures and per-function arity, keyword and capture debug metadata through authenticated cold installation and fixture snapshot relocation.",
+  "implementation": "Opt-in metadata compiler entry. The unchanged 32-byte function shape uses its existing arity and debug words. The per-function literal pool owns a seven-element arity vector and a three-element debug vector, emitted from front-end IR; generated closure constructors initialize both words. Each entry checks the complete function header, exact pool shape, metadata identity, record schemas and fixed argument counts. No runtime global repair or name lookup supplies metadata.",
+  "oracle": "CCL closure-function unwraps native trampolines before function-args and lfun-keyvect provide independent signatures. Mutable closure results are separately evaluated natively. Source-derived capture names are checked against actual environment cells, independently of the emitter's advertised capture count. Fresh Workers bind keywords to different owner addresses and inspect all metadata before installation.",
+  "exclusions": [
+    "The flag is off at existing entry points, which retain reviewed output byte for byte. Enabling metadata for production bootstrap materialization is an owner/compiler entry choice after review.",
+    "Debug records provide code names and capture names/slot indices; they are not full debugger source maps or live variable liveness records. Native signature count fields are modulo 64; this corpus uses smaller lambda lists.",
+    "Snapshot transport is the accepted fixture image mechanism extended for this exact six-word function layout. It is not the production cross-fasloader, which remains LL14 work. No CLOS dispatch or unadmitted function kind is claimed.",
+    "Keyword identity and catalog entries are supplied by the trusted owner. Entry validation checks structural shape and the module's fixed counts, not every nested string or symbol in malicious owner memory.",
+    "Metadata adds pool objects and entry validations. There is no timing claim. Movement of these new metadata graphs through the production collector is not newly claimed; this unit exercises fresh-Worker relocation, and the accepted moving corpora are replayed with the new flag off.",
+    "The proposal is isolated pending Claude's review and user acceptance. Shared compiler and runtime files remain at the accepted closed-GO integration. Native R6/R6a is newly executed for the exact proposal."
+  ]
+}
