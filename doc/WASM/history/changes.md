@@ -2401,3 +2401,19 @@ Observations: closed GO from nested functions is refused at admission though
 native CCL supports it; every iteration re-establishes the exit frame and every
 GO costs an exception; the backend's tag map relies on the validator's
 cross-function refusal. Record only; acceptance of the slot is the user's decision.
+
+## 2026-09-19 — ninety-eighth Claude audit: LL06 follow-up clarification reviewed, audit-97 observation corrected
+
+Claude reviewed `e924bf91`, a documentation-only commit that changes the plan
+and the change history, from the detached worktree. No compiler, runtime,
+fixture, packet, inventory, index or acceptance file changes; both ledger tools
+pass and the ledger stays at 11 accepted, 19 missing and one unreviewed. Codex's
+correction is right: the retained LL06 compiler binds its local tag map to NIL
+in the per-function emitter, and every separately emitted function, including
+closures, is compiled through that emitter, while inline lambdas remain in the
+enclosing Wasm function where the enclosing map is the correct scope. Audit 97's
+third observation, that the backend did not clear the map for nested functions,
+was mistaken and is withdrawn; its first observation stands with the corrected
+slot name, since the inventory's S1-LL12-a assertion is closures and callable
+metadata and closed GO coverage is planned as additional LL12 work. No defect;
+record only.
