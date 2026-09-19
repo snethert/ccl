@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-19T19:58:12.578054+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "3cdfc9068ea4b8d8f882f960536ba1f934ef9301",
+  "review": "Claude ninety-fifth audit; no defect in 5cfa55a9.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "c70917be2137d8f46bf0b62acfb23466f1010294dd62db0ca02b323489ec9a4e",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "abde6263f3afdb71e7e97ab96a4bbc250436e357c53ddb1616b57763e66eee56",
+      "after": "3fe47a6cf954a9afb2084529a080798e0db9558a018700dda76afc579da1289b",
+      "proposal_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-constructor-retry-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224",
+      "after": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3",
+      "proposal_locator": "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constructor-retry/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09",
+      "proposal_locator": "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constructor-retry/binary.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "e6988e248d0564d408e3ac46449013fca07f22f24edb276daa9fec92ac7fe15d"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "8af4e9018c8fd1d55ecd34e2accce38c28df874e56420677ccf168a43cb01ee5"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-constructor-retry-r1/packet.json",
+      "sha256": "58bd94d3725c14ccec5e0cd1e5080d434d0373c129ad4c4b59dc824e98624107"
+    }
+  ],
+  "previous_integration": "integration-allocation-retry.json",
+  "previous_integration_sha256": "186ec1a1e0b31beba3c97e679bac036f4bfb26d710dc670f8920eb91a9db8f9a",
+  "scope": "Exact reviewed raw constructor retry and owner-capability loader/reader; auxiliary only, no LL06/LL18 credit.",
+  "observations": [
+    "A stack guard that signals never resumes the interrupted reservation: it transfers or fails. Unstaged Wasm-local values across reservations depend on this contract, even if condition construction collects.",
+    "Malformed-owner allocation pointers may refuse binding growth with code 6 rather than 3; the TCR vector pointer reload does not repeat the pre-assurance shape check. The owner does not execute Lisp or mutate vector shape.",
+    "Owner-profile admission binds trusted-owner capability identity. Integrated loader and reader hashes are recorded individually."
+  ],
+  "verification": "Compiler equals retained proposal and generator; loader and reader equal retained execution and source pins. Reuse reviewed native R6/R6a and both independent replays for identical bytes.",
+  "reverse": "Restore compiler, loader and reader to the before hashes in this record."
+}

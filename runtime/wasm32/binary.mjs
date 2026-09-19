@@ -1,6 +1,6 @@
 // Narrow reader for generated B modules. The engine validates instructions;
 // this reader independently constrains the installation surface before instantiation.
-export function inspect(bytes) {
+export function inspect(bytes,{ownerRetry=false}={}) {
   const fail = reason => { throw Error(reason); };
   if (Buffer.from(bytes.subarray(0,8)).toString('hex') !== '0061736d01000000') fail('HEADER');
   let p=8,end=bytes.length;const byte=()=>{if(p>=end)fail('TRUNCATED');return bytes[p++];};
@@ -16,13 +16,13 @@ export function inspect(bytes) {
     if(![0,1,2,3,7,10].includes(id))fail('INITIALIZATION_OR_SECTION');
     if(id===1)m.types=vec(()=>{if(byte()!==96)fail('FUNCTION_TYPE');return {params:vec(type),results:vec(type)};});
     else if(id===2)m.imports=vec(()=>{const module=str(),name=str(),k=byte();
-      if(k===0)fail('FUNCTION_IMPORT');
+      if(k===0){if(!ownerRetry)fail('FUNCTION_IMPORT');const index=leb();m.functions.push(index);return {module,name,kind:'function',signature:m.types[index]};}
       if(k===1)return {module,name,kind:'table',element:type(),...limits()};
       if(k===2)return {module,name,kind:'memory',...limits()};
       if(k===3)return {module,name,kind:'global',type:type(),mutable:byte()};
       if(k===4){if(byte()!==0)fail('TAG_ATTRIBUTE');return {module,name,kind:'tag',signature:m.types[leb()]};}
       fail('IMPORT_KIND');});
-    else if(id===3)m.functions=vec(leb);
+    else if(id===3)m.functions.push(...vec(leb));
     else if(id===7)m.exports=vec(()=>({name:str(),kind:byte(),index:leb()}));
     else p=end;
     if(p!==end)fail('SECTION_END');

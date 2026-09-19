@@ -6,11 +6,15 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const B={params:['i32','i32'],results:['i32','i32']},TAIL={params:['i32','i32','i32'],results:['i32','i32']};
 export const PROFILE='wasm32-shared-B-exnref-control-v1';
 
+export const OWNER_PROFILE='wasm32-shared-B-owner-retry-v1';
+
 export function validate(bytes,record) {
   need(sha(bytes)===record.sha256,'BINARY_DIGEST');
-  need(record.profile===PROFILE,'PROFILE');
+  need([PROFILE,OWNER_PROFILE].includes(record.profile),'PROFILE');
   need(WebAssembly.validate(bytes),'INVALID_WASM');
-  const m=inspect(bytes);
+  const ownerRetry=record.profile===OWNER_PROFILE;
+  const m=inspect(bytes,{ownerRetry});
+  need(m.imports.filter(i=>i.kind==='function').length===(ownerRetry?1:0),'OWNER_IMPORT_COUNT');
   const expected=[
     {module:'env',name:'memory',kind:'memory',flags:3,minimum:1,maximum:32769},
     {module:'env',name:'tcr',kind:'global',type:'i32',mutable:0},
@@ -24,7 +28,8 @@ export function validate(bytes,record) {
   const fixed=m.imports.filter(i=>i.module==='env');need(same(fixed,expected),'ENV_IMPORTS');
   const keys=new Set();
   for(const i of m.imports){const key=i.module+'.'+i.name;need(!keys.has(key),'DUPLICATE_IMPORT');keys.add(key);
-    if(i.module!=='env')need(['symbols','keywords','codes'].includes(i.module)&&i.kind==='global'&&i.type==='i32'&&i.mutable===0,'IMPORT_AUTHORITY');}
+    if(i.module==='owner')need(ownerRetry&&i.name==='ensure'&&i.kind==='function'&&same(i.signature,{params:['i32'],results:[]}),'OWNER_IMPORT');
+    else if(i.module!=='env')need(['symbols','keywords','codes'].includes(i.module)&&i.kind==='global'&&i.type==='i32'&&i.mutable===0,'IMPORT_AUTHORITY');}
   need(same(m.imports,record.imports),'IMPORT_MANIFEST');
   need(m.exports.length===2,'EXPORT_SET');
   for(const [role,signature] of [['entry',B],['tail_entry',TAIL]]){
@@ -62,6 +67,8 @@ export class LazyLoader {
     need(clean.env.memory===o.memory&&clean.env.table===o.table&&clean.env.tail_table===o.tail_table&&clean.env.call_error===o.call_error&&clean.env.nonlocal_exit===o.nonlocal_exit,'CAPABILITIES');
     need(Number.isInteger(clean.env.tcr)&&Number.isInteger(clean.env.code_registry),'RAW_GLOBALS');
     for(const ns of ['symbols','keywords','codes'])for(const value of Object.values(clean[ns]??{}))need(Number.isInteger(value)&&value>=0&&value<=4294967295,'IDENTITY_GLOBAL');
+    if(r.profile===OWNER_PROFILE)need(typeof o.allocationEnsure==='function'&&clean.owner?.ensure===o.allocationEnsure,'OWNER_CAPABILITY');
+    else need(!clean.owner,'UNEXPECTED_OWNER_CAPABILITY');
     row.imports=clean;row.observe=observe;
     const stub=new WebAssembly.Instance(o.stub,{loader:{install:slot=>this.install(slot),slot:r.slot,table:o.table,tail_table:o.tail_table}});
     row.stubs={entry:stub.exports.entry,tail_entry:stub.exports.tail_entry};row.pair=row.stubs;row.state='COLD';
@@ -84,7 +91,8 @@ export class LazyLoader {
       need(row.state==='COLD','INSTALL_STATE');this.#busy=true;row.state='LOADING';
       const bytes=Buffer.from(o.readBytes(row.record.name)); // snapshot once
       validate(bytes,row.record);
-      // No start, segments, imported functions or getters: instantiation cannot
+      // No start, segments or getters; the sole admitted function import is
+      // the owner allocation capability. Instantiation cannot
       // execute user code or write shared state. Both exports precede publication.
       const instance=new WebAssembly.Instance(new WebAssembly.Module(bytes),row.imports);
       const raw={entry:instance.exports.entry,tail_entry:instance.exports.tail_entry};

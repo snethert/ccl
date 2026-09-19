@@ -51,3 +51,11 @@ The accepted internal allocation retry is integrated in the compiler and
 Retry remains opt-in and the existing lazy profile refuses its owner import.
 An assurance may move live data before refusing; invoke generated code outside
 an active owner boundary. Raw constructor retry and loader admission follow.
+
+Raw constructor retry and the explicit owner-capability loader profile are now
+integrated; see [the integration record](../../doc/WASM/stage1/integration-constructor-retry.json).
+A stack guard that signals **never resumes the interrupted reservation**: it
+transfers or fails. Frame/binding emitters may hold an unstaged value in a Wasm
+local across that guard; a returning handler must not resume it after collection.
+Assurance may move roots before refusing, and never executes Lisp or changes
+binding-vector shape. Malformed-owner refusals may use code 6 rather than 3.

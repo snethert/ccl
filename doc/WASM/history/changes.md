@@ -2329,3 +2329,7 @@ for values held in Wasm locals across frame reservation; binding growth on a
 malformed allocation pointer refuses with code 6 rather than 3 only under the
 opt-in profile; loader admission is trusted-owner identity, as the README says.
 Record only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate raw constructor retry
+
+The user directed “accept, integrate and proceed” after Claude audit 95. Compiler, loader and binary reader equal the reviewed unit by hash; collector, owner, allocation service and stub are unchanged. The integration record states that a signalling stack guard never resumes its interrupted reservation, carries the malformed-owner diagnostic distinction and binds both replacement runtime files. No slot credit is claimed; LL18-a qualification follows.
