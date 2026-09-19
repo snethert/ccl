@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "5c26bcd9f54b0143b2e154a77f0018e103db34e3",
+  "commit": "9ccbcfaf8c74ea9b5061d71dda1cc6d87363daa6",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "cc84711c6bd3289f4af4a9f31fc8b88399ab2617ad123158e921ae1b806bab40",
-  "immutable_evidence_files": 224502,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll18-acceptance.json",
-  "source_index_sha256": "2e03163c1363549622a04b03a2e55f0cf28702c84217f2b8c163be28de41b857",
-  "verification": "Unchanged acceptance producer; ten prior records preserved; integration byte-equal to reviewed proposal. Incremental catalog only.",
+  "catalog_sha256": "0d1b3c6758eec6427e87e6c013e193343c26bf3f2dd35896ef1f1b5f6ffe586e",
+  "immutable_evidence_files": 224590,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-temporaries.json",
+  "source_index_sha256": "2c5c29f860aedcb6686144231b1d1b52470b1407ab428d13c1140f253e40b51c",
+  "verification": "Fresh retained replay PASS: 1339 deterministic files, 284 source pins. New compiler native R6/R6a qualified; generated temporary/control matrix, eight compiled faults and publication controls rerun. Scoped catalog addition only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0:48 accepted. Stage 1:11 accepted,20 missing,zero unreviewed. LL18-a reviewed, accepted and integrated.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 11 accepted, 19 missing, one unreviewed (S1-LL06-a). LL18-a accepted/integrated; LL06-a compiler proposal awaiting review.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-ll18-acceptance-r1",
-    "files": 37,
-    "bytes": 10354578
+    "directory": "2026-09-19-stage1-temporaries-r1",
+    "files": 88,
+    "bytes": 31994807
   },
   "prior_indexed_references_verified": 19055
 }

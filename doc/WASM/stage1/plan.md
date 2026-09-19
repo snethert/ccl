@@ -81,8 +81,11 @@ and admits the owner import under an explicit profile. It is accepted and integr
 [LL18-a qualification](../../../tests/wasm/stage1/collector-qualification/README.md)
 now executes those declared root populations, specialized literal layouts,
 maximum-memory refusal and independent reclaim accounting. The C/owner proposal
-and slot are accepted and integrated after audit 96. Next: finish the LL06 temporary/control
-matrix; hash-table movement remains LL18-b.
+and slot are accepted and integrated after audit 96. [LL06-a qualification](../../../tests/wasm/stage1/temporaries/README.md)
+now executes temporary lifetime, evaluation order and actual TAGBODY loops, with
+300 legal collections and independent stack/control checks. Its compiler proposal
+and slot await review. Next: the remaining 1C nonlocal-transfer scope (LL12-a);
+hash-table movement remains LL18-b.
 
 
 ## What Stage 1 delivers

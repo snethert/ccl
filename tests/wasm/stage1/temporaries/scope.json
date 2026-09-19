@@ -1,0 +1,13 @@
+{
+  "test": "S1-LL06-a",
+  "variant": "generated",
+  "scope": "Temporary lifetime and evaluation order through CCL's real front end, including PROG2 and same-function TAGBODY/GO. Thirty literal expectation cases are checked natively first, then with and without legal moving collections at low/high placements.",
+  "implementation": "PROG2 is admitted to U1's own expansion. Local TAGBODY IR is emitted as a Wasm loop of source-order segments. GO records its destination in an unboxed local and raises the existing addressed exit so cleanup and binding extents retire before the next segment. TAGBODY returns NIL. Tag joins use native IR identity, including nested shadowing.",
+  "collection": "The unchanged accepted LL18 collector runs at observed entries to the generated GC service reached through explicit polls. Every move helper allocates two dead conses; the oracle independently checks reclamation and poisons retired semispaces. The other two runs execute the same generated functions without moving them.",
+  "exclusions": [
+    "GO across function boundaries is refused at source admission. DO/DOTIMES and arbitrary LOOP syntax remain outside the admitted source subset; these tests execute actual TAGBODY backedges, not an inferred recursive substitute.",
+    "Every GO currently costs one Wasm exception and a control-record cycle. This is a correctness implementation, with no performance claim; tail transfer is disabled within a TAGBODY's pending control extent.",
+    "Collection is at legal published call/poll boundaries, not arbitrary Wasm instructions. Broader instruction liveness and elimination of unnecessary root frames remain later optimization work.",
+    "Native R6/R6a is newly executed for this compiler proposal, reusing the accepted pristine baseline. The accepted collector binary is unchanged. The shared checkout remains at the accepted compiler until independent review and acceptance."
+  ]
+}

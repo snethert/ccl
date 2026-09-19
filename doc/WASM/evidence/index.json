@@ -2088,6 +2088,26 @@
       "test_ids": [
         "S1-LL18-a"
       ]
+    },
+    {
+      "id": "STAGE1-TEMPORARIES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-temporaries-r1-results.json",
+      "sha256": "ecb441f75da19ff9a16a721e216cebe39ef91a670528c6cc3c0402a1d1bc8253",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "45aaa3e2e37ec602169b10585ece7349dd5fdfa9c1b9a6f2e0a5569f6c4311b0",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-temporaries-r1/packet.json",
+      "packet_sha256": "88f5c76b0b62ea8a5fc77b7042f2de0a1c9af973e80b7ea03a38c71be1071d29",
+      "test_ids": [
+        "S1-LL06-a"
+      ],
+      "scope": "Generated temporary lifetime and evaluation order: PROG1/PROG2, LET/SETQ, conditionals, calls and actual TAGBODY loops. Thirty native cases, 120 comparisons and 300 collections; eight compiled runtime faults, eight source refusals and six publication controls. Native R6/R6a pass; 152 inherited WAT/Wasm files identical. Isolated compiler proposal, not integrated."
     }
   ],
   "auxiliary_records": [

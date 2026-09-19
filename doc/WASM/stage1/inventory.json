@@ -384,8 +384,8 @@
           "description": "Generated nested PROG1/PROG2, LET, SETQ, conditionals, calls and loops preserve every live temporary and the defined evaluation order under forced allocation and legal collection between producers and consumers; spill, root reload and stack balance hold on normal and exceptional paths; an independent expected result detects a changed local allocation."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/temporaries/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

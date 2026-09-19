@@ -1,0 +1,14 @@
+{
+  "S1-LL06-a:temporaries": {
+    "status": "PASS",
+    "nested_retention_order": ["probe.py:p1,p2,nested_prog,prog2_order,assigned,pending_values", "execution/generated/compiled/native.json", "execution/generated/execution.json"],
+    "let_setq_conditionals_calls": ["probe.py:parallel_let,sequential_let,conditional_yes,conditional_no,call_order", "execution/generated/compiled/root-ir.json", "execution/generated/compiled/root-contracts.json"],
+    "loops": ["probe.py:loop_list,loop_capture,loop_pending,loop_binding,go_shadow,nil_integer_tags,fallthrough", "loops.lisp:real Wasm loop over U1 local-tagbody/local-go identities"],
+    "normal_exceptional_and_control_restoration": ["probe.py:throw_retention,error_retention,go_cleanup,go_binding,go_outer,go_replace,go_outer_cleanup,go_error,go_cancel,fatal_cleanup", "execution/generated/harness.mjs:independent ownership, roots, TSP/CSP, bindings, results and handler checks"],
+    "forced_allocation_and_legal_GC": ["probe.py:move", "execution/generated/execution.json:moved_vectors", "execution/harness/conditions.mjs:GC service observer and retired-space poison"],
+    "changed_local_allocation": ["execution/mutants/reused-local.lisp", "execution/mutants/reused-local/execution.log", "execution/mutants/prog1-count-local/execution.log", "execution/mutants/controls.json"],
+    "admission_and_publication": ["execution/refusals/refusals.json", "assessment/controls.json", "role-controls.json"],
+    "native_R6_and_old_language": ["qualification/summary.json", "native.tar.gz", "native-references.json", "execution/summary.json:152 byte-identical inherited Wasm/WAT files"],
+    "locator_rule": "execution/ refers to members of execution.tar.gz; source names are under temporaries in source.tar.gz. All mutants are separately recompiled and must reach a runtime assertion."
+  }
+}
