@@ -2073,3 +2073,25 @@ in §3.3, and split the §4.2 activity line: the Image's own `:activity`
 frame no longer lists an epoch, and the Bridge's session announcement on
 activity 0 is listed separately with a pointer to §3.3. No transport
 change; no Stage 1 record changes.
+
+
+## 2026-09-19 — Codex: qualify generated LL19 control and recovery
+
+On the user's instruction to finish LL19, completed S1-LL19-a as one proposal:
+D1 bootstrap condition instances and native-derived slots, restarts and debugger
+hook, checked type/bounds/arity/unbound and improper APPLY errors, nested cleanup
+checkpoints, separate CSP records, recoverable soft stack limits, and explicit
+interrupt masking/re-enable with collector service independent. No shared
+compiler/runtime or upstream kernel changes; review precedes integration.
+
+107 modules, 46 native cases / 184 comparisons, 32 target resource/protocol
+comparisons, thirteen compiler mutants, five source refusals and six publication
+controls passed. The complete inherited corpus, cold installation, loader mutants
+and exact-compiler native R6/R6a passed; all 164 original FASLs restore exactly.
+The retained verifier freshly recompiled and re-executed the unit and inherited
+corpora. Original development failures are retained, including the missed soft
+limit and native-oracle cancellation status, plus loader-owner adaptation errors.
+
+Published STAGE1-CONTROL-R1 as NOT_REVIEWED. Eight accepted result objects remain
+unchanged; ledger is BLOCKED at 8 accepted, 22 missing, 1 unreviewed. No acceptance
+is inferred. The earlier APPLY-only packet is retained as a superseded prerequisite.

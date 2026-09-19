@@ -1,0 +1,50 @@
+(in-package :wasm32-compiler)
+(defun b-checked-cons-operation (op forms)
+  (let* ((readp (member op '(car cdr ccl::%car ccl::%cdr)))
+         (carp (member op '(car rplaca ccl::%car ccl::%rplaca)))
+         (offset (if carp wasm32::cons.car wasm32::cons.cdr)))
+    (b-frame (length forms)
+      (lambda (root)
+        (let* ((p (b-wat "(i32.load offset=8 ~a)" root))
+               (v (b-wat "(i32.load offset=12 ~a)" root))
+               (bad (b-wat "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 1))" p)))
+          (with-output-to-string (s)
+            (loop for f in forms for i from 0 do (format s "(i32.store offset=~d ~a ~a)" (+ 8 (* 4 i)) root (b-scalar f)))
+            (write-string (b-multiple (make-b-raw-code :text
+              (b-wat "(if (result i32) (i32.eq ~a (i32.const 77825)) (then ~a) (else (if ~a (then ~a)) (call $span (i32.sub ~a (i32.const 1)) (i32.const 8)) ~a))"
+                p (if readp "(i32.const 77825)" (b-type-failure p 'cons t)) bad (b-type-failure p (if readp 'list 'cons) t) p
+                (if readp (b-wat "(i32.load (i32.add ~a (i32.const ~d)))" p offset)
+                  (b-wat "(i32.store (i32.add ~a (i32.const ~d)) ~a) ~a" p offset v p))))) s)))))))
+(defun b-unbound-runtime ()
+ "(func $special_read_lisp (param $symbol i32) (param $top i32) (result i32) (local $value i32)
+ (local.set $value (i32.load (call $special_location (local.get $symbol))))
+ (if (i32.eq (local.get $value) (i32.const 51)) (then (call $implicit_error (i32.const 10) (local.get $top)) unreachable))
+ (local.get $value))")
+(defun b-svref (forms)
+  (unless (= (length forms) 2) (refuse :b-svref-arity))
+  (b-frame 2 (lambda (root)
+    (let* ((v (b-wat "(i32.load offset=8 ~a)" root)) (i (b-wat "(i32.load offset=12 ~a)" root)))
+      (with-output-to-string (s)
+        (format s "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a)" root (b-scalar (first forms)) root (b-scalar (second forms)))
+        (write-string (b-multiple (make-b-raw-code :text
+          (b-wat "(block (result i32)
+            (if (i32.ne (i32.and ~a (i32.const 7)) (i32.const 6)) (then ~a))
+            (call $span (i32.sub ~a (i32.const 6)) (i32.const 4))
+            (if (i32.ne (i32.and (i32.load (i32.sub ~a (i32.const 6))) (i32.const 255)) (i32.const 250)) (then ~a))
+            (if (i32.and ~a (i32.const 3)) (then ~a))
+            (if (i32.ge_u (i32.shr_u ~a (i32.const 2)) (i32.shr_u (i32.load (i32.sub ~a (i32.const 6))) (i32.const 8))) (then (call $implicit_error (i32.const 17) (local.get $top)) unreachable))
+            (call $span (i32.sub ~a (i32.const 6)) (i32.add (i32.const 4) (i32.mul (i32.shr_u (i32.load (i32.sub ~a (i32.const 6))) (i32.const 8)) (i32.const 4))))
+            (i32.load (i32.add (i32.sub ~a (i32.const 2)) ~a)))" v (b-type-failure v 'simple-vector) v v (b-type-failure v 'simple-vector) i (b-type-failure i 'fixnum) i v v v v i))) s))))))
+(defun b-condition-field (name forms)
+  (unless (= (length forms) 1) (refuse :b-condition-reader-arity))
+  (b-frame 1 (lambda (root)
+    (b-wat "(i32.store offset=8 ~a ~a) ~a" root (b-scalar (first forms))
+      (b-multiple (make-b-raw-code :text
+        (b-wat "(call $condition_field (i32.load offset=8 ~a) (i32.const ~d) (i32.const ~d) (local.get $top))"
+          root (if (eq name '%wasm-cell-name) 3072 32) (if (eq name '%wasm-condition-expected) 12 8))))))))
+(defun b-type-failure (datum expected &optional legacy-cons-p)
+  (concatenate 'string
+    (when legacy-cons-p
+      (b-wat "(if (i32.and (i32.ne ~a (i32.const 1)) (i32.eq (call $special_read ~a) (i32.const 77825))) (then (throw $type_error ~a (i32.const 1))))"
+        (b-load wasm32::tcr.error_service_mode) (b-special-symbol 'ccl::%handlers%) datum))
+    (b-wat "(call $implicit_error_details (i32.const 5) (local.get $top) ~a ~a) unreachable" datum (b-restart-symbol expected))))

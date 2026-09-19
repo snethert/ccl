@@ -1968,6 +1968,26 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND",
         "scope": "Audits 85 and 86; original qualification and focused oracle follow-up."
       }
+    },
+    {
+      "id": "STAGE1-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-r1-results.json",
+      "sha256": "bd963fe6c08cceab48f89b0b3a98f2285ebae8b6acbcd3ee31ef834dfc14cebd",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "e18e1277c31b95b5a57b0f3d150028a72dde2faad650b5ec2022682189250ce8",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-r1/packet.json",
+      "packet_sha256": "cbc45d17644c10253a6133df81a213dc8ef813cba9873d1d08de1090be918849",
+      "scope": "Generated LL19 control/recovery: D1 bootstrap condition instances and slots, restarts, debugger hook, checked type/bounds/arity/unbound/APPLY, source-derived cleanup checkpoints, separate CSP, soft stack limits and interrupt masking. Single owner, sealed classes; general CLOS/moving GC/host re-entry remain separate. Native R6/R6a and full replay pass.",
+      "test_ids": [
+        "S1-LL19-a"
+      ]
     }
   ],
   "auxiliary_records": [
@@ -4240,6 +4260,17 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "review_commit": "4b9aed8b99bb2b8c74e64f3f6ff890ca21020219",
       "integration": "doc/WASM/stage1/integration-b-repeated-keywords.json"
+    },
+    {
+      "id": "STAGE1-B-APPLY-ERRORS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-b-apply-errors-r1/packet.json",
+      "sha256": "a5154b9677b1d9573458c2f2b9efb1ae56f9dfc136e2c0bfe926896cda9022aa",
+      "scope": "Earlier APPLY-condition prerequisite; final exact compiler and inherited execution requalified by STAGE1-CONTROL-R1. Retained historical proposal, not separately integrated or credited.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "superseded_by": "STAGE1-CONTROL-R1"
     }
   ]
 }

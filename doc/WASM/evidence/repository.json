@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "394d8df93c610ee113c35ded9963e31cec085ef0",
+  "commit": "99f3084686289342bfcfeebb3ac6d54ff481902a",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5f41f7b8580df75ca7a018390c819adab69756725d20c91ef2c9852df26c6002",
-  "immutable_evidence_files": 222700,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-repeated-keywords.json",
-  "source_index_sha256": "48edc99fa54a7791caaac701091bc95e32cec48ad1b012ec3ada0255ba51ee87",
-  "verification": "Repeated-keyword integration: exact retained compiler equals its generator and reviewed native R6/R6a proposal; all 114 executed-source pins and previous integration hashes verified. Existing 3,336-file replay and Claude audit 87 reused. No new evidence payloads, catalog scan or native execution.",
+  "catalog_sha256": "4f577a29a2cae7fd6c3bf08ca77f597245006987832c56bdfbd7b3bc6ba1cf74",
+  "immutable_evidence_files": 223218,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-control.json",
+  "source_index_sha256": "bd6fe2630e9b4d808e42b33f769d6241a0ba6cc10c692dbd8fdc06dbd1f8db1e",
+  "verification": "LL19 fresh verifier PASS: 152 source pins, 7,592 deterministic files reproduced, native R6/R6a; production gate preserves eight accepted records and reports only 22 missing / one unreviewed. Incremental catalog: 518 new rows, all 222,700 prior rows unchanged. No historical archive rescan.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed inventory records. Repeated keyword aliases accepted and integrated after Claude audit 87; auxiliary extension with no inventory credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 22 missing, one unreviewed (S1-LL19-a). Generated control/recovery proposal awaits Claude review and user acceptance; shared implementation unchanged.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-repeated-keywords-r1",
-    "files": 57,
-    "bytes": 74343951
+    "directory": "2026-09-19-stage1-control-r1 and retained APPLY prerequisite",
+    "files": 518,
+    "bytes": 188574185
   },
   "prior_indexed_references_verified": 19055
 }

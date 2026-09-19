@@ -263,8 +263,8 @@
           "description": "Generated code transfers exceptions through nested frames with observable cleanup, cleanup that throws again, binding, root and VSP/TSP/CSP restoration, complete multiple values and no post-exit effect; recoverable type, bounds, arity and unbound checks reach the Lisp condition path with restarts; a missing handler before the ordinary error service activates is a structured fatal diagnostic."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/control/qualify.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

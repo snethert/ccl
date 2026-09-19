@@ -88,3 +88,13 @@ final argument through Lisp TYPE-ERROR handling. The retained counterexample is
 not covered by LL05’s designator/arity condition clause. Private class-mask
 vectors and the checked no-handler boundary also remain production condition
 and debugger obligations.
+
+
+19 September execution follow-through (pending review): [LL19](control.md)
+replaces the private condition payload with D1 instances/slot vectors under a
+sealed owner bootstrap registry, routes improper APPLY into TYPE-ERROR with its
+native datum, and executes restart/debugger-hook recovery. The same qualification
+covers soft VSP/TSP/CSP exhaustion and explicit interrupt masking/re-enable with
+independent collector service. These are executed claims, not accepted or
+integrated changes. General class/symbol installation, moving collection and
+host re-entry keep their separate obligations.
