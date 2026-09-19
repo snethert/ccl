@@ -84,8 +84,25 @@ maximum-memory refusal and independent reclaim accounting. The C/owner proposal
 and slot are accepted and integrated after audit 96. [LL06-a qualification](../../../tests/wasm/stage1/temporaries/README.md)
 now executes temporary lifetime, evaluation order and actual TAGBODY loops, with
 300 legal collections and independent stack/control checks. Its compiler proposal
-and slot await review. Next: the remaining 1C nonlocal-transfer scope (LL12-a);
-hash-table movement remains LL18-b.
+and slot are reviewed with no defect in audit 97 and await acceptance. Next:
+LL12-a closures and callable metadata; hash-table movement remains LL18-b.
+
+The LL12 implementation work will also cover closed GO through captured control
+state, including HANDLER-BIND handlers and RESTART-CASE clauses, with cleanup,
+binding restoration, moving roots and expired-target checks. This is planned
+additional coverage, not a change to LL12's adopted inventory assertion. LL06
+currently refuses closed GO. Its backend already binds `*b-local-tags*` to NIL
+in `b-one-module` for every function, including nested functions
+(`temporaries/backend.py`); the retained compiler confirms that reset at line
+1281 and the per-function emission at line 1636. This corrects audit 97's third
+observation without changing its review record or the reviewed compiler.
+
+Loop lowering also needs an ordinary-branch path: avoid per-iteration control
+records and per-GO exceptions when no dynamic extent must unwind. Transfers
+across cleanup or binding extents must preserve their restoration and replacement
+exit semantics; closed transfers need the captured target's lifetime checks.
+Qualify those paths separately before replacing the current exception-based
+implementation. LL06 establishes correctness, not acceptable production loop cost.
 
 
 ## What Stage 1 delivers

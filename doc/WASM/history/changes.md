@@ -1,4 +1,11 @@
+## 2026-09-19 — clarify the LL06 review follow-up
 
+Correct the plan's LL12 label to closures and callable metadata, schedule closed
+GO coverage and ordinary-branch loop lowering, and identify the existing
+per-function tag-map reset. The retained LL06 compiler equals its generator
+byte for byte and already resets that map in `b-one-module`; audit 97's contrary
+observation needs no compiler fix. No reviewed packet, criterion, acceptance or
+shared source changes.
 
 ## 2026-09-12 — record the sixth audit of the native observation harness
 
