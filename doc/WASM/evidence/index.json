@@ -4367,6 +4367,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "review_commit": "958d31c15055ba7c2ae39fdf476ba59e59b11649",
       "integration": "doc/WASM/stage1/integration-collector-live.json"
+    },
+    {
+      "id": "STAGE1-COLLECTOR-OWNER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-owner-r1/packet.json",
+      "sha256": "c893cdd78d4fdd47efc0ab568d6126eaa393cc41e83f36c1cff3905621d8d8dd",
+      "scope": "Single-Worker copying owner proposal: disjoint canonical/image/stack ownership, four external root families and TCR next-method root, collection before growth, refreshed views and real 2 GiB growth. 41 owner checks, eight rejected mutants, eight generated native comparisons and 25 generated owner comparisons. Compiler/C bytes unchanged; reviewed R6/R6a reused. Public-boundary allocation only; internal retry remains open. No LL06/LL18 credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

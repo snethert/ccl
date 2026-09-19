@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "505d37d14445a8f85fc707f60f827de92de4a460",
+  "commit": "b50a189851274314957a3ffe25adc05ccadd59a1",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "26659b5d9c8045f8e770ab1696900900ac1afdd107a49d9fa9fac33d446ff2b9",
-  "immutable_evidence_files": 224298,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-live.json",
-  "source_index_sha256": "68254bd2d58add08e13726fb1487b48a3b764446471689df36ef353e425b7c31",
-  "verification": "Fresh retained replay PASS: 3337 deterministic files, 199 source pins; R6/R6a, moving/core controls and inherited/lazy. Scoped catalog addition only.",
+  "catalog_sha256": "1353d435ded5b95bb983dbe25b86a1d4a778e2c3efda030d978f99a4de93e79a",
+  "immutable_evidence_files": 224310,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-owner.json",
+  "source_index_sha256": "2354c817bb2f6a337ad934ab28528bc7b23f7df610f56eb7cd0075928114a44d",
+  "verification": "Fresh retained replay PASS: 41 deterministic files, 206 source pins; eight owner mutants and generated/native composition. Unchanged native qualification reused; scoped catalog addition only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Collector core accepted and integrated; moving restarts/temporary follow-up auxiliary pending review. No new inventory credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Moving restarts/temporary follow-up accepted and integrated; owner admission/growth auxiliary pending review. No new inventory credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-collector-live-r1",
-    "files": 61,
-    "bytes": 72112897
+    "directory": "2026-09-19-stage1-collector-owner-r1",
+    "files": 12,
+    "bytes": 1897543
   },
   "prior_indexed_references_verified": 19055
 }
