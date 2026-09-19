@@ -2337,3 +2337,25 @@ The user directed “accept, integrate and proceed” after Claude audit 95. Com
 ## 2026-09-19 — qualify the generated small-heap collector (LL18-a)
 
 The isolated C collector and pinned-image inventory now admit the pointer-free LL10 vector layouts, including bit vectors and complex-float vectors. The compiler is unchanged from accepted constructor retry; reviewed native R6/R6a is reused by exact hashes. Generated execution supplies 301 retry comparisons over seven heap configurations (539 collections, 141 growths), 120 explicit-poll comparisons (62 collections), and 453 native literal comparisons in moving low/high and pinned images (237 collections). Cold installation reproduces all 302 retry observations. Generated objects exercise sole module, callback, registry, host and TCR roots, and actual active multiple values. Independent live-byte accounting, invalid/interior roots, 95 core checks, 40 owner checks, 17 runtime mutants, 11 publication controls and twelve production role omissions pass. Fresh replay reproduces 661 deterministic files at 267 source pins. Original failed inputs and first oracle predictions are retained. Only LL18-a runner/status changes; the ten accepted records are unchanged. Ledger: 10 accepted, 20 missing, one unreviewed. Shared runtime remains at the reviewed integration until this proposal is reviewed and accepted.
+
+## 2026-09-19 — ninety-sixth Claude audit: constructor-retry integration and LL18-a qualification reviewed
+
+Claude reviewed `59dc9bbb` and `c6d68682` from the detached worktree. The
+integration commit's compiler equals the retained constructor-retry proposal
+and its loader and reader equal the reviewed fixture files by hash; the owner,
+C collector, allocation service and stub are unchanged, and the three audit-95
+observations are carried in the integration record. The LL18-a proposal changes
+only the raw object width table in the isolated C collector and the owner's
+pinned-image inventory; every subtag and width was checked against
+`x8632-arch.lisp` and the kernel's 32-bit sizing rule. The verifier replay
+passed with 661 deterministic files and 267 source pins, equal to Codex's
+record; packet, results envelope, combined results, catalog and source index
+hash as indexed, and both ledger tools pass with 10 accepted, 20 missing and one
+unreviewed variant. An independent owner-level probe moved 72 raw objects of
+every admitted width byte-for-byte while reclaiming interleaved garbage exactly,
+refused eleven invalid or unadmitted shapes without publishing, and inventoried
+the same objects in a pinned image. No defect. Observations: scalar boxed
+complex floats and macptrs are not admitted and the literal corpus holds
+complex-float vectors only; the moving literal check skips the four
+argument-taking pool modules; the reused owner oracle runs 40 of its 41 checks.
+Record only; acceptance of the slot is the user's decision.
