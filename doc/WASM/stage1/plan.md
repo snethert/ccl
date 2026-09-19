@@ -78,9 +78,11 @@ It is accepted, integrated and opt-in; the owner loader profile explicitly admit
 capability. The [constructor and loader proposal](../../../tests/wasm/stage1/constructor-retry/README.md)
 now retries binding-vector, restart and condition allocation, roots their live operands and PROGV cursor,
 and admits the owner import under an explicit profile. It is accepted and integrated after audit 95.
-Next: qualify LL18-a across all declared root populations (including constants,
-callbacks and registries), maximum-memory refusal and reclaim accounting, then
-finish the LL06 temporary/control matrix. Hash-table movement is LL18-b.
+[LL18-a qualification](../../../tests/wasm/stage1/collector-qualification/README.md)
+now executes those declared root populations, specialized literal layouts,
+maximum-memory refusal and independent reclaim accounting. The C/owner proposal
+and slot await review and acceptance. Next: finish the LL06 temporary/control
+matrix; hash-table movement remains LL18-b.
 
 
 ## What Stage 1 delivers

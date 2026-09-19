@@ -2048,6 +2048,26 @@
       "test_ids": [
         "S1-LL17-a"
       ]
+    },
+    {
+      "id": "STAGE1-COLLECTOR-QUALIFICATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-qualification-r1-results.json",
+      "sha256": "59663737f38d1ed3db6b05da9843cb830d6f822f67d91c77ea68384a4b0563b3",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "fb21232457ab1f6b07ede8ac562c49ce1a944a45575913645558ba7fb41c1622",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-qualification-r1/packet.json",
+      "packet_sha256": "154251522b62b0c4fd9758b42ddba19d5131eead5005c2df59078a6aba0f7006",
+      "test_ids": [
+        "S1-LL18-a"
+      ],
+      "scope": "Generated small-heap collection: 301 retry, 120 explicit-poll and 453 literal native comparisons; 302 equal cold observations; sole callback/registry/module/host/TCR roots and active values, independent reclaim and invalid roots, 95 core/40 owner checks, 17 runtime mutants and 11 publication controls. Raw LL10 layouts extended only in isolated C/owner proposals. Exact reviewed compiler R6 reused; LL06 and hash-table LL18-b remain open."
     }
   ],
   "auxiliary_records": [

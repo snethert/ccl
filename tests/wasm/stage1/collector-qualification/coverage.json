@@ -1,0 +1,14 @@
+{
+  "S1-LL18-a:collector": {
+    "status": "PASS",
+    "generated_small_heap": ["execution/generated/native.json", "execution/generated/cases.json", "execution/generated.json:301 native comparisons, seven heap configurations", "execution/lazy.json:302 identical cold-loader observations"],
+    "temporaries_bindings_closures_conditions_restarts": ["execution/polls/compiled/native.json", "execution/polls/execution.json:120 comparisons, 62 collections", "execution/core.json:inline/arena descriptors and stack callables"],
+    "constants_and_module_pools": ["execution/constants/native.json", "execution/constants/pools.json", "execution/literals.json:453 comparisons, low/high/pinned images, collection before installation"],
+    "callbacks_registries_host_TCR_values": ["execution/roots.json:sole-root generated objects, moved callback invocation and active multiple values"],
+    "reclamation_and_invalid_tags": ["execution/roots.json:independently counted 16 and 24 reclaimed bytes; unregistered tag-like word unchanged; rooted interior pointer refused", "execution/core.json:95 checks"],
+    "legal_boundaries_growth_refresh_maximum_EGC": ["execution/owner.json:40 named checks", "execution/generated.json:539 collections, 141 growths", "execution/controls/controls.json:17 executed runtime mutants"],
+    "publication_omissions": ["assessment/controls.json:11 independent publication mutations", "role-controls.json:production gate role omissions"],
+    "native_R6": ["native-reuse.json:exact reviewed compiler and prior qualification references"],
+    "locator_rule": "execution/ paths refer to members of execution.tar.gz. Native observations precede target comparisons; literal bit payloads and graph identities are compared without numeric float conversion."
+  }
+}

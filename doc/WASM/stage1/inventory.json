@@ -323,8 +323,8 @@
           "description": "On a small heap the generated collector collects, visibly reclaims unreachable allocation and retains every live object reachable from temporaries, bindings, closures, constants, callbacks, multiple values, module constants and runtime registries; forced collection occurs only at legal stopping boundaries; invalid tag-like words are never roots; growth to the memory maximum and host view refresh are tested; EGC stays unavailable."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/collector-qualification/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

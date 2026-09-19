@@ -1,0 +1,17 @@
+{
+  "test": "S1-LL18-a",
+  "variant": "small-heap",
+  "scope": "Generated Lisp execution through the integrated CCL backend, freestanding copying collector and single-Worker owner. The proposal extends only pointer-free raw object widths in the collector and pinned-image inventory.",
+  "roots": ["temporaries", "special bindings", "closures and captured cells", "constant pools including cold modules", "owner-declared callback closures", "active multiple values", "module constants", "runtime registry slots", "host slots", "TCR next-method context"],
+  "compiler": "Unchanged from accepted constructor retry; native R6/R6a reused by exact compiler and input hashes. All generated Wasm and native oracle compilations rerun.",
+  "boundaries": "Explicit compiler polls and shortage-only constructor preflights are synchronous owner safepoints. Public host handoffs publish exact roots/counts. No arbitrary-instruction collection and no shared multi-Worker heap.",
+  "literal_families": ["cons", "bignum", "ratio", "complex", "single", "double", "string", "simple vector", "bit", "u8", "s8", "u16", "s16", "u32", "s32", "fixnum vector", "single vector", "double vector", "complex single vector", "complex double vector"],
+  "limitations": [
+    "EGC is unavailable and admission refuses it. Weak objects and hash-table relocation semantics remain outside this object allowlist; hash tables have the separate LL18-b slot.",
+    "Callbacks are generated closure objects in explicitly declared owner registry slots, invoked after movement. This does not qualify the future external callback installer.",
+    "The owner trusts its root manifest and authenticated module catalog. It is not a conservative scanner or a sandbox for forged owner data.",
+    "Growth appends fresh semispace pairs; retired space is not reused. An unsuccessful assurance may have moved valid roots before refusing.",
+    "A signalling stack guard never resumes the interrupted reservation. Owner assurance never executes Lisp or changes binding-vector shape.",
+    "Unknown object layouts refuse collection. General temporary/control transfer qualification remains LL06-a; this slot replays the reviewed explicit-poll cases as its root evidence."
+  ]
+}

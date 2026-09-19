@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "16784ce760ae96fd578f75054eb303e410eff94c",
+  "commit": "b1607180b966bdfed46e9222cd9d93f4a7640b98",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4d03450d1734bfde64a8187470d6fe89d18b3f36a49b15f5dd1506a9525e6da6",
-  "immutable_evidence_files": 224428,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-constructor-retry.json",
-  "source_index_sha256": "97c73c9fc42a90922fc1e19c3f089117218c8652f62420af699d240da031444d",
-  "verification": "Fresh retained replay PASS: 3944 deterministic files, 235 source pins; native R6/R6a, eight compiled mutants, eager/cold equality and default-profile compatibility. Scoped catalog addition only.",
+  "catalog_sha256": "fb6100d8070ef9e4ed3dc9f1e1febb149fc880edd5be0e17b5bc117d8ba5d717",
+  "immutable_evidence_files": 224465,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-qualification.json",
+  "source_index_sha256": "975eb48de27487c97033e4cdbacb519d6de56d5d342e330d18e326a4630680fd",
+  "verification": "Fresh retained replay PASS: 661 deterministic files, 267 source pins. Exact reviewed compiler reuses native R6/R6a; C/owner mutants, generated moving roots, cold loading and publication controls rerun. Scoped catalog addition only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Internal allocation retry accepted and integrated; raw constructor retry and owner loader auxiliary pending review. No inventory credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 20 missing, one unreviewed (S1-LL18-a). Constructor retry accepted/integrated; new collector/owner proposal awaiting review.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-constructor-retry-r1",
-    "files": 59,
-    "bytes": 84821459
+    "directory": "2026-09-19-stage1-collector-qualification-r1",
+    "files": 37,
+    "bytes": 13715721
   },
   "prior_indexed_references_verified": 19055
 }
