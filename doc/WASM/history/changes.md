@@ -2253,3 +2253,7 @@ remain a pre-existing source refusal; the canonical NIL/T fixture values sit
 inside the low stack range and production ownership must place their real
 objects elsewhere; EQ now pays a root frame. Record only; acceptance is the
 user's decision.
+
+## 2026-09-19 — accept and integrate live restarts and moving temporaries
+
+The user said “accept integrate and proceed” after Claude’s ninety-second audit (958d31c1). Both integrated files equal the retained compiler and collector proposals; the prior integration hash chain and unchanged runtime files match. The integration record carries &aux exclusion, canonical-object region ownership and EQ frame cost. Existing native R6/R6a and independent replays cover identical bytes; no repeated native build. Stage 1 stays 10 accepted, 21 missing, zero unreviewed.

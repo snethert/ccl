@@ -556,7 +556,13 @@
     (unless n (refuse :b-bound-variable))
     (b-wat "(i32.add (local.get $bindings) (i32.const ~d))" (+ 0 (* 4 n)))))
 (defun b-bind-value (var value)
-  (cond ((b-special-p var) (b-special-bind var value)) (var (b-wat "(i32.store ~a ~a)" (b-variable-address var) value)) (t "")))
+  (cond ((b-special-p var) (b-special-bind var value)) (var (if (b-captured-p var)
+    (let ((staged (temporary)))
+      ;; Evaluation may collect. The cell address must be read afterwards.
+      ;; Address lookup itself has no call, allocation or poll.
+      (b-wat "(local.set ~a ~a) (i32.store ~a (local.get ~a))"
+        staged value (b-variable-address var) staged))
+    (b-wat "(i32.store ~a ~a)" (b-variable-address var) value))) (t "")))
 (defun b-stage-value (var value)
   (if (b-special-p var) (b-wat "(i32.store ~a ~a)" (b-bound-address var) value) (b-bind-value var value)))
 (defun b-stage-read (var)
@@ -913,7 +919,9 @@
        (b-scalar (second args)))
       (ccl::eq
        (unless (and (= (length args) 3) (eq (ccl::acode-immediate-operand (first args)) :eq)) (refuse :b-condition-comparison))
-       (b-wat "(if (result i32) (i32.eq ~a ~a) (then (i32.const 77838)) (else (i32.const 77825)))" (b-scalar (second args)) (b-scalar (third args))))
+       (b-wat "(block (result i32) ~a)" (b-frame 2 (lambda (root)
+         (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) (if (result i32) (i32.eq (i32.load offset=8 ~a) (i32.load offset=12 ~a)) (then (i32.const 77838)) (else (i32.const 77825)))"
+           root (b-scalar (second args)) root (b-scalar (third args)) root root)))))
       ((ccl::special-ref ccl::bound-special-ref) (b-wat "(call $special_read_lisp ~a (local.get $top))" (b-special-symbol (first args))))
       (ccl::cons (b-cons (first args) (second args)))
       (ccl::setq-special
@@ -2101,8 +2109,8 @@
   (let ((*temporary-count* 0) (*b-exception-count* 0)
         (*b-tail-position* nil) (*b-producer-target* nil))
     (let* ((symbol (progn (pushnew "condition_registry" *b-symbols* :test #'equal) (b-special-symbol 'ccl::%handlers%)))
-           (signal (b-signal (make-b-raw-code :text "(local.get $condition)") nil))
-           (debugger (b-debugger "(local.get $condition)")))
+           (signal (b-signal (make-b-raw-code :text "(i32.load offset=24 (local.get $frame))") nil))
+           (debugger (b-debugger "(i32.load offset=24 (local.get $frame))")))
       (with-output-to-string (s)
         (write-string "(func $implicit_error (param $kind i32) (param $top i32) (call $implicit_error_details (local.get $kind) (local.get $top) (i32.const 77825) (i32.const 77825)))
  (func $implicit_error_details (param $kind i32) (param $top i32) (param $datum i32) (param $expected i32)
@@ -2121,12 +2129,12 @@
         (write-string "(local.set $frame (local.get $top)) (local.set $capacity (i32.const 4)) (local.set $result_bytes (i32.const 16)) (local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)
         (write-string (b-reserve 32) s)
         (write-string "(block $implicit_failed (result exnref) (try_table (catch_all_ref $implicit_failed)" s)
-        (write-string (b-initialize-roots "(local.get $frame)" 4) s)
+        (write-string (b-initialize-roots "(local.get $frame)" 6) s)
         (write-string "(local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get $top)) (local.set $result_scope (local.get $frame))" s)
         (write-string (b-reserve 48) s)
         (write-string (b-result-descriptor "(local.get $result_descriptor)" "(local.get $frame)") s)
         (write-string "(i32.store offset=8 (local.get $frame) (local.get $datum)) (i32.store offset=12 (local.get $frame) (local.get $expected))" s)
-        (write-string "(local.set $condition (call $condition_new (if (result i32) (i32.eq (local.get $kind) (i32.const 1)) (then (i32.const 2076)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4124)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 2108)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 8)) (then (i32.const 284)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 17)) (then (i32.const 124)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 10)) (then (i32.const 8220)) (else (if (result i32) (i32.and (i32.ge_u (local.get $kind) (i32.const 18)) (i32.le_u (local.get $kind) (i32.const 20))) (then (i32.const 16396)) (else (i32.const 156))))))))))))))) (local.get $datum) (local.get $expected))) (i32.store (local.get $results) (local.get $condition))" s)
+        (write-string "(local.set $condition (call $condition_new (if (result i32) (i32.eq (local.get $kind) (i32.const 1)) (then (i32.const 2076)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4124)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 2108)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 8)) (then (i32.const 284)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 17)) (then (i32.const 124)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 10)) (then (i32.const 8220)) (else (if (result i32) (i32.and (i32.ge_u (local.get $kind) (i32.const 18)) (i32.le_u (local.get $kind) (i32.const 20))) (then (i32.const 16396)) (else (i32.const 156))))))))))))))) (local.get $datum) (local.get $expected))) (i32.store (local.get $results) (local.get $condition)) (i32.store offset=24 (local.get $frame) (local.get $condition))" s)
         (write-string signal s) (write-string debugger s)
         (write-string "(throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))) unreachable) (local.set $exception)" s)
         (dolist (row (list (cons wasm32::tcr.vsp "$incoming") (cons wasm32::tcr.mv_base "$output") (cons wasm32::tcr.mv_owner_top "$owner") (cons wasm32::tcr.root_head "$root") (cons wasm32::tcr.mv_count "$old_count")))

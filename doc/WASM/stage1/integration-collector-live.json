@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-19T18:24:04.701186+00:00",
+  "user_authorization": "accept integrate and proceed",
+  "review_commit": "958d31c15055ba7c2ae39fdf476ba59e59b11649",
+  "review": "Claude ninety-second audit; no defect in d8c0c655.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "6f1437102a85ce23e0515a1012605ce0f3163c2a68d57e33ccd3ff9c690348a1",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "4ea0ed9fd5630f355b9cfe03cf2663a9de02db3b747614c7bda8a8c8ac7c4936",
+      "after": "f12ca4fe1b1386ae75ee9bb3c0a480215eaa3d8c234cbbca62dec06d126500dd",
+      "proposal_locator": "2026-09-19-stage1-collector-live-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "before": "f6d1acbf64ffb85f5ce22bab6e887ca31dfa34bb2b86f73662182247536ef903",
+      "after": "8af4e9018c8fd1d55ecd34e2accce38c28df874e56420677ccf168a43cb01ee5",
+      "proposal_locator": "2026-09-19-stage1-collector-live-r1/collector.c"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "972053855c9fbf7dbe18e62f6bc136e25e7657994309eec1f7a774ef2bed7224"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-collector-live-r1/packet.json",
+      "sha256": "8a7d813201c6f3457b855f2e00daa144e1b33a6fa78b7ef87165582d8e153120"
+    }
+  ],
+  "previous_integration": "integration-collector-core.json",
+  "previous_integration_sha256": "3e0aa34adedbf9e0e027b63323bd5a0ccf96c834fc3b93a68498b3d3a850da49",
+  "scope": "Exact reviewed live restart scanner and moving-temporary corrections; auxiliary acceptance only, no LL06/LL18 credit.",
+  "observations": [
+    "&aux remains outside the existing B source subset.",
+    "Production ownership must reserve materialized canonical NIL and T outside all stacks; the low fixture only uses their distinguished identities. This becomes an executable admission obligation in the next owner unit.",
+    "EQ uses a temporary root frame per comparison; a future no-safepoint proof may remove unnecessary frames."
+  ],
+  "verification": "Compiler and collector equal retained proposals and generators. Reuse native R6/R6a and both complete packet replays for identical bytes.",
+  "reverse": "Restore both changed files from 958d31c15055ba7c2ae39fdf476ba59e59b11649 at their before hashes."
+}

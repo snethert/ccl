@@ -51,7 +51,7 @@ static U find(State *s,U p) {
 }
 static U forward(State *s,U value) {
  U tag=value&7,base,index,dest;Object *o;
- if(value==NIL || (tag!=1 && tag!=6))return value;
+ if(value==NIL || value==77838u || (tag!=1 && tag!=6))return value;
  base=value-tag;
  if(inside(base,s->to,s->end))return fail(s,BAD_REFERENCE);
  if(!inside(base,s->from,s->limit))return value;
@@ -77,7 +77,7 @@ static void root(State *s,U slot) {
  /* A stack-resident callable is nonmoving, but its environment/pool are roots.
   * No heap object can contain a stack callable in this admitted profile.
   */
- if((old&7)==6 && old>=s->stacklo+6 && (W)old+26<=s->stackhi) {
+ if(old!=77838u && (old&7)==6 && old>=s->stacklo+6 && (W)old+26<=s->stackhi) {
   if(LOAD(old-6)!=1578){fail(s,BAD_ROOT);return;}
   if(s->updates+6>s->logcap){fail(s,NO_WORKSPACE);return;}
   for(U i=0;i<6&&!s->error;i++){
@@ -118,7 +118,7 @@ EXPORT U collect(U config) {
  while(p<s->used){
   header=LOAD(p);tag=header&255;n=header>>8;scan=0xffffffffu;size=8;
   if((tag&7)==2||(tag&7)==7){
-   if(node_subtag(tag)){scan=n;size=4+(W)n*4;}
+   if(node_subtag(tag)||(tag==130&&n==6)){scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(!bytes && !((tag==191||tag==215||tag==223)&&n==0))return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;
   }

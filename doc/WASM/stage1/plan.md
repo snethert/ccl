@@ -67,8 +67,7 @@ the accepted integrated core reloads both through rooted SELF. It has no LL18 cr
 The [movement follow-up](../../../tests/wasm/stage1/collector-live/README.md) now
 admits the emitted restart layout and fixes three actual stale-reference paths:
 EQ operands, captured initializers and implicit conditions across declining
-handlers. Its native-first movement corpus and controls pass; integration awaits
-independent review. Next: complete owner root admission (including image, callback
+handlers. It is accepted and integrated after Claude’s ninety-second audit. Next: complete owner root admission (including image, callback
 and registry roots), allocator retry and growth/view refresh for LL18, then finish
 the complete LL06 temporary/control matrix.
 
