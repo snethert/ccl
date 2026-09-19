@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T21:34:26.167024+00:00",
+  "authorization": {
+    "quote": "Accept and integrate and proceed",
+    "provenance": "User to Codex after Claude audit 98, confirming audit 97 no-defect LL06 qualification with corrected observations."
+  },
+  "review_commit": "8d8dba0ad8aec43539add5343564b3e75abb1f61",
+  "review_sha256": "2ad64e9ee28d1be2239a44948a09e97c070141310ac21fa6ea16d4ad23dbda3e",
+  "source_report_sha256": "ecb441f75da19ff9a16a721e216cebe39ef91a670528c6cc3c0402a1d1bc8253",
+  "scope": "Accept S1-LL06-a at its reviewed generated temporary-lifetime scope.",
+  "exclusions": [
+    "Closed GO is refused at admission, including HANDLER-BIND handlers and RESTART-CASE clauses; planned additional LL12 closure coverage, not a changed inventory assertion.",
+    "Each loop iteration reserves and retires a control record and each GO raises an exception. Ordinary-branch lowering is planned; no speed claim.",
+    "Audit 98 withdraws audit 97's tag-map observation: b-one-module already resets the map per function; inline lambdas share the enclosing Wasm function scope.",
+    "GO across function boundaries is refused at source admission. DO/DOTIMES and arbitrary LOOP syntax remain outside the admitted source subset; these tests execute actual TAGBODY backedges, not an inferred recursive substitute.",
+    "Every GO currently costs one Wasm exception and a control-record cycle. This is a correctness implementation, with no performance claim; tail transfer is disabled within a TAGBODY's pending control extent.",
+    "Collection is at legal published call/poll boundaries, not arbitrary Wasm instructions. Broader instruction liveness and elimination of unnecessary root frames remain later optimization work.",
+    "Native R6/R6a is newly executed for this compiler proposal, reusing the accepted pristine baseline. The accepted collector binary is unchanged. The shared checkout remains at the accepted compiler until independent review and acceptance."
+  ],
+  "records": [
+    {
+      "id": "S1-LL06-a",
+      "variant": "generated",
+      "test_revision": "f4fd34cede4410132606944ec9b4281ff3cb4e91f84244f343e090fd65c340df",
+      "contract_sha256": "bae508a7bc3469dbf8147c1f3a739100a0bb4bdb7d6c0d6b799dac93e0472cb6",
+      "scope": "Reviewed LL06-a, Claude audits 97 and 98."
+    }
+  ]
+}

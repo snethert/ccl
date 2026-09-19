@@ -929,6 +929,7 @@
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" base))))
 
+(defvar *b-local-tags* nil)
 (defvar *b-blocks* nil)
 (defun b-catch (tag body)
   (b-exit-frame 1 (b-scalar tag) (lambda (record) (declare (ignore record)) (b-multiple body))))
@@ -1087,7 +1088,7 @@
              ((member (first args) *b-restart-names*) (b-restart-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value_lisp ~a (local.get $top))" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
+      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr rplaca rplacd ccl::%rplaca ccl::%rplacd)
        (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" (b-checked-cons-operation op args)))
@@ -1175,6 +1176,8 @@
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       (ccl::catch (b-catch (first args) (second args)))
       (ccl::throw (b-throw (first args) (second args)))
+      (ccl::local-tagbody (b-tagbody (first args) (second args)))
+      (ccl::local-go (b-go (first args)))
       (ccl::local-block (b-local-block (first args) (second args)))
       (ccl::local-return-from (b-local-return (first args) (second args)))
       (ccl::multiple-value-call (b-multiple-call (first args) (second args)))
@@ -1275,7 +1278,7 @@
              (append (remove nil (append (first opt) (third opt) (list rest) (second keys) (third keys)))
                      (b-local-variables ir)
                      (remove-if-not #'b-captured-p *required-vars*)) :test #'eq))
-           (*b-blocks* nil)
+           (*b-blocks* nil) (*b-local-tags* nil)
            (implicit-runtime (b-implicit-runtime))
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
            (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first opt) (third opt) (list rest) (second keys) (third keys)))))
@@ -1544,7 +1547,7 @@
 
 ;;; Closure proposal: function.environment -> D1 simple-vector of shared cons
 ;;; cells. A cell's CAR is its mutable value; CDR is NIL. No code is in the heap.
-;;; This slice has no loop IR, collection or poll during allocation/publication.
+;;; Allocation/publication after assurance contains no calls or polls.
 (defun b-captured-p (var) (member (ccl::nx-root-var var) *b-captured* :test #'eq))
 (defun b-local-variables (ir)
   (let ((vars nil))
@@ -1635,7 +1638,7 @@
       (throw *module-result-tag* (first modules)))))
 
 (defun validate-b-source (form)
-  (let ((budget 8192) (local-names nil) (blocks nil))
+  (let ((budget 8192) (local-names nil) (blocks nil) (tags nil))
     (labels ((items (x)
                (let ((seen (make-hash-table :test #'eq)) (out nil))
                  (loop while (consp x) do
@@ -1659,6 +1662,18 @@
                       (let* ((xs (items x)) (head (car xs)) (n (length (cdr xs))))
                         (case head
                           (lambda (lambda-form xs vars (1+ depth)))
+                          (tagbody
+                           (let ((new nil) (saved tags))
+                             (dolist (part (cdr xs))
+                               (when (atom part)
+                                 (unless (or (symbolp part) (integerp part)) (refuse :b-tag-source))
+                                 (when (member part new :test #'eql) (refuse :b-tag-source))
+                                 (push part new)))
+                             (unwind-protect
+                               (progn (setq tags (append new tags))
+                                 (dolist (part (cdr xs)) (when (consp part) (walk part vars (1+ depth)))))
+                               (setq tags saved))))
+                          (go (unless (and (= n 1) (member (second xs) tags :test #'eql)) (refuse :b-go-source)))
                           (block
                            (unless (and (>= n 1) (symbolp (second xs))) (refuse :b-block-source))
                            (let ((saved blocks)) (unwind-protect (progn (push (second xs) blocks) (dolist (x (cddr xs)) (walk x vars (1+ depth)))) (setq blocks saved))))
@@ -1716,14 +1731,14 @@
                                        (and (member head '(signal error)) (= n 1))
                                        (and (eq head '%wasm-poll) (zerop n)) (member head '(%wasm-symbol-value %wasm-set %wasm-make-restart %wasm-find-restart %wasm-invoke-restart %wasm-restart-name %wasm-svref %wasm-condition-datum %wasm-condition-expected %wasm-cell-name))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
-                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
+                                       (and (eq head 'prog2) (<= 2 n)) (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (member head '(funcall multiple-value-call)) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
                                        (member head local-names) (assoc head *b-call-links*)
                                        (and (consp head) (eq (car head) 'lambda))) (refuse :b-source))
                            (when (consp head) (lambda-form (items head) vars (1+ depth)))
                            (dolist (part (cdr xs)) (walk part vars (1+ depth)))))))
                      (t (refuse :b-source))))
-             (lambda-form (parts outer depth)
+             (lambda-form (parts outer depth) (let ((saved-tags tags)) (unwind-protect (progn (setq tags nil) 
                (unless (and (>= (length parts) 2) (eq (first parts) 'lambda)) (refuse :b-source))
                (let ((vars nil) (mode :required) (keys nil))
                  (labels ((add-var (v) (variable v) (when (member v vars) (refuse :b-source)) (push v vars)))
@@ -1745,7 +1760,7 @@
                               (walk (second pair) (append vars outer) (1+ depth)) (add-var v) (when sp (add-var sp))))
                            (t (refuse :b-source)))))
                  (when (eq mode :rest) (refuse :b-source))
-                 (body-forms (cddr parts) (append vars outer) (1+ depth)))))
+                 (body-forms (cddr parts) (append vars outer) (1+ depth)))) (setq tags saved-tags)))))
       (lambda-form (items form) '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*) 0))))
 
 ;;; Local calls use lexical function cells. CCL omits function-cell captures
@@ -2878,3 +2893,40 @@
  (let ((*b-allocation-retry* t)) (compile-call-module source-text name links)))
 (defun compile-retrying-call-form (form name links)
  (let ((*b-allocation-retry* t)) (compile-call-form form name links)))
+
+(in-package :wasm32-compiler)
+
+;;; GO uses the existing checked exit record so lexical/dynamic frames and
+;;; cleanup extents retire before the next segment. A local branch alone would
+;;; bypass their restoration. Program counters are untagged, never GC roots.
+(defun b-tagbody (tags forms)
+  (let ((pc (temporary)) (segments (list nil)) (positions nil) (index 0))
+    (dolist (form forms)
+      (if (eq (ccl::acode-operator-name (ccl::acode-operator form)) 'ccl::tag-label)
+        (progn (incf index) (push nil segments)
+               (push (cons (first (ccl::acode-operands form)) index) positions))
+        (push form (car segments))))
+    (unless (every (lambda (tag) (assoc tag positions :test #'eq)) tags)
+      (refuse :b-tag-identity))
+    (setq segments (mapcar #'reverse (reverse segments)))
+    (let ((code
+           (b-exit-frame 3 "(i32.const 77825)"
+             (lambda (record)
+               (let ((*b-local-tags* (append (mapcar (lambda (p) (list (car p) pc (cdr p) record)) positions) *b-local-tags*)))
+                 (with-output-to-string (s)
+                   (loop for segment in segments for n from 0 do
+                     (format s "(if (i32.le_u (local.get ~a) (i32.const ~d)) (then " pc n)
+                     (dolist (form segment) (format s "(drop ~a)" (b-scalar form)))
+                     (write-string "))" s))
+                   (format s "(local.set ~a (i32.const -1))" pc)
+                   (write-string (b-multiple (make-b-raw-code :text "(i32.const 77825)")) s)))))))
+      (b-wat "(local.set ~a (i32.const 0)) (block $tagbody_done (loop $tagbody_loop ~a (br_if $tagbody_done (i32.eq (local.get ~a) (i32.const -1))) (br $tagbody_loop))) ~a"
+        pc code pc (b-multiple (make-b-raw-code :text "(i32.const 77825)"))))))
+
+(defun b-go (tag)
+  (let* ((entry (or (assoc tag *b-local-tags* :test #'eq) (refuse :b-go-identity)))
+         (record (fourth entry)))
+    (concatenate 'string
+      (b-wat "(local.set ~a (i32.const ~d)) (i32.store offset=12 ~a (i32.const 0))" (second entry) (third entry) record)
+      (b-store wasm32::tcr.unwind_state "(i32.const 1)")
+      (b-wat "(throw $nonlocal_exit ~a)" record))))

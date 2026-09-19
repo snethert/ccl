@@ -2099,7 +2099,7 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-temporaries-r1/packet.json",
@@ -2108,6 +2108,26 @@
         "S1-LL06-a"
       ],
       "scope": "Generated temporary lifetime and evaluation order: PROG1/PROG2, LET/SETQ, conditionals, calls and actual TAGBODY loops. Thirty native cases, 120 comparisons and 300 collections; eight compiled runtime faults, eight source refusals and six publication controls. Native R6/R6a pass; 152 inherited WAT/Wasm files identical. Isolated compiler proposal, not integrated."
+    },
+    {
+      "id": "STAGE1-LL06-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll06-acceptance-r1/accepted-results.json",
+      "sha256": "dc1d761faeab68545136abb09245ee19162f23fe2512ba5d93a28fcb4fa38d8b",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "45aaa3e2e37ec602169b10585ece7349dd5fdfa9c1b9a6f2e0a5569f6c4311b0",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll06-acceptance-r1/packet.json",
+      "packet_sha256": "46cea1937047edfbbcf73ff5181942251e904288cf85f8886fb9b6dd9342e74e",
+      "scope": "User acceptance after Claude audits 97/98; no new execution.",
+      "test_ids": [
+        "S1-LL06-a"
+      ]
     }
   ],
   "auxiliary_records": [

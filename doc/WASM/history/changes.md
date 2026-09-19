@@ -2417,3 +2417,7 @@ was mistaken and is withdrawn; its first observation stands with the corrected
 slot name, since the inventory's S1-LL12-a assertion is closures and callable
 metadata and closed GO coverage is planned as additional LL12 work. No defect;
 record only.
+
+## 2026-09-19 — accept and integrate LL06-a
+
+The user directed “Accept and integrate and proceed” after audit 98. The acceptance binds audits 97/98 and preserves all eleven earlier accepted result objects. The compiler equals the reviewed LL06 proposal byte for byte; all runtime sources are unchanged. The integration carries the closed-GO exclusion, loop cost and withdrawn tag-map observation. Ledger: 12 accepted, 19 missing, zero unreviewed.

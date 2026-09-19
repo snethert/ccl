@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T21:34:30.915031+00:00",
+  "user_authorization": "Accept and integrate and proceed",
+  "review_commit": "8d8dba0ad8aec43539add5343564b3e75abb1f61",
+  "review": "Claude audit 97 no defect; audit 98 corrects withdrawn tag-map observation.",
+  "acceptance": "acceptance-ll06.json",
+  "acceptance_sha256": "a9b01d5f037020f92afd90780074313cefd1392b0a9b61aa1ff3b27098e41996",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "3fe47a6cf954a9afb2084529a080798e0db9558a018700dda76afc579da1289b",
+      "after": "579bd157c44cc39b9a90ef0f5ed3ab6c210a4cb58d52fadf597326460e192d09",
+      "proposal_locator": "2026-09-19-stage1-temporaries-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-temporaries-r1/packet.json",
+      "sha256": "88f5c76b0b62ea8a5fc77b7042f2de0a1c9af973e80b7ea03a38c71be1071d29"
+    }
+  ],
+  "previous_integration": "integration-ll18.json",
+  "previous_integration_sha256": "b4fcda76fc429de448d5dc51c6205c1b5bef5edd820a2ea8a2521ced02cf8e26",
+  "scope": "Exact reviewed LL06-a proposal; runtime unchanged.",
+  "observations": [
+    "Closed GO is refused at admission, including HANDLER-BIND handlers and RESTART-CASE clauses; planned additional LL12 closure coverage, not a changed inventory assertion.",
+    "Each loop iteration reserves and retires a control record and each GO raises an exception. Ordinary-branch lowering is planned; no speed claim.",
+    "Audit 98 withdraws audit 97's tag-map observation: b-one-module already resets the map per function; inline lambdas share the enclosing Wasm function scope."
+  ],
+  "verification": "Compiler equals reviewed proposal and generator. Native R6/R6a and independent replay cover these exact bytes.",
+  "reverse": "Restore compiler to its recorded before hash."
+}

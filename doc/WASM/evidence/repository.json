@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "9ccbcfaf8c74ea9b5061d71dda1cc6d87363daa6",
+  "commit": "7d56f51dc83aae45fd3337ece7d7ccb4259a6d0b",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0d1b3c6758eec6427e87e6c013e193343c26bf3f2dd35896ef1f1b5f6ffe586e",
-  "immutable_evidence_files": 224590,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-temporaries.json",
-  "source_index_sha256": "2c5c29f860aedcb6686144231b1d1b52470b1407ab428d13c1140f253e40b51c",
-  "verification": "Fresh retained replay PASS: 1339 deterministic files, 284 source pins. New compiler native R6/R6a qualified; generated temporary/control matrix, eight compiled faults and publication controls rerun. Scoped catalog addition only.",
+  "catalog_sha256": "a837879867cb7638fef09f9f59f1d55f3b0786d4a7b8e627f3f3fd3f6cad8bb6",
+  "immutable_evidence_files": 224635,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll06-acceptance.json",
+  "source_index_sha256": "fe2ae454d570f9505f80790a6091e77a224911fd1dd315db45f1c15c605a0bf3",
+  "verification": "Unchanged acceptance producer; eleven prior records preserved; integration byte-equal to reviewed proposal. Incremental catalog only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 11 accepted, 19 missing, one unreviewed (S1-LL06-a). LL18-a accepted/integrated; LL06-a compiler proposal awaiting review.",
+  "scope": "Stage 0:48 accepted. Stage 1:12 accepted,19 missing,zero unreviewed.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-temporaries-r1",
-    "files": 88,
-    "bytes": 31994807
+    "directory": "2026-09-19-stage1-ll06-acceptance-r1",
+    "files": 45,
+    "bytes": 24061311
   },
   "prior_indexed_references_verified": 19055
 }

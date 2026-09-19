@@ -84,7 +84,7 @@ maximum-memory refusal and independent reclaim accounting. The C/owner proposal
 and slot are accepted and integrated after audit 96. [LL06-a qualification](../../../tests/wasm/stage1/temporaries/README.md)
 now executes temporary lifetime, evaluation order and actual TAGBODY loops, with
 300 legal collections and independent stack/control checks. Its compiler proposal
-and slot are reviewed with no defect in audit 97 and await acceptance. Next:
+and slot are accepted and integrated after audits 97/98. Next:
 LL12-a closures and callable metadata; hash-table movement remains LL18-b.
 
 The LL12 implementation work will also cover closed GO through captured control
