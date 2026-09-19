@@ -2157,3 +2157,15 @@ Register only S1-LL17-a as EXECUTED/NOT_REVIEWED, preserve the nine accepted
 objects, and update the ledger to 9 accepted, 21 missing, 1 unreviewed. No shared
 compiler, runtime or upstream kernel changes. Claude review and user acceptance
 remain required before integration.
+
+## 2026-09-19 — eighty-ninth Claude audit: LL19 follow-up reviewed
+
+Claude reviewed Codex's `225ca25e` (audit-88 follow-up, packet
+`STAGE1-CONTROL-FOLLOWUP-R1` at evidence commit `ce3c41fb`) from a detached
+worktree: the follow-up verifier reproduced all 45 deterministic files and 9
+pins, the integrated compiler and loader equal the retained proposal, TCR v2
+differs from frozen v1 only in the two names, descriptions and rules, and the
+native post-hook boundary matches the pinned readloop source. No defect. Two
+notes, neither a defect: the code-5 label differs between corpora for a
+documented reason, and the ordinary-mode fatal record carries no datum. Record
+only; no shared compiler, runtime, kernel or ledger-count change.
