@@ -2008,6 +2008,26 @@
       "test_ids": [
         "S1-LL19-a"
       ]
+    },
+    {
+      "id": "STAGE1-BINDING-VECTOR-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-vector-r1-results.json",
+      "sha256": "b071de69c60fca1b87d86ed817c4cc94f36eab95974aa405bd303140c2930603",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "eb55e37bd4798c14478659fcbc83cb35253d8491c64264b31c8002a9051876f3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-binding-vector-r1/packet.json",
+      "packet_sha256": "f4c6131d883db4c9c5423727b09c93e335f0b3b1acaf81b32863a2a831b189fa",
+      "test_ids": [
+        "S1-LL17-a"
+      ],
+      "scope": "Generated SYMBOL-VALUE/SET and owned binding-vector growth; 40 native cases /160 comparisons, 96 resource checks, twelve compiler mutants, two actual Worker suspensions, eight forced TLB evacuations, six publication controls, complete inherited/lazy and native R6/R6a. Proposal, shared implementation unchanged. See binding-vector scope for allocator, collector and symbol-installation bounds."
     }
   ],
   "auxiliary_records": [

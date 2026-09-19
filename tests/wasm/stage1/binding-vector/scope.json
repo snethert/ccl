@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "slot": "S1-LL17-a",
+  "profile": "wasm32-shared-B-exnref-control-v1",
+  "implementation": "Real CCL front-end IR and generated B calls; private pre-expansion maps standard SYMBOL-VALUE/SET to checked compiler intrinsics while respecting FLET/LABELS shadows.",
+  "symbols": "Owner-installed D1 symbols with immutable nonnegative binding indices. Index zero has global value only; dynamic binding requires a positive index. Reads/SET beyond the vector fall back to the global cell without allocation. NIL/T and registered keyword constants are protected. Package installation and assigning a new symbol index remain LL09.",
+  "growth": "Owner-thread only. Geometric capacity, at most 2^24-1 D1 vector elements. Preflight all extents in i64, copy the entire old vector, initialize every new slot to D1 no-thread-local-binding 243, then publish allocation cursor, element pointer and element capacity. No call/poll between preflight and publication; failures preserve the old vector and allocation state. No suspension or asynchronous collector may inspect mid-transaction.",
+  "roots": "TCR binding-vector element pointer/capacity is a raw interior root; scan all live element values except immediate markers. Saved binding symbol and old value remain in rooted binding records; unbinding recomputes the current slot from symbol/index. The source never stores a TLB slot address in a binding record.",
+  "retirement": "Old heap vectors become unreachable after publication and must be reclaimed by LL18's collector. They are not reused by this bump-allocation implementation. Initial bootstrap vector storage remains owner-managed. The test collector copies the complete vector at legal GC-service entries and poisons the abandoned vector; it does not implement general heap collection.",
+  "suspension": "A real Node Worker blocks in Atomics.wait at an entry-observation host import while compiled special bindings and roots stay live. The supervisor independently reads the shared state and resumes it. No host re-entry, JSPI or general foreign callback is claimed.",
+  "allocation_failure": "Owner-capacity exhaustion is checked refusal code 3, malformed owner metadata code 11; no engine trap or partial publication. General allocator retry/collection and recoverable heap exhaustion remain LL18.",
+  "interrupts": "Accepted LL19 explicit poll protocol and inherited interrupt masking remain unchanged. The forced vector evacuation service runs at the legal GC entry, with dynamic bindings live.",
+  "native_requalification": "New exact proposal rebuilt, tested and removed in disposable pristine U1; complete baseline and restored FASL comparison and evaluated native state, all existing architecture/module profiles.",
+  "inherited_changes": "Three old metadata refusals (index-limit, empty, partial-capacity) become positive growth cases with exact results and restored vector; other inherited assertions and all semantic native expectations remain. Retired old vector words need not be unbound after a copy; current published vector must be.",
+  "integration": "Proposal only. Shared compiler, runtime and upstream kernel remain unchanged pending adversarial review and user acceptance."
+}

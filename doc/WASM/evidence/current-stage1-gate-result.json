@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "GENERATED_EXECUTION_PENDING_REVIEW",
   "date": "2026-09-19",
-  "basis": "User accepts LL19 after Claude audit 88; prior eight accepted records unchanged.",
+  "basis": "LL17 qualified by exact proposal, native R6/R6a and complete retained replay; nine prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL17-a [generated]",
+      "unreviewed S1-LL17-a [generated]",
       "missing S1-LL18-a [small-heap]",
       "missing S1-LL18-b [hash-tables]",
       "missing S1-LL06-a [generated]",
@@ -36,16 +36,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll19-accepted-results.json",
-      "sha256": "9711f4ca3d84246a3fff3c13f6b19f8704a0d0b11b3c38c0a39d67d3fff14d1c"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll17-pending-results.json",
+      "sha256": "dd3a476d2a56d4e9bd0cf06e2a25405cdf3dfefc80d14559ca821f642b34e0a4"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll19-accepted-results.json",
-  "combined_results_sha256": "9711f4ca3d84246a3fff3c13f6b19f8704a0d0b11b3c38c0a39d67d3fff14d1c",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll17-pending-results.json",
+  "combined_results_sha256": "dd3a476d2a56d4e9bd0cf06e2a25405cdf3dfefc80d14559ca821f642b34e0a4",
   "counts": {
     "accepted": 9,
-    "missing": 22,
-    "unreviewed": 0,
+    "missing": 21,
+    "unreviewed": 1,
     "required": 31
   }
 }

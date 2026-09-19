@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "ce3c41fb8b497fe6142ebe9d3af9b2a6bdb35ba0",
+  "commit": "b69d478fc0ac7d7025fcd3a1ddd8d1cfca553d66",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "a5db54633782cdec1a59ebe8d69e64fab63f5a2484d6f35ea303b03617cb8265",
-  "immutable_evidence_files": 223647,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-control-followup.json",
-  "source_index_sha256": "eebff7daf232e99bb822a2b78abfa00fe39f459085bfb9dd9b927617c5bf8491",
-  "verification": "Fresh focused native/target replay: 45 deterministic files identical, six controls reject. Exact accepted compiler pins hold; native R6/R6a reused. Incremental catalog.",
+  "catalog_sha256": "42b791943a03383dab636f95fe369cf285d705d55940ef0342983ac095568bc8",
+  "immutable_evidence_files": 223933,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-binding-vector.json",
+  "source_index_sha256": "0751441417226784f6cefd06efa28c915ced507f2e5b669acd7598091f509f76",
+  "verification": "Complete LL17 retained replay: compiler mutants, native R6/R6a, generated/native comparisons, owner-resource tests, suspensions, vector evacuation, inherited/lazy; new artifact catalog rows checked only. Nine accepted rows unchanged.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0 48 accepted; Stage 1 nine accepted, 22 missing. Auxiliary LL19 review follow-up executed; no compiler change or extra slot.",
+  "scope": "Stage 0 48 accepted; Stage 1 9 accepted, 21 missing, 1 unreviewed. LL17 executed proposal, not integrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-control-followup-r1",
-    "files": 12,
-    "bytes": 1583082
+    "directory": "2026-09-19-stage1-binding-vector-r1",
+    "files": 286,
+    "bytes": 78224058
   },
   "prior_indexed_references_verified": 19055
 }

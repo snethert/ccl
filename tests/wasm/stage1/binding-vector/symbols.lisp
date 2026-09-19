@@ -1,0 +1,22 @@
+(in-package :wasm32-compiler)
+(defun b-symbol-access (name forms)
+ (let ((readp (eq name '%wasm-symbol-value)))
+  (unless (= (length forms) (if readp 1 2)) (refuse :symbol-access-arity))
+  (b-frame (length forms) (lambda (root)
+   (let ((symbol (b-wat "(i32.load offset=8 ~a)" root))
+         (value (b-wat "(i32.load offset=12 ~a)" root)))
+    (with-output-to-string (s)
+     (loop for f in forms for i from 0 do (format s "(i32.store offset=~d ~a ~a)" (+ 8 (* 4 i)) root (b-scalar f)))
+     (write-string (b-multiple (make-b-raw-code :text
+       (b-wat "(block (result i32)
+        (if (i32.or (i32.eq ~a (i32.const 77825)) (i32.eq ~a (i32.const 77838))) (then ~a))
+        (if (i32.ne (i32.and ~a (i32.const 7)) (i32.const 6)) (then ~a))
+        (call $span (i32.sub ~a (i32.const 6)) (i32.const 32))
+        (if (i32.ne (i32.load (i32.sub ~a (i32.const 6))) (i32.const 1850)) (then ~a))
+        ~a)"
+        symbol symbol
+        (if readp (b-wat "(br 1 ~a)" symbol) "(call $implicit_error (i32.const 17) (local.get $top)) unreachable")
+        symbol (b-type-failure symbol 'symbol) symbol symbol (b-type-failure symbol 'symbol)
+        (if readp (b-wat "(call $special_read_lisp ~a (local.get $top))" symbol)
+            (b-wat "(if (i32.and (i32.load offset=14 ~a) (i32.const 8)) (then (call $implicit_error (i32.const 17) (local.get $top)) unreachable)) (i32.store (call $special_location ~a) ~a) ~a" symbol symbol value value))))) s))))))
+)

@@ -53,9 +53,11 @@ binding-vector growth, debugger and collector integration remain later subgates.
 **1C current:** [S1-LL19-a](control.md) is accepted and integrated after Claude
 audit 88. Its proposal adds bootstrap condition
 instances, restarts, the debugger-hook boundary, recoverable stack limits and
-interrupt masking. The exact reviewed proposal is integrated. S1-LL17-a binding-vector growth
-is the next runtime unit. The debugger-boundary follow-up now executes ordinary
-service decline and names the persistent fields in compatible TCR v2. General CLOS and
+interrupt masking. The exact reviewed proposal is integrated. [S1-LL17-a](binding-vector.md) now executes generated SYMBOL-VALUE/SET,
+binding-vector growth, restoration and host suspension as a proposal awaiting
+Claude review. Forty native cases, 160 comparisons, 96 resource checks, twelve
+compiler mutants and native R6/R6a qualify its bounded scope. The debugger-boundary
+follow-up executes ordinary service decline and names persistent fields in TCR v2. General CLOS and
 moving-collector work retain their own slots.
 
 

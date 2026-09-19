@@ -293,8 +293,8 @@
           "description": "Compiled special access, SYMBOL-VALUE, SET and nested LET bindings agree with the native reference and are restored after errors, nonlocal exit and host suspension; unbound markers and binding-index growth work without replacing lexical closure state with process globals; the binding vector and tcr_index namespaces stay distinct per contracts/tcr.v1.json."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/binding-vector/qualify.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

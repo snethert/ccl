@@ -2138,3 +2138,22 @@ native cases, sixteen comparisons and ordinary fatal diagnostics, six controls.
 Fresh replay reproduces 45 deterministic files; exact accepted compiler and
 R6/R6a reused. Both original development failures retained. Auxiliary packet
 STAGE1-CONTROL-FOLLOWUP-R1 awaits review, no additional slot credit.
+
+## 2026-09-19 — Codex: qualify generated binding-vector growth (LL17)
+
+On the user's “Finish LL17”, implement an isolated proposal derived from
+accepted LL19: generated SYMBOL-VALUE/SET with constant and unbound conditions,
+lexical function shadows preserved, geometric owner-thread vector growth and
+restoration through symbol/index after relocation. Forty native cases produce
+29 modules and 160 comparisons; 24 owner-resource cases add 96 comparisons.
+Two real Worker suspensions preserve live binding/root state; eight vector
+evacuations poison retired storage at legal GC-service entry. Twelve compiler
+mutants and six publication controls reject. Exact final proposal passes native
+R6/R6a and complete inherited/lazy qualification; the retained verifier replays
+all deterministic artifacts. Original failures and the superseded successful
+native attempt are retained. General heap collection/retry remains LL18.
+
+Register only S1-LL17-a as EXECUTED/NOT_REVIEWED, preserve the nine accepted
+objects, and update the ledger to 9 accepted, 21 missing, 1 unreviewed. No shared
+compiler, runtime or upstream kernel changes. Claude review and user acceptance
+remain required before integration.
