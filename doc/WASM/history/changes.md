@@ -2459,3 +2459,31 @@ The user directed “Accept, integrate and proceed” after Claude audit 99. The
 ## 2026-09-19 — qualify LL12-a callable metadata
 
 The isolated compiler now builds arity, exact keyword-vector and capture debug records into function literal pools and initializes the existing function-object fields. Sixteen generated modules preserve shared and distinct mutable closure environments across cold installation and fresh-Worker restoration below and above 2 GiB. Native CCL supplies signatures after its own closure trampoline unwrap. Seven compiled faults and two runtime faults have focused oracles; six snapshots refuse without publication. Default mode reproduces all 256 reviewed module/template/installed files, with 240 inherited comparisons and 430 collections. New native R6/R6a and a fresh 614-file replay pass. LL12-a is executed, not accepted or integrated: 12 accepted,18 missing,one unreviewed. The evidence index preserves its existing serialization.
+
+## 2026-09-19 — hundredth Claude audit: closed-GO integration and LL12-a qualification reviewed
+
+Claude reviewed `ac38d502` and `1058a409` from the detached worktree. The
+integration commit's compiler equals the reviewed closed-GO proposal by hash,
+every runtime file is unchanged, the record binds the audit-99 review file and
+carries its three observations, and the evidence index kept its serialization.
+The LL12-a proposal is an opt-in compiler mode: each function's literal pool
+gains a seven-element arity record and a three-element debug record built from
+front-end IR, closure constructors store both into the existing arity and debug
+words of the 32-byte function object, and every entry validates the function
+header, the exact pool shape, record identity, record schemas and the fixed
+argument counts; default entry points emit the reviewed bytes, proven on 256
+files. The verifier replay passed with 614 deterministic files, 321 source pins
+and a native R6/R6a pass for the exact proposal, equal to Codex's record;
+packet, results envelope, combined results, catalog and source index hash as
+indexed; both ledger tools pass with 12 accepted, 18 missing and one unreviewed
+variant. A Lisp-level probe compiled eight lambda-list and closure shapes
+outside the corpus through the proposal and compared each arity record with
+native CCL's own function-args and key vector in the same process: seven agree,
+including supplied-p variables, rest without keys, empty keys with
+allow-other-keys, rest with aliased keys, a four-capture grandchild and an
+uninterned capture name, and all ten generated modules assemble; a non-keyword
+key name is refused at source admission. No defect. Observations: top-level
+function objects receive their metadata words from the owner's
+materialization, not from generated code; entry validation is a per-call cost
+that checks fixed counts but not key vectors; non-keyword key names never reach
+an arity record. Record only; acceptance of the slot is the user's decision.
