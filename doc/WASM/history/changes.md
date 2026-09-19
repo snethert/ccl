@@ -2528,3 +2528,31 @@ The user directed “Accept, integrate and proceed” after Claude audit 101. Th
 ## 2026-09-19 — qualify LL11-b empty generic dispatch
 
 Generated method add/remove/replacement now recomputes direct or table dispatch, and empty publication selects the missing-method entry through both direct stores and an encapsulated setter. An invocation guard also defeats later stale stores. The real U1 condition layout carries the generic callable and arguments; generated handlers, cleanup, resignalling and CONTINUE execute. Native direct and advised functions reproduce the stale-method defect, while the required no-applicable protocol is witnessed separately. A reverse-installation probe caught a universal-first selector error, now fixed and retained as a compiled regression. Thirty modules supply 144 invocations and 78 semantic comparisons at two placements, with nine compiled faults and eight registry refusals. The inherited condition corpus passes 184 comparisons, new native R6/R6a passes, and a fresh replay reproduces 1,076 deterministic files against 358 source pins. LL11-b is executed pending review; the initial T/EQL primary-method subset does not claim the complete CLOS MOP. Ledger: 14 accepted, 16 missing, one unreviewed.
+
+## 2026-09-19 — hundred-and-second Claude audit: LL11-a integration and LL11-b qualification reviewed
+
+Claude reviewed `46eed2f3` and `247acd8b` from the detached worktree. The
+integration commit adds the installer and range reader to the runtime
+byte-identically to the reviewed fixture and packet, changes no other source,
+binds the audit-101 commit and review hash, and moves the ledger to 14
+accepted. The LL11-b verifier replay from the detached worktree passed with
+1,076 identical deterministic files, 358 source pins and native R6/R6a of the
+exact proposal, equal to Codex's record; the assessment counts 30 modules, two
+placements, 144 invocations, 78 comparisons, 60 installations, eight registry
+refusals, nine compiled faults and the inherited 107-module, 184-comparison
+condition corpus. A probe compiled four extra corpus functions through the
+proposal compiler and drove them with the corpus at both placements: a handler
+re-entered after CONTINUE that installs a wrong-key method first and the right
+one second; an `error` clause catching the new condition while a `type-error`
+clause does not; construction and both readers without signalling; a raw store
+with a non-empty registry; a poke of the direct cell while encapsulated; and a
+reader applied to a cons. All agree with Common Lisp semantics; the last
+refuses at the code-4 boundary. No defect. Observations: the correction lives
+in the fixture's generated dispatch model, not in CCL's `l1-dcode.lisp`, whose
+stale-dcode publication remains the retained native defect; the guard covers
+only the empty registry, so a stale store with a non-empty registry still runs
+the stale code, as the scope states; the private readers refuse non-instance
+arguments at the code-4 boundary rather than as a handleable error; the
+registry check changes bytes of every condition-using module, so the inherited
+corpus is re-executed semantically rather than compared byte-for-byte. Record
+only; acceptance is the user's decision.
