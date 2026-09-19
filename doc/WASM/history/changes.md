@@ -2367,3 +2367,30 @@ The user directed “Accept, integrate and proceed” after Claude audit 96. The
 ## 2026-09-19 — qualify generated temporaries and local loops (LL06-a)
 
 The isolated compiler admits PROG2 through U1 expansion and local TAGBODY/GO through real IR. Ordered segments execute in a Wasm loop; addressed exits unwind cleanups and bindings before GO resumes, with tag joins by IR identity. Thirty literal expectations are independently checked natively before 120 target comparisons and 300 legal collections, covering normal, nonlocal and fatal paths. Eight recompiled faults include changed local allocation, lost retained roots and a branch that skips unwinding; eight source refusals, six publication controls and twelve role omissions pass. Native R6/R6a passed for the exact proposal (162 unchanged/164 restored FASLs, 21,843 tests); the accepted collector is unchanged. All 152 inherited WAT/Wasm files are identical. The fresh retained verifier reproduces 1339 deterministic files at 284 source pins. First failing inputs and diagnostic/count corrections are retained. Eleven accepted records remain unchanged. Ledger: 11 accepted, 19 missing, one unreviewed. Each GO currently costs an exception; cross-function GO remains refused.
+
+## 2026-09-19 — ninety-seventh Claude audit: LL18-a integration and LL06-a qualification reviewed
+
+Claude reviewed `16bb8557` and `85b2894a` from the detached worktree. The
+integration commit's collector and owner equal the reviewed LL18-a proposal by
+hash, the compiler and other runtime files are unchanged, and the acceptance
+record binds the audit-96 review file by hash and carries its three
+observations as exclusions. The LL06-a proposal admits PROG2 and same-function
+TAGBODY/GO: the source validator scopes tags per TAGBODY and clears them at
+every nested function, TAGBODY emits a Wasm loop of source-order segments
+inside the reviewed addressed-exit frame, and GO stores its segment index in an
+untagged local, zeroes the record's value count and raises the same exit that
+RETURN-FROM uses, so cleanup, binding and control extents retire before the
+next segment. The verifier replay passed with 1,339 deterministic files and 284
+source pins and a native R6/R6a pass for the exact proposal, equal to Codex's
+record; packet, results envelope, combined results, catalog and source index
+hash as indexed; both ledger tools pass with 11 accepted, 19 missing and one
+unreviewed variant. Ten adversarial probes through the unit's harness (GO out of
+BLOCK and through UNWIND-PROTECT, RETURN-FROM and THROW across a TAGBODY, GO from
+a HANDLER-CASE clause, a loop under pending MULTIPLE-VALUE-PROG1 values, GO from
+a LET* initform and from a staged call argument, a special variable rebuilt
+across iterations, and a backward GO issued from a cleanup form) agree with
+native CCL below and above 2 GiB, with and without collection. No defect.
+Observations: closed GO from nested functions is refused at admission though
+native CCL supports it; every iteration re-establishes the exit frame and every
+GO costs an exception; the backend's tag map relies on the validator's
+cross-function refusal. Record only; acceptance of the slot is the user's decision.
