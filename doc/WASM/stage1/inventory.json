@@ -474,8 +474,8 @@
           "description": "Removing the last method of a generic function leaves no stale dispatch code: a subsequent call signals NO-APPLICABLE-METHOD through the condition path instead of running the removed method, reproducing and correcting the U1 defect retained in stage0/dispatch-registry.md; direct dcode stores and the encapsulated setter are covered."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/generic-dispatch/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

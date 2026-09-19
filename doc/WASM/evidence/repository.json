@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "400657259c28cb86a06b6e5bc66ec680032c2df589751e94d8b219053a7a55c2",
-  "commit": "91a1d8093d7f61ce824a7a152ea9c507967685c9",
-  "immutable_evidence_files": 225027,
+  "catalog_sha256": "1f59861e57b8867d5a37c7afd854e7868957aba85847d95ac9665a6d1f412c87",
+  "commit": "a6eb4b5a6d6081c8bfeca3dad876a0540a4ba3be",
+  "immutable_evidence_files": 225191,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-ll11a-acceptance-r1",
-    "files": 54,
-    "bytes": 6078944
+    "directory": "2026-09-19-stage1-generic-dispatch-r1",
+    "files": 164,
+    "bytes": 30688729
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 25508,
+  "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:14 accepted,17 missing,zero unreviewed.",
-  "source_index_sha256": "2738046e74342d72f965a64d567800e82a68439de9b80dccaac5130ae96d7e79",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll11a-acceptance.json",
-  "verification": "Unchanged acceptance producer; thirteen prior records preserved; installer and range reader byte-equal to reviewed proposal. Incremental catalog only.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 14 accepted, 16 missing, one unreviewed. LL11-a installer integrated; LL11-b empty dispatch qualified and pending review.",
+  "source_index_sha256": "384f7d76b4acff4a2c9aed8792a564c251d54ee727e00470919d5e7e6b0e61d4",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-generic-dispatch.json",
+  "verification": "Fresh replay PASS: 1,076 identical deterministic files, 358 source pins; exact new compiler native R6/R6a. Scoped catalog append with prior records preserved.",
   "version": 1
 }

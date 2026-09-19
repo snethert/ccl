@@ -1,0 +1,12 @@
+{
+  "S1-LL11-b:empty-registry": {
+    "status": "PASS",
+    "native_defect_and_required_protocol": ["oracle.lisp:real native generic function, method removal and ADVISE", "execution/compiled/native-behavior.json:removed method values versus explicit NO-APPLICABLE-METHOD", "assessment.py:reject hiding the native defect"],
+    "generated_removal_and_dispatch": ["runtime.lisp:gd_remove, gd_recompute, gd_update, gd_body", "execute.mjs:last method removed and empty dcode publication checks for direct and table histories"],
+    "direct_and_encapsulated_stores": ["runtime.lisp:gd_update, gd_set_encapsulated, gd_raw_store", "execute.mjs:both modes retain the stable callable, trace the envelope and reject stale dispatch execution", "execution/mutants/retain-last-dcode/execution.log", "execution/mutants/omit-empty-guard/execution.log", "execution/mutants/wrong-encapsulated-cell/execution.log"],
+    "condition_path": ["condition.lisp:rooted constructor and typed GF/ARGS readers", "class-shapes.lisp:native slot derivation", "runtime.lisp:gd_missing CONTINUE, gd_probe, gd_cleanup, gd_resignal, gd_decline", "execution/compiled/native-flow.json", "execution/mutants/lose-condition-gf/execution.log", "execution/mutants/lose-condition-args/execution.log"],
+    "method_replacement": ["runtime.lisp:gd_add and gd_table", "execution/compiled/native-order.json", "execution/mutants/universal-first/execution.log"],
+    "qualification": ["qualification/summary.json", "execution/compatibility/summary.json", "assessment/controls.json", "role-controls.json"],
+    "locator_rule": "execution/ names members of execution.tar.gz. All new sources and native U1 anchors are in source.tar.gz; full join inputs are assessment/inputs.json."
+  }
+}

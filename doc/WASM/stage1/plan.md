@@ -104,8 +104,13 @@ The [LL11-a aliases and redefinition qualification](../../../tests/wasm/stage1/b
 now validates complete package-qualified binding manifests and publishes fresh
 code slots transactionally, keeping saved functions and environments callable.
 The compiler is unchanged; the owner installer is accepted and integrated after audit 101.
-Next: LL11-b generic dispatch and the empty-registry
-condition. LL18-b hash-table movement remains an independent obligation.
+The [LL11-b empty-dispatch qualification](../../../tests/wasm/stage1/generic-dispatch/README.md)
+now executes generated method add/remove/replacement and direct/encapsulated
+publication, with NO-APPLICABLE-METHOD-EXISTS and CONTINUE through the condition
+path. The native stale-method result remains explicit negative evidence. This
+initial one-argument primary-method subset is isolated pending review.
+Next after acceptance/integration: LL16-a numeric operations under D6. LL18-b
+hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps
