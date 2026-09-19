@@ -2283,3 +2283,19 @@ The user answered “yes” to accepting and integrating the owner after Claude 
 ## 2026-09-19 — retry internal generated allocations at the owner boundary
 
 The isolated compiler proposal opts CONS, captured cells, closures and rest-list construction into a synchronous owner capability. Only shortage enters the service; allocation and operand addresses reload afterwards, and no service call occurs during construction/publication. Forty-one modules pass 189 native comparisons over seven heap configurations (including above 2 GiB), plus a checked resource refusal after movement whose cleanup still mutates the live object. The execution records 302 collections and 68 growths; six compiled mutants reject. Default compilation matches the accepted backend on 129 Wasm/WAT files. Native R6/R6a passes (162 unchanged and 164 restored FASLs, 21,843 tests). Fresh retained replay reproduces 1214 deterministic files with 219 source pins. Original failed controls and fixture attempts are retained. Binding-vector, restart and condition slow paths and lazy-loader capability admission remain open. Shared source stays at the accepted owner/live collector; no LL06/LL18 slot is claimed. The STATUS owner row is corrected from Claude’s reviewed wording to the acceptance already recorded in 334e9914.
+
+## 2026-09-19 — ninety-fourth Claude audit: owner integration and internal allocation retry reviewed
+
+Claude checked Codex's `334e9914` (owner acceptance and integration: the
+runtime owner module equals the reviewed fixture source; compiler, collector,
+loader and stub unchanged) and reviewed `0653f1f4` (auxiliary packet
+`STAGE1-ALLOCATION-RETRY-R1` at evidence commit `78c16d14`) from a detached
+worktree: the verifier reproduced all 1,214 deterministic files and 219 pins,
+the native R6/R6a record, 189 native comparisons, the failure-after-movement
+case, six compiled mutants and the 129-file default-mode identity; a probe of a
+pending-multiple-values case passed in all seven heap configurations. No
+defect. Observations, none a defect: the retry harness gives no binding index
+to the condition-system specials, so condition and restart cases cannot be
+composed with the owner there; the three raw constructor paths still refuse
+on exhaustion; the owner service refuses when entered from inside a boundary.
+Record only; acceptance is the user's decision.
