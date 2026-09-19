@@ -2451,3 +2451,7 @@ agree with native CCL below and above 2 GiB with and without collection. No
 defect. Observations: closed TAGBODYs pay a catch frame and an exit frame and
 each closed GO is a THROW; the proof is all-or-nothing per TAGBODY; the evidence
 index was re-serialized. Record only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate closed GO and ordinary loop branches
+
+The user directed “Accept, integrate and proceed” after Claude audit 99. The integrated compiler equals the reviewed proposal and generator byte for byte; every runtime file is unchanged. The integration carries the catch-plus-exit-frame cost of closed transfers and all-or-nothing branch proof, without a speed claim. The evidence index retains its existing serialization. No slot credit; ledger remains 12 accepted,19 missing,zero unreviewed. Callable metadata qualification is next.

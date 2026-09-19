@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-19T21:59:06.556323+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "review_commit": "9b3999e4329e86d3ef7768bda2af1c80dd27dc2e",
+  "review": "Claude audit 99; no defect in de589073.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "1e8dfb82584f1d918be525767bdf67d28cc5d9f48fff3a5750e9b56d8456ef15",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "579bd157c44cc39b9a90ef0f5ed3ab6c210a4cb58d52fadf597326460e192d09",
+      "after": "7fc03d629827770c976ccbe63e108431db653147231f6ab99ff08540efa56839",
+      "proposal_locator": "2026-09-19-stage1-closure-transfers-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-closure-transfers-r1/packet.json",
+      "sha256": "9043f94199aa9829ebd435a2d85ec221bc060004c25b0c7a9d974dfd1b6ff70d"
+    }
+  ],
+  "previous_integration": "integration-ll06.json",
+  "previous_integration_sha256": "ec804292f26221e6ebfe5eba80d6e9632c21754d91b27318063d14a3a71eb7e7",
+  "scope": "Exact reviewed closed-GO and ordinary-branch proposal; auxiliary only, no LL12 credit.",
+  "observations": [
+    "Closed-tag TAGBODY uses a catch frame plus an exit frame; every closed GO is a THROW resolved by catch search. No speed claim applies to closed transfers.",
+    "Branch eligibility is all-or-nothing per TAGBODY. One foreign-target or framed GO retains the unwind path for all of its GOs; per-GO classification is future work.",
+    "Evidence index edits preserve the existing key order and serialization; no bulk re-serialization accompanies integration."
+  ],
+  "verification": "Retained compiler equals generator and integrated bytes. Reviewed native R6/R6a and independent replay cover exactly these bytes.",
+  "reverse": "Restore compiler to the recorded before hash."
+}

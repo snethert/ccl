@@ -94,7 +94,9 @@ roots and live-target identity. Expired-target refusal is separately scoped as
 a target safety guarantee. Eligible ordinary loops now use Wasm branches with
 no control-record or exit-exception instructions; a conservative IR proof keeps
 operand, nested-loop and pending-extent transfers on the reviewed unwind path.
-The proposal is auxiliary and awaits review/integration. The next LL12 work is
+The proposal is accepted and integrated after audit 99. Closed transfers still
+use both catch and exit frames and a catch-search THROW; branch eligibility is
+all-or-nothing per TAGBODY. The next LL12 work is
 callable arity, keyword-vector and debug metadata through installation: those
 function-object fields are still NIL, so no LL12 qualification is claimed.
 
