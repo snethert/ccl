@@ -4391,6 +4391,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "acceptance": "USER_ACCEPTED_AUXILIARY",
       "integration": "doc/WASM/stage1/integration-allocation-retry.json"
+    },
+    {
+      "id": "STAGE1-CONSTRUCTOR-RETRY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-constructor-retry-r1/packet.json",
+      "sha256": "58bd94d3725c14ccec5e0cd1e5080d434d0373c129ad4c4b59dc824e98624107",
+      "scope": "Opt-in binding-vector, restart and condition allocation retry with rooted operands/cursors and reloaded addresses. 74 generated modules; 301 native comparisons in ordinary and forced-constructor modes, 302 identical cold-loader observations, six nested-boundary refusals, eight compiled mutants and 22 loader checks. Default-mode comparison: 228 identical Wasm/WAT files. Native R6/R6a PASS; owner/C unchanged. No LL06/LL18 credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

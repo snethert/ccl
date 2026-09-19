@@ -75,9 +75,12 @@ The [internal retry proposal](../../../tests/wasm/stage1/allocation-retry/README
 now connects fixed heap construction and rest lists to the owner, with rooted
 operands, reloaded addresses, failure after movement and native R6/R6a tested.
 It is accepted, integrated and opt-in; the current lazy loader refuses its new service
-capability. Next: qualify binding-vector, restart and condition allocation slow
-paths and admit the owner capability in the loader; complete LL18 and then the
-LL06 temporary/control matrix.
+capability. The [constructor and loader proposal](../../../tests/wasm/stage1/constructor-retry/README.md)
+now retries binding-vector, restart and condition allocation, roots their live operands and PROGV cursor,
+and admits the owner import under an explicit profile. It remains pending review.
+Next: qualify LL18-a across all declared root populations (including constants,
+callbacks and registries), maximum-memory refusal and reclaim accounting, then
+finish the LL06 temporary/control matrix. Hash-table movement is LL18-b.
 
 
 ## What Stage 1 delivers
