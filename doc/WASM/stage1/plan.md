@@ -71,9 +71,13 @@ handlers. It is accepted and integrated after Claude’s ninety-second audit. Th
 now executes explicit image/callback/registry/host and TCR root admission,
 collection before allocation growth and refreshed host views, including real
 memory growth beyond 2 GiB. It is accepted and integrated after Claude’s ninety-third audit.
-Next: connect generated internal allocation slow paths to the owner boundary
-with rooted operands and reloaded addresses, qualify LL18, then finish the
-complete LL06 temporary/control matrix.
+The [internal retry proposal](../../../tests/wasm/stage1/allocation-retry/README.md)
+now connects fixed heap construction and rest lists to the owner, with rooted
+operands, reloaded addresses, failure after movement and native R6/R6a tested.
+It is opt-in and pending review; the current lazy loader refuses its new service
+capability. Next: qualify binding-vector, restart and condition allocation slow
+paths and admit the owner capability in the loader; complete LL18 and then the
+LL06 temporary/control matrix.
 
 
 ## What Stage 1 delivers

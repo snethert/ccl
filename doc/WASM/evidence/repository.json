@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b50a189851274314957a3ffe25adc05ccadd59a1",
+  "commit": "78c16d14d1ade814b9e9a5d8e58153aa070939e0",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1353d435ded5b95bb983dbe25b86a1d4a778e2c3efda030d978f99a4de93e79a",
-  "immutable_evidence_files": 224310,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-owner.json",
-  "source_index_sha256": "2354c817bb2f6a337ad934ab28528bc7b23f7df610f56eb7cd0075928114a44d",
-  "verification": "Fresh retained replay PASS: 41 deterministic files, 206 source pins; eight owner mutants and generated/native composition. Unchanged native qualification reused; scoped catalog addition only.",
+  "catalog_sha256": "af893c2c94fa45ff476d38568c51e0f990a35d5d2a8e70b87b0515aad70b7743",
+  "immutable_evidence_files": 224369,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-allocation-retry.json",
+  "source_index_sha256": "3e20349d1015cbe8f83fbe97bfb497e0bbfdd0023736a33f5673d85f8d2d67a3",
+  "verification": "Fresh retained replay PASS: 1214 deterministic files, 219 source pins; final native R6/R6a, six compiled mutants and default-mode compatibility. Scoped catalog addition only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Moving restarts/temporary follow-up accepted and integrated; owner admission/growth auxiliary pending review. No new inventory credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Collector owner accepted and integrated; internal allocation retry auxiliary pending review. No new inventory credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-collector-owner-r1",
-    "files": 12,
-    "bytes": 1897543
+    "directory": "2026-09-19-stage1-allocation-retry-r1",
+    "files": 59,
+    "bytes": 40456988
   },
   "prior_indexed_references_verified": 19055
 }
