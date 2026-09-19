@@ -2095,3 +2095,24 @@ limit and native-oracle cancellation status, plus loader-owner adaptation errors
 Published STAGE1-CONTROL-R1 as NOT_REVIEWED. Eight accepted result objects remain
 unchanged; ledger is BLOCKED at 8 accepted, 22 missing, 1 unreviewed. No acceptance
 is inferred. The earlier APPLY-only packet is retained as a superseded prerequisite.
+
+
+## 2026-09-19 — eighty-eighth Claude audit: generated LL19 control and recovery reviewed
+
+Claude reviewed `3eddbe69` (S1-LL19-a, packet
+`ccl-evidence/2026-09-19-stage1-control-r1` at evidence commit `99f30846`)
+from a detached worktree. The retained verifier replayed to PASS with 7,592
+deterministic files identical to the packet, 152 source pins, and the native
+R6/R6a qualification reproduced (21,843 native tests, 162 unchanged and 164
+restored FASLs); its record equals the packet's own. A four-case probe through
+the unit's runner (a declining handler before the hook, the hook reading the
+condition's datum, a restart invoked from the hook across a cleanup, and a
+bounds error reaching the hook) agreed with native CCL on all 16 comparisons.
+No defect. Three observations for integration, none a defect: the debugger
+depth and the reserve flag live in the TCR words the schema names scratch0 and
+scratch1, which no other emitter uses today but which should become named
+fields; one reserve flag serves all three stacks; and no executed case reaches
+the declined or unhandled path in ordinary error-service mode, so the
+structured fatal record is only demonstrated in bootstrap mode. Acceptance is
+the user's decision; the ledger is unchanged at 8 accepted, 22 missing and 1
+unreviewed.
