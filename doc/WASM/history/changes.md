@@ -2307,3 +2307,25 @@ The user directed “accept, integrate and proceed” after Claude audit 94. The
 ## 2026-09-19 — retry raw constructors and admit the owner capability
 
 The isolated proposal adds shortage-only owner retry to binding-vector growth, restarts and implicit conditions. Binding records root new values before growth; PROGV validates symbols without allocation and roots its advancing values cursor. Constructors reload operands after assurance. The condition/restart harness now has binding indices and native-derived class shapes. Seventy-four generated modules pass 301 native comparisons in both ordinary and forced-shortage modes, with 539 and 744 collections respectively; cold loading reproduces all 302 ordinary observations, including failure after movement. Six nested-owner refusals, eight compiled faults and 22 loader checks pass. The explicit new profile permits only the owner-bound ensure function and accounts for imported function indices, while the old profile remains unchanged. Default compilation matches on 228 Wasm/WAT files. Native R6/R6a passes with 162 unchanged and 164 restored FASLs; the registered suite passes 21,843 tests and reuses the accepted baseline. Fresh retained replay reproduces 3944 deterministic files with 235 pins. Original failed fixture and control attempts are retained. Shared source remains at the reviewed internal-retry unit; no LL06/LL18 slot is claimed.
+
+## 2026-09-19 — ninety-fifth Claude audit: retry integration and raw constructor retry reviewed
+
+Claude reviewed `321392e2` and `5cfa55a9` from the detached worktree. The
+integration commit's backend and allocation service equal the retained
+allocation-retry proposal by hash, and the owner, C collector, loader, reader
+and stub are unchanged. The raw constructor proposal is derived from the
+integrated backend by anchored replacement, gated by the same opt-in special;
+its verifier replay passed with 3944 deterministic files and 235 source pins,
+equal to Codex's record, and the evidence packet, catalog and source index hash
+as indexed. Eleven adversarial probes through the unit's harness (parallel LET
+with two heap-valued specials, a special lambda parameter, pending call
+arguments, pending values and pending MULTIPLE-VALUE-PROG1 values across
+binding growth, repeated and short-values PROGV, RESTART-BIND with growth, a
+handler inside a binding and a declining handler that grows the vector while
+the condition is live) agree with native CCL in seven heap configurations under
+ordinary and forced-shortage modes, with lazy-owner replays. No defect.
+Observations: the soft stack-limit signal's non-resumption is now load-bearing
+for values held in Wasm locals across frame reservation; binding growth on a
+malformed allocation pointer refuses with code 6 rather than 3 only under the
+opt-in profile; loader admission is trusted-owner identity, as the README says.
+Record only; acceptance is the user's decision.
