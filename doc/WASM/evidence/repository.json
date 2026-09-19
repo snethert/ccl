@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "f4bb0f9f9b2d0d3bac30c782156473d6e58f91f9",
+  "commit": "505d37d14445a8f85fc707f60f827de92de4a460",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "77943ab3158a5329abb63bce43cb6e1076115da8be0ce1212872647fe28bd84c",
-  "immutable_evidence_files": 224237,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-core.json",
-  "source_index_sha256": "cfd2765aa5f6339159b4b9d7d7d6bde4f593cdb9b9c07195b03532193b2c18b7",
-  "verification": "Collector retained replay: 2499 deterministic files, 189 source pins, native R6/R6a, generated collection, core and compiler controls, inherited/lazy all PASS. Existing evidence unchanged; incremental catalog only.",
+  "catalog_sha256": "26659b5d9c8045f8e770ab1696900900ac1afdd107a49d9fa9fac33d446ff2b9",
+  "immutable_evidence_files": 224298,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-live.json",
+  "source_index_sha256": "68254bd2d58add08e13726fb1487b48a3b764446471689df36ef353e425b7c31",
+  "verification": "Fresh retained replay PASS: 3337 deterministic files, 199 source pins; R6/R6a, moving/core controls and inherited/lazy. Scoped catalog addition only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Moving collector core is auxiliary, pending review; no LL18 credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 21 missing, zero unreviewed. Collector core accepted and integrated; moving restarts/temporary follow-up auxiliary pending review. No new inventory credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-collector-core-r1",
-    "files": 59,
-    "bytes": 61458531
+    "directory": "2026-09-19-stage1-collector-live-r1",
+    "files": 61,
+    "bytes": 72112897
   },
   "prior_indexed_references_verified": 19055
 }

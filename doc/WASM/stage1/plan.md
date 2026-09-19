@@ -64,8 +64,13 @@ prerequisite). The [collector core](../../../tests/wasm/stage1/collector-core/RE
 executes `v_many`, uses a non-growing unbind lookup, and moves live objects at
 explicit poll-service entries. Movement exposed cached capture/self addresses;
 the accepted integrated core reloads both through rooted SELF. It has no LL18 credit.
-Next: admit live restart objects and exercise temporaries across actual movement,
-then complete owner root admission and allocator retry/growth for LL18 and LL06.
+The [movement follow-up](../../../tests/wasm/stage1/collector-live/README.md) now
+admits the emitted restart layout and fixes three actual stale-reference paths:
+EQ operands, captured initializers and implicit conditions across declining
+handlers. Its native-first movement corpus and controls pass; integration awaits
+independent review. Next: complete owner root admission (including image, callback
+and registry roots), allocator retry and growth/view refresh for LL18, then finish
+the complete LL06 temporary/control matrix.
 
 
 ## What Stage 1 delivers

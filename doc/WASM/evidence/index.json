@@ -4355,6 +4355,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "review_commit": "67f243c79d603389a1bc0530bfff1da875d319c8",
       "integration": "doc/WASM/stage1/integration-collector-core.json"
+    },
+    {
+      "id": "STAGE1-COLLECTOR-LIVE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-collector-live-r1/packet.json",
+      "sha256": "8a7d813201c6f3457b855f2e00daa144e1b33a6fa78b7ef87165582d8e153120",
+      "scope": "Moving restart/temporary proposal: 63 modules, 120 native comparisons, 62 collections; inherited movement 56 comparisons/34 collections; 95 core checks, four compiler and five C mutants. EQ roots, captured initializer address order, implicit condition root, restart layout and canonical T scanner correction. Native R6/R6a and inherited/lazy PASS. No LL06/LL18 credit; shared implementation remains accepted collector core.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
