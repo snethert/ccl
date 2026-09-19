@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-19T20:58:43.740489+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "review_commit": "9f8e811e8530fa3617a9302ae61446fca4ad014d",
+  "review": "Claude audit 96; no defect.",
+  "acceptance": "acceptance-ll18.json",
+  "acceptance_sha256": "093c8a0e42374fb225e737fb58f6fc01c87c3ef408076ba61534c1012e10300b",
+  "files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "before": "8af4e9018c8fd1d55ecd34e2accce38c28df874e56420677ccf168a43cb01ee5",
+      "after": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3",
+      "proposal_locator": "2026-09-19-stage1-collector-qualification-r1/collector.c"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "before": "e6988e248d0564d408e3ac46449013fca07f22f24edb276daa9fec92ac7fe15d",
+      "after": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761",
+      "proposal_locator": "2026-09-19-stage1-collector-qualification-r1/collector-owner.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "3fe47a6cf954a9afb2084529a080798e0db9558a018700dda76afc579da1289b"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-collector-qualification-r1/packet.json",
+      "sha256": "154251522b62b0c4fd9758b42ddba19d5131eead5005c2df59078a6aba0f7006"
+    }
+  ],
+  "previous_integration": "integration-constructor-retry.json",
+  "previous_integration_sha256": "fba1eac21264121d2b079893b3e989327ac216d567b78f18e0bad986dd30612f",
+  "scope": "Exact reviewed LL18-a raw layout tables. No additional runtime or compiler edits.",
+  "observations": [
+    "The admitted complex layouts are node complex objects and complex-float vectors. Scalar boxed complex floats and macptrs are not admitted and refuse collection.",
+    "The moving literal matrix skips four argument-taking pool modules and does not move the literal-mutation persistence probe. Those paths were compared natively in the accepted constants unit; they are not additional movement claims here.",
+    "The reused owner oracle executes 40 of 41 checks. Its generated-boundary check needs a compiled-directory argument; this unit exercises that boundary through the generated retry corpus."
+  ],
+  "verification": "Collector and owner equal retained proposal and pre-integration generator. Reviewed producer and independent replay qualify these exact bytes; compiler unchanged.",
+  "reverse": "Restore both runtime files to their recorded before hashes."
+}

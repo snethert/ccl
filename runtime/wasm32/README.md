@@ -59,3 +59,11 @@ transfers or fails. Frame/binding emitters may hold an unstaged value in a Wasm
 local across that guard; a returning handler must not resume it after collection.
 Assurance may move roots before refusing, and never executes Lisp or changes
 binding-vector shape. Malformed-owner refusals may use code 6 rather than 3.
+
+LL18-a is accepted and integrated; see [the integration record](../../doc/WASM/stage1/integration-ll18.json).
+The scanner admits node complex objects and complex-float vectors, but refuses
+scalar boxed complex floats and macptrs. Audit 96 independently checked all raw
+widths. The accepted literal movement matrix excludes the argument-taking pool
+modules and literal-mutation persistence case; the full scope travels with the
+acceptance. Owner replay has 40 admission checks; generated retry covers its
+omitted standalone generated-boundary check.

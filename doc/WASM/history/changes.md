@@ -2359,3 +2359,7 @@ complex floats and macptrs are not admitted and the literal corpus holds
 complex-float vectors only; the moving literal check skips the four
 argument-taking pool modules; the reused owner oracle runs 40 of its 41 checks.
 Record only; acceptance of the slot is the user's decision.
+
+## 2026-09-19 — accept and integrate LL18-a
+
+The user directed “Accept, integrate and proceed” after Claude audit 96. The acceptance binds that review and preserves all ten earlier accepted result objects. The collector and owner are byte-identical to the reviewed proposal, with compiler and other runtime files unchanged. Scope distinguishes node complex/complex vectors from excluded boxed complex floats and macptrs, records the argument-taking literal movement exclusions, and explains the 40-check owner replay. Ledger: 11 accepted,20 missing,zero unreviewed. LL06 temporary/control qualification is next.

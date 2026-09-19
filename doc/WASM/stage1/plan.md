@@ -81,7 +81,7 @@ and admits the owner import under an explicit profile. It is accepted and integr
 [LL18-a qualification](../../../tests/wasm/stage1/collector-qualification/README.md)
 now executes those declared root populations, specialized literal layouts,
 maximum-memory refusal and independent reclaim accounting. The C/owner proposal
-and slot await review and acceptance. Next: finish the LL06 temporary/control
+and slot are accepted and integrated after audit 96. Next: finish the LL06 temporary/control
 matrix; hash-table movement remains LL18-b.
 
 

@@ -35,13 +35,19 @@ static Update *updates(State *s) { return (Update *)(unsigned long)s->log; }
 static U node_subtag(U t) {
  return t==10||t==26||t==42||t==58||t==106||t==114||t==250;
 }
+/* Header counts are 24 bits; even 16-byte elements fit U arithmetic. */
 static U raw_bytes(U tag,U n) {
  switch(tag) {
- case 7: case 15: case 191:return n*4;
- case 215: case 223:return n*2;
- case 231:return 4+n*8; /* padded header before double elements */
- case 23:return n==3?12:0; /* D1 double: alignment word + two payload words. */
- default:return 0;
+ case 7:return n?n*4:0xffffffffu;
+ case 15:return n==1?4:0xffffffffu;
+ case 23:return n==3?12:0xffffffffu;
+ case 159:case 167:case 175:case 183:case 191:return n*4;
+ case 199:case 207:return n;
+ case 215:case 223:return n*2;
+ case 231:case 239:return 4+n*8;
+ case 247:return 4+n*16;
+ case 255:return (n+7)/8;
+ default:return 0xffffffffu;
  }
 }
 static U find(State *s,U p) {
@@ -119,7 +125,7 @@ EXPORT U collect(U config) {
   header=LOAD(p);tag=header&255;n=header>>8;scan=0xffffffffu;size=8;
   if((tag&7)==2||(tag&7)==7){
    if(node_subtag(tag)||(tag==130&&n==6)){scan=n;size=4+(W)n*4;}
-   else {bytes=raw_bytes(tag,n);if(!bytes && !((tag==191||tag==215||tag==223)&&n==0))return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
+   else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;
   }
   if(size>(W)s->used-p)return reject(s,BAD_OBJECT);

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-19T20:58:39.502732+00:00",
+  "authorization": {
+    "quote": "Accept, integrate and proceed",
+    "provenance": "User to Codex following Claude audit 96, no defect in c6d68682."
+  },
+  "review_commit": "9f8e811e8530fa3617a9302ae61446fca4ad014d",
+  "review_sha256": "1ca4934f4ca8502ae70c06b61da4d5ede03fd366470bb601b3ee84d7895d224d",
+  "source_report_sha256": "59663737f38d1ed3db6b05da9843cb830d6f822f67d91c77ea68384a4b0563b3",
+  "scope": "Accept S1-LL18-a at the reviewed single-Worker generated small-heap scope.",
+  "exclusions": [
+    "The admitted complex layouts are node complex objects and complex-float vectors. Scalar boxed complex floats and macptrs are not admitted and refuse collection.",
+    "The moving literal matrix skips four argument-taking pool modules and does not move the literal-mutation persistence probe. Those paths were compared natively in the accepted constants unit; they are not additional movement claims here.",
+    "The reused owner oracle executes 40 of 41 checks. Its generated-boundary check needs a compiled-directory argument; this unit exercises that boundary through the generated retry corpus.",
+    "EGC is unavailable and admission refuses it. Weak objects and hash-table relocation semantics remain outside this object allowlist; hash tables have the separate LL18-b slot.",
+    "Callbacks are generated closure objects in explicitly declared owner registry slots, invoked after movement. This does not qualify the future external callback installer.",
+    "The owner trusts its root manifest and authenticated module catalog. It is not a conservative scanner or a sandbox for forged owner data.",
+    "Growth appends fresh semispace pairs; retired space is not reused. An unsuccessful assurance may have moved valid roots before refusing.",
+    "A signalling stack guard never resumes the interrupted reservation. Owner assurance never executes Lisp or changes binding-vector shape.",
+    "Unknown object layouts refuse collection. General temporary/control transfer qualification remains LL06-a; this slot replays the reviewed explicit-poll cases as its root evidence."
+  ],
+  "records": [
+    {
+      "id": "S1-LL18-a",
+      "variant": "small-heap",
+      "test_revision": "eba1cbd75f0738ffb476a95430598ae6a3cb02e814e3221bcee9cfd6c488d880",
+      "contract_sha256": "4e190e17a7df8920ab3a1e090382244b20b37b63b5982ffc1e3dad87903e7e4e",
+      "scope": "Reviewed LL18-a, Claude audit 96."
+    }
+  ]
+}

@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b1607180b966bdfed46e9222cd9d93f4a7640b98",
+  "commit": "5c26bcd9f54b0143b2e154a77f0018e103db34e3",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "fb6100d8070ef9e4ed3dc9f1e1febb149fc880edd5be0e17b5bc117d8ba5d717",
-  "immutable_evidence_files": 224465,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-collector-qualification.json",
-  "source_index_sha256": "975eb48de27487c97033e4cdbacb519d6de56d5d342e330d18e326a4630680fd",
-  "verification": "Fresh retained replay PASS: 661 deterministic files, 267 source pins. Exact reviewed compiler reuses native R6/R6a; C/owner mutants, generated moving roots, cold loading and publication controls rerun. Scoped catalog addition only.",
+  "catalog_sha256": "cc84711c6bd3289f4af4a9f31fc8b88399ab2617ad123158e921ae1b806bab40",
+  "immutable_evidence_files": 224502,
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll18-acceptance.json",
+  "source_index_sha256": "2e03163c1363549622a04b03a2e55f0cf28702c84217f2b8c163be28de41b857",
+  "verification": "Unchanged acceptance producer; ten prior records preserved; integration byte-equal to reviewed proposal. Incremental catalog only.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: 10 accepted, 20 missing, one unreviewed (S1-LL18-a). Constructor retry accepted/integrated; new collector/owner proposal awaiting review.",
+  "scope": "Stage 0:48 accepted. Stage 1:11 accepted,20 missing,zero unreviewed. LL18-a reviewed, accepted and integrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-collector-qualification-r1",
+    "directory": "2026-09-19-stage1-ll18-acceptance-r1",
     "files": 37,
-    "bytes": 13715721
+    "bytes": 10354578
   },
   "prior_indexed_references_verified": 19055
 }
