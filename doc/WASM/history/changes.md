@@ -2425,3 +2425,29 @@ The user directed “Accept and integrate and proceed” after audit 98. The acc
 ## 2026-09-19 — closed GO and ordinary-branch loop proposal
 
 The isolated compiler admits closed GO through U1's captured catch-tag lowering and selects ordinary branches only when no pending emitter frame is crossed. Native handlers, restart clauses, cleanup, bindings, shadowing, moving captures and live-target identity agree across 120 new comparisons/130 collections; accepted LL06 adds 120 comparisons/300 collections. Seven compiled mutants, six source refusals, nine instruction-shape checks and eight publication controls pass. Forty inherited nonloop WAT/Wasm files stay byte-identical. The exact proposal passes newly executed native R6/R6a and a fresh retained replay of 1301 deterministic files at 299 pins. Original failed probe/mutant attempts are retained, including a native out-of-extent stack-reuse case; it is not used as a semantic identity oracle. Shared compiler/runtime remain at accepted LL06. No LL12 credit: callable metadata remains open. Ledger unchanged:12 accepted,19 missing,zero unreviewed.
+
+## 2026-09-19 — ninety-ninth Claude audit: LL06-a integration and closed-GO proposal reviewed
+
+Claude reviewed `a4efeff7` and `de589073` from the detached worktree. The
+integration commit's compiler equals the reviewed LL06 proposal by hash, every
+runtime file is unchanged, and the acceptance record binds the audit-98 review
+file and carries the audit-97 and audit-98 observations as exclusions. The
+closed-GO proposal changes the compiler in three places: the source validator
+keeps the tag scope across nested lambdas so U1's own catch/throw lowering of a
+closed GO is admitted; GO to a branch-lowered tag becomes a Wasm branch; and a
+conservative IR proof selects branch lowering only when every GO is in
+statement, PROGN or IF-arm position and targets the same TAGBODY, with any other
+GO anywhere in the body sending the whole TAGBODY to the reviewed unwind path.
+The verifier replay passed with 1,301 deterministic files, 299 source pins and
+a native R6/R6a pass for the exact proposal, equal to Codex's record; packet,
+catalog and source index hash as indexed; both ledger tools pass with 12
+accepted, 19 missing and no unreviewed variant. Seven adversarial probes
+(branch loops whose statements open and close root frames, special bindings and
+moving allocations each iteration, RETURN-FROM leaving a branch loop through a
+cleanup, a closed GO thrown across a module boundary through a special extent,
+a closed GO crossing CATCH and HANDLER-CASE, a branch loop nested in a
+closed-tag TAGBODY, and a hundred-iteration closed loop collecting each time)
+agree with native CCL below and above 2 GiB with and without collection. No
+defect. Observations: closed TAGBODYs pay a catch frame and an exit frame and
+each closed GO is a THROW; the proof is all-or-nothing per TAGBODY; the evidence
+index was re-serialized. Record only; acceptance is the user's decision.
