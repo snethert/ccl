@@ -1,0 +1,9 @@
+{
+  "inventory_credit": false,
+  "closed_transfers": ["closed, closed_cleanup, closed_binding, closed_shadow, closed_outer, closed_mutable, closed_grandchild, closed_flet, closed_labels, closed_replace, closed_cancel, closed_nearest"],
+  "handlers_and_restarts": ["handler, restart, handler_cleanup, restart_binding"],
+  "target_safety": ["closed_expired; source admission refusals"],
+  "ordinary_branches": ["fast_loop at 0, 1 and 4000 iterations; fast_choices both arms; fast_fallthrough; fast_nested; fast_pending"],
+  "unwind_boundary": ["local_cleanup, local_binding, go_test, go_operand, go_pending; inherited LL06 matrix"],
+  "independent_checks": ["literal answers verified natively before compilation; shape.py; compatibility.py; seven compiled mutants; assessment.py negative controls"]
+}

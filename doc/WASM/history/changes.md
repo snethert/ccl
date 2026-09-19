@@ -2421,3 +2421,7 @@ record only.
 ## 2026-09-19 — accept and integrate LL06-a
 
 The user directed “Accept and integrate and proceed” after audit 98. The acceptance binds audits 97/98 and preserves all eleven earlier accepted result objects. The compiler equals the reviewed LL06 proposal byte for byte; all runtime sources are unchanged. The integration carries the closed-GO exclusion, loop cost and withdrawn tag-map observation. Ledger: 12 accepted, 19 missing, zero unreviewed.
+
+## 2026-09-19 — closed GO and ordinary-branch loop proposal
+
+The isolated compiler admits closed GO through U1's captured catch-tag lowering and selects ordinary branches only when no pending emitter frame is crossed. Native handlers, restart clauses, cleanup, bindings, shadowing, moving captures and live-target identity agree across 120 new comparisons/130 collections; accepted LL06 adds 120 comparisons/300 collections. Seven compiled mutants, six source refusals, nine instruction-shape checks and eight publication controls pass. Forty inherited nonloop WAT/Wasm files stay byte-identical. The exact proposal passes newly executed native R6/R6a and a fresh retained replay of 1301 deterministic files at 299 pins. Original failed probe/mutant attempts are retained, including a native out-of-extent stack-reuse case; it is not used as a semantic identity oracle. Shared compiler/runtime remain at accepted LL06. No LL12 credit: callable metadata remains open. Ledger unchanged:12 accepted,19 missing,zero unreviewed.

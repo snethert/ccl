@@ -1,21 +1,21 @@
 {
-  "version": 1,
-  "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "7d56f51dc83aae45fd3337ece7d7ccb4259a6d0b",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "a837879867cb7638fef09f9f59f1d55f3b0786d4a7b8e627f3f3fd3f6cad8bb6",
-  "immutable_evidence_files": 224635,
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll06-acceptance.json",
-  "source_index_sha256": "fe2ae454d570f9505f80790a6091e77a224911fd1dd315db45f1c15c605a0bf3",
-  "verification": "Unchanged acceptance producer; eleven prior records preserved; integration byte-equal to reviewed proposal. Incremental catalog only.",
-  "remote": null,
-  "off_machine_backup": false,
-  "scope": "Stage 0:48 accepted. Stage 1:12 accepted,19 missing,zero unreviewed.",
+  "catalog_sha256": "fc94aa8de079b4eff73dd0039aad9cbf0b8c5f2c5b70fe8722c4b28e092c5158",
+  "commit": "d3adf0bd72e3c5725d8ac210d80832427d72d590",
+  "immutable_evidence_files": 224719,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-ll06-acceptance-r1",
-    "files": 45,
-    "bytes": 24061311
+    "bytes": 32744829,
+    "directory": "2026-09-19-stage1-closure-transfers-r1",
+    "files": 84
   },
-  "prior_indexed_references_verified": 19055
+  "off_machine_backup": false,
+  "path": "/Users/buildsomething/Source/ccl-evidence",
+  "prior_indexed_references_verified": 19055,
+  "remote": null,
+  "scope": "Stage 0: 48 accepted. Stage 1: 12 accepted,19 missing,zero unreviewed. LL06 accepted/integrated; auxiliary closure-control proposal awaits review.",
+  "source_index_sha256": "efb9cd5af9ce24c43d4fb854750a41d6ae749a019b365a1451f1bcf47af4bbf2",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-closure-transfers.json",
+  "verification": "Fresh replay PASS: 1301 identical deterministic files, 299 source pins; exact new compiler native R6/R6a. Incremental catalog only.",
+  "version": 1
 }

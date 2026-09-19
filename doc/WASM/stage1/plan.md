@@ -87,22 +87,22 @@ now executes temporary lifetime, evaluation order and actual TAGBODY loops, with
 and slot are accepted and integrated after audits 97/98. Next:
 LL12-a closures and callable metadata; hash-table movement remains LL18-b.
 
-The LL12 implementation work will also cover closed GO through captured control
-state, including HANDLER-BIND handlers and RESTART-CASE clauses, with cleanup,
-binding restoration, moving roots and expired-target checks. This is planned
-additional coverage, not a change to LL12's adopted inventory assertion. LL06
-currently refuses closed GO. Its backend already binds `*b-local-tags*` to NIL
-in `b-one-module` for every function, including nested functions
-(`temporaries/backend.py`); the retained compiler confirms that reset at line
-1281 and the per-function emission at line 1636. This corrects audit 97's third
-observation without changing its review record or the reviewed compiler.
+The [closed-transfer proposal](../../../tests/wasm/stage1/closure-transfers/README.md)
+now executes closed GO through captured control state, including HANDLER-BIND
+handlers and RESTART-CASE clauses, with cleanup, binding restoration, moving
+roots and live-target identity. Expired-target refusal is separately scoped as
+a target safety guarantee. Eligible ordinary loops now use Wasm branches with
+no control-record or exit-exception instructions; a conservative IR proof keeps
+operand, nested-loop and pending-extent transfers on the reviewed unwind path.
+The proposal is auxiliary and awaits review/integration. The next LL12 work is
+callable arity, keyword-vector and debug metadata through installation: those
+function-object fields are still NIL, so no LL12 qualification is claimed.
 
-Loop lowering also needs an ordinary-branch path: avoid per-iteration control
-records and per-GO exceptions when no dynamic extent must unwind. Transfers
-across cleanup or binding extents must preserve their restoration and replacement
-exit semantics; closed transfers need the captured target's lifetime checks.
-Qualify those paths separately before replacing the current exception-based
-implementation. LL06 establishes correctness, not acceptable production loop cost.
+LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
+withdraws audit 97's contrary observation. The closure-transfer proposal keeps
+that reset; U1's closed-GO lowering uses CATCH/THROW rather than a cross-function
+branch map. General DO/DOTIMES/LOOP syntax and broader loop optimization remain
+outside this slice. No inventory assertion or acceptance criterion changes.
 
 
 ## What Stage 1 delivers

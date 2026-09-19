@@ -1,0 +1,14 @@
+{
+  "id": "STAGE1-CLOSURE-TRANSFERS-R1",
+  "inventory_credit": false,
+  "implementation": "The source validator keeps lexical tag scope across nested functions. U1 lowers closed GO through a fresh captured cons tag, CATCH, THROW and indexed redispatch. The per-function backend map still starts empty. Same-function TAGBODYs proven to have no GO beneath pending emitter frames use ordinary Wasm branches; other loops keep the reviewed addressed-exit implementation.",
+  "proof": "GO is branchable only in statement position, IF arms, PROGN or declaration bodies for a tag in this TAGBODY. IF tests must contain no GO. Other forms may execute but must contain no local GO; literal data and separately emitted function bodies are not traversed as same-function code. Nested loop transfers, operand evaluation, retained values, bindings and cleanups conservatively take the unwind path.",
+  "verification": "Thirty native-first cases at low/high memory placements with and without legal collection; the accepted LL06 corpus reruns unchanged. Independent function-body inspection rejects control-push or exit-throw instructions in four eligible modules. Seven recompiled mutants cover wrong targets, skipped backedges/fallthrough, unsafe branches, stale captured cells, wrong catch identity and unnecessary unwind overhead. Six source refusals remain.",
+  "limitations": [
+    "This is a closure-control prerequisite, not LL12-a qualification. The existing function-object arity and debug words are still NIL; keyword-vector and debug-metadata preservation through installation remains required for that slot.",
+    "Nested GO crossing pending root or dynamic extents still pays the addressed-exit cost. The proof is deliberately conservative, and no elapsed-time speed claim is made.",
+    "An expired closed target is a target safety refusal. One retained case also matches native control-error, but behaviour outside the target's dynamic extent is not a portable Lisp guarantee. A development case reached a reused native stack catch; it is retained and is not used as a native identity oracle. The final identity test uses two simultaneously live catch extents.",
+    "The collector and runtime sources are unchanged. Collections occur at legal published service calls, not arbitrary instructions. General LOOP/DO source macros remain outside this admitted subset.",
+    "Shared source stays at accepted LL06 until this isolated proposal is reviewed and accepted. R6/R6a is newly executed for the exact compiler proposal."
+  ]
+}
