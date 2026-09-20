@@ -2791,3 +2791,7 @@ Claude reviewed e7ef97e4 (float-owner R1) and the preceding acceptance commit 3a
 ## 2026-09-19 — accept and integrate collecting floating capability
 
 On “accept, integrate and proceed”, integrate float-service.mjs byte-identically to audit 111. Bind the review hash, packet and preceding integration. Correct the stale R2 scope text and record the passing pre-controls r2 attempt without changing immutable evidence. Compiler and earlier runtime files unchanged; no LL16 credit.
+
+## 2026-09-19 — qualify generated floating calls and condition delivery
+
+After float-owner acceptance and exact integration in 401c1334, add the opt-in compiler and trusted-owner loader proposal for mixed floating calls. Rooted operands survive arithmetic allocation and Lisp condition construction. Native explicit coercion errors, bignum/infinity comparisons and same-format FLOAT identity are reproduced; the last exposed a real development defect retained as a rejected control. One native unmasked exact-tiny trap differs under the adopted D6 policy, with both answers retained. Thirty-six modules execute 475 native cases at four settings, 1,900 comparisons and 744 collections per eager/cold run, eleven rejected faults and sixty default files unchanged. Fresh replay matches 1277 files and 442 pins; native R6/R6a passes with 21,843 tests, 162 unchanged and 164 restored FASLs. Correct the owner STATUS row to accepted and integrated. No shared compiler/runtime changes or LL16 credit; proposal awaits review.

@@ -2472,6 +2472,16 @@
       "scope": "Collecting floating owner capability accepted and integrated after audit 111; shared compiler/runtime unchanged, no LL16 credit. Accepted float/detector/collector binaries reused by hash. 1585 accepted-oracle rows at two placements, ordinary/forced collection:6340 comparisons,2834 copies.36 scenario records include real growth, dependent results, refusal after movement, live TCR masks, root/type/owner admission and re-entry.12 faults rejected. Replay 129 files,14 pins. Native differences retained; generated calls/loader admission/Lisp signaling next.",
       "review_commit": "31ed68aa3727bbfd06a8e83c3f35f17086e5028e",
       "integration": "doc/WASM/stage1/integration-float-owner.json"
+    },
+    {
+      "id": "STAGE1-FLOAT-CALLS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-calls-r1/packet.json",
+      "sha256": "a09d17f02015cfc06af358be0f9343093d3d072b52506bfbad344703e2e9ff23",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Generated floating-call compiler and runtime proposal, shared source unchanged, no LL16 credit.36 modules,475 native cases,1900 comparisons and744 collections per eager/cold run; outputs identical.11 faults rejected,60 default-mode files identical. Native R6/R6a PASS,21843 tests,162 unchanged/164 restored FASLs.116 policy rows joined independently; one explicit native exact-tiny trap difference under adopted D6 policy. Native coercion-overflow, infinity-comparison and same-format FLOAT identity retained. Replay 1277 files,442 pins. Loader admits a frozen trusted-owner triple; ratios/general numeric dispatch and cost qualification remain."
     }
   ],
   "current_runs": [

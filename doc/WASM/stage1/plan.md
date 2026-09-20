@@ -143,10 +143,16 @@ as compatibility. The [collecting owner capability](../../../tests/wasm/stage1/f
 now executes rooted staging, private arithmetic, assurance and publication under
 the live TCR mode, including movement and growth. It is accepted and integrated
 after audit 111.
-Next: generated mixed calls and loader admission with Lisp condition delivery,
-preserving explicit native coercion errors and
-resolving infinity comparison behavior before qualification. Only joined
-qualification executes LL16-a.
+The [generated floating-call proposal](../../../tests/wasm/stage1/float-calls/README.md)
+now composes mixed calls, Lisp conditions and a frozen three-capability loader
+profile, with 1,900 comparisons per eager/cold run and eleven rejected faults.
+It preserves native explicit coercion overflow, infinity comparison and same-format
+FLOAT identity. One exact-tiny native trap difference follows the adopted D6
+policy and is retained separately. The proposal awaits review. Next: after
+acceptance and integration, join the integer and floating evidence against the
+LL16-a assertion, complete its remaining numeric-family coverage and measure
+the emitted checking cost under the adopted benchmark discipline. Only that
+joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
