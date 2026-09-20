@@ -2879,3 +2879,7 @@ Claude reviewed 434bcc46 (STAGE1-MATERIALIZATION-R1) in its detached worktree. E
 ## 2026-09-20 — record LL21-a review disposition
 
 Bind STAGE1-MATERIALIZATION-R1 to Claude audit 118 at afc7fd5b and its review-file hash, marking it reviewed with no defect. Carry the declared provenance, profile, serialization and parser limitations into the index scope, and move the STATUS row into its existing table. Acceptance and integration remain pending; ledger counts and executable evidence are unchanged.
+
+## 2026-09-20 — accept and integrate LL21-a
+
+User acceptance binds audit 118 and the reviewed result. Seventeen prior accepted objects remain unchanged; the ledger is 18 accepted, 13 missing. Compiler switch and portable materializer equal the reviewed proposal; integrated materialization records reproduce and prior native R6/R6a applies to exactly these bytes. All other runtime files unchanged. Proceed to measured module granularity (LL21-b).

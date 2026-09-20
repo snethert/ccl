@@ -4822,9 +4822,29 @@
       "test_ids": [
         "S1-LL21-a"
       ],
-      "scope": "Production emitter D2 templates: eighteen modules, six Workers at three placements, 58 B calls and 162 metadata checks, ten leaf/primitive calls, eleven link cases, 36 refusals, eleven faults and seven publication controls. Forty default outputs identical. Exact S0 engine pins; fresh native R6/R6a and byte-identical retained replay. Code materialization only: no complete unshared runtime, new browser qualification, JSPI or packaging claim. Claude audit 118 found no defect. Compiler/runtime proposal remains unintegrated pending user acceptance. Engine identity is declared provenance, not runtime detection; atomic feature admission is not profile-specific; record comparison is JSON key-order sensitive; imported globals use the generated two-byte shape. No unshared runtime services, browser, JSPI or packaging claim.",
+      "scope": "Production emitter D2 templates: eighteen modules, six Workers at three placements, 58 B calls and 162 metadata checks, ten leaf/primitive calls, eleven link cases, 36 refusals, eleven faults and seven publication controls. Forty default outputs identical. Exact S0 engine pins; fresh native R6/R6a and byte-identical retained replay. Code materialization only: no complete unshared runtime, new browser qualification, JSPI or packaging claim. Claude audit 118 found no defect. Accepted and integrated via STAGE1-LL21A-ACCEPTANCE-R1. Engine identity is declared provenance, not runtime detection; atomic feature admission is not profile-specific; record comparison is JSON key-order sensitive; imported globals use the generated two-byte shape. No unshared runtime services, browser, JSPI or packaging claim.",
       "review_commit": "afc7fd5b99a26cd2c90da6056b41197d6bc664dc",
       "review_sha256": "f93a6c01a1a2623e63fe57c45201ffe32b80e25f198f5eee1c73c0743123652c"
+    },
+    {
+      "id": "STAGE1-LL21A-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll21a-acceptance-r1/accepted-results.json",
+      "sha256": "eabe2fd8839d2599038b4a1f9755698cddf3c17e43947329276087cc1d5021e2",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "de09c06cba25756ff735f21918dddb9cc9eb71cb4de818ae81531e1672a7e2f4",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll21a-acceptance-r1/packet.json",
+      "packet_sha256": "5b2830f4da5ea96ba2dc6964071a7d2bd81a86f47afa55115a9f4cb69180dfb3",
+      "scope": "User acceptance after Claude audit 118; integration exactly reviewed bytes.",
+      "test_ids": [
+        "S1-LL21-a"
+      ]
     }
   ],
   "historical_records": [

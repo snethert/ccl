@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_NOT_REVIEWED",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-20",
-  "basis": "Generated D2 materialization, native R6/R6a, both memory profiles and independent fault/publication controls reproduced. Seventeen accepted bindings unchanged.",
+  "basis": "User accepts LL21-a after audit 118; seventeen prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "unreviewed S1-LL21-a [materialization]",
       "missing S1-LL21-b [granularity]",
       "missing S1-LL09-a [generated]",
       "missing S1-LL15-a [closure]",
@@ -28,16 +27,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-materialization-results.json",
-      "sha256": "8a5522231ff99b5dc5d06b8fd9bccb62abd6cd56346c3af833cd932b4b0b530f"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21a-accepted-results.json",
+      "sha256": "f2912218f0c0beb0d1388edd9834421fd43d25fc871e580456377b629b50a989"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-materialization-results.json",
-  "combined_results_sha256": "8a5522231ff99b5dc5d06b8fd9bccb62abd6cd56346c3af833cd932b4b0b530f",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21a-accepted-results.json",
+  "combined_results_sha256": "f2912218f0c0beb0d1388edd9834421fd43d25fc871e580456377b629b50a989",
   "counts": {
-    "accepted": 17,
+    "accepted": 18,
     "missing": 13,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }

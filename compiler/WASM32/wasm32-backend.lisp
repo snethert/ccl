@@ -3,6 +3,9 @@
 (defpackage "WASM32-OS" (:use))
 (in-package "WASM32-COMPILER")
 (defvar *b-callable-metadata* nil)
+;; D2 template mode changes only the imported memory's shared bit. It is
+;; dynamically bound around compilation, including every nested module.
+(defvar *wasm32-template-memory* nil)
 (defvar *pool-layouts* nil)
 (defvar *pool-current* nil)
 (defvar *module-result-tag* nil)
@@ -35,8 +38,8 @@
            (*temporary-count* 0) (*cons-used* nil)
            (body (emit-expression (sixth args)))
            (arity (length *required-vars*))
-           (wat (format nil "(module~% (import ~s ~s (memory 1 32769 shared))~% (import ~s ~s (global $tcr i32))~%~a (func (export ~s) (param $self i32) (param $nargs i32) (result i32 i32) (local $value i32)~a~%  (if (i32.ne (local.get $nargs) (i32.const ~d)) (then unreachable))~%  (local.set $value ~a)~%  (i32.store (i32.load offset=~d (global.get $tcr)) (local.get $value))~%  (i32.store offset=~d (global.get $tcr) (i32.const 1))~%  (local.get $value) (i32.const 1)))~%"
-             "env" "memory" "env" "tcr"
+           (wat (format nil "(module~% (import ~s ~s (memory 1 32769~a))~% (import ~s ~s (global $tcr i32))~%~a (func (export ~s) (param $self i32) (param $nargs i32) (result i32 i32) (local $value i32)~a~%  (if (i32.ne (local.get $nargs) (i32.const ~d)) (then unreachable))~%  (local.set $value ~a)~%  (i32.store (i32.load offset=~d (global.get $tcr)) (local.get $value))~%  (i32.store offset=~d (global.get $tcr) (i32.const 1))~%  (local.get $value) (i32.const 1)))~%"
+             "env" "memory" (if *wasm32-template-memory* "" " shared") "env" "tcr"
              (if *cons-used* " (import \"env\" \"type_error\" (tag $type_error (param i32 i32)))" "")
              "entry" (with-output-to-string (s) (dotimes (i *temporary-count*) (format s " (local $tmp~d i32)" i)))
              arity body wasm32::tcr.mv_base wasm32::tcr.mv_count)))
@@ -294,8 +297,8 @@
         (unless (eq kind (second *primitive-signature*)) (refuse :primitive-result))
         (throw *module-result-tag*
           (list :version 1 :name *module-name* :abi :typed-internal :signature *primitive-signature*
-                :wat (format nil "(module (import ~s ~s (memory 1 32769 shared)) (import ~s ~s (table $slots 0 funcref)) (import ~s ~s (tag $conversion_error (param i32))) (func (export ~s) ~a (result i32) (local $wide i64) (local $scratch i32) ~a ~a))~%"
-                       "env" "memory" "env" "slots" "env" "conversion_error" "entry"
+                :wat (format nil "(module (import ~s ~s (memory 1 32769~a)) (import ~s ~s (table $slots 0 funcref)) (import ~s ~s (tag $conversion_error (param i32))) (func (export ~s) ~a (result i32) (local $wide i64) (local $scratch i32) ~a ~a))~%"
+                       "env" "memory" (if *wasm32-template-memory* "" " shared") "env" "slots" "env" "conversion_error" "entry"
                        (with-output-to-string (s) (dotimes (i (length *required-vars*)) (format s "(param $arg~d i32)" i)))
                        (with-output-to-string (s) (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))) body)))))))
 (defun compile-primitive-module (source-text name argument-kinds result-kind)
@@ -1317,7 +1320,7 @@
            (restart-runtime (when *b-restart-used* (b-restart-runtime)))
            (entry-roots (b-runtime-roots "(local.get $frame)" (b-wat "(i32.add (local.get $capacity) (i32.const ~d))" (length *b-bound-vars*))))
            (wat (with-output-to-string (s)
-             (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32))) (import \"env\" \"nonlocal_exit\" (tag $nonlocal_exit (param i32)))" s)
+             (format s "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769~a)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32))) (import \"env\" \"nonlocal_exit\" (tag $nonlocal_exit (param i32)))" (if *wasm32-template-memory* "" " shared"))
              (when *b-float-service* (write-string "(import \"floating\" \"calculate\" (func $float_slow (param i32 i32 i32) (result i32)))" s))
              (when *b-integer-service* (write-string "(import \"integer\" \"calculate\" (func $integer_slow (param i32 i32) (result i32)))" s))
              (when *b-allocation-retry* (write-string "(import \"owner\" \"ensure\" (func $owner_ensure (param i32)))" s))

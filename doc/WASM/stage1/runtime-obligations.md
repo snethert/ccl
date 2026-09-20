@@ -245,3 +245,7 @@ The pinned README claim that adding diagnostic arguments made the run pass is un
 The retained browser coverage is Chromium only; no Firefox, WebKit or complete engine-matrix qualification follows.
 
 Pure-JS SHA-256 is synchronous construction/installation work, not arithmetic-path work. Audit 117 measured about 26 seconds for a 1 GiB input; very large module binding needs a separate budget. Factory signatures and capability identities stay synchronous and unchanged.
+
+## D2 production materialization (audit 118)
+
+The owner supplies engine provenance, ABI and instruction classification. Install verifies these bindings but does not discover the current engine. JSON field ordering is part of the present record comparison. Generated imported globals use the two-byte shape; typed references outside it refuse. Atomics have no per-profile filter; wait/notify stay banned and no qualified module uses atomics. Complete unshared runtime services, browser qualification, JSPI and packaging remain separate. See [integration](integration-ll21a.json).

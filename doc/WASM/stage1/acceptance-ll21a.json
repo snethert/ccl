@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-20T18:56:28.380739+00:00",
+  "authorization": {
+    "quote": "accept, integrate and proceed",
+    "provenance": "User to Codex following audit 118 and the recorded review disposition."
+  },
+  "review_commit": "afc7fd5b99a26cd2c90da6056b41197d6bc664dc",
+  "review_sha256": "f93a6c01a1a2623e63fe57c45201ffe32b80e25f198f5eee1c73c0743123652c",
+  "source_report_sha256": "b0de2105ffad58b366ecc097f6ab439afe31acd5f937032f42af1d0a00123542",
+  "scope": "Accept S1-LL21-a production D2 code materialization at the reviewed scope.",
+  "exclusions": [
+    "Engine identity in D2 records is declared provenance; install does not detect the executing engine. Qualification joins executable hashes.",
+    "Atomics admission has no per-profile filter; wait/notify remain banned and this generated corpus has no atomic instructions.",
+    "Record comparison is JSON key-order sensitive: reserialized records may refuse.",
+    "Imported global parsing supports the generated two-byte type/mutability shape; multi-byte typed references refuse.",
+    "Code materialization only: no unshared runtime services, browser, JSPI or packaging qualification.",
+    "Only the full/shared and precompiled-callback/unshared code profiles. JSPI stays deferred under the Stage 1 entry decision.",
+    "Node/V8 is executed at exactly the S0-ENGINE-a tool pins. No new browser engine qualification or cross-Worker runtime ownership is claimed.",
+    "No wait/notify or legacy exception instructions in templates. No start, data, element, defined memory/table/global or tag sections admitted by the generated-module reader.",
+    "Runtime services such as the collector and numeric service are still emitted for their own profiles. This does not make their shared-memory binaries usable in unshared memory or qualify a complete unshared image.",
+    "The unshared binary has the same digest as its template because the bytes are identical. Its installation record still binds the final binary role and profile; a shared installation refuses template bytes or template identity.",
+    "The inherited pool snapshot transport is a fixture, not LL14 cross-dump or the production image loader. No module-granularity or performance claim."
+  ],
+  "records": [
+    {
+      "id": "S1-LL21-a",
+      "variant": "materialization",
+      "test_revision": "fcbfebbcb98080ac60afb80cbe1fb2e1f8cef4043e044a6654eefba56fe2a43c",
+      "contract_sha256": "248e504e7fe3ac34fbc496ad1914d5f8e9a51484d84c63173eaf08fa3b5730bb",
+      "scope": "Reviewed LL21-a, Claude audit 118."
+    }
+  ]
+}
