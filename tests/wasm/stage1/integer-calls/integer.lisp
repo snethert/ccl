@@ -1,0 +1,43 @@
+(in-package :wasm32-compiler)
+(defun b-integer-call (name forms)
+ (let ((op (position name '(%integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))))
+  (unless (= (length forms) (if (= op 4) 1 2)) (refuse :integer-arity))
+  (b-frame 2 (lambda (root)
+   (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a)
+    (local.set $count (call $integer (i32.const ~d) ~a)) ~a
+    (i32.store (local.get $results) (i32.load offset=8 ~a))
+    (if (i32.eq (local.get $count) (i32.const 2)) (then (i32.store offset=4 (local.get $results) (i32.load offset=12 ~a))))"
+    root (b-scalar (first forms)) root (if (= op 4) "(i32.const 0)" (b-scalar (second forms))) op root
+    (b-ensure-results "(local.get $count)") root root)))))
+(defun compile-integer-call-form (form name links)
+ (let ((*b-integer-service* t) (*b-callable-metadata* t)) (compile-call-form form name links)))
+(defun b-integer-runtime ()
+ "(func $integer (param $op i32) (param $root i32) (result i32)
+ (local $a i32) (local $b i32) (local $r i64) (local $rem i64) (local $count i32)
+ (local.set $a (i32.load offset=8 (local.get $root)))
+ (local.set $b (i32.load offset=12 (local.get $root)))
+ (block $slow
+  (br_if $slow (i32.and (i32.or (local.get $a) (local.get $b)) (i32.const 3)))
+  (local.set $a (i32.shr_s (local.get $a) (i32.const 2)))
+  (local.set $b (i32.shr_s (local.get $b) (i32.const 2)))
+  (local.set $count (i32.const 1))
+  (if (i32.eq (local.get $op) (i32.const 0)) (then (local.set $r (i64.add (i64.extend_i32_s (local.get $a)) (i64.extend_i32_s (local.get $b))))))
+  (if (i32.eq (local.get $op) (i32.const 1)) (then (local.set $r (i64.sub (i64.extend_i32_s (local.get $a)) (i64.extend_i32_s (local.get $b))))))
+  (if (i32.eq (local.get $op) (i32.const 2)) (then (local.set $r (i64.mul (i64.extend_i32_s (local.get $a)) (i64.extend_i32_s (local.get $b))))))
+  (if (i32.eq (local.get $op) (i32.const 3)) (then
+   (if (i32.lt_s (local.get $b) (i32.const 0))
+    (then (local.set $r (i64.extend_i32_s (i32.shr_s (local.get $a) (select (i32.const 31) (i32.sub (i32.const 0) (local.get $b)) (i32.le_s (local.get $b) (i32.const -31)))))))
+    (else (if (local.get $a) (then (br_if $slow (i32.gt_u (local.get $b) (i32.const 29)))
+     (local.set $r (i64.shl (i64.extend_i32_s (local.get $a)) (i64.extend_i32_u (local.get $b))))))))))
+  (if (i32.eq (local.get $op) (i32.const 4)) (then
+   (local.set $r (i64.extend_i32_u (i32.sub (i32.const 32) (i32.clz (i32.xor (local.get $a) (i32.shr_s (local.get $a) (i32.const 31)))))))))
+  (if (i32.eq (local.get $op) (i32.const 5)) (then
+   (br_if $slow (i32.eqz (local.get $b)))
+   (local.set $r (i64.div_s (i64.extend_i32_s (local.get $a)) (i64.extend_i32_s (local.get $b))))
+   (local.set $rem (i64.rem_s (i64.extend_i32_s (local.get $a)) (i64.extend_i32_s (local.get $b))))
+   (local.set $count (i32.const 2))))
+  (br_if $slow (i32.or (i64.lt_s (local.get $r) (i64.const -536870912)) (i64.gt_s (local.get $r) (i64.const 536870911))))
+  (i32.store offset=8 (local.get $root) (i32.shl (i32.wrap_i64 (local.get $r)) (i32.const 2)))
+  (i32.store offset=12 (local.get $root) (i32.shl (i32.wrap_i64 (local.get $rem)) (i32.const 2)))
+  (return (local.get $count)))
+ (call $integer_slow (local.get $op) (local.get $root)))")

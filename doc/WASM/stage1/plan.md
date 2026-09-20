@@ -116,9 +116,15 @@ with independent Python and native-policy oracles and compiled faults. Audit 103
 found no service defect. Its [follow-up](../../../tests/wasm/stage1/integer-core/review-followup/README.md)
 adds the missing quotient-only allocation mutant, large multiply/divide cases
 and precise alignment/width diagnostic claims, keeping the binary unchanged.
-Both packets are accepted after audits 103/104 and the exact integer service is integrated. It is an auxiliary service, not an LL16 result. Next: root-aware generated
-numeric dispatch and owner allocation/retry, then mixed floats and the approved
-D6 detection/condition path; only their joined qualification executes LL16-a.
+Both packets are accepted after audits 103/104 and the exact integer service is
+integrated. The [generated-call proposal](../../../tests/wasm/stage1/integer-calls/README.md)
+now executes inline fixnums and rooted integer fallback through the accepted
+service and collector owner: 1,221 native-derived comparisons, 429 collector
+copies, one growth and nine rejected faults, with default output unchanged and
+native R6/R6a passing. It remains auxiliary and unintegrated pending review.
+Next: numeric failures through Lisp conditions, mixed floats under the approved
+D6 detection policy, and authenticated loader admission for the numeric service.
+Only their joined qualification executes LL16-a; this unit claims no slot credit.
 LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98

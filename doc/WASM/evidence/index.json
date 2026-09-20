@@ -2388,6 +2388,16 @@
       "scope": "Audit-103 follow-up on the unchanged integer service: 129 additional native-checked cases, 4553 total; 13659 native/9106 target comparisons, 636 chain steps, 56 refusals, two exact fits and thirteen rejected faults. Quotient-only capacity fault passes original suite and fails new control; redundant pointer test removal is binary-identical. Canonical over-budget width diagnostics explicit. Fresh replay 84 deterministic files, 14 pins. No acceptance, integration or LL16 gate credit.",
       "review_commit": "322788f948e6a0076064ae2c486bf20d42fbb6c2",
       "integration": "doc/WASM/stage1/integration-integer-core.json"
+    },
+    {
+      "id": "STAGE1-INTEGER-CALLS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-calls-r1/packet.json",
+      "sha256": "45d88a6fcd2e057cb0ba36ced91973b76e09d9dab6dc3e6a1e519d6df5c3b03c",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Opt-in generated integer calls: inline fixnums and the unchanged accepted D1 service behind a rooted single-Worker owner capability. 25 modules, 305 native cases, 1221 comparisons, 429 collector copies, one memory growth, nine rejected compiler/owner faults. Native R6/R6a passes; 60 default-mode WAT/Wasm files identical. Fresh replay 681 files and 372 pins. Checked numeric errors, eager owner capability only; production loader refuses the import. No shared compiler integration or LL16 gate credit; numeric Lisp conditions, floating point and loader admission remain."
     }
   ],
   "current_runs": [
