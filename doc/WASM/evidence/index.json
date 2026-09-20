@@ -2430,10 +2430,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-owner-r1/packet.json",
       "sha256": "f86fa6079572ce58fc5eea9876a32cb3e3a96e6d4cd1c7fd2dc8406c825a8742",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Numeric calls with allocation retry and trusted combined-capability loader. Unchanged accepted R2 compiler; exact native R6/R6a reused. 80 modules, 444 native/reference cases, 1777 comparisons in each of eager, cold and forced-constructor modes. Ordinary:797 copies,1 growth; forced:1615 copies,412/28/388 constructor entries. 32 admission checks,10 rejected runtime faults. Replay 556 deterministic files,413 pins. Three runtime proposals; not integrated and no LL16 credit."
+      "scope": "Numeric calls with allocation retry and trusted combined-capability loader. Unchanged accepted R2 compiler; exact native R6/R6a reused. 80 modules, 444 native/reference cases, 1777 comparisons in each of eager, cold and forced-constructor modes. Ordinary:797 copies,1 growth; forced:1615 copies,412/28/388 constructor entries. 32 admission checks,10 rejected runtime faults. Replay 556 deterministic files,413 pins. Three runtime proposals; not integrated and no LL16 credit.",
+      "review_commit": "6bd82243f8605d95c7a1c4824df3fb821bf28d9e",
+      "integration": "doc/WASM/stage1/integration-integer-owner.json"
     }
   ],
   "current_runs": [

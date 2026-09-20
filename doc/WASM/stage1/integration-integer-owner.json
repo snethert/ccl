@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T03:03:24.693813+00:00",
+  "user_authorization": "accept and integrate. then proceed.",
+  "review_commit": "6bd82243f8605d95c7a1c4824df3fb821bf28d9e",
+  "review_sha256": "0203b1c43108cef1f037e52e947fd1215634349089672acbfca5175deb78c6c7",
+  "files": [
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3",
+      "after": "5cb9cde32d916f3dcc2569730348c86ce6cc611e68e4cebcc7b36ca15d07d169",
+      "proposal_locator": "2026-09-19-stage1-integer-owner-r1/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "before": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761",
+      "after": "a26a4ee9cbda3978bff2a08bd9c7a0cabc3e740a0ec486e31761023773191ea8",
+      "proposal_locator": "2026-09-19-stage1-integer-owner-r1/collector-owner.mjs"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "before": null,
+      "after": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a",
+      "proposal_locator": "2026-09-19-stage1-integer-owner-r1/numeric-capabilities.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "d328c6bc7882631d98bb49a878110c3b90b691583405a021e79ebef1f9192df4"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packet": {
+    "locator": "2026-09-19-stage1-integer-owner-r1/packet.json",
+    "sha256": "f86fa6079572ce58fc5eea9876a32cb3e3a96e6d4cd1c7fd2dc8406c825a8742"
+  },
+  "previous_integration": "integration-integer-conditions.json",
+  "previous_integration_sha256": "240f8390b247ac936043354adff200237d7f7457ef2c98fb99cfe0b773141623",
+  "observations": [
+    "The unchanged compiler retains its 252 inline-path assertions in the accepted R2 packet; this composition does not rerun that assertion layer.",
+    "Fault oracles combine a required failing execution with a function-name substring. Neither alone identifies the complete fault.",
+    "The capability factory binds a pair to one supplied owner; it does not prevent two CollectorOwner instances over one memory. Exclusive collector ownership remains the production installer’s obligation."
+  ],
+  "scope": "Exact reviewed numeric-owner runtime proposal. Compiler unchanged. No LL16 credit.",
+  "verification": "Byte identity with regenerated and retained proposal; audit 108 replay, native R6/R6a reused by unchanged compiler hash.",
+  "reverse": "Restore loader and owner before hashes; remove numeric-capabilities.mjs after withdrawing consumers."
+}

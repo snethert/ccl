@@ -165,3 +165,11 @@ Arithmetic condition OPERATION and OPERANDS follow the explicit constructor, not
 Fatal kind 5 identifies a nonnumeric failure in this context but is not globally unique. Recognized unsupported number families and service-budget failures remain checked boundaries.
 
 Numeric allocation-retry composition and trusted-loader admission remain separate work; no LL16 credit.
+
+## Numeric owner composition (Claude audit 108)
+
+The unchanged compiler retains its 252 inline-path assertions in the accepted R2 packet; this composition does not rerun that assertion layer.
+
+Fault oracles combine a required failing execution with a function-name substring. Neither alone identifies the complete fault.
+
+The capability factory binds a pair to one supplied owner; it does not prevent two CollectorOwner instances over one memory. Exclusive collector ownership remains the production installer’s obligation.

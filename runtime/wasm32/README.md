@@ -77,3 +77,8 @@ ABI is not a generated B entry or a collecting owner service. See the
 `integer-service.mjs` is the accepted single-Worker numeric capability from the
 [generated-call unit](../../tests/wasm/stage1/integer-calls/README.md). The compiler
 has its opt-in entry, but production loader admission remains separate.
+
+`numeric-capabilities.mjs` binds the integer and allocation capabilities to one
+trusted owner, memory, TCR and error tag. The loader admits their exact pair under
+`wasm32-shared-B-integer-owner-v1`; invoke generated code outside an active owner
+boundary. See the [reviewed composition](../../tests/wasm/stage1/integer-owner/README.md).

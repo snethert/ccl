@@ -2726,3 +2726,7 @@ identical, all three constructor kinds moving under pressure. Ten further
 loader admission paths refused or admitted as the proposal states. No shared
 source changed. Record only; acceptance of the runtime proposal is the
 user's decision.
+
+## 2026-09-19 — accept and integrate numeric owner composition
+
+On “accept and integrate. then proceed.”, the three runtime files are integrated byte-identically to the audit-108 proposal. The record binds the review commit and file hash, the retained packet and the prior integration. Compiler and other runtime files are unchanged; all three observations are carried. No LL16 credit: 15 accepted,16 missing.

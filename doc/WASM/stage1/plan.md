@@ -130,7 +130,7 @@ The 1,693 comparisons and seventeen controls retain policy-dependent +/* error
 priority and wrong-class reader differences explicitly. R2 is accepted and integrated after audit 107, with no slot credit. The [numeric-owner composition](../../../tests/wasm/stage1/integer-owner/README.md)
 now executes those existing compiler modes together, with eager/cold equality
 and forced movement in all three raw constructors. Its trusted capability
-bundle and loader profile remain runtime proposals pending review. The compiler
+bundle and loader profile are accepted and integrated after audit 108. The compiler
 is unchanged and its accepted R6/R6a is reused by exact hash. Next: mixed floats
 under the approved D6 policy. Only joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.

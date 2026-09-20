@@ -19,6 +19,7 @@ export class CollectorOwner {
   owner.#validate();return owner;
  }
  #refresh(){const buffer=this.#memory.buffer;if(!this.#view||this.#view.buffer!==buffer){this.#view=new DataView(buffer);this.#epoch++;}}
+ get tcr(){return this.#layout.tcr;}
  get view(){this.#refresh();return this.#view;}
  get viewEpoch(){this.#refresh();return this.#epoch;}
  get spaces(){return structuredClone(this.#spaces);}
