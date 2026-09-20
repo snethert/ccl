@@ -173,3 +173,11 @@ The unchanged compiler retains its 252 inline-path assertions in the accepted R2
 Fault oracles combine a required failing execution with a function-name substring. Neither alone identifies the complete fault.
 
 The capability factory binds a pair to one supplied owner; it does not prevent two CollectorOwner instances over one memory. Exclusive collector ownership remains the production installer’s obligation.
+
+## Floating primitive service (Claude audit 110)
+
+Six independent literal checks guard the Python oracle; the old-oracle target regression overlaps the positive corpus. Service faults identify a focused failing case rather than a unique failure cause.
+
+Primitive integer coercion overflow and huge-integer/infinity comparisons differ from native CCL as retained. A Lisp adapter must preserve explicit native coercion errors and resolve infinity comparison semantics before LL16 qualification.
+
+This raw service admits private unshared memory and nearest rounding only. Collector capability, generated calls, Lisp condition delivery and TCR control remain separate work.

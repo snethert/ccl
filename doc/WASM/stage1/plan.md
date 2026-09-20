@@ -136,7 +136,7 @@ is unchanged and its accepted R6/R6a is reused by exact hash. The isolated
 now executes arithmetic, exact integer/float comparisons and coercions against
 a rational oracle, with scalar-SSE flag checks. R2 corrects the audit-109
 signed-zero oracle defect and adds directed and random coercion coverage; the
-service is unchanged and awaits review. Native
+service is accepted and integrated after audit 110. Native
 CCL differs on explicit integer-coercion overflow despite masked hardware flags
 and on huge-integer/infinity ordering; both populations are retained, not claimed
 as compatibility. Next: a collecting owner capability and generated mixed calls

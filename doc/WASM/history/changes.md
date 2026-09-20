@@ -2775,3 +2775,7 @@ hand-corrected expectations row for row and passes; a further 34,368 directed
 signed-zero, underflow and exponent-scan cases pass at three placements with
 Python double and single witnesses agreeing on all 7,064 checked. No defect.
 Acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate floating primitive R2
+
+On “accept, integrate and proceed”, integrate the reviewed C service and detector byte-exactly. The record binds audit 110 and its review hash, the R2 packet and the prior numeric-owner integration. Compiler and earlier runtime files unchanged. Oracle limitations and native compatibility boundaries remain explicit. No LL16 credit: 15 accepted,16 missing.

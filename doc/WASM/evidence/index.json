@@ -2454,10 +2454,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-core-r2/packet.json",
       "sha256": "02378cbf735245596677ca035e5ea40c3a234d0a3816df7c9cd986f4dea8768b",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-109 oracle correction: preserve source sign at rounded zero. Service and detector binaries byte-identical to R1. 59083 cases,177249 target comparisons;1386 SSE witnesses (1167 arithmetic,219 conversions);15 service faults and original oracle regression rejected;6 independent literal expectations. Random coverage adds both coercions over integer/single/double inputs. Native:7367 cases,7103 equal,264 declared differences (184 explicit coercion overflows,80 infinity comparisons). Replay 100 files,19 pins. Auxiliary, not accepted or integrated; no LL16 credit."
+      "scope": "Audit-109 oracle correction: preserve source sign at rounded zero. Service and detector binaries byte-identical to R1. 59083 cases,177249 target comparisons;1386 SSE witnesses (1167 arithmetic,219 conversions);15 service faults and original oracle regression rejected;6 independent literal expectations. Random coverage adds both coercions over integer/single/double inputs. Native:7367 cases,7103 equal,264 declared differences (184 explicit coercion overflows,80 infinity comparisons). Replay 100 files,19 pins. Auxiliary, not accepted or integrated; no LL16 credit.",
+      "review_commit": "d967a16a59e144b00fe42fc12671742b4c5d2dd8",
+      "integration": "doc/WASM/stage1/integration-float-core.json"
     }
   ],
   "current_runs": [

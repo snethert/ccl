@@ -82,3 +82,9 @@ has its opt-in entry, but production loader admission remains separate.
 trusted owner, memory, TCR and error tag. The loader admits their exact pair under
 `wasm32-shared-B-integer-owner-v1`; invoke generated code outside an active owner
 boundary. See the [reviewed composition](../../tests/wasm/stage1/integer-owner/README.md).
+
+`float.c` and `float-detector.wat` are the accepted isolated floating primitives,
+byte-identical to the [R2 packet](../../tests/wasm/stage1/float-core/README.md).
+The detector imports the service’s private memory. Build flags, ownership, native
+compatibility boundaries and result/exception status ABI are specified there.
+These are raw primitives; collecting generated calls remain separate work.

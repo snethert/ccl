@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T04:02:24.403933+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "d967a16a59e144b00fe42fc12671742b4c5d2dd8",
+  "review_sha256": "f6794d8a992570be3c4d2f0332c90cf0c56c8273b76d18037922689826b6de9c",
+  "files": [
+    {
+      "file": "runtime/wasm32/float.c",
+      "before": null,
+      "after": "5e8c1572c08ba94eabe092988595dbafcae6894ed13c58b12f235e4a79385b39",
+      "proposal_locator": "2026-09-19-stage1-float-core-r2/execution/float.c"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "before": null,
+      "after": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77",
+      "proposal_locator": "2026-09-19-stage1-float-core-r2/execution/detector.wat"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "d328c6bc7882631d98bb49a878110c3b90b691583405a021e79ebef1f9192df4"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "a26a4ee9cbda3978bff2a08bd9c7a0cabc3e740a0ec486e31761023773191ea8"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "5cb9cde32d916f3dcc2569730348c86ce6cc611e68e4cebcc7b36ca15d07d169"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packet": {
+    "locator": "2026-09-19-stage1-float-core-r2/packet.json",
+    "sha256": "02378cbf735245596677ca035e5ea40c3a234d0a3816df7c9cd986f4dea8768b"
+  },
+  "previous_integration": "integration-integer-owner.json",
+  "previous_integration_sha256": "228287d4b77218e48124a685fac126b9e6eac7d8fc7e36aeb8ff57337a8e4cfb",
+  "observations": [
+    "Six independent literal checks guard the Python oracle; the old-oracle target regression overlaps the positive corpus. Service faults identify a focused failing case rather than a unique failure cause.",
+    "Primitive integer coercion overflow and huge-integer/infinity comparisons differ from native CCL as retained. A Lisp adapter must preserve explicit native coercion errors and resolve infinity comparison semantics before LL16 qualification.",
+    "This raw service admits private unshared memory and nearest rounding only. Collector capability, generated calls, Lisp condition delivery and TCR control remain separate work."
+  ],
+  "scope": "Exact reviewed floating primitive C service and detector; auxiliary, no LL16 credit.",
+  "verification": "Exact retained bytes; audit 110 replay. Shared compiler/native/kernel unchanged; no new native rebuild required.",
+  "reverse": "Remove float.c and float-detector.wat after withdrawing consumers."
+}
