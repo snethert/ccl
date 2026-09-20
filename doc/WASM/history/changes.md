@@ -2560,3 +2560,7 @@ only; acceptance is the user's decision.
 ## 2026-09-19 — accept and integrate LL11-b
 
 The user directed “Accept, integrate and proceed” after Claude audit 102. The acceptance binds that audit and preserves all fourteen earlier accepted records. The compiler is byte-identical to the reviewed proposal; all eight runtime files are unchanged. Portable dispatch source remains in the reviewed fixture for bootstrap compilation. Native CLOS correction, nonempty-registry raw stores, checked private-reader errors and inherited condition re-execution are carried as obligations. Ledger: 15 accepted, 16 missing, zero unreviewed. Next is LL16-a numerics.
+
+## 2026-09-19 — exact D1 integer service for LL16
+
+An isolated freestanding Wasm service now implements add, subtract, multiply, arithmetic shifts with full integer counts, integer length and both truncate results over normalized D1 integers. Independent Python and native CCL under three compiler policies agree on 4,424 cases; target execution below/above 2 GiB yields 8,848 comparisons plus 636 chained target-result operations. Forty-eight refusal checks preserve inputs and published results; twelve compiled faults fail focused oracles. The decoded call graph has no cycle, imported function or indirect call. Fresh replay reproduces all 75 deterministic files with eleven source pins. Original harness failures remain retained. No shared compiler/runtime/kernel change and no LL16 credit: generated dispatch, owner/roots and D6 floating-point execution remain. Ledger remains 15 accepted,16 missing.

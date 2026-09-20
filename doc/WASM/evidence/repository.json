@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "02ca7866a1aa66ed53a1307598152bf2700d0e3f8449213a2273ebe7558d8e04",
-  "commit": "09ade719023d974e0e738b38abad2742fd7047ba",
-  "immutable_evidence_files": 225311,
+  "catalog_sha256": "3fdf803ebc5d9a84cb583689f7f03bd5ca3670db95c2371c13dd796ea691264b",
+  "commit": "c3a92d485deb62c43ca0d669bb434b6a8580878e",
+  "immutable_evidence_files": 225476,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-ll11b-acceptance-r1",
-    "files": 120,
-    "bytes": 26488653
+    "directory": "2026-09-19-stage1-integer-core-r1",
+    "files": 165,
+    "bytes": 4116594
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed.",
-  "source_index_sha256": "6882df6e8f429dc6093807e63f9a385498ad1c2ffd75e55005b67ff02e822a30",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-ll11b-acceptance.json",
-  "verification": "Unchanged acceptance producer; fourteen prior records preserved; compiler byte-equal to reviewed proposal. Incremental catalog only.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Integer service auxiliary, no slot credit.",
+  "source_index_sha256": "4928de2f837ec2e01ed505db3e2d0908788700bafdc378f66a561fb0940ed114",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-integer-core.json",
+  "verification": "Scoped integer packet hashes and native inputs checked; fresh replay 75 deterministic files. Incremental catalog only; all prior rows preserved.",
   "version": 1
 }

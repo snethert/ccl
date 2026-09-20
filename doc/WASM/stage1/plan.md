@@ -109,8 +109,14 @@ now executes generated method add/remove/replacement and direct/encapsulated
 publication, with NO-APPLICABLE-METHOD-EXISTS and CONTINUE through the condition
 path. The native stale-method result remains explicit negative evidence. This
 initial one-argument primary-method subset is accepted after audit 102; its compiler is integrated. The portable source forms and scenario helpers remain in the reviewed fixture, ready for bootstrap compilation. Native CLOS is unchanged.
-Next: LL16-a numeric operations under D6. LL18-b
-hash-table movement remains an independent obligation.
+LL16-a numeric operations under D6 is underway. The
+[integer service](../../../tests/wasm/stage1/integer-core/README.md) now executes
+exact D1 add/subtract/multiply, shifts, integer length and quotient/remainder,
+with independent Python and native-policy oracles and compiled faults. It is
+an isolated auxiliary service, not an LL16 result. Next: root-aware generated
+numeric dispatch and owner allocation/retry, then mixed floats and the approved
+D6 detection/condition path; only their joined qualification executes LL16-a.
+LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps

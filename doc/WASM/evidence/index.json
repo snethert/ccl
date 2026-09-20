@@ -2364,6 +2364,16 @@
       "sha256": "9043f94199aa9829ebd435a2d85ec221bc060004c25b0c7a9d974dfd1b6ff70d",
       "acceptance": "USER_ACCEPTED_AUXILIARY",
       "integration": "doc/WASM/stage1/integration-closure-transfers.json"
+    },
+    {
+      "id": "STAGE1-INTEGER-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-core-r1/packet.json",
+      "sha256": "3987dae8d919058b004bfe0f2dcb7228e06c2867daf69616960b05a390082524",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Isolated D1 exact integer Wasm service: add/subtract/multiply/ash/integer-length/truncate. 4424 cases, 13272 native policy comparisons, 8848 target comparisons, 636 target-result chain comparisons, 48 refusal/preservation checks, 12 compiled mutants. Fresh replay: 75 deterministic files, 11 source pins. No compiler-generated LL16 claim; no shared files changed; compiler/owner integration and FP remain open."
     }
   ],
   "current_runs": [
