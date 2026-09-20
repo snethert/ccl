@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_NOT_REVIEWED",
   "date": "2026-09-20",
-  "basis": "User accepts LL21-a after audit 118; seventeen prior accepted records unchanged.",
+  "basis": "Measured production per-function packaging, native-derived redefinition and late Worker execution, mapping/semantic/omission controls reproduced. Eighteen accepted bindings unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL21-b [granularity]",
+      "unreviewed S1-LL21-b [granularity]",
       "missing S1-LL09-a [generated]",
       "missing S1-LL15-a [closure]",
       "missing S1-LL13-a [installation]",
@@ -23,20 +23,20 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "de09c06cba25756ff735f21918dddb9cc9eb71cb4de818ae81531e1672a7e2f4"
+    "sha256": "3916140883303df55f19ea07efb3e08a38de64b1e3740de8821f3d5b1c26da9d"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21a-accepted-results.json",
-      "sha256": "f2912218f0c0beb0d1388edd9834421fd43d25fc871e580456377b629b50a989"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-granularity-results.json",
+      "sha256": "762e2d360fb47be79327a3b086ad480e899f76d83c3676695f105870a80df8a5"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21a-accepted-results.json",
-  "combined_results_sha256": "f2912218f0c0beb0d1388edd9834421fd43d25fc871e580456377b629b50a989",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-granularity-results.json",
+  "combined_results_sha256": "762e2d360fb47be79327a3b086ad480e899f76d83c3676695f105870a80df8a5",
   "counts": {
     "accepted": 18,
-    "missing": 13,
-    "unreviewed": 0,
+    "missing": 12,
+    "unreviewed": 1,
     "required": 31
   }
 }

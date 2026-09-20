@@ -1,0 +1,4 @@
+import fs from 'node:fs';import {manifest,materialize} from './materializer.mjs';import {inspect} from './binary.mjs';
+const dir=process.argv[2],read=n=>JSON.parse(fs.readFileSync(dir+'/'+n)),mods=read('modules.json'),c=read('classifications.json'),policy=read('policy.json'),modules={};fs.mkdirSync(dir+'/full');fs.mkdirSync(dir+'/full/templates');
+for(const m of mods){const b=fs.readFileSync(dir+'/templates/'+m.name+'.wasm'),x=inspect(b),abi={minimum:1,maximum:32769,imports:x.imports,exports:x.exports.map(e=>({name:e.name,kind:e.kind,index:e.index,signature:x.types[x.functions[e.index]]}))},t=manifest(b,abi,c[m.name],policy),r=materialize(b,t,abi,c[m.name],policy,'full');fs.writeFileSync(dir+'/full/'+m.name+'.wasm',r.bytes);fs.writeFileSync(dir+'/full/templates/'+m.name+'.wasm',b);modules[m.name]={abi,classification:c[m.name],template:t,outputs:{full:r.record}};}
+fs.writeFileSync(dir+'/materialization.json',JSON.stringify({policy,modules},null,2)+'\n');

@@ -564,8 +564,8 @@
           "description": "Bootstrap module granularity is chosen from measured bytes, compile, instantiate and install latency and retained-code growth of the generated bundles under the benchmark policy, with the chosen packaging recorded and every logical code ID mapped to slot, module, ABI and layout versions."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/granularity/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

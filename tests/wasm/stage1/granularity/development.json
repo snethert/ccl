@@ -1,0 +1,41 @@
+{
+  "attempts": [
+    {
+      "id": "r1",
+      "status": "HARNESS_FAILURE",
+      "reason": "Revision version fields used raw generation values; the tagged function layout requires fixnum-aligned words. Snapshot correctly refused the pointer-shaped word.",
+      "retained": [
+        "ccl-granularity-r1.log",
+        "ccl-granularity-r1/execution.log",
+        "ccl-granularity-r1/execute.mjs"
+      ]
+    },
+    {
+      "id": "r2",
+      "status": "HARNESS_FAILURE",
+      "reason": "Python imported the inherited materialization controls module. Resolved by explicit module-file import.",
+      "retained": [
+        "ccl-granularity-r2.log"
+      ]
+    },
+    {
+      "id": "r3",
+      "status": "REPORT_FAILURE",
+      "reason": "Retention reporting shadowed the encoded-size rows with integer engine counters. Execution and timings passed before the report failed.",
+      "retained": [
+        "ccl-granularity-r3.log",
+        "ccl-granularity-r3/retention.json"
+      ]
+    },
+    {
+      "id": "r4",
+      "status": "PASS",
+      "reason": "Explicit control import, tagged generation words, native first and second values read from a rebound symbol, live owner binding dispatched through its registry slot, separate retention variables."
+    },
+    {
+      "id": "r5",
+      "status": "PASS",
+      "reason": "Final rollback fault and independent raw measurement joins. Reuses r4 timings only after all measured module binaries, bundle records and benchmark/runtime source files compare byte-identically."
+    }
+  ]
+}

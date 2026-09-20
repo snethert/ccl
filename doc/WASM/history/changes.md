@@ -2883,3 +2883,7 @@ Bind STAGE1-MATERIALIZATION-R1 to Claude audit 118 at afc7fd5b and its review-fi
 ## 2026-09-20 — accept and integrate LL21-a
 
 User acceptance binds audit 118 and the reviewed result. Seventeen prior accepted objects remain unchanged; the ledger is 18 accepted, 13 missing. Compiler switch and portable materializer equal the reviewed proposal; integrated materialization records reproduce and prior native R6/R6a applies to exactly these bytes. All other runtime files unchanged. Proceed to measured module granularity (LL21-b).
+
+## 2026-09-20 — qualify measured module granularity (LL21-b)
+
+Retain the simple per-generated-function packaging with two B entries per module. Nineteen modules bind code IDs, slots, roles, signatures, body ranges, ABI/layout versions and D2 digests. Three redefinitions preserve old functions and mutable closures through late Worker restoration. Thirty fresh cold trials, sixty warmed samples and separate default/eager NativeModule retention diagnostics expose load costs: ~1.93 ms compile and ~37.1 ms complete validated install for the 19-module corpus. The choice is engineering judgment under v3, not a statistical speed ranking or complete-bootstrap projection. Nineteen refusals, eight implementation faults, seven publication controls and twelve role omissions pass. Fresh replay matches 190 deterministic files at 111 pins; compiler unchanged and native R6/R6a reused by exact identity. Ledger: 18 accepted, 12 missing, one unreviewed.

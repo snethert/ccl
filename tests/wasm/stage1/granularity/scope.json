@@ -1,0 +1,15 @@
+{
+  "test": "S1-LL21-b",
+  "choice": "one-generated-function-per-module-v1",
+  "basis": "Measured current production packaging, independent installation, no merger or statistical speed-ranking claim under benchmark policy v3.",
+  "limits": [
+    "Nineteen generated B modules, not the completed bootstrap closure. LL15 still determines final membership; no extrapolated boot-latency claim.",
+    "Expected inventory, ABI/layout versions and D2 classification are trusted build/owner inputs, not code signing.",
+    "Code IDs and slots are distinct concepts; this execution retains the inherited equal assignment and separately validates a non-equal permutation.",
+    "Owner binding selection and snapshot restoration are fixtures. Production symbol transactions stay with LL11-a; process/thread ownership and cross-dump remain separate slots.",
+    "Retain every old module and callable slot. This unit does not implement code reclamation, a merged fallback or a new lazy-loader profile.",
+    "Node default-tier timings are descriptive; eager Liftoff-only retention diagnostics are separate. No browser, JSPI, unshared runtime or speed-ranking claim.",
+    "Engine-reported NativeModule off-heap storage excludes shared WasmEngine overhead and is not an isolated executable-code size. Whole-process RSS is reported separately.",
+    "Full validated installation repeats digest/record checks and costs about 37 ms for the 19-module corpus; this cost is one-time loading, not arithmetic dispatch."
+  ]
+}

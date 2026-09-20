@@ -1,0 +1,12 @@
+{
+ "S1-LL21-b:granularity": {
+  "choice": "README.md and scope.json: one generated function per module under benchmark policy v3, without a comparative speed claim",
+  "production_generated_bytes": "execution/sizes.json; fresh U1 compile equals the accepted modules and separately compiles three redefinitions",
+  "compile_instantiate_install": "execution/cold.json and warm.json, timing-summary.json, measurement-check.json: 30 fresh cold processes; 30 x 250 ms warm trials after 1 s warmup",
+  "retained_code_growth": "execution/retention.json plus raw V8 diagnostic logs: strong references through four generations, separate default and eager Liftoff populations",
+  "mapping": "execution/bundle.json maps every logical ID and entry role to module, structural signature, table/slot, export/index/range, ABI and layout identities; expected.json and independent assessment.json check completeness",
+  "semantics": "execution/execution.json: three placements, native signatures and mutable closures, old/new function results, owner-selected live binding, late Worker restoration",
+  "refusals": "execution/checks.json: 19 controls; execution/faults.json: eight implementation faults; publication-controls.json: seven independent real-document mutations",
+  "native_regression": "inputs.json pins accepted LL21-a native qualification and proposal; integrated compiler is byte-identical, native function oracles freshly recompiled"
+ }
+}
