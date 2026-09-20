@@ -1,0 +1,8 @@
+{
+  "kind": "AUXILIARY_SYMBOLS_REVIEW_FOLLOWUP",
+  "base": "STAGE1-SYMBOLS-R1 at 3ebb85d6, reviewed in audit 120",
+  "service_change": "The string validator rejects UTF-32 surrogate words U+D800 through U+DFFF in addition to values above U+10FFFF. The pinned native CCL returns NIL from CODE-CHAR for surrogates and signals for U+110000. Target malformed-string failures remain checked status 4 rather than Lisp conditions.",
+  "unchanged": "Shared source, compiler, adapter and image transport. Thirteen compiled modules and adapter are byte-identical to reviewed R1. Native R6/R6a reused by compiler hash; native semantic oracles freshly executed.",
+  "coverage": "Explicit MAKE-SYMBOL through all six calling forms before and after load; exact one-value versus NIL-filled two-value delivery and per-operation counters. Existing ALLOW-OTHER-KEYS keyword found before INTERN, preserving identity, external status and self-value without allocation. Retained low-to-2-GiB loads in primitive and generated paths; trace, keyword identity and bindings checked after retirement poisoning. Native character boundaries agree with target admission and refused calls preserve state.",
+  "limits": "The R1 fixed-capacity, pinned, sealed-package and trusted-owner restrictions remain. This tightens symbol-name admission, not every production string API or JavaScript string conversion. No package collector, production loader, timing, browser, or additional inventory credit. Proposal awaits independent review and acceptance."
+}

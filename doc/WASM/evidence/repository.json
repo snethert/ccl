@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "f1e792a30821f52bcb0531a05e5e5d98b6ff6e6510649f96dba33e413729a9b6",
-  "commit": "f5515de73c017789d37e4b90233f0fc8e074deef",
-  "immutable_evidence_files": 230740,
+  "catalog_sha256": "055d285c97544ad801f6a4eeca28810489e61c2524c02981e915e87c94bc586d",
+  "commit": "f8d170d1244e043d604e4c28032326ba1195cff5",
+  "immutable_evidence_files": 231094,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-symbols-r1",
-    "files": 277,
-    "bytes": 7255022
+    "directory": "2026-09-20-stage1-symbols-review-r1",
+    "files": 354,
+    "bytes": 4943063
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 35401,
+  "prior_indexed_references_verified": 35795,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:19 accepted,11 missing,one unreviewed. LL09-a executed; symbol/package proposal awaits review and acceptance.",
-  "source_index_sha256": "54e894df39d49d9778c328f5502f44a414e10881f1b8144121fceb26c19b694c",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-symbols.json",
-  "verification": "Fresh retained replay: 179 deterministic files at 96 pins; all service, image, adapter and role omissions pass. Nineteen accepted bindings unchanged. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0:48 accepted. Stage 1:19 accepted,11 missing,one unreviewed. LL09-a reviewed and awaiting acceptance; auxiliary audit-120 coverage/character follow-up awaits review.",
+  "source_index_sha256": "144ce0186138cf73dae5e1b9617d731edcdf5828dfa76cea5c6e21655af276a9",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-symbols-review.json",
+  "verification": "Fresh follow-up replay: 253 deterministic files at 103 pins. Inherited qualification and ten new controls pass. Immutable R1, gate envelopes and accepted records unchanged. Incremental catalog and indexed references verified.",
   "version": 1
 }

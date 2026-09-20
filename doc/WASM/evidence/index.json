@@ -2535,6 +2535,16 @@
       "review_commit": "fa8ccc0ea8d8e62938c273c3f835b480134a98b6",
       "review_sha256": "ffd3b5612ad296da50453cc2ce8d8127a3c300f29df50e7fcaa5cfb7f9824184",
       "integration": "doc/WASM/stage1/integration-portable-digests.json"
+    },
+    {
+      "id": "STAGE1-SYMBOLS-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-review-r1/packet.json",
+      "sha256": "4e326a7df211d3789b2e68fc31b917b1115d42a0c2099cb3e6a8bf0e5902f624",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit-120 follow-up: all six MAKE-SYMBOL forms explicitly exercised before/after load with per-operation delivery counters; existing ALLOW-OTHER-KEYS identity/status/self-value and zero allocation checked; primitive/generated loads from 4 MiB into 2 GiB retained. Native CODE-CHAR refuses surrogate code points; one derived C guard now rejects them. Compiler, thirteen modules, adapter and image transport unchanged. Inherited 1884 generated comparisons, twelve faults and eight publication controls pass; 36 directed MAKE form checks, 12 keyword checks, 96 character checks and ten new controls. Fresh replay: 253 deterministic files at 103 pins. No additional gate credit; acceptance and integration pending."
     }
   ],
   "current_runs": [
@@ -4906,7 +4916,7 @@
       "test_ids": [
         "S1-LL09-a"
       ],
-      "scope": "Thirteen unchanged-compiler B modules exercise D1 symbols/packages through owner-installed C/Wasm leaves: INTERN, FIND-SYMBOL, MAKE-SYMBOL, name/package readers, EQ and bindings. 582 native rows, 1,884 generated comparisons, six pointer-aware image loads at 4 MiB/8 MiB/2 GiB, 72 owner refusals, twelve implementation faults, eight publication controls and twelve role omissions. Foreign hash versions rebuild before lookup; no unqualified-name binding. Sealed topology, bounded pinned allocation and explicit-field owner snapshot; no production package installer, moving package scanner, complete package system, browser or timing claim. Native R6/R6a reused by exact accepted LL21-a compiler identity. Audit 120 found no defect. MAKE-SYMBOL covers three calling forms; one-value dynamic/indirect delivery is covered by the readers. No trace name pre-existed as a native keyword. Retained loads start at all three placements but target only 4 MiB or 8 MiB; the auditor independently probed loading at 2 GiB. Strings admit lone surrogate code points; production string policy remains open. Acceptance and integration remain pending.",
+      "scope": "Thirteen unchanged-compiler B modules exercise D1 symbols/packages through owner-installed C/Wasm leaves: INTERN, FIND-SYMBOL, MAKE-SYMBOL, name/package readers, EQ and bindings. 582 native rows, 1,884 generated comparisons, six pointer-aware image loads at 4 MiB/8 MiB/2 GiB, 72 owner refusals, twelve implementation faults, eight publication controls and twelve role omissions. Foreign hash versions rebuild before lookup; no unqualified-name binding. Sealed topology, bounded pinned allocation and explicit-field owner snapshot; no production package installer, moving package scanner, complete package system, browser or timing claim. Native R6/R6a reused by exact accepted LL21-a compiler identity. Audit 120 found no defect. MAKE-SYMBOL covers three calling forms; one-value dynamic/indirect delivery is covered by the readers. No trace name pre-existed as a native keyword. Retained loads start at all three placements but target only 4 MiB or 8 MiB; the auditor independently probed loading at 2 GiB. Strings admit lone surrogate code points; production string policy remains open. Acceptance and integration remain pending. STAGE1-SYMBOLS-REVIEW-R1 supplies the directed coverage and a native-aligned surrogate guard for review before integration. Replay original R1 at 3ebb85d6; its source enumeration predates the nested follow-up directory.",
       "review_commit": "8c0dd65b753b5b81101ba474c9014f108e4e9218",
       "review_sha256": "7640c24c546b8eaa194d5fd390ffa420dd8ff6bbe370fb0f47ac2580fa2e4f2c"
     }

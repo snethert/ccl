@@ -1,0 +1,41 @@
+{
+  "attempts": [
+    {
+      "attempt": "native-character-probe",
+      "note": "Initial attempt to execute the immutable evidence kernel in place was refused by filesystem permissions before Lisp started. Copied it to /tmp and set executable permission only on the copy. Native probe found surrogate CODE-CHAR returns NIL; the known keyword exists. A later exploratory native probe confirmed BMP and supplementary noncharacters remain accepted by CODE-CHAR; valid-char-code-p has a different predicate and was not used as the oracle.",
+      "retained": [
+        "ccl-symbol-surrogates.lisp",
+        "ccl-symbol-surrogates.log",
+        "ccl-symbol-noncharacters.lisp",
+        "ccl-symbol-noncharacters.log"
+      ]
+    },
+    {
+      "attempt": "r1",
+      "note": "Inherited and directed positive runs passed. Dynamic zero-count mutant escaped because its condition used bitwise AND of boolean 1 and an aligned descriptor pointer; the injected code was unreachable. Corrected to compare descriptor against zero, with no service or positive-oracle change.",
+      "retained": [
+        "ccl-symbol-followup-r1.log",
+        "ccl-symbol-followup-r1/native.log",
+        "ccl-symbol-followup-r1/directed/execution.json",
+        "ccl-symbol-followup-r1/controls/make-dynamic-zero/adapter.wat",
+        "ccl-symbol-followup-r1/controls/make-dynamic-zero/execution.json"
+      ]
+    },
+    {
+      "attempt": "r2",
+      "note": "All checks pass after correcting the effective dynamic-result fault. Final inspection then routes the directed known-keyword find/intern through generated symbol_values in the generated mode, extending coverage without a service change.",
+      "retained": [
+        "ccl-symbol-followup-r2.log",
+        "ccl-symbol-followup-r2/summary.json"
+      ]
+    },
+    {
+      "attempt": "r3",
+      "note": "Final candidate; generated known-keyword find/intern plus all controls pass.",
+      "retained": [
+        "ccl-symbol-followup-r3.log",
+        "ccl-symbol-followup-r3/summary.json"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+;; The lookup happens before INTERN; no keyword literal with this name is read.
+(multiple-value-bind (s status) (find-symbol "ALLOW-OTHER-KEYS" "KEYWORD")
+ (assert (and s (eq status :external)))
+ (multiple-value-bind (again status2) (intern "ALLOW-OTHER-KEYS" "KEYWORD")
+  (format t "KEYWORD ~{~d~^ ~}~%"
+   (mapcar (lambda (x) (if x 1 0))
+    (list s (eq status :external) (eq s again) (eq status2 :external)
+          (eq (symbol-value s) s) (eq (symbol-package s) (find-package "KEYWORD")))))))
+(let ((forms '((lambda (op a b c) (funcall op a b c))
+               (lambda (op a b c) (multiple-value-bind (v p) (funcall op a b c) (values v p)))
+               (lambda (op a b c) (multiple-value-prog1 (funcall op a b c) (eq a b)))
+               (lambda (op a b c) (apply op (cons a (cons b (cons c nil)))))
+               (lambda (op receiver a b c) (multiple-value-call receiver (funcall op a b c)))
+               (lambda (op receiver a b c) (multiple-value-call receiver (if a (funcall op a b c) (funcall op nil b c)))))))
+ (loop for form in forms for i from 0 do
+  (let* ((fn (compile nil form)) (op (lambda (a b c) (declare (ignore b c)) (make-symbol a)))
+         (receiver (lambda (&optional a b) (values a b)))
+         (args (append (list op) (when (>= i 4) (list receiver)) (list "FRESH" nil nil)))
+         (one (multiple-value-list (apply fn args))) (two (multiple-value-list (apply fn args))))
+   (format t "MAKE ~d ~d ~d ~d ~d ~d~%" i (length one)
+    (if (null (symbol-package (first one))) 1 0)
+    (if (string= (symbol-name (first one)) "FRESH") 1 0)
+    (if (not (eq (first one) (first two))) 1 0)
+    (if (null (second one)) 1 0)))))
+(dolist (code '(55295 55296 56319 56320 57343 57344 1114111 1114112))
+ (handler-case
+  (let ((ch (code-char code)))
+   (format t "CHAR ~d ~d~%" code (if ch (char-code ch) -1))
+   (when ch
+    (let* ((name (string ch)) (s (make-symbol name)))
+     (format t "NAME ~d ~d~%" code (char-code (char (symbol-name s) 0))))))
+  (error () (format t "CHAR ~d -2~%" code))))
+(ccl:quit)
