@@ -2564,3 +2564,27 @@ The user directed “Accept, integrate and proceed” after Claude audit 102. Th
 ## 2026-09-19 — exact D1 integer service for LL16
 
 An isolated freestanding Wasm service now implements add, subtract, multiply, arithmetic shifts with full integer counts, integer length and both truncate results over normalized D1 integers. Independent Python and native CCL under three compiler policies agree on 4,424 cases; target execution below/above 2 GiB yields 8,848 comparisons plus 636 chained target-result operations. Forty-eight refusal checks preserve inputs and published results; twelve compiled faults fail focused oracles. The decoded call graph has no cycle, imported function or indirect call. Fresh replay reproduces all 75 deterministic files with eleven source pins. Original harness failures remain retained. No shared compiler/runtime/kernel change and no LL16 credit: generated dispatch, owner/roots and D6 floating-point execution remain. Ledger remains 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-third Claude audit: LL11-b integration and D1 integer service reviewed
+
+Claude reviewed `01e3d10e` and `b543ed5e` from the detached worktree. The
+integration commit changes only the compiler outside `doc/`, to bytes equal to
+the retained proposal and to a fresh regeneration from the pre-integration
+compiler; all eight runtime files are unchanged; the acceptance binds audit 102
+and its review hash, the integration binds the acceptance and the previous
+integration; the four audit-102 observations are carried as obligations. The
+integer service replay from the detached worktree reproduces all 75
+deterministic files and eleven pins with counts equal to Codex's record: 4,424
+cases, 13,272 native comparisons at three policies, 8,848 target comparisons,
+636 chain steps, 48 refusals and twelve rejected faults. A differential probe
+of 6,592 further cases at both placements, including 1,024-limb multiply and
+divide, every capacity boundary and guard regions around each owner area,
+found no wrong value, no stray write and no refusal that altered inputs,
+allocation or publication. Observations, none a defect: a fault that checks
+only the first result's allocation escapes every fixture case and control,
+because the two-result control's quotient alone overflows; the pointer
+alignment check is dead code under the tag check, so the control named for it
+exercises the header check; a canonical input wider than 1,025 limbs is
+refused as malformed rather than as a capacity; and no corpus case exercises
+multiply or divide above 64 limbs. Record only; acceptance is the user's
+decision.
