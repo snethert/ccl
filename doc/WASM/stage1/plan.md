@@ -139,8 +139,11 @@ signed-zero oracle defect and adds directed and random coercion coverage; the
 service is accepted and integrated after audit 110. Native
 CCL differs on explicit integer-coercion overflow despite masked hardware flags
 and on huge-integer/infinity ordering; both populations are retained, not claimed
-as compatibility. Next: a collecting owner capability and generated mixed calls
-under the approved D6 TCR mode, preserving explicit native coercion errors and
+as compatibility. The [collecting owner capability](../../../tests/wasm/stage1/float-owner/README.md)
+now executes rooted staging, private arithmetic, assurance and publication under
+the live TCR mode, including movement and growth. It is a proposal awaiting review.
+Next: generated mixed calls and loader admission with Lisp condition delivery,
+preserving explicit native coercion errors and
 resolving infinity comparison behavior before qualification. Only joined
 qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.

@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "405613782002d79891570d2c10a63e7eac0e8ca450027c71eac90268f9a51438",
-  "commit": "a272febad0e784d836e9cb91f172af59d4521450",
-  "immutable_evidence_files": 226282,
+  "catalog_sha256": "df81401b717437376dcd5fd77bf03f4a567a42203236d010eb0cdc72ccbd1e7c",
+  "commit": "c6930df5ec3324696be6621aab8b2851bc1fcd6d",
+  "immutable_evidence_files": 226450,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-float-core-r2",
-    "files": 215,
-    "bytes": 30163362
+    "directory": "2026-09-19-stage1-float-owner-r1",
+    "files": 168,
+    "bytes": 1724607
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Floating primitives R2 oracle correction awaiting review, no slot credit.",
-  "source_index_sha256": "995e47cb3dbfb5eb9871314a41f5e85585a109db0b63932fb03084f23ffdf88c",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-float-core-r2.json",
-  "verification": "Scoped R2 packet checked; fresh replay 100 files,19 pins. Service/detector byte-identical to R1. All prior catalog rows preserved; incremental addition only.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Float primitives integrated; collecting float owner proposal awaiting review, no slot credit.",
+  "source_index_sha256": "875a00c4d6ade550ae82bffdd524ea78818bbdc5f529ec5160cd36823f32e459",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-float-owner-r1.json",
+  "verification": "Scoped float owner packet checked; fresh replay 129 files,14 pins. Reviewed raw services and compiler unchanged. All prior catalog rows preserved; incremental addition only.",
   "version": 1
 }

@@ -2779,3 +2779,7 @@ Acceptance is the user's decision.
 ## 2026-09-19 — accept and integrate floating primitive R2
 
 On “accept, integrate and proceed”, integrate the reviewed C service and detector byte-exactly. The record binds audit 110 and its review hash, the R2 packet and the prior numeric-owner integration. Compiler and earlier runtime files unchanged. Oracle limitations and native compatibility boundaries remain explicit. No LL16 credit: 15 accepted,16 missing.
+
+## 2026-09-19 — qualify collecting floating owner capability
+
+After float-core R2 integration, add an isolated owner capability proposal. It binds reviewed service/detector bytes to one owner, memory, TCR and checked-error tag, reads the FP control word per call, stages operands privately, and publishes a rooted result after collection/growth. 1,585 accepted-oracle rows yield 6,340 comparisons and 2,834 forced collections at two placements. Thirty-six scenario records include real growth, dependent calls, refusal after movement, live masks and boundary refusals; twelve runtime faults are rejected. The original memory-maximum harness failure and missing-exception-message control failure are retained. Fresh replay matches 129 deterministic files and 14 pins. No shared compiler/runtime changes, new native semantics or LL16 credit. Generated calls, loader admission and Lisp condition delivery follow.
