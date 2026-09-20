@@ -139,3 +139,5 @@ Bignum/exceptional fallback cost and application throughput are separate. The
 compiler and primitive binaries are unchanged; LL16-a is accepted at its reviewed subset/policy scope.
 
 Strong EQ backing vectors: `hash.c`, `hash-adapter.wat` and the collector’s moved-key scanner are integrated at the reviewed LL18-b scope. Fixed capacity, internal owner-installed callable entries; production installation and CL hash-form lowering remain open.
+
+All runtime JavaScript modules now use the reviewed synchronous `sha256.mjs` and `bytes.mjs` helpers. No runtime module imports Node crypto or uses Buffer. Factories keep their existing signatures; load binary bytes with the host’s file or fetch APIs before calling them. Loader/installer snapshots always own copies. SHA-256 remains construction/installation work, and very large inputs may block the Worker. See the [integration record](../../doc/WASM/stage1/integration-portable-digests.json) for exact bytes, checks and audit-117 browser limitations. The earlier `fs` example is a Node host example, not a runtime dependency.

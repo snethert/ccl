@@ -13,7 +13,7 @@
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 33446,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:17 accepted,14 missing,zero unreviewed. Portable digest runtime proposal auxiliary, not reviewed or integrated; LL21 paused.",
+  "scope": "Stage 0:48 accepted. Stage 1:17 accepted,14 missing,zero unreviewed. Portable digest runtime accepted and integrated after audit 117; auxiliary, no slot credit. LL21 paused.",
   "source_index_sha256": "29c8b55c2feabc679db7e8945790ef8a67856ba8da22eccc70aa3d329be457ec",
   "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-portable-digests.json",
   "verification": "Retained replay, source/tool/archive pins, browser/Node results and indexed references verified; prior accepted results unchanged.",

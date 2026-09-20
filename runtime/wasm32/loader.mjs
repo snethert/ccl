@@ -1,9 +1,10 @@
-import {createHash} from 'node:crypto';
+import {snapshotBytes} from './bytes.mjs';
+import {sha256} from './sha256.mjs';
 import {inspect} from './binary.mjs';
 import {admitNumericCapabilities} from './numeric-capabilities.mjs';
 import {admitFloatingCapabilities} from './floating-capabilities.mjs';
 export const FLOAT_PROFILE='wasm32-shared-B-floating-owner-v1';
-export const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+export const sha=sha256;
 const need=(ok,reason)=>{if(!ok)throw Error(reason);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const B={params:['i32','i32'],results:['i32','i32']},TAIL={params:['i32','i32','i32'],results:['i32','i32']};
@@ -110,7 +111,7 @@ export class LazyLoader {
       need(row&&row.state!=='DECLARED','UNDECLARED_SLOT');this.#check(row);
       if(row.state==='READY'){this.events.push({slot,event:'READY_HIT'});return;}
       need(row.state==='COLD','INSTALL_STATE');this.#busy=true;row.state='LOADING';
-      const bytes=Buffer.from(o.readBytes(row.record.name)); // snapshot once
+      const bytes=snapshotBytes(o.readBytes(row.record.name)); // snapshot once
       validate(bytes,row.record);
       // No start, segments or getters. The admitted functions are trusted
       // owner capabilities. Instantiation cannot

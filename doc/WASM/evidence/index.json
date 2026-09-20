@@ -2526,14 +2526,15 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1/packet.json",
       "sha256": "3c295ee4cc70ed93015061bfb938bb6a36b902c7ad2437886521235d37c01af4",
       "execution_status": "PASS",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Unintegrated runtime-only proposal: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Acceptance and integration remain pending; no slot credit.",
+      "scope": "Accepted and integrated runtime correction: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Accepted on the user’s “accept and integrate”; exact reviewed bytes integrated. No slot credit.",
       "verification_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1-verification.json",
       "verification_sha256": "b1f0165232110fd75cfd010d488dc3f6afde6fe477e396322cbc08006162b869",
       "review_commit": "fa8ccc0ea8d8e62938c273c3f835b480134a98b6",
-      "review_sha256": "ffd3b5612ad296da50453cc2ce8d8127a3c300f29df50e7fcaa5cfb7f9824184"
+      "review_sha256": "ffd3b5612ad296da50453cc2ce8d8127a3c300f29df50e7fcaa5cfb7f9824184",
+      "integration": "doc/WASM/stage1/integration-portable-digests.json"
     }
   ],
   "current_runs": [

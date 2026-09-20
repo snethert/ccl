@@ -1,8 +1,9 @@
+import {hex} from './bytes.mjs';
 // Narrow reader for generated B modules. The engine validates instructions;
 // this reader independently constrains the installation surface before instantiation.
 export function inspect(bytes,{ownerRetry=false}={}) {
   const fail = reason => { throw Error(reason); };
-  if (Buffer.from(bytes.subarray(0,8)).toString('hex') !== '0061736d01000000') fail('HEADER');
+  if (hex(bytes.subarray(0,8)) !== '0061736d01000000') fail('HEADER');
   let p=8,end=bytes.length;const byte=()=>{if(p>=end)fail('TRUNCATED');return bytes[p++];};
   const leb=()=>{let n=0;for(let i=0;i<5;i++){const b=byte();if(i===4&&b>15)fail('LEB');n+=(b&127)*2**(7*i);if(!(b&128))return n;}fail('LEB');};
   const str=()=>{const n=leb();if(p+n>end)fail('NAME');const s=new TextDecoder('utf8',{fatal:true}).decode(bytes.subarray(p,p+n));p+=n;return s;};

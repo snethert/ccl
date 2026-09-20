@@ -1,9 +1,9 @@
-import {createHash} from 'node:crypto';
+import {sha256} from './sha256.mjs';
 import {CollectorOwner} from './collector-owner.mjs';
 // A single-Worker capability. Arithmetic is exclusively in the pinned Wasm
 // service. The private buffer holds pointer-free integer results across GC.
 export function integerService({memory,tcr,owner,callError,bytes,digest,pinned=[]}){
- if(!(owner instanceof CollectorOwner)||!(memory instanceof WebAssembly.Memory)||!(callError instanceof WebAssembly.Tag)||createHash('sha256').update(bytes).digest('hex')!==digest)throw Error('integer owner capability');
+ if(!(owner instanceof CollectorOwner)||!(memory instanceof WebAssembly.Memory)||!(callError instanceof WebAssembly.Tag)||sha256(bytes)!==digest)throw Error('integer owner capability');
  if(owner.view.buffer!==memory.buffer)throw Error('integer memory capability');
  const mod=new WebAssembly.Module(bytes);if(JSON.stringify(WebAssembly.Module.imports(mod))!==JSON.stringify([{module:'env',name:'memory',kind:'memory'}]))throw Error('integer imports');
  const privateMemory=new WebAssembly.Memory({initial:4,maximum:32769});

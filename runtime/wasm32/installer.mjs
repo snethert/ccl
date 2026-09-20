@@ -1,3 +1,4 @@
+import {snapshotBytes,utf8} from './bytes.mjs';
 import {LazyLoader,validate,sha,PROFILE} from './loader.mjs';
 import {entryRanges} from './ranges.mjs';
 const need=(x,s)=>{if(!x)throw Error(s);},same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -35,7 +36,7 @@ export class BindingInstaller {
    need(Number.isInteger(r.slot)&&r.slot>=o.reserved&&r.slot<get(o.registry)&&r.slot<o.table.length&&r.slot<o.tail_table.length&&!this.#slots.has(r.slot)&&!slots.has(r.slot),'SLOT_OWNER');
    need(r.code===r.slot&&r.version===4&&r.signature===17&&r.role===23,'CODE_ROLE');
    span(o.registry+8+16*r.code,16);need([0,4,8,12].every(i=>get(o.registry+8+16*r.code+i)===0)&&o.table.get(r.slot)===null&&o.tail_table.get(r.slot)===null,'SLOT_EMPTY');
-   const b=Buffer.from(readBytes(r.name));validate(b,r);need(same(r.ranges,entryRanges(b)),'ENTRY_RANGES');
+   const b=snapshotBytes(readBytes(r.name));validate(b,r);need(same(r.ranges,entryRanges(b)),'ENTRY_RANGES');
    need(Array.isArray(r.arity)&&r.arity.length===6&&Number.isInteger(r.captures)&&r.captures>=0,'CALLABLE_SHAPE');
    slots.add(r.slot);staged.set(r.name,r);bytes.set(r.name,b);
   }
@@ -59,7 +60,7 @@ export class BindingInstaller {
    for(const b of bindings)write(b.where,b.value);
   }catch(e){for(let i=journal.length-1;i>=0;i--)put(...journal[i]);for(const slot of slots){o.table.set(slot,null);o.tail_table.set(slot,null);}throw e;}
   // Keep prior module instances and code rows alive for saved function objects.
-  for(const [n,c]of staged)this.#modules.set(n,c);for(const s of slots)this.#slots.add(s);this.#loaders.push(loader);this.#generation=m.generation;this.#head=sha(Buffer.from(JSON.stringify(m)));
+  for(const [n,c]of staged)this.#modules.set(n,c);for(const s of slots)this.#slots.add(s);this.#loaders.push(loader);this.#generation=m.generation;this.#head=sha(utf8(JSON.stringify(m)));
   return {...this.state(),installed:loader.events.filter(e=>e.event==='INSTALLED'),bindings:bindings.length};
  }
 }

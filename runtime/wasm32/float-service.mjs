@@ -1,9 +1,9 @@
-import {createHash} from 'node:crypto';
+import {sha256} from './sha256.mjs';
 import {CollectorOwner} from './collector-owner.mjs';
 // Single trusted Worker. Object starts and exclusive heap ownership are supplied
 // by the owner, not inferred from pointer tags. The private result is pointer-free.
 export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBytes,detectorDigest,pinned=[]}){
- const hash=b=>createHash('sha256').update(b).digest('hex');
+ const hash=sha256;
  if(!(owner instanceof CollectorOwner)||!(memory instanceof WebAssembly.Memory)||
     !(callError instanceof WebAssembly.Tag)||owner.tcr!==tcr||owner.view.buffer!==memory.buffer||
     hash(bytes)!==digest||hash(detectorBytes)!==detectorDigest)throw Error('FLOAT_CAPABILITY');

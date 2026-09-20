@@ -1,5 +1,5 @@
 // Single-Worker owner for the accepted copying service. No compiler/kernel edits.
-import {createHash} from 'node:crypto';
+import {sha256} from './sha256.mjs';
 const PAGE=65536,NIL=77825,T=77838,REQUIRED=['module-constants','callbacks','registry','host'];
 function need(x,why){if(!x)throw new Error('collector-owner: '+why);}
 function integer(n){return Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff;}
@@ -11,7 +11,7 @@ export class CollectorOwner {
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;
  static create(memory,bytes,digest,layout){
-  need(createHash('sha256').update(bytes).digest('hex')===digest,'collector digest');
+  need(sha256(bytes)===digest,'collector digest');
   const mod=new WebAssembly.Module(bytes),imports=WebAssembly.Module.imports(mod);
   need(imports.length===1&&imports[0].module==='env'&&imports[0].name==='memory'&&imports[0].kind==='memory','collector imports');
   const owner=new CollectorOwner();owner.#memory=memory;owner.#layout=structuredClone(layout);owner.#spaces=structuredClone(layout.spaces);

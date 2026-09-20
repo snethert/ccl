@@ -2863,3 +2863,7 @@ Claude reviewed d8544fb2 (STAGE1-PORTABLE-DIGESTS-R1) in its detached worktree. 
 ## 2026-09-20 — record portable digest review disposition
 
 Bind STAGE1-PORTABLE-DIGESTS-R1 to Claude audit 117 at `fa8ccc0e`, including the review-file hash, as reviewed with no defect. Acceptance and integration remain pending. Audit 117 localizes the mixed-placement refusal to the pinned Chromium 145 Maglev tier; Node and Chrome 153 pass. Withdraw the historical README claim that adding diagnostic arguments fixed it: the retained logs do not establish that. The pinned fixture and packet remain unchanged for exact replay; this correction and audit 117 supersede that wording. Browser coverage remains scoped, and LL21 stays paused. No execution, runtime or ledger-count change.
+
+## 2026-09-20 — accept and integrate portable runtime digests
+
+On “accept and integrate”, bind audit 117 and its review-file hash, the retained packet and the previous LL18-b integration. Seven runtime modules change and two shared byte/digest helpers are added, byte-identical to the reviewed proposal. All other runtime files, compiler and Wasm binaries remain unchanged. Fresh Node and Chromium Worker checks execute the integrated modules and reproduce the retained outputs. Carry the snapshot strengthening, UTF-8 lengths, Chromium Maglev limitation, corrected historical README claim, browser-coverage limit and construction-time hashing cost. Auxiliary acceptance leaves the ledger at 17 accepted, 14 missing. LL21 remains paused.

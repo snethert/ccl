@@ -1,9 +1,10 @@
-import {createHash} from 'node:crypto';
+import {utf8} from './bytes.mjs';
+import {sha256} from './sha256.mjs';
 import {lispFloatService} from './service.mjs';
 const need=(x,s)=>{if(!x)throw Error('SCALAR_'+s);};
 const u=n=>{const a=[];do{let b=n%128;n=Math.floor(n/128);a.push(b|(n?128:0));}while(n);return a;};
 const si=n=>{n=BigInt(n);const a=[];for(;;){let b=Number(n&127n);n>>=7n;const done=(n===0n&&!(b&64))||(n===-1n&&(b&64));a.push(b|(done?0:128));if(done)return a;}};
-const name=s=>[...u(s.length),...Buffer.from(s)];
+const name=s=>{const b=utf8(s);return [...u(b.length),...b];};
 const section=(id,body)=>[id,...u(body.length),...body];
 // Pure Wasm binary search over immutable, disjoint pinned spans. No linear-memory
 // metadata, JS callback, start function or imported authority in this module.
@@ -27,7 +28,7 @@ export function scalarFloatService(options){
  // Construction of the original service performs all existing capability,
  // digest and pinned-region checks, even when its hot branch is never called.
  const slow=lispFloatService(options),{memory,tcr,owner,scalarBytes,scalarDigest,pinned=[]}=options;
- need(createHash('sha256').update(scalarBytes).digest('hex')===scalarDigest,'DIGEST');
+ need(sha256(scalarBytes)===scalarDigest,'DIGEST');
  const module=new WebAssembly.Module(scalarBytes);
  const globals=['tcr','boundary','eligible','a0','a1','b0','b1','v0','v1','t0','t1','c0','c1','l0','l1','maximum'];
  const imports=['env/memory/memory',...globals.map(n=>'env/'+n+'/global'),'regions/contains/function','fallback/calculate/function'].sort();

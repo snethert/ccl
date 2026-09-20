@@ -231,3 +231,17 @@ Acceptance covers native policy comparisons mapped to the two generated checking
 ## Strong EQ tables (audit 116)
 
 The accepted runtime uses fixed-capacity strong backing vectors and trusted internal B adapters. CL hash-form lowering, the HASH-TABLE wrapper, growth, weak semantics, pinned-image inventory and production installation remain deferred. The retained trace’s nonempty test implies a heap key only for that corpus; the scanner itself marks actual bucket-key relocation. The packet hash_seed option is unused. See [integration](integration-ll18b.json) for all audit observations.
+
+## Portable digest integration (Claude audit 117)
+
+Snapshots now copy ArrayBuffer storage as well as views; prior Buffer.from(ArrayBuffer) aliased it. The reviewed loader and installer controls bind ownership.
+
+Import-name prefixes use UTF-8 byte length, identical for current ASCII names and correct for non-ASCII names.
+
+Audit 117 resolves the same-Worker mixed-placement refusal as a Maglev-tier fault in pinned Chromium 145.0.7632.6. It passes with Maglev disabled, in Node 25.6.1 and Chrome 153.0.8010.36. Keep the affected build/placement limit in browser qualification; the runtime bounds check is unchanged.
+
+The pinned README claim that adding diagnostic arguments made the run pass is unsupported by the retained logs and is superseded by audit 117. The immutable fixture remains unchanged for replay.
+
+The retained browser coverage is Chromium only; no Firefox, WebKit or complete engine-matrix qualification follows.
+
+Pure-JS SHA-256 is synchronous construction/installation work, not arithmetic-path work. Audit 117 measured about 26 seconds for a 1 GiB input; very large module binding needs a separate budget. Factory signatures and capability identities stay synchronous and unchanged.
