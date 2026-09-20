@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2f8575967419533fcbe078238564cdef10ee6903fffee8784cf3aabb79bde737",
-  "commit": "e0a380497c5cec419055927ba133bd0dea44e8f4",
-  "immutable_evidence_files": 225778,
+  "catalog_sha256": "e382134ed2c290a0eaf75a298e5555558a7c8e4fd3e8d3522b21c278c30ef4e0",
+  "commit": "c28ddd7c8181df91f2cb5a1e914195598252080b",
+  "immutable_evidence_files": 225839,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-integer-conditions-r1",
+    "directory": "2026-09-19-stage1-integer-conditions-r2",
     "files": 61,
-    "bytes": 37440355
+    "bytes": 38278319
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Integer calls accepted and integrated; numeric condition proposal awaiting review, no slot credit.",
-  "source_index_sha256": "e186d9a46a602735379ec5c447700233c4fc6919f3c295f78bda0c61933042f6",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-integer-conditions.json",
-  "verification": "Scoped integer-condition packet and native R6 qualification checked; fresh replay 1767 files, 390 pins. All prior catalog rows preserved; incremental addition only.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Integer calls accepted and integrated; numeric condition R2 awaiting review, no slot credit.",
+  "source_index_sha256": "6b8998dc0de75d9678eed1e0a812103aae3274a6d3fad2526c2a6bf54ad8ebdb",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-integer-conditions-r2.json",
+  "verification": "Scoped integer-condition packet and native R6 qualification checked; fresh replay 2702 files, 403 pins. All prior catalog rows preserved; incremental addition only.",
   "version": 1
 }

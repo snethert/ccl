@@ -2406,10 +2406,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-conditions-r1/packet.json",
       "sha256": "3b4e0ab5ecbcdf15580c6d032b707c6d2d64d0a635dd991715ddac1e6fc30812",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Opt-in generated integer Lisp conditions: 54 modules, 372 reference cases, 1489 comparisons, 465 collector copies, 252 inline checks, eleven rejected compiler faults and two harness controls. Native R6/R6a passes; 60 default-mode files identical. Native zero-divisor trap metadata retained separately; explicit CCL condition construction supplies the field oracle. Fresh replay 1767 files, 390 pins. Runtime files unchanged. No LL16 credit; allocation-retry composition, floating point and loader admission remain.",
+      "review_commit": "71f7fc9d0cb8a89f3e37cde3a0a1ea130de1704a",
+      "superseded_by": "STAGE1-INTEGER-CONDITIONS-R2"
+    },
+    {
+      "id": "STAGE1-INTEGER-CONDITIONS-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-conditions-r2/packet.json",
+      "sha256": "113308bf526c972d540bc266f01cabc916df3f4422cd693c5acd5982b6bcb43a",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Opt-in generated integer Lisp conditions: 54 modules, 372 reference cases, 1489 comparisons, 465 collector copies, 252 inline checks, eleven rejected compiler faults and two harness controls. Native R6/R6a passes; 60 default-mode files identical. Native zero-divisor trap metadata retained separately; explicit CCL condition construction supplies the field oracle. Fresh replay 1767 files, 390 pins. Runtime files unchanged. No LL16 credit; allocation-retry composition, floating point and loader admission remain."
+      "scope": "Audit-106 follow-up: numeric-only quote admission, native NIL-divisor behavior, ASH count-first checking, unbiased dividend/zero-divisor oracle. 67 modules, 423 native/reference cases, 1693 comparisons, 477 collector copies, 252 inline checks and seventeen rejected controls. Native policy-dependent +/* order, wrong-class readers and fatal diagnostic conventions explicitly retained. Native R6/R6a passes, 60 default files identical; fresh replay 2702 files, 403 pins. Supersedes unaccepted R1; no integration or LL16 credit."
     }
   ],
   "current_runs": [

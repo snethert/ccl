@@ -2676,3 +2676,7 @@ the target always reports the left operand; and the quoted-symbol admission
 list gains NUMBER, REAL and TRUNCATE in every mode, so default-mode source the
 integrated compiler refuses now compiles. Record only; acceptance is the
 user's decision.
+
+## 2026-09-19 — integer-condition audit-106 follow-up
+
+On the user’s “proceed”, R2 restricts the three quote names to numeric mode, treats an explicit NIL divisor as native CCL does, checks ASH’s count first, and corrects the explicit condition oracle to let native TRUNCATE reject an invalid dividend before zero division. The retained matrix exposes +/* check-order variation at safety 3/speed 0, both wrong-class reader conditions, and default/numeric quote admission. There are 1,693 comparisons, 477 collector copies, seventeen rejected controls and a new native R6/R6a run. Fresh replay matches 2702 deterministic files with 403 pins. Audit 106 is indexed; R1 remains retained unaccepted and superseded. No shared integration, criterion change or LL16 credit; ledger unchanged at 15 accepted,16 missing.

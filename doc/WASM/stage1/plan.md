@@ -122,15 +122,15 @@ now executes inline fixnums and rooted integer fallback through the accepted
 service and collector owner: 1,221 native-derived comparisons, 429 collector
 copies, one growth and nine rejected faults, with default output unchanged and
 native R6/R6a passing. It is accepted and integrated after audit 105, with no slot credit.
-The [integer-condition proposal](../../../tests/wasm/stage1/integer-conditions/README.md)
-now routes nonnumeric operands and zero divisors through Lisp handlers, restarts
-and cleanups, with moving conditions and pending values. Its 1,489 comparisons
-include a disclosed explicit-native-constructor oracle for division-error fields;
-the differing native trap fields are retained separately. All six inline paths,
-short multiple-value fills and the retained service digest now have controls.
-The proposal is auxiliary and pending review. Next: compose numeric conditions
-with allocation retry and authenticated loader admission, then mixed floats
-under the approved D6 policy. Only joined qualification executes LL16-a.
+The [integer-condition R2 proposal](../../../tests/wasm/stage1/integer-condition-review/README.md)
+supersedes unaccepted R1 after audit 106: quote admission is numeric-only,
+TRUNCATE matches CCL's NIL-divisor default, ASH checks the count first, and the
+native condition oracle defers invalid dividends to native type checking.
+The 1,693 comparisons and seventeen controls retain policy-dependent +/* error
+priority and wrong-class reader differences explicitly. R2 remains auxiliary,
+unintegrated and pending review. Next: compose numeric conditions with
+allocation retry and authenticated loader admission, then mixed floats under
+the approved D6 policy. Only joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
