@@ -181,3 +181,13 @@ Six independent literal checks guard the Python oracle; the old-oracle target re
 Primitive integer coercion overflow and huge-integer/infinity comparisons differ from native CCL as retained. A Lisp adapter must preserve explicit native coercion errors and resolve infinity comparison semantics before LL16 qualification.
 
 This raw service admits private unshared memory and nearest rounding only. Collector capability, generated calls, Lisp condition delivery and TCR control remain separate work.
+
+## Collecting floating capability (Claude audit 111)
+
+The omitted development r2 was a passing pre-controls run. The capability bytes were unchanged across r1–r4; original failing attempts r1 and r3 remain retained.
+
+Unchecked calls validate enabled bits but do not apply them, as in the accepted primitive.
+
+The full 59083-row capability replay and 3000-step chain are Claude audit-111 probes; the retained author fixture samples 1585 rows.
+
+Native explicit coercion-overflow and integer/infinity compatibility dispositions remain obligations for generated Lisp calls.

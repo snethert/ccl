@@ -141,7 +141,8 @@ CCL differs on explicit integer-coercion overflow despite masked hardware flags
 and on huge-integer/infinity ordering; both populations are retained, not claimed
 as compatibility. The [collecting owner capability](../../../tests/wasm/stage1/float-owner/README.md)
 now executes rooted staging, private arithmetic, assurance and publication under
-the live TCR mode, including movement and growth. It is a proposal awaiting review.
+the live TCR mode, including movement and growth. It is accepted and integrated
+after audit 111.
 Next: generated mixed calls and loader admission with Lisp condition delivery,
 preserving explicit native coercion errors and
 resolving infinity comparison behavior before qualification. Only joined

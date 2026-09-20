@@ -88,3 +88,8 @@ byte-identical to the [R2 packet](../../tests/wasm/stage1/float-core/README.md).
 The detector imports the service’s private memory. Build flags, ownership, native
 compatibility boundaries and result/exception status ABI are specified there.
 These are raw primitives; collecting generated calls remain separate work.
+
+`float-service.mjs` is the accepted collecting floating capability. It reads the
+live TCR FP-control word and publishes into a four-word root frame after assurance;
+see its [ABI and scope](../../tests/wasm/stage1/float-owner/README.md).
+Generated calls, loader admission and Lisp signaling remain separate work.

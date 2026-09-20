@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T04:26:53.910857+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "31ed68aa3727bbfd06a8e83c3f35f17086e5028e",
+  "review_sha256": "420058a577affa48f3fd58ced4804312466bf8af440c1b30e995b3fe004e3637",
+  "files": [
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "before": null,
+      "after": "668e36bec3de2f6a80eae098807ee25790de06d97cbbc5556472b00b5954b360",
+      "proposal_locator": "2026-09-19-stage1-float-owner-r1/float-service.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "d328c6bc7882631d98bb49a878110c3b90b691583405a021e79ebef1f9192df4"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "a26a4ee9cbda3978bff2a08bd9c7a0cabc3e740a0ec486e31761023773191ea8"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "sha256": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "sha256": "5e8c1572c08ba94eabe092988595dbafcae6894ed13c58b12f235e4a79385b39"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "5cb9cde32d916f3dcc2569730348c86ce6cc611e68e4cebcc7b36ca15d07d169"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packet": {
+    "locator": "2026-09-19-stage1-float-owner-r1/packet.json",
+    "sha256": "841f17b12c000b4299716cd61c2edef3242a28c142bf91ef3d89e5713b0565e5"
+  },
+  "previous_integration": "integration-float-core.json",
+  "previous_integration_sha256": "45f68c5dfdcb37c41565769b2982db5af81143a4f86b4a92e7994ee4319cd099",
+  "observations": [
+    "The omitted development r2 was a passing pre-controls run. The capability bytes were unchanged across r1–r4; original failing attempts r1 and r3 remain retained.",
+    "Unchecked calls validate enabled bits but do not apply them, as in the accepted primitive.",
+    "The full 59083-row capability replay and 3000-step chain are Claude audit-111 probes; the retained author fixture samples 1585 rows.",
+    "Native explicit coercion-overflow and integer/infinity compatibility dispositions remain obligations for generated Lisp calls."
+  ],
+  "scope": "Exact reviewed collecting float capability; auxiliary, no LL16 credit.",
+  "verification": "Byte identity with reviewed fixture and packet, audit-111 replay. Compiler and earlier runtime files unchanged.",
+  "reverse": "Remove float-service.mjs after withdrawing consumers."
+}

@@ -2457,7 +2457,7 @@
       "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-109 oracle correction: preserve source sign at rounded zero. Service and detector binaries byte-identical to R1. 59083 cases,177249 target comparisons;1386 SSE witnesses (1167 arithmetic,219 conversions);15 service faults and original oracle regression rejected;6 independent literal expectations. Random coverage adds both coercions over integer/single/double inputs. Native:7367 cases,7103 equal,264 declared differences (184 explicit coercion overflows,80 infinity comparisons). Replay 100 files,19 pins. Auxiliary, not accepted or integrated; no LL16 credit.",
+      "scope": "Audit-109 oracle correction: preserve source sign at rounded zero. Service and detector binaries byte-identical to R1. 59083 cases,177249 target comparisons;1386 SSE witnesses (1167 arithmetic,219 conversions);15 service faults and original oracle regression rejected;6 independent literal expectations. Random coverage adds both coercions over integer/single/double inputs. Native:7367 cases,7103 equal,264 declared differences (184 explicit coercion overflows,80 infinity comparisons). Replay 100 files,19 pins. Auxiliary, accepted and integrated after audit 110; no LL16 credit.",
       "review_commit": "d967a16a59e144b00fe42fc12671742b4c5d2dd8",
       "integration": "doc/WASM/stage1/integration-float-core.json"
     },
@@ -2466,10 +2466,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-owner-r1/packet.json",
       "sha256": "841f17b12c000b4299716cd61c2edef3242a28c142bf91ef3d89e5713b0565e5",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Collecting floating owner capability proposal; shared compiler/runtime unchanged, no LL16 credit. Accepted float/detector/collector binaries reused by hash. 1585 accepted-oracle rows at two placements, ordinary/forced collection:6340 comparisons,2834 copies.36 scenario records include real growth, dependent results, refusal after movement, live TCR masks, root/type/owner admission and re-entry.12 faults rejected. Replay 129 files,14 pins. Native differences retained; generated calls/loader admission/Lisp signaling next."
+      "scope": "Collecting floating owner capability accepted and integrated after audit 111; shared compiler/runtime unchanged, no LL16 credit. Accepted float/detector/collector binaries reused by hash. 1585 accepted-oracle rows at two placements, ordinary/forced collection:6340 comparisons,2834 copies.36 scenario records include real growth, dependent results, refusal after movement, live TCR masks, root/type/owner admission and re-entry.12 faults rejected. Replay 129 files,14 pins. Native differences retained; generated calls/loader admission/Lisp signaling next.",
+      "review_commit": "31ed68aa3727bbfd06a8e83c3f35f17086e5028e",
+      "integration": "doc/WASM/stage1/integration-float-owner.json"
     }
   ],
   "current_runs": [
