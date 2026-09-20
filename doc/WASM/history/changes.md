@@ -2680,3 +2680,24 @@ user's decision.
 ## 2026-09-19 — integer-condition audit-106 follow-up
 
 On the user’s “proceed”, R2 restricts the three quote names to numeric mode, treats an explicit NIL divisor as native CCL does, checks ASH’s count first, and corrects the explicit condition oracle to let native TRUNCATE reject an invalid dividend before zero division. The retained matrix exposes +/* check-order variation at safety 3/speed 0, both wrong-class reader conditions, and default/numeric quote admission. There are 1,693 comparisons, 477 collector copies, seventeen rejected controls and a new native R6/R6a run. Fresh replay matches 2702 deterministic files with 403 pins. Audit 106 is indexed; R1 remains retained unaccepted and superseded. No shared integration, criterion change or LL16 credit; ledger unchanged at 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-seventh Claude audit: integer-condition R2 reviewed
+
+Claude reviewed `2ff6752c` from the detached worktree. The commit changes no
+shared source; the R2 compiler regenerates to the packet copy `d328c6bc…` and
+differs from R1 by exactly the three described changes: the quote allowlist
+gains NUMBER, REAL and TRUNCATE only under the numeric special, TRUNCATE
+replaces a NIL divisor in its private root slot with one after both operands
+are evaluated, and ASH checks the count before the value. The oracle
+constructs DIVISION-BY-ZERO only for a real dividend. The packet replays with
+a record equal to Codex's: 2,702 deterministic files, 403 pins, 67 modules,
+423 native cases, 1,693 comparisons, 477 collector copies, one growth, 252
+inline checks, seventeen rejected controls including the admission and
+biased-oracle controls, 60 default-mode files identical and native R6/R6a
+passing. The retained native matrix at five policies and the two reader
+classes match Claude's audit-106 probe. A target probe of twelve further forms
+executed 452 cases at both placements with 243 collections and no mismatch:
+the divisor binding survives normalisation, nested and dynamic NIL divisors,
+zero dividends, a NIL-divisor call inside a collecting handler, and both
+operand orders for every operation. All six audit-106 observations are fixed
+or retained as data. Record only; acceptance is the user's decision.
