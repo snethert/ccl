@@ -2851,3 +2851,7 @@ Claude reviewed 89de9634 (S1-LL18-b strong EQ tables under movement, R1) in its 
 ## 2026-09-20 — accept and integrate LL18-b
 
 User acceptance binds audit 116 and the reviewed result. Sixteen prior result objects are unchanged; ledger now 17 accepted, 14 missing. Collector, hash service and internal adapter equal the reviewed proposal and rebuild to its retained binaries. All other runtime and compiler files unchanged. LL21 paused by user direction for browser-portable synchronous digest binding.
+
+## 2026-09-20 — portable synchronous runtime digests
+
+At the user’s direction, pause LL21 and propose one SHA-256 implementation plus byte/UTF-8 helpers for all runtime service constructors, the loader and the installer. No compiler or shared runtime edits in this unit. Node crypto and Chromium Web Crypto agree on all 96 replayed Wasm binaries; known vectors, padding/offset cases and a 512 MiB+9 input pass. Real Chromium module Workers run the factories and the retained installer at both placements; eager/cold numeric outputs remain byte-identical. Thirteen faults are rejected, including removed digest and snapshot checks. Fresh retained replay agrees. An instrumentation-sensitive refusal in a same-Worker low-then-high placement adaptation remains explicitly open; no complete browser qualification claimed. Auxiliary, not accepted or integrated; ledger remains 17 accepted, 14 missing.

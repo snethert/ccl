@@ -307,3 +307,5 @@ R6 and R7 unweakened; hand-built Stage 0 evidence never discharging a
 Stage 1 ID; no comparative timing beyond the benchmark policy.
 
 User direction, 2026-09-20: LL18-b is accepted and integrated. Pause before LL21; next deliverable removes Node-only digest and Buffer dependencies with synchronous shared SHA-256 and browser execution checks.
+
+Portable digest proposal completed: [review packet](../../../tests/wasm/stage1/portable-digests/README.md). Shared factories remain synchronous; shared runtime integration waits for Claude review and user acceptance. LL21 stays paused. Before broader browser qualification, investigate the retained Chromium same-Worker mixed-placement installer discrepancy; fresh per-placement Workers match the original fixture and pass.

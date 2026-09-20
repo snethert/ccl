@@ -1,0 +1,12 @@
+{
+  "attempts": [
+    {"name":"r1","outcome":"static scan incorrectly matched ArrayBuffer.isView as Buffer use; corrected to a word-boundary match; no runtime execution"},
+    {"name":"r2","outcome":"reconstructed numeric archive predates scalar.wasm; fixed driver to supply the integrated digest-bound scalar binary"},
+    {"name":"r3","outcome":"smoke oracle used two integer operands for a float-only operation, then reused nonempty result roots; corrected inputs and reset output roots between calls. SHA implementation unchanged"},
+    {"name":"r3-browser","outcome":"mixed-placement same-Worker installer refusal; diagnostic edit passes; original recheck fails; fresh Workers per placement pass. Finding remains open and scoped explicitly"},
+    {"name":"r4","outcome":"full qualification passed; during execution the loader-snapshot observer was refined to preserve its diagnostic across the checked Wasm boundary, with unchanged positive observations"},
+    {"name":"r5","outcome":"fresh final run, including snapshot controls and source/retained-input pins; no runtime proposal changes from r4"}
+  ],
+  "production_source_changes_during_development": "none",
+  "sha_algorithm_changes_after_first_execution": "none"
+}

@@ -2520,6 +2520,18 @@
       "scope": "Accepted runtime composition with STAGE1-NUMERIC-FASTPATH-R1: eligible finite scalar arithmetic binds the existing import directly to Wasm; no JavaScript call or private-memory staging. Exact live owner/frame checks, immutable pinned-span lookup, no-safepoint publication and pre-write fallback for collection, bignums, nonfinite values and demanding checked FP modes. Unchanged compiler/modules; 72,200 comparisons and 31,836 collections per eager/cold run, 145,804 raw comparisons and 56,200 copies, 109 direct-path checks, ten rejected faults. Absolute native/generated timing and separate persistent-root-frame loop. Both runtime proposals accepted and integrated after audit 115; no slot credit. Timings descriptive; eligible direct-path coverage is distinct from inherited totals.",
       "review_commit": "a1812507cd910a76639b62f9797b55f99d3eaa35",
       "integration": "doc/WASM/stage1/integration-numeric-fastpaths.json"
+    },
+    {
+      "id": "STAGE1-PORTABLE-DIGESTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1/packet.json",
+      "sha256": "3c295ee4cc70ed93015061bfb938bb6a36b902c7ad2437886521235d37c01af4",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Unintegrated runtime-only proposal: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Same-Worker mixed-placement Chromium discrepancy retained as open finding, no complete browser engine qualification or slot credit.",
+      "verification_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1-verification.json",
+      "verification_sha256": "b1f0165232110fd75cfd010d488dc3f6afde6fe477e396322cbc08006162b869"
     }
   ],
   "current_runs": [
@@ -4763,7 +4775,7 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-hash-tables-r1/packet.json",
       "packet_sha256": "a843cd0fdba9c79aa40c3dab84b52540f73674b9776cc91f7532e0218a5fdfc7",
-      "scope": "Strong EQ hash-vector moved-key protocol through nine unchanged-compiler generated B modules. 2588 generated/native comparisons, 2584 primitive comparisons, 88 collections, 95 inherited collector checks, twelve runtime faults, eight publication controls and twelve role omissions. Native hash trace independently agrees with identity-map semantics. Fixed-capacity runtime backing vectors; CL hash surface, weak tables, production materializer/loader and table growth explicitly deferred. Shared source unchanged; awaiting independent review. Accepted and integrated via STAGE1-LL18B-ACCEPTANCE-R1 at the declared backing-vector scope.",
+      "scope": "Strong EQ hash-vector moved-key protocol through nine unchanged-compiler generated B modules. 2588 generated/native comparisons, 2584 primitive comparisons, 88 collections, 95 inherited collector checks, twelve runtime faults, eight publication controls and twelve role omissions. Native hash trace independently agrees with identity-map semantics. Fixed-capacity runtime backing vectors; CL hash surface, weak tables, production materializer/loader and table growth explicitly deferred. Original fixture changed no shared source. Accepted and integrated via STAGE1-LL18B-ACCEPTANCE-R1 at the declared backing-vector scope.",
       "test_ids": [
         "S1-LL18-b"
       ],
