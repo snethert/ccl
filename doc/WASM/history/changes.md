@@ -2709,3 +2709,20 @@ On “accept, integrate and proceed”, the R2 compiler is integrated byte-ident
 ## 2026-09-19 — compose numeric calls with owner retry and cold installation
 
 After integrating accepted integer conditions R2, the unchanged compiler now runs its numeric and allocation-retry modes together. The runtime proposal binds both capabilities to one owner/memory/TCR/error tag and admits exactly their two function imports under a new profile. The 80-module corpus supplies 444 native/reference cases, 1,777 comparisons per execution mode, 797 ordinary and 1,615 forced collector copies, one growth, eager/cold equality, 32 admission checks and ten rejected faults. Forced constructor entry counts are 412 binding growths,28 restarts,388 conditions. Fresh replay matches 556 deterministic files with 413 pins; native R6/R6a reused by exact accepted compiler hash. Development failures are retained. No shared runtime integration, criterion change or LL16 credit; 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-eighth Claude audit: integer-condition R2 integration and numeric owner composition reviewed
+
+Claude reviewed 6fac05ac and ccf66e0d from the detached worktree. The R2
+integration record binds audit 107, the review-file hash at 24dcebfc, the
+retained R2 packet and the integer-call integration; the compiler at head is
+byte-identical to the retained proposal and all ten runtime files keep their
+integrated hashes. The numeric owner composition packet replays equal: 556
+deterministic files, 413 pins, 80 modules, 444 native cases, 1,777
+comparisons per mode, 797 ordinary and 1,615 forced copies, one growth,
+constructor entries 412/28/388, 32 admission checks and ten rejected faults.
+Claude's probe compiled eight further composition forms through the unit's
+own pipeline: 93 modules and 484 cases, eager and cold observations
+identical, all three constructor kinds moving under pressure. Ten further
+loader admission paths refused or admitted as the proposal states. No shared
+source changed. Record only; acceptance of the runtime proposal is the
+user's decision.

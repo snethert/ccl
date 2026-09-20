@@ -1274,3 +1274,73 @@ Replay. `packet.py verify` from the detached worktree pinned 403 sources, recons
 Probe. Twelve further forms were compiled through R2 with the fixture driver and corrected oracle and executed by the harness with mismatch collection: the divisor binding returned beside the quotient after NIL normalisation, nested and dynamic NIL divisors, zero divided by NIL, a NIL-divisor call inside a collecting DIVISION-BY-ZERO handler that resignals, a NIL-divisor result then divided by zero, both-nonnumeric pairs for `truncate` and `*`, `+` and `ash` with a NIL right operand, and `ash` of zero by NIL. 452 cases at both placements, 243 collections in the poisoning mode, roots, stack, handlers and binding vector restored, no mismatch.
 
 Verdict: no defect. The six audit-106 observations are each fixed or retained as data: the NIL divisor now follows native, the oracle no longer precedes native's type check, the reader-class difference and the fatal kind 5 are documented with native evidence, the policy-dependent check order is retained without being converted into target expectations, and the quote admission is gated and controlled. Remaining as stated by the fixture: the target's left-first order for `+` and `*` differs from native at one policy, readers on the wrong class signal TYPE-ERROR rather than native's NO-APPLICABLE-METHOD-EXISTS, and OPERATION and OPERANDS follow the explicit constructor rather than the x86-64 trap. Acceptance of the auxiliary record is the user’s call.
+
+## Hundred-and-eighth Claude audit — integer-condition R2 integration at 6fac05ac and numeric owner composition at ccf66e0d — 19 September 2026
+
+**Scope.** Two commits after 24dcebfc. 6fac05ac accepts and integrates the
+reviewed R2 compiler on the user's "accept, integrate and proceed". ccf66e0d
+adds `tests/wasm/stage1/integer-owner/` and retains
+`2026-09-19-stage1-integer-owner-r1`. Neither touches runtime sources.
+
+**Integration checks.** `integration-integer-conditions.json` binds
+review_commit 24dcebfc and review_sha256 `ba8d27d8…`, which equals the hash
+of `claude-review.md` at that commit. Compiler before `03b81251…` equals the
+tree at 24dcebfc; after `d328c6bc…` equals both head and the retained R2
+proposal copy. All ten unchanged runtime hashes match the tree.
+previous_integration_sha256 `489385f3…` equals the integer-call record.
+index.json now marks the R2 packet ACCEPTED_AUXILIARY with the review commit
+and integration path. The R2 observations are carried verbatim into
+`runtime-obligations.md`. Only the compiler changed outside `doc/`.
+
+**Proposal.** The owner unit keeps the accepted compiler (asserted by hash in
+`derive.py`) and wraps the R2 compile entry in `*b-allocation-retry*`. The
+runtime proposal is three textual overlays retained with the packet: a
+read-only `tcr` getter on CollectorOwner; `numeric-capabilities.mjs`, a
+factory binding allocation and integer services to one owner, memory, TCR
+and error tag through a private WeakMap and a frozen pair; and a
+`wasm32-shared-B-integer-owner-v1` loader profile admitting exactly
+`owner.ensure` and `integer.calculate` with identity checks against the
+admitted bundle. The corpus adds seven composition forms (21 cases) to the
+423 R2 cases; a test-only pressure overlay injects a fill import before each
+raw constructor preflight and is refused by the production loader.
+Evidence catalog `bcfe2c5f…`, source index `0133a87d…`, packet `f86fa607…`
+and evidence commit 8ecc8378 match `repository.json` and `index.json`.
+
+**Replay.** `packet.py verify` from the detached worktree: PASS, 556
+deterministic files, 413 pins, native R6/R6a reused by exact compiler hash;
+summary equals the packet: 80 modules (60 top, 20 inner), 444 native cases,
+1,777 comparisons in eager, cold and pressure modes, 797 copies and one
+growth, 1,615 forced copies, constructor entries 412/28/388, 1,305
+assurances, 32 admission checks, ten rejected faults, cold identical. The
+retained fault logs witness what the oracles name: the no-assurance fault
+fails at n_capture with code 6, the wrong-operation fault at n_add values.
+
+**Probe.** Eight further forms compiled through the unit's own `run.compile`
+and executed eager, cold and under pressure: a heap-valued special divided by
+zero with the operands read back, a use-value restart returning a bignum
+square, PROGV of a bignum through a symbol argument, a closure cell mutated in
+a zero-divisor handler, allocation in an unwind-protect cleanup, a nested
+zero-divisor signalled from inside a handler, two values surviving a later
+allocation, and an ASH-shifted special. 93 modules, 484 cases over five
+argument pairs including zero and a negative power of two; eager and cold
+observations identical; all values equal native; pressure entries 133/12/122
+with every kind moving at both placements. Ten further loader admission
+paths: an owner-profile record offered an integer namespace refuses
+UNEXPECTED_INTEGER_CAPABILITY, a missing or copied options bundle refuses
+NUMERIC_CAPABILITY, a foreign memory or tag in the import env refuses
+CAPABILITIES, the bundle is frozen, the bundle is bound at defer so a later
+swap of the options bundle does not affect installation, a second bundle from
+the same factory admits only against itself, and an unused extra host key is
+harmless because the manifest fixes the module's imports.
+
+**Verdict.** No defect. The integration is byte-exact and fully bound. The
+composition unit changes no shared source; its runtime proposal is stated as
+trusted-owner identity checking, not authentication, and behaves as stated.
+Observations: (a) the unit drops R2's 252 inline-path assertions from its
+derived harness, which is acceptable because the compiler is unchanged and
+those assertions remain in the accepted R2 record; (b) the fault oracles are
+function-name substrings, discriminating only together with the
+must-fail requirement; (c) two CollectorOwners over one memory and TCR would
+both satisfy the factory, within the README's stated scope. Ledger unchanged:
+15 accepted, 16 missing, 0 unreviewed. Acceptance of the runtime proposal is
+the user's decision.
