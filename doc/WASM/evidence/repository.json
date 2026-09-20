@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "bc8bbaf5781b27d97c083ac2058044514e707e551ca114317bfe386ae44d6ef6",
-  "commit": "44ef692ec583d5c726aa838cc8f0f644c58243a8",
-  "immutable_evidence_files": 232866,
+  "catalog_sha256": "fcbd6c21921597831152e6d5c21deb0dd1139f3daaaa31084d51ed4b8450ac06",
+  "commit": "d25618f80194128ff486ca88316a67533d745c97",
+  "immutable_evidence_files": 233074,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-bootstrap-schedule-acceptance-r1",
-    "files": 15,
-    "bytes": 534746
+    "directory": "2026-09-20-stage1-startup-resets-r1",
+    "files": 208,
+    "bytes": 4697667
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 38180,
+  "prior_indexed_references_verified": 38581,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Auxiliary initializer scheduler accepted and integrated; no LL15 credit.",
-  "source_index_sha256": "faa8154e70fecdcbc9a8d43a9c8cc9620a2891377c73fee5a4af9a1013e700b0",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-schedule-acceptance.json",
-  "verification": "Byte-exact reviewed scheduler integrated and run with production dependencies; retained execution reproduced, 36 installed digests independently checked. New artifacts and indexed references verified incrementally; accepted envelopes unchanged.",
+  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Native startup resets auxiliary executed, not reviewed; no LL15 credit.",
+  "source_index_sha256": "0fc25db804870d94490ef23d4028dc47436b8637e6e2d67781f07bb5c3030610",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-resets.json",
+  "verification": "Fresh verifier rebuilds generated modules, executes actual native callbacks and Workers, rejects all faults and publication controls, rebuilds census index and reproduces 130 deterministic files. Incremental new artifact and indexed-reference verification; accepted envelopes unchanged.",
   "version": 1
 }

@@ -2584,6 +2584,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "User accepts auxiliary scheduler after audit 124. Integrated source equals reviewed proposal; actual production-import execution byte-identical, all 36 installed digests matched to compiled bytes. No LL15 credit or accepted-envelope change."
+    },
+    {
+      "id": "STAGE1-STARTUP-RESETS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-resets-r1/packet.json",
+      "sha256": "9dceca4cfdc248cb6e503d1e98ca8aabacfeb8641a89b1ed3d057d6c1de0e050",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Thirteen selected native startup literal resets, not complete LL15 membership: actual U1 callbacks compared with generated global-cell replacements, all 35 snapshot callbacks retained and 22 open. Fifteen unchanged-compiler modules; two Workers at 4 MiB and 2 GiB, 52 callback comparisons, 92 generated invocations, 42 refusals, nine faults and nine publication controls. Private byte catalog binds actual installed digest to schedule plan, including refusal of a behaviour-identical custom-section replacement. Thirteen correlated census queries preserve separate namespaces and no-bound scope. Fresh replay 130 deterministic files at 151 pins; R6/R6a reused by exact compiler hash. No compiler/runtime/kernel integration, no slot credit."
     }
   ],
   "current_runs": [

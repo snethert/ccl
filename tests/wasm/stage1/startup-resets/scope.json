@@ -1,0 +1,16 @@
+{
+  "status": "AUXILIARY_NOT_REVIEWED_NOT_INTEGRATED",
+  "slot_credit": false,
+  "implemented": "13 literal global-reset effects from the accepted 35-callback post-restore inventory, through unchanged generated SET and a digest-bound scheduler adapter",
+  "open_callbacks": 22,
+  "native_oracle": "Actual unique registered U1 callbacks in a fresh disposable native image, two dirty initial states, original globals restored",
+  "representation": "Owner-assigned D1 writable symbols with binding index zero, one per selected identity; no production package reconstruction",
+  "phases": "Generated symbol-read preflight, selected resets, generated readback workload. Not ordinary-condition activation or complete native bootstrap phases.",
+  "query_scope": "Name/source candidates in separate correlated-build namespace, no reported calls in these literal reset bodies; no identity join or callee bound",
+  "limits": [
+    "Post-restore callback snapshot only; future callback registration and emitted compile/load effects remain obligations",
+    "Owner callbacks and imported capabilities trusted; synchronous exclusive Worker execution, no concurrency or relocation during schedule",
+    "Adapter owns the installed byte catalog; arbitrary BootstrapSchedule callbacks retain their previously stated trust scope",
+    "No LL15 slot credit, no full bootstrap ready, no image, browser, timing or complete condition-activation claim"
+  ]
+}

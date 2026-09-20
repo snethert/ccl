@@ -1,0 +1,23 @@
+{
+  "parent": "2026-09-20-stage1-bootstrap-schedule-r1",
+  "runtime_modules": [
+    "allocation-service.mjs",
+    "binary.mjs",
+    "bundle.mjs",
+    "bytes.mjs",
+    "collector-owner.mjs",
+    "float-service.mjs",
+    "floating-capabilities.mjs",
+    "initialization-owner.mjs",
+    "installer.mjs",
+    "integer-service.mjs",
+    "loader.mjs",
+    "materializer.mjs",
+    "numeric-capabilities.mjs",
+    "ranges.mjs",
+    "scalar-service.mjs",
+    "service.mjs",
+    "sha256.mjs",
+    "bootstrap-schedule.mjs"
+  ]
+}

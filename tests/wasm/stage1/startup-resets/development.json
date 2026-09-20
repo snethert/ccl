@@ -1,0 +1,24 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "outcome": "Native oracle and 15 modules compiled; orchestration started before check.mjs existed and stopped with FileNotFoundError. Original traceback was in tool output; retained native log and outputs demonstrate the completed portion.",
+      "retained": ["ccl-startup-resets-r1/compiled/compile.log", "ccl-startup-resets-r1/compiled/source-forms.lisp", "ccl-startup-resets-r1/compiled/native.json"]
+    },
+    {
+      "name": "r2",
+      "outcome": "Execution passed. Inspection found admission checked wrong symbol offsets for the binding index and flags; production generated access was correct. Corrected harness and two faults now bind the actual offsets.",
+      "retained": ["ccl-startup-resets-r2.log", "ccl-startup-resets-r2/execution.json", "ccl-startup-resets-r2/check-before-admission-fix.mjs"]
+    },
+    {
+      "name": "r3",
+      "outcome": "Positive execution and five controls passed; aliased-catalog bytes refused as required, but the harness did not label the installation exception. Added PRIVATE_CATALOG context, with no adapter/compiler change.",
+      "retained": ["ccl-startup-resets-r3.log", "ccl-startup-resets-r3/faults/aliased-loader-bytes/fault.log", "ccl-startup-resets-r3/controls-before-diagnostic-fix.py", "ccl-startup-resets-r3/check.mjs"]
+    },
+    {
+      "name": "r4",
+      "outcome": "Final execution, faults, publication controls and retained census queries.",
+      "retained": ["ccl-startup-resets-r4.log"]
+    }
+  ]
+}
