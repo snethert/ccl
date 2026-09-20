@@ -2394,10 +2394,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-calls-r1/packet.json",
       "sha256": "45d88a6fcd2e057cb0ba36ced91973b76e09d9dab6dc3e6a1e519d6df5c3b03c",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Opt-in generated integer calls: inline fixnums and the unchanged accepted D1 service behind a rooted single-Worker owner capability. 25 modules, 305 native cases, 1221 comparisons, 429 collector copies, one memory growth, nine rejected compiler/owner faults. Native R6/R6a passes; 60 default-mode WAT/Wasm files identical. Fresh replay 681 files and 372 pins. Checked numeric errors, eager owner capability only; production loader refuses the import. No shared compiler integration or LL16 gate credit; numeric Lisp conditions, floating point and loader admission remain."
+      "scope": "Opt-in generated integer calls: inline fixnums and the unchanged accepted D1 service behind a rooted single-Worker owner capability. 25 modules, 305 native cases, 1221 comparisons, 429 collector copies, one memory growth, nine rejected compiler/owner faults. Native R6/R6a passes; 60 default-mode WAT/Wasm files identical. Fresh replay 681 files and 372 pins. Checked numeric errors, eager owner capability only; production loader refuses the import. No shared compiler integration or LL16 gate credit; numeric Lisp conditions, floating point and loader admission remain.",
+      "review_commit": "520e19831c08033fdb180004da52578321ceced8",
+      "integration": "doc/WASM/stage1/integration-integer-calls.json"
     }
   ],
   "current_runs": [

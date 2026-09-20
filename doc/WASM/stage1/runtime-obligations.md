@@ -143,3 +143,13 @@ Canonical inputs beyond the admitted magnitude or header-width budgets may repor
 The redundant operand-base alignment check has no independent branch; tag six fixes that alignment. Owner region alignment remains checked.
 
 The accepted service authenticates shape and extent, not object starts. Its owner must supply known objects and disjoint input, output, workspace and publication regions; no shared-memory, collector or generated numeric-dispatch admission is implied.
+
+## Generated integer calls (Claude audit 105)
+
+The harness derives its capability digest from its loaded bytes. The independent service identity is the packet inputs pin; require that pin at admission.
+
+The original inline-fixnum assertion covers only addition of zero. Add per-operation fast-path counts without claiming the original packet did so.
+
+The original decoder cannot represent NIL and omits short multiple-value fills. Retain added NIL-fill comparisons in the next unit.
+
+Numeric failures are checked codes; fast paths still reserve operand roots. Assurance may move objects before refusing.

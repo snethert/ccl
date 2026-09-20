@@ -121,7 +121,7 @@ integrated. The [generated-call proposal](../../../tests/wasm/stage1/integer-cal
 now executes inline fixnums and rooted integer fallback through the accepted
 service and collector owner: 1,221 native-derived comparisons, 429 collector
 copies, one growth and nine rejected faults, with default output unchanged and
-native R6/R6a passing. It remains auxiliary and unintegrated pending review.
+native R6/R6a passing. It is accepted and integrated after audit 105, with no slot credit.
 Next: numeric failures through Lisp conditions, mixed floats under the approved
 D6 detection policy, and authenticated loader admission for the numeric service.
 Only their joined qualification executes LL16-a; this unit claims no slot credit.

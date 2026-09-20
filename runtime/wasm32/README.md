@@ -73,3 +73,7 @@ The [integer service](../../tests/wasm/stage1/integer-core/README.md) and its
 are accepted; `integer.c` equals the reviewed source. Its isolated unshared-memory
 ABI is not a generated B entry or a collecting owner service. See the
 [integration record](../../doc/WASM/stage1/integration-integer-core.json).
+
+`integer-service.mjs` is the accepted single-Worker numeric capability from the
+[generated-call unit](../../tests/wasm/stage1/integer-calls/README.md). The compiler
+has its opt-in entry, but production loader admission remains separate.

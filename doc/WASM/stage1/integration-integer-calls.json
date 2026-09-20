@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T01:34:58.910167+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "520e19831c08033fdb180004da52578321ceced8",
+  "review_sha256": "718121a9e10c4774beb919eae206c2ff37b2f49a8ea07f0ff79c83f51651f08d",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "bd608480264e7090684c5bfce52de083ec9ef0e1800f7d548a253ca79adea956",
+      "after": "03b812512f6234269ac7d6c2d13dfbd612aa0cb8ee89634d89cdca9d68b2f11c",
+      "proposal_locator": "2026-09-19-stage1-integer-calls-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "before": null,
+      "after": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a",
+      "proposal_locator": "2026-09-19-stage1-integer-calls-r1/service.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packet": {
+    "locator": "2026-09-19-stage1-integer-calls-r1/packet.json",
+    "sha256": "45d88a6fcd2e057cb0ba36ced91973b76e09d9dab6dc3e6a1e519d6df5c3b03c"
+  },
+  "previous_integration": "integration-integer-core.json",
+  "previous_integration_sha256": "cb560a17aef86437ed669016718ce3ef58965a90044a34a6e856a7fdce4db0cf",
+  "observations": [
+    "The harness derives its capability digest from its loaded bytes. The independent service identity is the packet inputs pin; require that pin at admission.",
+    "The original inline-fixnum assertion covers only addition of zero. Add per-operation fast-path counts without claiming the original packet did so.",
+    "The original decoder cannot represent NIL and omits short multiple-value fills. Retain added NIL-fill comparisons in the next unit.",
+    "Numeric failures are checked codes; fast paths still reserve operand roots. Assurance may move objects before refusing."
+  ],
+  "scope": "Exact reviewed compiler and single-Worker integer capability. Production loader still refuses the opt-in import. No LL16 credit.",
+  "verification": "Byte identity with reviewed packet; reuse its native R6/R6a and independent replay.",
+  "reverse": "Restore compiler before hash and remove integer-service.mjs after withdrawing consumers."
+}

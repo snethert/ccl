@@ -2639,3 +2639,7 @@ digest check is self-referential inside the harness, the inline-fixnum claim
 is asserted by one case, and the harness decoder cannot represent NIL so
 short multiple-value fills are absent from the corpus. Record only;
 acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate generated integer calls
+
+On “accept, integrate and proceed”, the reviewed integer-call compiler and owner capability are integrated byte-identically. The record binds audit 105 and its review hash, the retained packet and the preceding integration. All four observations are carried. No LL16 credit: 15 accepted,16 missing.
