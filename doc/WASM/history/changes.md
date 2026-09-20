@@ -2592,3 +2592,20 @@ decision.
 ## 2026-09-19 — integer-service audit-103 controls
 
 The unchanged reviewed service now has a follow-up over all 4,424 earlier cases and 129 new native-checked cases. The first-value-only allocation fault is retained passing the old harness and failing a 16-byte reservation that fits the quotient but not the remainder; 24 bytes also refuses and 32 fits exactly. Multi-hundred-digit multiply/divide cases, including the 1,024-digit magnitude boundary, now reside in the fixture. The misnamed pointer control is corrected in the overlay; removing the redundant alignment test is binary-identical. Canonical widths 1,025 and 1,026 pin capacity/status-3 versus unadmitted-header/status-2. All thirteen faults reject; fresh replay matches 84 files and 14 pins. Original sources and packet remain unchanged. Audit 103 is indexed as no defect, without accepting the auxiliary unit. Ledger remains 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-fourth Claude audit: integer-service follow-up controls reviewed
+
+Claude reviewed `a017fbe2` from the detached worktree. The commit adds only
+the follow-up runner, packet tool and README under the integer fixture; the
+service source, harness, corpus and every shared file are unchanged, and the
+follow-up pins the original packet's eleven sources plus its own three. The
+replay reproduces all 84 deterministic files with counts equal to Codex's
+record: 4,553 cases, 13,659 native comparisons, 9,106 target comparisons, 636
+chain steps, 56 refusals, two exact fits, thirteen rejected faults, the
+rebuilt binary equal to the reviewed one. The retained first-value-only fault
+passes the original harness and fails the new 16-byte control, as audit 103
+found. Three further allocation-check faults built by Claude (eight bytes of
+slack, a strict comparison, and writing both values before the check) all
+fail the overlay harness; only the exact-fit check rejects the strict
+comparison. No defect; the auxiliary unit's acceptance remains the user's
+decision.
