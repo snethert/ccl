@@ -2734,3 +2734,23 @@ On “accept and integrate. then proceed.”, the three runtime files are integr
 ## 2026-09-19 — qualify an isolated mixed floating-point primitive service
 
 After numeric-owner integration, add a freestanding single/double arithmetic, comparison and coercion service. 39,627 cases give 118,881 target comparisons at three placements, including the first permitted address and above 2 GiB. Rational expectations and 1,167 scalar-SSE flag witnesses agree; 63 refusals, six exact fits and fifteen compiled faults qualify publication and ownership. Native CCL supplies 6,153 distinct values: 5,939 agree and 214 differences remain explicit adapter obligations, 134 coercion-overflow signals and 80 integer/infinity comparisons. The reviewed f64 detector bodies are unchanged. Minimum-address testing caught LLVM moving the stack top 16 bytes beyond its reservation; disabling lookup-table generation fixes it, and the original failure plus a rejecting control are retained. Fresh replay matches 96 deterministic files and 19 pins. No shared compiler/runtime edits, acceptance changes or LL16 credit; 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-ninth Claude audit: numeric owner integration and float primitive service reviewed
+
+Claude reviewed 9e196e9a and 0ee23b38 from the detached worktree. The
+numeric-owner integration record binds audit 108, the review-file hash at
+6bd82243, the retained packet and the R2 integration; the three runtime
+files at head are byte-identical to the retained proposal and every other
+runtime file and the compiler keep their hashes. The float packet replays
+equal: 96 deterministic files, 19 pins, 39,627 cases, 118,881 target
+comparisons, 1,167 hardware witnesses, 63 refusals, six exact fits, fifteen
+rejected faults, native 5,939 equal and 214 retained differences. Claude's
+probe of 27,448 fresh cases found one fixture-oracle defect: the corpus
+oracle drops the sign when a negative double underflows to zero on
+coercion to single, where IEEE 754, the x86 conversion and the service all
+give negative zero. The retained corpus has no negative double input to
+that operation, so its evidence stands as run; with the sign corrected all
+probe cases pass at three placements, and 24 further edge and refusal
+probes match the README. Service: no defect. Fixture: oracle defect and
+coverage gap to correct before any dependent unit. Acceptance is the
+user's decision.

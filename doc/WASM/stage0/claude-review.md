@@ -1344,3 +1344,92 @@ must-fail requirement; (c) two CollectorOwners over one memory and TCR would
 both satisfy the factory, within the README's stated scope. Ledger unchanged:
 15 accepted, 16 missing, 0 unreviewed. Acceptance of the runtime proposal is
 the user's decision.
+
+## Hundred-and-ninth Claude audit — numeric owner integration at 9e196e9a and float primitive service at 0ee23b38 — 19 September 2026
+
+**Scope.** Two commits after 6bd82243. 9e196e9a accepts and integrates the
+audit-108 runtime proposal on the user's "accept and integrate. then
+proceed." 0ee23b38 adds `tests/wasm/stage1/float-core/` and retains
+`2026-09-19-stage1-float-core-r1`; it changes nothing outside `doc/` and
+`tests/`.
+
+**Integration checks.** `integration-integer-owner.json` binds review_commit
+6bd82243 and review_sha256 `0203b1c4…`, equal to the hash of
+`claude-review.md` at that commit. loader.mjs before `9a5ddd00…` after
+`5cb9cde3…`, collector-owner.mjs before `d986bd39…` after `a26a4ee9…`,
+numeric-capabilities.mjs new at `2b43bec1…`; all three equal the retained
+packet copies byte for byte and the before hashes equal the tree at
+6bd82243. Compiler and the other eight runtime files keep their hashes.
+previous_integration_sha256 `240f8390…` equals the R2 integration record.
+index.json marks the owner packet ACCEPTED_AUXILIARY with review commit and
+integration path; the three audit-108 observations are carried verbatim
+into `runtime-obligations.md`; the runtime README documents the new profile.
+
+**Proposal.** A freestanding C service `float_calculate` with ten i32
+arguments over private memory: add, subtract, multiply, divide, six
+comparisons and coercion to single or double over fixnums, canonical
+bignums of at most 1,024 magnitude limbs, singles and doubles. Integer
+conversion rounds once from guard and sticky bits; comparisons are exact
+without rounding the integer; mask and safe words select the first enabled
+flag in the order invalid, zero-divide, overflow, underflow, inexact; an
+enabled condition publishes NIL with no allocation. The reviewed Stage 0
+f64 detector is reused with only its memory maximum changed, and a new
+f32 exactness witness uses TwoSum, exact 48-bit products and a
+multiply-back division check with tininess after rounding. The corpus is
+an independent rational oracle over the Stage 0 `ieee.py`. Native CCL is a
+value witness under masked exceptions; scalar SSE witnesses f32 flags.
+structure.py asserts the stack top global is 131072 with no data segment
+after LLVM's jump table had moved it to 131088 in development; that
+original failure and the rejecting `stack-floor` fault are retained.
+Evidence catalog `62d42ffd…`, source index `5dabeeb8…`, packet `edf8a775…`
+and evidence commit eaae5a8b match `repository.json` and `index.json`.
+
+**Replay.** `packet.py verify` from the detached worktree: PASS, 96
+deterministic files, 19 pins; summary equals the packet: 39,627 cases,
+118,881 target comparisons at 128 KiB, 1 MiB and 2 GiB, 1,857 witness
+calls per placement, 1,167 hardware witnesses, 63 refusals, six exact fits,
+fifteen rejected faults, native 6,153 cases with 5,939 equal and 214
+differences in exactly the two stated categories: 134 explicit
+integer-coercion overflows and 80 integer-versus-infinity orderings where
+CCL reports a huge bignum equal to infinity. The detector text differs
+from the Stage 0 file only in the memory maximum.
+
+**Probe.** 27,448 fresh cases through the retained binary and harness at
+the same three placements: 13,056 signed integer-versus-float orderings
+across fractions, signed zero, the fixnum bounds, 2^53 neighbours and the
+smallest subnormal; 1,024-limb magnitudes coerced, compared with infinity
+and the largest double, and used in mixed arithmetic; 648 integer-to-single
+tie and near-tie roundings for 24- to 59-bit values in both signs; and
+3,000 random cases from a fresh seed that, unlike the fixture's random
+population, include the two coercion operations. 1,140 double-only
+arithmetic values were also checked against Python's hardware doubles with
+no disagreement. One family failed: coercing a negative double that
+underflows to zero, for example `-4.67e-95`, to single. The service
+publishes `80000000`, as do IEEE 754 and the x86 conversion; the fixture
+oracle expects `00000000` because `corpus.coerce` converts the rounded
+Fraction zero to a float and loses the sign, guarding only an input that
+is already zero. The retained corpus has 24 double-to-single rows, none
+negative, and its random cases exclude coercions, so the defect never
+surfaced. With that expectation corrected the probe passes at all three
+placements with 547 witness calls each. 24 further edge and refusal probes
+behaved as the README states: a result record touching the output limit or
+the input end is admitted, objects straddling the input end refuse with 2,
+comparisons require the second operand while coercions ignore it, an empty
+input extent admits fixnum comparison, unchecked division by zero
+publishes infinity with no flag, a mask without the zero-divide bit
+records the flag but publishes the quotient, the record may sit at the
+128 KiB floor and the input at memory end, a mask above 31 refuses, the
+fixnum floor -2^29 is accepted as a fixnum and refused as a bignum, and a
+1,025-limb object is accepted with a zero sign limb and refused with a
+magnitude limb.
+
+**Verdict.** Service: no defect found. Fixture: one oracle defect and a
+coverage gap. `corpus.coerce` must give the rounded zero the sign of its
+source, and the corpus should include negative double-to-single underflow
+and coercion operations in its random population. The packet's retained
+claims stand for the corpus as run; a dependent unit should not build on
+the oracle until corrected. Observation: the fifteen fault oracles match
+by focused case name, so a fault is rejected whenever its own case fails
+for any reason; the required positive run limits but does not remove that
+looseness. Ledger unchanged: 15 accepted, 16 missing, 0 unreviewed.
+Acceptance is the user's decision.
