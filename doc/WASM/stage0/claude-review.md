@@ -1433,3 +1433,62 @@ by focused case name, so a fault is rejected whenever its own case fails
 for any reason; the required positive run limits but does not remove that
 looseness. Ledger unchanged: 15 accepted, 16 missing, 0 unreviewed.
 Acceptance is the user's decision.
+
+## Hundred-and-tenth Claude audit — float primitive service R2 at 18334a7e — 19 September 2026
+
+Scope. One commit since audit 109: 18334a7e, Codex's R2 response to the
+audit-109 finding. It changes docs, the float-core fixture (corpus.py,
+controls.py, hardware.py, native-f32.c, packet.py, run.py, README) and the
+evidence index and repository records. No compiler, kernel or runtime source
+changes. Reviewed from ~/Source/ccl-claude detached at 18334a7e.
+
+Evidence. Packet 2026-09-19-stage1-float-core-r2 at evidence commit a272feba:
+packet.json 02378cbf…, catalog 40561378…, source index 995e47cb…, all equal to
+index.json and repository.json; 215 catalog rows for the packet. float.c,
+float.wasm, detector.wasm and execute.mjs are byte-identical to R1 (packet.py
+asserts the three binaries at retention). development.json cites audit
+31cfb7e3 and points to the R1 development tarball. The R1 index entry is now
+REVIEWED_FIXTURE_DEFECT, SUPERSEDED, review_commit 31cfb7e3.
+
+Correction. corpus.coerce now reads `if r==0: r=math.copysign(0.0,a)` for the
+double-to-single branch, which also covers the former `a==0` case. Directed
+signed-single rows cover ±4.67e-95, ±0, ±2^-1074, below/at/above 2^-150 (the
+half-least-single tie, rounding to even gives ±0), ±2^-149 and ±2^-126 under
+all eight masks and both safety modes. 600 seeded random inputs, one third
+integers, singles and doubles, exercise both coercions under all masks and
+modes. The retained corpus holds 666 negative double-to-single rows expecting
+80000000 and 549 expecting 00000000. hardware.py adds cvtsd2ss witnesses for
+every distinct finite double-to-single input (219 conversions, 51 of them
+producing negative zero), with native-f32.c parsing a 64-bit operand.
+controls.oracle_regression asserts six literal bit/flag expectations against
+the Python oracle and re-runs the old positive-zero expectation against the
+unchanged service, which fails with both zero patterns in the message.
+
+Replay. Verify from the detached worktree: PASS, 100 deterministic files, 19
+pins, summary identical to the packet; 59,083 cases and 177,249 comparisons at
+128 KiB, 1 MiB and 2 GiB; 1,857 witness calls and 2 exact fits per placement;
+1,386 hardware witnesses; 15 faults rejected by their named oracles; native
+7,367 cases, 7,103 equal, 264 differences: 184 integer-conversion overflows
+and 80 integer/infinity orderings. Both ledger tools pass at 18334a7e.
+
+Probe. The audit-109 probe generator rerun against the R2 corpus yields
+27,448 rows equal, row for row, to the hand-corrected expectations from audit
+109 (75 rows differ from the R1 oracle, none from the correction) and passes
+at three placements; the Python double witness agrees on all 1,140 checked. A
+new generator adds 34,368 rows: underflow-to-zero products and quotients of
+±1, ±2, ±3 subnormals by small factors in both widths, all sign combinations
+of ±0, ±1 and ±subnormal under the four operations, mixed integer-by-subnormal
+products, an exponent scan of ±m·2^e for e from −200 to −141 coerced to
+single, and 2,000 random tiny doubles of both signs. All pass at three
+placements; Python's double arithmetic agrees on 4,704 rows and struct-packed
+single conversion on 2,360, with no disagreement.
+
+Observations, not defects. The old-oracle regression re-executes a case the
+positive corpus already contains with the sign flipped, so it can only fail if
+the service changes; the six literal checks are the part that guards the
+Python oracle. The audit-109 observation that fault oracles match by focused
+case name still stands and the README now states it.
+
+Verdict. No defect. The audit-109 oracle defect is corrected as recommended,
+the coverage gap is closed, and the service is unchanged. Ledger unchanged:
+15 accepted, 16 missing, 0 unreviewed. Acceptance is the user's decision.

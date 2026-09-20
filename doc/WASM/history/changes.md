@@ -2758,3 +2758,20 @@ user's decision.
 ## 2026-09-19 — correct floating coercion oracle after audit 109
 
 Preserve the source sign when rational rounding yields zero. Add both signs around single zero/subnormal boundaries and 600 seeded integer/single/double inputs exercising both coercions under every mask and safety mode. The original bad expectation is retained and rejected by the unchanged service; six literal bit/flag expectations and 219 SSE conversion witnesses independently cover the correction. R2 runs 59,083 cases (177,249 target comparisons), 1,386 total hardware witnesses and fifteen service faults. Native values agree on 7,103 of 7,367 cases; the remaining 264 stay in the previously disclosed categories. Fresh replay matches 100 deterministic files and 19 source pins. R1 remains retained with its reviewed fixture defect and is superseded, not accepted. No shared source, integration or ledger change.
+
+## 2026-09-19 — hundred-and-tenth Claude audit: float primitive service R2 reviewed
+
+Claude reviewed 18334a7e from the detached worktree. The R2 packet, catalog and
+source-index hashes match the index and repository records; float.c, float.wasm,
+detector.wasm and execute.mjs are byte-identical to R1. The correction is the one
+audit 109 named: the oracle copies the source sign whenever the rounded single is
+zero. Replay from the detached worktree equals the packet: 100 deterministic files,
+19 pins, 59,083 cases, 177,249 comparisons, 1,386 hardware witnesses, 15 rejected
+faults, native 7,103 equal and 264 differences in the two declared categories.
+The corpus now holds 666 negative double-to-single rows expecting negative zero
+and 19,200 random coercion rows; 51 scalar-SSE conversions witness negative zero.
+Claude's audit-109 probe corpus regenerated with the R2 oracle equals the
+hand-corrected expectations row for row and passes; a further 34,368 directed
+signed-zero, underflow and exponent-scan cases pass at three placements with
+Python double and single witnesses agreeing on all 7,064 checked. No defect.
+Acceptance is the user's decision.
