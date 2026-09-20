@@ -2590,10 +2590,23 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-resets-r1/packet.json",
       "sha256": "9dceca4cfdc248cb6e503d1e98ca8aabacfeb8641a89b1ed3d057d6c1de0e050",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Thirteen selected native startup literal resets, not complete LL15 membership: actual U1 callbacks compared with generated global-cell replacements, all 35 snapshot callbacks retained and 22 open. Fifteen unchanged-compiler modules; two Workers at 4 MiB and 2 GiB, 52 callback comparisons, 92 generated invocations, 42 refusals, nine faults and nine publication controls. Private byte catalog binds actual installed digest to schedule plan, including refusal of a behaviour-identical custom-section replacement. Thirteen correlated census queries preserve separate namespaces and no-bound scope. Fresh replay 130 deterministic files at 151 pins; R6/R6a reused by exact compiler hash. No compiler/runtime/kernel integration, no slot credit."
+      "scope": "Accepted after Claude audit 125: thirteen real native callback reset effects and private-catalog installer adapter. Adapter integrated byte-exactly as bootstrap-install.mjs; generated effects retained pending production symbol materialization. Production-import execution and assessment equal reviewed records: 52 native comparisons, 92 invocations, 42 refusals, 60 installed digests. Invocation remains trusted, write checks cover the image window and declared words only; 22 callbacks and real startup membership remain open. No LL15 credit.",
+      "review_commit": "27f2dd7157fa07d247b62cae0fabd2f82895e280",
+      "review_sha256": "4c6357933a2c0498f5c27676311ac6458ea3aeeb66382472c8f7c4d7b7eac512",
+      "integration": "doc/WASM/stage1/integration-startup-resets.json"
+    },
+    {
+      "id": "STAGE1-STARTUP-RESETS-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-resets-acceptance-r1/packet.json",
+      "sha256": "58687c119a0424fc09a158bd3168af0dd3e00c42ae0aae84c2e3768baa78d690",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "User accepts auxiliary native startup resets after audit 125. Integrated adapter equals reviewed bytes; production-import execution and independent assessment reproduce exactly. No LL15 credit or accepted-envelope change."
     }
   ],
   "current_runs": [

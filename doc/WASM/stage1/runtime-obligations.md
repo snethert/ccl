@@ -293,3 +293,15 @@ The nine initializer bodies are protocol markers, not the selected native startu
 Trusted synchronous single-Worker callbacks require exclusive access to state and ready regions. Failure is terminal without rollback. No cross-Worker publication, callback confinement or movement of raw state addresses during a run is qualified.
 
 See [integration](integration-bootstrap-schedule.json).
+
+## Native startup resets and installed-byte binding (audit 125)
+
+The digest-bound adapter closes the audit-124 catalog-substitution gap for this adapter only; BootstrapSchedule still trusts any installer callback. Invocation and imported capabilities remain trusted.
+
+The PRIVATE_CATALOG diagnostic wraps any failure of the private-catalog run, so the fault control proves refusal, not a specific reason (the underlying loader reason is BINARY_DIGEST).
+
+Effects are checked only within the 8,600-byte image window and at declared words; writes to the binding vector, allocation area or stacks are outside the view. Foreign-region checks belong to the LL13 owner.
+
+The thirteen resets are the literal subset of one post-restore snapshot; membership and the 22 computed callbacks remain open for LL15. No production package materialization, ordinary-condition activation, coordinated image or complete startup is claimed.
+
+See [integration](integration-startup-resets.json).

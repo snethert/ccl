@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T23:06:01.307282+00:00",
+  "authorization": {
+    "quote": "accept",
+    "provenance": "User to Codex after Codex identified 69deb3e5 as reviewed with no defect at 27f2dd71 and awaiting acceptance; prior direction was accept, integrate and proceed."
+  },
+  "review_commit": "27f2dd7157fa07d247b62cae0fabd2f82895e280",
+  "review_sha256": "4c6357933a2c0498f5c27676311ac6458ea3aeeb66382472c8f7c4d7b7eac512",
+  "source_commit": "69deb3e5dc9d7aa234e4cfc02ab192e676d9c7b6",
+  "packet": {
+    "id": "STAGE1-STARTUP-RESETS-R1",
+    "locator": "2026-09-20-stage1-startup-resets-r1/packet.json",
+    "sha256": "9dceca4cfdc248cb6e503d1e98ca8aabacfeb8641a89b1ed3d057d6c1de0e050"
+  },
+  "scope": "Accept thirteen native reset effects and the reviewed private-catalog installer adapter; integrate adapter byte-exactly. Reset implementations remain retained generated evidence pending the production symbol owner. Auxiliary, no LL15 slot credit.",
+  "observations": [
+    "The digest-bound adapter closes the audit-124 catalog-substitution gap for this adapter only; BootstrapSchedule still trusts any installer callback. Invocation and imported capabilities remain trusted.",
+    "The PRIVATE_CATALOG diagnostic wraps any failure of the private-catalog run, so the fault control proves refusal, not a specific reason (the underlying loader reason is BINARY_DIGEST).",
+    "Effects are checked only within the 8,600-byte image window and at declared words; writes to the binding vector, allocation area or stacks are outside the view. Foreign-region checks belong to the LL13 owner.",
+    "The thirteen resets are the literal subset of one post-restore snapshot; membership and the 22 computed callbacks remain open for LL15. No production package materialization, ordinary-condition activation, coordinated image or complete startup is claimed."
+  ],
+  "slot_credit": false
+}
