@@ -109,7 +109,7 @@ now executes generated method add/remove/replacement and direct/encapsulated
 publication, with NO-APPLICABLE-METHOD-EXISTS and CONTINUE through the condition
 path. The native stale-method result remains explicit negative evidence. This
 initial one-argument primary-method subset is accepted after audit 102; its compiler is integrated. The portable source forms and scenario helpers remain in the reviewed fixture, ready for bootstrap compilation. Native CLOS is unchanged.
-LL16-a numeric operations under D6 is underway. The
+LL16-a numeric operations under D6 is accepted at its declared subset and policy scope. The
 [integer service](../../../tests/wasm/stage1/integer-core/README.md) now executes
 exact D1 add/subtract/multiply, shifts, integer length and quotient/remainder,
 with independent Python and native-policy oracles and compiled faults. Audit 103
@@ -161,7 +161,7 @@ now joins the accepted integer and floating subset through the unchanged
 integrated runtime: independent integer policies, mixed floating/condition
 cases, eager/cold moving execution, fallback inspection, semantic and omission
 controls, and fresh generated checking-cost measurements. Claude audit 114 found
-no correctness defect; the slot remains unaccepted. The absolute cost (~80 µs
+no correctness defect; the slot is now accepted after the performance corrections below. The absolute cost (~80 µs
 per floating operation) was not surfaced adequately. The user's performance-fix
 instruction takes priority. The [owner fast-path proposal](../../../tests/wasm/stage1/numeric-fastpath/README.md)
 removes repeated image enumeration; the [direct Wasm scalar proposal](../../../tests/wasm/stage1/scalar-floats/README.md)
@@ -176,7 +176,9 @@ shortages to exercise movement, and measures absolute native/generated cost.
 Bignums, nonfinite values, demanding checked FP modes and shortages retain the
 existing service. Further cost includes live ownership checks, boxing, temporary
 frames and result delivery; the separate persistent-frame timing is not a proof
-of stack cost alone. LL16 acceptance remains pending.
+of stack cost alone. LL16-a is accepted; native policies map to the two generated checking variants,
+without admitting source OPTIMIZE declarations or claiming formal performance
+qualification.
 No broader arithmetic coverage is claimed. LL18-b hash-table movement remains
 an independent obligation.
 

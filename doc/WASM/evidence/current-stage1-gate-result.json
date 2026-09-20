@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_EXECUTION_NO_ACCEPTANCE",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-20",
-  "basis": "LL16-a numeric qualification executed and replayed; fifteen accepted records unchanged; awaiting independent review.",
+  "basis": "User accepts LL16-a at the reviewed audit-114 scope after the audit-115 performance corrections were accepted and integrated; fifteen prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S1-LL18-b [hash-tables]",
-      "unreviewed S1-LL16-a [generated]",
       "missing S1-LL21-a [materialization]",
       "missing S1-LL21-b [granularity]",
       "missing S1-LL09-a [generated]",
@@ -30,20 +29,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll11b-accepted-results.json",
-      "sha256": "a6b1c8fd9285cf45cdf09620f9272230103bc7e90da449afe17eeab3ca8d285b"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-qualification-r1-results.json",
-      "sha256": "a4c06a53568630ad38f161bc0b197670dd49ec10fb2ad0306a8b8cdf2aa5c0f5"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll16-accepted-results.json",
+      "sha256": "b6c0e006deb3ae723e50f2ee9c7bc395f94e4ee9d8be4bd04da86e4a614e03fe"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-numeric-qualification-results.json",
-  "combined_results_sha256": "9fceb3d4d480eca4d7ec6e8b1490eced9718e9339ece7d05d809f1f321370b97",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll16-accepted-results.json",
+  "combined_results_sha256": "b6c0e006deb3ae723e50f2ee9c7bc395f94e4ee9d8be4bd04da86e4a614e03fe",
   "counts": {
-    "accepted": 15,
+    "accepted": 16,
     "missing": 15,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }

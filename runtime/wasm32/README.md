@@ -100,7 +100,7 @@ to one trusted owner. The loader admits their exact identities under
 are opt-in through `compile-float-call-form`. See the
 [integration record](../../doc/WASM/stage1/integration-float-calls.json) and
 [scope](../../tests/wasm/stage1/float-calls/review-followup/README.md).
-This is auxiliary work; LL16 qualification remains open.
+The joined numeric subset is accepted as LL16-a; see the [acceptance record](../../doc/WASM/stage1/acceptance-ll16.json) for its policy and performance limits.
 
 The audit-115 owner and scalar performance corrections are accepted and
 integrated; see the [integration record](../../doc/WASM/stage1/integration-numeric-fastpaths.json).
@@ -136,4 +136,4 @@ explicit owner configuration, not an automatic global switch.
 Eligible double arithmetic measures about 150 ns/op here versus native CCL's
 17 ns; these descriptive measurements are below formal v3 benchmark discipline.
 Bignum/exceptional fallback cost and application throughput are separate. The
-compiler and primitive binaries are unchanged; LL16 acceptance remains pending.
+compiler and primitive binaries are unchanged; LL16-a is accepted at its reviewed subset/policy scope.

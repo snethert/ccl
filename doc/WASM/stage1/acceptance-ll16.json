@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-20T16:42:58.198608+00:00",
+  "authorization": {
+    "quote": "accept.",
+    "provenance": "User to Codex after acceptance/integration of both audit-115 performance proposals and Codex stating that LL16 acceptance remained pending."
+  },
+  "review_commit": "92bcd83b6398b68c9dcb09c521e8c761b872453c",
+  "review_sha256": "ffca0c3dc1855b7ecfa3e97cab3c708e0e76e3abd4f76fd975f1d2acd490c6ee",
+  "source_report_sha256": "a4c06a53568630ad38f161bc0b197670dd49ec10fb2ad0306a8b8cdf2aa5c0f5",
+  "scope": "Accept S1-LL16-a at its audit-114 reviewed numeric-subset and declared compiler-policy scope. The already accepted performance corrections are separately bound; no inventory assertion or execution evidence changes.",
+  "exclusions": [
+    "Compiler-policy variations are accepted at the declared scope: native safety/speed policies and the generated compile-entry checking argument. This does not admit source OPTIMIZE declarations or promise distinct lowering for safety 3 speed 0 versus safety 3 speed 3.",
+    "Native q1 and q2 policies have identical generated modules: 18212 of 72200 target comparisons repeat q1 executions. Independent-answer counts describe the native side.",
+    "The retained poison run covers integer rows only; its broad numeric-leaves wording is not extra retained coverage. Audit 114 independently extended the check to floating rows, excluding f_shadow and h_restart whose inner calls require the table.",
+    "Original warm service cost was about 80 microseconds per operation. A checked-to-unchecked ratio near one did not establish cheap arithmetic. Its add interval half-width of 2.8 percent exceeds the 2.5 percent parameter; no performance claim follows.",
+    "Both audit-115 performance proposals are separately accepted and integrated in 1347bbc8. Their approximately 150 ns common-scalar timing is descriptive and below formal v3 benchmark discipline; native includes GC and Wasm timing excludes it. No native-speed, application-throughput or benchmark-ranking acceptance.",
+    "Fast-path coverage is distinct from inherited totals, and movement uses the slow path. The production owner must supply the digest-bound scalar binary; omission preserves the slow service. Bignums and demanding checked FP modes retain fallback costs.",
+    "The required Stage 1 subset is not all Common Lisp arithmetic: ratios, complex arithmetic, transcendental functions, unary/n-ary dispatch, integer /, and nonliteral FLOAT prototypes remain outside scope.",
+    "Integer service capacity is 1,024 magnitude digits; larger inputs retain the accepted non-retryable capacity/malformation refusals. Checked source and owner exclusions are unchanged.",
+    "Trusted single-Worker owner and catalog; polling/shortage safepoints only; no shared multi-Worker arithmetic claim.",
+    "Native policy-dependent dual-invalid-operand ordering, wrong-class numeric readers and source-level condition payload differences remain as accepted in integer-condition R2.",
+    "A failed assurance may already have moved roots. Owner growth appends semispaces and does not roll back the heap.",
+    "Warm checking measurements include generated loops, root records, argument staging, private service calls, allocation and returns. They exclude collection and cold installation. Host reset cost is included equally. No representative workload, ABI ranking or cross-engine performance claim."
+  ],
+  "compiler_policy": "Native integer oracle at safety/speed (0,3), (3,0), (3,3), debug 1; generated checking argument 0 for safety 0 and 1 otherwise. Floating live enable masks and both generated checking modes. No OPTIMIZE source-admission extension.",
+  "performance_followup": {
+    "integration": "integration-numeric-fastpaths.json",
+    "sha256": "4915a0ef827dc7fce2f8930fbfa14460d6ab71f9d4a6a985942e53b2c3caf1aa",
+    "commit": "1347bbc8f047b0c15dbc8a268c1e15d62f7a8a3b",
+    "review_commit": "a1812507cd910a76639b62f9797b55f99d3eaa35",
+    "review_sha256": "2397a823b1ef995957a21fbf1ac1e488b46764e5e5be28fdce8e91dc430cd780"
+  },
+  "records": [
+    {
+      "id": "S1-LL16-a",
+      "variant": "generated",
+      "test_revision": "ab61b3ec1dac22d4eabf5b00d1ecf57515a9cbd215f6d6b6b38f79c939a5b8e3",
+      "contract_sha256": "0a389f7e5e0e9616d3c010e9f2a292e773e571dfbe8d43ec345c95e07ad80fa6",
+      "scope": "Reviewed LL16-a, Claude audit 114; policy variations and performance limits declared above."
+    }
+  ]
+}

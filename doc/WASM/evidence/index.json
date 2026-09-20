@@ -4725,8 +4725,28 @@
       "test_ids": [
         "S1-LL16-a"
       ],
-      "scope": "Joined integrated numeric subset: 18,050 native cases, 72,200 generated comparisons and 31,000 collections per eager/cold run; 13,659 independent integer-policy answers, raw rational regression, acyclic primitive dispatch and poisoned generated tables, altered-operation and publication controls, fresh warm paired checking measurements. Compiler/runtime unchanged; native R6/R6a reused by exact reviewed hashes. Reviewed in audit 114; acceptance deferred while the user-requested absolute-cost fix is reviewed.",
+      "scope": "Joined integrated numeric subset: 18,050 native cases, 72,200 generated comparisons and 31,000 collections per eager/cold run; 13,659 independent integer-policy answers, raw rational regression, acyclic primitive dispatch and poisoned generated tables, altered-operation and publication controls, fresh warm paired checking measurements. Compiler/runtime unchanged; native R6/R6a reused by exact reviewed hashes. Reviewed in audit 114; accepted through STAGE1-LL16-ACCEPTANCE-R1 after the audit-115 performance corrections were integrated.",
       "review_commit": "92bcd83b6398b68c9dcb09c521e8c761b872453c"
+    },
+    {
+      "id": "STAGE1-LL16-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll16-acceptance-r1/accepted-results.json",
+      "sha256": "54047a17ea26d0e3839d7a581c52996980e37156367b1ad42ccc38237c4980b9",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "8850af242b8fa13bae6b81c7c7458aa5a47f50b08dbd3a618352399472b00b99",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll16-acceptance-r1/packet.json",
+      "packet_sha256": "ed48facf639492ce129b756aad5c62691bd03a2ccb89e13a7d6651833dd069e8",
+      "scope": "User acceptance of reviewed LL16-a, including declared policy-variation scope; no new execution or formal performance claim.",
+      "test_ids": [
+        "S1-LL16-a"
+      ]
     }
   ],
   "historical_records": [
