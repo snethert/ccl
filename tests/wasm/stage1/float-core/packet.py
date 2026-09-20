@@ -12,7 +12,7 @@ def pins():
  return {str(p.relative_to(ROOT)):sha(p) for p in sorted(paths) if p.is_file()}
 def deterministic(root):
  return {str(p.relative_to(root)):sha(p) for p in files(root) if p.suffix in ['.wasm','.wat','.c','.mjs','.lisp'] or (p.suffix=='.json' and not p.name.endswith('.command.json')) or p.name in ['native-results.txt','hardware-input.txt','hardware-results.txt']}
-def manifest(root):save(root/'packet.json',dict(id='STAGE1-FLOAT-CORE-R1',kind='AUXILIARY_FLOAT_PRIMITIVES',review_disposition='NOT_REVIEWED',files=[dict(path=str(p.relative_to(root)),sha256=sha(p),bytes=p.stat().st_size) for p in files(root) if p.name!='packet.json']))
+def manifest(root):save(root/'packet.json',dict(id='STAGE1-FLOAT-CORE-R2',kind='AUXILIARY_FLOAT_PRIMITIVES',review_disposition='NOT_REVIEWED',files=[dict(path=str(p.relative_to(root)),sha256=sha(p),bytes=p.stat().st_size) for p in files(root) if p.name!='packet.json']))
 def retain(e,x,p):
  assert not p.exists() and read(x/'summary.json')['status']=='PASS';p.mkdir()
  source=pins();save(p/'source-pins.json',source)
@@ -23,15 +23,17 @@ def retain(e,x,p):
  refs=read(x/'native-inputs.json')
  for n in ['2026-09-16-stage1-1a-r2/packet.json','2026-09-16-stage1-1a-r2/native/run.json','2026-09-16-float-detection-r4/packet.json']:refs[n]=sha(e/n)
  save(p/'inputs.json',refs)
- # Keep the real stack-layout failure, and the subsequent overly narrow
- # harness expectation, without duplicating full successful corpora.
- selected={'ccl-float-core-r3':['float.c','float.wasm','decode.wat','build.command.json'],'ccl-float-core-stack-repro':['execute.mjs','execution.json','execution.log'],'ccl-float-core-r5':['stack-floor/float.c','stack-floor/float.wasm','stack-floor/cases.json','stack-floor/execution.json','stack-floor/execution.log','stack-floor/build.command.json']}
- with tarfile.open(p/'development.tar.gz','w:gz') as t:
-  for run,names in selected.items():
-   for n in names:
-    q=Path('/tmp')/run/n;assert q.is_file(),q;t.add(q,arcname=run+'/'+n)
- first=read(Path('/tmp/ccl-float-core-r3/cases.json'))[0];save(p/'development-case.json',first)
- save(p/'development.json',dict(attempts=[dict(name='ccl-float-core-r3',failure='LLVM data table moved C stack top to 131088; minimum admitted input at 131072 was corrupted. Disabled jump tables, inspect actual stack top and retain no-option fault.'),dict(name='ccl-float-core-r5',failure='The same fault correctly failed integer-only refusal preservation, but the harness expected its non-discriminating positive double-add case. Replaced focused operands with the original zero-single case.')],compiler_changes=False,native_boundary_differences='134 explicit coercion overflows and 80 integer/infinity comparisons retained, not native-compatible claims'))
+ # The original development failures stay in the immutable R1 packet.
+ original=e/'2026-09-19-stage1-float-core-r1'
+ refs['2026-09-19-stage1-float-core-r1/packet.json']=sha(original/'packet.json')
+ save(p/'inputs.json',refs)
+ for n in ['float.c','float.wasm','detector.wasm']:
+  assert sha(x/n)==sha(original/'execution'/n),('service changed',n)
+ save(p/'development.json',dict(supersedes='STAGE1-FLOAT-CORE-R1',audit='31cfb7e3',
+  failure='R1 rational oracle lost the sign of negative double values rounded to single zero.',
+  correction='Copy source sign whenever the rounded result is zero; signed directed cases and both coercions in the random population.',
+  regression='execution/old-oracle-result.json',service_byte_identical=True,
+  prior_failures='2026-09-19-stage1-float-core-r1/development.tar.gz'))
  assert source==pins();manifest(p)
 def verify(e,p,out):
  out.mkdir(parents=True,exist_ok=False);source=pins();assert source==read(p/'source-pins.json'),'source pins'

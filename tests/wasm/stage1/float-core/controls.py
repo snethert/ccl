@@ -33,3 +33,26 @@ def run(out,driver):
    failure=json.loads((p/'execution.json').read_text());assert failure['status']=='FAIL' and failure['message'].startswith(oracle+':'),(name,oracle,failure);rows.append(dict(name=name,oracle=oracle,status='REJECTED'))
   else:raise AssertionError('escaped '+name)
  driver.save(out/'controls.json',rows)
+
+
+def oracle_regression(out,driver):
+ # Literal bit/flag expectations independent of the rational rounding helper.
+ checks=[]
+ for sign,raw in [(-1,'80000000'),(1,'00000000')]:
+  a=number(sign*4.67e-95,64);b=number(0)
+  for mask in [0,7,31]:
+   got=expected('single',a,b,mask,1)
+   literal=dict(width=32,flags=24 if mask==31 else 0,condition=8 if mask==31 else 0,stage=1,a_flags=24 if mask==31 else 0,b_flags=0,value='NIL' if mask==31 else raw)
+   assert got==literal,(got,literal)
+   checks.append(dict(sign=sign,mask=mask,expected=literal))
+ driver.save(out/'oracle-signed-zero.json',checks)
+ # Re-execute the genuine old expectation against the unchanged service.
+ a=number(-4.67e-95,64);b=number(0);old=expected('single',a,b,0,1);old['value']='00000000'
+ case=dict(name='old-oracle-negative-zero',op='single',a=a,b=b,mask=0,safe=1,expected=old)
+ driver.save(out/'old-oracle-cases.json',[case])
+ try:driver.command([driver.NODE,out/'execute.mjs',out/'float.wasm',out/'detector.wasm',out/'old-oracle-cases.json',out/'old-oracle-result.json'],out/'old-oracle.log')
+ except subprocess.CalledProcessError:
+  failure=json.loads((out/'old-oracle-result.json').read_text());message=failure['message']
+  assert message.startswith('old-oracle-negative-zero:') and "80000000" in message and "00000000" in message,failure
+ else:raise AssertionError('old oracle escaped')
+ driver.save(out/'oracle-control.json',dict(status='REJECTED',fault='rounded Fraction zero loses source sign',literal_checks=len(checks),service_changed=False))

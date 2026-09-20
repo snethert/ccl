@@ -11,7 +11,7 @@ From the repository root on the pinned macOS x86-64 host:
 
 ```
 python3 tests/wasm/stage1/float-core/run.py --evidence ../ccl-evidence --output /tmp/float-new-run
-python3 tests/wasm/stage1/float-core/packet.py verify --evidence ../ccl-evidence --packet ../ccl-evidence/2026-09-19-stage1-float-core-r1 --output /tmp/float-new-replay
+python3 tests/wasm/stage1/float-core/packet.py verify --evidence ../ccl-evidence --packet ../ccl-evidence/2026-09-19-stage1-float-core-r2 --output /tmp/float-new-replay
 ```
 
 The runner records exact commands, tool hashes, native kernel/image hashes and
@@ -66,20 +66,20 @@ record at memory end are exercised.
 
 ## Qualification and native boundaries
 
-39,627 cases run at three placements (118,881 comparisons), including both
+59,083 cases run at three placements (177,249 comparisons), including both
 precisions, all arithmetic/comparison operations, eight masks, safe/unchecked
 modes, 1,024-limb integers, normal/subnormal rounding boundaries and seeded
 random inputs. An independent rational oracle computes the expected rounded
-bits and flags. Scalar SSE agrees on all 1,167 distinct f32 arithmetic witnesses.
+bits and flags. Scalar SSE agrees on all 1,386 distinct witnesses: 1,167 f32 arithmetic and 219 double-to-single conversions.
 Fifteen focused compiled faults are rejected, with their corresponding positive
 runs required to pass. There are 63 owner/type/resource refusals and six exact
 fits. The flags chosen by the integer conversion and the operation are retained
 separately.
 
-The native CCL run has 6,153 distinct non-NaN cases: 5,939 agree and **214 differ**.
+The native CCL run has 7,367 distinct non-NaN cases: 7,103 agree and **264 differ**.
 Every difference is retained with its operands; no compatibility PASS is claimed:
 
-- 134 integer conversions overflow through CCL's explicit library error even
+- 184 integer conversions overflow through CCL's explicit library error even
   when hardware exceptions are masked. The raw primitive can instead return
   infinity when unchecked/masked. A Lisp adapter must preserve CCL's explicit
   coercion errors; this primitive does not authorize removing them.
@@ -93,6 +93,27 @@ behavior is not the approved explicit exception policy. They remain in the
 rational/target corpus. The native witness uses masked hardware exceptions and
 is a value comparison, not a policy matrix. These limitations prevent promoting
 this packet into generated numeric compatibility or LL16 credit.
+
+## Audit 109 correction (R2)
+
+The service source, service binary and f64 detector binary are byte-identical to
+R1. Its oracle converted a rounded rational zero to positive floating zero,
+losing the sign of negative doubles that underflow during single coercion. R2
+copies the source sign whenever the rounded result is zero. It includes the
+reported -4.67e-95 example, both signs of zero and of the smallest double, and
+values below, at and above the half-smallest-single boundary, under all masks
+and both safety modes. Six literal bit/flag expectations check the correction
+independently of rational rounding. The original positive-zero expectation now
+fails against the unchanged service with the two zero bit patterns in the
+retained diagnostic. Native CCL and scalar SSE also witness the conversion bits.
+
+The original 1,200 random arithmetic/comparison inputs are preserved. An added
+600 seeded random inputs, split evenly among integers, singles and doubles,
+each exercise both coercion operations under every mask and safety mode. R1
+remains retained with its oracle defect; R2 supersedes it and awaits review.
+The fifteen service fault oracles still identify focused case failures rather
+than distinct failure causes; positive focused cases must pass. The new oracle
+regression additionally requires the expected and actual zero bit patterns.
 
 ## Development and remaining work
 

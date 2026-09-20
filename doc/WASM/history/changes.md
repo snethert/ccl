@@ -2754,3 +2754,7 @@ probe cases pass at three placements, and 24 further edge and refusal
 probes match the README. Service: no defect. Fixture: oracle defect and
 coverage gap to correct before any dependent unit. Acceptance is the
 user's decision.
+
+## 2026-09-19 — correct floating coercion oracle after audit 109
+
+Preserve the source sign when rational rounding yields zero. Add both signs around single zero/subnormal boundaries and 600 seeded integer/single/double inputs exercising both coercions under every mask and safety mode. The original bad expectation is retained and rejected by the unchanged service; six literal bit/flag expectations and 219 SSE conversion witnesses independently cover the correction. R2 runs 59,083 cases (177,249 target comparisons), 1,386 total hardware witnesses and fifteen service faults. Native values agree on 7,103 of 7,367 cases; the remaining 264 stay in the previously disclosed categories. Fresh replay matches 100 deterministic files and 19 source pins. R1 remains retained with its reviewed fixture defect and is superseded, not accepted. No shared source, integration or ledger change.

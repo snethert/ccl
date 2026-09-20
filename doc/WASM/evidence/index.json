@@ -2442,10 +2442,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-core-r1/packet.json",
       "sha256": "edf8a775c27ad4060cf64ad0d36c870de753820273a87972ca8b06391437b744",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_FIXTURE_DEFECT",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Isolated mixed floating-point primitive service; no shared source changes and no LL16 credit. 39627 cases,118881 target comparisons at 128KiB/1MiB/2GiB,1167 scalar-SSE flag witnesses,63 refusals,6 exact fits,15 rejected faults. Native value witness:6153 cases,5939 equal,214 differences retained (134 explicit integer-coercion overflows,80 integer/infinity comparisons); not native-compatible lowering. Reviewed f64 detector bodies reused; new f32 witnesses and exact integer conversions. Replay 96 deterministic files,19 pins. Stack-boundary defect and harness failure retained. Audit 109: service no defect; oracle loses sign on negative double-to-single underflow. Not accepted; superseded by R2.",
+      "review_commit": "31cfb7e3",
+      "superseded_by": "STAGE1-FLOAT-CORE-R2"
+    },
+    {
+      "id": "STAGE1-FLOAT-CORE-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-core-r2/packet.json",
+      "sha256": "02378cbf735245596677ca035e5ea40c3a234d0a3816df7c9cd986f4dea8768b",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Isolated mixed floating-point primitive service; no shared source changes and no LL16 credit. 39627 cases,118881 target comparisons at 128KiB/1MiB/2GiB,1167 scalar-SSE flag witnesses,63 refusals,6 exact fits,15 rejected faults. Native value witness:6153 cases,5939 equal,214 differences retained (134 explicit integer-coercion overflows,80 integer/infinity comparisons); not native-compatible lowering. Reviewed f64 detector bodies reused; new f32 witnesses and exact integer conversions. Replay 96 deterministic files,19 pins. Stack-boundary defect and harness failure retained."
+      "scope": "Audit-109 oracle correction: preserve source sign at rounded zero. Service and detector binaries byte-identical to R1. 59083 cases,177249 target comparisons;1386 SSE witnesses (1167 arithmetic,219 conversions);15 service faults and original oracle regression rejected;6 independent literal expectations. Random coverage adds both coercions over integer/single/double inputs. Native:7367 cases,7103 equal,264 declared differences (184 explicit coercion overflows,80 infinity comparisons). Replay 100 files,19 pins. Auxiliary, not accepted or integrated; no LL16 credit."
     }
   ],
   "current_runs": [

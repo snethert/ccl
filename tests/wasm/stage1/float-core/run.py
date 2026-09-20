@@ -21,7 +21,7 @@ def run(e,out):
  command([NODE,out/'execute.mjs',out/'float.wasm',out/'detector.wasm',out/'cases.json',out/'execution.json'],out/'execution.log')
  import native;native.run(e,out,rows,sys.modules[__name__])
  import hardware;hardware.run(out,rows,sys.modules[__name__])
- import controls;controls.run(out,sys.modules[__name__])
- save(out/'summary.json',dict(status='PASS',cases=len(rows),target_comparisons=len(rows)*3,mutants=len(controls.faults()),hardware_comparisons=json.loads((out/'hardware.json').read_text())['cases'],native=json.loads((out/'native.json').read_text())|{'differences':len(json.loads((out/'native.json').read_text())['differences'])},owner_refusals=63,exact_fits=6,gate_credit=False));print((out/'summary.json').read_text())
+ import controls;controls.run(out,sys.modules[__name__]);controls.oracle_regression(out,sys.modules[__name__])
+ save(out/'summary.json',dict(status='PASS',cases=len(rows),target_comparisons=len(rows)*3,mutants=len(controls.faults()),oracle_controls=1,hardware_comparisons=json.loads((out/'hardware.json').read_text())['cases'],native=json.loads((out/'native.json').read_text())|{'differences':len(json.loads((out/'native.json').read_text())['differences'])},owner_refusals=63,exact_fits=6,gate_credit=False));print((out/'summary.json').read_text())
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--evidence',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();run(a.evidence.resolve(),a.output.resolve())

@@ -4,6 +4,11 @@ from corpus import OPS,value,coerce,ieee,bits,flags
 def run(out,rows,driver):
  selected=[];seen=set()
  for row in rows:
+  if row['op']=='single' and row['a']['kind']=='64' and not math.isnan(value(row['a'])):
+   key=('single',row['a']['bits'],'00000000')
+   if key not in seen:
+    seen.add(key);r,f=coerce(row['a'],32,True,1);selected.append(dict(op=key[0],a=key[1],b=key[2],result=bits(r,32),flags=f))
+   continue
   if row['op'] not in OPS[:4] or '64' in [row['a']['kind'],row['b']['kind']]:continue
   a,_=coerce(row['a'],32,True,1);b,_=coerce(row['b'],32,True,1)
   if math.isnan(a) or math.isnan(b):continue

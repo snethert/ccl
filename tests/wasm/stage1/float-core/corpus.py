@@ -25,7 +25,7 @@ def coerce(x,w,full,safe):
   r,fs=ieee.round_binary(Fraction(a),ieee.SINGLE if w==32 else ieee.DOUBLE);status=ieee.status_of(fs);r=float(r)
  elif x['kind']=='64' and w==32 and math.isfinite(a):
   r,fs=ieee.round_binary(Fraction(a),ieee.SINGLE);status=ieee.status_of(fs);r=float(r)
-  if a==0:r=a
+  if r==0:r=math.copysign(0.0,a)
  else:r=a;status=0
  if not full and status in (4,5):status=0
  return r,flags(status) if safe else 0
@@ -82,6 +82,13 @@ def cases():
  # f32 tininess after rounding: below, at and above quarter-subnormal cutoff.
  for i,x in enumerate([float(Fraction(2)**-126-Fraction(2)**-151+d*Fraction(2)**-175) for d in [-1,0,1]]):
   add(f'single-tiny-{i}','single',number(x,64),masks=MASKS)
+ # Signed double-to-single coercion around zero, subnormal and normal edges.
+ for label,x in [('reported',4.67e-95),('zero',0.0),('least-double',2**-1074),
+                 ('below-half',math.nextafter(2**-150,0.0)),('half',2**-150),
+                 ('above-half',math.nextafter(2**-150,math.inf)),
+                 ('least-single',2**-149),('normal',2**-126)]:
+  for sign in [-1,1]:
+   add(f'signed-single-{label}-{sign}','single',number(math.copysign(x,sign),64),masks=MASKS,safes=(0,1))
  # The integer must round directly to f32, not through a rounded double.
  for sign in [-1,1]:
   for k in [55,80,120]:
@@ -99,4 +106,10 @@ def cases():
  for i in range(1200):
   w=rng.choice([32,64]);a=randfloat(w);b=number(rng.getrandbits(rng.choice([30,54,128,1024]))*rng.choice([-1,1])) if i%3==0 else randfloat(rng.choice([32,64]))
   add('random-'+str(i),rng.choice(OPS[:10]),a,b,(7,31),(1,))
+ # Keep the original random arithmetic population; exercise both unary ops
+ # over all three input families with independent seeded random operands.
+ for i in range(600):
+  kind=i%3
+  a=number(rng.getrandbits(rng.choice([30,54,128,1024]))*rng.choice([-1,1])) if kind==0 else randfloat(32 if kind==1 else 64)
+  for op in OPS[10:]:add(f'random-coerce-{i}-{op}',op,a,masks=MASKS,safes=(0,1))
  return rows
