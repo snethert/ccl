@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_NOT_REVIEWED",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-20",
-  "basis": "Generated shared process initialization and per-Worker setup with actual late Workers, lazy installation and ownership refusals. Twenty accepted records unchanged.",
+  "basis": "User accepts LL13-a and admission follow-up after audits 122/123; twenty earlier accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S1-LL15-a [closure]",
-      "unreviewed S1-LL13-a [installation]",
       "missing S1-LL14-a [cross-dump]",
       "missing S1-NAMESPACE-a [read-only]",
       "missing S1-LOADER-a [one-worker]",
@@ -25,16 +24,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-initialization-results.json",
-      "sha256": "e7f6cd3108b42b8cbe7c60ccd4316283d6f6cc656fd1ef37c84f5f97b52c3637"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll13a-accepted-results.json",
+      "sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-initialization-results.json",
-  "combined_results_sha256": "e7f6cd3108b42b8cbe7c60ccd4316283d6f6cc656fd1ef37c84f5f97b52c3637",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll13a-accepted-results.json",
+  "combined_results_sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79",
   "counts": {
-    "accepted": 20,
+    "accepted": 21,
     "missing": 10,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }

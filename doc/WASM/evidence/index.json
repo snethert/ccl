@@ -2554,10 +2554,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-initialization-review-r1/packet.json",
       "sha256": "0718b417a724b30dea1feea7e7dd425ca357618e39d864832fe7ec121fd1acd1",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-122 follow-up: constructor checks both actual Worker-local table capacities before any claim; fresh bootstrap requires zero control storage and ready entry checks all reserved words. Six inherited generated Workers reproduce R1 exactly, ten inherited owner faults and seven publication controls rerun. At two placements: 616 directed refusals preserve declared regions; four three-Worker races admit one initializer each; four additional behavioral faults rejected. Fresh replay: 405 deterministic files at 111 pins. Compiler, generated modules and native oracle reused by reviewed packet hash. Sibling fixture with explicit source enumeration; original R1 pins unchanged. Trusted callback uses supplied tables, trusted writers own control bytes, scheduler owns busy retry. No additional slot credit; neither R1 nor follow-up accepted or integrated."
+      "scope": "Audit-122 follow-up: constructor checks both actual Worker-local table capacities before any claim; fresh bootstrap requires zero control storage and ready entry checks all reserved words. Six inherited generated Workers reproduce R1 exactly, ten inherited owner faults and seven publication controls rerun. At two placements: 616 directed refusals preserve declared regions; four three-Worker races admit one initializer each; four additional behavioral faults rejected. Fresh replay: 405 deterministic files at 111 pins. Compiler, generated modules and native oracle reused by reviewed packet hash. Sibling fixture with explicit source enumeration; original R1 pins unchanged. Trusted callback uses supplied tables, trusted writers own control bytes, scheduler owns busy retry. Auxiliary follow-up accepted and integrated with R1; no additional slot credit. User accepts both after audits 122/123; integration-ll13a.json binds the corrected owner, actual runtime replay, table-distinctness obligation and diagnostic precedence. R1 verifier replays from d6bf93fb after the new runtime file enters its recursive enumeration; follow-up frozen pins remain current.",
+      "review_commit": "d6bf93fb8bec8a0cc2f3f33dc4fea33cabc80c95",
+      "review_sha256": "7363768b29099c790413808fe29f5ea036fa532fcc4a66081e531b39bd90fd4f",
+      "integration": "doc/WASM/stage1/integration-ll13a.json"
     }
   ],
   "current_runs": [
@@ -4964,7 +4967,7 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-initialization-r1/packet.json",
@@ -4972,9 +4975,30 @@
       "test_ids": [
         "S1-LL13-a"
       ],
-      "scope": "Five unchanged-compiler modules execute native-checked process and Worker initialization, mutation and reads. Six real Workers at 4 MiB/2 GiB preserve mutated heap/runtime/staging, foreign regions, reserved slots and original code through late lazy installation. Explicit metadata and TCR pointer checks precede initialization; active data/start/BSS/element modules refuse before publication. Forty owner refusals, ten owner faults, seven publication controls and twelve role omissions. Fresh replay: 315 files at 104 pins. Trusted bounded synchronous bootstrap profile, terminal failure rather than rollback, Worker-local tables and shared code identity. No C service, scheduler, concurrent Lisp/GC, browser, production cross-dump or Stage 2 claim. Audit 122 found no defect; proposal awaits user acceptance and integration. Recursive source enumeration means a nested follow-up would require replaying R1 from its original commit. Bootstrap race losers refuse busy; scheduler join/wait policy remains open. Actual Worker-local table capacity is checked by installation after the claim, not by owner admission. Fresh zeroed shared control storage is required; bytes outside state words and digest are preserved.",
+      "scope": "Five unchanged-compiler modules execute native-checked process and Worker initialization, mutation and reads. Six real Workers at 4 MiB/2 GiB preserve mutated heap/runtime/staging, foreign regions, reserved slots and original code through late lazy installation. Explicit metadata and TCR pointer checks precede initialization; active data/start/BSS/element modules refuse before publication. Forty owner refusals, ten owner faults, seven publication controls and twelve role omissions. Fresh replay: 315 files at 104 pins. Trusted bounded synchronous bootstrap profile, terminal failure rather than rollback, Worker-local tables and shared code identity. No C service, scheduler, concurrent Lisp/GC, browser, production cross-dump or Stage 2 claim. Audit 122 found no defect; accepted with its reviewed follow-up and integrated. Recursive source enumeration means a nested follow-up would require replaying R1 from its original commit. Bootstrap race losers refuse busy; scheduler join/wait policy remains open. Actual Worker-local table capacity is checked by installation after the claim, not by owner admission. Fresh zeroed shared control storage is required; bytes outside state words and digest are preserved. User accepts both after audits 122/123; integration-ll13a.json binds the corrected owner, actual runtime replay, table-distinctness obligation and diagnostic precedence. R1 verifier replays from d6bf93fb after the new runtime file enters its recursive enumeration; follow-up frozen pins remain current.",
       "review_commit": "306fdc77e478c7fac82f3056d63102b4b68490f6",
-      "review_sha256": "dd942a14ab46410101e1a68ce8dbd7a510d9317f08f93400a95841cd9445acd0"
+      "review_sha256": "dd942a14ab46410101e1a68ce8dbd7a510d9317f08f93400a95841cd9445acd0",
+      "integration": "doc/WASM/stage1/integration-ll13a.json"
+    },
+    {
+      "id": "STAGE1-LL13A-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll13a-acceptance-r1/accepted-results.json",
+      "sha256": "f436c52e56eeeed9203314888c5fcde0da4378c2a55887bee39517d10ed139e7",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "d32c9a3eaee0f85a7cc5892b6dd1528f507527d6b7bc46d3b67dab2278a89f1d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll13a-acceptance-r1/packet.json",
+      "packet_sha256": "37ac3fc1f4af4d622d4fcd50f6fbaf843c5dbfb32fbd2b40b3aed9466bfa59f2",
+      "scope": "User accepts LL13-a and reviewed admission follow-up; corrected owner integrated byte-exactly and executed through production imports.",
+      "test_ids": [
+        "S1-LL13-a"
+      ]
     }
   ],
   "historical_records": [

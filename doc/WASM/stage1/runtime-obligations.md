@@ -265,3 +265,19 @@ The pre-existing keyword is owner-materialized from native membership, not copie
 Fixed-capacity sealed package topology and pinned objects; no package mutation API, production symbol registration, moving package scanner or complete bootstrap membership claim.
 
 Names reject surrogate words, matching native CODE-CHAR; noncharacters remain admitted. Owner image and tables are pinned with sealed topology, 4–256 table capacity and 4,096-code-point names. No global registration of the runtime functions or package collector scanner is supplied. See [integration](integration-ll09a.json).
+
+## Shared initialization (audits 122/123)
+
+Use the reviewed follow-up owner, with the actual Worker-local table and tail_table supplied before any claim. Both must meet the declared capacity.
+
+The owner accepts one table object for both roles. Callers must supply distinct tables; the accepted lazy loader rejects aliasing at installation, after the claim. Moving distinctness admission earlier requires a separately reviewed change.
+
+On fresh storage the reserved scan runs first, so a dirty reserved word reports CONTROL_RESERVED rather than CONTROL_NOT_FRESH. Both refuse without writes.
+
+Fresh bootstrap requires zero control storage; reserved words remain zero. Only trusted protocol owners may write it. Callback failures are terminal, not rollback.
+
+Busy bootstrap contenders refuse instead of waiting; a winning initializer may cause PROCESS_STATE or CONTROL_NOT_FRESH. Join and retry policy belongs to the scheduler.
+
+The follow-up uses a frozen source list in a sibling directory. Adding the integrated runtime module changes R1 recursive runtime enumeration, so replay the original R1 verifier from d6bf93fb; the follow-up frozen pins remain valid at HEAD.
+
+See [integration](integration-ll13a.json). The accepted bounded shared profile initializes only owned regions; it supplies neither a scheduler nor a production cross-dump.

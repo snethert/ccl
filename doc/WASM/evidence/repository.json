@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "02525887c102e287029c64096f20359c224f305184481e01cec1074ef99ef85c",
-  "commit": "76c481a8b0f92fb6a4eac87c71ca54185584f863",
-  "immutable_evidence_files": 232249,
+  "catalog_sha256": "78d8831620ed2e2bc966c0984f0b570cd050a7d632dfa4e7a2340dbde3e2b67a",
+  "commit": "1c90353286bcb1358b97824df69f98d086ca2376",
+  "immutable_evidence_files": 232661,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-initialization-review-r1",
-    "files": 478,
-    "bytes": 4934384
+    "directory": "2026-09-20-stage1-ll13a-acceptance-r1",
+    "files": 412,
+    "bytes": 8169909
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 36983,
+  "prior_indexed_references_verified": 37381,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,10 missing,one unreviewed. LL13-a reviewed; initialization admission follow-up awaits review. Neither proposal accepted or integrated.",
-  "source_index_sha256": "8679b578666fc14ab66d58dcba42fd26bcdb50bd4765fd60b9952d88794825a3",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-initialization-review.json",
-  "verification": "Fresh retained replay: 405 deterministic files at 111 pins; inherited results identical, 616 directed refusals and four races pass, fourteen owner faults and seven publication controls rejected. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. LL13-a and admission follow-up accepted and integrated.",
+  "source_index_sha256": "b53aa11fcfb2f6557397d89684c964dc61f1a98381a346e6b9327466e1635dff",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll13a-acceptance.json",
+  "verification": "Acceptance producer preserves twenty earlier accepted records. Exact source comparison and integrated production-import execution reproduce inherited and directed/race results. Incremental catalog and indexed references verified.",
   "version": 1
 }
