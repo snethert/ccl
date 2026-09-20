@@ -1,6 +1,8 @@
 import {createHash} from 'node:crypto';
 import {inspect} from './binary.mjs';
 import {admitNumericCapabilities} from './numeric-capabilities.mjs';
+import {admitFloatingCapabilities} from './floating-capabilities.mjs';
+export const FLOAT_PROFILE='wasm32-shared-B-floating-owner-v1';
 export const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const need=(ok,reason)=>{if(!ok)throw Error(reason);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -12,11 +14,11 @@ export const OWNER_PROFILE='wasm32-shared-B-owner-retry-v1';
 
 export function validate(bytes,record) {
   need(sha(bytes)===record.sha256,'BINARY_DIGEST');
-  need([PROFILE,OWNER_PROFILE,NUMERIC_PROFILE].includes(record.profile),'PROFILE');
+  need([PROFILE,OWNER_PROFILE,NUMERIC_PROFILE,FLOAT_PROFILE].includes(record.profile),'PROFILE');
   need(WebAssembly.validate(bytes),'INVALID_WASM');
-  const numeric=record.profile===NUMERIC_PROFILE,ownerRetry=numeric||record.profile===OWNER_PROFILE;
+  const floating=record.profile===FLOAT_PROFILE,numeric=floating||record.profile===NUMERIC_PROFILE,ownerRetry=numeric||record.profile===OWNER_PROFILE;
   const m=inspect(bytes,{ownerRetry});
-  need(m.imports.filter(i=>i.kind==='function').length===(numeric?2:ownerRetry?1:0),'OWNER_IMPORT_COUNT');
+  need(m.imports.filter(i=>i.kind==='function').length===(floating?3:numeric?2:ownerRetry?1:0),'OWNER_IMPORT_COUNT');
   const expected=[
     {module:'env',name:'memory',kind:'memory',flags:3,minimum:1,maximum:32769},
     {module:'env',name:'tcr',kind:'global',type:'i32',mutable:0},
@@ -32,7 +34,9 @@ export function validate(bytes,record) {
   for(const i of m.imports){const key=i.module+'.'+i.name;need(!keys.has(key),'DUPLICATE_IMPORT');keys.add(key);
     if(i.module==='owner')need(ownerRetry&&i.name==='ensure'&&i.kind==='function'&&same(i.signature,{params:['i32'],results:[]}),'OWNER_IMPORT');
     else if(i.module==='integer')need(numeric&&i.name==='calculate'&&i.kind==='function'&&same(i.signature,{params:['i32','i32'],results:['i32']}),'INTEGER_IMPORT');
+    else if(i.module==='floating')need(floating&&i.name==='calculate'&&i.kind==='function'&&same(i.signature,{params:['i32','i32','i32'],results:['i32']}),'FLOAT_IMPORT');
     else if(i.module!=='env')need(['symbols','keywords','codes'].includes(i.module)&&i.kind==='global'&&i.type==='i32'&&i.mutable===0,'IMPORT_AUTHORITY');}
+  if(floating)need(keys.has('floating.calculate'),'FLOAT_IMPORT_SET');
   if(numeric)need(keys.has('owner.ensure')&&keys.has('integer.calculate'),'NUMERIC_IMPORT_SET');
   need(same(m.imports,record.imports),'IMPORT_MANIFEST');
   need(m.exports.length===2,'EXPORT_SET');
@@ -71,7 +75,12 @@ export class LazyLoader {
     need(clean.env.memory===o.memory&&clean.env.table===o.table&&clean.env.tail_table===o.tail_table&&clean.env.call_error===o.call_error&&clean.env.nonlocal_exit===o.nonlocal_exit,'CAPABILITIES');
     need(Number.isInteger(clean.env.tcr)&&Number.isInteger(clean.env.code_registry),'RAW_GLOBALS');
     for(const ns of ['symbols','keywords','codes'])for(const value of Object.values(clean[ns]??{}))need(Number.isInteger(value)&&value>=0&&value<=4294967295,'IDENTITY_GLOBAL');
-    need([PROFILE,OWNER_PROFILE,NUMERIC_PROFILE].includes(r.profile),'PROFILE');
+    need([PROFILE,OWNER_PROFILE,NUMERIC_PROFILE,FLOAT_PROFILE].includes(r.profile),'PROFILE');
+    if(r.profile===FLOAT_PROFILE){
+      const bundle=admitFloatingCapabilities(o.floatingCapabilities,clean.env);
+      need(clean.owner?.ensure===bundle.ensure&&clean.integer?.calculate===bundle.integer&&clean.floating?.calculate===bundle.floating,'FLOAT_IMPORT_CAPABILITY');
+    }else{
+    need(!clean.floating,'UNEXPECTED_FLOAT_CAPABILITY');
     if(r.profile===NUMERIC_PROFILE){
       const bundle=admitNumericCapabilities(o.numericCapabilities,clean.env);
       need(clean.owner?.ensure===bundle.ensure&&clean.integer?.calculate===bundle.calculate,'NUMERIC_IMPORT_CAPABILITY');
@@ -79,6 +88,7 @@ export class LazyLoader {
     need(!clean.integer,'UNEXPECTED_INTEGER_CAPABILITY');
     if(r.profile===OWNER_PROFILE)need(typeof o.allocationEnsure==='function'&&clean.owner?.ensure===o.allocationEnsure,'OWNER_CAPABILITY');
     else need(!clean.owner,'UNEXPECTED_OWNER_CAPABILITY');
+    }
     }
     row.imports=clean;row.observe=observe;
     const stub=new WebAssembly.Instance(o.stub,{loader:{install:slot=>this.install(slot),slot:r.slot,table:o.table,tail_table:o.tail_table}});

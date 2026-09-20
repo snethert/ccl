@@ -13,7 +13,7 @@
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Generated floating calls R2 addresses audit112 under user coercion decision; awaiting review, no slot credit.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Generated floating calls R2 accepted and integrated after audit113; auxiliary, no LL16 credit.",
   "source_index_sha256": "f162f2dccd5037612c97708b910eed636f5ca7256a8eb795ee9149ab21f87274",
   "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-float-calls-r2.json",
   "verification": "Scoped R2 packet checked; fresh replay 1076 files,450 pins. All prior catalog rows preserved; incremental addition only.",

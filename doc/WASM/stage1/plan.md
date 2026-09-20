@@ -154,8 +154,9 @@ preserves that behavior while keeping small-integer hardware inexact and later
 arithmetic flags. Its 4,379 native cases run in eager/cold and moving modes;
 the original mathematical entry still passes its full accepted corpus. The
 compiler is unchanged. One exact-tiny native trap difference still follows
-the adopted D6 policy. R2 awaits review. Next: after
-acceptance and integration, join the integer and floating evidence against the
+the adopted D6 policy. R2 is accepted after audit 113 and its reviewed compiler,
+primitive, owner, adapter and loader are integrated byte-for-byte. Next: join
+the integer and floating evidence against the
 LL16-a assertion, complete its remaining numeric-family coverage and measure
 the emitted checking cost under the adopted benchmark discipline. Only that
 joined qualification executes LL16-a.

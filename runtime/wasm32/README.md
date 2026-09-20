@@ -83,13 +83,21 @@ trusted owner, memory, TCR and error tag. The loader admits their exact pair und
 `wasm32-shared-B-integer-owner-v1`; invoke generated code outside an active owner
 boundary. See the [reviewed composition](../../tests/wasm/stage1/integer-owner/README.md).
 
-`float.c` and `float-detector.wat` are the accepted isolated floating primitives,
-byte-identical to the [R2 packet](../../tests/wasm/stage1/float-core/README.md).
-The detector imports the service’s private memory. Build flags, ownership, native
-compatibility boundaries and result/exception status ABI are specified there.
-These are raw primitives; collecting generated calls remain separate work.
+`float.c` now supplies both the original mathematical `float_calculate` entry
+and the accepted Lisp-coercion `float_calculate_lisp` entry. The latter preserves
+native silent bignum rounding while retaining small-integer and subsequent
+arithmetic flags. `float-detector.wat` is unchanged. Build with the reviewed
+[follow-up flags](../../tests/wasm/stage1/float-calls/review-followup/run.py),
+including exports for **both** entries; the original raw entry retains its
+accepted behavior. The detector imports the service's private memory.
 
-`float-service.mjs` is the accepted collecting floating capability. It reads the
-live TCR FP-control word and publishes into a four-word root frame after assurance;
-see its [ABI and scope](../../tests/wasm/stage1/float-owner/README.md).
-Generated calls, loader admission and Lisp signaling remain separate work.
+`float-service.mjs` calls the Lisp-coercion entry and publishes a result into the
+root frame after assurance. `service.mjs` is the reviewed Lisp adapter; its
+filename is retained so `floating-capabilities.mjs` is byte-identical to the
+reviewed source. The latter binds floating, integer and allocation capabilities
+to one trusted owner. The loader admits their exact identities under
+`wasm32-shared-B-floating-owner-v1`. Generated floating calls and Lisp conditions
+are opt-in through `compile-float-call-form`. See the
+[integration record](../../doc/WASM/stage1/integration-float-calls.json) and
+[scope](../../tests/wasm/stage1/float-calls/review-followup/README.md).
+This is auxiliary work; LL16 qualification remains open.

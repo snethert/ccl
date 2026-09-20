@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T14:02:09.724428+00:00",
+  "user_authorization": "accept and integrate",
+  "review_commit": "842a2481f08a9fa32b5ceda991658ba0383cc64e",
+  "review_sha256": "1bd235bc11d23f6d90d009d9d1d12eac264e42e43cbc4f308c90e9f91668b9ae",
+  "prior_review_commit": "97f589ad9bd91805c9337df8c0ead8db21150558",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "d328c6bc7882631d98bb49a878110c3b90b691583405a021e79ebef1f9192df4",
+      "after": "e05c33de50e70f1010413ccafa2b5412b9281dda00c46413cc9b7ac5febc0ab3",
+      "proposal_locator": "2026-09-19-stage1-float-calls-r1/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "before": "5e8c1572c08ba94eabe092988595dbafcae6894ed13c58b12f235e4a79385b39",
+      "after": "672ae8b7603e3d373ed905203189488bd5a047839125c2008f6bce452aa0fafa",
+      "proposal_locator": "2026-09-20-stage1-float-calls-r2/float-lisp.c"
+    },
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "before": "668e36bec3de2f6a80eae098807ee25790de06d97cbbc5556472b00b5954b360",
+      "after": "bef52b854bb34ceec62edeee273182356af996111b5cf191fc2ca39c51e71e46",
+      "proposal_locator": "2026-09-20-stage1-float-calls-r2/float-service.mjs"
+    },
+    {
+      "file": "runtime/wasm32/service.mjs",
+      "before": null,
+      "after": "bf526ab84340f6534d2aafd624a28582e9c55cef39df989423e571d0c156e9e9",
+      "proposal_locator": "2026-09-19-stage1-float-calls-r1/service.mjs"
+    },
+    {
+      "file": "runtime/wasm32/floating-capabilities.mjs",
+      "before": null,
+      "after": "5ebe1c17c6a794d1436bc077bd57052a1eb66c099e56dcde1304a685b622449f",
+      "proposal_locator": "2026-09-19-stage1-float-calls-r1/floating-capabilities.mjs"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "5cb9cde32d916f3dcc2569730348c86ce6cc611e68e4cebcc7b36ca15d07d169",
+      "after": "9c1fa814a3a4ae7a60678b2be1c421dbd4b2515ad0d23b3ea038853c3d532973",
+      "proposal_locator": "2026-09-19-stage1-float-calls-r1/loader.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "a26a4ee9cbda3978bff2a08bd9c7a0cabc3e740a0ec486e31761023773191ea8"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "sha256": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-float-calls-r1/packet.json",
+      "sha256": "a09d17f02015cfc06af358be0f9343093d3d072b52506bfbad344703e2e9ff23"
+    },
+    {
+      "locator": "2026-09-20-stage1-float-calls-r2/packet.json",
+      "sha256": "7aa9cef401d22ec2eb121e9bb2a3cee2e371b206f8c25562e0ba02b02ce5e049"
+    }
+  ],
+  "previous_integration": "integration-float-owner.json",
+  "previous_integration_sha256": "bb909956a901878d73ef5fa276d6c5144d75a94d2e0bd8520793d7566ac70708",
+  "observations": [
+    "Audit 113: R1 review reference now uses the full audit-112 commit hash.",
+    "Audit 113: raw regression comparisons re-derived from the retained report at integration, rather than its summary constant; immutable reviewed evidence is unchanged.",
+    "Audit 112: native h_collect payload matches its explicit-constructor oracle on this host; that oracle remains as reviewed.",
+    "Unchecked generated rows compare with native execution with all hardware traps masked; explicit library coercion errors still apply.",
+    "Integer-only comparisons are admitted, while integer division and broader numeric families remain outside this slice.",
+    "Native reference bignum coercion is selected by magnitude rather than the narrower D1 tag; later arithmetic flags retain D6 checks. Exact-tiny native trap difference remains explicit.",
+    "Owner capability admission is trusted identity, not code signing. Assurance may move objects before refusal. No LL16 or performance credit."
+  ],
+  "raw_regression_counts": {
+    "archive": "2026-09-20-stage1-float-calls-r2/execution.tar.gz",
+    "archive_sha256": "ef2ac7f9a1d306c253dfcd6b1b374fbffe167f4e9c5fca388a55009ad2e57501",
+    "member": "raw-regression.json",
+    "member_sha256": "3427313039f7bbb27f2f689b2af7675db16b89064f4793c91484f713b175cf07",
+    "counts_by_placement": [
+      {
+        "base": 131072,
+        "cases": 59083
+      },
+      {
+        "base": 1048576,
+        "cases": 59083
+      },
+      {
+        "base": 2147483648,
+        "cases": 59083
+      }
+    ],
+    "comparisons": 177249
+  },
+  "scope": "Reviewed generated floating compiler, loader, adapter and R2 primitive/owner composition; auxiliary, no LL16 credit.",
+  "verification": "Exact regenerated and retained proposal bytes. Audits 112/113 replay and native R6/R6a cover this compiler. Integrated binary and eager/cold linkage checked separately before commit.",
+  "reverse": "Restore prior hashes for existing files; remove service.mjs and floating-capabilities.mjs after withdrawing floating-profile consumers.",
+  "integration_checks": {
+    "primitive_binary_sha256": "fcc3b5fa7f27fa1363c1accd95ddddc4cee437dd618d8b8654966a8b900d5f6c",
+    "eager_sha256": "5839b6b8993ea39e759355c007ed1730df6b1f490046863c3dd338ad988a9faf",
+    "cold_sha256": "5839b6b8993ea39e759355c007ed1730df6b1f490046863c3dd338ad988a9faf",
+    "retained_observations_byte_identical": true,
+    "comparisons_per_mode": 17516
+  }
+}

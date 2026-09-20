@@ -191,3 +191,21 @@ Unchecked calls validate enabled bits but do not apply them, as in the accepted 
 The full 59083-row capability replay and 3000-step chain are Claude audit-111 probes; the retained author fixture samples 1585 rows.
 
 Native explicit coercion-overflow and integer/infinity compatibility dispositions remain obligations for generated Lisp calls.
+
+## Generated floating calls (Claude audits 112/113)
+
+Audit 113: R1 review reference now uses the full audit-112 commit hash.
+
+Audit 113: raw regression comparisons re-derived from the retained report at integration, rather than its summary constant; immutable reviewed evidence is unchanged.
+
+Audit 112: native h_collect payload matches its explicit-constructor oracle on this host; that oracle remains as reviewed.
+
+Unchecked generated rows compare with native execution with all hardware traps masked; explicit library coercion errors still apply.
+
+Integer-only comparisons are admitted, while integer division and broader numeric families remain outside this slice.
+
+Native reference bignum coercion is selected by magnitude rather than the narrower D1 tag; later arithmetic flags retain D6 checks. Exact-tiny native trap difference remains explicit.
+
+Owner capability admission is trusted identity, not code signing. Assurance may move objects before refusal. No LL16 or performance credit.
+
+The floating profile requires a primitive binary exporting `float_calculate_lisp`; the original mathematical entry remains available separately. Runtime build flags must retain both exports.

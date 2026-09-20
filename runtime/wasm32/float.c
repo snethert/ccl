@@ -110,7 +110,7 @@ static U witness32(U op,double a,double b,double r){
  * operand-A flags, operand-B flags. Stage 1/2 conversion, 3 operation.
  * Enabled conditions publish no allocated result; the Lisp adapter signals.
  */
-EXPORT U float_calculate(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U safe){
+static U calculate(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U safe,U native){
  if(!region(in,end)||!region(out,limit)||result<131072||(result&7)||(W)result+32>memory_bytes()||mask>31||safe>1)return 1;
  U starts[3]={in,out,result};W ends[3]={end,limit,(W)result+32};
  for(U i=0;i<3;i++)for(U j=i+1;j<3;j++)if((W)starts[i]<ends[j]&&(W)starts[j]<ends[i])return 1;
@@ -125,10 +125,10 @@ EXPORT U float_calculate(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask
   if(unordered)yes=op==7;value=yes?T:NIL;width=0;f=safe&&unordered?1:0;chosen=enabled(f,mask,safe);
  }else{
   if(op<4&&!a.kind&&!b.kind)return 5;
-  U full=safe&&(mask&24),status=0;double x=coerce(&a,width,full,&status);fa=safe?flags(status):0;chosen=enabled(fa,mask,safe);
+  U full=safe&&(mask&24),status=0;double x=coerce(&a,width,full,&status);fa=safe&&!(native&&!a.kind&&length(&a.i)>60)?flags(status):0;chosen=enabled(fa,mask,safe);
   if(chosen){f=fa;stage=1;goto commit;}
   if(op>=10){r=x;f=fa;stage=1;goto result;}
-  double y=coerce(&b,width,full,&status);fb=safe?flags(status):0;chosen=enabled(fb,mask,safe);
+  double y=coerce(&b,width,full,&status);fb=safe&&!(native&&!b.kind&&length(&b.i)>60)?flags(status):0;chosen=enabled(fb,mask,safe);
   if(chosen){f=fb;stage=2;goto commit;}
   r=operation(op,x,y,width);status=safe?classify(op,x,y,r):0;
   if(full&&!status&&!nan(x)&&!nan(y)&&!inf(x)&&!inf(y)&&!inf(r)){
@@ -144,3 +144,7 @@ commit:
  if(size){if(width==32){F x={.f=(float)r};GET(out)=271;GET(out+4)=x.u;}else{D x={.f=r};GET(out)=791;GET(out+4)=0;GET(out+8)=(U)x.u;GET(out+12)=(U)(x.u>>32);}}
  GET(result)=value;GET(result+4)=f;GET(result+8)=chosen;GET(result+12)=stage;GET(result+16)=out+size;GET(result+20)=width;GET(result+24)=fa;GET(result+28)=fb;return 0;
 }
+
+EXPORT U float_calculate(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U safe){return calculate(op,av,bv,in,end,out,limit,result,mask,safe,0);}
+
+EXPORT U float_calculate_lisp(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U safe){return calculate(op,av,bv,in,end,out,limit,result,mask,safe,1);}

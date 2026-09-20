@@ -18,6 +18,8 @@
 (defvar *b-call-links* nil)
 (defvar *b-allocation-retry* nil)
 (defvar *b-integer-service* nil)
+(defvar *b-float-service* nil)
+(defvar *b-float-safety* 1)
 (defvar *b-call-mode* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
@@ -1083,6 +1085,7 @@
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
        (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+             ((and *b-float-service* (member (first args) '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact))) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
@@ -1197,6 +1200,10 @@
        (b-local-call 'b-local-function (first args) (second args) (third args)))
       ((ccl::let ccl::let*) (b-let op args))
       (ccl::call
+       (when (and *b-float-service* (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
+         (member (first (ccl::acode-operands (first args))) '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double)))
+        (unless (and (null (third args)) (null (second (second args)))) (refuse :float-spread))
+        (return-from b-multiple (b-float-call (first (ccl::acode-operands (first args))) (first (second args)))))
        (when (and *b-integer-service* (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
                   (member (first (ccl::acode-operands (first args))) '(%numeric-operation %numeric-operands)))
          (return-from b-multiple (b-numeric-field (first (ccl::acode-operands (first args))) (first (second args)))))
@@ -1311,6 +1318,7 @@
            (entry-roots (b-runtime-roots "(local.get $frame)" (b-wat "(i32.add (local.get $capacity) (i32.const ~d))" (length *b-bound-vars*))))
            (wat (with-output-to-string (s)
              (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32))) (import \"env\" \"nonlocal_exit\" (tag $nonlocal_exit (param i32)))" s)
+             (when *b-float-service* (write-string "(import \"floating\" \"calculate\" (func $float_slow (param i32 i32 i32) (result i32)))" s))
              (when *b-integer-service* (write-string "(import \"integer\" \"calculate\" (func $integer_slow (param i32 i32) (result i32)))" s))
              (when *b-allocation-retry* (write-string "(import \"owner\" \"ensure\" (func $owner_ensure (param i32)))" s))
              (dolist (name (sort *b-keywords* #'string<))
@@ -1321,6 +1329,7 @@
                (format s "(import \"codes\" ~s (global $code_~a i32))" (second entry) (second entry)))
              (when *b-allocation-retry* (write-string (b-allocation-runtime) s))
              (when *b-integer-service* (write-string (b-integer-runtime) s))
+             (when *b-float-service* (write-string (b-float-runtime) s))
              (write-string (b-object-runtime) s)
              (write-string implicit-runtime s)
              (when restart-runtime (write-string restart-runtime s))
@@ -1702,7 +1711,7 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)))) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (and *b-float-service* (member (second xs) '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact))) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
@@ -1745,7 +1754,7 @@
                            (unless (or (and (member head '(car cdr)) (= n 1))
                                        (and (member head '(rplaca rplacd cons eq)) (= n 2))
                                        (and (member head '(signal error)) (= n 1))
-                                       (and (eq head '%wasm-poll) (zerop n)) (and *b-integer-service* (member head '(%numeric-operation %numeric-operands %integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))) (member head '(%wasm-symbol-value %wasm-set %wasm-make-restart %wasm-find-restart %wasm-invoke-restart %wasm-restart-name %wasm-svref %wasm-condition-datum %wasm-condition-expected %wasm-cell-name))
+                                       (and (eq head '%wasm-poll) (zerop n)) (and *b-float-service* (member head '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double))) (and *b-integer-service* (member head '(%numeric-operation %numeric-operands %integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))) (member head '(%wasm-symbol-value %wasm-set %wasm-make-restart %wasm-find-restart %wasm-invoke-restart %wasm-restart-name %wasm-svref %wasm-condition-datum %wasm-condition-expected %wasm-cell-name))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
                                        (and (eq head 'prog2) (<= 2 n)) (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (member head '(funcall multiple-value-call)) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
@@ -2108,11 +2117,12 @@
 ;;; construction, restarts, the debugger and implicit trap-to-condition mapping
 ;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
 (defun b-condition-mask (type)
+  (when (and (member type '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact)) (not *b-float-service*)) (refuse :float-condition-mode))
   (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
-                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192) (arithmetic-error . 16384) (division-by-zero . 32768)
+                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192) (arithmetic-error . 16384) (division-by-zero . 32768) (floating-point-invalid-operation . 65536) (floating-point-overflow . 131072) (floating-point-underflow . 262144) (floating-point-inexact . 524288)
                          (control-error . 64) (warning . 128) (simple-warning . 256))))
       (refuse :b-condition-type)))
-(defun b-expand-conditions (form) (setq *b-restart-names* (if *b-integer-service* '(list cons function simple-vector integer fixnum or number real truncate) '(list cons function simple-vector integer fixnum or)))
+(defun b-expand-conditions (form) (setq *b-restart-names* (if *b-float-service* '(list cons function simple-vector integer fixnum or number real truncate + - * / < <= = /= >= > float) (if *b-integer-service* '(list cons function simple-vector integer fixnum or number real truncate) '(list cons function simple-vector integer fixnum or))))
   ;; Check the input graph before any native macro sees it. Shared/cyclic reader
   ;; objects and dotted lists are outside this source API.
   (let ((work (list (cons form 0))) (seen (make-hash-table :test #'eq)) (left 32768))
@@ -2176,11 +2186,20 @@
                    ((ccl::without-interrupts ccl::with-interrupts-enabled)
                     (walk `(unwind-protect (let* ((ccl::*interrupt-level* ,(if (eq (car x) 'ccl::without-interrupts) -1 0))) ,@(mapcar #'walk (cdr x))) (%wasm-poll))))
                    (ccl::%interrupt-poll (unless (null (cdr x)) (refuse :poll-arity)) '(%wasm-poll))
+                   ((/ < <= = /= >= > float)
+                    (if (and *b-float-service* (not (member (car x) symbol-access-shadows)))
+                     (progn
+                      (unless (= (length (cdr x)) 2) (refuse :float-arity))
+                      (if (eq (car x) 'float)
+                       (progn (unless (typep (third x) 'float) (refuse :float-prototype))
+                        (cons (if (typep (third x) 'single-float) '%float-single '%float-double) (mapcar #'walk (cdr x))))
+                       (cons (cdr (assoc (car x) '((/ . %float-div) (< . %float-lt) (<= . %float-le) (= . %float-eq) (/= . %float-ne) (>= . %float-ge) (> . %float-gt)))) (mapcar #'walk (cdr x)))))
+                     (cons (car x) (mapcar #'walk (cdr x)))))
                    ((+ - * ash integer-length truncate)
                     (if (and *b-integer-service* (not (member (car x) symbol-access-shadows)))
                       (progn
                         (unless (= (length (cdr x)) (if (eq (car x) 'integer-length) 1 2)) (refuse :integer-arity))
-                        (cons (cdr (assoc (car x) '((+ . %integer-add) (- . %integer-sub) (* . %integer-mul) (ash . %integer-ash) (integer-length . %integer-length) (truncate . %integer-truncate)))) (mapcar #'walk (cdr x))))
+                        (cons (or (and *b-float-service* (cdr (assoc (car x) '((+ . %float-add) (- . %float-sub) (* . %float-mul))))) (cdr (assoc (car x) '((+ . %integer-add) (- . %integer-sub) (* . %integer-mul) (ash . %integer-ash) (integer-length . %integer-length) (truncate . %integer-truncate))))) (mapcar #'walk (cdr x))))
                       (cons (car x) (mapcar #'walk (cdr x)))))
                    ((symbol-value set) (cons (if (member (car x) symbol-access-shadows) (car x) (if (eq (car x) 'set) '%wasm-set '%wasm-symbol-value)) (mapcar #'walk (cdr x))))
                    (svref (cons '%wasm-svref (mapcar #'walk (cdr x))))
@@ -3137,14 +3156,14 @@
  (let ((p (search old text)))
   (unless (and p (not (search old text :start2 (+ p (length old))))) (error "Numeric runtime anchor"))
   (concatenate 'string (subseq text 0 p) new (subseq text (+ p (length old))))))
-(defun b-condition-runtime ()
+(defun prior-float-b-condition-runtime ()
  (let ((s (prior-numeric-b-condition-runtime)))
   (if *b-integer-service*
    (numeric-text
     (numeric-text s "(i32.ne (local.get $n) (i32.const 13))" "(i32.and (i32.ne (local.get $n) (i32.const 13)) (i32.ne (local.get $n) (i32.const 15)))")
     "(i32.eq (local.get $mask) (i32.const 32796))"
     "(i32.or (i32.eq (local.get $mask) (i32.const 32796)) (i32.eq (local.get $mask) (i32.const 196636)))") s)))
-(defun b-implicit-runtime ()
+(defun prior-float-b-implicit-runtime ()
  (let ((s (prior-numeric-b-implicit-runtime)))
   (if *b-integer-service*
    (numeric-text s "(else (i32.const 156))" "(else (if (result i32) (i32.eq (local.get $kind) (i32.const 34)) (then (i32.const 196636)) (else (i32.const 156))))") s)))
@@ -3193,3 +3212,63 @@
    (i32.or (i32.eq (local.get $tag) (i32.const 71)) (i32.eq (local.get $tag) (i32.const 79)))))
   (then (throw $call_error (i32.const 32))))
  (i32.const 0))"))
+
+(in-package :wasm32-compiler)
+(defun compile-float-call-form (form name links &optional (safety 1))
+ (unless (member safety '(0 1)) (refuse :float-safety))
+ (let ((*b-float-service* t) (*b-float-safety* safety) (*b-integer-service* t) (*b-callable-metadata* t) (*b-allocation-retry* t))
+  (compile-call-form form name links)))
+(defun b-condition-runtime ()
+ (let ((s (prior-float-b-condition-runtime)))
+  (if *b-float-service*
+   (numeric-text (numeric-text s "(i32.ne (local.get $n) (i32.const 15))" "(i32.and (i32.ne (local.get $n) (i32.const 15)) (i32.ne (local.get $n) (i32.const 19)))")
+    "(i32.eq (local.get $mask) (i32.const 196636))" "(i32.ne (i32.and (local.get $mask) (i32.const 65536)) (i32.const 0))") s)))
+(defun b-implicit-runtime ()
+ (let ((s (prior-float-b-implicit-runtime)))
+  (if *b-float-service*
+   (numeric-text s "(else (i32.const 156))"
+    "(else (if (result i32) (i32.eq (local.get $kind) (i32.const 35)) (then (i32.const 327708)) (else
+     (if (result i32) (i32.eq (local.get $kind) (i32.const 36)) (then (i32.const 589852)) (else
+     (if (result i32) (i32.eq (local.get $kind) (i32.const 37)) (then (i32.const 1114140)) (else
+     (if (result i32) (i32.eq (local.get $kind) (i32.const 38)) (then (i32.const 2162716)) (else (i32.const 156))))))))))") s)))
+(defun b-float-call (name forms)
+ (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double))
+        (op (position name names)) (operation (nth op '(+ - * / < <= = /= >= > float float))))
+  (unless (= (length forms) 2) (refuse :float-arity))
+  (b-frame 4 (lambda (root)
+   (let ((a (b-wat "(i32.load offset=8 ~a)" root)) (b (b-wat "(i32.load offset=12 ~a)" root)) (status (temporary)))
+    (let ((prefix (concatenate 'string
+     (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a)" root (b-scalar (first forms)) root (b-scalar (second forms)))
+     (with-output-to-string (s)
+      (dolist (v (if (>= op 10) (list a) (list a b)))
+       (write-string (b-wat "(if (i32.eqz (call $real_operand ~a)) (then ~a))" v (b-type-failure v (if (< op 4) 'number 'real))) s))))))
+     (let ((floating (concatenate 'string
+     (b-wat "(local.set ~a (call $float_slow (i32.const ~d) ~a (i32.const ~d)))" status op root *b-float-safety*)
+     (b-wat "(if (i32.and (local.get ~a) (i32.const 31)) (then ~a))" status
+      (b-frame 1 (lambda (pair)
+       (b-wat "(i32.store offset=8 ~a ~a) (call $implicit_error_details ~a (local.get $top) ~a (i32.load offset=8 ~a)) unreachable"
+        pair (b-cons (make-b-raw-code :text a) (make-b-raw-code :text (if (>= op 10) "(i32.const 77825)" (b-cons (make-b-raw-code :text b) (make-b-raw-code :text "(i32.const 77825)")))))
+        (b-wat "(call $float_kind (i32.and (local.get ~a) (i32.const 31)))" status) (b-restart-symbol operation) pair))))
+     (b-multiple (make-b-raw-code :text (b-wat "(i32.load offset=16 ~a)" root))))))
+      (concatenate 'string prefix
+       (if (< op 3)
+        (b-wat "(if (i32.and (i32.eq (call $real_operand ~a) (i32.const 1)) (i32.eq (call $real_operand ~a) (i32.const 1))) (then ~a) (else ~a))"
+         a b (b-integer-call (nth op '(%integer-add %integer-sub %integer-mul)) (list (make-b-raw-code :text a) (make-b-raw-code :text b))) floating)
+        floating)))))))))
+(defun b-float-runtime ()
+ "(func $float_kind (param $flags i32) (result i32)
+ (if (i32.eq (local.get $flags) (i32.const 1)) (then (return (i32.const 35))))
+ (if (i32.eq (local.get $flags) (i32.const 2)) (then (return (i32.const 34))))
+ (if (i32.eq (local.get $flags) (i32.const 4)) (then (return (i32.const 36))))
+ (if (i32.eq (local.get $flags) (i32.const 8)) (then (return (i32.const 37))))
+ (i32.const 38))
+ (func $real_operand (param $x i32) (result i32) (local $p i32) (local $tag i32)
+ (if (i32.eqz (i32.and (local.get $x) (i32.const 3))) (then (return (i32.const 1))))
+ (if (i32.ne (i32.and (local.get $x) (i32.const 7)) (i32.const 6)) (then (return (i32.const 0))))
+ (local.set $p (i32.sub (local.get $x) (i32.const 6))) (call $span (local.get $p) (i32.const 4))
+ (local.set $tag (i32.and (i32.load (local.get $p)) (i32.const 255)))
+ (if (i32.eq (local.get $tag) (i32.const 7)) (then (return (i32.const 1))))
+ (if (i32.eq (i32.load (local.get $p)) (i32.const 271)) (then (call $span (local.get $p) (i32.const 8)) (return (i32.const 32))))
+ (if (i32.eq (i32.load (local.get $p)) (i32.const 791)) (then (call $span (local.get $p) (i32.const 16)) (return (i32.const 64))))
+ (if (i32.or (i32.eq (local.get $tag) (i32.const 10)) (i32.or (i32.eq (local.get $tag) (i32.const 26)) (i32.or (i32.eq (local.get $tag) (i32.const 71)) (i32.eq (local.get $tag) (i32.const 79))))) (then (throw $call_error (i32.const 32))))
+ (i32.const 0))")

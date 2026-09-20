@@ -2482,7 +2482,7 @@
       "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Generated floating-call compiler and runtime proposal, shared source unchanged, no LL16 credit.36 modules,475 native cases,1900 comparisons and744 collections per eager/cold run; outputs identical.11 faults rejected,60 default-mode files identical. Native R6/R6a PASS,21843 tests,162 unchanged/164 restored FASLs.116 policy rows joined independently; one explicit native exact-tiny trap difference under adopted D6 policy. Native coercion-overflow, infinity-comparison and same-format FLOAT identity retained. Replay 1277 files,442 pins. Loader admits a frozen trusted-owner triple; ratios/general numeric dispatch and cost qualification remain. Audit 112: no runtime defect; native-silent integer rounding band and inexact conversion missing from compatibility coverage. Not accepted; superseded by the user-directed R2 follow-up.",
-      "review_commit": "97f589ad",
+      "review_commit": "97f589ad9bd91805c9337df8c0ead8db21150558",
       "superseded_by": "STAGE1-FLOAT-CALLS-R2"
     },
     {
@@ -2490,10 +2490,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-float-calls-r2/packet.json",
       "sha256": "7aa9cef401d22ec2eb121e9bb2a3cee2e371b206f8c25562e0ba02b02ce5e049",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-112 follow-up under user decision to match native integer coercion below the explicit limits. Compiler, loader and adapter unchanged; separate Lisp primitive entry and owner call select native bignum conversion behavior without suppressing later arithmetic flags.4379 native cases,17516 comparisons and7768 collections per eager/cold run; equality holds.9 focused faults rejected; original raw entry passes all59083 mathematical cases at3placements. R1 compiler faults/default outputs/R6 reused by exact hash. Fresh replay 1076 files,450 pins. Not accepted or integrated; no LL16 credit."
+      "scope": "Audit-112 follow-up under user decision to match native integer coercion below the explicit limits. Compiler, loader and adapter unchanged; separate Lisp primitive entry and owner call select native bignum conversion behavior without suppressing later arithmetic flags.4379 native cases,17516 comparisons and7768 collections per eager/cold run; equality holds.9 focused faults rejected; original raw entry passes all59083 mathematical cases at3placements. R1 compiler faults/default outputs/R6 reused by exact hash. Fresh replay 1076 files,450 pins. Accepted and integrated after audit 113; no LL16 credit.",
+      "review_commit": "842a2481f08a9fa32b5ceda991658ba0383cc64e",
+      "integration": "doc/WASM/stage1/integration-float-calls.json"
     }
   ],
   "current_runs": [

@@ -40,7 +40,7 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
     const dest=cursor;cursor+=size;pb.set(new Uint8Array(memory.buffer,p,size),dest);return dest+6;
    };
    const a=stage(get(root+8)),b=op>=10?0:stage(get(root+12));
-   const status=wasm.float_calculate(op,a,b,input,inputEnd,output,outputEnd,result,mask,safe);
+   const status=wasm.float_calculate_lisp(op,a,b,input,inputEnd,output,outputEnd,result,mask,safe);
    if(status)fail(40+status);
    const read=o=>pv.getUint32(result+o,true),v=read(0),flags=read(4),selected=read(8),phase=read(12),size=read(16)-output,width=read(20),fa=read(24),fb=read(28);
    if(flags>31||selected>16||(selected&&(selected&(selected-1)))||phase<1||phase>3||fa>31||fb>31||
