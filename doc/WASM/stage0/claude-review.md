@@ -1883,3 +1883,43 @@ Packet 9dceca4c… (STAGE1-STARTUP-RESETS-R1, NOT_REVIEWED, slot_credit false, 2
 ### Verdict
 
 No defect found in 69deb3e5 (STAGE1-STARTUP-RESETS-R1) or in the intermediate acceptance commit e76276a5. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged by this commit at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-twenty-sixth Claude audit — STAGE1-STARTUP-CONFIG-R1 (auxiliary LL15 prerequisite) at 3189606d — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 3189606d. Author: Codex. Scope: `tests/wasm/stage1/startup-config/` in full, the STAGE1-STARTUP-CONFIG-R1 packet, and the intermediate commit 36aeff78. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit
+
+36aeff78 accepts the native startup resets and integrates the installer adapter on the user’s “accept” after audit 125. Verified: `runtime/wasm32/bootstrap-install.mjs` is git blob 5d7322e9, identical to `tests/wasm/stage1/startup-resets/install.mjs` at 69deb3e5 (sha256 821c1251…); `acceptance-startup-resets.json` binds review commit 27f2dd71 by the claude-review.md hash 4c635793… (recomputed from that commit) and the R1 packet 9dceca4c…; `integration-startup-resets.json` binds the acceptance record (a03a12e8…), the previous integration (02111c9d…) and 30 unchanged runtime and compiler files, all re-hashed unchanged at 3189606d; the acceptance packet’s `execution.json` (19a96478…) and `assessment.json` (cea692eb…) equal the retained R1 records byte for byte; the acceptance packet hash 58687c11… equals the index entry. All four audit-125 observations are carried. Auxiliary; ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+### Evidence
+
+Packet adffb559… (STAGE1-STARTUP-CONFIG-R1, NOT_REVIEWED, slot_credit false, 200 manifest entries, all hashes match, no unlisted file); catalog 2a8c526b…; index snapshot ad4adbd9…; evidence commit 03be7fb0, store clean; 201 packet files all cataloged with matching hashes.
+
+### Replay
+
+`packet.py verify` in the detached worktree at 3189606d: PASS, 113 deterministic files, 171 source pins, summary equal to the retained summary: 7 modules, 36 cases, 4 Workers, 1,440 native comparisons, 2,032 generated invocations, 120 refusals, 2,016 installed-digest checks, 6,096 foreign-region checks, 12 faults, 10 publication controls. The replay re-probed the pinned Chromium 145.0.7632.6 Worker (hardwareConcurrency 8, 65,536-byte page, cross-origin isolated), recompiled the native source forms and reran Node and Chromium. The counts are per-Worker totals: the distinct native computations are 360 (36 cases, two dirty starts, five callbacks), each compared in four Workers.
+
+### Findings
+
+- F1. The SPIN-COUNT substitution removes a native write. `(cpu-count)` in `level-1/linux-files.lisp` is `(or *cpu-count* (setq *cpu-count* …))`, so the call the oracle replaces with a literal is a memoizing write, not only an external read. Native probe (main-checkout `dx86cl64`, unpinned, U1 source): with `*cpu-count*` nil, which is the state the accepted literal reset at system-pointer 5 leaves, the untouched registered SPIN-COUNT callback returns `*SPIN-LOCK-TIMEOUTS*` and leaves `*cpu-count*` = 16; the fixture’s substituted form leaves it nil. `*cpu-count*` is not among the eight checked globals, so neither the native oracle, the Python model nor the target can see the difference, and the generated `config_5566` publishes only the two spin globals. The README and scope.json statements that each substitution replaces “exactly its external … CPU-count read” and that the oracle “retain[s] all original computation and writes” are therefore not true for this callback, and the port’s post-startup state differs from native in a global that belongs to the accepted reset set. Publishing the owner’s count into `*cpu-count*` in the same callback would match the native post-state and would also keep the unmodified `cpu-count` function off its `host_info` foreign call. The other three substituted reads (`get-page-size`, `sysconf`, `%get-kernel-global`) are pure.
+- F2. The restored-pointer check reads the wrong TCR word. `check.mjs` saves and compares offsets 64, 128, 140, 92, 112 and 48. In `tcr.v2.json` offset 92 is `csp_base`; `csp` is 88, and `tsp` (76) is not in the list. Mutants of `config_5566` that return with `csp` displaced by 16 or with `tsp` displaced by 16 reach READY in both placements with exit 0; the same mutant against `csp_base` is refused. The README claim that each entry “restores its caller/root/control/allocation state” is thus unverified for the control and temp stack pointers. A harness copy that adds 88 and 76 passes the real seven modules with a byte-identical `execution.json` and refuses the `csp` mutant, so the generated code is correct and the gap is confined to the harness. The identical list is in the accepted `startup-resets/check.mjs` (audit 125 did not catch it); that harness has the same gap.
+
+### Probes
+
+- A. Source binding: the five selected forms read at the retained positions are the U1 forms; each is registered exactly once in the expected registry; every adapted form is retained, and the rewrite count is asserted at one (zero for the period callback, which reads the global set by its predecessor).
+- B. Arithmetic: `Math.floor(1000000000/ticks)` equals integer FLOOR over the whole admitted domain (non-integer quotients are at least 2^-29 from an integer, above the rounding error at quotients up to 10^6). Cases cover ticks −1, 0, 999, 1000, 1001 and 536,870,911, 17 non-dividing rates, five odd positive stack sizes, overrides −1 and 0, CPU 1 and 14 other counts.
+- C. Undeclared writes through a mutated `config_5566`: a write to another symbol’s value cell refuses “no foreign image writes”; writes to the CSP region and the allocation area refuse “foreign owner region”; writes at 1 MiB (unowned), at TCR+256 and to the TCR `fp_control` word reach READY unobserved. The first two are within the declared “not a memory sandbox” scope; TCR words other than the six compared are not covered by any statement.
+- D. Development record: eight attempts, each retained file present in `development.tar.gz` under the manifest; the symbol-return correction, assertion key-order correction, clamp-fault refinement and publication failure match the README.
+- E. Host values: the browser reports 8 logical processors where native `host_info` reports 16 on this machine; the README already states the report may be reduced.
+
+### Observations (none a defect)
+
+1. The native oracle is source-derived with literal substitution; apart from F1 it preserves the original computation. The untouched registered callbacks are never executed by this unit.
+2. The period callback in the target receives the owner’s precomputed period rather than reading the tick global as native does; the schedule’s before-state check on all eight globals is what ties the two together.
+3. Symbol admission refusals are exercised only on symbol 0; the adapter loop covers all eight by inspection.
+4. “1,440 comparisons” counts 360 native answers four times.
+
+### Verdict
+
+Two defects found in 3189606d (STAGE1-STARTUP-CONFIG-R1): F1, an omitted native `*cpu-count*` write hidden by a substitution described as read-only; F2, a restored-pointer check that reads `csp_base` instead of `csp` and omits `tsp`, inherited from the accepted startup-resets harness. No defect in the intermediate acceptance commit 36aeff78. Both are small and fixable in a follow-up; I do not recommend acceptance before one. Auxiliary packet, no slot credit; the decision is the user’s. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
