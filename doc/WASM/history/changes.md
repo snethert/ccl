@@ -2643,3 +2643,7 @@ acceptance is the user's decision.
 ## 2026-09-19 — accept and integrate generated integer calls
 
 On “accept, integrate and proceed”, the reviewed integer-call compiler and owner capability are integrated byte-identically. The record binds audit 105 and its review hash, the retained packet and the preceding integration. All four observations are carried. No LL16 credit: 15 accepted,16 missing.
+
+## 2026-09-19 — generated integer Lisp conditions
+
+The disposable numeric proposal now signals TYPE-ERROR and DIVISION-BY-ZERO through the existing condition machinery, with native class layouts and rooted datum/operands. Fifty-four modules give 1,489 reference comparisons, 465 collector copies, one growth, 252 fast-path checks and thirteen rejected controls. Native x86-64 divide-by-zero trap fields differ: fixnums report /, bignums COERCE and no operands. Those observations stay retained; the added field oracle uses CCL’s explicit condition constructor following U1’s Lisp and 32-bit bignum paths. Native R6/R6a passes and fresh replay matches 1767 files with 390 pins. Audit-105 coverage is addressed by six separate slow-path faults, NIL short fills and a pinned binary identity. No shared source or runtime changes in this proposal, no loader admission or LL16 credit. Ledger remains 15 accepted,16 missing.

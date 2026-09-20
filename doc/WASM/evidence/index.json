@@ -2400,6 +2400,16 @@
       "scope": "Opt-in generated integer calls: inline fixnums and the unchanged accepted D1 service behind a rooted single-Worker owner capability. 25 modules, 305 native cases, 1221 comparisons, 429 collector copies, one memory growth, nine rejected compiler/owner faults. Native R6/R6a passes; 60 default-mode WAT/Wasm files identical. Fresh replay 681 files and 372 pins. Checked numeric errors, eager owner capability only; production loader refuses the import. No shared compiler integration or LL16 gate credit; numeric Lisp conditions, floating point and loader admission remain.",
       "review_commit": "520e19831c08033fdb180004da52578321ceced8",
       "integration": "doc/WASM/stage1/integration-integer-calls.json"
+    },
+    {
+      "id": "STAGE1-INTEGER-CONDITIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-conditions-r1/packet.json",
+      "sha256": "3b4e0ab5ecbcdf15580c6d032b707c6d2d64d0a635dd991715ddac1e6fc30812",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Opt-in generated integer Lisp conditions: 54 modules, 372 reference cases, 1489 comparisons, 465 collector copies, 252 inline checks, eleven rejected compiler faults and two harness controls. Native R6/R6a passes; 60 default-mode files identical. Native zero-divisor trap metadata retained separately; explicit CCL condition construction supplies the field oracle. Fresh replay 1767 files, 390 pins. Runtime files unchanged. No LL16 credit; allocation-retry composition, floating point and loader admission remain."
     }
   ],
   "current_runs": [
