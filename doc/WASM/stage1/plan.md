@@ -147,8 +147,14 @@ The [generated floating-call proposal](../../../tests/wasm/stage1/float-calls/RE
 now composes mixed calls, Lisp conditions and a frozen three-capability loader
 profile, with 1,900 comparisons per eager/cold run and eleven rejected faults.
 It preserves native explicit coercion overflow, infinity comparison and same-format
-FLOAT identity. One exact-tiny native trap difference follows the adopted D6
-policy and is retained separately. The proposal awaits review. Next: after
+FLOAT identity. Audit 112 identified native-silent bignum conversion in the
+rounding band. Under the [user decision](integer-float-coercion.md), the
+[R2 follow-up](../../../tests/wasm/stage1/float-calls/review-followup/README.md)
+preserves that behavior while keeping small-integer hardware inexact and later
+arithmetic flags. Its 4,379 native cases run in eager/cold and moving modes;
+the original mathematical entry still passes its full accepted corpus. The
+compiler is unchanged. One exact-tiny native trap difference still follows
+the adopted D6 policy. R2 awaits review. Next: after
 acceptance and integration, join the integer and floating evidence against the
 LL16-a assertion, complete its remaining numeric-family coverage and measure
 the emitted checking cost under the adopted benchmark discipline. Only that

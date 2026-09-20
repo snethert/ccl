@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "aea923ee8968fffd548f1812d4cfc5ac8371c69b9107a4413bddff8347e3fe2b",
-  "commit": "7f0992038e2bfafef7fc84d53e87e11eab434528",
-  "immutable_evidence_files": 226512,
+  "catalog_sha256": "5539e32ac4b6cc8feddaff446c3dd11bf8c24ab4006d0992dd46d65400e54bdb",
+  "commit": "b3f75569f7f4050231a9dcf00598da7dc0070718",
+  "immutable_evidence_files": 226528,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-float-calls-r1",
-    "files": 62,
-    "bytes": 23654074
+    "directory": "2026-09-20-stage1-float-calls-r2",
+    "files": 16,
+    "bytes": 12427896
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Float owner integrated; generated floating calls proposal awaiting review, no slot credit.",
-  "source_index_sha256": "c8405bb6ee1df00ad5825c8824b42d8e6effa186acce23506eb4ae2c0d914dc7",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-float-calls-r1.json",
-  "verification": "Scoped generated-float packet checked; fresh replay 1277 files,442 pins, native R6/R6a PASS. All prior catalog rows preserved; incremental addition only.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Generated floating calls R2 addresses audit112 under user coercion decision; awaiting review, no slot credit.",
+  "source_index_sha256": "f162f2dccd5037612c97708b910eed636f5ca7256a8eb795ee9149ab21f87274",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-float-calls-r2.json",
+  "verification": "Scoped R2 packet checked; fresh replay 1076 files,450 pins. All prior catalog rows preserved; incremental addition only.",
   "version": 1
 }
