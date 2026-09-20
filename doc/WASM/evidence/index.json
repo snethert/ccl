@@ -2496,6 +2496,16 @@
       "scope": "Audit-112 follow-up under user decision to match native integer coercion below the explicit limits. Compiler, loader and adapter unchanged; separate Lisp primitive entry and owner call select native bignum conversion behavior without suppressing later arithmetic flags.4379 native cases,17516 comparisons and7768 collections per eager/cold run; equality holds.9 focused faults rejected; original raw entry passes all59083 mathematical cases at3placements. R1 compiler faults/default outputs/R6 reused by exact hash. Fresh replay 1076 files,450 pins. Accepted and integrated after audit 113; no LL16 credit.",
       "review_commit": "842a2481f08a9fa32b5ceda991658ba0383cc64e",
       "integration": "doc/WASM/stage1/integration-float-calls.json"
+    },
+    {
+      "id": "STAGE1-NUMERIC-FASTPATH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-fastpath-r1/packet.json",
+      "sha256": "c0c0f22474a71a7fb773b5a3973d884f0de81f91c0283984fd15d9475491e1d6",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Runtime-only proposal: live owner checks on sufficient-space assurance, image enumeration before copying, immutable role lookup and refreshed cached views. Eager/cold each match 72,200 retained comparisons and 31,000 collections; 55 owner checks, 6,340 raw-owner comparisons plus grown-result reuse, five rejected controls. Observer-free absolute timing against the reviewed runtime and freshly compiled native CCL. Shared files unchanged; no new slot credit."
     }
   ],
   "current_runs": [
@@ -4693,7 +4703,7 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-qualification-r1/packet.json",
@@ -4701,7 +4711,8 @@
       "test_ids": [
         "S1-LL16-a"
       ],
-      "scope": "Joined integrated numeric subset: 18,050 native cases, 72,200 generated comparisons and 31,000 collections per eager/cold run; 13,659 independent integer-policy answers, raw rational regression, acyclic primitive dispatch and poisoned generated tables, altered-operation and publication controls, fresh warm paired checking measurements. Compiler/runtime unchanged; native R6/R6a reused by exact reviewed hashes. Awaiting review and acceptance."
+      "scope": "Joined integrated numeric subset: 18,050 native cases, 72,200 generated comparisons and 31,000 collections per eager/cold run; 13,659 independent integer-policy answers, raw rational regression, acyclic primitive dispatch and poisoned generated tables, altered-operation and publication controls, fresh warm paired checking measurements. Compiler/runtime unchanged; native R6/R6a reused by exact reviewed hashes. Reviewed in audit 114; acceptance deferred while the user-requested absolute-cost fix is reviewed.",
+      "review_commit": "92bcd83b6398b68c9dcb09c521e8c761b872453c"
     }
   ],
   "historical_records": [

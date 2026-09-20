@@ -1,0 +1,6 @@
+(("add" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (+ a b)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x)))
+("sub" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (- a b)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x)))
+("mul" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (* a b)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x)))
+("div" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (/ a b)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x)))
+("single" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (float a 1.0s0)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x)))
+("mixed" (lambda (a b) (declare (optimize (safety 1) (speed 1) (debug 1))) (let ((n 64) (x a)) (tagbody again (setq x (+ a b)) (setq n (- n 1)) (if (eq n 0) (go done) (go again)) done) x))))

@@ -160,9 +160,15 @@ primitive, owner, adapter and loader are integrated byte-for-byte.
 now joins the accepted integer and floating subset through the unchanged
 integrated runtime: independent integer policies, mixed floating/condition
 cases, eager/cold moving execution, fallback inspection, semantic and omission
-controls, and fresh generated checking-cost measurements. The slot awaits
-Claude's review and user acceptance. No broader arithmetic coverage is claimed.
-LL18-b hash-table movement remains an independent obligation.
+controls, and fresh generated checking-cost measurements. Claude audit 114 found
+no correctness defect; the slot remains unaccepted. The absolute cost (~80 µs
+per floating operation) was not surfaced adequately. The user's performance-fix
+instruction takes priority: qualify the [runtime fast-path proposal](../../../tests/wasm/stage1/numeric-fastpath/README.md), report absolute native comparisons,
+and obtain review before integrating it. Reducing repeated owner work does not
+make the remaining per-operation service boundary acceptable as a final numeric
+fast path; generated arithmetic specialization remains performance work.
+No broader arithmetic coverage is claimed. LL18-b hash-table movement remains
+an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps
