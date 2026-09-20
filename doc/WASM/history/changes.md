@@ -2617,3 +2617,25 @@ The user directed “Accept, integrate and proceed” after Claude audit 104. Bo
 ## 2026-09-19 — generated integer calls with collector assurance
 
 A disposable compiler proposal lowers six integer operations from real CCL IR. Fixnum results stay in generated Wasm; slow calls retain both operands in roots while the accepted integer service computes into private pointer-free storage, then assure space through the accepted owner and publish both results after reloading heap state. The 25-module corpus gives 1,221 native-derived comparisons, 429 collector copies, one real growth, a refusal after collection, and nine rejected compiler/owner faults. Sixty default-mode WAT/Wasm files remain identical. Native R6/R6a passes with 21,843 tests, 162 unchanged registered FASLs and all 164 restored; fresh replay matches 681 deterministic files with 372 pins. The original qualification harness mismatch is retained. Numeric errors still use checked codes and the production loader refuses this new capability; Lisp numeric conditions, floating point and loader admission remain. No shared compiler/runtime changes in this proposal and no LL16 credit. Ledger remains 15 accepted, 16 missing.
+
+## 2026-09-19 — hundred-and-fifth Claude audit: integer integration and generated integer calls reviewed
+
+Claude reviewed `0e64f54a` and `d0cbb3b0` from the detached worktree. The
+integration commit adds the integer service to the runtime byte-identically
+to both reviewed packets, changes no other source, binds audits 103 and 104
+by commit and review hash and the previous LL11-b integration, and carries
+five observations as obligations. The generated-call proposal replays from
+the detached worktree with a record equal to Codex's: 681 deterministic
+files, 372 pins, 25 modules, 305 native cases, 1,221 comparisons, 429
+collector copies, one growth, nine rejected faults, 60 default-mode files
+identical and native R6/R6a passing; the proposal compiler regenerates to the
+retained hash. A probe compiled twelve further forms through the proposal,
+labels and nested flet shadows, let-bound and setq-assigned bignums read after
+collecting calls, four-deep nesting, multiple-value fill with fewer values,
+integer-length and shifts of collected results and a bignum across
+catch/throw, and executed 389 cases at both placements with 380 collections;
+every value equalled native. Observations, none a defect: the capability's
+digest check is self-referential inside the harness, the inline-fixnum claim
+is asserted by one case, and the harness decoder cannot represent NIL so
+short multiple-value fills are absent from the corpus. Record only;
+acceptance is the user's decision.
