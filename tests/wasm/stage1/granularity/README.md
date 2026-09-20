@@ -37,7 +37,7 @@ symbol installer; LL11-a separately qualifies named-symbol transactions.
 
 ## Measurements
 
-Thirty fresh Node processes each compile the full set once. Cold compile,
+Thirty fresh Node processes each compile the full set once. Cold decode/validation under the default lazy tier,
 instantiate and table publication are timed separately; this avoids cross-trial
 engine caches. Warm instantiate and complete validated-install measurements use
 30 trials of at least 250 ms after a 1 s warmup, with explicit GC between trials
@@ -56,16 +56,30 @@ byte count or a GC reclamation claim. Encoded bytes, gzip sizes and whole-proces
 RSS/heap counters are also retained and labelled separately. No references are
 dropped to manufacture a flat retention curve.
 
-The retained run has 19 modules / 197,431 bytes. Median full-set cold compilation
+The retained run has 19 modules / 197,431 bytes. Median full-set cold decode/validation under the default lazy tier
 is about 1.93 ms; warm instantiation 0.18 ms; complete validated installation
 37.1 ms. Digest/record checking is construction work and dominates the latter;
 it is not a per-call cost. Default NativeModule storage grows from 237,657 to
-284,019 bytes; eager Liftoff storage from 458,778 to 549,180 bytes. These costs
+284,019 bytes; eager Liftoff storage from 458,786 to 549,124 bytes. These costs
 make the tradeoff explicit: independent installation and simple identity at the
 price of repeated per-module helper bodies and validation. Revisit packaging if
 the completed bootstrap measurements demonstrate that cost is unacceptable.
 
+Two modules, `twins_inner_2` and `separate_inner_1`, have identical bytes.
+The 19 logical modules therefore retain 18 NativeModules, and the duplicate
+benefits from the engine cache even within a fresh process. Unique digests are
+not required by the packaging contract. Audit 119 measured roughly 8 ms with
+eager compilation in three fresh processes; that probe is separate from the
+retained 30-trial lazy-tier measurement. The redefinition corpus changes only
+constants and keeps equal encoded sizes; different-body-shape revisions remain
+unexercised here.
+
 ## Replay
+
+Run R1's verifier from a detached checkout of `ff3789f2`: its 111 source pins
+include the historical README. This current README corrects the eager retention
+figures and clarifies the timing and coverage labels after audit 119. The
+retained packet and executable sources remain unchanged.
 
 ```sh
 python3 tests/wasm/stage1/granularity/packet.py verify \
