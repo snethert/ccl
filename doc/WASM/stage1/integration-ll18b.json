@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-20T17:31:46.829250+00:00",
+  "user_authorization": "accept and integrate, but we must pause before LL21 to tackle another problem",
+  "review_commit": "4f0076e7e3b614f7285ef37deabaa3f467527241",
+  "review_sha256": "063b0fbaf7e5e5ebc6b7cc2829d95975ba644201fce6359acdf3fc05077c7514",
+  "acceptance": "acceptance-ll18b.json",
+  "acceptance_sha256": "4a20d96fe0a3cbb6bd04a2e1a2116752a662de3aaf1e31ae9056c4afc64b7b30",
+  "files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "before": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3",
+      "after": "e1c0eab88744faa7282380cb88ba603fac997b9e21ca70cd0eb6396e4cf87cb0",
+      "proposal_locator": "2026-09-20-stage1-hash-tables-r1/collector.c"
+    },
+    {
+      "file": "runtime/wasm32/hash.c",
+      "before": null,
+      "after": "253753a4406317b45154620fc5923288325a7992a79464f4861572c141ede9db",
+      "proposal_locator": "2026-09-20-stage1-hash-tables-r1/hash.c"
+    },
+    {
+      "file": "runtime/wasm32/hash-adapter.wat",
+      "before": null,
+      "after": "597302944dd8a80e0747b8a4d6874db4962a8a2b26847453927736112490402d",
+      "proposal_locator": "2026-09-20-stage1-hash-tables-r1/adapter.wat"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/scalar-service.mjs",
+      "sha256": "90a4b589fe0c955fe9a87d042db88eb54ef39be4fb4ea7664187d897700b8f20"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wasm",
+      "sha256": "1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wat",
+      "sha256": "54d412dc365137c615364f22fa82c5996046b712dfbc0e66795a28e2a0a18e3f"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9c1fa814a3a4ae7a60678b2be1c421dbd4b2515ad0d23b3ea038853c3d532973"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "sha256": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77"
+    },
+    {
+      "file": "runtime/wasm32/floating-capabilities.mjs",
+      "sha256": "4c723777e4f0ca6d2f5b65ac2df105c2d9fa4b7cfa33a29c8af32f6843a03c53"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "sha256": "672ae8b7603e3d373ed905203189488bd5a047839125c2008f6bce452aa0fafa"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/service.mjs",
+      "sha256": "ab69ce10d55f7a3c2a32771cb84bd5920a6c9fe2c2561d169561e1eaf7ed25b3"
+    },
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "sha256": "8772ce62ed4c1d208875dfb9e17081cca3d7d1cba257d8c3b97e670f15d473a2"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d7c0ee160c3de05720b5c676b360af9fa121080ee1b980dc536ce9f63995eaff"
+    },
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "e05c33de50e70f1010413ccafa2b5412b9281dda00c46413cc9b7ac5febc0ab3"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-20-stage1-hash-tables-r1/packet.json",
+      "sha256": "a843cd0fdba9c79aa40c3dab84b52540f73674b9776cc91f7532e0218a5fdfc7"
+    }
+  ],
+  "previous_integration": "integration-numeric-fastpaths.json",
+  "previous_integration_sha256": "4915a0ef827dc7fce2f8930fbfa14460d6ab71f9d4a6a985942e53b2c3caf1aa",
+  "observations": [
+    "Scanner integration is a shared-runtime change, bound byte-for-byte to the reviewed derived collector and retained for follow-up review.",
+    "Native trace answers are also checked against a Python identity map; relocation, cache and generated calling forms are the substantive qualification.",
+    "The retained trace expects movement when nonempty because it always has heap keys. Audit 116 independently exercised immediate-only keys; the implementation marks only bucket-key relocation.",
+    "The packet options hash_seed is an unused bookkeeping value; the C hash uses a fixed address-word mix.",
+    "Growth, weak tables, the HASH-TABLE wrapper, pinned image inventory and production installation remain out of scope. No performance claim."
+  ],
+  "scope": "Reviewed strong EQ runtime leaves and moving scanner only. Production owner image inventory, loader admission and CL source lowering remain deferred.",
+  "verification": "Regenerated scanner before integration equals reviewed proposal. Integrated collector, hash service and adapter rebuild byte-identical to the three retained binaries. Compiler and all other runtime files unchanged.",
+  "reverse": "Restore collector before hash; remove hash.c and hash-adapter.wat after withdrawing their consumers."
+}

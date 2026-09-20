@@ -4758,12 +4758,33 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-hash-tables-r1/packet.json",
       "packet_sha256": "a843cd0fdba9c79aa40c3dab84b52540f73674b9776cc91f7532e0218a5fdfc7",
-      "scope": "Strong EQ hash-vector moved-key protocol through nine unchanged-compiler generated B modules. 2588 generated/native comparisons, 2584 primitive comparisons, 88 collections, 95 inherited collector checks, twelve runtime faults, eight publication controls and twelve role omissions. Native hash trace independently agrees with identity-map semantics. Fixed-capacity runtime backing vectors; CL hash surface, weak tables, production materializer/loader and table growth explicitly deferred. Shared source unchanged; awaiting independent review.",
+      "scope": "Strong EQ hash-vector moved-key protocol through nine unchanged-compiler generated B modules. 2588 generated/native comparisons, 2584 primitive comparisons, 88 collections, 95 inherited collector checks, twelve runtime faults, eight publication controls and twelve role omissions. Native hash trace independently agrees with identity-map semantics. Fixed-capacity runtime backing vectors; CL hash surface, weak tables, production materializer/loader and table growth explicitly deferred. Shared source unchanged; awaiting independent review. Accepted and integrated via STAGE1-LL18B-ACCEPTANCE-R1 at the declared backing-vector scope.",
+      "test_ids": [
+        "S1-LL18-b"
+      ],
+      "review_commit": "4f0076e7e3b614f7285ef37deabaa3f467527241"
+    },
+    {
+      "id": "STAGE1-LL18B-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll18b-acceptance-r1/accepted-results.json",
+      "sha256": "668d208c6c63246f8600dba4905da9b84887a1a11f0f190019b39d5e2245f35f",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "ed76b3e9e75a869fe75e6d5f6fa48456a2d509f562220e23c0f9ceda0c374c19",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll18b-acceptance-r1/packet.json",
+      "packet_sha256": "bc87551aed00eaadae302ebca0ad72e5a13c216c81165dd8330ef08570b68336",
+      "scope": "User acceptance after Claude audit 116; integration exactly reviewed bytes.",
       "test_ids": [
         "S1-LL18-b"
       ]

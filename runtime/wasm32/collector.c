@@ -124,7 +124,17 @@ EXPORT U collect(U config) {
  while(p<s->used){
   header=LOAD(p);tag=header&255;n=header>>8;scan=0xffffffffu;size=8;
   if((tag&7)==2||(tag&7)==7){
-   if(node_subtag(tag)||(tag==130&&n==6)){scan=n;size=4+(W)n*4;}
+   if(tag==74){
+    /* Only strong owner-created EQ vectors; never infer weak semantics. */
+    U capacity=n>=14?(n-14)/2:0;
+    if(n<22||((n-14)&1)||capacity>16384||(capacity&(capacity-1))||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
+    if((LOAD(p+8)&~((1u<<30)|(1u<<29)))||!(LOAD(p+8)&(1u<<30))||LOAD(p+52)!=capacity*4||LOAD(p+56)!=0)return reject(s,BAD_OBJECT);
+    if(LOAD(p+4)!=NIL||LOAD(p+12)!=0||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=0||LOAD(p+28)!=NIL)return reject(s,BAD_OBJECT);
+    if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
+    if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
+    scan=n;size=4+(W)n*4;
+   }
+   else if(node_subtag(tag)||(tag==130&&n==6)){scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;
   }
@@ -171,7 +181,12 @@ EXPORT U collect(U config) {
   Object *o=objects(s)+queue(s)[s->cursor++];
   scan=o->scan;p=o->moved;
   if(scan==0xffffffffu)scan=2;else p+=4;
-  for(index=0;index<scan&&!s->error;index++){U v=forward(s,LOAD(p+4*index));STORE(p+4*index,v);}
+  for(index=0;index<scan&&!s->error;index++){U old=LOAD(p+4*index),v=forward(s,old);STORE(p+4*index,v);
+   /* Payload index 14 is object word 15: first key. Cached keys are roots,
+    * but only bucket-key movement requests a rehash. Destination-only write
+    * preserves the collector's source/root atomicity on refusal. */
+   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v)
+    STORE(o->moved+8,LOAD(o->moved+8)|(1u<<29));}
  }
  if(s->error)return s->error;
  /* No call, poll, owner callback or allocation between validation and commit. */

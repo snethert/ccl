@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-20T17:31:39.819429+00:00",
+  "authorization": {
+    "quote": "accept and integrate, but we must pause before LL21 to tackle another problem",
+    "provenance": "User to Codex after Claude audit 116; pause LL21 for browser-portable runtime digest binding."
+  },
+  "review_commit": "4f0076e7e3b614f7285ef37deabaa3f467527241",
+  "review_sha256": "063b0fbaf7e5e5ebc6b7cc2829d95975ba644201fce6359acdf3fc05077c7514",
+  "source_report_sha256": "b801011f190ce9454016c2ac6b708698a161803533a5c6b6137bc535ecd41a96",
+  "scope": "Accept reviewed S1-LL18-b strong EQ backing-vector movement, at its declared scope.",
+  "exclusions": [
+    "Scanner integration is a shared-runtime change, bound byte-for-byte to the reviewed derived collector and retained for follow-up review.",
+    "Native trace answers are also checked against a Python identity map; relocation, cache and generated calling forms are the substantive qualification.",
+    "The retained trace expects movement when nonempty because it always has heap keys. Audit 116 independently exercised immediate-only keys; the implementation marks only bucket-key relocation.",
+    "The packet options hash_seed is an unused bookkeeping value; the C hash uses a fixed address-word mix.",
+    "Growth, weak tables, the HASH-TABLE wrapper, pinned image inventory and production installation remain out of scope. No performance claim.",
+    "Only strong EQ vectors; weak, frozen and other hash-vector flags refuse collection.",
+    "Capacity is a power of two from 4 through 16384; full insertion is a checked refusal. Automatic table growth is not implemented.",
+    "No MAKE-HASH-TABLE, GETHASH or SETF source rewrite is added; generated code reaches the implemented operations through ordinary function values.",
+    "No native CLOS HASH-TABLE wrapper, user hash tests, iteration order, weak semantics, cross-Worker sharing or pinned hash-vector inventory is claimed.",
+    "The hand-built adapters are internal B leaves, not public host entries or lazy-loader catalog modules. Invalid runtime arguments use checked refusals, not Lisp conditions.",
+    "No performance claim. Cache hits and ordinary bucket probes stay in Wasm; a rehash uses owner scratch and runs without a safepoint."
+  ],
+  "records": [
+    {
+      "id": "S1-LL18-b",
+      "variant": "hash-tables",
+      "test_revision": "57fd2efb11f49e9c58013b806607e9aa955201bf9c57a6a1ae68b01c05bca4b8",
+      "contract_sha256": "9e4104ad656e273f1a08c593b655b2ddf080a81abc1e5535361a3c1699d8c55d",
+      "scope": "Reviewed LL18-b, Claude audit 116."
+    }
+  ]
+}

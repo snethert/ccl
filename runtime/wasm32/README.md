@@ -137,3 +137,5 @@ Eligible double arithmetic measures about 150 ns/op here versus native CCL's
 17 ns; these descriptive measurements are below formal v3 benchmark discipline.
 Bignum/exceptional fallback cost and application throughput are separate. The
 compiler and primitive binaries are unchanged; LL16-a is accepted at its reviewed subset/policy scope.
+
+Strong EQ backing vectors: `hash.c`, `hash-adapter.wat` and the collector’s moved-key scanner are integrated at the reviewed LL18-b scope. Fixed capacity, internal owner-installed callable entries; production installation and CL hash-form lowering remain open.

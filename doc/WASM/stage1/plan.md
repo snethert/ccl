@@ -305,3 +305,5 @@ Small commits with one deliverable each; every packet reproduced by its
 verifier; adversarial review from a different model before acceptance;
 R6 and R7 unweakened; hand-built Stage 0 evidence never discharging a
 Stage 1 ID; no comparative timing beyond the benchmark policy.
+
+User direction, 2026-09-20: LL18-b is accepted and integrated. Pause before LL21; next deliverable removes Node-only digest and Buffer dependencies with synchronous shared SHA-256 and browser execution checks.

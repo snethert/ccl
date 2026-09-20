@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_NOT_REVIEWED",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-20",
-  "basis": "LL18-b strong EQ moved-key qualification: fresh native/generated replay with independent semantic and omission controls. All sixteen accepted results unchanged.",
+  "basis": "User accepts LL18-b after Claude audit 116; sixteen prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "unreviewed S1-LL18-b [hash-tables]",
       "missing S1-LL21-a [materialization]",
       "missing S1-LL21-b [granularity]",
       "missing S1-LL09-a [generated]",
@@ -29,16 +28,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-hash-tables-results.json",
-      "sha256": "ab01623befa9f220eb750b399fff0f37a966ce61b94bf85560dd4a03442928b5"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll18b-accepted-results.json",
+      "sha256": "37aba078f63da99f6aae175c2218e1b6a65a6f3ff92d7675eb0099d7a5b6f6a1"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-hash-tables-results.json",
-  "combined_results_sha256": "ab01623befa9f220eb750b399fff0f37a966ce61b94bf85560dd4a03442928b5",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll18b-accepted-results.json",
+  "combined_results_sha256": "37aba078f63da99f6aae175c2218e1b6a65a6f3ff92d7675eb0099d7a5b6f6a1",
   "counts": {
-    "accepted": 16,
+    "accepted": 17,
     "missing": 14,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }
