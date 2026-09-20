@@ -1,0 +1,16 @@
+{
+  "id": "S1-LL09-a",
+  "claim": "Package-qualified symbol identity and bindings through generated B callers before and after pointer-aware image loading, with a defined pre-lookup hash rebuild.",
+  "representation": "D1 symbols and canonical NIL/T, UTF-32 strings, eight-slot packages, native-shaped two-cons package table descriptors. Bucket algorithm is target FNV-1a over code points, version 1, not U1's hash-pname arithmetic.",
+  "generated": "Thirteen unchanged-compiler B modules: six runtime-leaf calling forms, receiver, EQ, SYMBOL-VALUE, SET, single/repeated PROGV and simultaneous same-name bindings in distinct packages. Actual installed Wasm bytes are retained.",
+  "owner": "One synchronous Worker; sealed package topology, disjoint owner storage and bounded names. No lookup before successful admission. Admission rebuilds all foreign-version buckets only after validation. Scratch is expendable. Symbols and packages are pinned image objects; canonical objects stay at the schema addresses.",
+  "limits": [
+    "Two through sixteen admitted packages; at most one directly used package each; no package mutation, import/export/shadow APIs, intern hooks or name/nickname package designators. Symbols have direct home-package pointers, not package-predicate conses.",
+    "Table capacities are powers of two from 4 through 256. Names contain at most 4096 code points. Full tables and image exhaustion are checked refusals; no automatic growth or collection.",
+    "Owner assigns distinct nonzero binding indices before dynamic binding. Global symbol-value access uses the accepted zero-index fallback. No new production symbol installer is claimed.",
+    "INTERN and FIND-SYMBOL are implemented runtime functions reached through function values. This unit does not add source-head rewrites or register their global Lisp names.",
+    "Snapshot relocation is an explicit-field owner fixture, not LL14 production image loading. It preserves tagged references and scalar fields; unsupported bases reject before writes. No moving collector scanner for package objects is added.",
+    "Malformed runtime arguments use checked refusals, not new Lisp conditions. The trusted image builder supplies well-formed non-overlapping objects; admission is not an arbitrary forged-heap security boundary.",
+    "No unshared runtime, cross-Worker mutation, browser qualification, performance or whole bootstrap package membership claim."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "note": "Native trace source missing closing parenthesis; native reader refused before execution.",
+      "retained": [
+        "ccl-symbols-r1.log",
+        "ccl-symbols-r1/native.log",
+        "ccl-symbols-r1/native.lisp"
+      ]
+    },
+    {
+      "attempt": "r2",
+      "note": "First passing trace, generated B callers and relocation; before fault controls.",
+      "retained": [
+        "ccl-symbols-r2.log",
+        "ccl-symbols-r2/native.log",
+        "ccl-symbols-r2/execution.json",
+        "ccl-symbols-r2/summary.json"
+      ]
+    },
+    {
+      "attempt": "r3",
+      "note": "Passing owner refusals and simultaneous distinct-package bindings; before fault controls.",
+      "retained": [
+        "ccl-symbols-r3.log",
+        "ccl-symbols-r3/native.log",
+        "ccl-symbols-r3/execution.json",
+        "ccl-symbols-r3/summary.json"
+      ]
+    },
+    {
+      "attempt": "r4",
+      "note": "All twelve implementation faults and eight publication controls rejected.",
+      "retained": [
+        "ccl-symbols-r4.log",
+        "ccl-symbols-r4/native.log",
+        "ccl-symbols-r4/execution.json",
+        "ccl-symbols-r4/summary.json"
+      ]
+    },
+    {
+      "attempt": "r5",
+      "note": "Bindings moved before and after load; package fault now fails earlier at identity rather than the previous trace diagnostic. Positive run passed; control diagnostic stopped the driver.",
+      "retained": [
+        "ccl-symbols-r5.log",
+        "ccl-symbols-r5/native.log",
+        "ccl-symbols-r5/execution.json",
+        "ccl-symbols-r5/mutants/unqualified-package/execution.log",
+        "ccl-symbols-r5/mutants/unqualified-package/check.mjs"
+      ]
+    },
+    {
+      "attempt": "r6",
+      "note": "Named earlier identity diagnostic; final qualification candidate.",
+      "retained": [
+        "ccl-symbols-r6.log",
+        "ccl-symbols-r6/native.log",
+        "ccl-symbols-r6/execution.json",
+        "ccl-symbols-r6/summary.json"
+      ]
+    }
+  ]
+}

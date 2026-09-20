@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_NOT_REVIEWED",
   "date": "2026-09-20",
-  "basis": "User accepts LL21-b after audit 119 and correction 459eda83; eighteen prior accepted records unchanged.",
+  "basis": "Generated symbol/package identity and binding execution before and after image relocation; pre-lookup hash admission, service faults and publication omissions reproduced. Nineteen accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL09-a [generated]",
+      "unreviewed S1-LL09-a [generated]",
       "missing S1-LL15-a [closure]",
       "missing S1-LL13-a [installation]",
       "missing S1-LL14-a [cross-dump]",
@@ -22,20 +22,20 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "3916140883303df55f19ea07efb3e08a38de64b1e3740de8821f3d5b1c26da9d"
+    "sha256": "822dde59ccee25f79efb5a943d30ba5e172bec2219890e863105d4f9dc4ca2f6"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21b-accepted-results.json",
-      "sha256": "5c88a1854e6fc73b7b631e480e3bb4ed1144ed4b875f14f25a8f763313f8f1a0"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-symbols-results.json",
+      "sha256": "b9fac59145896f8b762acd27a7e333ab8a007065ddaa569daa74b88d309aea74"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll21b-accepted-results.json",
-  "combined_results_sha256": "5c88a1854e6fc73b7b631e480e3bb4ed1144ed4b875f14f25a8f763313f8f1a0",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-symbols-results.json",
+  "combined_results_sha256": "b9fac59145896f8b762acd27a7e333ab8a007065ddaa569daa74b88d309aea74",
   "counts": {
     "accepted": 19,
-    "missing": 12,
-    "unreviewed": 0,
+    "missing": 11,
+    "unreviewed": 1,
     "required": 31
   }
 }

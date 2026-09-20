@@ -4887,6 +4887,26 @@
       "test_ids": [
         "S1-LL21-b"
       ]
+    },
+    {
+      "id": "STAGE1-SYMBOLS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-r1-results.json",
+      "sha256": "04ec2c29b75bdbbba7d8ef6afa26fb4188db9067c0e31ea7f950c964680387ae",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "822dde59ccee25f79efb5a943d30ba5e172bec2219890e863105d4f9dc4ca2f6",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-r1/packet.json",
+      "packet_sha256": "aa5593dfdcb8478b32c79aef697ae26d98beff00417944958d68cd8885f46e74",
+      "test_ids": [
+        "S1-LL09-a"
+      ],
+      "scope": "Thirteen unchanged-compiler B modules exercise D1 symbols/packages through owner-installed C/Wasm leaves: INTERN, FIND-SYMBOL, MAKE-SYMBOL, name/package readers, EQ and bindings. 582 native rows, 1,884 generated comparisons, six pointer-aware image loads at 4 MiB/8 MiB/2 GiB, 72 owner refusals, twelve implementation faults, eight publication controls and twelve role omissions. Foreign hash versions rebuild before lookup; no unqualified-name binding. Sealed topology, bounded pinned allocation and explicit-field owner snapshot; no production package installer, moving package scanner, complete package system, browser or timing claim. Native R6/R6a reused by exact accepted LL21-a compiler identity. Proposal awaits independent review and acceptance."
     }
   ],
   "historical_records": [

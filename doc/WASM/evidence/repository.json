@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d22a9bd21419d2c8199040d80715ee6ddc670156aa7585990b402ba1af45df33",
-  "commit": "9f77cc8acd42d9a7f02fbf9813ce4b9d6299e45f",
-  "immutable_evidence_files": 230463,
+  "catalog_sha256": "f1e792a30821f52bcb0531a05e5e5d98b6ff6e6510649f96dba33e413729a9b6",
+  "commit": "f5515de73c017789d37e4b90233f0fc8e074deef",
+  "immutable_evidence_files": 230740,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-ll21b-acceptance-r1",
-    "files": 329,
-    "bytes": 14812265
+    "directory": "2026-09-20-stage1-symbols-r1",
+    "files": 277,
+    "bytes": 7255022
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 34616,
+  "prior_indexed_references_verified": 35401,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:19 accepted,12 missing,zero unreviewed. LL21-b accepted and integrated.",
-  "source_index_sha256": "5b73bf7d39114a5b8874c11d2980712a6aa2d6089b9870b915cdf17ecca147ca",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll21b-acceptance.json",
-  "verification": "Acceptance producer, exact source comparisons and integrated mapping/publication/three-Worker replay; incremental catalog.",
+  "scope": "Stage 0:48 accepted. Stage 1:19 accepted,11 missing,one unreviewed. LL09-a executed; symbol/package proposal awaits review and acceptance.",
+  "source_index_sha256": "54e894df39d49d9778c328f5502f44a414e10881f1b8144121fceb26c19b694c",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-symbols.json",
+  "verification": "Fresh retained replay: 179 deterministic files at 96 pins; all service, image, adapter and role omissions pass. Nineteen accepted bindings unchanged. Incremental catalog and indexed references verified.",
   "version": 1
 }

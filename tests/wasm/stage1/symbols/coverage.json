@@ -1,0 +1,13 @@
+{
+  "S1-LL09-a:symbols": {
+    "intern_find_identity": "582 freshly executed native rows equal an independent package/identity model and both primitive and compiler-generated paths at three placements. Real native keyword initial membership is recorded.",
+    "names_and_canonicals": "Distinct packages and uninterned symbols, case/Unicode/NUL/empty names, 24 wraparound hash collisions, canonical NIL/T conversion, keyword external status and self values, own/internal versus inherited/external lookup.",
+    "bindings": "Generated EQ, global reads/writes, repeated and simultaneous PROGV with distinct symbol indices, canonical and keyword reads before and after loading. Caller root, value stack and handler state are checked after each successful call.",
+    "loading": "Six real image loads change ordinary image addresses and poison retired bytes. Trace identities persist. Pointer-looking fixnum control rejects relocation without a tag check. Canonical objects stay at D1 addresses.",
+    "hash_contract": "Every query hash compared across host and target; a foreign hash version rebuilt transactionally, a falsely current table refused, lookups blocked before initial and restored admission.",
+    "bases": "4 MiB, 8 MiB and 2 GiB; unsupported bases refused before writes.",
+    "negative_evidence": "Twelve service/adapter/relocation faults, twelve owner/resource refusals per execution, eight independent publication controls and production artifact-role omissions.",
+    "compiler": "Exact accepted LL21-a compiler rebuilt in pristine U1. Native R6/R6a reused by hash; generated WAT, Wasm, compiler FASL and installed binaries retained.",
+    "scope": "scope.json declares fixed owner limits, pinned allocation, sealed package topology, runtime-function admission and production loader/collector exclusions."
+  }
+}

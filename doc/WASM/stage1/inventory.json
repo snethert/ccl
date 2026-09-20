@@ -594,8 +594,8 @@
           "description": "INTERN, FIND-SYMBOL, EQ and bindings behave correctly for colliding names in distinct packages, NIL, T, keywords and uninterned symbols before and after loading; the host/target hash contract matches or triggers a defined pre-lookup rebuild; supported image bases vary and unsupported ones are rejected explicitly; nothing binds by unqualified name alone."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/symbols/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
