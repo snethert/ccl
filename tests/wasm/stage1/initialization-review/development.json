@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "id": "r1",
+      "outcome": "Positive inherited execution, all ten inherited mutants, seven publication controls, directed checks and races passed. The omitted-fresh-check mutant left a for loop without a body and failed syntax, so its expected behavioral diagnostic correctly refused to count it. Replaced the removed statement with an empty statement and added node --check for every new mutant. No proposal correction was needed.",
+      "retained": [
+        "ccl-initialization-review-r1.log",
+        "ccl-initialization-review-r1/failed-run.py",
+        "ccl-initialization-review-r1/execution.json",
+        "ccl-initialization-review-r1/controls.json",
+        "ccl-initialization-review-r1/publication-controls.json",
+        "ccl-initialization-review-r1/directed.json",
+        "ccl-initialization-review-r1/owner.mjs",
+        "ccl-initialization-review-r1/new-faults/missing-fresh/owner.mjs",
+        "ccl-initialization-review-r1/new-faults/missing-fresh/fault.log"
+      ]
+    },
+    {
+      "id": "r2",
+      "outcome": "All inherited and new checks passed. Final runner omits positive JSON reports from mutant directories to avoid carrying stale success files; r3 reruns the same checks with that retention hygiene.",
+      "retained": [
+        "ccl-initialization-review-r2.log",
+        "ccl-initialization-review-r2/summary.json",
+        "ccl-initialization-review-r2/new-controls.json"
+      ]
+    }
+  ]
+}

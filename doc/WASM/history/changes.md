@@ -2939,3 +2939,7 @@ Claude reviewed d015bb12 (STAGE1-INITIALIZATION-R1) in its detached worktree. Ev
 ## 2026-09-20 — bind LL13-a to Claude audit 122
 
 Bind STAGE1-INITIALIZATION-R1 to review commit 306fdc77e478c7fac82f3056d63102b4b68490f6 and its review-file hash. Carry the recursive-pin, busy-claim, actual-table-capacity and fresh-control-storage observations in the index scope. No acceptance, integration, evidence packet or slot count changes.
+
+## 2026-09-20 — Initialization admission follow-up to audit 122
+
+The isolated owner now requires actual Worker-local tables with full declared capacity before any claim and validates fresh zero control storage and reserved ready-state words without writes. Six generated Workers reproduce the reviewed R1 result exactly. The ten inherited owner mutants and seven publication controls rerun; 616 directed refusals preserve all declared regions, four races each admit one of three Workers, and four additional behavioral faults are rejected. Fresh replay matches 405 files at 111 pins. The original mutant-syntax failure is retained and is not counted. Sibling fixture with frozen source enumeration leaves R1 unchanged. No compiler/runtime/kernel edits, no acceptance, no extra slot credit.

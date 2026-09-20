@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "09e61192387b913cd1b4bbe0915d24218b65a67940f7c12a15e8fbc429007655",
-  "commit": "6d4850f1860e995c684bead778602ae72039c947",
-  "immutable_evidence_files": 231771,
+  "catalog_sha256": "02525887c102e287029c64096f20359c224f305184481e01cec1074ef99ef85c",
+  "commit": "76c481a8b0f92fb6a4eac87c71ca54185584f863",
+  "immutable_evidence_files": 232249,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-initialization-r1",
-    "files": 402,
-    "bytes": 7505122
+    "directory": "2026-09-20-stage1-initialization-review-r1",
+    "files": 478,
+    "bytes": 4934384
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 36586,
+  "prior_indexed_references_verified": 36983,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,10 missing,one unreviewed. LL13-a executed; owner proposal awaits review and acceptance.",
-  "source_index_sha256": "08f91e4284f76814c2d217cd9634b40234fb48c3a3e7ae295e2dcfd2d21ef725",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-initialization.json",
-  "verification": "Fresh retained replay: 315 deterministic files at 104 pins; owner faults and publication/role omissions rejected. Twenty accepted bindings unchanged. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,10 missing,one unreviewed. LL13-a reviewed; initialization admission follow-up awaits review. Neither proposal accepted or integrated.",
+  "source_index_sha256": "8679b578666fc14ab66d58dcba42fd26bcdb50bd4765fd60b9952d88794825a3",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-initialization-review.json",
+  "verification": "Fresh retained replay: 405 deterministic files at 111 pins; inherited results identical, 616 directed refusals and four races pass, fourteen owner faults and seven publication controls rejected. Incremental catalog and indexed references verified.",
   "version": 1
 }

@@ -1,0 +1,11 @@
+{
+  "kind": "AUXILIARY_INITIALIZATION_REVIEW_FOLLOWUP",
+  "parent": "STAGE1-INITIALIZATION-R1",
+  "claim": "Actual Worker-local table capacities and zero initial/reserved control storage refuse before claim or writes; reviewed generated outcomes preserved.",
+  "source_enumeration": "Explicit own file list plus frozen parent pins; sibling fixture.",
+  "trust": "Trusted synchronous callback uses supplied tables; only protocol owners write control storage. No confinement or malicious concurrent writer claim.",
+  "busy_policy": "Refuse without waiting; scheduler owns retries. Concurrent bootstrap winner may cause PROCESS_STATE or CONTROL_NOT_FRESH.",
+  "reuse": "Reviewed native answers, generated code and R6/R6a by exact hashes; all target Workers, owner faults and publication controls re-executed.",
+  "acceptance": "NOT_ACCEPTED_NOT_INTEGRATED",
+  "additional_slot_credit": false
+}

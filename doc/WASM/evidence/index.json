@@ -2548,6 +2548,16 @@
       "review_commit": "8ec776b796a12663743f95789b8408afbdbd2276",
       "review_sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9",
       "integration": "doc/WASM/stage1/integration-ll09a.json"
+    },
+    {
+      "id": "STAGE1-INITIALIZATION-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-initialization-review-r1/packet.json",
+      "sha256": "0718b417a724b30dea1feea7e7dd425ca357618e39d864832fe7ec121fd1acd1",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit-122 follow-up: constructor checks both actual Worker-local table capacities before any claim; fresh bootstrap requires zero control storage and ready entry checks all reserved words. Six inherited generated Workers reproduce R1 exactly, ten inherited owner faults and seven publication controls rerun. At two placements: 616 directed refusals preserve declared regions; four three-Worker races admit one initializer each; four additional behavioral faults rejected. Fresh replay: 405 deterministic files at 111 pins. Compiler, generated modules and native oracle reused by reviewed packet hash. Sibling fixture with explicit source enumeration; original R1 pins unchanged. Trusted callback uses supplied tables, trusted writers own control bytes, scheduler owns busy retry. No additional slot credit; neither R1 nor follow-up accepted or integrated."
     }
   ],
   "current_runs": [

@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""Frozen source enumeration for the auxiliary audit-122 follow-up."""
+import argparse,shutil,subprocess,sys,tarfile
+from pathlib import Path
+import run
+from run import HERE,ROOT,PARENT,sha,read,save,command
+ID='STAGE1-INITIALIZATION-REVIEW-R1'
+SOURCES=('derive.py','directed.mjs','run.py','packet.py','README.md','scope.json','development.json')
+def files(p):return sorted(f for f in p.rglob('*') if f.is_file() and '__pycache__' not in f.parts and not f.is_symlink())
+def pins(e):
+ source=read(e/PARENT/'source-pins.json')
+ for n,h in source.items():assert sha(ROOT/n)==h,n
+ for n in SOURCES:source[str((HERE/n).relative_to(ROOT))]=sha(HERE/n)
+ return source
+def retained(out):
+ for f in files(out):
+  n=f.relative_to(out)
+  if n.parts[0] in ['faults','new-faults'] and any(x in n.parts for x in ['compiled','installed','malformed']):continue
+  yield f
+def deterministic(out):return {str(p.relative_to(out)):sha(p) for p in retained(out) if p.suffix in ['.json','.mjs','.wasm','.wat','.dx64fsl'] and p.name!='command.json' and not p.name.endswith('.command.json')}
+def manifest(p):save(p/'packet.json',dict(id=ID,kind='AUXILIARY_INITIALIZATION_REVIEW_FOLLOWUP',review_disposition='NOT_REVIEWED',files=[dict(path=str(f.relative_to(p)),sha256=sha(f),bytes=f.stat().st_size) for f in files(p) if f.name!='packet.json']))
+def retain(e,x,p):
+ assert not p.exists() and read(x/'summary.json')['status']=='PASS';p.mkdir();source=pins(e);save(p/'source-pins.json',source)
+ with tarfile.open(p/'sources.tar.gz','w:gz') as t:
+  for n in source:t.add(ROOT/n,arcname=n,recursive=False)
+ for f in retained(x):
+  target=p/'execution'/f.relative_to(x);target.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,target)
+ save(p/'deterministic.json',deterministic(x))
+ for n in ['summary.json','directed.json','controls.json','new-controls.json','assessment.json','publication-controls.json']:shutil.copy(x/n,p/n)
+ for n in ['README.md','scope.json','development.json']:shutil.copy(HERE/n,p/n)
+ shutil.copy(x/'owner.mjs',p/'owner.mjs')
+ refs={PARENT+'/'+n:sha(e/PARENT/n) for n in ['packet.json','source-pins.json','verification.json','native-reuse.json']}
+ save(p/'inputs.json',refs);shutil.copy(e/PARENT/'toolchain.json',p/'toolchain.json');shutil.copy(e/PARENT/'native-reuse.json',p/'native-reuse.json')
+ with tarfile.open(p/'development.tar.gz','w:gz') as t:
+  for a in read(HERE/'development.json')['attempts']:
+   for n in a.get('retained',[]):
+    f=Path('/tmp')/n;assert f.is_file(),n;t.add(f,arcname=n,recursive=False)
+ assert source==pins(e);manifest(p)
+def verify(e,p,out):
+ out.mkdir(parents=True,exist_ok=False);source=pins(e);assert source==read(p/'source-pins.json')
+ for r in read(p/'packet.json')['files']:assert sha(p/r['path'])==r['sha256'],r['path']
+ for n,h in read(p/'inputs.json').items():assert sha(e/n)==h,n
+ for t in read(p/'toolchain.json')['tools']:assert sha(Path(t['path']))==t['sha256']
+ command([sys.executable,HERE/'run.py','--evidence',e,'--output',out/'execution'],out/'replay.log')
+ actual=deterministic(out/'execution');expected=read(p/'deterministic.json');assert actual.keys()==expected.keys()
+ for n,h in expected.items():assert actual[n]==h,n
+ assert source==pins(e);v=dict(status='PASS',deterministic_files=len(actual),source_pins=len(source),summary=read(out/'execution/summary.json'));save(out/'verification.json',v);print(v)
+if __name__=='__main__':
+ a=argparse.ArgumentParser();a.add_argument('mode',choices=['retain','verify']);a.add_argument('--evidence',type=Path,required=True);a.add_argument('--packet',type=Path,required=True);a.add_argument('--execution',type=Path);a.add_argument('--output',type=Path);v=a.parse_args()
+ if v.mode=='retain':retain(v.evidence.resolve(),v.execution.resolve(),v.packet.resolve())
+ else:verify(v.evidence.resolve(),v.packet.resolve(),v.output.resolve())
