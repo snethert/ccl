@@ -2541,10 +2541,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-review-r1/packet.json",
       "sha256": "4e326a7df211d3789b2e68fc31b917b1115d42a0c2099cb3e6a8bf0e5902f624",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-120 follow-up: all six MAKE-SYMBOL forms explicitly exercised before/after load with per-operation delivery counters; existing ALLOW-OTHER-KEYS identity/status/self-value and zero allocation checked; primitive/generated loads from 4 MiB into 2 GiB retained. Native CODE-CHAR refuses surrogate code points; one derived C guard now rejects them. Compiler, thirteen modules, adapter and image transport unchanged. Inherited 1884 generated comparisons, twelve faults and eight publication controls pass; 36 directed MAKE form checks, 12 keyword checks, 96 character checks and ten new controls. Fresh replay: 253 deterministic files at 103 pins. No additional gate credit; acceptance and integration pending."
+      "scope": "Audit-120 follow-up: all six MAKE-SYMBOL forms explicitly exercised before/after load with per-operation delivery counters; existing ALLOW-OTHER-KEYS identity/status/self-value and zero allocation checked; primitive/generated loads from 4 MiB into 2 GiB retained. Native CODE-CHAR refuses surrogate code points; one derived C guard now rejects them. Compiler, thirteen modules, adapter and image transport unchanged. Inherited 1884 generated comparisons, twelve faults and eight publication controls pass; 36 directed MAKE form checks, 12 keyword checks, 96 character checks and ten new controls. Fresh replay: 253 deterministic files at 103 pins. No additional gate credit; acceptance and integration pending. Audit 121 found no defect. Original R1 replays from 3ebb85d6 because its recursive pin enumeration predates this nested fixture; this follow-up replays from HEAD. Integration must use this corrected derived service. The existing keyword is owner-materialized from the native membership assertion, not copied from the native package.",
+      "review_commit": "8ec776b796a12663743f95789b8408afbdbd2276",
+      "review_sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9"
     }
   ],
   "current_runs": [
