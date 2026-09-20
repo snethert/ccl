@@ -4523,10 +4523,30 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-generic-dispatch-r1-results.json",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-generic-dispatch-r1/packet.json",
       "packet_sha256": "ad0c0f3bbf03bf5a292262a6d46fd121248cad7eebafd5dfad38a003a90d1961",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "scope": "LL11-b: generated empty-registry guard and direct/encapsulated dcode publication, NO-APPLICABLE-METHOD-EXISTS slots and CONTINUE. Thirty modules, 144 invocations, 78 semantic comparisons and 60 installations below/above 2 GiB. Nine compiled faults, eight registry refusals, eleven publication and twelve role controls. Native stale-method defect retained in both modes. Existing twelve-class corpus: 107 modules and 184 comparisons. New native R6/R6a; fresh 1,076-file replay against 358 pins. Initial one-argument T/EQL primary-method subset; isolated proposal.",
       "sha256": "d8ab2f2fa59ffdfd9a9008d063ef2c62038a220657d786b103ca29d04c0f4c2e",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "test_ids": [
+        "S1-LL11-b"
+      ]
+    },
+    {
+      "id": "STAGE1-LL11B-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll11b-acceptance-r1/accepted-results.json",
+      "sha256": "aebf8449e09207bf9d9493746a7be1cc7035a811a68ea36b23dc33e3ecb7e803",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "23c59043d633e6378f10f12bf2675df11edd3cbfbec37ccda72fbe7496664af9",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-ll11b-acceptance-r1/packet.json",
+      "packet_sha256": "715e164d752f988422ac5ad4dfc71476f33cf6dfc25be16b97bdc7b85f5f3a8c",
+      "scope": "User acceptance after Claude audit 102; no new execution.",
       "test_ids": [
         "S1-LL11-b"
       ]

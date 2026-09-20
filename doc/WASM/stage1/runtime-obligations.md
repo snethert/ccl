@@ -119,3 +119,14 @@ Manifest module rows match by name; their order does not affect admission.
 Completeness is measured against the trusted owner's expected list. An owner omitting an alias from both lists is outside this control's authority.
 
 Failed transactions discard their compiled instances and loader; rolled-back slots can be reused. Retained old module slots are never reused.
+
+
+## Empty generic dispatch (Claude audit 102)
+
+The empty-registry correction is in the generated dispatch service. Native CCL l1-dcode.lisp still has the retained stale-dcode defect; compiling native CLOS requires a separate source correction.
+
+The guard covers an empty method registry. A raw stale store with a nonempty registry can select an incorrect method until recomputation; owner records remain trusted.
+
+The private condition readers refuse non-instance arguments with checked code 4, not a handleable Lisp error.
+
+Condition-using module bytes change with the bounded registry check. The inherited corpus was re-executed against native expectations, not claimed byte-identical.

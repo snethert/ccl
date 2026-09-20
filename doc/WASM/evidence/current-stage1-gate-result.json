@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_QUALIFICATION_PENDING_REVIEW",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-19",
-  "basis": "LL11-b empty generic dispatch qualified; fourteen accepted objects preserved, no acceptance implied.",
+  "basis": "User accepts LL11-b after Claude audit 102; fourteen prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S1-LL18-b [hash-tables]",
-      "unreviewed S1-LL11-b [dispatch]",
       "missing S1-LL16-a [generated]",
       "missing S1-LL21-a [materialization]",
       "missing S1-LL21-b [granularity]",
@@ -31,20 +30,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll11a-accepted-results.json",
-      "sha256": "54c7560d92b85b92ee12af0e18c416ea2f8124cac1b03678253d97422f3511bd"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-generic-dispatch-r1-results.json",
-      "sha256": "d8ab2f2fa59ffdfd9a9008d063ef2c62038a220657d786b103ca29d04c0f4c2e"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll11b-accepted-results.json",
+      "sha256": "a6b1c8fd9285cf45cdf09620f9272230103bc7e90da449afe17eeab3ca8d285b"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-generic-dispatch-results.json",
-  "combined_results_sha256": "89c8b45f3d397921d7848777f41c48c7d2817652c44bdac4958509c6da39b281",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-through-ll11b-accepted-results.json",
+  "combined_results_sha256": "a6b1c8fd9285cf45cdf09620f9272230103bc7e90da449afe17eeab3ca8d285b",
   "counts": {
-    "accepted": 14,
+    "accepted": 15,
     "missing": 16,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }

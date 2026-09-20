@@ -1081,7 +1081,7 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
@@ -1196,6 +1196,10 @@
        (b-local-call 'b-local-function (first args) (second args) (third args)))
       ((ccl::let ccl::let*) (b-let op args))
       (ccl::call
+       (when (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
+                  (member (first (ccl::acode-operands (first args))) '(gd_condition gd_condition_gf gd_condition_args)))
+         (unless (and (null (third args)) (null (second (second args)))) (refuse :gd-constructor-spread))
+         (return-from b-multiple (gd-condition-call (first (ccl::acode-operands (first args))) (first (second args)))))
        (when (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
                   (member (first (ccl::acode-operands (first args))) '(%wasm-symbol-value %wasm-set)))
          (unless (and (null (third args)) (null (second (second args)))) (refuse :symbol-access-spread))
@@ -1688,7 +1692,7 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition)))) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists)))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
@@ -2095,7 +2099,7 @@
 ;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
 (defun b-condition-mask (type)
   (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
-                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096)
+                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192)
                          (control-error . 64) (warning . 128) (simple-warning . 256))))
       (refuse :b-condition-type)))
 (defun b-expand-conditions (form) (setq *b-restart-names* '(list cons function simple-vector integer fixnum or))
@@ -2685,10 +2689,14 @@
 ;; slot defaults]. Instances and slot vectors use U1's D1 CLOS layouts.
 (func $condition_row (param $key i32) (param $by_wrapper i32) (result i32)
  (local $table i32) (local $row i32) (local $i i32) (local $n i32)
- (local.set $table (call $object_base (global.get $symbol_condition_registry) (i32.const 4) (i32.const 3322)))
- (call $span (local.get $table) (i32.const 52))
+ (local.set $table (i32.sub (global.get $symbol_condition_registry) (i32.const 6)))
+ (if (i32.ne (i32.and (global.get $symbol_condition_registry) (i32.const 7)) (i32.const 6)) (then (throw $call_error (i32.const 5))))
+ (call $span (local.get $table) (i32.const 4))
+ (local.set $n (i32.shr_u (i32.load (local.get $table)) (i32.const 8)))
+ (if (i32.or (i32.ne (i32.and (i32.load (local.get $table)) (i32.const 255)) (i32.const 250)) (i32.and (i32.ne (local.get $n) (i32.const 12)) (i32.ne (local.get $n) (i32.const 13)))) (then (throw $call_error (i32.const 5))))
+ (call $span (local.get $table) (i32.mul (i32.add (local.get $n) (i32.const 1)) (i32.const 4)))
  (loop $rows
-  (if (i32.ge_u (local.get $i) (i32.const 12)) (then (throw $call_error (i32.const 5))))
+  (if (i32.ge_u (local.get $i) (local.get $n)) (then (throw $call_error (i32.const 5))))
   (local.set $row (call $object_base (i32.load (i32.add (local.get $table) (i32.add (i32.const 4) (i32.mul (local.get $i) (i32.const 4))))) (i32.const 16) (i32.const 1018)))
   (if (i32.eq (i32.load (i32.add (local.get $row) (if (result i32) (local.get $by_wrapper) (then (i32.const 4)) (else (i32.const 8))))) (local.get $key)) (then (return (local.get $row))))
   (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $rows)) unreachable)
@@ -2738,6 +2746,7 @@
   (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $copy)))
  (if (i32.or (i32.eq (local.get $mask) (i32.const 156)) (i32.or (i32.eq (local.get $mask) (i32.const 4124)) (i32.eq (local.get $mask) (i32.const 8220)))) (then (i32.store offset=8 (local.get $slots) (local.get $datum))))
  (if (i32.eq (local.get $mask) (i32.const 156)) (then (i32.store offset=12 (local.get $slots) (local.get $expected))))
+ (if (i32.eq (local.get $mask) (i32.const 32796)) (then (i32.store offset=8 (local.get $slots) (local.get $datum)) (i32.store offset=12 (local.get $slots) (local.get $expected))))
  (if (i32.or (i32.eq (local.get $mask) (i32.const 124)) (i32.eq (local.get $mask) (i32.const 2108))) (then (i32.store offset=8 (local.get $slots) (global.get $symbol_error_message))))
  (i32.store offset=48 (global.get $tcr) (i32.add (local.get $p) (local.get $bytes)))
  (i32.add (local.get $p) (i32.const 6)))
@@ -2748,10 +2757,14 @@
 ;; slot defaults]. Instances and slot vectors use U1's D1 CLOS layouts.
 (func $condition_row (param $key i32) (param $by_wrapper i32) (result i32)
  (local $table i32) (local $row i32) (local $i i32) (local $n i32)
- (local.set $table (call $object_base (global.get $symbol_condition_registry) (i32.const 4) (i32.const 3322)))
- (call $span (local.get $table) (i32.const 52))
+ (local.set $table (i32.sub (global.get $symbol_condition_registry) (i32.const 6)))
+ (if (i32.ne (i32.and (global.get $symbol_condition_registry) (i32.const 7)) (i32.const 6)) (then (throw $call_error (i32.const 5))))
+ (call $span (local.get $table) (i32.const 4))
+ (local.set $n (i32.shr_u (i32.load (local.get $table)) (i32.const 8)))
+ (if (i32.or (i32.ne (i32.and (i32.load (local.get $table)) (i32.const 255)) (i32.const 250)) (i32.and (i32.ne (local.get $n) (i32.const 12)) (i32.ne (local.get $n) (i32.const 13)))) (then (throw $call_error (i32.const 5))))
+ (call $span (local.get $table) (i32.mul (i32.add (local.get $n) (i32.const 1)) (i32.const 4)))
  (loop $rows
-  (if (i32.ge_u (local.get $i) (i32.const 12)) (then (throw $call_error (i32.const 5))))
+  (if (i32.ge_u (local.get $i) (local.get $n)) (then (throw $call_error (i32.const 5))))
   (local.set $row (call $object_base (i32.load (i32.add (local.get $table) (i32.add (i32.const 4) (i32.mul (local.get $i) (i32.const 4))))) (i32.const 16) (i32.const 1018)))
   (if (i32.eq (i32.load (i32.add (local.get $row) (if (result i32) (local.get $by_wrapper) (then (i32.const 4)) (else (i32.const 8))))) (local.get $key)) (then (return (local.get $row))))
   (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $rows)) unreachable)
@@ -2797,6 +2810,7 @@
   (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $copy)))
  (if (i32.or (i32.eq (local.get $mask) (i32.const 156)) (i32.or (i32.eq (local.get $mask) (i32.const 4124)) (i32.eq (local.get $mask) (i32.const 8220)))) (then (i32.store offset=8 (local.get $slots) (local.get $datum))))
  (if (i32.eq (local.get $mask) (i32.const 156)) (then (i32.store offset=12 (local.get $slots) (local.get $expected))))
+ (if (i32.eq (local.get $mask) (i32.const 32796)) (then (i32.store offset=8 (local.get $slots) (local.get $datum)) (i32.store offset=12 (local.get $slots) (local.get $expected))))
  (if (i32.or (i32.eq (local.get $mask) (i32.const 124)) (i32.eq (local.get $mask) (i32.const 2108))) (then (i32.store offset=8 (local.get $slots) (global.get $symbol_error_message))))
  (i32.store offset=48 (global.get $tcr) (i32.add (local.get $p) (local.get $bytes)))
  (i32.add (local.get $p) (i32.const 6)))
@@ -3031,3 +3045,28 @@
   (let ((*b-callable-metadata* t)) (compile-call-form form name links)))
 (defun compile-metadata-call-module (source name links)
   (let ((*b-callable-metadata* t)) (compile-call-module source name links)))
+
+(in-package :wasm32-compiler)
+(defun gd-condition-call (name forms)
+  (setq *b-condition-used* t)
+  (pushnew "condition_registry" *b-symbols* :test #'equal)
+  (if (eq name 'gd_condition)
+    (progn
+      (unless (= (length forms) 2) (refuse :gd-constructor-arity))
+      (let ((*b-tail-position* nil) (*b-producer-target* nil))
+        (b-frame 2
+          (lambda (root)
+            (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) ~a"
+              root (b-scalar (first forms)) root (b-scalar (second forms))
+              (b-multiple (make-b-raw-code :text
+                (if *b-allocation-retry*
+                  (b-wat "(call $condition_new (i32.const 32796) (i32.add ~a (i32.const 8)))" root)
+                  (b-wat "(call $condition_new (i32.const 32796) (i32.load offset=8 ~a) (i32.load offset=12 ~a))" root root)))))))))
+    (progn
+      (unless (= (length forms) 1) (refuse :gd-reader-arity))
+      (b-frame 1
+        (lambda (root)
+          (b-wat "(i32.store offset=8 ~a ~a) ~a" root (b-scalar (first forms))
+            (b-multiple (make-b-raw-code :text
+              (b-wat "(call $condition_field (i32.load offset=8 ~a) (i32.const 8192) (i32.const ~d) (local.get $top))"
+                root (if (eq name 'gd_condition_gf) 8 12))))))))))

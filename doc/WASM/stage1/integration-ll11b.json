@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-20T00:00:51.701976+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "review_commit": "83bd90ab87bc3cf657f679bace19973aa67d4b86",
+  "review": "Claude audit 102; no defect.",
+  "acceptance": "acceptance-ll11b.json",
+  "acceptance_sha256": "597f8f8d82a168efde2c3896a1169c680222bc52867c6bba69e22f1ad35a374b",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "a303b8658339e4858e41121ed55af4c86b4471354a0c37d3db7befbaec3d30be",
+      "after": "bd608480264e7090684c5bfce52de083ec9ef0e1800f7d548a253ca79adea956",
+      "proposal_locator": "2026-09-19-stage1-generic-dispatch-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-generic-dispatch-r1/packet.json",
+      "sha256": "ad0c0f3bbf03bf5a292262a6d46fd121248cad7eebafd5dfad38a003a90d1961"
+    }
+  ],
+  "previous_integration": "integration-ll11a.json",
+  "previous_integration_sha256": "c1cc390bdf54bae7b0896099ac02d1bfb71e3d5c5daa94d9c468979dace269e9",
+  "scope": "Exact reviewed LL11-b compiler. Portable dispatch source and its scenario helpers remain in the retained generic-dispatch fixture as bootstrap source forms; no native CLOS or system registration change. All eight runtime files unchanged.",
+  "observations": [
+    "The empty-registry correction is in the generated dispatch service. Native CCL l1-dcode.lisp still has the retained stale-dcode defect; compiling native CLOS requires a separate source correction.",
+    "The guard covers an empty method registry. A raw stale store with a nonempty registry can select an incorrect method until recomputation; owner records remain trusted.",
+    "The private condition readers refuse non-instance arguments with checked code 4, not a handleable Lisp error.",
+    "Condition-using module bytes change with the bounded registry check. The inherited corpus was re-executed against native expectations, not claimed byte-identical."
+  ],
+  "verification": "Compiler equals reviewed proposal generator and packet bytes. Audit 102 independently replayed native R6/R6a and generated execution for these exact bytes.",
+  "reverse": "Restore compiler from the preceding integration commit after withdrawing consumers of the new condition class."
+}

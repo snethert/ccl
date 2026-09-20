@@ -2556,3 +2556,7 @@ arguments at the code-4 boundary rather than as a handleable error; the
 registry check changes bytes of every condition-using module, so the inherited
 corpus is re-executed semantically rather than compared byte-for-byte. Record
 only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate LL11-b
+
+The user directed “Accept, integrate and proceed” after Claude audit 102. The acceptance binds that audit and preserves all fourteen earlier accepted records. The compiler is byte-identical to the reviewed proposal; all eight runtime files are unchanged. Portable dispatch source remains in the reviewed fixture for bootstrap compilation. Native CLOS correction, nonempty-registry raw stores, checked private-reader errors and inherited condition re-execution are carried as obligations. Ledger: 15 accepted, 16 missing, zero unreviewed. Next is LL16-a numerics.
