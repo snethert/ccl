@@ -67,3 +67,9 @@ widths. The accepted literal movement matrix excludes the argument-taking pool
 modules and literal-mutation persistence case; the full scope travels with the
 acceptance. Owner replay has 40 admission checks; generated retry covers its
 omitted standalone generated-boundary check.
+
+The [integer service](../../tests/wasm/stage1/integer-core/README.md) and its
+[review follow-up](../../tests/wasm/stage1/integer-core/review-followup/README.md)
+are accepted; `integer.c` equals the reviewed source. Its isolated unshared-memory
+ABI is not a generated B entry or a collecting owner service. See the
+[integration record](../../doc/WASM/stage1/integration-integer-core.json).

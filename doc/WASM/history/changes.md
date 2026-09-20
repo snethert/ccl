@@ -2609,3 +2609,7 @@ slack, a strict comparison, and writing both values before the check) all
 fail the overlay harness; only the exact-fit check rejects the strict
 comparison. No defect; the auxiliary unit's acceptance remains the user's
 decision.
+
+## 2026-09-19 — accept and integrate integer service
+
+The user directed “Accept, integrate and proceed” after Claude audit 104. Both integer auxiliary records are accepted, bound to audits 103/104 and their review-file hashes. New runtime/wasm32/integer.c equals both reviewed packets byte for byte; compiler and all other runtime code are unchanged. The record carries exact-fit coverage, escaped/rejected fault distinction, non-retryable input budgets and trusted owner admission. No slot credit: 15 accepted,16 missing. Next is root-aware generated numeric calls.

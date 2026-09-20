@@ -116,7 +116,7 @@ with independent Python and native-policy oracles and compiled faults. Audit 103
 found no service defect. Its [follow-up](../../../tests/wasm/stage1/integer-core/review-followup/README.md)
 adds the missing quotient-only allocation mutant, large multiply/divide cases
 and precise alignment/width diagnostic claims, keeping the binary unchanged.
-Acceptance is pending. It is an isolated auxiliary service, not an LL16 result. Next: root-aware generated
+Both packets are accepted after audits 103/104 and the exact integer service is integrated. It is an auxiliary service, not an LL16 result. Next: root-aware generated
 numeric dispatch and owner allocation/retry, then mixed floats and the approved
 D6 detection/condition path; only their joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.

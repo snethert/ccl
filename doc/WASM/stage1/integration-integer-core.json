@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T00:50:13.895053+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "reviews": [
+    {
+      "commit": "223e7957992d87930ca57e985019cccfc72f1a7b",
+      "review_sha256": "e45c9e3d8155ba39c2e31122cd17c94eb1becc8511cfdd3484c455e2a7325980"
+    },
+    {
+      "commit": "322788f948e6a0076064ae2c486bf20d42fbb6c2",
+      "review_sha256": "b50b060ae720c8afc815aed8ce30391cf7c2b6e47105083ecf95d6ef54ece0a6"
+    }
+  ],
+  "files": [
+    {
+      "file": "runtime/wasm32/integer.c",
+      "before": null,
+      "after": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632",
+      "reviewed_source": "tests/wasm/stage1/integer-core/integer.c",
+      "proposal_locator": "2026-09-19-stage1-integer-core-r1/execution/integer.c"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "bd608480264e7090684c5bfce52de083ec9ef0e1800f7d548a253ca79adea956"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-19-stage1-integer-core-r1/packet.json",
+      "sha256": "3987dae8d919058b004bfe0f2dcb7228e06c2867daf69616960b05a390082524"
+    },
+    {
+      "locator": "2026-09-19-stage1-integer-review-r1/packet.json",
+      "sha256": "d80248736aa675e17f95a28b8e0fa4ddbf184cbafb1a3acd764a93734788da04"
+    }
+  ],
+  "previous_integration": "integration-ll11b.json",
+  "previous_integration_sha256": "1cde87821b35a5b098f3a5eb882c95579fb041304ef248d1883ed5805cad0072",
+  "scope": "Accept both reviewed integer auxiliary records and integrate exact service source only. No LL16 credit or criterion change.",
+  "observations": [
+    "The exact-fit check uniquely rejects a strict capacity comparison; keep it when adapting reservations.",
+    "The thirteenth allocation fault is rejected by the follow-up and retained as escaped by the original harness. Do not count the original execution as rejection.",
+    "Canonical inputs beyond the admitted magnitude or header-width budgets may report 3 or 2. Neither permits an owner to retry the same input by merely extending output space. Status 3 also covers scratch/output exhaustion; a retry needs an independently established output shortage.",
+    "The redundant operand-base alignment check has no independent branch; tag six fixes that alignment. Owner region alignment remains checked.",
+    "The accepted service authenticates shape and extent, not object starts. Its owner must supply known objects and disjoint input, output, workspace and publication regions; no shared-memory, collector or generated numeric-dispatch admission is implied."
+  ],
+  "verification": "Service source equals both reviewed packets; independent replay reproduces the same binary. No new execution required for copying exact bytes.",
+  "reverse": "Remove runtime/wasm32/integer.c after withdrawing its consumers."
+}

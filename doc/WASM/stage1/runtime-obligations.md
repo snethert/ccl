@@ -130,3 +130,16 @@ The guard covers an empty method registry. A raw stale store with a nonempty reg
 The private condition readers refuse non-instance arguments with checked code 4, not a handleable Lisp error.
 
 Condition-using module bytes change with the bounded registry check. The inherited corpus was re-executed against native expectations, not claimed byte-identical.
+
+
+## Integer service (Claude audits 103/104)
+
+The exact-fit check uniquely rejects a strict capacity comparison; keep it when adapting reservations.
+
+The thirteenth allocation fault is rejected by the follow-up and retained as escaped by the original harness. Do not count the original execution as rejection.
+
+Canonical inputs beyond the admitted magnitude or header-width budgets may report 3 or 2. Neither permits an owner to retry the same input by merely extending output space. Status 3 also covers scratch/output exhaustion; a retry needs an independently established output shortage.
+
+The redundant operand-base alignment check has no independent branch; tag six fixes that alignment. Owner region alignment remains checked.
+
+The accepted service authenticates shape and extent, not object starts. Its owner must supply known objects and disjoint input, output, workspace and publication regions; no shared-memory, collector or generated numeric-dispatch admission is implied.
