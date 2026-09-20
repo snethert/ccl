@@ -353,8 +353,8 @@
           "description": "An EQ table with distinct heap keys exercises cached lookups, witnesses key relocation under forced collection, and preserves lookup presence and values, replacement without duplicates, deletion and counts over repeated collections against the retained U1 semantics; mutants omitting moved-key or rehash notification or cache maintenance fail while the intact path passes."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/hash-tables/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

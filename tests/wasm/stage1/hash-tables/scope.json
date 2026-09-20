@@ -1,0 +1,16 @@
+{
+  "id": "S1-LL18-b",
+  "claim": "Strong EQ backing vectors preserve key identity and table operations over actual relocation, including cached lookup and mutation, through compiler-generated B callers.",
+  "representation": "D1 hash-vector subtag 74, fourteen header payload words followed by alternating key/value words. Native track-keys and key-moved bits are retained. The full U1 HASH-TABLE structure is not materialized.",
+  "algorithm": "Address-word mixing with bounded linear probing replaces U1 bucket arithmetic. Movement sets key-moved on the copied vector; the next operation rebuilds its buckets in owner scratch and invalidates the cache before using it. Strong keys, values and cache slots are traced.",
+  "generated": "Nine modules from the unchanged accepted compiler: ordinary tail calls, APPLY, multiple-value bind/prog1/call, and live values across collection and collecting cleanup. Owner-installed hand-built B runtime adapters call the C/Wasm primitive directly, without JavaScript on the operation path.",
+  "owner": "One synchronous Worker. The owner creates fixed-capacity vectors and supplies exact extents, disjoint scratch/result storage, semispaces and trusted callable entries. Raw malformed-table refusals do not claim arbitrary heap integrity validation or an untrusted host boundary.",
+  "limits": [
+    "Only strong EQ vectors; weak, frozen and other hash-vector flags refuse collection.",
+    "Capacity is a power of two from 4 through 16384; full insertion is a checked refusal. Automatic table growth is not implemented.",
+    "No MAKE-HASH-TABLE, GETHASH or SETF source rewrite is added; generated code reaches the implemented operations through ordinary function values.",
+    "No native CLOS HASH-TABLE wrapper, user hash tests, iteration order, weak semantics, cross-Worker sharing or pinned hash-vector inventory is claimed.",
+    "The hand-built adapters are internal B leaves, not public host entries or lazy-loader catalog modules. Invalid runtime arguments use checked refusals, not Lisp conditions.",
+    "No performance claim. Cache hits and ordinary bucket probes stay in Wasm; a rehash uses owner scratch and runs without a safepoint."
+  ]
+}

@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_NOT_REVIEWED",
   "date": "2026-09-20",
-  "basis": "User accepts LL16-a at the reviewed audit-114 scope after the audit-115 performance corrections were accepted and integrated; fifteen prior accepted records unchanged.",
+  "basis": "LL18-b strong EQ moved-key qualification: fresh native/generated replay with independent semantic and omission controls. All sixteen accepted results unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL18-b [hash-tables]",
+      "unreviewed S1-LL18-b [hash-tables]",
       "missing S1-LL21-a [materialization]",
       "missing S1-LL21-b [granularity]",
       "missing S1-LL09-a [generated]",
@@ -25,20 +25,20 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "8850af242b8fa13bae6b81c7c7458aa5a47f50b08dbd3a618352399472b00b99"
+    "sha256": "ed76b3e9e75a869fe75e6d5f6fa48456a2d509f562220e23c0f9ceda0c374c19"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll16-accepted-results.json",
-      "sha256": "b6c0e006deb3ae723e50f2ee9c7bc395f94e4ee9d8be4bd04da86e4a614e03fe"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-hash-tables-results.json",
+      "sha256": "ab01623befa9f220eb750b399fff0f37a966ce61b94bf85560dd4a03442928b5"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll16-accepted-results.json",
-  "combined_results_sha256": "b6c0e006deb3ae723e50f2ee9c7bc395f94e4ee9d8be4bd04da86e4a614e03fe",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-hash-tables-results.json",
+  "combined_results_sha256": "ab01623befa9f220eb750b399fff0f37a966ce61b94bf85560dd4a03442928b5",
   "counts": {
     "accepted": 16,
-    "missing": 15,
-    "unreviewed": 0,
+    "missing": 14,
+    "unreviewed": 1,
     "required": 31
   }
 }

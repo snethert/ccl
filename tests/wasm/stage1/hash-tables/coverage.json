@@ -1,0 +1,11 @@
+{
+  "S1-LL18-b:moved-keys": {
+    "distinct_eq_keys": "Forty distinct native and target conses with equal contents; cycles and table-as-key checked separately.",
+    "cached_lookup": "Every trace round leaves a live cache, then collects before replacement. Separate cached replacement/deletion case requires the bucket index to change.",
+    "real_movement": "Execution records retain before/after root addresses at low and above-2-GiB placements. Retired semispaces are poisoned before subsequent use; generated collection leaf poisons before returning.",
+    "semantics": "Native CCL supplies every trace result and both generated moving-form results. Lookup values/presence, defaults, replacement counts, deletion and repeated collections are compared exactly.",
+    "mutants": "Collector key notification/parity and cached-root omissions, runtime rehash/cache/count omissions, and B adapter delivery faults rerun the actual execution harness.",
+    "compiler": "Accepted compiler rebuilt unchanged in disposable U1; compiler R6/R6a reused by exact hash. WAT, Wasm, compiler FASL and bytes actually installed are retained.",
+    "scope": "scope.json records representation, algorithm replacement and deferred CL surface/owner installation responsibilities."
+  }
+}

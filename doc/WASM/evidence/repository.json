@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "c424792f1f7bd8621fa87340bdaade947556dd6f7cc7b474942ae40a8ec2cdea",
-  "commit": "176d3166bf6d3e50191e391940cb841555be3cb3",
-  "immutable_evidence_files": 226689,
+  "catalog_sha256": "f691bf6fa6afefd7a35248fb440331dbdc6d8dab6836d070af2e8afa759da3e9",
+  "commit": "7cea481c5e9725ce316823e982b18ebd3b67a6aa",
+  "immutable_evidence_files": 226908,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-ll16-acceptance-r1",
-    "files": 58,
-    "bytes": 33377160
+    "directory": "2026-09-20-stage1-hash-tables-r1",
+    "files": 219,
+    "bytes": 6661104
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 32285,
+  "prior_indexed_references_verified": 32671,
   "remote": null,
-  "scope": "Stage 0: 48 accepted. Stage 1: 16 accepted, 15 missing, zero unreviewed. LL16-a accepted at reviewed scope after numeric performance integration.",
-  "source_index_sha256": "672c56905755a632d8787ce694a73710095572bc8413f30a4d6bbd7cea9d80eb",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll16-acceptance.json",
-  "verification": "Unchanged acceptance producer; fifteen prior records preserved; all sixteen accepted bindings current. No new execution. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 16 accepted, 14 missing, one unreviewed. LL18-b executed and awaiting Claude review.",
+  "source_index_sha256": "339852e87ed8f10d407ea1ac6f0a7e13465dc632f0034b7ad8a8778e07c7f02b",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-hash-tables.json",
+  "verification": "Fresh retained replay: 118 deterministic files at 96 source pins; semantic and runtime controls pass. All sixteen accepted bindings current. Incremental catalog and indexed references verified.",
   "version": 1
 }

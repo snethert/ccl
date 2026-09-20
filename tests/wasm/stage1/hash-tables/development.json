@@ -1,0 +1,111 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "status": "FAILED",
+      "description": "Harness allocated fewer pages than the C module import minimum.",
+      "retained": [
+        "ccl-hash-core-r1/check.mjs",
+        "ccl-hash-core-r1/execution.log"
+      ]
+    },
+    {
+      "name": "r2",
+      "status": "FAILED",
+      "description": "Cached-key forwarding fault escaped: later rehash invalidated it before lookup. Added checks immediately after collection.",
+      "retained": [
+        "ccl-hash-core-r2/check.mjs",
+        "ccl-hash-core-r2/mutants/cached-key-scanner/collector.c",
+        "ccl-hash-core-r2/mutants/cached-key-scanner/execution.json"
+      ]
+    },
+    {
+      "name": "r3",
+      "status": "PASS",
+      "description": "Primitive protocol and nine faults passed before generated callers were added.",
+      "retained": [
+        "ccl-hash-core-r3/summary.json"
+      ]
+    },
+    {
+      "name": "r4",
+      "status": "FAILED",
+      "description": "Relocated driver encoder looked for its schema at /doc; the compiler run itself passed.",
+      "retained": [
+        "ccl-hash-core-r4/driver/encode.py",
+        "ccl-hash-core-r4/compiled/compile.log"
+      ]
+    },
+    {
+      "name": "r5",
+      "status": "FAILED",
+      "description": "Python indentation error while fixing the relocated schema default; no target execution. The erroneous runner text was not snapshotted.",
+      "retained": []
+    },
+    {
+      "name": "r6",
+      "status": "PASS",
+      "description": "Four generated calling forms passed before generated in-call collection and adapter controls.",
+      "retained": [
+        "ccl-hash-core-r6/summary.json",
+        "ccl-hash-core-r6/generated.json"
+      ]
+    },
+    {
+      "name": "r7",
+      "status": "PASS",
+      "description": "Two generated collecting forms added; their expectations were subsequently sourced from native compilation.",
+      "retained": [
+        "ccl-hash-core-r7/summary.json",
+        "ccl-hash-core-r7/generated.json"
+      ]
+    },
+    {
+      "name": "r8",
+      "status": "FAILED",
+      "description": "Dynamic-destination adapter fault escaped because no caller exercised dynamic mode.",
+      "retained": [
+        "ccl-hash-core-r8/mutants/adapter-dynamic-destination/adapter.wat",
+        "ccl-hash-core-r8/mutants/adapter-dynamic-destination/execution.json"
+      ]
+    },
+    {
+      "name": "r9",
+      "status": "FAILED",
+      "description": "A displaced dynamic destination also escaped for the same missing path; added MULTIPLE-VALUE-CALL.",
+      "retained": [
+        "ccl-hash-core-r9/mutants/adapter-dynamic-displacement/adapter.wat",
+        "ccl-hash-core-r9/mutants/adapter-dynamic-displacement/execution.json"
+      ]
+    },
+    {
+      "name": "r10",
+      "status": "FAILED",
+      "description": "First direct producer refused with code 13: adapter required a rooted-descriptor marker on the direct-delivery descriptor, which is not a root record. Gated that check on descriptor mode; added both modes and counters.",
+      "retained": [
+        "ccl-hash-core-r10/adapter.wasm",
+        "ccl-hash-core-r10/generated.mjs",
+        "ccl-hash-core-r10/generated.log",
+        "ccl-hash-core-r10/debug.wat",
+        "ccl-hash-core-r10/debug.wasm"
+      ]
+    },
+    {
+      "name": "r11",
+      "status": "PASS",
+      "description": "All twelve runtime controls passed; independent publication checks and retained moving observations added next.",
+      "retained": [
+        "ccl-hash-core-r11/summary.json"
+      ]
+    },
+    {
+      "name": "r12",
+      "status": "PASS",
+      "description": "Final execution with independent identity-map oracle and eight publication controls.",
+      "retained": [
+        "ccl-hash-core-r12/summary.json"
+      ]
+    }
+  ],
+  "note": "R1 initial native oracle used interpreted loaded forms; generated moving-form oracle is native compiled from the identical source forms. No compiler change in any attempt. All primitive/collector sources are retained at the failed stages where they matter."
+}

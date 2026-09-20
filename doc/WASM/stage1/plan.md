@@ -179,8 +179,13 @@ frames and result delivery; the separate persistent-frame timing is not a proof
 of stack cost alone. LL16-a is accepted; native policies map to the two generated checking variants,
 without admitting source OPTIMIZE declarations or claiming formal performance
 qualification.
-No broader arithmetic coverage is claimed. LL18-b hash-table movement remains
-an independent obligation.
+No broader arithmetic coverage is claimed. [LL18-b hash-table movement](../../../tests/wasm/stage1/hash-tables/README.md)
+is executed and awaits independent review: strong EQ backing vectors through
+generated callers, actual relocation, cache/rehash controls and native semantics.
+The compiler is unchanged. CL hash-surface lowering, weak tables, automatic
+table growth and production hash-vector materialization remain outside this slice.
+After review and acceptance, integrate the isolated runtime/scanner and proceed
+to 1E (LL21 materialization and granularity).
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps

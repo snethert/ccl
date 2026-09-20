@@ -4747,6 +4747,26 @@
       "test_ids": [
         "S1-LL16-a"
       ]
+    },
+    {
+      "id": "STAGE1-HASH-TABLES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-hash-tables-r1-results.json",
+      "sha256": "b801011f190ce9454016c2ac6b708698a161803533a5c6b6137bc535ecd41a96",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "ed76b3e9e75a869fe75e6d5f6fa48456a2d509f562220e23c0f9ceda0c374c19",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-hash-tables-r1/packet.json",
+      "packet_sha256": "a843cd0fdba9c79aa40c3dab84b52540f73674b9776cc91f7532e0218a5fdfc7",
+      "scope": "Strong EQ hash-vector moved-key protocol through nine unchanged-compiler generated B modules. 2588 generated/native comparisons, 2584 primitive comparisons, 88 collections, 95 inherited collector checks, twelve runtime faults, eight publication controls and twelve role omissions. Native hash trace independently agrees with identity-map semantics. Fixed-capacity runtime backing vectors; CL hash surface, weak tables, production materializer/loader and table growth explicitly deferred. Shared source unchanged; awaiting independent review.",
+      "test_ids": [
+        "S1-LL18-b"
+      ]
     }
   ],
   "historical_records": [
