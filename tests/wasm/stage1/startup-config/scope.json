@@ -1,0 +1,21 @@
+{
+  "status": "AUXILIARY_NOT_REVIEWED_NOT_INTEGRATED",
+  "slot_credit": false,
+  "implemented": "Five native source-derived process configuration effects and an actual browser input adapter",
+  "snapshot_total": 35,
+  "prior_literal_callbacks": 13,
+  "additional_selected_callbacks": 5,
+  "open_callbacks": 17,
+  "native_oracle": "Read original U1 forms; substitute each of four external reads exactly once, retain all original computation and writes, compile natively; do not equate these with untouched native registered callback execution",
+  "browser": "Real Chromium Workers read hardwareConcurrency, one Wasm memory page and performance.now capability; clock units and explicit Lisp stack sizing are runtime policy, not native OS measurements",
+  "arithmetic_location": "Owner computes bounded configuration clamp and periods; generated functions perform all global publication, conditional stack writes and CPU-dependent spin choice",
+  "representation": "Owner-assigned D1 writable global symbols; no package reconstruction or actual stack resizing",
+  "phases": "Generated preflight, selected effects, generated readback. Not ordinary-condition activation or full bootstrap phases.",
+  "limits": [
+    "A post-restore snapshot is not complete future registration or emitted-initializer membership",
+    "Trusted synchronous owner and invocation; no sandbox or code-signing claim",
+    "Active value-stack scratch may change; caller/root/control/allocation pointers restore; image, binding vector, TSP/CSP and allocation regions checked",
+    "No allocation, collection, browser engine matrix, scheduler, clock service, timing or LL15 credit",
+    "Browser CPU reports may be reduced; fixed 64 KiB memory-page profile; all configuration values fit the admitted D1 fixnum domain"
+  ]
+}

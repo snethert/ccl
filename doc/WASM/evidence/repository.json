@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "cf58ca7df1f8be533fb4aa124be9b47a1a24c8c2d71a1e643a4d2c9f47cea742",
-  "commit": "62623cd6e36b282c904571e4443076ad242b93fe",
-  "immutable_evidence_files": 233106,
+  "catalog_sha256": "2a8c526b0441d3aa97af945204cecb0b238095865ea03da57712da18760f4780",
+  "commit": "03be7fb0ac4cf8c2c90afb6190a91f8b78f4e68b",
+  "immutable_evidence_files": 233308,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-resets-acceptance-r1",
-    "files": 32,
-    "bytes": 495320
+    "directory": "2026-09-20-stage1-startup-config-r1",
+    "files": 202,
+    "bytes": 13424218
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 38983,
+  "prior_indexed_references_verified": 39386,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Auxiliary native startup resets accepted and installer adapter integrated; no LL15 credit.",
-  "source_index_sha256": "3cd05452119b6461bbe2ffefb762878d005ee720681e70d5fe405444097af3a4",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-resets-acceptance.json",
-  "verification": "Reviewed adapter integrated byte-exactly and run through production dependencies; retained execution and independent assessment reproduced, 60 installed digests bound to compiled bytes. New artifacts and indexed references verified incrementally; accepted envelopes unchanged.",
+  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Browser startup configuration auxiliary executed, not reviewed; no LL15 credit.",
+  "source_index_sha256": "ad4adbd900c09dd8117f93b963ae27328da600f213b8a76948ea51d05d32a08f",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-config.json",
+  "verification": "Fresh verifier probes a real Chromium Worker, recompiles original native source formulas with declared host substitutions and unchanged generated compiler modules, executes Node and Chromium, rejects twelve runtime faults and ten publication controls, reproducing 113 deterministic files at 171 pins. Incremental new artifact and indexed-reference verification; accepted envelopes unchanged.",
   "version": 1
 }

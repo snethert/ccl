@@ -1,0 +1,73 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "outcome": "Native source execution exposed that SPIN-COUNT returns the timeout symbol, not zero; JSON writer refused that symbol. Corrected generated return and both independent oracles to preserve native identity. The aborted WITH-OPEN-FILE deleted its incomplete native.json; only its diagnostic and original source survive.",
+      "retained": [
+        "ccl-startup-config-r1/compiled/compile.log",
+        "ccl-startup-config-r1/compiled/source-forms.lisp",
+        "ccl-startup-config-r1/original-compile.lisp"
+      ]
+    },
+    {
+      "name": "r2",
+      "outcome": "Corrected native oracle and seven generated modules compiled. Browser acquisition was added on user direction; this preliminary compile lacked that extra case.",
+      "retained": [
+        "ccl-startup-config-r2/compiled/compile.log",
+        "ccl-startup-config-r2/compiled/native.json"
+      ]
+    },
+    {
+      "name": "r3",
+      "outcome": "Real browser input and all native cases passed; Node execution reached the oracle but the portable assertion compared JSON object insertion order. Replaced it with recursive structural comparison. The failed source and log are retained.",
+      "retained": [
+        "ccl-startup-config-r3.log",
+        "ccl-startup-config-r3/assert.mjs",
+        "ccl-startup-config-r3/execution.log",
+        "ccl-startup-config-r3/browser-input.json"
+      ]
+    },
+    {
+      "name": "r4",
+      "outcome": "Reused compiled r3 artifacts with corrected assertion; complete Node execution passed.",
+      "retained": [
+        "ccl-startup-config-r4/execution.log",
+        "ccl-startup-config-r4/execution.json"
+      ]
+    },
+    {
+      "name": "r5",
+      "outcome": "Fresh compile, native, Node and browser execution passed. The minimum-instead-of-maximum clamp fault refused at state assertion before the intended semantic oracle. Replaced it with a valid but wrong 999 clamp to isolate the semantic difference.",
+      "retained": [
+        "ccl-startup-config-r5.log",
+        "ccl-startup-config-r5/controls-original.py",
+        "ccl-startup-config-r5/faults/clock-clamp/config.mjs",
+        "ccl-startup-config-r5/faults/clock-clamp/fault.log",
+        "ccl-startup-config-r5/browser.log"
+      ]
+    },
+    {
+      "name": "r6",
+      "outcome": "Reused passing r5 positives; all twelve execution faults and ten publication controls rejected at their focused diagnostics.",
+      "retained": [
+        "ccl-startup-config-r6/controls.json",
+        "ccl-startup-config-r6/publication-controls.json"
+      ]
+    },
+    {
+      "name": "r7",
+      "outcome": "Final fresh end-to-end execution, retained before independent replay.",
+      "retained": [
+        "ccl-startup-config-r7.log"
+      ]
+    },
+    {
+      "name": "publication-r1",
+      "outcome": "Retention named the native.json deleted by the aborted r1 WITH-OPEN-FILE, so it stopped before manifest publication. The subsequent verifier refused the missing manifest. Removed the nonexistent file from the development list; computation unchanged.",
+      "retained": [
+        "ccl-startup-config-verify-r1.log",
+        "ccl-startup-config-publication-failure.json"
+      ]
+    }
+  ]
+}

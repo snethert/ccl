@@ -2607,6 +2607,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "User accepts auxiliary native startup resets after audit 125. Integrated adapter equals reviewed bytes; production-import execution and independent assessment reproduce exactly. No LL15 credit or accepted-envelope change."
+    },
+    {
+      "id": "STAGE1-STARTUP-CONFIG-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-config-r1/packet.json",
+      "sha256": "adffb5597793117419f405ab38aac312c0eeb957104535a4f536ecdf30269dcb",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Five source-bound startup configuration adaptations: page size, clock units and period, listener stack defaults and spin settings. Browser Worker reads real hardwareConcurrency and a Wasm memory page and checks performance.now; clock units and Lisp stack defaults are explicit runtime policy. Original U1 source formulas are compiled natively with exactly four external-read substitutions per case; this is not untouched registered-callback execution. Seven unchanged-compiler modules, 36 configurations including browser input, two dirty starts and two placements in Node and Chromium: 1440 native comparisons, 2032 invocations, 120 refusals, 2016 installed-digest checks, 6096 foreign-region checks; twelve execution faults and ten publication controls rejected. Thirteen prior literal callbacks remain retained; seventeen callbacks and complete bootstrap membership remain open. Fresh replay 113 deterministic files at 171 pins. No compiler/runtime/kernel integration, no LL15 credit or engine-matrix claim."
     }
   ],
   "current_runs": [

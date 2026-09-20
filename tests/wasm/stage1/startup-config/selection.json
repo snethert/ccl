@@ -1,0 +1,353 @@
+{
+  "version": 1,
+  "snapshot": "2026-09-13-startup-seeds-r2/image.json.gz",
+  "scope": "Five source-bound process-configuration adaptations; thirteen earlier literal effects retained, seventeen callbacks remain open. Not complete startup membership.",
+  "callbacks": [
+    {
+      "group": "system_pointers",
+      "ordinal": 0,
+      "function": 2427,
+      "name": "CCL::*TOTAL-GC-MICROSECONDS*",
+      "source": "level-1/l1-init.lisp",
+      "position": 11356,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 1,
+      "function": 2426,
+      "name": "CCL::*TOTAL-BYTES-FREED*",
+      "source": "level-1/l1-init.lisp",
+      "position": 11746,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 2,
+      "function": 2582,
+      "name": "CCL::KERNEL-LOCKS",
+      "source": "level-1/l1-aprims.lisp",
+      "position": 1586,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 3,
+      "function": 5081,
+      "name": "CCL::*FD-SET-SIZE*",
+      "source": "level-1/l1-streams.lisp",
+      "position": 212577,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 4,
+      "function": 5538,
+      "name": "CCL::*MAX-OS-OPEN-FILES*",
+      "source": "level-1/linux-files.lisp",
+      "position": 40638,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 5,
+      "function": 5568,
+      "name": "CCL::*CPU-COUNT*",
+      "source": "level-1/linux-files.lisp",
+      "position": 86059,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_5568"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 6,
+      "function": 5564,
+      "name": "CCL::*HOST-PAGE-SIZE*",
+      "source": "level-1/linux-files.lisp",
+      "position": 88722,
+      "disposition": "SELECTED_OWNER_CONFIGURATION",
+      "module": "config_5564"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 7,
+      "function": 5548,
+      "name": "CCL::*LAST-RDTSC-TIME*",
+      "source": "level-1/linux-files.lisp",
+      "position": 103196,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": 0,
+      "module": "reset_5548"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 8,
+      "function": 6151,
+      "name": "CCL::*TICKS-PER-SECOND*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 930,
+      "disposition": "SELECTED_OWNER_CONFIGURATION",
+      "module": "config_6151"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 9,
+      "function": 6150,
+      "name": "CCL::*NS-PER-TICK*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 1051,
+      "disposition": "SELECTED_OWNER_CONFIGURATION",
+      "module": "config_6150"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 10,
+      "function": 6147,
+      "name": "CCL::*LISP-START-TIMEVAL*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 2687,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 11,
+      "function": 6146,
+      "name": "CCL::*INTERNAL-REAL-TIME-SESSION-SECONDS*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 2812,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_6146"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 12,
+      "function": 6131,
+      "name": "CCL::INITIAL-THREAD",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 7420,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 13,
+      "function": 6127,
+      "name": "CCL::LISTENER-STACK-SIZES",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 8509,
+      "disposition": "SELECTED_OWNER_CONFIGURATION",
+      "module": "config_6127"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 14,
+      "function": 6189,
+      "name": "CCL::*UNPROCESSED-COMMAND-LINE-ARGUMENTS*",
+      "source": "level-1/l1-application.lisp",
+      "position": 2195,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_6189"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 15,
+      "function": 6171,
+      "name": "CCL::*LOAD-LISP-INIT-FILE*",
+      "source": "level-1/l1-application.lisp",
+      "position": 8939,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "t",
+      "module": "reset_6171"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 16,
+      "function": 6170,
+      "name": "CCL::*LISP-STARTUP-PARAMETERS*",
+      "source": "level-1/l1-application.lisp",
+      "position": 8976,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_6170"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 17,
+      "function": 6716,
+      "name": "CCL::*QUITTING*",
+      "source": "level-1/l1-readloop.lisp",
+      "position": 4998,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_6716"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 18,
+      "function": 7277,
+      "name": "CCL::*EVENT-DISPATCH-TASK*",
+      "source": "level-1/l1-events.lisp",
+      "position": 9812,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 19,
+      "function": 7592,
+      "name": "CCL::*HEAP-IMAGE-NAME*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 1135,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 20,
+      "function": 7591,
+      "name": "CCL::*COMMAND-LINE-ARGUMENT-LIST*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 1185,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 21,
+      "function": 7632,
+      "name": "CCL::*USER-HOMEDIR-PATHNAME*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 29363,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 22,
+      "function": 7626,
+      "name": "CCL::*DID-SHOW-MARKETING-BLURB*",
+      "source": "level-1/l1-boot-lds.lisp",
+      "position": 2210,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_7626"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 23,
+      "function": 7648,
+      "name": "CCL::INIT-LOGICAL-DIRECTORIES",
+      "source": "level-1/l1-boot-1.lisp",
+      "position": 3449,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 24,
+      "function": 7661,
+      "name": "CCL::*AUTO-FLUSH-STREAMS*",
+      "source": "level-1/l1-boot-2.lisp",
+      "position": 2478,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_7661"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 25,
+      "function": 7660,
+      "name": "CCL::*QUIET-FLAG*",
+      "source": "level-1/l1-boot-2.lisp",
+      "position": 2674,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_7660"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 26,
+      "function": 10263,
+      "name": "CCL::RESET-WINNERS",
+      "source": "compiler/nx.lisp",
+      "position": 8001,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 27,
+      "function": 13017,
+      "name": "CCL::RESET-DB-FILES",
+      "source": "lib/db-io.lisp",
+      "position": 28364,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 28,
+      "function": 13226,
+      "name": "CCL::*MACHINE-VERSION*",
+      "source": "lib/misc.lisp",
+      "position": 1981,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_13226"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 29,
+      "function": 13364,
+      "name": "CCL::*USE-CYGWIN-SVN*",
+      "source": "lib/misc.lisp",
+      "position": 31932,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_13364"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 30,
+      "function": 13324,
+      "name": "CCL::*STATIC-CONS-ADDRESS*",
+      "source": "lib/misc.lisp",
+      "position": 59148,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 31,
+      "function": 13323,
+      "name": "CCL::*FREE-STATIC-CONS-ADDRESS*",
+      "source": "lib/misc.lisp",
+      "position": 59237,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 32,
+      "function": 6299,
+      "name": "CCL::STARTUP-SHUTDOWN-PROCESSES",
+      "source": "level-1/l1-processes.lisp",
+      "position": 2216,
+      "disposition": "OPEN_NOT_IMPLEMENTED"
+    },
+    {
+      "group": "system_pointers",
+      "ordinal": 33,
+      "function": 15376,
+      "name": "CCL::*IP-INTERFACES*",
+      "source": "library/sockets.lisp",
+      "position": 53935,
+      "disposition": "SELECTED_LITERAL_RESET",
+      "value": "nil",
+      "module": "reset_15376"
+    },
+    {
+      "group": "user_pointers",
+      "ordinal": 0,
+      "function": 5566,
+      "name": "CCL::SPIN-COUNT",
+      "source": "level-1/linux-files.lisp",
+      "position": 88304,
+      "disposition": "SELECTED_OWNER_CONFIGURATION",
+      "module": "config_5566"
+    }
+  ]
+}

@@ -1,0 +1,492 @@
+[
+  {
+    "name": "clockTicks--1",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": -1,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-0",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 0,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-999",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 999,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-1000",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 1000,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-1001",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 1001,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-1024",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 1024,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-3001",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 3001,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-32768",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 32768,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "clockTicks-536870911",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 536870911,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize--1",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": -1,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-1",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 1,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-2",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 2,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-3",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 3,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-4095",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 4095,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-4096",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 4096,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "stackSize-536870911",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 536870911,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "cpuCount-2",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 2,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "cpuCount-3",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 3,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "cpuCount-128",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 128,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "cpuCount-536870911",
+    "input": {
+      "pageSize": 65536,
+      "clockTicks": 100,
+      "cpuCount": 536870911,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "pageSize-1",
+    "input": {
+      "pageSize": 1,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "pageSize-4096",
+    "input": {
+      "pageSize": 4096,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "pageSize-268435456",
+    "input": {
+      "pageSize": 268435456,
+      "clockTicks": 100,
+      "cpuCount": 1,
+      "stackSize": 0,
+      "defaults": [
+        1048576,
+        1048576,
+        524288
+      ]
+    }
+  },
+  {
+    "name": "mixed-0",
+    "input": {
+      "pageSize": 524288,
+      "clockTicks": 82891,
+      "cpuCount": 72,
+      "stackSize": -1,
+      "defaults": [
+        483693802,
+        436993496,
+        220106934
+      ]
+    }
+  },
+  {
+    "name": "mixed-1",
+    "input": {
+      "pageSize": 4096,
+      "clockTicks": 31620,
+      "cpuCount": 113,
+      "stackSize": 0,
+      "defaults": [
+        67903724,
+        388025203,
+        156994895
+      ]
+    }
+  },
+  {
+    "name": "mixed-2",
+    "input": {
+      "pageSize": 131072,
+      "clockTicks": 61663,
+      "cpuCount": 101,
+      "stackSize": 0,
+      "defaults": [
+        100725333,
+        134858308,
+        230522881
+      ]
+    }
+  },
+  {
+    "name": "mixed-3",
+    "input": {
+      "pageSize": 134217728,
+      "clockTicks": 24250,
+      "cpuCount": 97,
+      "stackSize": -1,
+      "defaults": [
+        300686403,
+        482524598,
+        118221700
+      ]
+    }
+  },
+  {
+    "name": "mixed-4",
+    "input": {
+      "pageSize": 2048,
+      "clockTicks": 90927,
+      "cpuCount": 128,
+      "stackSize": -1,
+      "defaults": [
+        122592710,
+        293892702,
+        224840376
+      ]
+    }
+  },
+  {
+    "name": "mixed-5",
+    "input": {
+      "pageSize": 1048576,
+      "clockTicks": 28426,
+      "cpuCount": 9,
+      "stackSize": -1,
+      "defaults": [
+        238218866,
+        302747986,
+        363074052
+      ]
+    }
+  },
+  {
+    "name": "mixed-6",
+    "input": {
+      "pageSize": 262144,
+      "clockTicks": 79277,
+      "cpuCount": 20,
+      "stackSize": -1,
+      "defaults": [
+        143812773,
+        96715866,
+        104551830
+      ]
+    }
+  },
+  {
+    "name": "mixed-7",
+    "input": {
+      "pageSize": 256,
+      "clockTicks": 38579,
+      "cpuCount": 49,
+      "stackSize": 0,
+      "defaults": [
+        45693863,
+        469084986,
+        117832188
+      ]
+    }
+  },
+  {
+    "name": "mixed-8",
+    "input": {
+      "pageSize": 4194304,
+      "clockTicks": 68464,
+      "cpuCount": 69,
+      "stackSize": 19161063,
+      "defaults": [
+        371896680,
+        481394196,
+        491938173
+      ]
+    }
+  },
+  {
+    "name": "mixed-9",
+    "input": {
+      "pageSize": 8,
+      "clockTicks": 65476,
+      "cpuCount": 3,
+      "stackSize": -1,
+      "defaults": [
+        233644205,
+        240892726,
+        361020566
+      ]
+    }
+  },
+  {
+    "name": "mixed-10",
+    "input": {
+      "pageSize": 8,
+      "clockTicks": 74840,
+      "cpuCount": 114,
+      "stackSize": -1,
+      "defaults": [
+        157166953,
+        518915595,
+        342937171
+      ]
+    }
+  },
+  {
+    "name": "mixed-11",
+    "input": {
+      "pageSize": 524288,
+      "clockTicks": 26635,
+      "cpuCount": 122,
+      "stackSize": 0,
+      "defaults": [
+        162756835,
+        392718406,
+        386298856
+      ]
+    }
+  }
+]
