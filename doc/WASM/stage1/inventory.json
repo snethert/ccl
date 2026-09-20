@@ -504,8 +504,8 @@
           "description": "The required numeric subset agrees with an independent oracle: fixnum bounds, large and negative shifts, integer length, quotient and remainder, bignum carry and borrow, mixed fixnum and float operations under compiler-policy variations; dispatch is inspected for fallback recursion; floating-point conditions follow the approved policy over the detection rules of contracts/floating-point.v1.md."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/numeric-qualification/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

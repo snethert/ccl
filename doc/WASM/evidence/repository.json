@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5539e32ac4b6cc8feddaff446c3dd11bf8c24ab4006d0992dd46d65400e54bdb",
-  "commit": "b3f75569f7f4050231a9dcf00598da7dc0070718",
-  "immutable_evidence_files": 226528,
+  "catalog_sha256": "528180ac996a3772436ac64edcf973602838272be5e349c7f3260c4ee2a40480",
+  "commit": "124f53e7ea1f19158b8933f5160fe26d49f24807",
+  "immutable_evidence_files": 226587,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-float-calls-r2",
-    "files": 16,
-    "bytes": 12427896
+    "directory": "2026-09-20-stage1-numeric-qualification-r1",
+    "files": 59,
+    "bytes": 37151290
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Generated floating calls R2 accepted and integrated after audit113; auxiliary, no LL16 credit.",
-  "source_index_sha256": "f162f2dccd5037612c97708b910eed636f5ca7256a8eb795ee9149ab21f87274",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-float-calls-r2.json",
-  "verification": "Scoped R2 packet checked; fresh replay 1076 files,450 pins. All prior catalog rows preserved; incremental addition only.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 15 accepted, 15 missing, one unreviewed (LL16-a).",
+  "source_index_sha256": "9c5960d81fe1505b64a93da71fde8b6976e2a9e6f0ee86b8ebd07cf5449cf165",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-numeric-qualification.json",
+  "verification": "Fresh retained replay: 208 deterministic files, 470 pins; native/generated execution, controls and new timing trials. Scoped catalog addition only.",
   "version": 1
 }

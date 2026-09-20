@@ -4682,6 +4682,26 @@
       "test_ids": [
         "S1-LL11-b"
       ]
+    },
+    {
+      "id": "STAGE1-NUMERIC-QUALIFICATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-qualification-r1-results.json",
+      "sha256": "a4c06a53568630ad38f161bc0b197670dd49ec10fb2ad0306a8b8cdf2aa5c0f5",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "8850af242b8fa13bae6b81c7c7458aa5a47f50b08dbd3a618352399472b00b99",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-qualification-r1/packet.json",
+      "packet_sha256": "22cbae3fa4d569bc8d52faf7e050238791cd73420a2c2244962083b416a2e436",
+      "test_ids": [
+        "S1-LL16-a"
+      ],
+      "scope": "Joined integrated numeric subset: 18,050 native cases, 72,200 generated comparisons and 31,000 collections per eager/cold run; 13,659 independent integer-policy answers, raw rational regression, acyclic primitive dispatch and poisoned generated tables, altered-operation and publication controls, fresh warm paired checking measurements. Compiler/runtime unchanged; native R6/R6a reused by exact reviewed hashes. Awaiting review and acceptance."
     }
   ],
   "historical_records": [

@@ -155,11 +155,13 @@ arithmetic flags. Its 4,379 native cases run in eager/cold and moving modes;
 the original mathematical entry still passes its full accepted corpus. The
 compiler is unchanged. One exact-tiny native trap difference still follows
 the adopted D6 policy. R2 is accepted after audit 113 and its reviewed compiler,
-primitive, owner, adapter and loader are integrated byte-for-byte. Next: join
-the integer and floating evidence against the
-LL16-a assertion, complete its remaining numeric-family coverage and measure
-the emitted checking cost under the adopted benchmark discipline. Only that
-joined qualification executes LL16-a.
+primitive, owner, adapter and loader are integrated byte-for-byte.
+[LL16-a qualification](../../../tests/wasm/stage1/numeric-qualification/README.md)
+now joins the accepted integer and floating subset through the unchanged
+integrated runtime: independent integer policies, mixed floating/condition
+cases, eager/cold moving execution, fallback inspection, semantic and omission
+controls, and fresh generated checking-cost measurements. The slot awaits
+Claude's review and user acceptance. No broader arithmetic coverage is claimed.
 LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98

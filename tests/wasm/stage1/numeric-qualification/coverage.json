@@ -1,0 +1,12 @@
+{
+  "S1-LL16-a:numerics": {
+    "fixnum_bounds_shifts_length_carry_borrow_quotient_remainder": ["execution/integer-oracle.json", "execution/independent-integers.json", "execution/generated/native.json", "execution/generated/eager.json", "execution/generated/cold.json"],
+    "mixed_float_policy_conditions": ["execution/generated/cases.json", "execution/generated/native-observed.json", "execution/generated/policy-join.json", "execution/generated/native.json", "execution/raw-float.json"],
+    "fallback_recursion": ["dispatch.json: acyclic integer, float and detector binary call graphs", "fallback-execution.json: generated numeric leaves execute with both tables null", "execution/poison/generated/poison.json"],
+    "generated_installed_identity": ["execution/generated/compiled/modules.json", "execution/generated/compiled/*.wat and *.wasm", "execution/generated/eager.json:admission", "execution/generated/cold.json:admission", "positive/installed"],
+    "sensitivity": ["controls.json: actual altered numeric instructions and independent population omissions", "dispatch.json: cyclic and indirect graph mutations", "role-controls.json: unchanged production gate role omissions"],
+    "native_R6_R6a": ["native-reuse.json", "inputs.json: reviewed compiler, native qualification, primitive and detector evidence"],
+    "checking_cost": ["execution/benchmark/execution-timing.json: raw paired trials", "execution/benchmark/host.json", "execution/benchmark/summary.json"],
+    "locator_rule": "execution/ denotes a member of execution.tar.gz. The benchmark is fresh on replay but timings are not required to be byte-identical. Deterministic semantic artifacts are compared exactly."
+  }
+}

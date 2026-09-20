@@ -1,0 +1,51 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "outcome": "Harness import collision after successful native compilation: the float corpus module has no integer OPS export.",
+      "retained": [
+        "ccl-ll16-r1.log",
+        "ccl-ll16-r1/generated/driver/compile.lisp"
+      ]
+    },
+    {
+      "name": "r2",
+      "outcome": "Harness expected the detector's old one-page memory declaration; the integrated detector already has its reviewed widened declaration.",
+      "retained": [
+        "ccl-ll16-r2.log"
+      ]
+    },
+    {
+      "name": "r3",
+      "outcome": "72,200 eager and cold comparisons passed; a same-named controls module was imported instead of the qualification's control module. Replaced with an unambiguous module name.",
+      "retained": [
+        "ccl-ll16-r3.log",
+        "ccl-ll16-r3/assessment.json"
+      ]
+    },
+    {
+      "name": "controls1",
+      "outcome": "A text edit inserted the driver module alias into the embedded subprocess script too, causing a Python syntax error before execution; corrected.",
+      "retained": [
+        "ccl-ll16-controls1.log"
+      ]
+    },
+    {
+      "name": "benchmark-development",
+      "outcome": "Stopped before retaining timing results because the poisoned-dispatch execution was still running. Final timing runs start only after all semantic controls finish.",
+      "retained": [
+        "ccl-ll16-benchmark-dev.log"
+      ]
+    },
+    {
+      "name": "r4-poison-headline",
+      "outcome": "Poisoned table execution selected the correct rows but inherited the full corpus headline count. Re-run with the reduced input inventory so counts also describe the actual execution.",
+      "retained": [
+        "ccl-ll16-r4-poison-initial/poison.json",
+        "ccl-ll16-r4-poison-initial/execute.mjs"
+      ]
+    }
+  ],
+  "source_changes": "Harness and publication tooling only. The integrated compiler and runtime bytes are unchanged.",
+  "source_retention": "Original first-error logs and the native driver are retained. No claim that a later edited Python runner is the exact original failed runner. Final sources and all executed derived code are retained with the qualification."
+}

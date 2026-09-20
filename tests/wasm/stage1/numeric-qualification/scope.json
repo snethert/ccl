@@ -1,0 +1,17 @@
+{
+  "test": "S1-LL16-a",
+  "variant": "generated",
+  "scope": "Joined generated integer and floating-point subset under the accepted D6 policy. Integrated compiler, primitive services, owner capabilities and loader unchanged.",
+  "integer_operations": ["binary add", "binary subtract", "binary multiply", "ASH", "INTEGER-LENGTH", "TRUNCATE quotient and remainder"],
+  "floating_operations": ["binary add/subtract/multiply/divide", "six comparisons", "FLOAT with literal single or double prototype"],
+  "compiler_policy": "Native integer oracle at safety/speed (0,3), (3,0), (3,3), debug 1; generated checking argument 0 for safety 0 and 1 otherwise. Floating live enable masks and both generated checking modes. No OPTIMIZE source-admission extension.",
+  "oracle": "Python exact integers regenerated before target execution; independent native compiled values; approved exact-tiny difference retained by the existing D6 join. Raw float entry reruns the accepted rational corpus. Native-silent bignum conversion below explicit exponent limits follows the user's R2 decision.",
+  "limits": [
+    "The required Stage 1 subset is not all Common Lisp arithmetic: ratios, complex arithmetic, transcendental functions, unary/n-ary dispatch, integer /, and nonliteral FLOAT prototypes remain outside scope.",
+    "Integer service capacity is 1,024 magnitude digits; larger inputs retain the accepted non-retryable capacity/malformation refusals. Checked source and owner exclusions are unchanged.",
+    "Trusted single-Worker owner and catalog; polling/shortage safepoints only; no shared multi-Worker arithmetic claim.",
+    "Native policy-dependent dual-invalid-operand ordering, wrong-class numeric readers and source-level condition payload differences remain as accepted in integer-condition R2.",
+    "A failed assurance may already have moved roots. Owner growth appends semispaces and does not roll back the heap.",
+    "Warm checking measurements include generated loops, root records, argument staging, private service calls, allocation and returns. They exclude collection and cold installation. Host reset cost is included equally. No representative workload, ABI ranking or cross-engine performance claim."
+  ]
+}
