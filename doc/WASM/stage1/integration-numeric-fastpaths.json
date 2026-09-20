@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNITS",
+  "timestamp": "2026-09-20T16:28:51.725638+00:00",
+  "user_authorization": "accept and integrate",
+  "review_commit": "a1812507cd910a76639b62f9797b55f99d3eaa35",
+  "review_sha256": "2397a823b1ef995957a21fbf1ac1e488b46764e5e5be28fdce8e91dc430cd780",
+  "files": [
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "before": "a26a4ee9cbda3978bff2a08bd9c7a0cabc3e740a0ec486e31761023773191ea8",
+      "after": "d7c0ee160c3de05720b5c676b360af9fa121080ee1b980dc536ce9f63995eaff",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/collector-owner.mjs"
+    },
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "before": "bef52b854bb34ceec62edeee273182356af996111b5cf191fc2ca39c51e71e46",
+      "after": "8772ce62ed4c1d208875dfb9e17081cca3d7d1cba257d8c3b97e670f15d473a2",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/float-service.mjs"
+    },
+    {
+      "file": "runtime/wasm32/floating-capabilities.mjs",
+      "before": "5ebe1c17c6a794d1436bc077bd57052a1eb66c099e56dcde1304a685b622449f",
+      "after": "4c723777e4f0ca6d2f5b65ac2df105c2d9fa4b7cfa33a29c8af32f6843a03c53",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/floating-capabilities.mjs"
+    },
+    {
+      "file": "runtime/wasm32/scalar-service.mjs",
+      "before": null,
+      "after": "90a4b589fe0c955fe9a87d042db88eb54ef39be4fb4ea7664187d897700b8f20",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/scalar-service.mjs"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wasm",
+      "before": null,
+      "after": "1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/scalar.wasm"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wat",
+      "before": null,
+      "after": "54d412dc365137c615364f22fa82c5996046b712dfbc0e66795a28e2a0a18e3f",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/scalar.wat"
+    },
+    {
+      "file": "runtime/wasm32/service.mjs",
+      "before": "bf526ab84340f6534d2aafd624a28582e9c55cef39df989423e571d0c156e9e9",
+      "after": "ab69ce10d55f7a3c2a32771cb84bd5920a6c9fe2c2561d169561e1eaf7ed25b3",
+      "proposal_locator": "2026-09-20-stage1-scalar-floats-r1/proposal/service.mjs"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9c1fa814a3a4ae7a60678b2be1c421dbd4b2515ad0d23b3ea038853c3d532973"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "sha256": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "sha256": "672ae8b7603e3d373ed905203189488bd5a047839125c2008f6bce452aa0fafa"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "e05c33de50e70f1010413ccafa2b5412b9281dda00c46413cc9b7ac5febc0ab3"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-20-stage1-numeric-fastpath-r1/packet.json",
+      "sha256": "c0c0f22474a71a7fb773b5a3973d884f0de81f91c0283984fd15d9475491e1d6"
+    },
+    {
+      "locator": "2026-09-20-stage1-scalar-floats-r1/packet.json",
+      "sha256": "bff8d225ad09c58ae4376931f16b4fad3a8fa1930a6fee145f3b71aa0e510d45"
+    }
+  ],
+  "previous_integration": "integration-float-calls.json",
+  "previous_integration_sha256": "648c0b6eb8ca0311f2755fe7b8b73133faf3b892f52352c58b771e4e51f8a7af",
+  "observations": [
+    "Inherited comparison totals are not direct-path coverage. Audit 115 counted 21855 of 36451 plain raw cases and 2920 of 10540 generated floating calls taking the direct path; benchmark rows are entirely direct.",
+    "Timing is descriptive: twenty 125 ms trials after 500 ms warmup, below v3 benchmark discipline. Native includes GC; Wasm timing excludes collection. No formal performance qualification or new LL16 credit.",
+    "The direct path does not collect. Pressure cases fall back before writes; movement correctness is covered by the slow path and post-growth refresh controls.",
+    "The owner must supply digest-bound scalarBytes and scalarDigest to floatingCapabilities. Omitting them retains the reviewed slow service. This integration ships both the reviewed WAT and matching binary.",
+    "Owner admission remains trusted single-Worker identity. Fast sufficient-space assurance validates live state; image enumeration occurs at admission/collection, not on each assurance.",
+    "Bignum operations and demanding checked floating modes retain JavaScript fallback and private-memory staging. Eligible scalar operations retain ownership checks, boxing, temporary frames and result delivery."
+  ],
+  "scope": "Both audit-115 runtime proposals accepted and integrated exactly; LL16-a acceptance remains pending and the ledger is unchanged.",
+  "verification": "Both proposals rederived against pre-integration source and matched retained bytes; scalar.wat rebuild equals retained binary; unchanged compiler native R6/R6a reused. Integrated execution checks follow.",
+  "reverse": "Restore recorded before hashes and remove newly added scalar-service.mjs, scalar.wat and scalar.wasm after withdrawing scalar consumers.",
+  "integration_checks": {
+    "status": "PASS",
+    "scalar_binary_sha256": "1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071",
+    "eager_sha256": "5a2cf63dc0a59690d49f881713acbfede4790d6273449bb6371f1baa9ddccbf1",
+    "cold_sha256": "5a2cf63dc0a59690d49f881713acbfede4790d6273449bb6371f1baa9ddccbf1",
+    "direct_sha256": "9d68e3b51b730f0cdf321c6054836f02869faf374ff8047e62c55cc50fdc291c",
+    "retained_observations_byte_identical": true,
+    "comparisons_per_mode": 72200,
+    "collections_per_mode": 31836,
+    "direct_checks": 109,
+    "scope": "Exact integrated modules and shipped binary, with reviewed test-only pressure and poison wrappers. No new compiler or detector code.",
+    "retained_expected_outputs": {
+      "archive": "2026-09-20-stage1-scalar-floats-r1/execution.tar.gz",
+      "archive_sha256": "9dd644c518369455822658a91c798517dc35c0b60c5307548f7950a40936f47a",
+      "members": {
+        "eager": "eager.json",
+        "cold": "cold.json",
+        "direct": "probes/positive.json"
+      }
+    },
+    "runtime_selection": "Reconstruct reviewed base and scalar execution archives; overlay integrated runtime modules and shipped scalar.wasm. For moving cases apply the reviewed pressure_service wrapper; for direct-path tests substitute the reviewed throwing fallback. Both wrappers equal their retained bytes."
+  }
+}

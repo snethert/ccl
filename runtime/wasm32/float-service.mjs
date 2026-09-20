@@ -16,7 +16,8 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
  const wasm=new WebAssembly.Instance(mod,{env:{memory:privateMemory},detector:checks}).exports;
  const input=131072,inputEnd=147456,output=147456,outputEnd=147472,result=147472;
  const pv=new DataView(privateMemory.buffer),pb=new Uint8Array(privateMemory.buffer);
- const view=()=>new DataView(memory.buffer),get=p=>view().getUint32(p,true),set=(p,v)=>view().setUint32(p,v,true);
+ let cachedView=new DataView(memory.buffer);
+ const view=()=>{const b=memory.buffer;if(cachedView.buffer!==b)cachedView=new DataView(b);return cachedView;},get=p=>view().getUint32(p,true),set=(p,v)=>view().setUint32(p,v,true);
  const fail=n=>{throw new WebAssembly.Exception(callError,[n]);};
  const regions=pinned.map(r=>({...r}));
  for(const r of regions)if(!Number.isSafeInteger(r.start)||!Number.isSafeInteger(r.end)||r.start<0||r.start%8||r.end%8||r.end<r.start||r.end>memory.buffer.byteLength)throw Error('FLOAT_PINNED');

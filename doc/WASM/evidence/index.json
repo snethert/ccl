@@ -2502,20 +2502,24 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-numeric-fastpath-r1/packet.json",
       "sha256": "c0c0f22474a71a7fb773b5a3973d884f0de81f91c0283984fd15d9475491e1d6",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Runtime-only proposal: live owner checks on sufficient-space assurance, image enumeration before copying, immutable role lookup and refreshed cached views. Eager/cold each match 72,200 retained comparisons and 31,000 collections; 55 owner checks, 6,340 raw-owner comparisons plus grown-result reuse, five rejected controls. Observer-free absolute timing against the reviewed runtime and freshly compiled native CCL. Shared files unchanged; no new slot credit."
+      "scope": "Accepted runtime correction: live owner checks on sufficient-space assurance, image enumeration before copying, immutable role lookup and refreshed cached views. Eager/cold each match 72,200 retained comparisons and 31,000 collections; 55 owner checks, 6,340 raw-owner comparisons plus grown-result reuse, five rejected controls. Observer-free absolute timing against the reviewed runtime and freshly compiled native CCL. Accepted and integrated after audit 115; no new slot credit.",
+      "review_commit": "a1812507cd910a76639b62f9797b55f99d3eaa35",
+      "integration": "doc/WASM/stage1/integration-numeric-fastpaths.json"
     },
     {
       "id": "STAGE1-SCALAR-FLOATS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-scalar-floats-r1/packet.json",
       "sha256": "bff8d225ad09c58ae4376931f16b4fad3a8fa1930a6fee145f3b71aa0e510d45",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Runtime proposal composing STAGE1-NUMERIC-FASTPATH-R1: eligible finite scalar arithmetic binds the existing import directly to Wasm; no JavaScript call or private-memory staging. Exact live owner/frame checks, immutable pinned-span lookup, no-safepoint publication and pre-write fallback for collection, bignums, nonfinite values and demanding checked FP modes. Unchanged compiler/modules; 72,200 comparisons and 31,836 collections per eager/cold run, 145,804 raw comparisons and 56,200 copies, 109 direct-path checks, ten rejected faults. Absolute native/generated timing and separate persistent-root-frame loop. Shared files unchanged, no slot credit, both runtime proposals await Claude review."
+      "scope": "Accepted runtime composition with STAGE1-NUMERIC-FASTPATH-R1: eligible finite scalar arithmetic binds the existing import directly to Wasm; no JavaScript call or private-memory staging. Exact live owner/frame checks, immutable pinned-span lookup, no-safepoint publication and pre-write fallback for collection, bignums, nonfinite values and demanding checked FP modes. Unchanged compiler/modules; 72,200 comparisons and 31,836 collections per eager/cold run, 145,804 raw comparisons and 56,200 copies, 109 direct-path checks, ten rejected faults. Absolute native/generated timing and separate persistent-root-frame loop. Both runtime proposals accepted and integrated after audit 115; no slot credit. Timings descriptive; eligible direct-path coverage is distinct from inherited totals.",
+      "review_commit": "a1812507cd910a76639b62f9797b55f99d3eaa35",
+      "integration": "doc/WASM/stage1/integration-numeric-fastpaths.json"
     }
   ],
   "current_runs": [

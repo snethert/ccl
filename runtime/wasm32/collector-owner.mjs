@@ -7,6 +7,8 @@ function contains(r,p,n=1){return p>=r.start&&p+n<=r.end;}
 function overlaps(a,b){return a.start<b.end&&b.start<a.end;}
 function align(n,a){return Math.ceil(n/a)*a;}
 export class CollectorOwner {
+ #roles=new Map();
+ #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;
  static create(memory,bytes,digest,layout){
   need(createHash('sha256').update(bytes).digest('hex')===digest,'collector digest');
@@ -19,6 +21,13 @@ export class CollectorOwner {
   owner.#validate();return owner;
  }
  #refresh(){const buffer=this.#memory.buffer;if(!this.#view||this.#view.buffer!==buffer){this.#view=new DataView(buffer);this.#epoch++;}}
+ get scalarAdmission(){
+  const bounds={maximum:this.#layout.maximumPages};
+  for(const [prefix,role] of [['v','vstack'],['t','temp'],['c','control'],['l','bindings']]){
+   const r=this.#region(role);bounds[prefix+'0']=r.start;bounds[prefix+'1']=r.end;
+  }
+  return Object.freeze({boundary:this.#scalarBoundary,bounds:Object.freeze(bounds)});
+ }
  get tcr(){return this.#layout.tcr;}
  get view(){this.#refresh();return this.#view;}
  get viewEpoch(){this.#refresh();return this.#epoch;}
@@ -26,7 +35,7 @@ export class CollectorOwner {
  #get(p){return this.view.getUint32(p,true);}
  #set(p,v){this.view.setUint32(p,v,true);}
  #t(o){return this.#get(this.#layout.tcr+o);}
- #region(role){const rows=this.#layout.regions.filter(r=>r.role===role);need(rows.length===1,'region '+role);return rows[0];}
+ #region(role){if(this.#roles.has(role))return this.#roles.get(role);const rows=this.#layout.regions.filter(r=>r.role===role);need(rows.length===1,'region '+role);this.#roles.set(role,rows[0]);return rows[0];}
  #admit(){
   const l=this.#layout;need(l.collector==='copying'&&l.workers===1&&l.egc===false,'collector profile');need(l.version===1&&integer(l.maximumPages)&&l.maximumPages>0&&l.maximumPages<=65535,'layout version/maximum');
   need(Array.isArray(l.regions)&&Array.isArray(l.spaces)&&l.spaces.length===2,'region list');
@@ -74,18 +83,22 @@ export class CollectorOwner {
   }
   return result;
  }
- #validate(){
-  this.#refresh();const spaces=this.#spaces,base=this.#t(56),used=this.#t(48),limit=this.#t(52);
+ #validateLive(){
+  this.#refresh();const view=this.#view,t=o=>view.getUint32(this.#layout.tcr+o,true);const spaces=this.#spaces,base=t(56),used=t(48),limit=t(52);
   const active=spaces.find(r=>r.start===base&&r.end===limit);need(active&&used>=base&&used<=limit&&used%8===0,'allocation ownership');
   const v=this.#region('vstack'),temp=this.#region('temp'),control=this.#region('control');
-  need(this.#t(68)===v.start+8&&this.#t(72)===v.end,'value-stack ownership');
-  need(this.#t(80)===temp.start&&this.#t(84)===temp.end&&this.#t(76)>=temp.start&&this.#t(76)<=temp.end,'temp-stack ownership');
-  need(this.#t(92)===control.start&&this.#t(96)===control.end&&this.#t(88)>=control.start&&this.#t(88)<=control.end,'control-stack ownership');
-  need(this.view.byteLength/PAGE<=this.#layout.maximumPages,'memory maximum');
+  need(t(68)===v.start+8&&t(72)===v.end,'value-stack ownership');
+  need(t(80)===temp.start&&t(84)===temp.end&&t(76)>=temp.start&&t(76)<=temp.end,'temp-stack ownership');
+  need(t(92)===control.start&&t(96)===control.end&&t(88)>=control.start&&t(88)<=control.end,'control-stack ownership');
+  need(view.byteLength/PAGE<=this.#layout.maximumPages,'memory maximum');
   need(this.#get(NIL-1)===NIL&&this.#get(NIL+3)===NIL&&this.#get(T-6)===1850,'canonical objects');
-  const tlb=this.#t(104),cap=this.#t(108);need(cap<=16777215&&tlb%4===0,'binding-vector shape');
+  const tlb=t(104),cap=t(108);need(cap<=16777215&&tlb%4===0,'binding-vector shape');
   need(contains(active,tlb,cap*4)||contains(this.#region('bindings'),tlb,cap*4),'binding-vector ownership');
-  const result=this.#t(120),end=this.#t(124);need(end>=result&&(contains(v,result,end-result)||contains(temp,result,end-result)),'result ownership');
+  const result=t(120),end=t(124);need(end>=result&&(contains(v,result,end-result)||contains(temp,result,end-result)),'result ownership');
+  return active;
+ }
+ #validate(){
+  const active=this.#validateLive();
   const slots=this.#imageSlots();for(const group of this.#layout.groups)slots.push(...group.slots);
   slots.push(this.#layout.tcr+188); // TCR v2 next_method_context: tagged-root.
   const list=this.#region('root-list');need(slots.length*4<=list.end-list.start,'root-list capacity');
@@ -94,7 +107,7 @@ export class CollectorOwner {
  }
  atSafepoint(action){
   need(!this.#boundary&&!this.#busy,'nested boundary');need(typeof action==='function','boundary callback');
-  this.#boundary=true;try{const value=action(this);need(!(value&&typeof value.then==='function'),'synchronous boundary');return value;}finally{this.#boundary=false;}
+  this.#boundary=true;this.#scalarBoundary.value=1;try{const value=action(this);need(!(value&&typeof value.then==='function'),'synchronous boundary');return value;}finally{this.#boundary=false;this.#scalarBoundary.value=0;}
  }
  #requireBoundary(){need(this.#boundary&&!this.#busy,'legal owner boundary');}
  #copy(destination){
@@ -112,7 +125,7 @@ export class CollectorOwner {
    return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),reclaimed:this.#get(scratch.start+92),rootSlots:slots.length};
   }finally{this.#busy=false;}
  }
- collect(){this.#requireBoundary();const {active}=this.#validate();return this.#copy(this.#spaces.find(r=>r!==active));}
+ collect(){this.#requireBoundary();const active=this.#validateLive();return this.#copy(this.#spaces.find(r=>r!==active));}
  growMemory(pages){
   this.#requireBoundary();this.#validate();need(integer(pages)&&pages>=this.view.byteLength/PAGE&&pages<=this.#layout.maximumPages,'growth maximum');
   const previous=this.view.byteLength/PAGE;
@@ -120,7 +133,10 @@ export class CollectorOwner {
   return {previous,pages,viewEpoch:this.viewEpoch};
  }
  ensure(bytes){
-  this.#requireBoundary();need(integer(bytes)&&bytes>0&&bytes%8===0,'allocation request');this.#validate();
+  this.#requireBoundary();need(integer(bytes)&&bytes>0&&bytes%8===0,'allocation request');
+  // No root enumeration is needed until copying. Mutable owner state is still
+  // checked before a fast assurance; collection re-inventories the live image.
+  this.#validateLive();
   if(this.#t(52)-this.#t(48)>=bytes)return {collected:false,grown:false};
   const collection=this.collect();if(this.#t(52)-this.#t(48)>=bytes)return {collected:true,grown:false,collection};
   const live=this.#t(48)-this.#t(56),capacity=align(Math.max(2*(this.#t(52)-this.#t(56)),live+bytes),PAGE),start=this.view.byteLength;

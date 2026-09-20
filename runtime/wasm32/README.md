@@ -101,3 +101,39 @@ are opt-in through `compile-float-call-form`. See the
 [integration record](../../doc/WASM/stage1/integration-float-calls.json) and
 [scope](../../tests/wasm/stage1/float-calls/review-followup/README.md).
 This is auxiliary work; LL16 qualification remains open.
+
+The audit-115 owner and scalar performance corrections are accepted and
+integrated; see the [integration record](../../doc/WASM/stage1/integration-numeric-fastpaths.json).
+The owner validates live state on each assurance and enumerates pinned image
+objects at admission/collection. `scalar-service.mjs` can bind the existing
+floating import directly to Wasm for eligible finite scalar operations. It
+falls back before writes for shortages, bignums, nonfinite values and demanding
+checked FP modes. No loader profile or compiler change is required.
+
+The reviewed `scalar.wasm` is shipped alongside its exact `scalar.wat` source:
+
+```sh
+wat2wasm --enable-threads scalar.wat -o scalar.wasm
+```
+
+Its accepted SHA-256 is `1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071`. The Worker owner
+must pass its bytes and this expected digest to the existing factory:
+
+```js
+const scalarBytes = fs.readFileSync('runtime/wasm32/scalar.wasm');
+const bundle = floatingCapabilities({
+  ...options,
+  scalarBytes,
+  scalarDigest: '1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071',
+});
+```
+
+This repository-root example assumes the owner's existing `fs`, `options` and
+`floatingCapabilities` bindings. Supplying these options selects the direct
+Wasm export; omitting them intentionally retains the slow service. It is an
+explicit owner configuration, not an automatic global switch.
+
+Eligible double arithmetic measures about 150 ns/op here versus native CCL's
+17 ns; these descriptive measurements are below formal v3 benchmark discipline.
+Bignum/exceptional fallback cost and application throughput are separate. The
+compiler and primitive binaries are unchanged; LL16 acceptance remains pending.

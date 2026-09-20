@@ -209,3 +209,17 @@ Native reference bignum coercion is selected by magnitude rather than the narrow
 Owner capability admission is trusted identity, not code signing. Assurance may move objects before refusal. No LL16 or performance credit.
 
 The floating profile requires a primitive binary exporting `float_calculate_lisp`; the original mathematical entry remains available separately. Runtime build flags must retain both exports.
+
+## Numeric performance integration (Claude audit 115)
+
+The fixture reports state inherited totals, not direct-path coverage. The bench rows are entirely direct; handler rows mostly fall back because they enable underflow or inexact traps or use bignums and nonfinite values. Audit 115 measured 21,855/36,451 plain raw cases and 2,920/10,540 generated floating calls using the direct path.
+
+Timing uses 20 trials of 125 ms after 500 ms warmup, below v3 benchmark discipline, and is descriptive. Native figures include GC; Wasm figures exclude collection.
+
+The direct path never collects. Movement correctness rests on the slow path and post-growth refresh checks; pressure fixtures deliberately fall back before writes.
+
+The owner must supply the shipped digest-bound scalar.wasm to floatingCapabilities as scalarBytes with scalarDigest. Omitting it keeps the existing service.
+
+Sufficient-space owner assurance checks live state rather than enumerating unrelated image objects. Admission and collection still validate image shapes. Authority remains the trusted synchronous single-Worker owner.
+
+Bignum operations still cross JavaScript and copy through private memory. Eligible scalar operations still pay ownership checks, boxing, temporary-frame and result-delivery costs; no native-speed or formal performance claim.

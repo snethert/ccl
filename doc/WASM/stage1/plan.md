@@ -167,7 +167,10 @@ instruction takes priority. The [owner fast-path proposal](../../../tests/wasm/s
 removes repeated image enumeration; the [direct Wasm scalar proposal](../../../tests/wasm/stage1/scalar-floats/README.md)
 then binds the existing numeric import to Wasm for eligible scalar operations,
 eliminating the JavaScript round trip and private-memory staging without a
-compiler change. Both proposals need Claude review before integration.
+compiler change. Both proposals were reviewed with no defect in Claude audit 115 and are now
+accepted and integrated byte-for-byte, including the digest-bound scalar binary.
+Owners select the reviewed fast binding by supplying that binary and its pinned
+digest; omitting it preserves the slow service.
 Qualification preserves the complete generated corpus, forces allocation
 shortages to exercise movement, and measures absolute native/generated cost.
 Bignums, nonfinite values, demanding checked FP modes and shortages retain the
