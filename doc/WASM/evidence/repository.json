@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1d31f83489db59e1ac9f0a19d82445cbd02dd8780713f4bdcac9a1e6c177bdc0",
-  "commit": "d2e5ecd34e3276fcf9ab106fc995ea6ff8d4a0b1",
-  "immutable_evidence_files": 226604,
+  "catalog_sha256": "2f21f307e8e46bc4faa5c5de81b596c707c84acdcdc75005c43638af180dbf96",
+  "commit": "797bc7a524abc8bd0faa14255bd5e002aae1986b",
+  "immutable_evidence_files": 226631,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-numeric-fastpath-r1",
-    "files": 17,
-    "bytes": 9209788
+    "directory": "2026-09-20-stage1-scalar-floats-r1",
+    "files": 27,
+    "bytes": 9588160
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 31516,
+  "prior_indexed_references_verified": 31900,
   "remote": null,
   "scope": "Stage 0: 48 accepted. Stage 1: 15 accepted, 15 missing, one unreviewed (LL16-a).",
-  "source_index_sha256": "42b5bf91da2e87c17da267d2d0fdba5b9b8cce9d480b97605c3649b958c2a95a",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-numeric-fastpath.json",
-  "verification": "Fresh retained replay of numeric fast-path proposal; 13 deterministic outputs, complete eager/cold and raw-owner movement, refusal controls and fresh native/target absolute timing. Scoped catalog addition only.",
+  "source_index_sha256": "dec421f483252890ae421cf8ebeda4d12f1a05fc17a0731ca31d65e893bc365c",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-scalar-floats.json",
+  "verification": "Fresh scalar-float retained replay; 151 deterministic files at 488 source pins; full eager/cold and raw movement, ten rejected faults, direct-Wasm and absolute native timing. Scoped catalog addition only.",
   "version": 1
 }

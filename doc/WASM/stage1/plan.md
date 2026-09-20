@@ -163,10 +163,17 @@ cases, eager/cold moving execution, fallback inspection, semantic and omission
 controls, and fresh generated checking-cost measurements. Claude audit 114 found
 no correctness defect; the slot remains unaccepted. The absolute cost (~80 µs
 per floating operation) was not surfaced adequately. The user's performance-fix
-instruction takes priority: qualify the [runtime fast-path proposal](../../../tests/wasm/stage1/numeric-fastpath/README.md), report absolute native comparisons,
-and obtain review before integrating it. Reducing repeated owner work does not
-make the remaining per-operation service boundary acceptable as a final numeric
-fast path; generated arithmetic specialization remains performance work.
+instruction takes priority. The [owner fast-path proposal](../../../tests/wasm/stage1/numeric-fastpath/README.md)
+removes repeated image enumeration; the [direct Wasm scalar proposal](../../../tests/wasm/stage1/scalar-floats/README.md)
+then binds the existing numeric import to Wasm for eligible scalar operations,
+eliminating the JavaScript round trip and private-memory staging without a
+compiler change. Both proposals need Claude review before integration.
+Qualification preserves the complete generated corpus, forces allocation
+shortages to exercise movement, and measures absolute native/generated cost.
+Bignums, nonfinite values, demanding checked FP modes and shortages retain the
+existing service. Further cost includes live ownership checks, boxing, temporary
+frames and result delivery; the separate persistent-frame timing is not a proof
+of stack cost alone. LL16 acceptance remains pending.
 No broader arithmetic coverage is claimed. LL18-b hash-table movement remains
 an independent obligation.
 
