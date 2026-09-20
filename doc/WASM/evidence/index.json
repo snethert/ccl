@@ -2436,6 +2436,16 @@
       "scope": "Numeric calls with allocation retry and trusted combined-capability loader. Unchanged accepted R2 compiler; exact native R6/R6a reused. 80 modules, 444 native/reference cases, 1777 comparisons in each of eager, cold and forced-constructor modes. Ordinary:797 copies,1 growth; forced:1615 copies,412/28/388 constructor entries. 32 admission checks,10 rejected runtime faults. Replay 556 deterministic files,413 pins. Three runtime proposals; not integrated and no LL16 credit.",
       "review_commit": "6bd82243f8605d95c7a1c4824df3fb821bf28d9e",
       "integration": "doc/WASM/stage1/integration-integer-owner.json"
+    },
+    {
+      "id": "STAGE1-FLOAT-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-float-core-r1/packet.json",
+      "sha256": "edf8a775c27ad4060cf64ad0d36c870de753820273a87972ca8b06391437b744",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Isolated mixed floating-point primitive service; no shared source changes and no LL16 credit. 39627 cases,118881 target comparisons at 128KiB/1MiB/2GiB,1167 scalar-SSE flag witnesses,63 refusals,6 exact fits,15 rejected faults. Native value witness:6153 cases,5939 equal,214 differences retained (134 explicit integer-coercion overflows,80 integer/infinity comparisons); not native-compatible lowering. Reviewed f64 detector bodies reused; new f32 witnesses and exact integer conversions. Replay 96 deterministic files,19 pins. Stack-boundary defect and harness failure retained."
     }
   ],
   "current_runs": [

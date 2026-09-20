@@ -131,8 +131,16 @@ priority and wrong-class reader differences explicitly. R2 is accepted and integ
 now executes those existing compiler modes together, with eager/cold equality
 and forced movement in all three raw constructors. Its trusted capability
 bundle and loader profile are accepted and integrated after audit 108. The compiler
-is unchanged and its accepted R6/R6a is reused by exact hash. Next: mixed floats
-under the approved D6 policy. Only joined qualification executes LL16-a.
+is unchanged and its accepted R6/R6a is reused by exact hash. The isolated
+[mixed floating-point primitive service](../../../tests/wasm/stage1/float-core/README.md)
+now executes arithmetic, exact integer/float comparisons and coercions against
+a rational oracle, with scalar-SSE flag checks. It remains a proposal. Native
+CCL differs on explicit integer-coercion overflow despite masked hardware flags
+and on huge-integer/infinity ordering; both populations are retained, not claimed
+as compatibility. Next: a collecting owner capability and generated mixed calls
+under the approved D6 TCR mode, preserving explicit native coercion errors and
+resolving infinity comparison behavior before qualification. Only joined
+qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98

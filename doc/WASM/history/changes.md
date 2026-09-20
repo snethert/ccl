@@ -2730,3 +2730,7 @@ user's decision.
 ## 2026-09-19 — accept and integrate numeric owner composition
 
 On “accept and integrate. then proceed.”, the three runtime files are integrated byte-identically to the audit-108 proposal. The record binds the review commit and file hash, the retained packet and the prior integration. Compiler and other runtime files are unchanged; all three observations are carried. No LL16 credit: 15 accepted,16 missing.
+
+## 2026-09-19 — qualify an isolated mixed floating-point primitive service
+
+After numeric-owner integration, add a freestanding single/double arithmetic, comparison and coercion service. 39,627 cases give 118,881 target comparisons at three placements, including the first permitted address and above 2 GiB. Rational expectations and 1,167 scalar-SSE flag witnesses agree; 63 refusals, six exact fits and fifteen compiled faults qualify publication and ownership. Native CCL supplies 6,153 distinct values: 5,939 agree and 214 differences remain explicit adapter obligations, 134 coercion-overflow signals and 80 integer/infinity comparisons. The reviewed f64 detector bodies are unchanged. Minimum-address testing caught LLVM moving the stack top 16 bytes beyond its reservation; disabling lookup-table generation fixes it, and the original failure plus a rejecting control are retained. Fresh replay matches 96 deterministic files and 19 pins. No shared compiler/runtime edits, acceptance changes or LL16 credit; 15 accepted,16 missing.

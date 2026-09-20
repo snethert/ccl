@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "bcfe2c5f60ac2877ea50ba2a8bb592b878a840a150cd0d2111483fdcc4f6086f",
-  "commit": "8ecc8378b18e9d3901206bfc38248edb2ba09fbb",
-  "immutable_evidence_files": 225856,
+  "catalog_sha256": "62d42ffd875cd3197dd393d01227574588f70f413c0ca5e6bb80dea7737d917e",
+  "commit": "eaae5a8b2319ce587a8a497365866c6604dc7ebf",
+  "immutable_evidence_files": 226067,
   "last_scoped_addition": {
-    "directory": "2026-09-19-stage1-integer-owner-r1",
-    "files": 17,
-    "bytes": 9763957
+    "directory": "2026-09-19-stage1-float-core-r1",
+    "files": 211,
+    "bytes": 21551546
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 26245,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Integer conditions R2 accepted and integrated; numeric-owner runtime proposal awaiting review, no slot credit.",
-  "source_index_sha256": "0133a87d51c7b8e68b538f8c1bc8f9f3dfbcf6b4d875478b552811a31414f0c4",
-  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-integer-owner-r1.json",
-  "verification": "Scoped numeric-owner packet checked; fresh replay 556 files,413 pins. Native R6/R6a reused by exact accepted compiler hash. All prior catalog rows preserved; incremental addition only.",
+  "scope": "Stage 0:48 accepted. Stage 1:15 accepted,16 missing,zero unreviewed. Numeric owner integrated; floating primitives auxiliary proposal awaiting review, no slot credit.",
+  "source_index_sha256": "5dabeeb8cb7fe7402b49e297088abf192b39e0f57dd3032800aa0056be77fe9d",
+  "source_index_snapshot": "catalog/source-index-2026-09-19-stage1-float-core-r1.json",
+  "verification": "Scoped float packet checked; fresh replay 96 files,19 pins. Shared compiler and runtime unchanged. All prior catalog rows preserved; incremental addition only.",
   "version": 1
 }
