@@ -2705,3 +2705,7 @@ or retained as data. Record only; acceptance is the user's decision.
 ## 2026-09-19 — accept and integrate integer conditions R2
 
 On “accept, integrate and proceed”, the R2 compiler is integrated byte-identically to the reviewed proposal. The record binds audit 107 and its review hash, the retained packet and the preceding integration. Runtime files are unchanged; the remaining compatibility differences are carried into the runtime obligations. No LL16 credit: 15 accepted, 16 missing.
+
+## 2026-09-19 — compose numeric calls with owner retry and cold installation
+
+After integrating accepted integer conditions R2, the unchanged compiler now runs its numeric and allocation-retry modes together. The runtime proposal binds both capabilities to one owner/memory/TCR/error tag and admits exactly their two function imports under a new profile. The 80-module corpus supplies 444 native/reference cases, 1,777 comparisons per execution mode, 797 ordinary and 1,615 forced collector copies, one growth, eager/cold equality, 32 admission checks and ten rejected faults. Forced constructor entry counts are 412 binding growths,28 restarts,388 conditions. Fresh replay matches 556 deterministic files with 413 pins; native R6/R6a reused by exact accepted compiler hash. Development failures are retained. No shared runtime integration, criterion change or LL16 credit; 15 accepted,16 missing.

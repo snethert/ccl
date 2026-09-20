@@ -2424,6 +2424,16 @@
       "scope": "Audit-106 follow-up: numeric-only quote admission, native NIL-divisor behavior, ASH count-first checking, unbiased dividend/zero-divisor oracle. 67 modules, 423 native/reference cases, 1693 comparisons, 477 collector copies, 252 inline checks and seventeen rejected controls. Native policy-dependent +/* order, wrong-class readers and fatal diagnostic conventions explicitly retained. Native R6/R6a passes, 60 default files identical; fresh replay 2702 files, 403 pins. Supersedes unaccepted R1; no integration or LL16 credit.",
       "review_commit": "24dcebfc0737a80b1e9294cbea61af494d3a66d7",
       "integration": "doc/WASM/stage1/integration-integer-conditions.json"
+    },
+    {
+      "id": "STAGE1-INTEGER-OWNER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-owner-r1/packet.json",
+      "sha256": "f86fa6079572ce58fc5eea9876a32cb3e3a96e6d4cd1c7fd2dc8406c825a8742",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Numeric calls with allocation retry and trusted combined-capability loader. Unchanged accepted R2 compiler; exact native R6/R6a reused. 80 modules, 444 native/reference cases, 1777 comparisons in each of eager, cold and forced-constructor modes. Ordinary:797 copies,1 growth; forced:1615 copies,412/28/388 constructor entries. 32 admission checks,10 rejected runtime faults. Replay 556 deterministic files,413 pins. Three runtime proposals; not integrated and no LL16 credit."
     }
   ],
   "current_runs": [
