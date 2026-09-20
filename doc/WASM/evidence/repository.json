@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2dc758b9eea032686e42b1a15b448cdd863b0e93963440ae388b471225bd914f",
-  "commit": "315d13937b42c84d261c2c4be93d302fa85738fc",
-  "immutable_evidence_files": 232851,
+  "catalog_sha256": "bc8bbaf5781b27d97c083ac2058044514e707e551ca114317bfe386ae44d6ef6",
+  "commit": "44ef692ec583d5c726aa838cc8f0f644c58243a8",
+  "immutable_evidence_files": 232866,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-bootstrap-schedule-r1",
-    "files": 190,
-    "bytes": 4551823
+    "directory": "2026-09-20-stage1-bootstrap-schedule-acceptance-r1",
+    "files": 15,
+    "bytes": 534746
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 37780,
+  "prior_indexed_references_verified": 38180,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Auxiliary generated initializer schedule awaits review without LL15 credit.",
-  "source_index_sha256": "186654e934c8771636a46083f4cb88aa7ce98e1874c3e05e9472e9f390ccecdd",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-schedule.json",
-  "verification": "Fresh replay: 103 deterministic files, 116 source pins. Newly retained artifacts and indexed references verified incrementally; existing accepted envelopes unchanged.",
+  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Auxiliary initializer scheduler accepted and integrated; no LL15 credit.",
+  "source_index_sha256": "faa8154e70fecdcbc9a8d43a9c8cc9620a2891377c73fee5a4af9a1013e700b0",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-schedule-acceptance.json",
+  "verification": "Byte-exact reviewed scheduler integrated and run with production dependencies; retained execution reproduced, 36 installed digests independently checked. New artifacts and indexed references verified incrementally; accepted envelopes unchanged.",
   "version": 1
 }

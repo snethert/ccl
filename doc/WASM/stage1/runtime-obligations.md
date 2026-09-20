@@ -281,3 +281,15 @@ Busy bootstrap contenders refuse instead of waiting; a winning initializer may c
 The follow-up uses a frozen source list in a sibling directory. Adding the integrated runtime module changes R1 recursive runtime enumeration, so replay the original R1 verifier from d6bf93fb; the follow-up frozen pins remain valid at HEAD.
 
 See [integration](integration-ll13a.json). The accepted bounded shared profile initializes only owned regions; it supplies neither a scheduler nor a production cross-dump.
+
+## Generated initializer schedule (audit 124)
+
+The scheduler validates private byte copies, but the trusted installation callback installs from its own loader catalog and returns only an invoke function. A behaviour-identical substituted binary can reach ready. Before relying on production startup identity, bind the loader installed digest to the plan digest. This integration preserves reviewed bytes and does not add that binding.
+
+Effects are checked only at declared state words, completion words and ready words. Undeclared writes elsewhere remain outside the scheduler view; foreign-region checks belong to the LL13 owner qualification.
+
+The nine initializer bodies are protocol markers, not the selected native startup worklist. Membership, required effects and any needed census witnesses remain open for S1-LL15-a; no slot credit.
+
+Trusted synchronous single-Worker callbacks require exclusive access to state and ready regions. Failure is terminal without rollback. No cross-Worker publication, callback confinement or movement of raw state addresses during a run is qualified.
+
+See [integration](integration-bootstrap-schedule.json).

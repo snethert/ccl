@@ -2567,10 +2567,23 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-schedule-r1/packet.json",
       "sha256": "73a466822d45a2a9f2ee8ed3407ab0d83bcbc6988b46250e7fa05f7285fc39aa",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Generated initializer scheduling prerequisite for LL15, no slot credit. Nine protocol initializers plus five failure bodies compile through unchanged accepted compiler; native effects checked independently. Four fresh Workers at 4 MiB and 2 GiB execute 172 calls, 36 native comparisons and 140 refusal checks. Twelve scheduler faults including a forged-completion/no-load path and seven publication omissions rejected. Fresh replay reproduces 103 deterministic files at 116 source pins. Portable isolated scheduler proposal; digest-bound trusted inventory, synchronous owner callbacks, exclusive single-Worker state, terminal failure without rollback. Marker functions do not implement native startup effects or select membership; native worklist unknowns and S1-LL15-a remain open. No compiler/runtime/kernel integration."
+      "scope": "Generated initializer scheduling prerequisite for LL15, no slot credit. Nine protocol initializers plus five failure bodies compile through unchanged accepted compiler; native effects checked independently. Four fresh Workers at 4 MiB and 2 GiB execute 172 calls, 36 native comparisons and 140 refusal checks. Twelve scheduler faults including a forged-completion/no-load path and seven publication omissions rejected. Fresh replay reproduces 103 deterministic files at 116 source pins. Accepted scheduler protocol; digest-bound trusted inventory, synchronous owner callbacks, exclusive single-Worker state, terminal failure without rollback. Marker functions do not implement native startup effects or select membership; native worklist unknowns and S1-LL15-a remain open. Scheduler integrated byte-exactly after audit 124; compiler and prior runtime/kernel files unchanged. Trusted callback installed-digest binding and undeclared-write coverage remain explicit obligations.",
+      "review_commit": "3c9c36cbc3db37f975f067ff072a0cda201e4396",
+      "review_sha256": "89ff9885993b7a1f1ad1cf8365b4dd5f1b285b809f82ba0f63724cd417b91449",
+      "integration": "doc/WASM/stage1/integration-bootstrap-schedule.json"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-SCHEDULE-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-schedule-acceptance-r1/packet.json",
+      "sha256": "5e6ce5eee8539d896bb4b229e7cef967fb48ab9b89772c86a4158e7c5b735bfe",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "User accepts auxiliary scheduler after audit 124. Integrated source equals reviewed proposal; actual production-import execution byte-identical, all 36 installed digests matched to compiled bytes. No LL15 credit or accepted-envelope change."
     }
   ],
   "current_runs": [

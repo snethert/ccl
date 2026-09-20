@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T22:24:28.022185+00:00",
+  "authorization": {
+    "quote": "Accept, integrate",
+    "provenance": "User to Codex after Claude audit 124 at 3c9c36cb."
+  },
+  "review_commit": "3c9c36cbc3db37f975f067ff072a0cda201e4396",
+  "review_sha256": "89ff9885993b7a1f1ad1cf8365b4dd5f1b285b809f82ba0f63724cd417b91449",
+  "source_commit": "f44677a9bf451568506ddd0258fb8e2525878bc9",
+  "packet": {
+    "id": "STAGE1-BOOTSTRAP-SCHEDULE-R1",
+    "locator": "2026-09-20-stage1-bootstrap-schedule-r1/packet.json",
+    "sha256": "73a466822d45a2a9f2ee8ed3407ab0d83bcbc6988b46250e7fa05f7285fc39aa"
+  },
+  "scope": "Accept generated initializer scheduling at the reviewed trusted-adapter scope; integrate byte-exactly. Auxiliary, no LL15 slot credit.",
+  "observations": [
+    "The scheduler validates private byte copies, but the trusted installation callback installs from its own loader catalog and returns only an invoke function. A behaviour-identical substituted binary can reach ready. Before relying on production startup identity, bind the loader installed digest to the plan digest. This integration preserves reviewed bytes and does not add that binding.",
+    "Effects are checked only at declared state words, completion words and ready words. Undeclared writes elsewhere remain outside the scheduler view; foreign-region checks belong to the LL13 owner qualification.",
+    "The nine initializer bodies are protocol markers, not the selected native startup worklist. Membership, required effects and any needed census witnesses remain open for S1-LL15-a; no slot credit.",
+    "Trusted synchronous single-Worker callbacks require exclusive access to state and ready regions. Failure is terminal without rollback. No cross-Worker publication, callback confinement or movement of raw state addresses during a run is qualified."
+  ],
+  "slot_credit": false
+}
