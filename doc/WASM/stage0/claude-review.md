@@ -1715,3 +1715,30 @@ E. Edge cases: a 4,096-code-point name interns (16,424 bytes) and 4,097 refuses 
 9. STATUS row inside the table. Slot credit follows acceptance (20 accepted, 11 missing).
 
 **Verdict.** No defect found in 3ebb85d6 (STAGE1-SYMBOLS-R1). Acceptance of the LL09-a proposal is the user’s decision. Ledger unchanged at 19 accepted, 11 missing, one unreviewed.
+
+## Hundred-and-twenty-first Claude audit — STAGE1-SYMBOLS-REVIEW-R1 LL09-a coverage and character follow-up at cacdc64f — 20 September 2026
+
+**Scope.** Commit cacdc64f `Close LL09 coverage gaps and match native character admission`: seven new files under `tests/wasm/stage1/symbols/review-followup/` (README, scope, development, directed.mjs, native.lisp, run.py, packet.py) and the ledger (STATUS row, index entry STAGE1-SYMBOLS-REVIEW-R1 NOT_REVIEWED as an auxiliary record without slot credit, R1 scope note, repository, changes). No compiler, runtime or kernel change. The follow-up answers audit 120: it derives from every pinned R1 source, overlays one clause on the C string guard (reject U+D800–U+DFFF), drives MAKE-SYMBOL through all six generated forms twice before and after relocation with per-operation delivery counters, checks the native pre-existing ALLOW-OTHER-KEYS keyword by FIND-SYMBOL before INTERN, retains loads from 4 MiB into 2 GiB in both primitive and generated runs, and compares eight character boundaries against native CODE-CHAR. Four execution controls and six report controls.
+
+**Intermediate commit.** 9303e962 flips STAGE1-SYMBOLS-R1 to REVIEWED_NO_DEFECT_FOUND with review_commit 8c0dd65b and review_sha256 7640c24c…, equal to the hash of `doc/WASM/stage0/claude-review.md` at that commit; the scope carries the four audit-120 observations.
+
+**Evidence.** Packet 4e326a7d… (352 files, kind AUXILIARY_SYMBOLS_REVIEW_FOLLOWUP), catalog 055d285c…, source index `catalog/source-index-2026-09-20-stage1-symbols-review.json` 144ce018…, evidence commit f8d170d1. inputs.json pins the R1 packet, source pins, service and adapter binaries, native-reuse record, baseline kernel and image, accepted LL21-a packet and compiler d0496d2c…, and the U1 inputs. Toolchain unchanged. STATUS row inside the table; stage 1 gate 19 accepted, 11 missing, one unreviewed; both project gates PASS.
+
+**Replay.** `review-followup/packet.py verify` from the detached checkout: PASS, 253 deterministic files at 103 source pins; inherited summary 13 modules, 582 rows, 3,492 native comparisons, 1,884 generated comparisons, 138 binding comparisons, six loads, 72 refusals, twelve faults; directed 36 MAKE form comparisons, 12 keyword checks, 96 character checks, two low-to-high loads, twelve phases; ten controls.
+
+**Probes.**
+A. Identity: the thirteen inherited compiled modules and `adapter.wasm` are byte-equal to the R1 packet; `symbols.c` differs from R1 only in the guard clause; the packet-root, inherited and directed `symbols.wasm` are one binary (b0206f4a…) and the `old-surrogate-guard` control carries the R1 binary (f15f71d3…); the retained `make-dynamic-zero` adapter has the corrected `(i32.ne (local.get $d) (i32.const 0))` condition.
+B. Native oracle: the retained native log re-parses to `followup-native.json`: KEYWORD 1 1 1 1 1 1; all six MAKE forms give fresh uninterned FRESH with one value for forms 0, 2, 3 and two for 1, 4, 5; CODE-CHAR returns NIL for 55296, 56319, 56320, 57343, signals for 1114112, and 55295, 57344, 1114111 round-trip through MAKE-SYMBOL.
+C. Directed rows: all six Workers record both phases; the 4 MiB Workers load into 2 GiB (11,528 and 12,376 bytes) and the keyword pointer relocates by exactly the base difference; every generated row shows fixed delivery 2 for forms 0–3, dynamic 2 and direct 2 for symbol_dynamic, dynamic 2 and direct 0 for symbol_indirect.
+D. Audit-120 differential fuzz rerun against the corrected service: identical outcome (6,737 checked, 763 refusals, 636 interns, both relocations) with the lone surrogate now status 4.
+E. Surrogate probe: D800, DBFF, DC00 and DFFF alone, first, middle, last and at position 4,096 of a name refuse status 4 for ops 0, 1 and 2 with the allocation pointer unchanged and `symbol_hash` zero (60 refusals); the R1 service admits all 16 short shapes; D7FF, E000, FFFE, FFFF, 10FFFF and 1FFFE are admitted with host-equal hashes; 110000 and FFFFFFFF refuse; a symbol whose stored name is patched to contain D800 makes admission refuse SHAPE and admission succeeds again once restored.
+
+**Observations.**
+1. R1’s `packet.py pins()` enumerates its directory recursively; at HEAD it yields 103 pins against the retained 96, so R1’s verifier replays only from 3ebb85d6, as the R1 index scope now states. The follow-up pins the parent’s retained list plus its own directory and replays from HEAD. Nesting a fixture under an existing fixture will repeat this.
+2. The corrected guard lives only in the follow-up’s derived service; the README says integration should take it from here. Nothing is integrated.
+3. ALLOW-OTHER-KEYS is materialized by the image builder from the native membership assertion rather than read from the native package; the check establishes that FIND-SYMBOL precedes INTERN, that INTERN allocates nothing and preserves identity, status and self-value, and that the identity relocates.
+4. Native CODE-CHAR admits noncharacters (FFFE, FFFF, 1FFFE); the service agrees. The scope limits the change to symbol-name admission.
+5. The development record retains the ineffective first mutant (bitwise AND of a boolean with an aligned pointer) and the corrected one; the retained control is the effective form.
+6. Auxiliary record: no slot credit. Both R1 and the follow-up await acceptance.
+
+**Verdict.** No defect found in cacdc64f (STAGE1-SYMBOLS-REVIEW-R1). Acceptance of R1 and this follow-up is the user’s decision. Ledger unchanged at 19 accepted, 11 missing, one unreviewed.
