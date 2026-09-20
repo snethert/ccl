@@ -1,0 +1,11 @@
+{
+  "S1-LL21-a:production-path": {
+    "production_emitter": "Proposed compiler is applied only inside pristine U1 copies. Eighteen modules span leaf, typed primitive and B/closure entries; template bytes differ from independently compiled default bytes at exactly one byte. Forty default-mode artifacts are byte-identical to the integrated compiler.",
+    "D2": "materialization.json records every template, actual flag offset, explicit limits, full import and export inventory, WABT feature classification, materializer source digest/version, engine contract and result pins, and shared/unshared binary digests. Python assessment independently checks retained byte differences and installation traces.",
+    "execution": "Generated B modules run in six fresh Workers through native signatures, escaping mutable closures and snapshot restoration at three placements. Ten additional leaf/primitive calls and eleven engine link/subtyping cases execute both profiles.",
+    "rejection": "Thirty-six malformed-record, binary, feature, profile and installation controls. Ten materializer faults and one recompiled compiler fault fail the unchanged checks. Seven independent publication controls and all required role omissions are rejected.",
+    "identity": "Installation re-materializes from pinned owner inputs and validates the final record and bytes; template substitution is rejected for shared code. All installed bytes and event digests are retained.",
+    "engine": "Exact Node, wat2wasm and wasm-objdump executable hashes match the accepted ENGINE-MATRIX-R2 environment. Required features and profile admission join its observed Node matrix row, not a new engine assumption.",
+    "native": "Fresh registered/restored builds and tests, retained baseline by exact input/kernel provenance; independent R6/R6a replay. No shared checkout mutation."
+  }
+}

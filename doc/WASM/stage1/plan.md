@@ -180,12 +180,12 @@ of stack cost alone. LL16-a is accepted; native policies map to the two generate
 without admitting source OPTIMIZE declarations or claiming formal performance
 qualification.
 No broader arithmetic coverage is claimed. [LL18-b hash-table movement](../../../tests/wasm/stage1/hash-tables/README.md)
-is executed and awaits independent review: strong EQ backing vectors through
+is accepted and integrated after audit 116: strong EQ backing vectors through
 generated callers, actual relocation, cache/rehash controls and native semantics.
 The compiler is unchanged. CL hash-surface lowering, weak tables, automatic
 table growth and production hash-vector materialization remain outside this slice.
-After review and acceptance, integrate the isolated runtime/scanner and proceed
-to 1E (LL21 materialization and granularity).
+The runtime/scanner integration is complete; proceed to 1E (LL21
+materialization and granularity).
 
 LL06's integrated backend already clears `*b-local-tags*` per function. Audit 98
 withdraws audit 97's contrary observation. The closure-transfer proposal keeps
@@ -308,4 +308,6 @@ Stage 1 ID; no comparative timing beyond the benchmark policy.
 
 User direction, 2026-09-20: LL18-b is accepted and integrated. Pause before LL21; next deliverable removes Node-only digest and Buffer dependencies with synchronous shared SHA-256 and browser execution checks.
 
-Portable digest proposal reviewed with no defect in Claude audit 117 (`fa8ccc0e`): [packet](../../../tests/wasm/stage1/portable-digests/README.md). Shared factories remain synchronous; user acceptance and byte-exact integration are recorded in [integration-portable-digests.json](integration-portable-digests.json). LL21 stays paused. The [review](../stage0/claude-review.md) resolves the same-Worker refusal as a Maglev fault in Chromium 145.0.7632.6; Chrome 153 and Node pass. The pinned README’s statement that diagnostic text made the run pass is unsupported by its retained logs and is superseded by audit 117. Keep this engine/build limitation in browser qualification; neither Firefox nor WebKit is qualified by this packet.
+Portable digest proposal reviewed with no defect in Claude audit 117 (`fa8ccc0e`): [packet](../../../tests/wasm/stage1/portable-digests/README.md). Shared factories remain synchronous; user acceptance and byte-exact integration are recorded in [integration-portable-digests.json](integration-portable-digests.json). The [review](../stage0/claude-review.md) resolves the same-Worker refusal as a Maglev fault in Chromium 145.0.7632.6; Chrome 153 and Node pass. The pinned README’s statement that diagnostic text made the run pass is unsupported by its retained logs and is superseded by audit 117. Keep this engine/build limitation in browser qualification; neither Firefox nor WebKit is qualified by this packet.
+
+User direction after portable digest integration, 20 September: “proceed”. Resume 1E. [LL21-a materialization](../../../tests/wasm/stage1/materialization/README.md) now executes the canonical-template switch and portable D2 installer against production compiler output, with shared/unshared code results and exact Stage 0 engine pins. The proposal awaits Claude review and acceptance. Next is LL21-b measured module granularity; no performance or complete unshared-runtime claim is imported from this qualification.

@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "6ef96495811ed975183550af951670c74d600d40ddb373d5f522f3ee7898f946",
-  "commit": "154ec959d130f560dd754a19aed8e37ae702a7ee",
-  "immutable_evidence_files": 227160,
+  "catalog_sha256": "9e96eef351f02e159ec8ea2591d01dc24e88e0a096f099a2dbda7cc0266971b4",
+  "commit": "ebbdf26fab8dc9d5cf2ffa1fddd7e0d57ac7b09a",
+  "immutable_evidence_files": 228504,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-portable-digests-r1",
-    "files": 34,
-    "bytes": 1494851
+    "directory": "2026-09-20-stage1-materialization-r1",
+    "files": 1344,
+    "bytes": 47201154
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 33446,
+  "prior_indexed_references_verified": 33835,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:17 accepted,14 missing,zero unreviewed. Portable digest runtime accepted and integrated after audit 117; auxiliary, no slot credit. LL21 paused.",
-  "source_index_sha256": "29c8b55c2feabc679db7e8945790ef8a67856ba8da22eccc70aa3d329be457ec",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-portable-digests.json",
-  "verification": "Retained replay, source/tool/archive pins, browser/Node results and indexed references verified; prior accepted results unchanged.",
+  "scope": "Stage 0:48 accepted. Stage 1:17 accepted,13 missing,one unreviewed. LL21-a executed; generated template/materializer proposal awaits independent review and acceptance.",
+  "source_index_sha256": "842e2d2eef0ae4c5582974b19f4c3609a8218b6fb3eb60f7fb4db2a6adeb44d3",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-materialization.json",
+  "verification": "Fresh retained replay: 1148 deterministic files at 94 pins; native R6/R6a and all role omissions pass. Seventeen accepted bindings unchanged. Incremental catalog and indexed references verified.",
   "version": 1
 }

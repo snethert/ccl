@@ -1,0 +1,16 @@
+{
+  "id": "S1-LL21-a",
+  "claim": "D2 materialization on production compiler output, with final-byte installation identity and shared/unshared execution against pinned S0-ENGINE-a Node/V8 evidence.",
+  "emitter": "An off-by-default dynamic special selects canonical unshared explicit-maximum memory in all three production emitter entry kinds, including every nested B module. Existing entry points retain their text and bytes.",
+  "materializer": "Synchronous portable JavaScript, using integrated byte and SHA-256 helpers. The reader discovers the memory flag offset within validated canonical imports. Only that byte changes; code sections, limits, imports other than sharedness and exports remain unchanged. Installs re-derive expected final bytes from the trusted build inputs.",
+  "execution": "Six fresh Node Workers execute sixteen metadata-enabled B modules at 1 MiB, 2 MiB and 2 GiB with native signatures and closure behavior. Generated leaf and typed primitive entries execute in both profiles. Shared materializations equal the default emitter binaries byte for byte.",
+  "owner": "ABI, WABT classification, engine policy and templates are trusted build inputs bound in the packet. This is digest integrity against that owner, not code signing or a runtime instruction classifier. The fixture publishes validated exports eagerly into owner tables; it does not add an unshared profile to the production lazy loader.",
+  "limits": [
+    "Only the full/shared and precompiled-callback/unshared code profiles. JSPI stays deferred under the Stage 1 entry decision.",
+    "Node/V8 is executed at exactly the S0-ENGINE-a tool pins. No new browser engine qualification or cross-Worker runtime ownership is claimed.",
+    "No wait/notify or legacy exception instructions in templates. No start, data, element, defined memory/table/global or tag sections admitted by the generated-module reader.",
+    "Runtime services such as the collector and numeric service are still emitted for their own profiles. This does not make their shared-memory binaries usable in unshared memory or qualify a complete unshared image.",
+    "The unshared binary has the same digest as its template because the bytes are identical. Its installation record still binds the final binary role and profile; a shared installation refuses template bytes or template identity.",
+    "The inherited pool snapshot transport is a fixture, not LL14 cross-dump or the production image loader. No module-granularity or performance claim."
+  ]
+}

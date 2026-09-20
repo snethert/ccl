@@ -1,0 +1,36 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "status": "PASS_PRE_CONTROLS",
+      "description": "Positive compiler, memory profiles and snapshot executions; before structural and mutant controls."
+    },
+    {
+      "name": "r2",
+      "status": "HARNESS_FAILURE",
+      "description": "Defined-memory control put a memory definition before the TCR import; WABT correctly refused the fixture's import order. Move the memory definition after imports.",
+      "retained": [
+        "ccl-materialization-r2.log",
+        "ccl-materialization-r2/malformed/defined-memory.wat",
+        "ccl-materialization-r2/malformed/defined-memory.build.log"
+      ]
+    },
+    {
+      "name": "r3",
+      "status": "PASS_PRE_PUBLICATION",
+      "description": "All execution and eleven faults passed before adding the exact engine-evidence join and independent publication controls."
+    },
+    {
+      "name": "r4",
+      "status": "PASS_PRE_RETENTION",
+      "description": "Engine join and independent publication controls passed. Snapshot schema lookup was then made relative to the retained output for detached-worktree replay."
+    },
+    {
+      "name": "r5",
+      "status": "PASS_PRE_RETENTION",
+      "description": "Relative schema lookup passed. Added explicit refusal of a missing engine identity before final qualification."
+    }
+  ],
+  "compiler_failures": [],
+  "runtime_failures": []
+}

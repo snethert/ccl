@@ -4803,6 +4803,26 @@
       "test_ids": [
         "S1-LL18-b"
       ]
+    },
+    {
+      "id": "STAGE1-MATERIALIZATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-materialization-r1-results.json",
+      "sha256": "b0de2105ffad58b366ecc097f6ab439afe31acd5f937032f42af1d0a00123542",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "de09c06cba25756ff735f21918dddb9cc9eb71cb4de818ae81531e1672a7e2f4",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-materialization-r1/packet.json",
+      "packet_sha256": "26cb1846b5ce5ebf1221899b4b5d9e1d3baf6a79b1902603ea04c0a06e03a30e",
+      "test_ids": [
+        "S1-LL21-a"
+      ],
+      "scope": "Production emitter D2 templates: eighteen modules, six Workers at three placements, 58 B calls and 162 metadata checks, ten leaf/primitive calls, eleven link cases, 36 refusals, eleven faults and seven publication controls. Forty default outputs identical. Exact S0 engine pins; fresh native R6/R6a and byte-identical retained replay. Code materialization only: no complete unshared runtime, new browser qualification, JSPI or packaging claim. Compiler/runtime proposal remains unintegrated pending Claude review."
     }
   ],
   "historical_records": [

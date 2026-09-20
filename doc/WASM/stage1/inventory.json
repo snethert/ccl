@@ -534,8 +534,8 @@
           "description": "The production emitter produces the canonical explicit-maximum template and the D2 materialization yields validated shared and unshared binaries with recorded template, materializer, profile, limits, import, feature and binary identities against the S0-ENGINE-a pins; wrong bytes, hashes and features are rejected; the template hash is never the installed identity."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/materialization/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
