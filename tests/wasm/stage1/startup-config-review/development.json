@@ -1,0 +1,6 @@
+{
+ "attempts":[
+  {"name":"r1","outcome":"Initial corrected configuration and both stronger TCR harnesses passed. The pinned untouched native callback published CPU count 16 from NIL and preserved 1 and 2. Four original pointer escapes reproduced; fourteen TCR faults and omitted cache store rejected. A warm-cache fault was then added before finalization.","retained":["ccl-startup-config-review-r1/config/summary.json","ccl-startup-config-review-r1/config/compiled/native-cpu-probe.json","ccl-startup-config-review-r1/resets/verification.json","ccl-startup-config-review-r1/regressions.json"]},
+  {"name":"r2","outcome":"Fresh complete corrected run including cold-cache and warm-cache faults, both harnesses, inherited controls and real browser execution.","retained":["ccl-startup-config-review-r2.log"]}
+ ]
+}

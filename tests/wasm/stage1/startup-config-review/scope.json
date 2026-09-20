@@ -1,0 +1,13 @@
+{
+ "status":"AUXILIARY_CORRECTION_NOT_REVIEWED_NOT_INTEGRATED",
+ "slot_credit":false,
+ "supersedes":"STAGE1-STARTUP-CONFIG-R1",
+ "also_corrects":"TCR preservation oracle in accepted STAGE1-STARTUP-RESETS-R1; generated reset binaries unchanged",
+ "F1":"CPU cache is a ninth global. Preserve native cache lookup and conditional write while substituting only hardware acquisition; target fills NIL and preserves a warm count. Pinned-kernel untouched registered callback covers NIL, 1 and 2.",
+ "F2":"Both derived harnesses compare all 256 TCR bytes except mv_count, which must equal the returned count. Includes TSP at 76, CSP at 88, FP control and reserved words.",
+ "native_answers":360,
+ "target_comparisons":1440,
+ "native_reuse":"Unchanged integrated compiler by hash; every changed generated module and native oracle recompiled",
+ "invariants":"No allocation, collection or concurrent owner updates in these specific startup calls. Complete-TCR preservation is not asserted for arbitrary runtime calls.",
+ "unchanged_limits":["Seventeen snapshot callbacks and full startup membership remain open","Owner-supplied global identities, no production package materialization","Browser-reported concurrency may differ from native; explicit millisecond and Wasm page profile","Memory outside declared observed regions is not checked; no sandbox claim","No new gate credit or shared runtime/compiler/kernel edits"]
+}
