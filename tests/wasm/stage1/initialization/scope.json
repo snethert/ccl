@@ -1,0 +1,15 @@
+{
+  "id": "S1-LL13-a",
+  "claim": "Compiler-generated process initialization and per-Worker setup under a preflighted shared owner layout; lazy installation in two late Workers preserves all foreign regions, mutated shared cells, runtime sentinels and original published code.",
+  "owner": "Trusted synchronous initialization owner. Atomic process state 0/1/2/3 means fresh/initializing/ready/failed. A layout digest is published before ready and checked by late Workers. Each Worker claims its own state once; no spinning or implicit retry. A callback failure poisons its Worker and, during bootstrap, the process; it is not rollback.",
+  "generated": "Five freshly compiled unchanged-backend B modules: process initializer, Worker initializer, reader, mutator and indirect reader caller. Native CCL compiles and executes the same forms. Worker setup calls its reader through a lazy table entry. The original Worker stays alive and executes published code again after both late Workers.",
+  "layout": "Canonical objects, generated functions and imported symbols, code registry, shared runtime BSS/staging sentinels, atomic admission control, and three disjoint Worker TCR/value/temp/control stacks, allocation regions, binding vectors, cells and staging regions. TCR v2 offsets bound explicitly; module/object counts derive extents. No C service is linked, so no C stack or static/BSS region is present. Stack minima are declared owner resource budgets; generated guards enforce actual call demand.",
+  "limits": [
+    "Shared Node/V8 qualification only; no browser, JSPI, unshared runtime, concurrent Lisp execution, concurrent collection or process restart claim.",
+    "Fresh shared memory belongs to one trusted owner. Layout digests are identity checks against trusted metadata, not signing or adversarial code confinement. Generated initializers are trusted code; their actual writes are tested with foreign-region digests and boundary canaries.",
+    "Initialization is synchronous. A failed callback may have written its owned regions; state is terminal rather than rolled back. Busy and failed process states refuse instead of waiting.",
+    "Worker creation is deliberately ordered after mutation and publication. Tables are Worker-local Wasm tables; code identities and registry bytes are process-shared. Slot zero remains reserved, and lazy installation publishes only declared slots.",
+    "This is a bounded bootstrap ownership profile, not a production thread scheduler, production package membership, image cross-dump or the Stage 2 Worker-creation qualification.",
+    "The corpus has no literal pool bytes and uses no C services; omitted zero-length storage is explicit. Runtime constructors, GC and numerical services retain their own ownership and admission obligations."
+  ]
+}

@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_NOT_REVIEWED",
   "date": "2026-09-20",
-  "basis": "User accepts LL09-a and its follow-up after audits 120/121; nineteen prior accepted records unchanged.",
+  "basis": "Generated shared process initialization and per-Worker setup with actual late Workers, lazy installation and ownership refusals. Twenty accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S1-LL15-a [closure]",
-      "missing S1-LL13-a [installation]",
+      "unreviewed S1-LL13-a [installation]",
       "missing S1-LL14-a [cross-dump]",
       "missing S1-NAMESPACE-a [read-only]",
       "missing S1-LOADER-a [one-worker]",
@@ -21,20 +21,20 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "822dde59ccee25f79efb5a943d30ba5e172bec2219890e863105d4f9dc4ca2f6"
+    "sha256": "d32c9a3eaee0f85a7cc5892b6dd1528f507527d6b7bc46d3b67dab2278a89f1d"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll09a-accepted-results.json",
-      "sha256": "317b40f25b50626442b6be2af0c3c2b03ac591ee7ec17049034c727443b3024e"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-initialization-results.json",
+      "sha256": "e7f6cd3108b42b8cbe7c60ccd4316283d6f6cc656fd1ef37c84f5f97b52c3637"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll09a-accepted-results.json",
-  "combined_results_sha256": "317b40f25b50626442b6be2af0c3c2b03ac591ee7ec17049034c727443b3024e",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-initialization-results.json",
+  "combined_results_sha256": "e7f6cd3108b42b8cbe7c60ccd4316283d6f6cc656fd1ef37c84f5f97b52c3637",
   "counts": {
     "accepted": 20,
-    "missing": 11,
-    "unreviewed": 0,
+    "missing": 10,
+    "unreviewed": 1,
     "required": 31
   }
 }

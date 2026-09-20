@@ -654,8 +654,8 @@
           "description": "Generated installation separates process-once shared initialization from per-Worker setup; a late Worker preserves mutated heap and runtime sentinels and published code while initializing only its owned regions; overlap, undersized ranges and active data segments are rejected before publication."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/initialization/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

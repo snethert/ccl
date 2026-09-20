@@ -4943,6 +4943,26 @@
       "test_ids": [
         "S1-LL09-a"
       ]
+    },
+    {
+      "id": "STAGE1-INITIALIZATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-initialization-r1-results.json",
+      "sha256": "f68ef6e408a2980512a69dcc8f6a7a5a999222b87bd8d233087561a2167dbf73",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "d32c9a3eaee0f85a7cc5892b6dd1528f507527d6b7bc46d3b67dab2278a89f1d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-initialization-r1/packet.json",
+      "packet_sha256": "52cad98e2cedac20794b1014d68cb1ae674ae090484cca3ad911feee92f206dd",
+      "test_ids": [
+        "S1-LL13-a"
+      ],
+      "scope": "Five unchanged-compiler modules execute native-checked process and Worker initialization, mutation and reads. Six real Workers at 4 MiB/2 GiB preserve mutated heap/runtime/staging, foreign regions, reserved slots and original code through late lazy installation. Explicit metadata and TCR pointer checks precede initialization; active data/start/BSS/element modules refuse before publication. Forty owner refusals, ten owner faults, seven publication controls and twelve role omissions. Fresh replay: 315 files at 104 pins. Trusted bounded synchronous bootstrap profile, terminal failure rather than rollback, Worker-local tables and shared code identity. No C service, scheduler, concurrent Lisp/GC, browser, production cross-dump or Stage 2 claim. Proposal awaits review and acceptance."
     }
   ],
   "historical_records": [

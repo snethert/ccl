@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d6c25eff5126821066d31e28ee4c03cd73c3c5c634b95be0075b71e5d092af24",
-  "commit": "ff53f4c7ba4ab01142abfeed2d4f0c24d03ea7d3",
-  "immutable_evidence_files": 231369,
+  "catalog_sha256": "09e61192387b913cd1b4bbe0915d24218b65a67940f7c12a15e8fbc429007655",
+  "commit": "6d4850f1860e995c684bead778602ae72039c947",
+  "immutable_evidence_files": 231771,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-ll09a-acceptance-r1",
-    "files": 275,
-    "bytes": 7812999
+    "directory": "2026-09-20-stage1-initialization-r1",
+    "files": 402,
+    "bytes": 7505122
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 35795,
+  "prior_indexed_references_verified": 36586,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,11 missing,zero unreviewed. LL09-a accepted and integrated.",
-  "source_index_sha256": "310f39aa75257e126c65893f3dff2862fcf5ae53604e45ba148d707cc8ca26d8",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll09a-acceptance.json",
-  "verification": "Acceptance producer, exact source comparisons and integrated mapping/publication/three-Worker replay; incremental catalog.",
+  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,10 missing,one unreviewed. LL13-a executed; owner proposal awaits review and acceptance.",
+  "source_index_sha256": "08f91e4284f76814c2d217cd9634b40234fb48c3a3e7ae295e2dcfd2d21ef725",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-initialization.json",
+  "verification": "Fresh retained replay: 315 deterministic files at 104 pins; owner faults and publication/role omissions rejected. Twenty accepted bindings unchanged. Incremental catalog and indexed references verified.",
   "version": 1
 }

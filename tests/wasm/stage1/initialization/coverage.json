@@ -1,0 +1,10 @@
+{
+  "S1-LL13-a:installation": {
+    "process_once": "Generated process_init executes in Worker 0; shared state then mutates via generated mutate. A second process request returns false without invoking its callback; a retained fault repeats the shared writes and fails.",
+    "per_worker": "Generated worker_init mutates its own cell and tail-calls the reader through the accepted lazy loader; TCR and three stack extents validated before any writes. All foreign bytes and boundary canaries survive.",
+    "late_worker": "Workers 1 and 2 start after Worker 0 mutation/publication. Both read the mutated values and retain process_init and mutate as COLD. Worker 0 executes its old published code again after both joins.",
+    "metadata": "range-derivation.json binds TCR offsets, object widths, module count and explicit stack budgets. Layouts and write sets retained at 4 MiB and 2 GiB. Raw TCR pointers must equal their owned regions.",
+    "refusals": "Forty checks cover overlap, size, alignment, unbacked storage, foreign writes and pointers, missing regions/modules, reserved/duplicate/undersized slots, active data/start/BSS/element modules, foreign ready identity and terminal failed initialization.",
+    "controls": "Ten owner faults rerun real Workers. Seven independent publication omissions edit actual observation records. Required-role omissions are checked by the unchanged gate."
+  }
+}
