@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "kind": "AUXILIARY_GENERATED_BOOTSTRAP_SCHEDULE",
+  "slot_credit": false,
+  "shared_source_changed": false,
+  "phases": ["loader-dependencies", "definition-effects", "activation-and-workload"],
+  "claim": "Generated initializer phase, dependency, physical completion and no-load rejection protocol with trusted manifest and synchronous single-Worker callbacks.",
+  "excluded": [
+    "Native startup-worklist membership and replacement dispositions",
+    "Actual reader/compiler/error-service activation by these marker functions",
+    "Cross-Worker scheduler or concurrent publication",
+    "Initializer rollback or arbitrary-code confinement",
+    "Moving these raw completion/state addresses during a run",
+    "Complete bootstrap, image loading or S1-LL15-a execution"
+  ]
+}

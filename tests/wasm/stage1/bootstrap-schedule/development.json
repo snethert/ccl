@@ -1,0 +1,14 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "outcome": "All new Lisp bodies compiled and native expectations passed. The raised-error negative case produced the existing two-argument type_error tag, while the harness expected call_error. Worker propagation obscured the original assertion; a diagnostic copy identified the mismatch. The corrected harness names both tags; compiler and scheduler unchanged.",
+      "retained": ["ccl-bootstrap-schedule-r1/compiled/compile.log", "ccl-bootstrap-schedule-r1/compiled/native.json", "ccl-bootstrap-schedule-r1/execution.log", "ccl-bootstrap-schedule-r1/check.mjs", "ccl-bootstrap-schedule-r1/check-debug.mjs", "ccl-bootstrap-schedule-r1/check-debug2.mjs", "ccl-bootstrap-schedule-debug2.json"]
+    },
+    {
+      "name": "r2",
+      "outcome": "Four Workers, 140 refusals and twelve scheduler faults passed. Added the separate publication checker and a frozen runtime input list before final retention; no scheduler or compiler change.",
+      "retained": ["ccl-bootstrap-schedule-r2/summary.json", "ccl-bootstrap-schedule-r2/controls.json", "ccl-bootstrap-schedule-r2/execution.json"]
+    }
+  ]
+}

@@ -2561,6 +2561,16 @@
       "review_commit": "d6bf93fb8bec8a0cc2f3f33dc4fea33cabc80c95",
       "review_sha256": "7363768b29099c790413808fe29f5ea036fa532fcc4a66081e531b39bd90fd4f",
       "integration": "doc/WASM/stage1/integration-ll13a.json"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-SCHEDULE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-schedule-r1/packet.json",
+      "sha256": "73a466822d45a2a9f2ee8ed3407ab0d83bcbc6988b46250e7fa05f7285fc39aa",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Generated initializer scheduling prerequisite for LL15, no slot credit. Nine protocol initializers plus five failure bodies compile through unchanged accepted compiler; native effects checked independently. Four fresh Workers at 4 MiB and 2 GiB execute 172 calls, 36 native comparisons and 140 refusal checks. Twelve scheduler faults including a forged-completion/no-load path and seven publication omissions rejected. Fresh replay reproduces 103 deterministic files at 116 source pins. Portable isolated scheduler proposal; digest-bound trusted inventory, synchronous owner callbacks, exclusive single-Worker state, terminal failure without rollback. Marker functions do not implement native startup effects or select membership; native worklist unknowns and S1-LL15-a remain open. No compiler/runtime/kernel integration."
     }
   ],
   "current_runs": [

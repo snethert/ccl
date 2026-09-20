@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "78d8831620ed2e2bc966c0984f0b570cd050a7d632dfa4e7a2340dbde3e2b67a",
-  "commit": "1c90353286bcb1358b97824df69f98d086ca2376",
-  "immutable_evidence_files": 232661,
+  "catalog_sha256": "2dc758b9eea032686e42b1a15b448cdd863b0e93963440ae388b471225bd914f",
+  "commit": "315d13937b42c84d261c2c4be93d302fa85738fc",
+  "immutable_evidence_files": 232851,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-ll13a-acceptance-r1",
-    "files": 412,
-    "bytes": 8169909
+    "directory": "2026-09-20-stage1-bootstrap-schedule-r1",
+    "files": 190,
+    "bytes": 4551823
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 37381,
+  "prior_indexed_references_verified": 37780,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. LL13-a and admission follow-up accepted and integrated.",
-  "source_index_sha256": "b53aa11fcfb2f6557397d89684c964dc61f1a98381a346e6b9327466e1635dff",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll13a-acceptance.json",
-  "verification": "Acceptance producer preserves twenty earlier accepted records. Exact source comparison and integrated production-import execution reproduce inherited and directed/race results. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Auxiliary generated initializer schedule awaits review without LL15 credit.",
+  "source_index_sha256": "186654e934c8771636a46083f4cb88aa7ce98e1874c3e05e9472e9f390ccecdd",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-schedule.json",
+  "verification": "Fresh replay: 103 deterministic files, 116 source pins. Newly retained artifacts and indexed references verified incrementally; existing accepted envelopes unchanged.",
   "version": 1
 }
