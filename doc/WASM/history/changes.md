@@ -2647,3 +2647,32 @@ On “accept, integrate and proceed”, the reviewed integer-call compiler and o
 ## 2026-09-19 — generated integer Lisp conditions
 
 The disposable numeric proposal now signals TYPE-ERROR and DIVISION-BY-ZERO through the existing condition machinery, with native class layouts and rooted datum/operands. Fifty-four modules give 1,489 reference comparisons, 465 collector copies, one growth, 252 fast-path checks and thirteen rejected controls. Native x86-64 divide-by-zero trap fields differ: fixnums report /, bignums COERCE and no operands. Those observations stay retained; the added field oracle uses CCL’s explicit condition constructor following U1’s Lisp and 32-bit bignum paths. Native R6/R6a passes and fresh replay matches 1767 files with 390 pins. Audit-105 coverage is addressed by six separate slow-path faults, NIL short fills and a pinned binary identity. No shared source or runtime changes in this proposal, no loader admission or LL16 credit. Ledger remains 15 accepted,16 missing.
+
+## 2026-09-19 — hundred-and-sixth Claude audit: integer-call integration and generated integer conditions reviewed
+
+Claude reviewed `19d474aa` and `ba5883a3` from the detached worktree. The
+integration commit places the reviewed integer-call compiler `03b81251…` and
+owner capability `39f74e36…` byte-identically to the retained packet, changes
+no other source, binds audit 105 by commit and review hash `718121a9…` and the
+integer-service integration `cb560a17…`, and carries the four observations as
+obligations. The condition proposal replays from the detached worktree with a
+record equal to Codex's: 1,767 deterministic files, 390 pins, 54 modules, 372
+native cases, 1,489 comparisons, 465 collector copies, one growth, 252 inline
+checks, thirteen rejected controls, 60 default-mode files identical and native
+R6/R6a passing. A native probe at five policies confirmed the hard-coded
+expected types NUMBER, INTEGER and REAL for the nonnumeric-dividend positions
+the corpus exercises. A target probe compiled twenty further forms through
+the proposal and executed 423 cases at both placements with 240 collections;
+every value equalled native except three explained families. Observations,
+none a defect: native CCL treats a NIL divisor as omitted and returns two
+values where the target signals TYPE-ERROR expected REAL, and the corpus has
+no nonnumeric divisor; the explicit-constructor oracle reports
+DIVISION-BY-ZERO for a nonnumeric dividend with a zero divisor where real
+native and the target signal TYPE-ERROR; the condition readers applied to the
+wrong class signal TYPE-ERROR on the target and NO-APPLICABLE-METHOD natively,
+the existing reader convention; native checks the shift count before the
+shifted value and, at safety 3 speed 0, the right operand of `+` first, while
+the target always reports the left operand; and the quoted-symbol admission
+list gains NUMBER, REAL and TRUNCATE in every mode, so default-mode source the
+integrated compiler refuses now compiles. Record only; acceptance is the
+user's decision.
