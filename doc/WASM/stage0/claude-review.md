@@ -1814,3 +1814,38 @@ Packet 0718b417… (476 files, kind `AUXILIARY_INITIALIZATION_REVIEW_FOLLOWUP`, 
 ### Verdict
 
 No defect found in 7c8ba5fc (STAGE1-INITIALIZATION-REVIEW-R1) or in the intermediate commit 5a2990fc. Auxiliary packet, no slot credit. Acceptance of LL13-a R1 and this follow-up is the user’s decision; integration should take the derived owner and supply the actual Worker-local tables. Ledger unchanged at 20 accepted, 10 missing, one unreviewed.
+
+## Hundred-and-twenty-fourth Claude audit — STAGE1-BOOTSTRAP-SCHEDULE-R1 (auxiliary LL15 prerequisite) at f44677a9 — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at f44677a9. Author: Codex. Scope: `tests/wasm/stage1/bootstrap-schedule/` in full (`schedule.mjs`, `check.mjs`, `compile.lisp`, `run.py`, `packet.py`, `controls.py`, `assess.py`, inputs, scope, README and development records), the retained packet, the index and repository records, and the intermediate acceptance commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit
+
+3efe86fd accepts LL13-a and its admission follow-up on the user’s “accept and integrate” authorization and integrates `runtime/wasm32/initialization-owner.mjs`. Verified: the integrated file (b4d42ff6…) equals the retained follow-up `owner.mjs` byte for byte; `acceptance-ll13a.json` (87c7d730…) binds review commits 306fdc77 and d6bf93fb by hashes dd942a14… and 7363768b…, the latter equal to the blob of `doc/WASM/stage0/claude-review.md` at d6bf93fb; the acceptance packet (37ac3fc1…, 409 files, all cataloged) copies the 392 bound R1 artifacts, four acceptance records and twelve integration records; the integration replay through the production module and its production imports reproduces the follow-up `execution.json` (29f42166…) and `directed.json` (349a427c…) exactly; the combined ledger ce90c85b… differs from e7f6cd31… by the one LL13-a row (locator relocation, disposition ACCEPTED, four acceptance artifacts) with the twenty other rows identical; the gate result moves to 21 accepted, 10 missing, 0 unreviewed. The first integration driver failed on a `/tmp` versus `/private/tmp` path and was corrected without a runtime change; both drivers and the failure log are retained. The 27 other runtime files and the compiler are unchanged by hash. The audit-122/123 observations are carried into `runtime-obligations.md` and the runtime README.
+
+### Evidence
+
+Packet 73a46682… (188 files, `slot_credit: false`, `NOT_REVIEWED`), catalog 2dc758b9…, index snapshot 186654e9…, evidence commit 315d1393; every packet file is cataloged with a matching hash. `inputs.json` binds the LL13-a R1 packet, its source pins, toolchain and native-reuse records, the pinned kernel and image, and the materialization compiler. Pins: the 104 R1 pins re-asserted at HEAD plus the eleven fixture files and the integrated owner (116). The compile driver (`symbols/generated.py`, the constants and registration trees, `stub.wat`, the TCR v2 and layout contracts, the compiler) is covered by the inherited pins. f44677a9 changes only `tests/` and `doc/`.
+
+### Replay
+
+`packet.py verify`: PASS, 103 deterministic files at 116 pins; summary identical to the retained record (14 modules, 4 Workers, 9 initializers, 172 invocations, 36 native comparisons, 140 refusals, 12 faults, 7 publication controls). The regenerated compile helper differs from the retained copy by the worktree path only; it is not a deterministic file.
+
+### Probes
+
+- **A. Digest binding.** The publication oracle checks installed digests only for shape (64 hexadecimal characters). Independently, all 36 `INSTALLED` events over the four retained rows carry the SHA-256 of the corresponding compiled `.wasm`, and the 14 module digests are distinct.
+- **B. Admission.** 34 additional crafted plans, module sets and a non-Memory object refuse with the named reason and leave the state region unchanged: ready region overlapping either end of the state region, unaligned or beyond memory; state size zero, unaligned or spanning the memory end; completion outside the region, unaligned, zero, above 2^32 or reusing another entry’s token; assertions outside the region, duplicated, non-array, negative or aliasing the entry’s own completion; self and mutual prerequisites; plan version 2; empty plan; no activation phase; negative or fractional phase; empty id; prerequisite in a later phase; extra, renamed or mis-recorded modules; bytes swapped under a forged record (`BINARY_DIGEST`) or a consistent record (`MODULE_IDENTITY`); wrong profile; truncated import manifest.
+- **C. Snapshot independence.** Zeroing the caller’s module bytes and records and mutating the plan after construction leaves the run READY with the expected effects, and the bytes handed to the installation callback carry the plan digests.
+- **D. Trusted-callback boundary.** With the loader catalog substituted behind the callback, the scheduler admits because its own copies are valid: the `wrong_completion` module at slot 5 fails `COMPLETION_MISSING`, terminal, ready untouched; a `define_two` binary with an appended custom section (behaviour-identical, different digest) reaches READY, and the loader’s `INSTALLED` event carries the substituted digest, which the scheduler does not observe.
+- **E. Run phase.** A callback that clobbers an earlier persistent effect fails terminally; an early ready write fails `EARLY_READY`; a WebAssembly exception without a message records `WASM_EXCEPTION`; a non-function installer refuses before any state change; the events getter returns copies; the ready digest prefix equals the admitted plan digest.
+- **F. Development record.** The r1 harness diff is confined to tag handling (`type_error` alongside `call_error`), wrapping installation failure, adding the loader snapshot and events to the positive record, and Worker error propagation; the retained r1 log shows the original failure.
+
+### Observations (none a defect)
+
+1. Validated bytes are not what is installed. The scheduler hands private copies to the trusted callback, but the fixture’s callback installs from the loader’s own catalog and the scheduler receives only the invoke function, so a substituted behaviour-identical binary reaches ready. This matches the declared trusted synchronous adapter scope, and the binding of installed digests to compiled bytes was established here independently. A production scheduler should bind the loader’s installed digest to the plan digest.
+2. Effects are checked at plan-declared words, completion words and the ready words only; undeclared writes elsewhere are not observed by this scheduler. Foreign-region digests belong to the LL13 owner harness.
+3. The nine bodies are protocol markers, as the packet states; membership and required effects of the real startup worklist remain open for LL15.
+
+### Verdict
+
+No defect found in f44677a9 (STAGE1-BOOTSTRAP-SCHEDULE-R1) or in the intermediate acceptance commit 3efe86fd. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged by this commit at 21 accepted, 10 missing, zero unreviewed.
