@@ -1742,3 +1742,41 @@ E. Surrogate probe: D800, DBFF, DC00 and DFFF alone, first, middle, last and at 
 6. Auxiliary record: no slot credit. Both R1 and the follow-up await acceptance.
 
 **Verdict.** No defect found in cacdc64f (STAGE1-SYMBOLS-REVIEW-R1). Acceptance of R1 and this follow-up is the user’s decision. Ledger unchanged at 19 accepted, 11 missing, one unreviewed.
+
+
+## Hundred-and-twenty-second Claude audit — STAGE1-INITIALIZATION-R1 (S1-LL13-a) at d015bb12 — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at d015bb12. Author: Codex. Scope: `tests/wasm/stage1/initialization/` in full (`owner.mjs`, `check.mjs`, `run.py`, `packet.py`, `publish.py`, `controls.py`, `assess.py`, `compile.lisp`, `adapter.wat`, scope/coverage/development records, README), the LL13-a inventory record, the STAGE1-INITIALIZATION-R1 packet and results envelope, the combined ledger, and the two intermediate commits. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commits
+
+- e78f9f77 binds STAGE1-SYMBOLS-REVIEW-R1 to audit 121 at 8ec776b7; the recorded review-file hash ae268e58… equals the blob of `doc/WASM/stage0/claude-review.md` at that commit. Index scope carries the R1 replay-commit constraint, the corrected-service integration source and the keyword materialization note. No source change.
+- a7776b3a accepts and integrates LL09-a and its follow-up. `runtime/wasm32/symbols.c` (7cb6e60c…) equals the follow-up packet’s `symbols.c` and differs from the R1 fixture source by exactly the surrogate clause; compiled with the pinned clang and the fixture’s flags it reproduces the reviewed corrected binary b0206f4a…. `runtime/wasm32/symbol-adapter.wat` (892de955…) equals the R1 packet’s `adapter.wat` and assembles to the retained R1 `adapter.wasm` (337b445d…). `acceptance-ll09a.json` hashes to the value bound in `integration-ll09a.json`; the integration’s execution hash 693b7ccb… equals the retained follow-up `directed/execution.json`. The acceptance packet (cc346874…) copies all 267 bound R1 artifacts byte-identically and omits the same six non-artifact files as the LL21-a acceptance; its `review.md` hashes to ae268e58…. The accepted row differs from the R1 row only in `review_disposition`, `review_record` and rebased artifact paths, and the combined ledger 317b40f2… differs from b9fac591… by that one row. Gate result: 20 accepted, 11 missing, zero unreviewed. Runtime README and obligations updated; no compiler or prior runtime file changed.
+
+### Evidence
+
+Packet 52cad98e… (398 files, `NOT_REVIEWED`), results envelope f68ef6e4…, combined e7f6cd31… (differs from 317b40f2… by the single LL13-a row), catalog 09e61192…, source index 08f91e42…, inventory d32c9a3e… equal at HEAD and in the packet, evidence commit 6d4850f1. Toolchain pins (node 25.6.1, wabt 1.0.39) unchanged. `range-derivation.json` binds the TCR v2 schema hash 42d50182… which equals HEAD. No file outside `tests/`, `doc/` changed between a7776b3a and d015bb12; `tests/wasm/stage1/symbols/` is unchanged since cacdc64f. The fixture’s `adapter.wat` equals the integrated `symbol-adapter.wat` and, as the README states, is assembled but never instantiated.
+
+### Replay
+
+`packet.py verify` from the detached worktree: PASS, 315 deterministic files at 104 pins, summary identical to the retained record (5 modules, 6 Workers, 18 native comparisons, 40 owner refusals, 2 placements, 10 faults, 7 publication controls). The replayed late-Worker installation events (slots 2, 3, 5) equal the retained ones; all fifteen `installed/<id>` binaries in the retained packet equal the compiled modules.
+
+### Probes
+
+- **A. Layout and module refusals (36).** With every region pre-filled and fingerprinted: unshared memory, wrong digest, worker ids [0,2] and [], duplicate region name, zero-size and past-end regions, alignment 2, size 6, owner 5, control owned by a Worker, control 72 bytes, a write to control, NaN and 2^32 words, misaligned write offset, a stray TCR word at offset 12, alloc_limit off by four, wrong worker_id, zero fp_control, heap 4092 and TLB 252 bytes, reserved slots without zero, capacity 1, slot 0, slot equal to capacity, version 3, code not equal to slot, swapped module order, stale layout digest, stale record digest, and read_cell rebuilt with a defined global, a passive data segment, a passive element segment, a declarative element segment and a table definition. Every case refuses with the named reason (the five section shapes with `INITIALIZATION_OR_SECTION`) and the memory fingerprint is unchanged.
+- **B. State machine, single thread.** `process(1)` refuses `BOOTSTRAP_WORKER`; `process(0)` runs its callback once and leaves process and Worker-0 states ready with the canonical words written; `worker(0)` and `worker(3)` refuse; `worker(1)` runs once, leaves every foreign region byte-identical, and leaves each Worker-1 region exactly zero plus its declared words; a second `worker(1)` refuses; a throwing `worker(2)` callback leaves that Worker failed and the process ready, with no retry; `process(0)` then returns false without running, from the same and from a second owner instance.
+- **C. Identity.** After one flipped byte in the stored digest, both `process(0)` and `worker(2)` refuse `PROCESS_IDENTITY` before any state claim.
+- **D. Real-Worker races.** Three Workers released together on `process(0)`: one callback, two `PROCESS_STATE` busy refusals, final states ready. Three Workers released together on `worker(1)` after bootstrap: one callback, two `WORKER_STATE` refusals.
+- **E. Generated code path.** `worker_init` and `call_reader` contain one `return_call_indirect` and two `call_indirect` through the tail table; `process_init` contains none. The retained late-Worker events install slot 2, then 3, then 5, consistent with the reader being reached lazily from the Worker initializer.
+
+### Observations (none a defect)
+
+1. The LL13 `packet.py` enumerates its fixture directory recursively, like the R1 symbols packet; a nested follow-up directory would move this packet’s replay commit in the same way.
+2. A bootstrap race loser that observes the busy state refuses `PROCESS_STATE` rather than waiting for ready; this matches the declared scope (busy and failed states refuse instead of waiting) and leaves a join policy to the scheduler obligation.
+3. The owner validates slots against the declared `tableCapacity` but does not compare the Worker-local `WebAssembly.Table` size to it; an undersized table would fail at lazy installation, after the ownership claim.
+4. Control-region bytes outside the state words and the digest are never written by the owner; a fresh shared memory is zero, so the compare-exchange claims start from zero as required.
+5. The acceptance packet for LL09-a omits the R1 README, deterministic list, development records, inputs and role controls, which are not bound artifact roles; the same set is omitted by the LL21-a acceptance packet.
+
+### Verdict
+
+No defect found in d015bb12 (STAGE1-INITIALIZATION-R1) or in the intermediate commits e78f9f77 and a7776b3a. The LL09-a acceptance and integration are verified byte-exactly against the reviewed packets. Acceptance of LL13-a is the user’s decision. Ledger 20 accepted, 10 missing, one unreviewed.
