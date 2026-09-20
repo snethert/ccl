@@ -1780,3 +1780,37 @@ Packet 52cad98e… (398 files, `NOT_REVIEWED`), results envelope f68ef6e4…, co
 ### Verdict
 
 No defect found in d015bb12 (STAGE1-INITIALIZATION-R1) or in the intermediate commits e78f9f77 and a7776b3a. The LL09-a acceptance and integration are verified byte-exactly against the reviewed packets. Acceptance of LL13-a is the user’s decision. Ledger 20 accepted, 10 missing, one unreviewed.
+
+
+## Hundred-and-twenty-third Claude audit — STAGE1-INITIALIZATION-REVIEW-R1 (auxiliary follow-up to audit 122) at 7c8ba5fc — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 7c8ba5fc. Author: Codex. Scope: `tests/wasm/stage1/initialization-review/` in full (`derive.py`, `directed.mjs`, `run.py`, `packet.py`, README, scope and development records), the retained packet, the index and repository records, and the intermediate binding commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit
+
+5a2990fc binds STAGE1-INITIALIZATION-R1 to review commit 306fdc77; the recorded hash dd942a14… equals the blob of `doc/WASM/stage0/claude-review.md` at that commit. The index scope carries the recursive-pin, busy-claim, actual-table-capacity and fresh-control-storage observations. No source change.
+
+### Evidence
+
+Packet 0718b417… (476 files, kind `AUXILIARY_INITIALIZATION_REVIEW_FOLLOWUP`, `NOT_REVIEWED`), catalog 02525887…, source index 8679b578…, evidence commit 76c481a8. `inputs.json` binds the R1 packet (52cad98e…), its source pins, verification and native-reuse records. Toolchain and native-reuse records are copied from R1. The retained `execution/execution.json` is byte-identical to the R1 record. No file outside `tests/` and `doc/` changed since d015bb12, and `tests/wasm/stage1/initialization/` is unchanged, so the sibling layout leaves the R1 fixture and its pins as reviewed.
+
+### Replay
+
+`packet.py verify`: PASS, 405 deterministic files at 111 pins (the 104 R1 pins, each re-asserted at HEAD, plus the seven follow-up files). Summary identical to the retained record: inherited 5 modules, 6 Workers, 18 native comparisons, 40 owner refusals; 10 owner faults, 7 publication controls, 4 new faults, 616 directed refusals, 4 races with 12 Workers.
+
+### Probes
+
+- **A. Derivation.** `derive.py` at HEAD regenerates the retained `owner.mjs` (packet root and execution copy) and `check.mjs` exactly. The owner diff against R1 is the constructor’s `table`/`tail_table` parameters and `ACTUAL_TABLE_CAPACITY` guard, the `#reserved` and `#fresh` scans, and three call sites (bootstrap entry, before the bootstrap claim, and Worker entry after identity). The harness diff exports `modules` and `layout`, passes the Worker’s actual tables to the owner, and guards its top-level branches so `directed.mjs` can import it.
+- **B. Audit-122 probe set against the derived owner.** All 36 crafted layout and module refusals from audit 122 refuse with the same reasons and write nothing; added: a 7-slot table refuses, a non-table `tail_table` refuses, a 9-slot table is accepted, and one table object supplied for both roles is accepted. The single-thread state machine, the flipped digest byte, and the two three-Worker races (bootstrap: one callback, two busy refusals; late Worker 1: one callback, two state refusals) behave as in audit 122.
+- **C. Control storage.** A nonzero reserved word (1 or 12) on fresh memory refuses `CONTROL_RESERVED` before any claim and leaves state word 0 at zero; after a clean bootstrap, a nonzero word 20 refuses both ready-process entry and Worker entry as `CONTROL_RESERVED` without claiming the Worker; a flipped digest word refuses as `PROCESS_IDENTITY`, confirming digest words are excluded from the reserved scan; after repair the Worker joins.
+- **D. Counts.** Per placement the directed counts are 20 table, 124 fresh-byte (bytes 4 to 127), 160 reserved-byte (80 bytes outside the digest and the three Worker states, each on two entry points) and 4 phase values, totalling 616 over two placements, as retained.
+
+### Observations (none a defect)
+
+1. The owner does not require `table` and `tail_table` to be distinct objects; the accepted lazy loader refuses a shared object at installation with `DISTINCT_TABLES`, after the claim. Integration could add the distinctness check to admission.
+2. On fresh memory a dirty reserved word is reported as `CONTROL_RESERVED` because the reserved scan precedes the freshness scan; the fixture’s regex accepts either reason and both refuse without writes.
+3. The sibling-directory layout resolves the audit-122 pin observation for this unit; the R1 fixture’s own recursive enumeration is unchanged and still replays from HEAD.
+
+### Verdict
+
+No defect found in 7c8ba5fc (STAGE1-INITIALIZATION-REVIEW-R1) or in the intermediate commit 5a2990fc. Auxiliary packet, no slot credit. Acceptance of LL13-a R1 and this follow-up is the user’s decision; integration should take the derived owner and supply the actual Worker-local tables. Ledger unchanged at 20 accepted, 10 missing, one unreviewed.
