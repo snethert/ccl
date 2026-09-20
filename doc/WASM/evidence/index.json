@@ -2370,10 +2370,21 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-core-r1/packet.json",
       "sha256": "3987dae8d919058b004bfe0f2dcb7228e06c2867daf69616960b05a390082524",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Isolated D1 exact integer Wasm service: add/subtract/multiply/ash/integer-length/truncate. 4424 cases, 13272 native policy comparisons, 8848 target comparisons, 636 target-result chain comparisons, 48 refusal/preservation checks, 12 compiled mutants. Fresh replay: 75 deterministic files, 11 source pins. No compiler-generated LL16 claim; no shared files changed; compiler/owner integration and FP remain open.",
+      "review_commit": "223e7957992d87930ca57e985019cccfc72f1a7b"
+    },
+    {
+      "id": "STAGE1-INTEGER-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-review-r1/packet.json",
+      "sha256": "d80248736aa675e17f95a28b8e0fa4ddbf184cbafb1a3acd764a93734788da04",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Isolated D1 exact integer Wasm service: add/subtract/multiply/ash/integer-length/truncate. 4424 cases, 13272 native policy comparisons, 8848 target comparisons, 636 target-result chain comparisons, 48 refusal/preservation checks, 12 compiled mutants. Fresh replay: 75 deterministic files, 11 source pins. No compiler-generated LL16 claim; no shared files changed; compiler/owner integration and FP remain open."
+      "scope": "Audit-103 follow-up on the unchanged integer service: 129 additional native-checked cases, 4553 total; 13659 native/9106 target comparisons, 636 chain steps, 56 refusals, two exact fits and thirteen rejected faults. Quotient-only capacity fault passes original suite and fails new control; redundant pointer test removal is binary-identical. Canonical over-budget width diagnostics explicit. Fresh replay 84 deterministic files, 14 pins. No acceptance, integration or LL16 gate credit."
     }
   ],
   "current_runs": [

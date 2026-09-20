@@ -2588,3 +2588,7 @@ exercises the header check; a canonical input wider than 1,025 limbs is
 refused as malformed rather than as a capacity; and no corpus case exercises
 multiply or divide above 64 limbs. Record only; acceptance is the user's
 decision.
+
+## 2026-09-19 — integer-service audit-103 controls
+
+The unchanged reviewed service now has a follow-up over all 4,424 earlier cases and 129 new native-checked cases. The first-value-only allocation fault is retained passing the old harness and failing a 16-byte reservation that fits the quotient but not the remainder; 24 bytes also refuses and 32 fits exactly. Multi-hundred-digit multiply/divide cases, including the 1,024-digit magnitude boundary, now reside in the fixture. The misnamed pointer control is corrected in the overlay; removing the redundant alignment test is binary-identical. Canonical widths 1,025 and 1,026 pin capacity/status-3 versus unadmitted-header/status-2. All thirteen faults reject; fresh replay matches 84 files and 14 pins. Original sources and packet remain unchanged. Audit 103 is indexed as no defect, without accepting the auxiliary unit. Ledger remains 15 accepted,16 missing.

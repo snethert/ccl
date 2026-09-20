@@ -112,8 +112,11 @@ initial one-argument primary-method subset is accepted after audit 102; its comp
 LL16-a numeric operations under D6 is underway. The
 [integer service](../../../tests/wasm/stage1/integer-core/README.md) now executes
 exact D1 add/subtract/multiply, shifts, integer length and quotient/remainder,
-with independent Python and native-policy oracles and compiled faults. It is
-an isolated auxiliary service, not an LL16 result. Next: root-aware generated
+with independent Python and native-policy oracles and compiled faults. Audit 103
+found no service defect. Its [follow-up](../../../tests/wasm/stage1/integer-core/review-followup/README.md)
+adds the missing quotient-only allocation mutant, large multiply/divide cases
+and precise alignment/width diagnostic claims, keeping the binary unchanged.
+Acceptance is pending. It is an isolated auxiliary service, not an LL16 result. Next: root-aware generated
 numeric dispatch and owner allocation/retry, then mixed floats and the approved
 D6 detection/condition path; only their joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.
