@@ -4864,9 +4864,29 @@
       "test_ids": [
         "S1-LL21-b"
       ],
-      "scope": "One generated function per module: measured engineering choice under benchmark policy v3, no merger ranking. Nineteen B modules, 38 role mappings, three Workers, nine old/new generation observations, 19 refusals, eight faults, seven independent publication controls and twelve role omissions. Thirty fresh-process cold trials, 60 warmed samples, four-generation default/eager retention diagnostics. Compiler unchanged; native R6/R6a reused by exact accepted LL21-a hash, native semantic oracles freshly compiled. No completed bootstrap workload, browser, code reclamation, new lazy profile or production snapshot claim. Audit 119 found no defect in executable evidence. Current README corrects eager retention to 458786 through 549124 bytes; the immutable R1 README retains the stale r3 figures. Cold ~1.93 ms is lazy-tier decode/validation, not eager compilation. Nineteen logical modules have eighteen distinct binaries/NativeModules; revisions change constants with equal encoded size. Acceptance and integration remain pending. Replay R1 at ff3789f2 because its pins include the historical README.",
+      "scope": "One generated function per module: measured engineering choice under benchmark policy v3, no merger ranking. Nineteen B modules, 38 role mappings, three Workers, nine old/new generation observations, 19 refusals, eight faults, seven independent publication controls and twelve role omissions. Thirty fresh-process cold trials, 60 warmed samples, four-generation default/eager retention diagnostics. Compiler unchanged; native R6/R6a reused by exact accepted LL21-a hash, native semantic oracles freshly compiled. No completed bootstrap workload, browser, code reclamation, new lazy profile or production snapshot claim. Audit 119 found no defect in executable evidence. Current README corrects eager retention to 458786 through 549124 bytes; the immutable R1 README retains the stale r3 figures. Cold ~1.93 ms is lazy-tier decode/validation, not eager compilation. Nineteen logical modules have eighteen distinct binaries/NativeModules; revisions change constants with equal encoded size. Accepted and integrated via STAGE1-LL21B-ACCEPTANCE-R1 at the reviewed scope. Replay R1 at ff3789f2 because its pins include the historical README.",
       "review_commit": "079008121e11183cd5a9844a53197021cacb854e",
       "review_sha256": "b86ef1ad7c668b260d67f500562cfa12a081a4d49f7bd2525236a8ef315113dc"
+    },
+    {
+      "id": "STAGE1-LL21B-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll21b-acceptance-r1/accepted-results.json",
+      "sha256": "338acfc0593f179a66ef290352b4c569d0843064beaa4c8b2db02a45d2e1ae59",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "3916140883303df55f19ea07efb3e08a38de64b1e3740de8821f3d5b1c26da9d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll21b-acceptance-r1/packet.json",
+      "packet_sha256": "8f0f9a6cb20499da879bd0c6ef99da8636e30b394bd8ca22fd363f40135e5d94",
+      "scope": "User acceptance after Claude audit 119 and README correction; packaging chosen and owner/build module integrated byte-exactly.",
+      "test_ids": [
+        "S1-LL21-b"
+      ]
     }
   ],
   "historical_records": [

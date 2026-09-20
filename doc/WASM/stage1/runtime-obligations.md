@@ -249,3 +249,7 @@ Pure-JS SHA-256 is synchronous construction/installation work, not arithmetic-pa
 ## D2 production materialization (audit 118)
 
 The owner supplies engine provenance, ABI and instruction classification. Install verifies these bindings but does not discover the current engine. JSON field ordering is part of the present record comparison. Generated imported globals use the two-byte shape; typed references outside it refuse. Atomics have no per-profile filter; wait/notify stay banned and no qualified module uses atomics. Complete unshared runtime services, browser qualification, JSPI and packaging remain separate. See [integration](integration-ll21a.json).
+
+## Per-function packaging (audit 119)
+
+The accepted bootstrap packaging is one generated Lisp function per module, with both B roles and heap-resident closure environments. Preserve old modules/slots while old function objects remain live; code reclamation and merging are unimplemented. The trusted expected inventory defines completeness. The 19-module corpus has 18 distinct binaries, equal-size constant-only revisions, and is not the completed bootstrap workload. Cold ~1.93 ms is lazy-tier decode/validation; full validated installation is ~37.1 ms for this set, not a per-call cost. Eager retention is 458,786→549,124 bytes in the retained run. See [integration](integration-ll21b.json) for the review observations and scope.

@@ -2895,3 +2895,7 @@ Claude reviewed ff3789f2 (STAGE1-GRANULARITY-R1) in its detached worktree. Evide
 ## 2026-09-20 — record LL21-b review and correct measurement labels
 
 Bind the granularity index disposition to Claude audit 119 at 07900812 and its review-file hash: no defect in executable evidence. Correct the current README’s eager-Liftoff retention to the retained 458,786→549,124 bytes and label the 1.93 ms cold result as default lazy-tier decode/validation. State the duplicate binary/cache sharing and equal-size redefinition scope. The immutable packet, executable files, ledger counts and acceptance state are unchanged. Because R1 pins its historical README, its documented replay uses ff3789f2. Acceptance and integration remain pending.
+
+## 2026-09-20 — accept and integrate LL21-b
+
+User acceptance binds audit 119 and the corrected README disposition. Select one generated function per module with both B roles and integrate runtime/wasm32/bundle.mjs byte-for-byte from the reviewed packet. Mapping/refusal/rollback records and all three Worker observations reproduce against the integrated module. Compiler and every prior runtime file are unchanged. Eighteen earlier accepted result objects remain unchanged; ledger now 19 accepted, 12 missing, zero unreviewed. Carry the lazy-tier timing label, duplicate binary sharing, corrected retention figures and equal-size revision limit into the acceptance and runtime obligations.

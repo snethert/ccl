@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-20T19:30:07.951519+00:00",
+  "authorization": {
+    "quote": "accept and integrate",
+    "provenance": "User to Codex after audit 119 and the README correction/disposition commit 459eda83."
+  },
+  "review_commit": "079008121e11183cd5a9844a53197021cacb854e",
+  "review_sha256": "b86ef1ad7c668b260d67f500562cfa12a081a4d49f7bd2525236a8ef315113dc",
+  "source_report_sha256": "ad65bc5f25aea9d337ed192a0506840665a0b122a7c3da6452744691587b41f9",
+  "scope": "Accept S1-LL21-b and select one generated function per module with both B entry roles, at the reviewed measured engineering scope under benchmark policy v3.",
+  "exclusions": [
+    "The current README corrects the eager-Liftoff retention figures to 458786 through 549124 bytes. The immutable R1 README preserves the stale r3 figures; replay R1 at ff3789f2.",
+    "Nineteen logical modules include two byte-identical binaries (twins_inner_2 and separate_inner_1), so the engine retains eighteen NativeModules. Distinct digests are not required; the duplicate benefits from the engine cache.",
+    "The roughly 1.93 ms cold figure measures decode/validation under the default lazy tier. Audit 119 observed roughly 8 ms with eager compilation in a separate three-process probe; neither is a comparative performance claim.",
+    "The three redefinitions change constants and retain equal encoded sizes. Different-body-shape revisions are not exercised.",
+    "Nineteen generated B modules, not the completed bootstrap closure. LL15 still determines final membership; no extrapolated boot-latency claim.",
+    "Expected inventory, ABI/layout versions and D2 classification are trusted build/owner inputs, not code signing.",
+    "Code IDs and slots are distinct concepts; this execution retains the inherited equal assignment and separately validates a non-equal permutation.",
+    "Owner binding selection and snapshot restoration are fixtures. Production symbol transactions stay with LL11-a; process/thread ownership and cross-dump remain separate slots.",
+    "Retain every old module and callable slot. This unit does not implement code reclamation, a merged fallback or a new lazy-loader profile.",
+    "Node default-tier timings are descriptive; eager Liftoff-only retention diagnostics are separate. No browser, JSPI, unshared runtime or speed-ranking claim.",
+    "Engine-reported NativeModule off-heap storage excludes shared WasmEngine overhead and is not an isolated executable-code size. Whole-process RSS is reported separately.",
+    "Full validated installation repeats digest/record checks and costs about 37 ms for the 19-module corpus; this cost is one-time loading, not arithmetic dispatch."
+  ],
+  "records": [
+    {
+      "id": "S1-LL21-b",
+      "variant": "granularity",
+      "test_revision": "d17d235809a0c504fa457573b379965a528fa4326e22a583e8c7ebf291157914",
+      "contract_sha256": "7b00230c63c1fd318273d4d5d7420c746d1945cee17b02da9d57e0481c9d7358",
+      "scope": "Reviewed LL21-b, Claude audit 119; explanatory README corrected in 459eda83."
+    }
+  ]
+}
