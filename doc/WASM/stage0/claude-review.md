@@ -1849,3 +1849,37 @@ Packet 73a46682… (188 files, `slot_credit: false`, `NOT_REVIEWED`), catalog 2d
 ### Verdict
 
 No defect found in f44677a9 (STAGE1-BOOTSTRAP-SCHEDULE-R1) or in the intermediate acceptance commit 3efe86fd. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged by this commit at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-twenty-fifth Claude audit — STAGE1-STARTUP-RESETS-R1 (auxiliary LL15 prerequisite) at 69deb3e5 — 20 September 2026
+
+### Intermediate commit
+
+e76276a5 accepts and integrates the generated initializer schedule on the user’s “Accept, integrate” after audit 124. Verified: `runtime/wasm32/bootstrap-schedule.mjs` is git blob 4e97458e, identical to `tests/wasm/stage1/bootstrap-schedule/schedule.mjs` at f44677a9 and to the retained `schedule.mjs` (e0d651a3…); `acceptance-bootstrap-schedule.json` binds review commit 3c9c36cb by the claude-review.md blob hash 89ff9885… and the R1 packet 73a46682…; `integration-bootstrap-schedule.json` binds the acceptance record (78b123b2…), the LL13-a integration (1e5d5b71…) and 30 unchanged runtime and compiler files, all re-hashed unchanged at 69deb3e5; its verification execution hash c4f761fd… equals the retained R1 `execution/execution.json`; the acceptance packet (5e6ce5ee…, 14 files, all cataloged) carries a driver that re-exports the production scheduler, loader and binary reader through shims and reruns the unchanged R1 harness; the repository copy of the integration record equals the packet copy. Auxiliary; ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+### Evidence
+
+Packet 9dceca4c… (STAGE1-STARTUP-RESETS-R1, NOT_REVIEWED, slot_credit false, 206 manifest entries, all hashes match); catalog fcbd6c21…; index snapshot 0fc25db8…; evidence commit d25618f8; 207 packet files all cataloged with matching hashes. Inputs bind the parent bootstrap-schedule R1 packet, source-pins, toolchain and native-reuse records, the LL13-a R1 records, the startup-seeds R2 snapshot, the correlated query base packet, the pristine U1 source tar and the native kernel and image.
+
+### Replay
+
+`packet.py verify` in the detached worktree at 69deb3e5: PASS, 130 deterministic files, 151 source pins (parent 116 re-asserted at HEAD plus fixture sources, 18 runtime modules, 17 U1 source files and four census tools), summary equal to the retained summary: 15 modules, 2 Workers, 13 selected and 22 open callbacks, 52 native callback comparisons, 92 generated invocations, 42 refusals, 60 installed-digest checks, 9 faults, 9 publication controls. The replay rebuilt the census query index and reran native CCL for the oracle.
+
+### Probes
+
+- A. Selection completeness. Extracted the source form at all 35 snapshot positions independently. The 13 selected forms are `defloadvar` with nil, t, () or 0, or the explicit `(setq *auto-flush-streams* nil)`; `*use-cygwin-svn*` is literal nil on non-Windows targets. All 22 open forms are computed (foreign calls, kernel globals, records) or procedural (`defun`, hash clearing, process setup). No literal reset was passed over.
+- B. Adapter binding (22 checks, all passed) against the replayed execution: baseline READY at 4 MiB equals expected; a behaviour-identical custom-section catalog behind the adapter, with the scheduler holding the originals, refuses INSTALL_PLAN_IDENTITY with nothing installed and no table entry; the reverse refuses MODULE_IDENTITY at admission; the substituted set with its own plan and matching adapter reaches READY (identity is plan-relative, as designed); row/module mismatch, altered record with identical bytes, row digest differing from the catalog, unknown module name, duplicate catalog names, record name mismatch and wrong record digest at construction all refuse; catalog bytes and records zeroed after construction still yield READY with the original digests; installed() returns copies; the adapter is frozen; a second installation of a module refuses; rows and bytes passed to install and mutated afterwards have no effect; all 60 retained installed digests equal the compiled bytes; every generated module imports memory and exports only entry and tail_entry; a wrong plan digest refuses before any install; the sentinel-91 round equals the second expected record; a wrong initial sentinel refuses PRECONDITION without resetting.
+- C. Symbol admission offsets: binding index at tagged +22 and flags at +14 agree with `wasm32-arch.lisp` and the layout contract, matching the corrected harness; the development r2 harness checked +14 and +10.
+- D. Development record: the r2 diff is confined to those two offsets and their two refusal probes; r3 adds the PRIVATE_CATALOG wrapper and relabels one fault diagnostic; the r1 native oracle equals the retained one byte for byte.
+- E. Census queries: 13 rows, each with one candidate in CORRELATED-QUERY-BASE-R1 at the expected source, zero recorded calls, exhaustive false.
+- F. Undeclared writes: a reset module that additionally stores to the thread-local binding vector and the allocation area reaches READY with the harness image check passing. The checked window is the 8,600-byte image at base; this is the declared scope.
+
+### Observations (none a defect)
+
+1. The digest-bound adapter closes the audit-124 catalog-substitution gap for this adapter only; BootstrapSchedule still trusts any installer callback, and the record says so.
+2. The PRIVATE_CATALOG diagnostic wraps any failure of the private-catalog run, so the fault control proves refusal, not a specific reason (the underlying loader reason is BINARY_DIGEST).
+3. Effects are checked only within the image window and at declared words; writes to the binding vector, allocation area or stacks are outside the view. Foreign-region checks belong to the LL13 owner.
+4. The thirteen resets are the literal subset of one post-restore snapshot; membership and the 22 computed callbacks remain open for LL15.
+
+### Verdict
+
+No defect found in 69deb3e5 (STAGE1-STARTUP-RESETS-R1) or in the intermediate acceptance commit e76276a5. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged by this commit at 21 accepted, 10 missing, zero unreviewed.
