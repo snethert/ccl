@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-20T20:40:29.722494+00:00",
+  "user_authorization": "Accept, integrate and proceed",
+  "reviews": [
+    {
+      "commit": "8c0dd65b753b5b81101ba474c9014f108e4e9218",
+      "sha256": "7640c24c546b8eaa194d5fd390ffa420dd8ff6bbe370fb0f47ac2580fa2e4f2c"
+    },
+    {
+      "commit": "8ec776b796a12663743f95789b8408afbdbd2276",
+      "sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9"
+    }
+  ],
+  "acceptance": "acceptance-ll09a.json",
+  "acceptance_sha256": "56e9c95fe76bc01dad4058387e42416d75dfca96012b6dde449d911f36484baa",
+  "files": [
+    {
+      "file": "runtime/wasm32/symbols.c",
+      "before": null,
+      "after": "7cb6e60c2383e7bff2b427637ff5a5d2241df6767e2c8f684cf69a3b7a6674ab",
+      "proposal_locator": "2026-09-20-stage1-symbols-review-r1/symbols.c"
+    },
+    {
+      "file": "runtime/wasm32/symbol-adapter.wat",
+      "before": null,
+      "after": "892de9556607dbae9a0d04f976d216fc85267e7813d9056cb836ca3b7bd75c81",
+      "proposal_locator": "2026-09-20-stage1-symbols-r1/adapter.wat"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    },
+    {
+      "file": "runtime/wasm32/scalar-service.mjs",
+      "sha256": "c429c4a57a2c099de53d3c85a42bf224bab9084c41172c017a01188d8a8f75d3"
+    },
+    {
+      "file": "runtime/wasm32/numeric-capabilities.mjs",
+      "sha256": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "73f525c4201e1254d58f2f64797630f73ba02ab28550e5e54b44bd3ab567a0e4"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wasm",
+      "sha256": "1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071"
+    },
+    {
+      "file": "runtime/wasm32/bytes.mjs",
+      "sha256": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7"
+    },
+    {
+      "file": "runtime/wasm32/hash-adapter.wat",
+      "sha256": "597302944dd8a80e0747b8a4d6874db4962a8a2b26847453927736112490402d"
+    },
+    {
+      "file": "runtime/wasm32/scalar.wat",
+      "sha256": "54d412dc365137c615364f22fa82c5996046b712dfbc0e66795a28e2a0a18e3f"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "edd1cc0adffdfd2b8dac994fa3016237c7061fa6484f1d5a8bbba89b8fff6e74"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "b37e143b8e08292560efbacec99a13e234af37f02995a7d626acc80021c89504"
+    },
+    {
+      "file": "runtime/wasm32/hash.c",
+      "sha256": "253753a4406317b45154620fc5923288325a7992a79464f4861572c141ede9db"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "e1c0eab88744faa7282380cb88ba603fac997b9e21ca70cd0eb6396e4cf87cb0"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "229df07e712aac35fbe1fce2634e894cf073b3f8917c5fcd77e5e96a5fe1679a"
+    },
+    {
+      "file": "runtime/wasm32/float-detector.wat",
+      "sha256": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77"
+    },
+    {
+      "file": "runtime/wasm32/floating-capabilities.mjs",
+      "sha256": "4c723777e4f0ca6d2f5b65ac2df105c2d9fa4b7cfa33a29c8af32f6843a03c53"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "sha256": "672ae8b7603e3d373ed905203189488bd5a047839125c2008f6bce452aa0fafa"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/materializer.mjs",
+      "sha256": "251d9145930fd68bf58621fb1530f81c6e3af55918d8e2638e05903dc12a4723"
+    },
+    {
+      "file": "runtime/wasm32/service.mjs",
+      "sha256": "ab69ce10d55f7a3c2a32771cb84bd5920a6c9fe2c2561d169561e1eaf7ed25b3"
+    },
+    {
+      "file": "runtime/wasm32/sha256.mjs",
+      "sha256": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907"
+    },
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "sha256": "c7009477d5de4f20730c4bdd7a1c3b1ab24754994c7c4e43ade4a05f669fece5"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "cb2d60737bd2edbcb6cad81bb4a8b55d790ed01bf1962b57ec3eed825cd4b3e0"
+    },
+    {
+      "file": "runtime/wasm32/bundle.mjs",
+      "sha256": "6cf6249c23274ee898cd2848c797523c8eead773b6e3cd70aaa8f97065c024cd"
+    },
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "sha256": "d0496d2c1f1aab04e3ac21c524befc7ed9277dcbdcf1d91e5a912fb4517792a7"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-20-stage1-symbols-r1/packet.json",
+      "sha256": "aa5593dfdcb8478b32c79aef697ae26d98beff00417944958d68cd8885f46e74"
+    },
+    {
+      "locator": "2026-09-20-stage1-symbols-review-r1/packet.json",
+      "sha256": "4e326a7df211d3789b2e68fc31b917b1115d42a0c2099cb3e6a8bf0e5902f624"
+    }
+  ],
+  "previous_integration": "integration-ll21b.json",
+  "previous_integration_sha256": "cb6887768c497884cb37f4e2edc8a152c9afcbe36b08e28629d12b4b10d8febe",
+  "observations": [
+    "Original R1 replay uses 3ebb85d6 because its recursive source enumeration predates the nested follow-up; the follow-up replays from HEAD.",
+    "Integrate the corrected C service from the follow-up, not the original surrogate-admitting service.",
+    "The pre-existing keyword is owner-materialized from native membership, not copied from the native package; find-before-intern identity and relocation are executed.",
+    "Fixed-capacity sealed package topology and pinned objects; no package mutation API, production symbol registration, moving package scanner or complete bootstrap membership claim."
+  ],
+  "scope": "Integrate reviewed corrected D1 symbol service and unchanged internal B adapter. Pinned bounded packages, trusted owner and checked refusals; no new compiler source or package installer.",
+  "verification": "Both service and adapter rebuild byte-identically to reviewed binaries; integrated primitive and generated replay equals retained follow-up at all three placements, including low-to-2-GiB loads. Existing compiler/runtime unchanged.",
+  "integration_checks": {
+    "status": "PASS",
+    "commands": [
+      [
+        "/usr/local/bin/node",
+        "/tmp/ccl-integrate-ll09a/check.mjs",
+        "/tmp/ccl-integrate-ll09a",
+        "/tmp/ccl-integrate-ll09a/integration-execution.json"
+      ]
+    ],
+    "execution_sha256": "693b7ccb138dfbc22c5e2ebb7ca35bd91573f696be470740144e5e25e1407438",
+    "retained": "2026-09-20-stage1-symbols-review-r1/execution/directed/execution.json"
+  },
+  "reverse": "Withdraw consumers, then remove symbols.c and symbol-adapter.wat."
+}

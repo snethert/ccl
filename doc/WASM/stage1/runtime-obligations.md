@@ -253,3 +253,15 @@ The owner supplies engine provenance, ABI and instruction classification. Instal
 ## Per-function packaging (audit 119)
 
 The accepted bootstrap packaging is one generated Lisp function per module, with both B roles and heap-resident closure environments. Preserve old modules/slots while old function objects remain live; code reclamation and merging are unimplemented. The trusted expected inventory defines completeness. The 19-module corpus has 18 distinct binaries, equal-size constant-only revisions, and is not the completed bootstrap workload. Cold ~1.93 ms is lazy-tier decode/validation; full validated installation is ~37.1 ms for this set, not a per-call cost. Eager retention is 458,786→549,124 bytes in the retained run. See [integration](integration-ll21b.json) for the review observations and scope.
+
+## Symbols and packages (audits 120/121)
+
+Original R1 replay uses 3ebb85d6 because its recursive source enumeration predates the nested follow-up; the follow-up replays from HEAD.
+
+Integrate the corrected C service from the follow-up, not the original surrogate-admitting service.
+
+The pre-existing keyword is owner-materialized from native membership, not copied from the native package; find-before-intern identity and relocation are executed.
+
+Fixed-capacity sealed package topology and pinned objects; no package mutation API, production symbol registration, moving package scanner or complete bootstrap membership claim.
+
+Names reject surrogate words, matching native CODE-CHAR; noncharacters remain admitted. Owner image and tables are pinned with sealed topology, 4–256 table capacity and 4,096-code-point names. No global registration of the runtime functions or package collector scanner is supplied. See [integration](integration-ll09a.json).

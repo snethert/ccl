@@ -2923,3 +2923,7 @@ Claude reviewed cacdc64f (STAGE1-SYMBOLS-REVIEW-R1) in its detached worktree. Ev
 ## 2026-09-20 — Bind the LL09-a follow-up review disposition
 
 Mark STAGE1-SYMBOLS-REVIEW-R1 reviewed with no defect, binding Claude audit 121 at 8ec776b796a12663743f95789b8408afbdbd2276 and the review-file hash. Carry the original replay-commit constraint, corrected-service integration source and keyword materialization scope into the index. Acceptance of LL09-a and the auxiliary follow-up remains pending; no source, evidence packet or gate-result change.
+
+## 2026-09-20 — Accept and integrate LL09-a and its follow-up
+
+User authorization binds audits 120/121. Integrate the follow-up’s corrected symbol service and unchanged reviewed B adapter. Both rebuild to the retained binary hashes; integrated primitive/generated execution reproduces the complete directed trace at all three placements. Nineteen earlier accepted result objects remain unchanged; Stage 1 now 20 accepted, 11 missing, zero unreviewed. Compiler and all prior runtime files unchanged. Proceed to LL13-a initialization and installation.

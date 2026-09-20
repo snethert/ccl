@@ -2541,12 +2541,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-review-r1/packet.json",
       "sha256": "4e326a7df211d3789b2e68fc31b917b1115d42a0c2099cb3e6a8bf0e5902f624",
       "execution_status": "PASS",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-120 follow-up: all six MAKE-SYMBOL forms explicitly exercised before/after load with per-operation delivery counters; existing ALLOW-OTHER-KEYS identity/status/self-value and zero allocation checked; primitive/generated loads from 4 MiB into 2 GiB retained. Native CODE-CHAR refuses surrogate code points; one derived C guard now rejects them. Compiler, thirteen modules, adapter and image transport unchanged. Inherited 1884 generated comparisons, twelve faults and eight publication controls pass; 36 directed MAKE form checks, 12 keyword checks, 96 character checks and ten new controls. Fresh replay: 253 deterministic files at 103 pins. No additional gate credit; acceptance and integration pending. Audit 121 found no defect. Original R1 replays from 3ebb85d6 because its recursive pin enumeration predates this nested fixture; this follow-up replays from HEAD. Integration must use this corrected derived service. The existing keyword is owner-materialized from the native membership assertion, not copied from the native package.",
+      "scope": "Audit-120 follow-up: all six MAKE-SYMBOL forms explicitly exercised before/after load with per-operation delivery counters; existing ALLOW-OTHER-KEYS identity/status/self-value and zero allocation checked; primitive/generated loads from 4 MiB into 2 GiB retained. Native CODE-CHAR refuses surrogate code points; one derived C guard now rejects them. Compiler, thirteen modules, adapter and image transport unchanged. Inherited 1884 generated comparisons, twelve faults and eight publication controls pass; 36 directed MAKE form checks, 12 keyword checks, 96 character checks and ten new controls. Fresh replay: 253 deterministic files at 103 pins. No additional gate credit; acceptance and integration pending. Audit 121 found no defect. Original R1 replays from 3ebb85d6 because its recursive pin enumeration predates this nested fixture; this follow-up replays from HEAD. Integration must use this corrected derived service. The existing keyword is owner-materialized from the native membership assertion, not copied from the native package. Accepted and integrated by user after audits 120/121; integration-ll09a.json binds corrected service and unchanged adapter.",
       "review_commit": "8ec776b796a12663743f95789b8408afbdbd2276",
-      "review_sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9"
+      "review_sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9",
+      "integration": "doc/WASM/stage1/integration-ll09a.json"
     }
   ],
   "current_runs": [
@@ -4910,7 +4911,7 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-symbols-r1/packet.json",
@@ -4918,9 +4919,30 @@
       "test_ids": [
         "S1-LL09-a"
       ],
-      "scope": "Thirteen unchanged-compiler B modules exercise D1 symbols/packages through owner-installed C/Wasm leaves: INTERN, FIND-SYMBOL, MAKE-SYMBOL, name/package readers, EQ and bindings. 582 native rows, 1,884 generated comparisons, six pointer-aware image loads at 4 MiB/8 MiB/2 GiB, 72 owner refusals, twelve implementation faults, eight publication controls and twelve role omissions. Foreign hash versions rebuild before lookup; no unqualified-name binding. Sealed topology, bounded pinned allocation and explicit-field owner snapshot; no production package installer, moving package scanner, complete package system, browser or timing claim. Native R6/R6a reused by exact accepted LL21-a compiler identity. Audit 120 found no defect. MAKE-SYMBOL covers three calling forms; one-value dynamic/indirect delivery is covered by the readers. No trace name pre-existed as a native keyword. Retained loads start at all three placements but target only 4 MiB or 8 MiB; the auditor independently probed loading at 2 GiB. Strings admit lone surrogate code points; production string policy remains open. Acceptance and integration remain pending. STAGE1-SYMBOLS-REVIEW-R1 supplies the directed coverage and a native-aligned surrogate guard for review before integration. Replay original R1 at 3ebb85d6; its source enumeration predates the nested follow-up directory.",
+      "scope": "Thirteen unchanged-compiler B modules exercise D1 symbols/packages through owner-installed C/Wasm leaves: INTERN, FIND-SYMBOL, MAKE-SYMBOL, name/package readers, EQ and bindings. 582 native rows, 1,884 generated comparisons, six pointer-aware image loads at 4 MiB/8 MiB/2 GiB, 72 owner refusals, twelve implementation faults, eight publication controls and twelve role omissions. Foreign hash versions rebuild before lookup; no unqualified-name binding. Sealed topology, bounded pinned allocation and explicit-field owner snapshot; no production package installer, moving package scanner, complete package system, browser or timing claim. Native R6/R6a reused by exact accepted LL21-a compiler identity. Audit 120 found no defect. MAKE-SYMBOL covers three calling forms; one-value dynamic/indirect delivery is covered by the readers. No trace name pre-existed as a native keyword. Retained loads start at all three placements but target only 4 MiB or 8 MiB; the auditor independently probed loading at 2 GiB. Strings admit lone surrogate code points; production string policy remains open. Acceptance and integration remain pending. STAGE1-SYMBOLS-REVIEW-R1 supplies the directed coverage and a native-aligned surrogate guard for review before integration. Replay original R1 at 3ebb85d6; its source enumeration predates the nested follow-up directory. Accepted and integrated by user after audits 120/121; integration-ll09a.json binds corrected service and unchanged adapter.",
       "review_commit": "8c0dd65b753b5b81101ba474c9014f108e4e9218",
-      "review_sha256": "7640c24c546b8eaa194d5fd390ffa420dd8ff6bbe370fb0f47ac2580fa2e4f2c"
+      "review_sha256": "7640c24c546b8eaa194d5fd390ffa420dd8ff6bbe370fb0f47ac2580fa2e4f2c",
+      "integration": "doc/WASM/stage1/integration-ll09a.json"
+    },
+    {
+      "id": "STAGE1-LL09A-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll09a-acceptance-r1/accepted-results.json",
+      "sha256": "18dd71edb021431951a17627c358012a7d3d3d928a10d625273891ab04de7e6d",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "822dde59ccee25f79efb5a943d30ba5e172bec2219890e863105d4f9dc4ca2f6",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-ll09a-acceptance-r1/packet.json",
+      "packet_sha256": "cc346874bc41559d15865618b003779b7c523d81408fdad33ce4a625ab5fdb15",
+      "scope": "User accepts LL09-a and audit-121 follow-up; corrected service and unchanged adapter integrated byte-exactly.",
+      "test_ids": [
+        "S1-LL09-a"
+      ]
     }
   ],
   "historical_records": [

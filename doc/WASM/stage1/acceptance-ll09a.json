@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-20T20:39:29.741096+00:00",
+  "authorization": {
+    "quote": "Accept, integrate and proceed",
+    "provenance": "User to Codex after audit 121 and disposition e78f9f77."
+  },
+  "review_commit": "8ec776b796a12663743f95789b8408afbdbd2276",
+  "review_sha256": "ae268e587d1fa487f65f0f5f3cb8757fd7ce550e07deb5f66c2e50ee05bdf2c9",
+  "source_report_sha256": "04ec2c29b75bdbbba7d8ef6afa26fb4188db9067c0e31ea7f950c964680387ae",
+  "scope": "Accept S1-LL09-a and its reviewed auxiliary follow-up; integrate the corrected service and unchanged B adapter.",
+  "exclusions": [
+    "Original R1 replay uses 3ebb85d6 because its recursive source enumeration predates the nested follow-up; the follow-up replays from HEAD.",
+    "Integrate the corrected C service from the follow-up, not the original surrogate-admitting service.",
+    "The pre-existing keyword is owner-materialized from native membership, not copied from the native package; find-before-intern identity and relocation are executed.",
+    "Fixed-capacity sealed package topology and pinned objects; no package mutation API, production symbol registration, moving package scanner or complete bootstrap membership claim.",
+    "Two through sixteen admitted packages; at most one directly used package each; no package mutation, import/export/shadow APIs, intern hooks or name/nickname package designators. Symbols have direct home-package pointers, not package-predicate conses.",
+    "Table capacities are powers of two from 4 through 256. Names contain at most 4096 code points. Full tables and image exhaustion are checked refusals; no automatic growth or collection.",
+    "Owner assigns distinct nonzero binding indices before dynamic binding. Global symbol-value access uses the accepted zero-index fallback. No new production symbol installer is claimed.",
+    "INTERN and FIND-SYMBOL are implemented runtime functions reached through function values. This unit does not add source-head rewrites or register their global Lisp names.",
+    "Snapshot relocation is an explicit-field owner fixture, not LL14 production image loading. It preserves tagged references and scalar fields; unsupported bases reject before writes. No moving collector scanner for package objects is added.",
+    "Malformed runtime arguments use checked refusals, not new Lisp conditions. The trusted image builder supplies well-formed non-overlapping objects; admission is not an arbitrary forged-heap security boundary.",
+    "No unshared runtime, cross-Worker mutation, browser qualification, performance or whole bootstrap package membership claim."
+  ],
+  "records": [
+    {
+      "id": "S1-LL09-a",
+      "variant": "generated",
+      "test_revision": "c4f3efec8609f979717c7b96ba61afd5000fbdd5bf48fcb340334ef60e268c17",
+      "contract_sha256": "0e0f219eac382d378d264bc31817b19f161dbd3ab6349407b60232cc657f0af0",
+      "scope": "Reviewed LL09-a, Claude audits 120 and 121."
+    }
+  ]
+}

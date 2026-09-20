@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_NOT_REVIEWED",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-20",
-  "basis": "Generated symbol/package identity and binding execution before and after image relocation; pre-lookup hash admission, service faults and publication omissions reproduced. Nineteen accepted records unchanged.",
+  "basis": "User accepts LL09-a and its follow-up after audits 120/121; nineteen prior accepted records unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "unreviewed S1-LL09-a [generated]",
       "missing S1-LL15-a [closure]",
       "missing S1-LL13-a [installation]",
       "missing S1-LL14-a [cross-dump]",
@@ -26,16 +25,16 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-symbols-results.json",
-      "sha256": "b9fac59145896f8b762acd27a7e333ab8a007065ddaa569daa74b88d309aea74"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll09a-accepted-results.json",
+      "sha256": "317b40f25b50626442b6be2af0c3c2b03ac591ee7ec17049034c727443b3024e"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-symbols-results.json",
-  "combined_results_sha256": "b9fac59145896f8b762acd27a7e333ab8a007065ddaa569daa74b88d309aea74",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll09a-accepted-results.json",
+  "combined_results_sha256": "317b40f25b50626442b6be2af0c3c2b03ac591ee7ec17049034c727443b3024e",
   "counts": {
-    "accepted": 19,
+    "accepted": 20,
     "missing": 11,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 31
   }
 }

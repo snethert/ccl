@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "055d285c97544ad801f6a4eeca28810489e61c2524c02981e915e87c94bc586d",
-  "commit": "f8d170d1244e043d604e4c28032326ba1195cff5",
-  "immutable_evidence_files": 231094,
+  "catalog_sha256": "d6c25eff5126821066d31e28ee4c03cd73c3c5c634b95be0075b71e5d092af24",
+  "commit": "ff53f4c7ba4ab01142abfeed2d4f0c24d03ea7d3",
+  "immutable_evidence_files": 231369,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-symbols-review-r1",
-    "files": 354,
-    "bytes": 4943063
+    "directory": "2026-09-20-stage1-ll09a-acceptance-r1",
+    "files": 275,
+    "bytes": 7812999
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 35795,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:19 accepted,11 missing,one unreviewed. LL09-a reviewed and awaiting acceptance; auxiliary audit-120 coverage/character follow-up awaits review.",
-  "source_index_sha256": "144ce0186138cf73dae5e1b9617d731edcdf5828dfa76cea5c6e21655af276a9",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-symbols-review.json",
-  "verification": "Fresh follow-up replay: 253 deterministic files at 103 pins. Inherited qualification and ten new controls pass. Immutable R1, gate envelopes and accepted records unchanged. Incremental catalog and indexed references verified.",
+  "scope": "Stage 0:48 accepted. Stage 1:20 accepted,11 missing,zero unreviewed. LL09-a accepted and integrated.",
+  "source_index_sha256": "310f39aa75257e126c65893f3dff2862fcf5ae53604e45ba148d707cc8ca26d8",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-ll09a-acceptance.json",
+  "verification": "Acceptance producer, exact source comparisons and integrated mapping/publication/three-Worker replay; incremental catalog.",
   "version": 1
 }
