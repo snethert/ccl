@@ -153,3 +153,15 @@ The original inline-fixnum assertion covers only addition of zero. Add per-opera
 The original decoder cannot represent NIL and omits short multiple-value fills. Retain added NIL-fill comparisons in the next unit.
 
 Numeric failures are checked codes; fast paths still reserve operand roots. Assurance may move objects before refusing.
+
+## Integer conditions R2 (Claude audit 107)
+
+Numeric + and * keep left-first checks when both operands are invalid; native safety 3/speed 0 checks right-first. ASH count-first and explicit NIL divisor now match native.
+
+Wrong-class arithmetic-error readers signal TYPE-ERROR rather than native NO-APPLICABLE-METHOD-EXISTS. ERROR handlers agree.
+
+Arithmetic condition OPERATION and OPERANDS follow the explicit constructor, not x86-64 trap metadata; both native records remain retained.
+
+Fatal kind 5 identifies a nonnumeric failure in this context but is not globally unique. Recognized unsupported number families and service-budget failures remain checked boundaries.
+
+Numeric allocation-retry composition and trusted-loader admission remain separate work; no LL16 credit.

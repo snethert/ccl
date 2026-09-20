@@ -127,8 +127,7 @@ supersedes unaccepted R1 after audit 106: quote admission is numeric-only,
 TRUNCATE matches CCL's NIL-divisor default, ASH checks the count first, and the
 native condition oracle defers invalid dividends to native type checking.
 The 1,693 comparisons and seventeen controls retain policy-dependent +/* error
-priority and wrong-class reader differences explicitly. R2 remains auxiliary,
-unintegrated and pending review. Next: compose numeric conditions with
+priority and wrong-class reader differences explicitly. R2 is accepted and integrated after audit 107, with no slot credit. Next: compose numeric conditions with
 allocation retry and authenticated loader admission, then mixed floats under
 the approved D6 policy. Only joined qualification executes LL16-a.
 LL18-b hash-table movement remains an independent obligation.

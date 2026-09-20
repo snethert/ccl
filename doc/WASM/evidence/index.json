@@ -2418,10 +2418,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-integer-conditions-r2/packet.json",
       "sha256": "113308bf526c972d540bc266f01cabc916df3f4422cd693c5acd5982b6bcb43a",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-106 follow-up: numeric-only quote admission, native NIL-divisor behavior, ASH count-first checking, unbiased dividend/zero-divisor oracle. 67 modules, 423 native/reference cases, 1693 comparisons, 477 collector copies, 252 inline checks and seventeen rejected controls. Native policy-dependent +/* order, wrong-class readers and fatal diagnostic conventions explicitly retained. Native R6/R6a passes, 60 default files identical; fresh replay 2702 files, 403 pins. Supersedes unaccepted R1; no integration or LL16 credit."
+      "scope": "Audit-106 follow-up: numeric-only quote admission, native NIL-divisor behavior, ASH count-first checking, unbiased dividend/zero-divisor oracle. 67 modules, 423 native/reference cases, 1693 comparisons, 477 collector copies, 252 inline checks and seventeen rejected controls. Native policy-dependent +/* order, wrong-class readers and fatal diagnostic conventions explicitly retained. Native R6/R6a passes, 60 default files identical; fresh replay 2702 files, 403 pins. Supersedes unaccepted R1; no integration or LL16 credit.",
+      "review_commit": "24dcebfc0737a80b1e9294cbea61af494d3a66d7",
+      "integration": "doc/WASM/stage1/integration-integer-conditions.json"
     }
   ],
   "current_runs": [

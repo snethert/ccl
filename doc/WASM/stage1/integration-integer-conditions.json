@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-20T02:22:57.220111+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "24dcebfc0737a80b1e9294cbea61af494d3a66d7",
+  "review_sha256": "ba8d27d8ed644619d5927ce4574cd212729134655ef40598ec68f41e04c79632",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "03b812512f6234269ac7d6c2d13dfbd612aa0cb8ee89634d89cdca9d68b2f11c",
+      "after": "d328c6bc7882631d98bb49a878110c3b90b691583405a021e79ebef1f9192df4",
+      "proposal_locator": "2026-09-19-stage1-integer-conditions-r2/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/allocation-service.mjs",
+      "sha256": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "42600de130a94ef456cb1180887cd41d03a2cc2a6aeb30f3b04004ba58626f09"
+    },
+    {
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "sha256": "d986bd397fb9fc9e73dde7afdb820085af100d336e951907f79430e885d00761"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "sha256": "640ca8a3fa06c7b9d34dab8447c5fa0fbe1c8efdab6afe00bec2647aae4a2fe3"
+    },
+    {
+      "file": "runtime/wasm32/installer.mjs",
+      "sha256": "b5bdbc791b52dd1101bdf5f2f65fe49e869f454b91dcdf38edb8ce2dba10157d"
+    },
+    {
+      "file": "runtime/wasm32/integer-service.mjs",
+      "sha256": "39f74e36f043edcab8f40c35ec9a0a22c277e1bb1984cf09b54cd3b33aa9904a"
+    },
+    {
+      "file": "runtime/wasm32/integer.c",
+      "sha256": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9a5ddd004c2150ffacc9a1417fcfa290edea5ad9d68237c5855e193af4dc62e3"
+    },
+    {
+      "file": "runtime/wasm32/ranges.mjs",
+      "sha256": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packet": {
+    "locator": "2026-09-19-stage1-integer-conditions-r2/packet.json",
+    "sha256": "113308bf526c972d540bc266f01cabc916df3f4422cd693c5acd5982b6bcb43a"
+  },
+  "previous_integration": "integration-integer-calls.json",
+  "previous_integration_sha256": "489385f38cd9b435f2f3ca2ef0da55b49198074cf0c2431f05aacc633130be83",
+  "observations": [
+    "Numeric + and * keep left-first checks when both operands are invalid; native safety 3/speed 0 checks right-first. ASH count-first and explicit NIL divisor now match native.",
+    "Wrong-class arithmetic-error readers signal TYPE-ERROR rather than native NO-APPLICABLE-METHOD-EXISTS. ERROR handlers agree.",
+    "Arithmetic condition OPERATION and OPERANDS follow the explicit constructor, not x86-64 trap metadata; both native records remain retained.",
+    "Fatal kind 5 identifies a nonnumeric failure in this context but is not globally unique. Recognized unsupported number families and service-budget failures remain checked boundaries.",
+    "Numeric allocation-retry composition and trusted-loader admission remain separate work; no LL16 credit."
+  ],
+  "scope": "Exact reviewed R2 compiler; all runtime files unchanged. No LL16 credit.",
+  "verification": "Byte identity with regenerated and retained reviewed proposal; reuse its qualified native R6/R6a and audit 107 replay.",
+  "reverse": "Restore compiler before hash after withdrawing consumers."
+}

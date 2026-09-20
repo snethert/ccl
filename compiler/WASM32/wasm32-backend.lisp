@@ -1082,7 +1082,7 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
@@ -1197,6 +1197,9 @@
        (b-local-call 'b-local-function (first args) (second args) (third args)))
       ((ccl::let ccl::let*) (b-let op args))
       (ccl::call
+       (when (and *b-integer-service* (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
+                  (member (first (ccl::acode-operands (first args))) '(%numeric-operation %numeric-operands)))
+         (return-from b-multiple (b-numeric-field (first (ccl::acode-operands (first args))) (first (second args)))))
        (when (and *b-integer-service* (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
                   (member (first (ccl::acode-operands (first args))) '(%integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate)))
          (unless (and (null (third args)) (null (second (second args)))) (refuse :integer-spread))
@@ -1699,7 +1702,7 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists)))) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (null (second xs)) (eq (second xs) t) (and (integerp (second xs)) (<= -536870912 (second xs) 536870911)) (pool-literal-p (second xs)) (member (second xs) *b-restart-names*) (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
@@ -1742,7 +1745,7 @@
                            (unless (or (and (member head '(car cdr)) (= n 1))
                                        (and (member head '(rplaca rplacd cons eq)) (= n 2))
                                        (and (member head '(signal error)) (= n 1))
-                                       (and (eq head '%wasm-poll) (zerop n)) (and *b-integer-service* (member head '(%integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))) (member head '(%wasm-symbol-value %wasm-set %wasm-make-restart %wasm-find-restart %wasm-invoke-restart %wasm-restart-name %wasm-svref %wasm-condition-datum %wasm-condition-expected %wasm-cell-name))
+                                       (and (eq head '%wasm-poll) (zerop n)) (and *b-integer-service* (member head '(%numeric-operation %numeric-operands %integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))) (member head '(%wasm-symbol-value %wasm-set %wasm-make-restart %wasm-find-restart %wasm-invoke-restart %wasm-restart-name %wasm-svref %wasm-condition-datum %wasm-condition-expected %wasm-cell-name))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
                                        (and (eq head 'prog2) (<= 2 n)) (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (member head '(funcall multiple-value-call)) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
@@ -2106,10 +2109,10 @@
 ;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
 (defun b-condition-mask (type)
   (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
-                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192)
+                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192) (arithmetic-error . 16384) (division-by-zero . 32768)
                          (control-error . 64) (warning . 128) (simple-warning . 256))))
       (refuse :b-condition-type)))
-(defun b-expand-conditions (form) (setq *b-restart-names* '(list cons function simple-vector integer fixnum or))
+(defun b-expand-conditions (form) (setq *b-restart-names* (if *b-integer-service* '(list cons function simple-vector integer fixnum or number real truncate) '(list cons function simple-vector integer fixnum or)))
   ;; Check the input graph before any native macro sees it. Shared/cyclic reader
   ;; objects and dotted lists are outside this source API.
   (let ((work (list (cons form 0))) (seen (make-hash-table :test #'eq)) (left 32768))
@@ -2168,6 +2171,7 @@
                  ((block return-from) `(,(car x) ,(second x) ,@(mapcar #'walk (cddr x))))
                    ((restart-case restart-bind)
                     (walk (b-expand-restart x #'walk #'lambda-list)))
+                   ((arithmetic-error-operation arithmetic-error-operands) (cons (if (eq (car x) 'arithmetic-error-operation) '%numeric-operation '%numeric-operands) (mapcar #'walk (cdr x))))
                    ((type-error-datum type-error-expected-type cell-error-name) (cons (case (car x) (type-error-datum '%wasm-condition-datum) (type-error-expected-type '%wasm-condition-expected) (cell-error-name '%wasm-cell-name)) (mapcar #'walk (cdr x))))
                    ((ccl::without-interrupts ccl::with-interrupts-enabled)
                     (walk `(unwind-protect (let* ((ccl::*interrupt-level* ,(if (eq (car x) 'ccl::without-interrupts) -1 0))) ,@(mapcar #'walk (cdr x))) (%wasm-poll))))
@@ -2289,7 +2293,7 @@
 ;;; scratch and restores the interrupted TCR state on every transfer. Conditions
 ;;; are newly allocated D1 vectors under the current condition representation;
 ;;; production CLOS layout and condition slot access are separate obligations.
-(defun b-implicit-runtime ()
+(defun prior-numeric-b-implicit-runtime ()
  (if *b-allocation-retry* (progn 
   (pushnew "error_message" *b-symbols* :test #'equal)
   (pushnew "expected_function" *b-symbols* :test #'equal)
@@ -2697,7 +2701,7 @@
     (pushnew name *b-symbols* :test #'equal)
     (b-wat "(global.get $symbol_~a)" name)))
 
-(defun b-condition-runtime ()
+(defun prior-numeric-b-condition-runtime ()
  (if *b-allocation-retry* (progn  (concatenate 'string (b-handler-runtime) ";; Sealed bootstrap classes. Registry rows are [wrapper, ancestry mask,
 ;; slot defaults]. Instances and slot vectors use U1's D1 CLOS layouts.
 (func $condition_row (param $key i32) (param $by_wrapper i32) (result i32)
@@ -3127,3 +3131,65 @@
   (i32.store offset=12 (local.get $root) (i32.shl (i32.wrap_i64 (local.get $rem)) (i32.const 2)))
   (return (local.get $count)))
  (call $integer_slow (local.get $op) (local.get $root)))")
+
+(in-package :wasm32-compiler)
+(defun numeric-text (text old new)
+ (let ((p (search old text)))
+  (unless (and p (not (search old text :start2 (+ p (length old))))) (error "Numeric runtime anchor"))
+  (concatenate 'string (subseq text 0 p) new (subseq text (+ p (length old))))))
+(defun b-condition-runtime ()
+ (let ((s (prior-numeric-b-condition-runtime)))
+  (if *b-integer-service*
+   (numeric-text
+    (numeric-text s "(i32.ne (local.get $n) (i32.const 13))" "(i32.and (i32.ne (local.get $n) (i32.const 13)) (i32.ne (local.get $n) (i32.const 15)))")
+    "(i32.eq (local.get $mask) (i32.const 32796))"
+    "(i32.or (i32.eq (local.get $mask) (i32.const 32796)) (i32.eq (local.get $mask) (i32.const 196636)))") s)))
+(defun b-implicit-runtime ()
+ (let ((s (prior-numeric-b-implicit-runtime)))
+  (if *b-integer-service*
+   (numeric-text s "(else (i32.const 156))" "(else (if (result i32) (i32.eq (local.get $kind) (i32.const 34)) (then (i32.const 196636)) (else (i32.const 156))))") s)))
+(defun b-numeric-field (name forms)
+ (unless (= (length forms) 1) (refuse :numeric-reader-arity))
+ (b-frame 1 (lambda (root)
+  (b-wat "(i32.store offset=8 ~a ~a) ~a" root (b-scalar (first forms))
+   (b-multiple (make-b-raw-code :text (b-wat "(call $condition_field (i32.load offset=8 ~a) (i32.const 16384) (i32.const ~d) (local.get $top))" root (if (eq name '%numeric-operation) 8 12))))))))
+(defun b-integer-call (name forms)
+ (let ((op (position name '(%integer-add %integer-sub %integer-mul %integer-ash %integer-length %integer-truncate))))
+  (unless (= (length forms) (if (= op 4) 1 2)) (refuse :integer-arity))
+  (b-frame 2 (lambda (root)
+   (let ((a (b-wat "(i32.load offset=8 ~a)" root)) (b (b-wat "(i32.load offset=12 ~a)" root)))
+    (concatenate 'string
+     (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a)" root (b-scalar (first forms)) root (if (= op 4) "(i32.const 0)" (b-scalar (second forms))))
+     ;; Native CCL treats an explicit NIL divisor like the omitted default.
+     ;; Evaluation is already complete; normalize only the private operand root.
+     (when (= op 5) (b-wat "(if (i32.eq ~a (i32.const 77825)) (then (i32.store offset=12 ~a (i32.const 4))))" b root))
+     (with-output-to-string (s)
+      (dolist (value (cond ((= op 4) (list a)) ((= op 3) (list b a)) (t (list a b))))
+       ;; Recognised noninteger numbers stay at the unsupported-numeric boundary;
+       ;; they must not signal TYPE-ERROR with NUMBER as their expected type.
+       (write-string (b-wat "(if (i32.eqz (call $integer_operand ~a)) (then ~a))" value (b-type-failure value (cond ((< op 3) 'number) ((= op 5) 'real) (t 'integer)))) s)))
+     (when (= op 5)
+      (b-wat "(if (i32.eqz ~a) (then ~a))" b
+       (b-frame 1 (lambda (pair)
+        (b-wat "(i32.store offset=8 ~a ~a) (call $implicit_error_details (i32.const 34) (local.get $top) ~a (i32.load offset=8 ~a)) unreachable"
+         pair (b-cons (make-b-raw-code :text a) (make-b-raw-code :text (b-cons (make-b-raw-code :text b) (make-b-raw-code :text "(i32.const 77825)")))) (b-restart-symbol 'truncate) pair)))))
+     (b-wat "(local.set $count (call $integer (i32.const ~d) ~a)) ~a
+      (i32.store (local.get $results) (i32.load offset=8 ~a))
+      (if (i32.eq (local.get $count) (i32.const 2)) (then (i32.store offset=4 (local.get $results) (i32.load offset=12 ~a))))"
+      op root (b-ensure-results "(local.get $count)") root root)))))))
+;; Keep the accepted arithmetic helper unchanged; add a checked classification
+;; of admitted operands before entering it.
+(setf (symbol-function 'prior-numeric-integer-runtime) (symbol-function 'b-integer-runtime))
+(defun b-integer-runtime ()
+ (concatenate 'string (prior-numeric-integer-runtime)
+ "(func $integer_operand (param $x i32) (result i32) (local $p i32) (local $tag i32)
+ (if (i32.eqz (i32.and (local.get $x) (i32.const 3))) (then (return (i32.const 1))))
+ (if (i32.ne (i32.and (local.get $x) (i32.const 7)) (i32.const 6)) (then (return (i32.const 0))))
+ (local.set $p (i32.sub (local.get $x) (i32.const 6))) (call $span (local.get $p) (i32.const 4))
+ (local.set $tag (i32.and (i32.load (local.get $p)) (i32.const 255)))
+ (if (i32.eq (local.get $tag) (i32.const 7)) (then (return (i32.const 1))))
+ (if (i32.or (i32.or (i32.eq (local.get $tag) (i32.const 10)) (i32.eq (local.get $tag) (i32.const 26)))
+  (i32.or (i32.or (i32.eq (local.get $tag) (i32.const 15)) (i32.eq (local.get $tag) (i32.const 23)))
+   (i32.or (i32.eq (local.get $tag) (i32.const 71)) (i32.eq (local.get $tag) (i32.const 79)))))
+  (then (throw $call_error (i32.const 32))))
+ (i32.const 0))"))

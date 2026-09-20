@@ -2701,3 +2701,7 @@ the divisor binding survives normalisation, nested and dynamic NIL divisors,
 zero dividends, a NIL-divisor call inside a collecting handler, and both
 operand orders for every operation. All six audit-106 observations are fixed
 or retained as data. Record only; acceptance is the user's decision.
+
+## 2026-09-19 — accept and integrate integer conditions R2
+
+On “accept, integrate and proceed”, the R2 compiler is integrated byte-identically to the reviewed proposal. The record binds audit 107 and its review hash, the retained packet and the preceding integration. Runtime files are unchanged; the remaining compatibility differences are carried into the runtime obligations. No LL16 credit: 15 accepted, 16 missing.
