@@ -2999,3 +2999,7 @@ On “accept. integrate and PROCEED”, bind audit 127 and integrate the two exa
 ## 2026-09-20 — execute joined startup callbacks
 
 Eighteen selected reset/configuration effects execute in one schedule over 21 live globals; the CPU reset and cache publication share a cell. Thirteen reset completion constants recompiled through unchanged compiler; native resets rerun, R2 configuration bytes and native answers reused. Node and Chromium at both placements: 5184 callback comparisons, 5996 invocations, 180 refusals. Full-TCR and foreign-region checks; no LL15 credit. Fresh verifier reproduces 131 deterministic files at 191 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.
+
+## 2026-09-20 — execute startup EQ table reset
+
+RESET-WINNERS native registered callback and six generated calling forms over the strong EQ backing vector. Clear preserves identity/capacity and retires buckets, cache, tombstones and moved state; collection reclaims prior keys/values. Proposed hash service extension, unchanged compiler and adapter, inherited hash corpus replayed. No LL15 credit or production hash wrapper claim. Fresh verifier reproduces 88 deterministic files at 195 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.
