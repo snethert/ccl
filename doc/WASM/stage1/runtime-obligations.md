@@ -409,3 +409,21 @@ Callee closure is not all-input execution: %QUO-1 refuses ratio-producing divisi
 Next packet: ERROR/SIGNAL with arguments, character/string primitives, l0-symbol and l0-misc whole, and a denominator from the real Wasm module list.
 
 Original proposal verifier replays from 6947f83b after integration; no additional LL15 credit.
+
+## Audit 148 — accepted library and dependency integration
+
+252 original definitions execute and match native; 193 have a non-NIL witness, while 59 return NIL for every retained input. Add member inputs before treating structure predicates as positively exercised.
+
+After member witnesses, supply recipes for the remaining 136 closed definitions without inputs, then resolve the 22 target-list files stopped at reader/environment errors. Historical admission 1864/2492 and incomplete target admission 1522/1919 are not bootstrap completion.
+
+Replace the handwritten ASSQ WAT loop with a CCL-style target Lisp definition through the normal compiler in the next implementation packet; this integration preserves the reviewed lowering.
+
+Move refusal of literal handler classes outside the twenty admitted classes to compile time. The integrated runtime retains the reviewed checked refusal.
+
+Add source-emitted witnesses for %I<> and %IZEROP, condition-lowering refusal cases, and the bit-vector array-kind refusal case.
+
+Literal-zero subtraction of negative double zero differs from the native compiler: target preserves -0.0d0, native returns +0.0d0. With variable zero both preserve the sign; retained as an explicit native compiler quirk.
+
+Exact integer division is supported; nonintegral quotients refuse rather than truncate. Ratios, bignum logical operations, the full dynamic type system, proper native improper-list conditions and initialized object layouts remain outside the current executable scope.
+
+The three original packet verifiers replay at their proposal commits after integration. No LL15 or BT-0 completion credit is claimed.

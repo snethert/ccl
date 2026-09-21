@@ -1,3 +1,22 @@
+## 2026-09-21 — accept audit 148 and integrate library, execution and dependencies
+
+On Steve’s “accept as advised”, accept execution R2, division and dependencies.
+Import audit 148 verbatim at 78250fda (original d3acc0a0). Fold the final proposal’s
+two dispatcher hooks into the existing CASE/COND functions: 785 generated and
+result files remain byte-identical, including all WAT/Wasm, native answers and
+execution records. A fresh pristine-U1 build of the final compiler passes
+R6/R6a; all 164 FASLs restore. The 21,843 native test answers are reused only
+through exact rebuilt FASL/snapshot equality, and the existing-target reader
+matrix covers SYMBOL-NAME under the source-location allowance.
+
+Four shared files change: backend, architecture, cross-fasloader and SYMBOL-NAME.
+Runtime services stay unchanged. This integrates both computed-callee and handler
+symbol/mask wrong-code fixes. No new execution credit: 252 original definitions
+match native, of which 193 have a non-NIL witness. Carry member inputs, remaining
+recipes, reader environments, Lisp ASSQ, literal handler-class admission and the
+reported refusal/witness gaps into the next implementation packet. LL15 remains
+open, with the ledger at 21 accepted and 12 missing of 33.
+
 ## 2026-09-21 — execute 252 native bootstrap definitions
 
 On the user's demand for a larger execution packet, close ASSQ, fixnum

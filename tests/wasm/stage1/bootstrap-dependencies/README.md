@@ -1,5 +1,20 @@
 # Execute native bootstrap dependencies
 
+Accepted by Steve after audit 148 and integrated with folded dispatchers.
+**252 original definitions execute; 193 have a non-NIL witness.** The remaining
+59 have negative-only recipes; member witnesses are next. The final backend
+reproduces all generated modules and execution records byte for byte, and its
+fresh native R6/R6a build passes. See
+[the integration record](../../../../doc/WASM/stage1/integration-bootstrap-dependencies.json).
+The following describes the original proposal, whose `packet.py` verifier must
+be run at `4dd029e4` after integration. `integrate.py` replays the folded candidate
+from the retained proposal on the integrated tree:
+
+```sh
+python3 tests/wasm/stage1/bootstrap-dependencies/integrate.py target --output /tmp/dependencies-integration-target
+python3 tests/wasm/stage1/bootstrap-dependencies/integrate.py native --output /tmp/dependencies-integration-native --work /tmp/dependencies-integration-work
+```
+
 **252 original definitions execute and match native, up from 186 (+66). Admission stays 1,864/2,492 historically and 1,522/1,919 in the incomplete target worklist.** The run has 2,472 native rows, 9,888 comparisons, 5,270 collections, 38 checked refusals and 14 rejected faults. It builds on the reviewed execution work and the integer-division proposal. It adds no C or JavaScript runtime service and changes no shared file. The retained summary and execution frontier give the final counts and per-definition input counts.
 
 The backend lowers ASSQ, fixnum LOGAND/LOGIOR calls, unary and variadic subtraction, constant LDB fields, and constant TYPEP/REQUIRE-TYPE calls. Type tests call the existing CCL predicates; EQL/member tests use the accepted EQL implementation. Dynamic type specifiers and unsupported literal descriptors remain real Lisp dependencies. Subtraction uses the accepted numeric implementation, with every operand evaluated once in source order into roots and every accumulated result rooted before another call.

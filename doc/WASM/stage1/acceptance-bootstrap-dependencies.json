@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept as advised",
+    "context": "Accept execution R2, division and dependencies under audit 148; integrate the last with folded dispatchers and R6/R6a on the final backend."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-EXECUTION-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-execution-r2/packet.json",
+      "sha256": "aefd030f5bacf86fef899041c4b16b295d28eedc5907f5e13613d38fb1f8aa45"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-DIVISION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-division-r1/packet.json",
+      "sha256": "696aeb8b9b4c38c38eac4470cb2a4d52196f1b7f17f849303dae628ca5f598b0"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-DEPENDENCIES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-dependencies-r1/packet.json",
+      "sha256": "d7060e27fa5ed00e1b8898f28f7a9a6b3f59798c8c7f1f5bc379a6ac6316c50d"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "d3acc0a09735730f4d28e7b5a8081ef21b9f99e9",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "662728e0e24e14682e5eef74eb039f4de08355fc6f225715de14c270e0b4e9cc",
+      "import_commit": "78250fda9839210fdcaabdc8e7079d58b635fa99"
+    }
+  ],
+  "observations": [
+    "252 original definitions execute and match native; 193 have a non-NIL witness, while 59 return NIL for every retained input. Add member inputs before treating structure predicates as positively exercised.",
+    "After member witnesses, supply recipes for the remaining 136 closed definitions without inputs, then resolve the 22 target-list files stopped at reader/environment errors. Historical admission 1864/2492 and incomplete target admission 1522/1919 are not bootstrap completion.",
+    "Replace the handwritten ASSQ WAT loop with a CCL-style target Lisp definition through the normal compiler in the next implementation packet; this integration preserves the reviewed lowering.",
+    "Move refusal of literal handler classes outside the twenty admitted classes to compile time. The integrated runtime retains the reviewed checked refusal.",
+    "Add source-emitted witnesses for %I<> and %IZEROP, condition-lowering refusal cases, and the bit-vector array-kind refusal case.",
+    "Literal-zero subtraction of negative double zero differs from the native compiler: target preserves -0.0d0, native returns +0.0d0. With variable zero both preserve the sign; retained as an explicit native compiler quirk.",
+    "Exact integer division is supported; nonintegral quotients refuse rather than truncate. Ratios, bignum logical operations, the full dynamic type system, proper native improper-list conditions and initialized object layouts remain outside the current executable scope.",
+    "The three original packet verifiers replay at their proposal commits after integration. No LL15 or BT-0 completion credit is claimed."
+  ],
+  "slot_credit": false
+}

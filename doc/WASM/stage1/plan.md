@@ -639,3 +639,13 @@ type system and its environment, bignum logical operations, proper native
 improper-list conditions, and the remaining file compilation environment.
 Representation primitive witnesses and fixture adapters are excluded from
 original-definition credit. The packet is unintegrated and LL15 remains open.
+
+2026-09-21: Audit 148 is accepted on Steve’s “accept as advised”; execution R2,
+division and dependencies are integrated with folded dispatchers and final
+R6/R6a. The current executable headline is **252 definitions, 193 with a
+non-NIL witness**. Next, supply a member input to each negative-only predicate,
+then recipes for the 136 closed definitions without inputs, then repair the 22
+stopped target-file environments. Alongside this substantive work, move ASSQ
+into idiomatic target Lisp, refuse unsupported literal handler classes at
+compile time, and close the %I<>/%IZEROP and condition/array refusal carry items.
+Do not count this integration as new throughput or completion of LL15.

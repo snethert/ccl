@@ -15,7 +15,7 @@
    ;; is a valid Wasm substitute. Refuse before the native writer is entered.
    :closure-trampoline-code nil :udf-code nil
    :default-image-name nil :default-startup-file-name nil
-   :subdirs nil :nil-relative-symbols nil
+   :subdirs '("ccl:level-0;WASM32;") :nil-relative-symbols nil
    :image-base-address nil :static-space-address nil :purespace-reserve nil))
 (when (and (find-xload-backend :wasm32)
            (not (eq (find-xload-backend :wasm32) *wasm32-xload-backend*)))

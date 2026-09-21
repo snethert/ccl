@@ -3023,29 +3023,35 @@
       "execution_status": "PASS",
       "id": "STAGE1-BOOTSTRAP-EXECUTION-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-execution-r2/packet.json",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "R2 fixes audit-147 retained-source mismatch and runs a passing unmodified verifier before commit. Compiler/runtime proposals byte-identical to R1. 186 original definitions match native (was 172), 2047 native rows, 8188 comparisons, 4094 between-call and 110 in-call collections. Fourteen new executions include binding/value readers, MOVE-STRING-BYTES, GETF-TEST, RASSOC and type combinators; narrow predicate inputs explicitly declared. Both copy functions have six boundary/offset rows. Division coverage explicitly float-only. Retention rejects stale compiler source copies. Six focused faults rejected, ten legacy files identical, 112 fast checks. Reuse the unchanged R1 native build and its qualified native tests/readers. Admissions unchanged: historical 1864/2492; incomplete real worklist 1522/1919. No integration, acceptance or LL15 credit.",
-      "sha256": "aefd030f5bacf86fef899041c4b16b295d28eedc5907f5e13613d38fb1f8aa45"
+      "review_disposition": "ACCEPTED",
+      "scope": "Accepted by Steve after audit 148 and integrated through the folded dependency proposal, with fresh final-backend R6/R6a and byte-identical generated execution. No slot credit. Original proposal history: R2 fixes audit-147 retained-source mismatch and runs a passing unmodified verifier before commit. Compiler/runtime proposals byte-identical to R1. 186 original definitions match native (was 172), 2047 native rows, 8188 comparisons, 4094 between-call and 110 in-call collections. Fourteen new executions include binding/value readers, MOVE-STRING-BYTES, GETF-TEST, RASSOC and type combinators; narrow predicate inputs explicitly declared. Both copy functions have six boundary/offset rows. Division coverage explicitly float-only. Retention rejects stale compiler source copies. Six focused faults rejected, ten legacy files identical, 112 fast checks. Reuse the unchanged R1 native build and its qualified native tests/readers. Admissions unchanged: historical 1864/2492; incomplete real worklist 1522/1919. No LL15 credit.",
+      "sha256": "aefd030f5bacf86fef899041c4b16b295d28eedc5907f5e13613d38fb1f8aa45",
+      "review_commit": "d3acc0a09735730f4d28e7b5a8081ef21b9f99e9",
+      "review_sha256": "662728e0e24e14682e5eef74eb039f4de08355fc6f225715de14c270e0b4e9cc"
     },
     {
       "id": "STAGE1-BOOTSTRAP-DIVISION-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-division-r1/packet.json",
       "sha256": "696aeb8b9b4c38c38eac4470cb2a4d52196f1b7f17f849303dae628ca5f598b0",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Exact integer division proposal, following the user's instruction to fix the integer witness. Reuses accepted integer quotient/remainder service and its fast fixnum path; exact quotients return one value, nonzero remainders refuse code 45. Integer / and source-emitted DIV2, %QUO-1 integer reciprocals, signed/bignum quotients, mixed floats, operand effects and collection, division-by-zero and invalid-operand handlers all run against native. Fixes newly exposed bootstrap handler-symbol/mask identity mismatch; restart/type/operation names use bootstrap symbol identity. 186 original definitions unchanged, 2085 native cases, 8340 comparisons, 4170 between-call and 166 in-call collections. Nine directed faults, legacy byte comparison, fresh native R6/R6a build with identical native FASLs and snapshot allowing test reuse. Unmodified retained verifier passes. No new arithmetic service, shared-source edit, integration or LL15 credit. Ratios remain unsupported."
+      "scope": "Accepted by Steve after audit 148 and integrated through the folded dependency proposal, with fresh final-backend R6/R6a and byte-identical generated execution. No slot credit. Original proposal history: Exact integer division proposal, following the user's instruction to fix the integer witness. Reuses accepted integer quotient/remainder service and its fast fixnum path; exact quotients return one value, nonzero remainders refuse code 45. Integer / and source-emitted DIV2, %QUO-1 integer reciprocals, signed/bignum quotients, mixed floats, operand effects and collection, division-by-zero and invalid-operand handlers all run against native. Fixes newly exposed bootstrap handler-symbol/mask identity mismatch; restart/type/operation names use bootstrap symbol identity. 186 original definitions unchanged, 2085 native cases, 8340 comparisons, 4170 between-call and 166 in-call collections. Nine directed faults, legacy byte comparison, fresh native R6/R6a build with identical native FASLs and snapshot allowing test reuse. Unmodified retained verifier passes. No new arithmetic service or LL15 credit. Ratios remain unsupported.",
+      "review_commit": "d3acc0a09735730f4d28e7b5a8081ef21b9f99e9",
+      "review_sha256": "662728e0e24e14682e5eef74eb039f4de08355fc6f225715de14c270e0b4e9cc"
     },
     {
       "id": "STAGE1-BOOTSTRAP-DEPENDENCIES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-dependencies-r1/packet.json",
       "sha256": "d7060e27fa5ed00e1b8898f28f7a9a6b3f59798c8c7f1f5bc379a6ac6316c50d",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Execution-focused bootstrap dependency proposal: 252 unchanged original definitions match native (+66), 2472 native rows, 9888 comparisons, 5270 collections, 14 faults rejected and 38 checked refusals. Admission unchanged at 1864/2492 historically and 1522/1919 in the incomplete target list. Lowers ASSQ, fixnum LOGAND/LOGIOR, subtraction calls, literal TYPEP/REQUIRE-TYPE and constant LDB fields through existing primitives. Original LENGTH, SEQUENCE-TYPE, registration cells, string/array/list/symbol consumers execute unchanged. %BADARG decodes NX1 compact type IDs through original %TYPE-ERROR-TYPE and its rooted native vector. Three target representation primitives have separate native witnesses and are excluded from original-definition credit. Fresh native R6/R6a build; exact native FASL/snapshot equality permits test reuse. Unmodified retained verifier passes. No new C/JS runtime service, shared-source changes, integration or LL15 credit. Dynamic type system, bignum logical operations, improper-list condition semantics, initialized layouts and complete file environments remain open."
+      "scope": "Accepted by Steve after audit 148 and integrated through the folded dependency proposal, with fresh final-backend R6/R6a and byte-identical generated execution. No slot credit. Original proposal history: Execution-focused bootstrap dependency proposal: 252 unchanged original definitions match native (+66), 2472 native rows, 9888 comparisons, 5270 collections, 14 faults rejected and 38 checked refusals. Admission unchanged at 1864/2492 historically and 1522/1919 in the incomplete target list. Lowers ASSQ, fixnum LOGAND/LOGIOR, subtraction calls, literal TYPEP/REQUIRE-TYPE and constant LDB fields through existing primitives. Original LENGTH, SEQUENCE-TYPE, registration cells, string/array/list/symbol consumers execute unchanged. %BADARG decodes NX1 compact type IDs through original %TYPE-ERROR-TYPE and its rooted native vector. Three target representation primitives have separate native witnesses and are excluded from original-definition credit. Fresh native R6/R6a build; exact native FASL/snapshot equality permits test reuse. Unmodified retained verifier passes. No new C/JS runtime service or LL15 credit. Dynamic type system, bignum logical operations, improper-list condition semantics, initialized layouts and complete file environments remain open. Audit-148 witness split: 252 original definitions executed, 193 with a non-NIL answer; 59 NIL-only. Remaining member-input, error-admission and Lisp ASSQ work is recorded in runtime obligations.",
+      "review_commit": "d3acc0a09735730f4d28e7b5a8081ef21b9f99e9",
+      "review_sha256": "662728e0e24e14682e5eef74eb039f4de08355fc6f225715de14c270e0b4e9cc"
     }
   ],
   "current_runs": [
