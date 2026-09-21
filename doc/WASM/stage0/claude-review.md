@@ -2936,3 +2936,57 @@ Closed: 150-F1. Open: this audit's F1 (index bytes); the full foreign-reference 
 Integration f63a4a3b: verified, no defect, replay repaired. Inputs packet: no defect in the execution work; the verifier passes; everything Claude ran agrees with native. Recommended: accept the packet; integrate the thirteen constant branches and the six arch constants under the R6 allowance; do not integrate the `linux-files` removal yet. The chain nit (F1) is repaired at the head of the next packet.
 
 Suggested next packet, same size or larger: the 56 recipes; the foreign-reference table and every constant-only branch in one unit; a first cut of the target OS-layer file with the host-independent definitions (time units, semaphore API over the existing services, GETENV answering NIL) so that the `linux-files` callers close. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-second Claude audit — STAGE1-BOOTSTRAP-HOST-R1 at 3d8fb085 and 59814b0c — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-152`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed audit 151. Reviewer disposition only. Audit 151 is imported verbatim at 764ca6c1: this file there hashes fcd42b1f…, the value `review-bootstrap-inputs.json` binds for 99079c0f. That record states the inputs packet's disposition correctly (execution reviewed, module-list removal held, the user's acceptance not inferred).
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 332 → 349 (+17). With a non-NIL return witness: 318 → 323 (+5). The README leads with both numbers and with the third that explains the gap: eight of the seventeen have error-only witnesses (`%BADARG`, `%INVALID-METHOD-ERROR`, the four IOBLOCK-NO- entries, MISSING-TYPE-METHOD, SORT-LIST-ERROR), where native and target are compared on arrival at an ERROR handler, cleanup and restored state, not on condition class or payload; three more return NIL by definition. Claude's recount from the replayed native rows agrees with all of it. Native rows 2,913 → 2,972; target comparisons 11,652 → 11,888, of which 64 are target-protocol rows with no native counterpart and are counted apart. The backend and runtime bytes are unchanged.
+
+`progress.json` gives every one of the 49 closed definitions that had no recipe a disposition: 17 now run, 32 are named with the particular reason (a target-specific representation, process state, a foreign interface, transport). The difference from audit 151's 56 is seven fixture and primitive names, listed. This vein is nearly worked out: what remains needs state the fixture cannot honestly fake.
+
+Real worklist, with `linux-files` restored: 57 files, 42 read to the end, 2,145 definitions parsed, 1,685 admitted. The historical scan is now 1,871 of 2,509 and is no longer a fixed denominator, which the README says.
+
+Where the next gain is. Of the 2,145 parsed definitions 460 are refused, and the refusals are concentrated in a few cheap operators: a lambda form the emitter does not take (47), the missing `NTH-IMMEDIATE` arch macro (31), `LIST*` (27), `%ILSL` (22), `UVREF` (20), `LOGBITP` (18), `%IASR` (17), `%CONSMACPTR%` (16), `UVSET` (14), `%MAKE-UVECTOR` (12), `IMMEDIATE-GET-XXX` (12), `%NEW-PTR` (11), `%AREF1` (10), `NTH-VALUE` (8), `MAKE-LIST` (6). Seventeen more die inside the compiler with "NIL is not of type (OR SYMBOL FUNCTION)", which is a compiler bug, not a refusal. Recipes moved the counter by seventeen this time. 271 definitions have one of these fifteen operators as their first refusal (three of them, `%CONSMACPTR%`, `%NEW-PTR` and `IMMEDIATE-GET-XXX`, are foreign-memory operations and may belong with F1 below); a first refusal can hide a second, so the yield is a bound, not a promise.
+
+### Evidence and replay
+
+Packet 6f188832… (1,824 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog d96d217b… at 253,252 files; evidence commit 51a8981e; store clean. Audit 151's F1 is fixed: the committed index and the snapshot are byte-equal again (31ba28da…). The verifier passes unmodified from the detached worktree in 140 seconds: 349 originals, 11,888 target comparisons, the 204-join reader matrix rerun.
+
+### The foreign-reference table
+
+`foreign-sites.json` lists 409 syntactic `#$` and `#_` sites in the 57 files, found by a scanner that skips strings, comments and escaped symbols, and joined to what CCL's reader actually reads under the Wasm features: 309 sites are never read on this target (existing-platform conditionals), 100 active foreign calls remain, three active foreign type reads (all `:TIMEVAL` in `linux-files`), and no active constant read remains. This is the enumeration audit 151 asked for and it is well made.
+
+### F1 — scope: excluded subsystems are given protocol constants and provider dispositions
+
+The table has no disposition for "not on this target". Every active call but `dlopen` and `dlclose` is marked as owed by some provider: `fork`, `execvp`, `waitpid`, `kill` (scheduler or process provider); `setuid`, `setgid`, `setpgid`, `chown`, `getpwuid`, `getpwnam`, `getuid`, `tcgetpgrp`, `getdtablesize`, `munlock` (namespace or host provider); `mmap`, `munmap`, `mlock`, `mincore` (memory-owner replacement). Neither host has these and the outline excludes the POSIX layer; nothing is owed for them. The definitions that call them leave the target.
+
+The same error reaches CCL's source. 35 of the 108 proposed constant branches, 19 of the 58 new arch constants, serve only those subsystems: `MAP_ANON`, `MAP_PRIVATE`, `MAP_FIXED`, `PROT_NONE`, `PROT_READ`, `PROT_WRITE`, `PROT_EXEC`, `RTLD_NOW`, `RTLD_NOLOAD`, `RUSAGE_SELF`, `SIGSTOP`, `SIGTSTP`, `SIGTTIN`, `SIGTTOU`, `WNOHANG`, `WUNTRACED`, `WCOREFLAG`, `SOL_SOCKET`, `SO_SNDLOWAT`. The README is candid that these "do not admit those operations". But a `target::os-map-anon` with Linux's value in the wasm32 arch file tells the next reader that a mapping protocol exists, and a token-level branch inside RUN-PROGRAM's support code lets the reader pass so that the definition is then counted as parsed and perhaps admitted. CCL's own idiom for a subsystem a platform lacks is to conditionalize the definition, which is how `linux-files` treats Windows. For these the edit is `#-wasm32-target` around the definitions (or a `#+wasm32-target` definition that signals), not a constant.
+
+Part of this is Claude's wording in audit 151 ("the branches for every row that is only a constant"), which did not say that a row in an excluded definition is not a constant row. The disposition asked for there, "excluded with its caller", is the missing one.
+
+Remedy, at the head of the next packet: add that disposition; move the process, identity, memory-mapping, dynamic-loading, signal and socket rows into it; drop their 19 constants and 35 branches from the source proposal; conditionalize the calling definitions instead. `sysconf`, `fpathconf`, `poll`, `fcntl` and their six constants need a decision row by row (page size and clock ticks are host configuration; pipe limits and descriptor flags probably are not). That leaves 39 constants and 73 branches, six of the constants subject to that decision; the rest is the file-provider vocabulary (seek, open flags, file errors, `S_IF*`, `PATH_MAX`), `EINTR`, `ETIMEDOUT` and the `EX_*` exit codes.
+
+### The source proposal otherwise
+
+The mechanism is the reviewed one from audit 151: a token substitution per site in twelve files, native R6/R6a PASS with 21,843 tests, 146 of 164 FASLs byte-identical and the changed files identical in decoded code, all 164 restored, and a compositional reader proof over 204 file-and-profile joins. No objection to the mechanism or to the 39 constants that stay. Both module-list edits are gone and `linux-files` is back in both lists, as advised.
+
+### The target OS file
+
+`w32-os.lisp` (proposed as `level-1/WASM32/w32-os.lisp`, 35 lines, compiled whole by CCL's file compiler) routes GETENV, GET-UNIVERSAL-TIME, SIGNAL-SEMAPHORE, WAIT-ON-SEMAPHORE, TIMED-WAIT-ON-SEMAPHORE and YIELD through an alist of Lisp-callable capabilities in `*WASM-HOST-SERVICES*`; a missing capability signals an error and nothing succeeds silently. Signatures match the native ones. It reads as CCL code. It is a routing prototype and says so: the providers in the fixture are generated Lisp functions, the rows are protocol rows asserted independently in `host-checks.py`, none of it counts as original-definition execution, and it is not in the shared tree or any module list. CPU-COUNT is refused by the compiler at GLOBAL-SETQ and is listed as unfinished, not stubbed; a SETQ of a special variable that the bootstrap path cannot compile is itself worth a line in the next packet.
+
+Two design questions it raises, neither a defect in a first cut: WAIT-ON-SEMAPHORE requires the provider to finish the wait before it returns, which a browser main thread cannot do, so the blocking contract belongs with the scheduler work and the HOSTFM proposal; and the capability table is a special variable that any code can rebind, which is fine for a prototype and wrong for the port.
+
+A probe of Claude's that called these entries from a compiled caller could not be compared, because the native side calls CCL's real WAIT-ON-SEMAPHORE there; the fixture substitutes the target definitions only when they are the entry under test. That agrees with the README's "source caller routing … remains owed" and is recorded so that nobody reads the seven protocol entries as caller-level evidence.
+
+### Carry items
+
+Closed: 151-F1 (index bytes); the foreign-reference table; `linux-files` kept. Open: this audit's F1; the target OS file beyond its first seven entries; the blocking contract; the refusal histogram above.
+
+### Disposition
+
+No defect in the execution work; the verifier passes; the counts are honestly split. The source proposal is not ready to integrate as it stands (F1): 39 constants and 73 branches are sound or decidable, 19 constants and 35 branches belong to subsystems the target does not have. R-4 applies to scope, so this is a finding and not a carry item, but it needs no dedicated packet: re-cut the table and the proposal at the head of the next one. Recommended: accept the execution evidence; integrate no source from this packet yet. The inputs packet's thirteen branches (audit 151) are all in the sound set and remain integrable.
+
+Suggested next packet, same size or larger, admission and execution together: the cheap operators in the refusal histogram and the seventeen compiler crashes, with inputs for whatever closes; GLOBAL-SETQ; the re-cut foreign table with the excluded definitions conditionalized in CCL's source. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
