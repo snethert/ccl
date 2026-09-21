@@ -1,6 +1,6 @@
 # Stage 1 termination exclusion — 20 September 2026
 
-Status: **user-approved policy; corrected enforcement proposal reviewed, awaiting acceptance**.
+Status: **user-approved policy; corrected components accepted and integrated**.
 This records no result acceptance, integration or LL15 credit.
 
 The user answered “Exclude it in Stage 1 (recommended)” to this question:
@@ -36,8 +36,10 @@ not materialized as an ordinary strong list merely because the observed queue
 was empty. Explicit resource disposal is unaffected by this policy; this is
 not permission to omit required releases or cleanup during normal control flow.
 
-The strong-table/population proposal reviewed in audits 132–134 still awaits
-its own user acceptance. This finalization policy decision does not supply it.
+The user accepted both this corrected exclusion and the strong-table/population
+proposal after audit 136: “accept integrate and finish ::15”. The acceptance and
+component integration are bound in acceptance-bootstrap-policies.json and
+integration-bootstrap-policies.json.
 
 Corrected implementation candidate: [empty-state follow-up](../../../tests/wasm/stage1/termination-exclusion-review/README.md),
 STAGE1-TERMINATION-EXCLUSION-REVIEW-R1. Audit 135 found that R1 incorrectly
@@ -49,10 +51,10 @@ inert. The follow-up compares against untouched native consumers and exercises
 real file close with the corrected bindings. Native registration/cancellation is
 observed separately and restored, without finalizing an object. Actual image
 slot discovery, digest-bound installation at the CCL symbols and the bootstrap
-READY join remain required. No shared runtime has changed.
+READY join remain required. The reviewed components are integrated; production image joins remain open.
 
 Audit 136, imported as e153515d, finds no defect and closes audit-135 F1.
 The retained replay and three additional compiled faults support the declared
 scope. Both this corrected exclusion and the strong-table/ordinary-population
-substitute are fully reviewed and await user acceptance. Production image
+substitute are now accepted, with reviewed components integrated. Production image
 installation and the READY join remain open; review is not bootstrap closure.

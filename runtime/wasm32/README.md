@@ -155,3 +155,14 @@ Initializer phases: `bootstrap-schedule.mjs` integrates the accepted auxiliary `
 Digest-bound initializer installation: `bootstrap-install.mjs` exports `scheduleInstaller({modules, loaderOptions, imports, invoke})`. Pass its `install` function to `BootstrapSchedule.run`. It owns a private validated byte catalog, obtains entries through the production lazy loader, and binds each installed digest to the plan before returning the invocation callback; `installed()` returns copied records. The synchronous `invoke(entry, row)` callback and import capabilities remain trusted. This closes the catalog-substitution gap for this adapter, while arbitrary scheduler callbacks remain trusted. The accepted thirteen native reset effects remain generated evidence awaiting the production symbol owner; this is not complete startup or LL15 qualification.
 
 `config.mjs` validates a trusted process configuration synchronously. `browser-config.mjs` supplies reported browser concurrency and Wasm page size; its milliseconds and Lisp stack sizes are explicit policy. R2 generated startup effects and full-TCR harnesses remain in the accepted evidence packet; the superseded R1 spin body must not be used.
+
+
+The reviewed bootstrap policy helpers are integrated as `bootstrap-tables.mjs`
+and `bootstrap-populations.mjs`. They implement the accepted Stage 1 strong
+retention policy, with measured fixed capacities; EQL/EQUAL construction still
+refuses until its service is supplied. `bootstrap-termination/` contains the
+corrected reviewed entry data, five compiled modules, binding map and read-only
+image-admission guard. Cancellation, lookup and draining return one NIL in the
+admitted empty state; registration refuses. Entry data is compiler input, not
+an automatically loaded native Lisp file. Production root discovery, installation
+at CCL symbols, scheduling disablement and the READY join remain required.

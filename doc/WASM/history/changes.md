@@ -1,3 +1,13 @@
+## 2026-09-20 — accept and integrate bootstrap retention and termination policies
+
+On the user's “accept integrate and finish ::15”, accept the reviewed strong
+substitute chain and corrected termination exclusion. Bind audits 132–136,
+packet hashes and the preceding integration. Ten added runtime files equal the
+reviewed bytes. Production imports reproduce the table, population, generated
+termination and admission records byte for byte; all prior compiler/runtime
+files are unchanged. No LL15 credit. Continue with the outstanding equality,
+population and selected initializer joins.
+
 ## 2026-09-20 — record audit 136: termination correction reviewed
 
 Import Claude's audit-only branch as e153515d and bind its commit and review-file

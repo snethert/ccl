@@ -461,3 +461,12 @@ the index. Both this exclusion and the strong-table/ordinary-population chain
 (audits 132–134) await acceptance. Use the corrected exclusion packet for later
 integration. Actual CCL symbol installation, cross-dumped slot discovery,
 scheduling disablement and the READY join remain required; no LL15 credit.
+
+
+2026-09-20, user: “accept integrate and finish ::15”. Both reviewed policies are
+accepted and integrated under integration-bootstrap-policies.json. Ten new files
+are exact reviewed bytes: strong table/population builders and the corrected
+termination entry data, mapping, guard and five modules. Production-import
+checks reproduce four retained records. Remaining work is functional LL15
+closure: equality services, population consumers/roots, selected initializer
+implementation/dependency joins and READY. Acceptance is not slot credit.

@@ -1,0 +1,61 @@
+{
+  "authorization": {
+    "provenance": "User following audit 136 and explicit recommendation to accept both proposals; ::15 interpreted as LL15.",
+    "quote": "accept integrate and finish ::15"
+  },
+  "observations": [
+    "Strong retention is the approved Stage 1 substitute; weak behavior is owed in Stage 2.",
+    "Counts describe the pinned native image; re-census the actual port heap. Fixed-capacity EQ tables refuse past capacity or the 16384 ceiling; growth, EQL/EQUAL and actual root installation remain required.",
+    "Use the corrected empty-state entries: cancellation, lookup and draining return one NIL, registration refuses. Image slots, scheduling disablement and real CCL bindings must join before READY.",
+    "The entries file is reviewed compiler input data (including qualification helpers), not an automatically loaded native source file. Only the five modules named by bindings.json are installed artifacts.",
+    "No LL15 credit: acceptance of these components does not establish initializer membership or completion."
+  ],
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-TABLES-R1",
+      "locator": "2026-09-20-stage1-bootstrap-tables-r1/packet.json",
+      "sha256": "7f32faa277e212c3b423c184c3bf1bfa5da842ade12f2cfab96b1cceba40e12e"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-TABLES-REVIEW-R1",
+      "locator": "2026-09-20-stage1-bootstrap-tables-review-r1/packet.json",
+      "sha256": "0e77a917af95f0a49de955c1737e989d29568c3d8d42bda439abb572ca6745b2"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HEAP-CENSUS-R1",
+      "locator": "2026-09-20-stage1-bootstrap-heap-census-r1/packet.json",
+      "sha256": "d33f36bb726c50d06b152e925688e15a73b9f36632c70bcf7ab78f6101204bc0"
+    },
+    {
+      "id": "STAGE1-TERMINATION-EXCLUSION-REVIEW-R1",
+      "locator": "2026-09-20-stage1-termination-exclusion-review-r1/packet.json",
+      "sha256": "c1cc110216a0f9c433242f25552ce6c45cfa21dc3bdde808618c2f64c99ea752"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "68afe0fcbb9f2fa307337b9d62122fe5b84befc3",
+      "sha256": "ecee83b8bd50430467a8c3b964e011aad0187f18adec00de605f150993588da3"
+    },
+    {
+      "commit": "484cc1e28b2b7c6e4de93c60b02a36d56ed368fa",
+      "sha256": "ad6774169ca1f13999392c8b580e258c44c1deb32752ed1287c890c8436302c0"
+    },
+    {
+      "commit": "010c0dfb08067792785556f36a941ebbe3f8f391",
+      "sha256": "8531f45c1d34d5585283a8a07902943f573d3bfcf1d0dc1ecd24b7730a573c16"
+    },
+    {
+      "commit": "0d63a00ec69be9578a1c48a347629bc6701b1af0",
+      "sha256": "d6f2e6c2412831d2f796d07e63965f8c232d2da7cc849a5db6c8402c45083548"
+    },
+    {
+      "commit": "e153515dcd91033d257f45f825c4ab4f2f97fe2f",
+      "sha256": "c8b6b15e6245e47fba93be64367d00dbbc4e324ad2ff150fc34dff9812210107"
+    }
+  ],
+  "slot_credit": false,
+  "timestamp": "2026-09-21T04:03:49.042387+00:00",
+  "version": 1
+}
