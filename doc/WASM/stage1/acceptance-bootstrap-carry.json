@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Accept and integrate",
+    "context": "Direct answer after audit 150; prior audit-149 accept was also Steve’s direct message."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-CARRY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-carry-r1/packet.json",
+      "sha256": "cf66d5961b7126e52807e77bdd8eab429073f3e3f62834c88ac094f64770b404"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "be35e2ab5100f04f50fb6f7e6b60a4aa64fae179",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "bc372f3ced52ff53db4ed816272cd97b787cf8d23eca086da4c1905f6719171e",
+      "import_commit": "ecf98002f151a5c72d35911ebf94b9abae84174c"
+    }
+  ],
+  "observations": [
+    "301 original definitions remain matched, 290 with non-NIL witnesses; no execution gain.",
+    "Signed-zero literal native compiler difference remains declared; variable-zero subtraction agrees.",
+    "Audit-150 F1: repair the witnesses replay subprocess source selection and run the documented command from the committed checkout.",
+    "Next work: execution recipes, corrected module list and source branches for POSIX constants."
+  ],
+  "slot_credit": false
+}

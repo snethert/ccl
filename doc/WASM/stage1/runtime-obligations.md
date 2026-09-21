@@ -465,3 +465,7 @@ zero changes -0.0d0 to +0.0d0; target subtraction retains the sign. Variable zer
 agrees. No numeric behavior was changed and the four observed differences are
 excluded from the native-match count. Collector-owner checks already closed in
 b9de543d are reused only on exact source and rebuilt binary identity.
+
+## Audit 150 — carry acceptance
+
+Steve accepted the carry packet explicitly. Lisp ASSQ, compile-time handler admission, spread refusals and the written harness are integrated byte-exact; those carry items are closed. Literal signed zero remains a tested, declared difference. The witnesses replay source override now crosses the subprocess boundary; its documented command must be run from the committed clean checkout and retained with the next execution packet. Remaining execution recipes and POSIX source/module work continue.

@@ -3406,6 +3406,7 @@
         ;; Ordinary macros and NX1's target-aware operators remain available.
         (ccl::*nx-compile-time-compiler-macros* nil)
         (ccl::*compiler-macros* (make-hash-table :test #'eq))
+        (*macroexpand-hook* (bootstrap-macroexpand-hook))
         (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
     (catch *module-result-tag*
       (ccl::compile-named-function (bootstrap-function-form form)
@@ -3457,6 +3458,21 @@
   ;; NX1 recursively compiles this form before emitting LOAD-TIME-VALUE.
   ;; It must not escape through the enclosing module's pass-2 result tag.
   (refuse :bootstrap-load-time-value))
+
+(defun bootstrap-macroexpand-hook ()
+  ;; Validate the native handler macros wherever NX1 encounters them, including
+  ;; inside local macros. A lexical macro with the same name is not this API.
+  (let ((hook *macroexpand-hook*)
+        (bind (macro-function 'handler-bind))
+        (case (macro-function 'handler-case)))
+    (lambda (expander form environment)
+      (when (or (eq expander bind) (eq expander case))
+        (dolist (clause (if (eq expander bind) (second form) (cddr form)))
+          (unless (and (consp clause) (listp clause))
+            (refuse :b-handler-clause))
+          (unless (and (eq expander case) (eq (car clause) :no-error))
+            (b-condition-mask (car clause)))))
+      (funcall hook expander form environment))))
 
 (defun bootstrap-alphatizers ()
   (let ((table (make-hash-table :test #'eq)))
@@ -3918,7 +3934,6 @@
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
     (cond ((eq name 'ldb) (bootstrap-ldb forms))
-          ((eq name 'ccl::assq) (bootstrap-assq forms))
           ((member name '(logand logior)) (bootstrap-logical-call name forms))
           ((eq name '-) (bootstrap-subtract forms))
           ((member name '(typep ccl::require-type)) (bootstrap-type-call name forms))
@@ -4156,27 +4171,6 @@
                    (b-wat "(if (i32.eqz ~a) (then
                              (call $implicit_error_details (i32.const 5) (local.get $top) ~a ~a) unreachable)) ~a"
                           test object (second values) object)))))))))))
-
-(defun bootstrap-assq (forms)
-  (when (= (length forms) 2)
-    (b-multiple
-     (make-b-raw-code :text
-       (bootstrap-operands forms
-         (lambda (values)
-           (let ((cursor (temporary)) (pair (temporary)) (exit (temporary)))
-             (b-wat "(local.set ~a ~a)
-                     (block ~a (result i32) (loop
-                       (if (i32.eq (local.get ~a) (i32.const 77825)) (then (br ~a (i32.const 77825))))
-                       (local.set ~a ~a)
-                       (if (i32.ne (local.get ~a) (i32.const 77825)) (then
-                         (if (i32.eq ~a ~a) (then (br ~a (local.get ~a))))))
-                       (local.set ~a ~a) (br 0)) unreachable)"
-                    cursor (second values) exit cursor exit pair
-                    (bootstrap-primary (b-checked-cons-operation 'car (list (make-b-raw-code :text (b-local cursor)))))
-                    pair (first values)
-                    (bootstrap-primary (b-checked-cons-operation 'car (list (make-b-raw-code :text (b-local pair)))))
-                    exit pair cursor
-                    (bootstrap-primary (b-checked-cons-operation 'cdr (list (make-b-raw-code :text (b-local cursor)))))))))))))
 
 (defun bootstrap-logical-call (name forms)
   (b-multiple

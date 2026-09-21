@@ -3061,7 +3061,7 @@
       "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Accepted by Steve on audit 149; integrated with the reviewed architecture and collector/owner bytes and a byte-equivalent dispatcher fold. 301 original definitions execute, 290 with non-NIL witnesses. 10944 comparisons, 20 new ISTRUCT checks, 20 faults, and all 40 inherited collector-owner checks pass. Fresh final compiler R6/R6a. 80 unexecuted originals and 19 POSIX reader stops remain; incomplete target denominator 1574/2005. Original replay at 9f5bd0cc; integration replay works at HEAD. No LL15 or BT-0 slot credit.",
+      "scope": "Accepted by Steve on audit 149; integrated with the reviewed architecture and collector/owner bytes and a byte-equivalent dispatcher fold. 301 original definitions execute, 290 with non-NIL witnesses. 10944 comparisons, 20 new ISTRUCT checks, 20 faults, and all 40 inherited collector-owner checks pass. Fresh final compiler R6/R6a. 80 unexecuted originals and 19 POSIX reader stops remain; incomplete target denominator 1574/2005. Original replay at 9f5bd0cc; original integration replay had audit-150 F1; repair passes runtime source selection into the execution subprocess. No LL15 or BT-0 slot credit.",
       "review": {
         "commit": "8c3a6cf578ddd3142514e3ced6742c334c3b7b3b",
         "path": "doc/WASM/stage0/claude-review.md",
@@ -3088,10 +3088,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-carry-r1/packet.json",
       "sha256": "cf66d5961b7126e52807e77bdd8eab429073f3e3f62834c88ac094f64770b404",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-149 carry proposal. Ordinary Lisp ASSQ replaces the backend WAT loop; native handler macro literals validate at compile time, including macro-introduced handlers and respecting local shadows. SIGNAL/ERROR spread refusals execute. 301 original definitions remain matched, 290 with non-NIL witnesses; target ASSQ excluded from original-definition credit. Historical admission corrects to 1862/2492 because unsupported handlers now refuse; incomplete target list 1573/2006. 11016 target comparisons: 11012 native matches plus four explicitly asserted literal-zero signed-zero differences; 5874 collections. Written check/install harness replaces replacement derivation. One EQ-sense fault rejected, omitted handler guard admits the refused class. Fresh R6/R6a passes; rebuilt native hashes permit exact-hash test reuse. Forty collector checks already passed in b9de543d and are bound to unchanged sources/binary. No shared source, runtime service, integration or LL15 credit."
+      "scope": "Accepted by Steve after audit 150; compiler and target Lisp ASSQ integrated byte-exact. No slot credit. Original proposal replay at 97430f91. Audit-149 carry proposal. Ordinary Lisp ASSQ replaces the backend WAT loop; native handler macro literals validate at compile time, including macro-introduced handlers and respecting local shadows. SIGNAL/ERROR spread refusals execute. 301 original definitions remain matched, 290 with non-NIL witnesses; target ASSQ excluded from original-definition credit. Historical admission corrects to 1862/2492 because unsupported handlers now refuse; incomplete target list 1573/2006. 11016 target comparisons: 11012 native matches plus four explicitly asserted literal-zero signed-zero differences; 5874 collections. Written check/install harness replaces replacement derivation. One EQ-sense fault rejected, omitted handler guard admits the refused class. Fresh R6/R6a passes; rebuilt native hashes permit exact-hash test reuse. Forty collector checks already passed in b9de543d and are bound to unchanged sources/binary. No new C/JS runtime service or LL15 credit.",
+      "review_commit": "be35e2ab5100f04f50fb6f7e6b60a4aa64fae179",
+      "review_sha256": "bc372f3ced52ff53db4ed816272cd97b787cf8d23eca086da4c1905f6719171e",
+      "acceptance": {
+        "path": "doc/WASM/stage1/acceptance-bootstrap-carry.json",
+        "sha256": "9cb256060eb375e5ce8b06943a17f6aaa78ffddc828b81d11a6b0db1cf1f2376"
+      }
     }
   ],
   "current_runs": [

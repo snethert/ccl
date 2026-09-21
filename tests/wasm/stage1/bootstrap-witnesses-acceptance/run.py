@@ -70,7 +70,15 @@ def main():
         assert status == 0, status
     else:
         import run
-        run.run(out)
+        import subprocess
+        run.compile_corpus(out)
+        run.stable_reader_diagnostics(out)
+        # The execution driver is a separate interpreter: pass the immutable
+        # runtime source selection there as well, rather than relying on this
+        # process's backend override.
+        subprocess.run([sys.executable, HERE / 'execute.py', out, packet], check=True)
+        subprocess.run([sys.executable, FIXTURE / 'faults.py', out], check=True)
+        run.summarize(out)
         old = packet / 'execution'
         matched = []
         for path in sorted((out / 'compiled').glob('*')):

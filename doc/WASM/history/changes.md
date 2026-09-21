@@ -1,3 +1,7 @@
+## 2026-09-21 — accept audit 150 carry packet; repair replay source selection
+
+On Steve’s “Accept and integrate”, integrate the reviewed compiler and Lisp ASSQ byte for byte, with all runtime files unchanged. Reuse the reviewed final-byte qualification. Import audit 150 verbatim. Correct the witnesses integration replay: the execution subprocess now selects and hashes its collector sources from the immutable packet, instead of re-deriving a pre-integration patch against the shared tree. The original successful result is unchanged, but the former documented command was broken after integration. Next packet supplies a committed-clean-checkout replay and new execution work. 301 originals, 290 non-NIL witnesses, no slot credit.
+
 ## 2026-09-21 — Lisp ASSQ and the audit-149 carry items
 
 Propose ordinary Lisp ASSQ in the existing Wasm primitive file and remove its
