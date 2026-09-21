@@ -2280,3 +2280,42 @@ Closed.
 ### Verdict
 
 No defect found in f8ad1da0 (STAGE1-TERMINATION-EXCLUSION-REVIEW-R1). Audit-135 F1 is closed. The Stage 1 termination exclusion — registration refused, empty-state answers native, automatic hook inert, image admission guarded — has a complete qualification at its declared scope; later integration must take the entries from this packet, not from R1. Acceptance is the user’s decision. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-seventh Claude audit — STAGE1-STARTUP-HOST-INPUTS-R1 at 8e6443ae, with STAGE1-EQUALITY-TABLES-R1 (22fe91d1), STAGE1-POPULATION-ACCESS-R1 (6fc8f34d) and the acceptance commit e9808520 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-137`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 136 landed on wasm2 as e153515d with content identical to the worktree commit. Four Codex commits followed it; all are covered here. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit e9808520 — acceptance and integration of the bootstrap policies
+
+On the user’s “accept integrate and finish ::15” (recorded with the note that “::15” is read as LL15). Verified: `acceptance-bootstrap-policies.json` hashes to the value the integration record binds, and the previous integration hash matches; all ten integrated files equal their cited packet copies byte for byte — `bootstrap-tables.mjs` and `bootstrap-populations.mjs` from the heap-census packet, and `entries.lisp`, `bindings.json`, `admission.mjs` and the five termination modules from the termination *review* packet, so the corrected entries of audit 136 were integrated and not R1’s; the 33 previously integrated files are unchanged at 8e6443ae. No defect.
+
+### Evidence and replay
+
+Packets b9dab36b… (host inputs, 156 entries), 969819ef… (equality tables, 557) and 9e893872… (population access, 333): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted file, every file cataloged, all indexed; catalog, index snapshot and evidence commit bind; store clean. These three verifiers take no `--evidence` argument and default to the sibling store. All three replays pass at 8e6443ae: host inputs 121 deterministic files at 51 pins (20 callbacks in registry order, 288 scenarios in four Workers, Node and Chromium, 8 faults); equality tables 382 files at 17 pins (70,688 comparisons, 23,596 collections, 1,248 captured-key lookups, 8 Workers, 10 faults); population access 225 files at 13 pins (792 observations, 296 collections, 6 faults).
+
+### STAGE1-STARTUP-HOST-INPUTS-R1 (8e6443ae)
+
+Scope. Owner-supplied image name and argument list, not read from `process.argv` or a URL, is HOSTFM CAP-image and CAP-args and means the same under both providers. The unit belongs, with one exception:
+
+- F1. The port reproduces a `#+darwin-target` branch that its own target does not take. U1 `heap-image-name` (`l1-pathnames.lisp:25–31`) applies `precompose-simple-string` only under `#+darwin-target` and returns the string unchanged under `#-(or windows-target darwin-target)`. The integrated backend declares `:target-os :wasm` with target features `:wasm-target :wasm32-target :32-bit-target :little-endian-target` (`wasm32-backend.lisp:101–102`), so the port’s own compilation of that function does not compose. The unit nevertheless exports Darwin’s complete non-NFC pair table from the native image, carries it as `composition.mjs`, applies it to every image name under Node and Chromium, and has a control (`unicode-nfc`) that fails if the port does anything else. Darwin composes because HFS+ hands back decomposed file names; an owner-supplied namespace name has no such origin. The macOS oracle should be used with the Darwin branch substituted out, as the kernel-pointer reads already are, or restricted to inputs without composable pairs. This is the audit-130 error again at smaller size: a native macOS-ism implemented for a browser target.
+
+Otherwise verified: the native oracle substitutes only the two kernel-pointer acquisitions (count asserted at one each) and keeps native UTF-8 decoding, list construction and the SETQ writes; both callbacks are registered once; arguments are never normalized; NUL and lone surrogates refuse; validation precedes the first write; the two published cells are the only collector roots when the graph is moved and old bytes are poisoned before generated readback; full-TCR restoration after every invocation; the schedule is in registry order.
+
+### STAGE1-EQUALITY-TABLES-R1 (22fe91d1)
+
+Scope. EQL and EQUAL comparison services for the three non-EQ bootstrap tables recorded as blocking in audit 134. Belongs. The service is bounded, allocation-free and address-independent, and five of Claude’s eight mutants are refused (a skipped bignum digit, ratio numerator only, no header comparison, double first word only, and an unbounded visit count, which hangs on the cyclic key). Two are not:
+
+- F2. NIL against a cons is not in the comparison matrix. D1 NIL carries the cons low tag, which is why `same()` refuses any pair in which one side is NIL or T before it dereferences. With that guard removed the whole harness passes. Directed case: store NIL as a key, then look up the fresh cons `(NIL . NIL)`. The real EQUAL service reports absent, as native `(equal nil (cons nil nil))` requires; the mutant reports present, because NIL’s own car and cdr are NIL. The 47 native objects and both predicate matrices contain no such pair.
+- F3. The pending-depth bound is unexercised, and it is the guard on a fixed C-stack array. With `used+2>KEY_DEPTH` removed from `keys_valid` the harness passes. Directed case: a car-nested key 3,000 deep. The real service refuses with status 3; the mutant returns 0, having written some 2,000 words past its 1,024-word work array on the C stack. The README states the 1,024 bound as a property; nothing tests it.
+
+Observation: a third mutant that removes key content from the hash also passes; that is performance only, and the README makes no performance claim, but with all 97 symbol keys already hashing alike every lookup in the specializer table is a linear probe.
+
+### STAGE1-POPULATION-ACCESS-R1 (6fc8f34d)
+
+Scope. Reader, setter and raw type reader for the accepted strong population representation. Belongs. The native oracle calls the untouched constructor, reader, SETF function and type reader, including shared setter spines, dotted and cyclic lists and a refused non-list. Four of ten mutants are refused (header, type range, setter returning the old value, omitted fourth publication word).
+
+- F4. Six admission clauses are not isolated: the object tag, the exact end, type-code alignment, result alignment, result-versus-object overlap, and the operation bound. Removing any one passes the harness. The overlap clause is the one that stops publication from overwriting the population itself. Same shape as audits 130, 131 and 132; one directed refusal per clause.
+
+### Verdict
+
+No defect in e9808520. Findings: F1 (host inputs) a Darwin-only composition implemented for a target that is not Darwin; F2 and F3 (equality tables) the NIL-versus-cons pair and the traversal depth bound are untested, the second a memory-safety guard; F4 (population access) six un-isolated admission clauses. In every case the implementation is correct where the harness cannot see it, except F1, where the implementation does something the port’s own source does not. Follow-ups recommended before acceptance of each; the decisions are the user’s. All auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
