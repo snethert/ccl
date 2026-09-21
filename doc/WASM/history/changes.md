@@ -1,3 +1,19 @@
+## 2026-09-20 — audit 133 and complete weak-object instance measurement
+
+Import Claude's audit-only commit as 484cc1e2 and bind its review-file hash.
+Replace the three-table measurement with one all-area snapshot: 19 weak tables,
+6,550 entries, 22 population objects and 739 members. Identity joins through
+cells, closure captures, FTD fields and method-combination records identify every
+instance and all seven oversized tables. No default one-entry fallback remains.
+
+Execute all 16 EQ instances at measured sizes and all 21 ordinary populations
+through movement. Mark populated EQL/EQUAL tables as bootstrap blockers. The
+additional termination population is recorded separately as requiring replacement
+or exclusion; the 18 method-combination populations extend the earlier source
+inventory. Retain the probe-allocation observation and avoid counting it by
+capturing before report compilation. Fresh replay: 33 files at 46 pins, 222
+collections and 11 controls. Shared sources unchanged; no acceptance or LL15 credit.
+
 ## 2026-09-20 — audit 132 and bootstrap table/population follow-up
 
 Import Claude's audit-only branch as 68afe0fc and bind its review-file hash in

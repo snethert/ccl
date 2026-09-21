@@ -2766,10 +2766,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-tables-review-r1/packet.json",
       "sha256": "0e77a917af95f0a49de955c1737e989d29568c3d8d42bda439abb572ca6745b2",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit-132 follow-up: measured 1281/1281/1049 entries use 2048-slot plans; EQUAL table with eight entries explicitly blocks bootstrap. User authorized strong populations; portable vector/cons constructor retains list/alist members over movement, with native accessors and actual member scanners still unjoined. Owner admission clauses isolated, full ceiling checked, NIL statistics publication fully observed. Replay: 33 files at 36 pins, 108 table and 30 population collections, 15 owner checks, 13 faults. Shared sources unchanged; not integrated, no LL15 credit. Audit 133 closes the earlier three-table capacity, population disposition, owner and publication items; full heap measurement and populated EQL blocker remain. Follow-up STAGE1-BOOTSTRAP-HEAP-CENSUS-R1; no acceptance.",
+      "review_commit": "484cc1e28b2b7c6e4de93c60b02a36d56ed368fa",
+      "review_sha256": "ad6774169ca1f13999392c8b580e258c44c1deb32752ed1287c890c8436302c0"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HEAP-CENSUS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-heap-census-r1/packet.json",
+      "sha256": "d33f36bb726c50d06b152e925688e15a73b9f36632c70bcf7ab78f6101204bc0",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-132 follow-up: measured 1281/1281/1049 entries use 2048-slot plans; EQUAL table with eight entries explicitly blocks bootstrap. User authorized strong populations; portable vector/cons constructor retains list/alist members over movement, with native accessors and actual member scanners still unjoined. Owner admission clauses isolated, full ceiling checked, NIL statistics publication fully observed. Replay: 33 files at 36 pins, 108 table and 30 population collections, 15 owner checks, 13 faults. Shared sources unchanged; not integrated, no LL15 credit."
+      "scope": "Audit-133 heap census: 19 weak tables/6550 entries and 22 population objects/739 members, all joined by identity to owner/source paths. Seven oversized tables; all 16 EQ instances execute with measured counts over 96 collections. Populated EQL and EQUAL instances explicitly block bootstrap. 21 ordinary populations execute 126 collections; the separate empty terminatable alist remains blocking. Eleven controls, 33 replay files at 46 pins. Counts describe pinned-image observation, not future bounds. Unchanged compiler/runtime and parent packets; auxiliary, not integrated, no LL15 credit."
     }
   ],
   "current_runs": [

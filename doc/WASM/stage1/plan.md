@@ -395,3 +395,20 @@ It does not install native population accessors or qualify scanners for arbitrar
 lock/thread/GF instances. Those joins and the EQUAL service remain required
 before claiming a collectable bootstrap image. Follow-up executed, not reviewed
 or integrated; no LL15 credit.
+
+
+2026-09-20, audit 133: [the complete weak-object instance census](../../../tests/wasm/stage1/bootstrap-heap-census/README.md)
+replaces the three-global probe. Nineteen tables hold 6,550 entries; every
+instance is attributed by owner identity to a source constructor. All seven
+oversized tables get measured plans, with no one-entry fallback for hidden
+state. Both the 97-entry EQL specializer table and the eight-entry EQUAL
+combined-methods table block bootstrap until their equality services exist.
+Two constructor sites have no observed table; that does not prove exclusion.
+
+Twenty-two population objects hold 739 members. Eighteen empty ordinary lists
+come from `%cons-mci`, beyond the previous four-path inventory. A separate
+terminatable alist belongs to `*termination-population*`; no finalization service
+is claimed and it remains blocking even though empty. Ordinary strong storage
+is tested at actual instance counts; accessor/member-scanner integration and
+future growth remain open. The census packet is executed, not reviewed or
+integrated, and earns no LL15 credit.

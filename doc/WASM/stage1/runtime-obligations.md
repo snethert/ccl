@@ -339,3 +339,13 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   16,384 slots. Oversized plans refuse before construction and installed FULL
   refuses without eviction, mutation or growth. The populated EQUAL combined-
   methods table remains a hard dependency until its equality service exists.
+
+
+- **Complete weak-object measurement (audit 133).** Measure instances by heap
+  walk, not only globally named tables. Attribute closure-held tables and FTD
+  fields by identity. The pinned image contains 19 weak tables and seven exceed
+  60 entries; populated EQL and EQUAL tables both block bootstrap. Future image
+  contents require a new count, not reuse of these counts as bounds. Include the
+  18 populations owned by method-combination metadata in constructor/accessor
+  lowering. The separate terminatable alist has native finalization obligations;
+  ordinary strong-list storage does not discharge them, even with an empty queue.
