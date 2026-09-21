@@ -1,3 +1,15 @@
+## 2026-09-20 — record audit 134 and correct the active census description
+
+Import the audit-only branch as 010c0dfb and bind its review-file hash in the
+index. Claude finds no defect in the heap census and closes both audit-133
+findings. Record the strong substitute as reviewed, awaiting user acceptance.
+Clarify the actual seven-entry EQUAL count in current documentation and an
+adjacent README erratum, preserving the original pinned fixture and packet.
+Require a new census of the actual port image. No runtime changes, integration,
+acceptance or slot credit. The user subsequently chose Stage 1 termination
+exclusion; record the exact authorization and required refusal/image-admission
+behavior in stage1/termination-decision.md. Enforcement remains unimplemented.
+
 ## 2026-09-20 — audit 133 and complete weak-object instance measurement
 
 Import Claude's audit-only commit as 484cc1e2 and bind its review-file hash.

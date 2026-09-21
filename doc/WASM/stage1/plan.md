@@ -383,7 +383,7 @@ not native weak flags or EQ substitutions for other tests.
 uses pinned-image population measurements (1,281, 1,281, 1,049) rather than
 constructor size hints alone. Each needs 2,048 slots with headroom. Requests
 beyond the fixed service ceiling refuse, and post-install FULL preserves state.
-The EQUAL `*combined-methods*` table has eight live entries: its missing service
+The earlier name-based probe reported eight EQUAL `*combined-methods*` entries (the later heap snapshot records seven): its missing service
 and wrapper are a bootstrap blocker, not an optional refinement. Other selected
 image populations must be measured before construction too.
 
@@ -401,7 +401,7 @@ or integrated; no LL15 credit.
 replaces the three-global probe. Nineteen tables hold 6,550 entries; every
 instance is attributed by owner identity to a source constructor. All seven
 oversized tables get measured plans, with no one-entry fallback for hidden
-state. Both the 97-entry EQL specializer table and the eight-entry EQUAL
+state. Both the 97-entry EQL specializer table and the seven-entry EQUAL
 combined-methods table block bootstrap until their equality services exist.
 Two constructor sites have no observed table; that does not prove exclusion.
 
@@ -412,3 +412,15 @@ is claimed and it remains blocking even though empty. Ordinary strong storage
 is tested at actual instance counts; accessor/member-scanner integration and
 future growth remain open. The census packet is executed, not reviewed or
 integrated, and earns no LL15 credit.
+
+
+2026-09-20, audit 134: the heap census and strong-substitute chain have no
+remaining review defect at their declared scope. They await user acceptance;
+no integration or LL15 credit is recorded. [Count clarification](../../../tests/wasm/stage1/bootstrap-heap-census/README-errata.md):
+the actual heap snapshot has seven combined-methods entries, not the earlier
+probe's eight. Keep the original packet bytes. Re-census the port's own
+cross-dumped heap before image qualification; the native counts cannot stand
+in for port image population or capacity evidence. The user chose [Stage 1 termination exclusion](termination-decision.md): refuse
+registration, reject images with outstanding termination state, and defer
+finalization to Stage 2. Policy is decided; admission and generated refusal
+enforcement remain to be implemented and qualified.

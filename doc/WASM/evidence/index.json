@@ -2778,10 +2778,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-heap-census-r1/packet.json",
       "sha256": "d33f36bb726c50d06b152e925688e15a73b9f36632c70bcf7ab78f6101204bc0",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-133 heap census: 19 weak tables/6550 entries and 22 population objects/739 members, all joined by identity to owner/source paths. Seven oversized tables; all 16 EQ instances execute with measured counts over 96 collections. Populated EQL and EQUAL instances explicitly block bootstrap. 21 ordinary populations execute 126 collections; the separate empty terminatable alist remains blocking. Eleven controls, 33 replay files at 46 pins. Counts describe pinned-image observation, not future bounds. Unchanged compiler/runtime and parent packets; auxiliary, not integrated, no LL15 credit."
+      "scope": "Audit-133 heap census: 19 weak tables/6550 entries and 22 population objects/739 members, all joined by identity to owner/source paths. Seven oversized tables; all 16 EQ instances execute with measured counts over 96 collections. Populated EQL and EQUAL instances explicitly block bootstrap. 21 ordinary populations execute 126 collections; the separate empty terminatable alist remains blocking. Eleven controls, 33 replay files at 46 pins. Counts describe pinned-image observation, not future bounds. Unchanged compiler/runtime and parent packets; auxiliary, not integrated, no LL15 credit. Audit 134 closes both audit-133 findings. Combined-methods count is seven in this capture; the earlier name-based probe reported eight. Original README is pinned; clarification: tests/wasm/stage1/bootstrap-heap-census/README-errata.md. Re-census the port cross-dumped heap before using capacities for image qualification. Not accepted or integrated.",
+      "review_commit": "010c0dfb08067792785556f36a941ebbe3f8f391",
+      "review_sha256": "8531f45c1d34d5585283a8a07902943f573d3bfcf1d0dc1ecd24b7730a573c16"
     }
   ],
   "current_runs": [

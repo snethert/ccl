@@ -349,3 +349,20 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   18 populations owned by method-combination metadata in constructor/accessor
   lowering. The separate terminatable alist has native finalization obligations;
   ordinary strong-list storage does not discharge them, even with an empty queue.
+
+
+- **Port image census (audit 134).** The accepted-scope candidate measures the
+  pinned native macOS image only. Re-take instance counts and owner/source joins
+  on the actual cross-dumped heap before table capacity/root installation and
+  LL14/LL15 image claims. The retained EQUAL combined-methods count is seven;
+  eight belongs to the earlier observer-affected probe.
+
+
+- **Termination policy (user decision, 2026-09-20).** The user selected “Exclude
+  it in Stage 1 (recommended)”. [Decision and enforcement requirements](termination-decision.md):
+  explicitly refuse `terminate-when-unreachable`; do not silently retain or
+  discard registrations. Reject images carrying registered objects, pending
+  callbacks or live termination-function registrations. Disable/exclude native
+  automatic scheduling and disposition remaining consumers before bootstrap
+  closure. Finalization remains owed in Stage 2. This policy is approved; the
+  enforcement and cross-dumped-image checks are not yet executed.

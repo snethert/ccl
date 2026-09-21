@@ -1,0 +1,38 @@
+# Stage 1 termination exclusion — 20 September 2026
+
+Status: **user-approved policy; enforcement not yet implemented or qualified**.
+This records no result acceptance, integration or LL15 credit.
+
+The user answered “Exclude it in Stage 1 (recommended)” to this question:
+
+> For Stage 1, should terminate-when-unreachable be explicitly excluded, or
+> should I implement a finalization replacement before bootstrap can proceed?
+> Exclusion would refuse registration rather than silently retain objects;
+> finalization would remain owed in Stage 2.
+
+Stage 1 excludes `CCL:TERMINATE-WHEN-UNREACHABLE`. Attempted registration must
+be refused explicitly; it must not return success, install a callback, or turn
+registration into strong retention. The refusal must preserve the established
+Lisp error/unwind behavior at a Lisp entry point, not leak a host exception.
+Finalization replacement remains owed in Stage 2.
+
+Image admission must establish that no registered objects, pending termination
+callbacks or live termination-function registrations need preservation. Nonempty
+state refuses the image; it is not cleared to make admission pass. The empty
+termination population observed in the native census is evidence about that
+image only. Recheck the port's cross-dumped heap and its actual root graph.
+
+Bootstrap must disable or exclude automatic termination scheduling and bind any
+reachable registration entry to the explicit refusal. Cancellation, lookup,
+queue draining and other native termination consumers require an explicit
+reachability/replacement disposition; they must not become silent success stubs.
+Keep these implementation joins open until they execute in the selected image.
+
+Ordinary strong populations remain a separate approved compatibility policy.
+The terminatable alist has a pending queue and registered callbacks, so it is
+not materialized as an ordinary strong list merely because the observed queue
+was empty. Explicit resource disposal is unaffected by this policy; this is
+not permission to omit required releases or cleanup during normal control flow.
+
+The strong-table/population proposal reviewed in audits 132–134 still awaits
+its own user acceptance. This finalization policy decision does not supply it.
