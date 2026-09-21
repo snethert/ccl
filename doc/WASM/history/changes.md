@@ -3205,3 +3205,12 @@ change or LL15 credit.
   204 schedule refusals and eight focused faults. Retained replay reproduces
   121 deterministic files at 51 source pins. Unchanged compiler/native R6 reused
   by hash. Auxiliary proposal; no shared runtime edit or LL15 credit.
+
+- 2026-09-21: Land Claude audit 137 from 323d1376 as 0c98b7b1. Bootstrap
+  policy integration verified. Record F1 (host-specific composition applied to
+  Wasm), F2/F3 (missing NIL/cons and depth controls), and F4 (population admission
+  isolation); all three proposals remain unaccepted. Follow-up removes host
+  composition, selects native reader branches with actual Wasm features, extends
+  the native equality matrix and adds bounded-depth and six admission controls.
+  Equality and population binaries remain unchanged, with byte identity required.
+  No shared compiler/runtime edit or LL15 credit. Original fixtures stay intact.

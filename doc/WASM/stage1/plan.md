@@ -500,3 +500,11 @@ Next implementation joins still include home/logical pathname effects, thread
 and scheduler state, static-cons disposition, the reviewed runtime services,
 and production image bindings. Definition/loading initializers and the census
 query/build-path proof remain separate required parts of LL15.
+
+2026-09-21: Audit 137 corrects the preceding host-input proposal: Wasm has no
+Darwin filename origin and its reader features do not select precomposition.
+The [follow-up](../../../tests/wasm/stage1/startup-review-137/README.md) preserves
+owner namespace strings unchanged and uses the target-selected native body as
+oracle. It also closes the named equality/population test gaps with directed
+cases and compiled faults. All three proposals remain unaccepted pending
+Claude review; this does not change LL15's membership or grant slot credit.

@@ -1,0 +1,26 @@
+{
+  "attempts": {
+    "r1": "Native target-feature oracle and module compilation passed. An over-broad import-removal text edit also removed a comma at a precompose call in the owner test, causing TypeError. Narrowed the import edit; no runtime semantic change.",
+    "r2": "All host, equality and population execution and all new faults passed. Summary creation then used a loop filename in place of the original matrix count; renamed the count variable.",
+    "r3": "Final candidate reruns all changed execution and faults; retained verifier replays from a fresh directory."
+  },
+  "retained": [
+    "ccl-audit137-r1/host.log",
+    "ccl-audit137-r1/host-driver/owner-check.mjs",
+    "ccl-audit137-r1/host-driver/native.lisp",
+    "ccl-audit137-r1/host/native-forms.lisp",
+    "ccl-audit137-r1/host/execution.log",
+    "ccl-audit137-r1.log",
+    "ccl-audit137-r2/host.log",
+    "ccl-audit137-r2/host-driver/owner-check.mjs",
+    "ccl-audit137-r2/host-driver/native.lisp",
+    "ccl-audit137-r2/host/native-forms.lisp",
+    "ccl-audit137-r2/host/execution.log",
+    "ccl-audit137-r2/host/summary.json",
+    "ccl-audit137-r2/equality.log",
+    "ccl-audit137-r2/equality/review.json",
+    "ccl-audit137-r2/population/review.json",
+    "ccl-audit137-r2/controls.json",
+    "ccl-audit137-r2.log"
+  ]
+}

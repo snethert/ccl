@@ -2822,30 +2822,46 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-equality-tables-r1/packet.json",
       "sha256": "969819efebca326141b479bf816d03d4bde257dac9e852f76624fc26174ddb02",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "EQL numeric and EQUAL cons/string/bit-vector keys over strong backing vectors. 70688 matrix observations, 1248 captured bootstrap key lookups, 23596 collections, eight Workers, ten compiled faults. 97-entry and empty EQL plus seven-entry EQUAL table key graphs. Method values remain opaque identity placeholders. Default native NaN hash traps differ and are disclosed. Fixed capacity; no wrapper installation or LL15 credit. Compiler/collector/adapter unchanged. Auxiliary proposal, not integrated."
+      "scope": "EQL numeric and EQUAL cons/string/bit-vector keys over strong backing vectors. 70688 matrix observations, 1248 captured bootstrap key lookups, 23596 collections, eight Workers, ten compiled faults. 97-entry and empty EQL plus seven-entry EQUAL table key graphs. Method values remain opaque identity placeholders. Default native NaN hash traps differ and are disclosed. Fixed capacity; no wrapper installation or LL15 credit. Compiler/collector/adapter unchanged. Auxiliary proposal, not integrated. Audit 137 F2/F3: the corpus lacked NIL-versus-cons and pending-depth controls. Service correct at these boundaries. Follow-up STAGE1-STARTUP-REVIEW-137-R1 adds the native matrix row and deep-key refusals; awaiting independent review. Not accepted.",
+      "review_commit": "0c98b7b1ead263355c082ec10041c15cd81d53ec",
+      "review_sha256": "6f203a1b704fdd4a06ab7681244d187f5bb36ed0fa6aaff3d5098d783189444f"
     },
     {
       "id": "STAGE1-POPULATION-ACCESS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-population-access-r1/packet.json",
       "sha256": "9e893872ad2930593bf5ec0239e8df2082942a23ebdf4bb4ddef7abcbd532300",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Checked strong-population data read/write and raw type code. Native empty/proper/dotted/cyclic list semantics, 792 observations, 296 collections, four Workers, six compiled faults. Constructor builder and collector unchanged. Generated adapter uses one value. Members here are conses, not lock/thread/GF representations. Public keyword type reader, macro lowering and image bindings remain open. Auxiliary proposal, not integrated, no LL15 credit."
+      "scope": "Checked strong-population data read/write and raw type code. Native empty/proper/dotted/cyclic list semantics, 792 observations, 296 collections, four Workers, six compiled faults. Constructor builder and collector unchanged. Generated adapter uses one value. Members here are conses, not lock/thread/GF representations. Public keyword type reader, macro lowering and image bindings remain open. Auxiliary proposal, not integrated, no LL15 credit. Audit 137 F4: six admission boundaries were not isolated. Follow-up STAGE1-STARTUP-REVIEW-137-R1 adds directed cases and remove-guard controls, with a binary-identical removal of redundant base alignment. Awaiting independent review; not accepted.",
+      "review_commit": "0c98b7b1ead263355c082ec10041c15cd81d53ec",
+      "review_sha256": "6f203a1b704fdd4a06ab7681244d187f5bb36ed0fa6aaff3d5098d783189444f"
     },
     {
       "id": "STAGE1-STARTUP-HOST-INPUTS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-host-inputs-r1/packet.json",
       "sha256": "b9dab36bec60fa9c68acc7354dc970c5d91d5387c6ce465c07a73d750cd5fdf1",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Native image-name/argv acquisition adaptation and generated publications in a twenty-callback registry-ordered schedule. 288 joined scenarios and collections, 7172 invocations, Node and Chromium at 4 MiB and 2 GiB, complete TCR restoration, poisoned old storage, eight rejected faults. Native adjacent composition preserved; owner inputs explicit. Whole startup worklist and real image symbol binding remain open. Auxiliary proposal, not integrated, no LL15 credit. Audit 137 F1: Darwin-only image-name composition is wrong for the Wasm target. Not accepted; superseded by the derived host proposal in STAGE1-STARTUP-REVIEW-137-R1. Original packet and fixture unchanged.",
+      "review_commit": "0c98b7b1ead263355c082ec10041c15cd81d53ec",
+      "review_sha256": "6f203a1b704fdd4a06ab7681244d187f5bb36ed0fa6aaff3d5098d783189444f"
+    },
+    {
+      "id": "STAGE1-STARTUP-REVIEW-137-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-137-r1/packet.json",
+      "sha256": "417749d2d9d54df3aaec232c6efc5a3b480e4ce9d73c27ca2708b9c6f9c6662e",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Native image-name/argv acquisition adaptation and generated publications in a twenty-callback registry-ordered schedule. 288 joined scenarios and collections, 7172 invocations, Node and Chromium at 4 MiB and 2 GiB, complete TCR restoration, poisoned old storage, eight rejected faults. Native adjacent composition preserved; owner inputs explicit. Whole startup worklist and real image symbol binding remain open. Auxiliary proposal, not integrated, no LL15 credit."
+      "scope": "Audit 137 follow-up for F1-F4. Native HEAP-IMAGE-NAME read with Wasm target features; namespace names unchanged; 288 Node/Chromium joined scenarios and collections, nine host faults. Equality adds native NIL/cons matrix pair, 73728 comparisons, 24612 collections, pending-depth boundary refusals and two new faults. Population adds six isolated admission refusals at both placements and six C faults; redundant alignment trim rebuilds byte-identically. Original binaries and compiler unchanged except host JS behavior. Fresh replay 258 deterministic files at 82 pins. All parent scopes and production joins remain open. Auxiliary proposal, not accepted or integrated; no LL15 credit."
     }
   ],
   "current_runs": [
