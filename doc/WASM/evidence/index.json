@@ -2267,7 +2267,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-repeated-keywords-r1/packet.json",
       "review_commit": "4b9aed8b99bb2b8c74e64f3f6ff890ca21020219",
       "review_disposition": "ACCEPTED_AUXILIARY",
-      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. Accepted by the user and integrated after Claude’s eighty-seventh audit. Native CCL compatibility, not a portable-language guarantee. No inventory credit.",
+      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. Accepted by the user and integrated after Claude\u2019s eighty-seventh audit. Native CCL compatibility, not a portable-language guarantee. No inventory credit.",
       "sha256": "aff1aab7f143583320ff058d8f1dacd509c2aa92e67e88913d4ccb0166e09c1c"
     },
     {
@@ -2290,7 +2290,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-followup-r1/packet.json",
       "review_commit": "ccc6370f67fe7a6a6caf5e65726d0c648db24c4f",
       "review_disposition": "ACCEPTED_AUXILIARY",
-      "scope": "Audit 88 follow-up: compatible TCR v2 names persistent reserve/depth fields without moving any field; shared reserve policy explicit. Four native ordinary-service decline cases, 16 comparisons and fatal diagnostics, six controls. Fresh replay: 45 deterministic files identical. Accepted compiler/runtime unchanged, exact R6/R6a reused. No slot credit. Accepted by the user after Claude’s eighty-ninth audit; no implementation change.",
+      "scope": "Audit 88 follow-up: compatible TCR v2 names persistent reserve/depth fields without moving any field; shared reserve policy explicit. Four native ordinary-service decline cases, 16 comparisons and fatal diagnostics, six controls. Fresh replay: 45 deterministic files identical. Accepted compiler/runtime unchanged, exact R6/R6a reused. No slot credit. Accepted by the user after Claude\u2019s eighty-ninth audit; no implementation change.",
       "sha256": "595f1a2ce00c3f2d127acba5642a8d619a2e097c7f861fad2ecc8f9b50eefb45"
     },
     {
@@ -2529,7 +2529,7 @@
       "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Accepted and integrated runtime correction: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Accepted on the user’s “accept and integrate”; exact reviewed bytes integrated. No slot credit.",
+      "scope": "Accepted and integrated runtime correction: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Accepted on the user\u2019s \u201caccept and integrate\u201d; exact reviewed bytes integrated. No slot credit.",
       "verification_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1-verification.json",
       "verification_sha256": "b1f0165232110fd75cfd010d488dc3f6afde6fe477e396322cbc08006162b869",
       "review_commit": "fa8ccc0ea8d8e62938c273c3f835b480134a98b6",
@@ -2906,30 +2906,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-consumer-review-r1/packet.json",
       "sha256": "a6222829b4ca880d91377ba5f85533152c70b6e53e380f0a56285c22b710a5e7",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit 140 F1: explicit pre-normalization scaffold admission, both SETF place orders, function and macro shadows, API variables and setter references. Thirteen native refusals and eight omission controls; sixteen admitted forms rewrite alpha-equivalently to the reviewed corpus. Fresh detached replay: 13 files at 104 pins. Rewriter not for integration; native accessors and REQUIRE-TYPE are the intended path. Auxiliary, not accepted/integrated, no LL15 credit."
+      "scope": "Audit 140 F1: explicit pre-normalization scaffold admission, both SETF place orders, function and macro shadows, API variables and setter references. Thirteen native refusals and eight omission controls; sixteen admitted forms rewrite alpha-equivalently to the reviewed corpus. Fresh detached replay: 13 files at 104 pins. Rewriter not for integration; native accessors and REQUIRE-TYPE are the intended path. Auxiliary, not accepted/integrated, no LL15 credit. Audit 141: executable evidence has no defect. Audit-140 F1 closed; source walker remains scaffolding.",
+      "review_commit": "79c9099db1c9caab64f185ea8e5616607ba7ea58",
+      "review_sha256": "43b1fd05bf38477569a76505f44ef50472bb007875d98ebc6179aba9840df411"
     },
     {
       "id": "STAGE1-TYPED-POPULATIONS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-typed-populations-r1/packet.json",
       "sha256": "7d3785dc32dd555bf141b596c704a7f2f972e3b47b09daf2d4b580dbb93bb9a4",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Exact two-field strong population shape under existing D1 subtag 90, with derived builder, leaf service, copying scanner and pinned-image inventory. Native weak and termination layouts remain refused. Twenty-two unchanged generated modules, 64 native comparisons, 80 collections, 18 shape checks, 20 pinned-image checks, 40 inherited owner checks, 12 focused faults. Fresh detached replay: 91 files at 106 pins. Native compiler/R6 and oracle reused by hash; no shared source changed. Prerequisite for target population accessor indices and REQUIRE-TYPE; production roots/installation and v1 migration remain owed. Auxiliary runtime proposal, not accepted/integrated, no LL15 credit."
+      "scope": "Exact two-field strong population shape under existing D1 subtag 90, with derived builder, leaf service, copying scanner and pinned-image inventory. Native weak and termination layouts remain refused. Twenty-two unchanged generated modules, 64 native comparisons, 80 collections, 18 shape checks, 20 pinned-image checks, 40 inherited owner checks, 12 focused faults. Fresh detached replay: 91 files at 106 pins. Native compiler/R6 and oracle reused by hash; no shared source changed. Prerequisite for target population accessor indices and REQUIRE-TYPE; production roots/installation and v1 migration remain owed. Auxiliary runtime proposal, not accepted/integrated, no LL15 credit. Audit 141: executable evidence has no defect. Design finding F1: retain native three-field layout (zero GC link, type, data); two-field proposal is not an integration candidate.",
+      "review_commit": "79c9099db1c9caab64f185ea8e5616607ba7ea58",
+      "review_sha256": "43b1fd05bf38477569a76505f44ef50472bb007875d98ebc6179aba9840df411"
     },
     {
       "id": "STAGE1-POPULATION-PUSHNEW-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-pushnew-r1/packet.json",
       "sha256": "141d39411ae2480ae3f9c891d782554bd1ec3f99739f9f6002a8ec1b5ff8268f",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Generated population PUSHNEW using CCL macro order, branch-loop membership and shared EQL table-service entry; no separately compiled comparator. Callable :test, NIL default, numeric EQL, duplicates, collection and exits. Twenty-seven modules, 34 native cases, 68 comparisons, 80 collections, forty exact allocation checks, 28 shared-service checks, seven source refusals and eight controls. Detached replay 212 deterministic files at 115 pins. Source adapter remains fixture scaffolding, not for integration; native accessor/REQUIRE-TYPE and public installation remain owed. Auxiliary proposal, not accepted/integrated; no LL15 credit."
+      "scope": "Generated population PUSHNEW using CCL macro order, branch-loop membership and shared EQL table-service entry; no separately compiled comparator. Callable :test, NIL default, numeric EQL, duplicates, collection and exits. Twenty-seven modules, 34 native cases, 68 comparisons, 80 collections, forty exact allocation checks, 28 shared-service checks, seven source refusals and eight controls. Detached replay 212 deterministic files at 115 pins. Source adapter remains fixture scaffolding, not for integration; native accessor/REQUIRE-TYPE and public installation remain owed. Auxiliary proposal, not accepted/integrated; no LL15 credit. Audit 141: executable evidence has no defect. Shared EQL entry is durable; handwritten ADJOIN helpers and source walker are scaffolding, not for integration. Next work is the general compiler front end.",
+      "review_commit": "79c9099db1c9caab64f185ea8e5616607ba7ea58",
+      "review_sha256": "43b1fd05bf38477569a76505f44ef50472bb007875d98ebc6179aba9840df411"
     }
   ],
   "current_runs": [
@@ -3157,7 +3163,7 @@
       "execution_status": "FAIL",
       "id": "INTEGRATED-RUNTIME-r9",
       "inventory_sha256": "1b88c8f28b4dde26a7ea27a08937148219621a2b248e796ea25abd40a863bdcd",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged.",
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged.",
       "path": "evidence/runs/2026-09-11-integrated-r9.zip",
       "results_member": "results.json",
       "review_disposition": "NOT_REVIEWED",
@@ -4371,7 +4377,7 @@
       "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/packet.json",
       "packet_sha256": "337b6ea193ad02f696786e2c526e5a62a853a8c04acce63db1f1fc3e4df5e4fa",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
+      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures\u2019 retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
       "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
       "timestamp": "2026-09-15T18:28:00.857489+00:00"
@@ -4397,7 +4403,7 @@
       "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/packet.json",
       "packet_sha256": "53a2837b97373b93baec0d0443c3109dcab5ac324cf2174e853996218cf8b7db",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites\u2019 physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
       "sha256": "917f51e7954cb2975a189c783b19266114dbb712968e8bb180be5faf6fdac37d",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
       "timestamp": "2026-09-15T19:00:12.627155+00:00"

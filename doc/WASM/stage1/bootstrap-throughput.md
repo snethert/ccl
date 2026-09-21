@@ -1,6 +1,6 @@
 # Bootstrap throughput directive (BOOT-TP-P1)
 
-Status: PROPOSED by Claude at the user's request on 2026-09-21. It binds Codex only when the user adopts it. It is a proposal about where Stage 1 effort goes and how review is done; it changes no contract, decision record, acceptance criterion or evidence rule. Codex is asked to review it first (section 7) and to correct anything measured or read wrongly.
+Status: ADOPTED by the user on 2026-09-21, with Codex’s review corrections in section 8. The directive changes work priorities and review cadence; existing acceptance contracts remain in force.
 
 Reader: Codex, as Stage 1 author. Items carry IDs so a reply can cite them.
 
@@ -85,4 +85,17 @@ Caveats. M-C1: top-level forms are split at column-0 parentheses; a form the rea
 
 ## 8. Review record
 
-(Codex's review and the user's decision are recorded here.)
+Adopted by the user on 2026-09-21: “remember that and proceed”. The user further requires generated Lisp to resemble idiomatic CCL. This direction changes implementation priority, not acceptance of any pending unit.
+
+Codex reproduced all five historical totals. They are diagnostic proxies, not a strict as-written baseline: the instrument uses SUBLIS on the whole form, including quoted data, and silently skips read failures. Its TARGET feature list also does not rebind the TARGET package while reading. A replacement must preserve source identities, bind target context before reading, retain every skip, and compare baseline and proposal on the same inventory. Compilation success does not imply executable dependency closure.
+
+Q-1/Q-2: the whitelist was deliberate staging, protecting against host compiler-macro folding before acode validation. It is not the final front end. The next proposal uses CCL's actual front end (including lexical macro environments), disables host compiler macros at this boundary, and retains emitter refusal for unsupported acode. Legacy entry points remain unchanged. This is a trusted bootstrap-source compiler, not an untrusted macro sandbox.
+
+Q-3/Q-4: general macro admission comes first. THE and declarations must retain CCL semantics, not be blanket-erased to inflate throughput. Special and constant admission needs owner identity and target-context checks; LOAD-TIME-VALUE needs a lifecycle contract. BT-3 requires symbol identity plus a safe wire encoding, not simply a wider name regexp. SETF function names remain an explicit obligation until their identity path is implemented.
+
+Q-5: CALL-WITH-TARGET invokes WITH-CROSS-COMPILATION-TARGET, which rebinds TARGET to WASM32. The legacy string entry reads before this binding. The new source entry must read inside it. A directed NODE-SIZE test must produce 4 rather than the host's 8.
+
+Q-6: retain collector, memory, atomics, numeric kernels and host acquisition at the low-level boundary. Compile population accessors, list algorithms, table policy and startup bookkeeping from CCL sources as the front end admits their dependencies. The native three-field population shape (zero GC link, type, data) supersedes the proposed two-field design; trace type and data strongly in Stage 1. Do not integrate that design or its consumer rewriter as-is.
+
+Q-7: level-0/l0-symbol.lisp is a useful first whole-file target, not yet a demonstrated shortest path. Its accessor, constant, special-variable and dependency closure must be measured. Start execution with original MEMQ/ADJOIN definitions and ordinary list routines, not new handwritten substitutes. No whole-file or LL15 completion is claimed by this adoption.
+

@@ -1,3 +1,13 @@
+## 2026-09-21 — adopt bootstrap throughput direction and bind audit 141
+
+Import Claude's directive and audit from their original branches. The user adopts
+front-end work and requires Codex's Lisp style to match CCL. Record the reproduced
+historical tally's source-renaming and reader limitations, the target-reader
+hazard, and the plan to compile original definitions with CCL's own front end.
+Bind audit 141 by review blob hash. The two-field population proposal needs the
+native three-field layout; neither it nor a consumer source walker is integrated.
+The ledger remains 21 accepted and 10 missing.
+
 ## 2026-09-20 — accept and integrate bootstrap retention and termination policies
 
 On the user's “accept integrate and finish ::15”, accept the reviewed strong

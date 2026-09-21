@@ -17,3 +17,5 @@ This is the clean upstream Clozure/ccl v1.13 restart at `c994217adc56b3f8a564526
 These rules record the user's 2026-09-11 platform decision and supplied audit instructions. They do not import unpublished memory or rules from the archived attempt.
 
 - Admission predicates: retain a directed refusal for each independent validation clause, or record why its omission is equivalent under the admitted contract. Isolate depth checks by site and mode, require checked refusals rather than traps, and check refusal preserves state before publication.
+
+- Bootstrap throughput (user adoption, 2026-09-21, “remember that and proceed”): follow `doc/WASM/stage1/bootstrap-throughput.md` with its section 8 corrections. Prioritize admitting and executing unchanged CCL definitions through CCL's front end. Codex’s own Lisp style must match the surrounding CCL code, as the user explicitly clarified: ordinary macros, declarations and control flow, with target differences at the backend/accessor boundary. Do not integrate consumer source rewriters. Report admission and native-matched execution separately; carry minor refusal-test gaps in the next substantive packet.
