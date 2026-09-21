@@ -2187,3 +2187,33 @@ Packet 0e77a917… (NOT_REVIEWED, slot_credit false, 78 manifest entries, all ha
 ### Verdict
 
 Audit-132 findings F3, F4 and R1 are closed, F1 is closed for the three named tables, and F2 is recorded. Two findings remain in 1021bbcb: F1 the measurement misses four of the seven oversized weak tables, F2 the populated EQL table is not recorded as blocking. Neither is an error in what the unit implements; both decide whether the substitute can carry a real image. A heap-walk census by constructor site and an EQL entry in the dependency record close them. Follow-up recommended before acceptance; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-fourth Claude audit — STAGE1-BOOTSTRAP-HEAP-CENSUS-R1 (follow-up to audit 133) at 1d0a719f — 20 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-134`; this commit changes only this file, and the STATUS row and history entry are owed at merge. Author: Codex. Audit 133 landed on wasm2 as 484cc1e2 with content identical to the worktree commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packet d33f36bb… (NOT_REVIEWED, slot_credit false, 61 manifest entries, all hashes match, no unlisted file, every file cataloged, indexed); catalog, index snapshot and evidence commit bind; store clean; the index binds audit 133 by the review-file hash recomputed from 484cc1e2. `packet.py verify` at 1d0a719f: PASS, 33 deterministic files, 46 pins; 19 tables, 6,550 entries, 22 populations, 739 members, 7 oversized tables, 16 EQ tables executed, 96 table and 126 population collections, 11 controls. No shared source and no parent fixture changed.
+
+### Disposition of audit-133 findings
+
+- F1 closed. The measurement is now a `%map-areas` walk of every heap area under `without-gcing`, capturing identities and counts before any attribution form is compiled. Its totals equal Claude’s independent walk in audit 133 exactly (19 and 6,550; 22 and 739), and its seven oversized tables are the seven that walk found: 1,281, 1,281, 1,121, 1,049, 945, 724 and 97. Each instance is joined by EQ identity to an owner path (global cell, closure capture, structure field or a pair’s CDR) and to one constructor site whose test and weakness must match the selection; an unattributed or ambiguous instance fails, and a reverse join requires each declared owner to appear in the walk. The two FTD globals share one table and are recorded as aliases. Two library sites have no instance in the capture and are retained as absent rather than given a nominal count. The target harness now refuses a site without an instance measurement, fills all 16 EQ tables to their captured counts at both placements, and looks up every entry after each of three moves.
+- F2 closed. `dependencies.json` marks the 97-entry EQL specializer table, the EQUAL combined-methods table and the empty EQL inspector table BLOCKS_BOOTSTRAP, each with owner and constructor; none is reduced to EQ.
+
+### Checks made independently
+
+- Owner-to-site mapping. For all 21 selected sites the owner’s name (global symbol, closure variable or structure slot) appears at or immediately above the cited source line, so identities matched through a named owner carry the right constructor site; this covers the one thing the census cannot check about itself, since two same-shaped tables swapped in the hand-written owner list would still satisfy its test-and-weakness assertion.
+- Populations. `%cons-mci` at `library/lispequ.lisp:1166` does allocate two populations per method-combination record, and `*termination-population*` at `l1-lisp-threads.lisp:1035` is a `%cons-terminatable-alist`. Both constructor paths were missed by audit 132’s F3, whose search covered only `%cons-population` and `make-population` in level-0, level-1, lib and compiler; Codex’s instance census found them.
+- The 582, 155 and 2 member counts sum with 18 empty lists and the empty termination alist to 739 over 22 objects.
+
+### Observations (none a defect)
+
+1. The README says “the eight-entry EQUAL combined-methods table”; the census and `dependencies.json` record 7. The earlier by-name probe saw 8 because its own generic-function calls add an entry. The records are right and the sentence is stale; it also illustrates that these counts move with probe activity, which the README already notes for locks.
+2. The counts describe the pinned native macOS image. The port’s bootstrap heap will differ (no native FFI types, Wasm-specific files), so the census has to be retaken on the cross-dumped heap at image construction; the unit says it is a pinned-image measurement and claims no bound.
+3. The termination population is rightly kept out of the strong substitute: retaining its entries would mean registered termination functions never run. It needs the user’s decision — a finalization replacement, or exclusion of `terminate-when-unreachable` in Stage 1 — and is recorded as blocking until then.
+4. Open after this unit, all recorded by it: EQL and EQUAL services, the termination decision, population accessor lowering and member scanners, growth beyond the fixed capacity, and the wrapper and root installation of the tables themselves.
+
+### Verdict
+
+No defect found in 1d0a719f (STAGE1-BOOTSTRAP-HEAP-CENSUS-R1). Audit-133 findings F1 and F2 are closed. With audits 132 to 134 the Stage 1 strong substitute for weak tables and ordinary populations has a complete qualification at its declared scope; what it does not cover is recorded as blocking. Acceptance is the user’s decision. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
