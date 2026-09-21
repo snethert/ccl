@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "3cd2dc86093cc3518a27fab1b6ebc4a04f09e8f894c15494265288e35e8c6fb4",
-  "commit": "d05c19b0bfe71eb49fb0d6f8503c087a8bd7b18b",
-  "immutable_evidence_files": 235310,
+  "catalog_sha256": "c966c94c0ee45d4d5fc867f30b69d4c37a7f8412d18c2c59b81efcc875f8e95c",
+  "commit": "807515e3172d2510f8f11e7f0513a6c912ce9986",
+  "immutable_evidence_files": 235998,
   "last_scoped_addition": {
-    "bytes": 9187330,
-    "directory": "2026-09-20-stage1-termination-exclusion-r1",
-    "files": 318
+    "bytes": 21274082,
+    "directory": "2026-09-20-stage1-termination-exclusion-review-r1",
+    "files": 687
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing, 0 unreviewed. Termination-exclusion proposal executed, not reviewed or integrated; no LL15 credit.",
-  "source_index_sha256": "c602faade7ff637f5e77bbfb9eddd95c10528c0b568c48c8d26178365531ed68",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-termination-exclusion-r1.json",
-  "verification": "Fresh replay: 207 deterministic files at 106 pins. New artifacts and current index references checked incrementally.",
+  "scope": "Stage 1: 21 accepted, 10 missing, 0 unreviewed. Audit 135 bound; termination empty-state correction executed, not reviewed or integrated; no LL15 credit.",
+  "source_index_sha256": "a0c4b78125f40687b1e5d917c953aa679804e9eae681acf6195f9ad6d3de639e",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-termination-exclusion-review-r1.json",
+  "verification": "Fresh replay: 459 deterministic files at 111 pins. New artifacts and current index references checked incrementally.",
   "version": 1
 }

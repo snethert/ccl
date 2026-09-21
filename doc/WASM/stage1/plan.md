@@ -443,3 +443,13 @@ not merely relabel an EQ vector. The captured 97-key specializer table contains
 nonidentical numeric keys, signed zeros, widths and relocation cases when
 qualifying the service. EQUAL, population accessors/scanners, root installation
 and growth remain open. No old packet or accepted scope was altered.
+
+
+2026-09-20, audit 135 follow-up: [termination empty-state compatibility](../../../tests/wasm/stage1/termination-exclusion-review/README.md)
+corrects cancellation, lookup and draining to native one-NIL answers. R1's
+blanket exclusion would break fd-stream close and must not be installed. The
+reference now uses untouched native consumers rather than substituted bodies.
+Generated cancellation/flush/close and cleanup paths, native empty-state cases,
+and actual file closes execute. Registration exclusion and admission remain;
+no compiler/runtime changes or LL15 credit. Integrate only the corrected
+entries after independent review and acceptance.

@@ -2790,10 +2790,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-termination-exclusion-r1/packet.json",
       "sha256": "50d97e3f9d39265d7cf5b051aaef9636c4d9e65e50de522e9f95bcfc962526e5",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "User-approved Stage 1 finalization exclusion: five generated replacement entries and a read-only image-owner admission guard. Registration/cancellation/lookup/draining signal SIMPLE-ERROR; disabled automatic hook is inert, enabled hook refuses.17 modules,52 native-derived comparisons,26 collections,64 admission checks,10 rejected faults;207 deterministic replay files at106 pins. Native registration/cancellation restored and97 EQL specializer keys surveyed (94symbols,integers1,2,30). Trusted actual-image slot mapping and production binding installation remain open. Unchanged compiler/runtime; auxiliary,not integrated,no LL15 credit. Audit 135 F1: refusing empty cancellation, lookup and draining breaks fd-stream close. Do not integrate those R1 bodies. Corrected by STAGE1-TERMINATION-EXCLUSION-REVIEW-R1, pending review.",
+      "review_commit": "0d63a00ec69be9578a1c48a347629bc6701b1af0",
+      "review_sha256": "d6f2e6c2412831d2f796d07e63965f8c232d2da7cc849a5db6c8402c45083548"
+    },
+    {
+      "id": "STAGE1-TERMINATION-EXCLUSION-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-termination-exclusion-review-r1/packet.json",
+      "sha256": "c1cc110216a0f9c433242f25552ce6c45cfa21dc3bdde808618c2f64c99ea752",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "User-approved Stage 1 finalization exclusion: five generated replacement entries and a read-only image-owner admission guard. Registration/cancellation/lookup/draining signal SIMPLE-ERROR; disabled automatic hook is inert, enabled hook refuses.17 modules,52 native-derived comparisons,26 collections,64 admission checks,10 rejected faults;207 deterministic replay files at106 pins. Native registration/cancellation restored and97 EQL specializer keys surveyed (94symbols,integers1,2,30). Trusted actual-image slot mapping and production binding installation remain open. Unchanged compiler/runtime; auxiliary,not integrated,no LL15 credit."
+      "scope": "Audit-135 F1 correction: cancellation, lookup and draining return exactly one NIL under the admitted empty-state invariant. Native reference uses untouched CCL consumers. Generated close/cleanup paths and real native file closes with corrected bindings execute. 21 modules, 76 comparisons, 38 collections, 64 admission checks, 21 native empty answers, four native file closes and fourteen controls. Fresh replay: 459 files at 111 pins. R1 source/pins and shared compiler/runtime unchanged. Actual image installation remains open; auxiliary, not integrated, no LL15 credit."
     }
   ],
   "current_runs": [

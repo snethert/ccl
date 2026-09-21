@@ -1,3 +1,16 @@
+## 2026-09-20 — audit 135 and termination empty-state correction
+
+Import Claude's audit-only branch as 0d63a00e. F1 is correct: registration
+exclusion does not authorize errors from empty cancellation, lookup or draining;
+the cancellation error would break fd-stream-close. Add a sibling follow-up
+whose three replacements return exactly one NIL. Its native reference binds to
+the untouched CCL consumers. A separate probe checks 21 native empty answers
+and four real file closes, with and without the corrected bindings. Generated
+close and cleanup callers verify cancellation precedes flushing and closing.
+Twenty-one modules, 76 comparisons, 38 collections, 64 admission checks and
+fourteen controls pass. Original sources/pins remain unchanged. No integration,
+acceptance, compiler/runtime edits or LL15 credit; independent review is pending.
+
 ## 2026-09-20 — implement and retain Stage 1 termination exclusion
 
 Add an isolated proposal implementing the user's exclusion decision: generated

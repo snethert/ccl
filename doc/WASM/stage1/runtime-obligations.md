@@ -378,3 +378,14 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   specializers can carry boxed integers, floats and other EQL numeric values.
   Do not substitute unrestricted EQ for the pending EQL service. The empty
   inspector EQL table and the populated EQUAL table remain separate joins.
+
+- **Termination empty-state consumers (audit 135).** R1's refusal for
+  cancellation, lookup and queue draining breaks `fd-stream-close`, which
+  cancels unconditionally before its flush/close path. Use the
+  [corrected follow-up](../../../tests/wasm/stage1/termination-exclusion-review/README.md):
+  exactly one NIL for those three operations under the admitted empty-state
+  invariant. Registration still signals SIMPLE-ERROR; enabled scheduling and
+  nonempty image state still refuse. Do not install R1's three error bodies.
+  The native reference now calls the untouched native functions, and real
+  file close plus a generated close/cleanup model execute. Actual image
+  installation and global empty-state admission remain owed.

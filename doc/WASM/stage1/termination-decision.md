@@ -23,9 +23,11 @@ termination population observed in the native census is evidence about that
 image only. Recheck the port's cross-dumped heap and its actual root graph.
 
 Bootstrap must disable or exclude automatic termination scheduling and bind any
-reachable registration entry to the explicit refusal. Cancellation, lookup,
-queue draining and other native termination consumers require an explicit
-reachability/replacement disposition; they must not become silent success stubs.
+reachable registration entry to the explicit refusal. Cancellation, lookup and
+queue draining return exactly one NIL value when the admitted state is empty
+and registration is refused. This is the native
+not-registered answer, not a claim of successful removal or callback execution.
+Other native termination consumers still require an explicit disposition.
 Keep these implementation joins open until they execute in the selected image.
 
 Ordinary strong populations remain a separate approved compatibility policy.
@@ -37,11 +39,14 @@ not permission to omit required releases or cleanup during normal control flow.
 The strong-table/population proposal reviewed in audits 132–134 still awaits
 its own user acceptance. This finalization policy decision does not supply it.
 
-Implementation candidate: [termination-exclusion fixture](../../../tests/wasm/stage1/termination-exclusion/README.md),
-STAGE1-TERMINATION-EXCLUSION-R1. Five generated entries and a read-only state
-admission guard execute with native Lisp error/unwind comparisons and real
-collection. Cancellation, lookup and explicit draining also signal the exclusion;
-the disabled automatic hook is inert. Native registration/cancellation is
+Corrected implementation candidate: [empty-state follow-up](../../../tests/wasm/stage1/termination-exclusion-review/README.md),
+STAGE1-TERMINATION-EXCLUSION-REVIEW-R1. Audit 135 found that R1 incorrectly
+refused cancellation, lookup and draining, which breaks ordinary stream close.
+Five generated entries and a read-only state admission guard execute with native Lisp error/unwind comparisons and real
+collection. Cancellation, lookup and explicit draining now return the native
+empty-state NIL; registration still signals the exclusion. The disabled automatic hook is
+inert. The follow-up compares against untouched native consumers and exercises
+real file close with the corrected bindings. Native registration/cancellation is
 observed separately and restored, without finalizing an object. Actual image
 slot discovery, digest-bound installation at the CCL symbols and the bootstrap
 READY join remain required. No shared runtime has changed.
