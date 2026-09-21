@@ -2881,3 +2881,58 @@ Closed: ASSQ in Lisp, C-5, C-10, C-11 (the forty owner checks ran at integration
 Integration b9de543d: right on substance, verified byte for byte with one corrected substitution; its documented replay fails as committed (F1), to be repaired and re-retained at the head of the next packet. Carry packet: no defect; the verifier passes; everything Claude ran agrees with native. Recommended: accept and integrate the carry packet (backend minus the ASSQ lowering plus the handler hook, and ASSQ in `w32-prims.lisp`), with R6/R6a on the final files.
 
 Suggested next packet, an execution packet: recipes for the closed definitions without inputs (87 at the last count); the common remaining callees from the frontier; and a first source-branch unit for the POSIX stops, starting with the cheapest family (the `#$` constants `SEEK_SET`, `SEEK_CUR`, `EMFILE`, `EEXIST`, `EINTR`, which stop six files between them: `l0-io`, `nfasload`, `l1-boot-2`, `l1-files`, `l1-sysio`, `linux-files`), each as a `#+wasm32-target` branch in CCL's own file with the 17-target reader matrix. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-first Claude audit — acceptance and integration at f63a4a3b, STAGE1-BOOTSTRAP-INPUTS-R1 at 6e3bdcc5 and dece7595 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-151`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Three Codex commits followed audit 150. Reviewer disposition only. Audit 150 is imported verbatim at ecf98002: this file there hashes bc372f3c…, the value `acceptance-bootstrap-carry.json` binds for be35e2ab.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 301 → 332 (+31). With a non-NIL witness: 290 → 318 (+28). Claude's recount from the replayed native rows agrees: 332 executed, 14 NIL-only, three of them new (CHEAP-FREE-LIST, CLEAR-LOCK-ACQUISITION-STATUS, CLEAR-SEMAPHORE-NOTIFICATION-STATUS, which return NIL by design and are checked through argument and global post-state). Native rows 2,754 → 2,913; target comparisons 11,016 → 11,652. Closed definitions without an input recipe 87 → 56. The backend is unchanged; the gain is input recipes built from real native structures: ioblocks and io-buffers, string-input-stream blocks, the cons pool, lock and semaphore status records, periodic tasks. The execution counter moves again, as asked.
+
+Real worklist: 56 files (linux-files removed, see below), 39 read to the end, 2,027 definitions parsed, 1,582 admitted; seventeen files still stop.
+
+### Integration f63a4a3b
+
+`compiler/WASM32/wasm32-backend.lisp` and `level-0/WASM32/w32-prims.lisp` equal the reviewed proposal bytes in packet cf66d596…; no fold was needed. The 35 unchanged runtime files hash as recorded; the record reuses the packet's own final-byte native and generated qualification, which is sound because the integrated bytes are the qualified bytes. Audit 150's F1 is repaired: the execution step now runs through a child adapter that takes the collector sources from the immutable packet, checking each against `packet.json`. `bootstrap-witnesses-acceptance/run.py target`, unmodified, from the detached worktree: PASS in 88 seconds, 885 files identical, 40 owner checks. The acceptance record quotes the user as "Accept and integrate"; as before, Claude did not witness it. No defect.
+
+### Evidence and replay, inputs packet
+
+Packet 8336b0a6… (1,676 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash, the separate verification record cataloged; catalog 991a7274… at 251,425 files; evidence commit 1c11ce24; store clean. The verifier passes unmodified from the detached worktree in 83 seconds: 332 originals, 11,652 target comparisons, 11,648 equal to native and the four declared signed-zero differences, the 136-join reader matrix rerun.
+
+F1 (minor, chain). `repository.json` binds `source_index_sha256` 657d8986…, which is the hash of the retained snapshot. The committed `doc/WASM/evidence/index.json` at dece7595 hashes 62a1a5c7…. The two files are equal as JSON and differ in eight lines of bytes: the snapshot writes `\u2019` and `\u201c` escapes where the committed file has the UTF-8 characters. In every earlier audit the two were byte-equal. Nothing is wrong with the content, and the binding is still not what it says. Fix at the head of the next packet: write both with the same encoder setting and check byte equality in `manage.py check`.
+
+### The source proposal
+
+Thirteen sites in seven files (`l0-io`, `nfasload`, `l1-files`, `l1-lisp-threads`, `l1-streams`, `l1-boot-2`, `l1-sysio`) change `#$NAME` to `#+wasm32-target target::io-… #-wasm32-target #$NAME`, the idiom the same files already use for Windows. Six constants are added to the wasm32 arch file with the values 0, 1, 4, 17, 23, 24. They are declared as the port's file-provider protocol, not read from any host; a provider translates into them. That is a contract decision and the README states it as one; it belongs in the file-provider section of the outline when that is written, and Claude has no objection to the values.
+
+Native qualification, from the packet: the registered build passes 21,843 tests; 150 of 164 FASLs are byte-identical; every changed source file has a PASS comparison with identical decoded code (`l1-streams` alone is 2,229 functions); restoring the sources restores all 164 FASLs. The reader proof is compositional: each substituted form is read by CCL's reader under each of the seventeen existing feature sets and is identical to the original, and the inverse edit restores every other byte. That is a sound reading of the adopted R6 allowance for a change that is only local token substitution, and the README says plainly that a whole-file read under foreign profiles was tried, fails for an unrelated reason (Windows foreign definitions absent from the macOS interface database) and is not claimed.
+
+What it bought: one more file (`l0-io`) reads to the end. Four of the others now stop at the next POSIX constant along, and two at a foreign function (`sysconf`, `fpathconf`): `O_RDONLY` in `nfasload`, `O_RDWR` in `l1-boot-2`, `ENOENT` in `l1-files`, `EISDIR` in `l1-sysio`. One constant family at a time will take many packets. The whole surface is small enough to enumerate once: across the 48 worklist files that have parsed definitions or stops there are 52 distinct `#$` constants at 82 sites and 55 distinct `#_` functions at 83 sites, and a good share of both already sit under `#+windows-target` or dynamic-loader conditionals that the target never reads. The next source unit should be a table of all 165 sites with one disposition each (not read on this target; protocol constant; needs a provider call; excluded with its caller), and the branches for every row that is only a constant.
+
+### linux-files: a correction to audit 149
+
+Audit 149 called `linux-files.lisp` "the POSIX file layer" and said it should leave the module list. Codex did that, in `lib/compile-ccl.lisp` and `level-1/level-1.lisp`. The advice was incomplete and the error is Claude's. `linux-files.lisp` is CCL's operating-system layer for every platform, Windows included (it holds 96 `windows-target` conditionals and is in `*level-1-modules*` unconditionally). Beside files, processes and memory mapping it defines SIGNAL-SEMAPHORE, WAIT-ON-SEMAPHORE, TIMED-WAIT-ON-SEMAPHORE, NANOSECONDS, MILLISECONDS, GETENV, GET-UNIVERSAL-TIME, YIELD, CPU-COUNT and the `%ACQUIRE-SHARED-RESOURCE` family. In the historical corpus, which under-reads most of these files, 22 call sites in six other worklist files (`l1-files`, `l1-pathnames`, `l1-streams`, `l1-lisp-threads`, `l1-processes`, `l1-aprims`) already name 17 of its definitions. With the file gone those are undefined functions on the target.
+
+So the removal is half of a change. The other half is a target file that defines, for both hosts, the part of that interface the rest of level 1 calls (CCL's convention would put it beside `linux-files` and load it under `#+wasm32-target` at the same point in `level-1.lisp`), with the file operations behind the provider protocol and the rest (time, semaphores, yield, environment) on the services the port already has. Recommendation: integrate the thirteen constant branches and the six constants; hold the two module-list edits out of integration until the replacement file exists, so that the shared tree never describes a level 1 with those callers and no callee. The denominator should keep counting the 53 `linux-files` definitions of the historical corpus as owed until then.
+
+### Probes (scratch copy of the inputs fixture, files restored, worktree clean)
+
+Both executed (rows confirmed) and match native at both placements, 11,676 target comparisons with the probes added:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| one call that reads a character, collects, peeks, reads, unreads and reads twice more, all through CCL's unchanged string-input-stream ioblock functions | "aλz" from 0, "abcd" from 1, "ab" from 0 | equal, including `:EOF` after the unread in the two-character case |
+| CHEAP-LIST then CHEAP-COPY-LIST through the cons pool, a collection, then element values and identities | fixnums, a cons and a string, NIL and a 2^60 bignum | equal: copy is a new list sharing elements |
+
+The pool probe first stopped with checked error 4 because Claude had not supplied `*CONS-POOL*` in the per-case environment; with the environment it matches. Not a finding.
+
+### Carry items
+
+Closed: 150-F1. Open: this audit's F1 (index bytes); the full foreign-reference table; the target OS-layer file that replaces `linux-files`; input recipes for the 56 closed definitions that have none.
+
+### Disposition
+
+Integration f63a4a3b: verified, no defect, replay repaired. Inputs packet: no defect in the execution work; the verifier passes; everything Claude ran agrees with native. Recommended: accept the packet; integrate the thirteen constant branches and the six arch constants under the R6 allowance; do not integrate the `linux-files` removal yet. The chain nit (F1) is repaired at the head of the next packet.
+
+Suggested next packet, same size or larger: the 56 recipes; the foreign-reference table and every constant-only branch in one unit; a first cut of the target OS-layer file with the host-independent definitions (time units, semaphore API over the existing services, GETENV answering NIL) so that the `linux-files` callers close. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
