@@ -1,3 +1,18 @@
+## 2026-09-20 — implement and retain Stage 1 termination exclusion
+
+Add an isolated proposal implementing the user's exclusion decision: generated
+registration, cancellation, lookup and queue-draining entries signal SIMPLE-ERROR;
+automatic termination is inert only while disabled. Add a read-only image-owner
+guard rejecting nonempty or enabled state without clearing it. Native Lisp
+supplies refusal/unwind comparisons; separate real native registration and
+cancellation restore the original state. The generated corpus includes named,
+FUNCALL, APPLY and multiple-value calls, effects, cleanups and nested handlers
+at both placements before/after collection. Retain 17 modules, 52 comparisons,
+26 collections, 64 admission checks and ten controls, with fresh replay over
+207 deterministic files at 106 pins. EQL key survey finds 94 symbols and
+integers 1, 2 and 30; general EQL remains required. Evidence commit d05c19b0.
+No shared compiler/runtime edit, acceptance, integration or LL15 credit.
+
 ## 2026-09-20 — record audit 134 and correct the active census description
 
 Import the audit-only branch as 010c0dfb and bind its review-file hash in the

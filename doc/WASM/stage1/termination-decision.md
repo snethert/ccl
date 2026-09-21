@@ -1,6 +1,6 @@
 # Stage 1 termination exclusion — 20 September 2026
 
-Status: **user-approved policy; enforcement not yet implemented or qualified**.
+Status: **user-approved policy; isolated enforcement proposal executed, awaiting review**.
 This records no result acceptance, integration or LL15 credit.
 
 The user answered “Exclude it in Stage 1 (recommended)” to this question:
@@ -36,3 +36,12 @@ not permission to omit required releases or cleanup during normal control flow.
 
 The strong-table/population proposal reviewed in audits 132–134 still awaits
 its own user acceptance. This finalization policy decision does not supply it.
+
+Implementation candidate: [termination-exclusion fixture](../../../tests/wasm/stage1/termination-exclusion/README.md),
+STAGE1-TERMINATION-EXCLUSION-R1. Five generated entries and a read-only state
+admission guard execute with native Lisp error/unwind comparisons and real
+collection. Cancellation, lookup and explicit draining also signal the exclusion;
+the disabled automatic hook is inert. Native registration/cancellation is
+observed separately and restored, without finalizing an object. Actual image
+slot discovery, digest-bound installation at the CCL symbols and the bootstrap
+READY join remain required. No shared runtime has changed.

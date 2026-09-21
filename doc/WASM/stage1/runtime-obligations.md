@@ -365,4 +365,16 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   callbacks or live termination-function registrations. Disable/exclude native
   automatic scheduling and disposition remaining consumers before bootstrap
   closure. Finalization remains owed in Stage 2. This policy is approved; the
-  enforcement and cross-dumped-image checks are not yet executed.
+  [isolated enforcement proposal](../../../tests/wasm/stage1/termination-exclusion/README.md)
+  now executes, awaiting review. Bind its generated entry digests to the real
+  CCL symbols and map the admission guard to actual image data/pending/count/
+  enable slots before READY. Its trusted-owner slots are not proof of global
+  root discovery. Recheck the actual cross-dumped image; production integration
+  remains open.
+
+- **EQL bootstrap key domain (termination-exclusion survey).** The populated
+  specializer table in the pinned image contains 94 symbols and integers
+  1, 2 and 30. Those keys have identity-compatible EQL behavior, but new
+  specializers can carry boxed integers, floats and other EQL numeric values.
+  Do not substitute unrestricted EQ for the pending EQL service. The empty
+  inspector EQL table and the populated EQUAL table remain separate joins.

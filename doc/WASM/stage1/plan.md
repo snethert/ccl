@@ -424,3 +424,22 @@ in for port image population or capacity evidence. The user chose [Stage 1 termi
 registration, reject images with outstanding termination state, and defer
 finalization to Stage 2. Policy is decided; admission and generated refusal
 enforcement remain to be implemented and qualified.
+
+
+2026-09-20, [termination exclusion implementation](../../../tests/wasm/stage1/termination-exclusion/README.md):
+five generated replacement entries now implement the approved refusal and
+inactive automatic hook; a read-only owner guard rejects registered objects,
+pending callbacks, live callback registrations and enabled scheduling. Seventeen
+modules, 52 native comparisons, 26 collections, 64 admission checks and ten
+controls pass; fresh replay reproduces 207 deterministic files at 106 pins.
+Compiler and runtime are unchanged. This is a reviewable auxiliary proposal,
+not integration or LL15 credit. Join the actual image slots, real CCL function
+bindings and READY schedule after review. Native automatic termination is T,
+so disabling it is an explicit image edit, not an assumption from empty queues.
+
+The next equality slice must implement EQL numeric behavior and table lookup,
+not merely relabel an EQ vector. The captured 97-key specializer table contains
+94 symbols and integers 1, 2 and 30; retain that exact bootstrap trace, then add
+nonidentical numeric keys, signed zeros, widths and relocation cases when
+qualifying the service. EQUAL, population accessors/scanners, root installation
+and growth remain open. No old packet or accepted scope was altered.

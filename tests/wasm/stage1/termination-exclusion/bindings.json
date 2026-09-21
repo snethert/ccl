@@ -1,0 +1,14 @@
+{
+  "scope": "Proposal for the selected Stage 1 image; production installation remains required",
+  "functions": {
+    "CCL:TERMINATE-WHEN-UNREACHABLE": "termination_register",
+    "CCL:CANCEL-TERMINATE-WHEN-UNREACHABLE": "termination_cancel",
+    "CCL:TERMINATION-FUNCTION": "termination_lookup",
+    "CCL::DRAIN-TERMINATION-QUEUE": "termination_drain",
+    "CCL::DO-AUTOMATIC-TERMINATION": "termination_automatic"
+  },
+  "specials": {
+    "CCL::*ENABLE-AUTOMATIC-TERMINATION*": {"import": "automatic_termination_enabled", "value": "NIL"},
+    "owner SIMPLE-ERROR": {"import": "termination_unavailable", "message": "Finalization is not supported in Stage 1."}
+  }
+}
