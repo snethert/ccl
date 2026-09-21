@@ -2119,3 +2119,39 @@ They were deferred slice by slice and have not come back. `hash.c` and the accep
 ### Verdict
 
 Defects found in 21198a0d (STAGE1-STARTUP-RUNTIME-R1): F1 untested bignum sign-pad, F2 un-isolated admission clauses, F3 a host exception through Lisp frames for the timing-unavailable state, F4 Node dispositions overstated in the manifest. The statistics arithmetic, the snapshot protocol and the scope are right; all four are small. No defect in 5d6c01b0 or e7c272a0. Follow-up recommended before acceptance; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-second Claude audit — STAGE1-BOOTSTRAP-TABLES-R1 at 0d99cb76, with STAGE1-STARTUP-RUNTIME-REVIEW-R1 at 0779bd79 (follow-up to audit 131) — 20 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-132`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 131 landed on wasm2 as dc8adbb1 with content identical to the worktree commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packets e4397e4d… (runtime review, 135 entries) and 7f32faa2… (bootstrap tables, 48 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted file, every file cataloged, both indexed; catalog, index snapshot and evidence commit bind; store clean; the index binds audit 131 by the review-file hash recomputed from dc8adbb1. Both `packet.py verify` runs at 0d99cb76 pass: runtime review 88 deterministic files, 94 pins, 1,058 comparisons, 818 collections, 40 owner checks, 19 controls; bootstrap tables 16 files, 24 pins, 21 plans, 108 collections, 171 refusals, 6 controls, with the 21 native constructor pairs rerun on the pinned kernel and image.
+
+### 0779bd79 — disposition of audit-131 findings
+
+- F1 closed. Six native inputs now reach the sign-pad range and the decoder is sign-aware; with the pad removed the corrected harness fails “exact five native values”.
+- F2 closed. Seven directed refusals each change one argument or the descriptor header and assert unchanged TCR, descriptor, result and heap bytes; with `pub!==result` removed the harness fails “admission publication”.
+- F3 closed. An unavailable clock publishes a NIL snapshot and generated Lisp signals the owner’s SIMPLE-ERROR; backwards and throwing clocks, ordinary and named calls, HANDLER-CASE over UNWIND-PROTECT return 701 with cleanup 611 and restored binding state at both placements. Forcing the old path fails with the raw host error, so the control is real.
+- F4 closed. The five host-input effects read `node: INPUT_PROVIDER_NOT_QUALIFIED`; 18 browser and 13 Node accepted effects; closure still NOT_ESTABLISHED.
+- Residual R1 (minor). The new NIL-snapshot path publishes `[NIL, NIL, 1, 0]` but nothing observes words 2 and 3: a service that writes only the first two passes. The adapter does not consume them (audit 128), so this is inert today; the success path already has the complement-poison check and the NIL path should share it.
+- Observation. `timingValid` never resets, so one bad clock sample makes `gctime`, and therefore `time`, signal for the rest of the session. `performance.now` is monotonic by specification, so this is a policy note, not a defect.
+
+### 0d99cb76 — bootstrap strong-table substitute
+
+Scope. The user’s decision is quoted in the README: “Use the Stage 1 strong substitute.” Retaining keys and values is safe for identity-keyed tables (a retained key cannot be reallocated), the unit sets no weak flag and relaxes no collector check, and it means the same under both providers. It belongs.
+
+Verified.
+- Selection completeness. An independent recursive search of level-0, level-1, lib and compiler finds exactly the 21 `:weak` constructor sites the unit selects; the only others are two optional `library/` files, excluded as the README says. Every site uses a literal `t`, `:key` or `:value`, so no weak table is constructed through a variable.
+- Native pairs. Each original and adapted constructor agrees on test, rehash size and threshold; the adapted one reports non-weak, retains across `(gc)`, and distinct equal strings and separately parsed bignums separate EQ, EQL and EQUAL. The unadapted control fails the non-weak assertion.
+- Target. 18 EQ sites at 256 KiB and 2 GiB: the table is the only root, three moves keep key and value, the unrelated cons is reclaimed once, old space is poisoned before lookup, flags stay strong. EQL and EQUAL plans refuse materialization rather than fall back to EQ.
+
+Findings.
+- F1. Capacity comes from the source form, and three bootstrap tables are far larger than that. The plan takes `:size` (default 60, so capacity 64) and the accepted service is fixed-capacity with a 16,384 ceiling. In the pinned native image `%setf-function-names%` and its inverse hold 1,281 entries each and `%lambda-lists%` 1,049, all constructed with no `:size`. Materialized as the unit does it, each refuses FULL at the 65th insertion. The README says growth is outside the accepted service; it does not say that three of the 18 EQ sites cannot hold their native populations, and the harness inserts one entry per table. Owed before this substitute can carry a bootstrap image: owner capacity from measured population with headroom, or growth; and a statement of what happens past 16,384.
+- F2. `*combined-methods*` is an EQUAL table with 8 live entries in the base image, so the refusal to materialize EQUAL is not hypothetical: one reached bootstrap table has no substitute until an EQUAL service exists. Record it as an open dependency rather than a deferred nicety.
+- F3. Weak hash tables are not the only weak objects the bootstrap makes. Four population (weak list) constructors are in scope: `%system-locks%` in `level-0/nfasload.lisp:1212`, the thread population with `$population_weak-list` in `l1-lisp-threads.lisp:240`, `%all-gfs%` in `l1-dcode.lisp:392`, and `lib/misc.lisp:710`. The accepted collector’s allowlist excludes weak objects as it does weak hash vectors. `stage0/plan.md:143` names “weak objects/tables” together; the user’s decision covers tables, and populations need the same explicit disposition.
+- F4 (low). Owner clauses are not isolated. Removing any one of the power-of-two, minimum, maximum, alignment, end-bound or `ht_size` checks passes the harness; each is backed by the service’s own validation. Removing the check of `ht_init`’s status also passes, and nothing backs that one: the harness never drives a construction the service refuses, because every invalid case is stopped earlier by design (“refusal before service”). Two metadata mutants also pass (weak-value validity, the retention label).
+
+### Verdict
+
+No defect in 0779bd79; audit-131 findings F1 to F4 are closed, with minor residual R1. Defects found in 0d99cb76 (STAGE1-BOOTSTRAP-TABLES-R1): F1 capacity against measured native populations, F2 a reached EQUAL table with no substitute, F3 populations undisposed, F4 un-isolated owner clauses. The policy, the selection and the retention behaviour are right; F1 to F3 are about what the substitute does not yet cover, and they decide whether a bootstrap image can actually be collected. Follow-up recommended before acceptance; the decisions are the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
