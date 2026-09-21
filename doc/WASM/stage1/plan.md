@@ -620,3 +620,12 @@ and float-only division scope are now explicit. Continue implementation with
 TYPEP/REQUIRE-TYPE dependencies and initialized layouts, native-error comparison,
 ASSQ/LOGAND/LOGIOR/subtraction call closure, and the remaining actual file
 compilation environment. Do not rebuild unchanged native qualifications.
+
+2026-09-21: The user's integer-division witness request is implemented in the
+[division proposal](../../../tests/wasm/stage1/bootstrap-division/README.md).
+Exact integer quotients use the existing integer service; CALL and DIV2 each
+have integer witnesses. Nonintegral quotients require ratio arithmetic and still
+refuse. Mixed handler clauses exposed the symbol-versus-mask dispatch bug;
+bootstrap condition and restart names now share the literal symbol owner.
+This remains a review candidate, with 186 original definitions executed and no
+change to the admission count or LL15 disposition.

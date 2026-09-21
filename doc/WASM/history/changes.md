@@ -1,3 +1,26 @@
+## 2026-09-21 — implement exact integer division and correct handler identity
+
+On the user's instruction to fix the division witness with integers, add a
+bootstrap compiler proposal that reuses the accepted integer quotient/remainder
+helper. Ordinary / and source-emitted DIV2 now return exact integer quotients,
+including the fixnum-overflow and bignum cases; nonzero remainders refuse with
+code 45 until ratio arithmetic exists. No duplicate arithmetic service is added.
+The collecting integer owner retains its required two-slot head frame.
+
+The new integer error witnesses exposed a pre-existing condition-dispatch bug:
+native handler expansions hold quoted symbols, while the old dispatcher treated
+them as fixnum masks. Resolve admitted symbols by identity, and route bootstrap
+restart/type/operation imports through the existing symbol owner. Tests compare
+class discrimination, type-error payloads, cleanup, evaluation order and moving
+operands with native. Retain both development failures and the CALL-versus-DIV2
+coverage correction. Nine directed faults fail, including the old handler bug.
+
+The packet runs 186 original definitions, 2,085 native rows and 8,340 comparisons
+with 4,336 collections; 140 fast-path checks pass. Its unmodified retained
+verifier must pass before commit. Fresh native R6/R6a output equals the prior
+qualified native build, permitting reuse of 21,843 native tests. Integration and
+LL15 qualification remain open.
+
 ## 2026-09-21 — repair execution retention and run 186 original definitions
 
 Import audit 147 verbatim at 5dda5589 (original 357de8a1). R1's retained

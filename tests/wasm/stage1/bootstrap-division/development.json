@@ -1,0 +1,31 @@
+{
+  "attempts": [
+    {
+      "log": "ccl-division-r1/execution.log",
+      "reason": "The integer owner correctly refused a four-slot floating frame with code 31. Give the existing integer capability its required two-slot head frame; retain original operands in the enclosing floating frame."
+    },
+    {
+      "log": "ccl-division-r2/execution.log",
+      "reason": "Mixed handler clauses exposed quoted native condition symbols being shifted as old numeric masks; TYPE-ERROR incorrectly selected DIVISION-BY-ZERO. Resolve admitted symbols by identity under bootstrap compilation."
+    },
+    {
+      "log": "ccl-division-r3/execution.log",
+      "reason": "Handler symbol comparison first used legacy restart-name imports, distinct from bootstrap-owned symbols. Route bootstrap restart/type/operation names through the existing bootstrap symbol owner to preserve identity."
+    },
+    {
+      "log": "ccl-division-r4.log",
+      "reason": "Execution and nine faults passed, but the coverage assertion caught that ordinary / emits CALL, not DIV2. Add integer rows to the explicit CCL /-2 (DIV2) witness rather than relabel the call."
+    }
+  ],
+  "retained": [
+    "ccl-division-r1/execution.log",
+    "ccl-division-r1/compiled/core_divide_order.wat",
+    "ccl-division-r2/execution.log",
+    "ccl-division-r2/compiled/core_divide_zero.wat",
+    "ccl-division-r3/execution.log",
+    "ccl-division-r3/compiled/core_divide_zero.wat",
+    "ccl-division-r4.log",
+    "ccl-division-r4/compiled/executed-operators.json"
+  ],
+  "prior_development": "2026-09-21-stage1-bootstrap-execution-r2/development.tar.gz"
+}

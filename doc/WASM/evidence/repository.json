@@ -1,27 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "40e24112e3e9eba99149008af7f1c65be6188e212cc9fdfa64801b8f9bcf2cb7",
-  "commit": "11acf854fe0c5977da2f3ac12791ae4006352ea0",
-  "immutable_evidence_files": 243924,
+  "catalog_sha256": "53f767ca2e53a3ffa14e56a1a6b67864a471a9d7475d0b4c67add79709b46918",
+  "commit": "717c6c0020cb900eea34aebaf7652f12914e63cb",
+  "immutable_evidence_files": 245125,
   "last_scoped_addition": {
-    "bytes": 50907556,
-    "directory": "2026-09-21-stage1-bootstrap-execution-r2",
-    "files": 1182
+    "bytes": 53113144,
+    "directory": "2026-09-21-stage1-bootstrap-division-r1",
+    "files": 1201
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap execution R2 corrects retention and increases native-matched definitions to 186; awaiting review, no slot credit.",
-  "source_index_sha256": "a5a313ac4bc2cca2b7d5fca12d961e4ddb2d8e93740c6b52c461674ee11a37ac",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-execution-r2.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Exact integer division and bootstrap handler identity proposal awaits review, no slot credit.",
+  "source_index_sha256": "0bf17d5a330c66310b101df750d89898d393854125957dd78df22aacce4e79ef",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-division-r1.json",
   "verification": {
-    "deterministic_files": 743,
-    "execution": "47453046b1450cc9d22e72ff2abfe08d80030386660f1f4725c5669ff05aa8b0",
-    "method": "Unmodified R2 verifier passes after retention; every deterministic file matches. Exact compiler/runtime proposal and native qualification reused. Only newly published files added to catalog.",
+    "deterministic_files": 755,
+    "execution": "c5279ef77494c9f7d261f7ef1e5b5112ed001d310a4aa9d4cb28f6901af3e449",
+    "method": "Unmodified retained verifier passes. New compiler has a fresh native R6/R6a build equal to the qualified native FASLs/snapshot; native tests reused. New target witnesses, faults and prior corpus executed.",
     "native": "5cda7f33f4e4f8ca351121911a9304d8a31d119724d1cc2acc91f63f16c6456a",
-    "source_pins": 260,
+    "source_pins": 280,
     "status": "PASS"
   },
   "version": 1
