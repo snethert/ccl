@@ -2217,3 +2217,39 @@ Packet d33f36bb… (NOT_REVIEWED, slot_credit false, 61 manifest entries, all ha
 ### Verdict
 
 No defect found in 1d0a719f (STAGE1-BOOTSTRAP-HEAP-CENSUS-R1). Audit-133 findings F1 and F2 are closed. With audits 132 to 134 the Stage 1 strong substitute for weak tables and ordinary populations has a complete qualification at its declared scope; what it does not cover is recorded as blocking. Acceptance is the user’s decision. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-fifth Claude audit — STAGE1-TERMINATION-EXCLUSION-R1 at fc0e834b, with the decision record a3b084d5 — 20 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-135`; this commit changes only this file, and the STATUS row and history entry are owed at merge. Author: Codex. Audit 134 landed on wasm2 as 010c0dfb with content identical to the worktree commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit
+
+a3b084d5 is documents only: it records audit 134, adds `termination-decision.md` quoting the user’s answer “Exclude it in Stage 1 (recommended)” to the question put, and adds a census errata file stating that the combined-methods count is seven and that the census must be retaken on the port’s own heap, leaving the pinned README byte-identical. Consistent with audit 134’s observations.
+
+### Scope (checked first)
+
+Excluding `terminate-when-unreachable` in Stage 1 is the user’s decision and means the same under both providers. The native registration callers are the `:auto-close t` paths of `run-program` pipes (`linux-files.lisp:1206–1639`) and sockets (`library/sockets.lisp`), both outside the browser profile, so refusing registration costs the port nothing it has. The unit belongs. The scope question that matters is the other four entries; see F1.
+
+### Evidence and replay
+
+Packet 50d97e3f… (NOT_REVIEWED, slot_credit false, 317 manifest entries, all hashes match, no unlisted file, every file cataloged, indexed); catalog, index snapshot and evidence commit bind; store clean; the index binds audit 134 by the review-file hash recomputed from 010c0dfb. `packet.py verify` at fc0e834b: PASS, 207 deterministic files, 106 pins; 17 modules, 52 comparisons, 26 collections, 64 admission checks, 10 controls, and the EQL key survey (94 symbols, integers 1, 2 and 30).
+
+### Finding
+
+- F1. Cancellation, lookup and draining signal an error where native CCL returns NIL, and every stream close calls cancellation. `entries.lisp` makes `termination_cancel`, `termination_lookup` and `termination_drain` signal the same SIMPLE-ERROR as registration. In U1, `fd-stream-close` (`l1-streams.lisp:5702–5703`) calls `(cancel-terminate-when-unreachable s)` unconditionally, before flushing or closing the descriptor. Native probe on the pinned kernel and image: for an object that was never registered, `cancel-terminate-when-unreachable` returns NIL, `termination-function` returns NIL and `drain-termination-queue` on an empty queue returns NIL; an ordinary `with-open-file` write and close succeeds. With the proposed bindings installed at the CCL symbols, every `close` of an fd-stream would signal “Finalization is not supported in Stage 1”, including the close inside `with-open-file`’s cleanup, before the stream is flushed. In a world where registration is refused nothing can ever be registered, so the native answers for the unregistered case — NIL, NIL, and an empty drain — are the faithful semantics for these three; they are not the “silent success stubs” the decision record warns against, because they report that nothing was found, which is true. The decision text itself requires explicit refusal only of registration. The harness cannot see this: its native oracle compiles the substituted refusal bodies, and its separate native probe exercises cancellation and lookup only on a registered object. `drain-termination-queue`’s other callers (the EMFILE retry in `fd-open-path`, `linux-files.lisp:1117`) are native-descriptor paths and do not change the conclusion.
+
+### Verified
+
+- Registration refusal. Named, default-argument, FUNCALL, APPLY and MULTIPLE-VALUE-CALL forms signal the owner’s SIMPLE-ERROR; operand effects occur once; nested cleanup runs; a declining handler passes it on; the callback never runs and the object is unchanged; every TCR word other than the allocation words and the value count is restored, on the unhandled path too; before and after a real collection at both placements.
+- Automatic hook. Inert when the enable special is NIL; the pinned native image has it enabled, and the unit says the port must disable it explicitly rather than inherit the flag.
+- Admission guard. Read-only; requires the explicit policy, four distinct in-region aligned slots, NIL population data, NIL pending list, zero function count and NIL enable; refuses nonempty state without clearing it; each state clause, the policy, aliasing and the region have a remove-one-check control. It does not discover the slots, and says so.
+
+### Observations (none a defect)
+
+1. The replacement `termination_register` drops native’s default `'terminate` callback argument; harmless before an unconditional refusal, and declared.
+2. The EQL key survey (94 symbols and three small fixnums among 97 keys) is useful for the next service and rightly does not argue for EQ.
+3. Installation at the real CCL symbols, slot discovery on the cross-dumped heap and the READY join remain owed, as stated.
+
+### Verdict
+
+One defect found in fc0e834b (STAGE1-TERMINATION-EXCLUSION-R1): F1, cancellation, lookup and draining refuse where native returns NIL for the never-registered case, and `fd-stream-close` calls cancellation on every close, so installing these bindings would make stream close fail. Registration refusal, the automatic hook and the admission guard are right. Follow-up: make the three entries return the native not-registered answers, with native oracle rows for the unregistered case and a generated `fd-stream-close`-shaped caller. No defect in a3b084d5. Follow-up recommended before acceptance; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
