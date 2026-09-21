@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d912abf54fb09900e3ae45c76d0ed89cc4d71c2d4ebe11f1d8328885ad3ca887",
-  "commit": "25be6a27555577a709e82cf4a0cdf65d0f56a590",
-  "immutable_evidence_files": 233754,
+  "catalog_sha256": "e9437b32d2a545701ca7c581931bea72d13ef9a022395f01c3a512bb71d47691",
+  "commit": "e8fbb56c3dd3428608886df8d1a6fb45e71c8fe9",
+  "immutable_evidence_files": 233766,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-config-r2",
-    "files": 446,
-    "bytes": 20681159
+    "directory": "2026-09-20-stage1-startup-config-acceptance-r2",
+    "files": 12,
+    "bytes": 2276851
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 39790,
+  "prior_indexed_references_verified": 40195,
   "remote": null,
-  "scope": "Stage 0:48 accepted. Stage 1:21 accepted,10 missing,zero unreviewed. Startup configuration R2 auxiliary correction executed, not reviewed; no LL15 credit.",
-  "source_index_sha256": "fbc45fe2138743281adbedb2b1a98d873e5d625c50c76814796c6302db13b645",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-config-r2.json",
-  "verification": "Fresh verifier rebuilds native and generated configuration, runs Node and Chromium, the stronger accepted-reset harness, four original escapes and sixteen new rejected faults; twelve inherited faults and ten publication controls pass. 258 deterministic files at 179 pins. Incremental artifact and indexed-reference verification; accepted envelopes unchanged.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Startup configuration R2 accepted and portable modules integrated; no LL15 credit.",
+  "source_index_sha256": "a62253d569ef9f656f947cdc72d94954477efbdf96509a77c8abf6cbbc683e73",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-config-acceptance-r2.json",
+  "verification": "Exact reviewed modules; production-import Node and Chromium replay and corrected reset replay identical. New files and index references verified.",
   "version": 1
 }

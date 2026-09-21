@@ -305,3 +305,11 @@ Effects are checked only within the 8,600-byte image window and at declared word
 The thirteen resets are the literal subset of one post-restore snapshot; membership and the 22 computed callbacks remain open for LL15. No production package materialization, ordinary-condition activation, coordinated image or complete startup is claimed.
 
 See [integration](integration-startup-resets.json).
+
+## Startup configuration R2 (audit 127)
+
+Use the retained R2 callback and both corrected harnesses. Original startup-config and startup-resets sources remain historical pinned evidence; never use the superseded R1 spin body for integration.
+
+Browser concurrency may differ from native. Millisecond units and Lisp stack extents are explicit runtime/owner policy, not measured native clock frequency or browser stack size.
+
+Full TCR preservation is a check for these nonallocating startup bodies only; mv_count is separately verified. Seventeen snapshot callbacks, wider startup membership, definition effects and ordinary-condition activation remain open. No LL15 credit.

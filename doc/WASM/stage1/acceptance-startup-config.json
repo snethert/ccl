@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-21T00:15:39.999882+00:00",
+  "authorization": {
+    "quote": "accept. integrate and PROCEED",
+    "provenance": "User to Codex following Claude audit 127; explicit R2 acceptance and integration."
+  },
+  "review_commit": "8bd38558b2c01772bb13cf7b5273660526446bef",
+  "review_sha256": "8393b031c38e6242f1823d6ec3c8ff197918321b7aa9aa8738043e1435e95e7a",
+  "source_commit": "2e3e08ead340a925468c8255a576c93cf0b723c9",
+  "packet": {
+    "id": "STAGE1-STARTUP-CONFIG-R2",
+    "locator": "2026-09-20-stage1-startup-config-r2/packet.json",
+    "sha256": "d5ff38f1b090b1ae7432d9951910e06669eca7c872dde33a1595f57912acc2cf"
+  },
+  "observations": [
+    "Use the retained R2 callback and both corrected harnesses. Original startup-config and startup-resets sources remain historical pinned evidence; never use the superseded R1 spin body for integration.",
+    "Browser concurrency may differ from native. Millisecond units and Lisp stack extents are explicit runtime/owner policy, not measured native clock frequency or browser stack size.",
+    "Full TCR preservation is a check for these nonallocating startup bodies only; mv_count is separately verified. Seventeen snapshot callbacks, wider startup membership, definition effects and ordinary-condition activation remain open. No LL15 credit."
+  ],
+  "slot_credit": false,
+  "scope": "Accept corrected generated effects and both full-TCR harnesses; integrate the exact portable configuration modules. Generated effects remain retained evidence pending production symbol materialization."
+}
