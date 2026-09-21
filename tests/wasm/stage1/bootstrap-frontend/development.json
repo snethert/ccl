@@ -1,0 +1,37 @@
+{
+  "retained": [
+    "ccl-bootstrap-front-r1/compiled/compile.log",
+    "ccl-bootstrap-front-r1/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r2/compiled/compile.log",
+    "ccl-bootstrap-front-r2/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r3/compiled/compile.log",
+    "ccl-bootstrap-front-r3/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r4/compiled/compile.log",
+    "ccl-bootstrap-front-r4/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r5/compiled/compile.log",
+    "ccl-bootstrap-front-r5/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r6/compiled/compile.log",
+    "ccl-bootstrap-front-r6/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r7/compiled/compile.log",
+    "ccl-bootstrap-front-r7/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r8/compiled/compile.log",
+    "ccl-bootstrap-front-r8/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r9/compiled/compile.log",
+    "ccl-bootstrap-front-r9/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r10/compiled/compile.log",
+    "ccl-bootstrap-front-r10/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r11/compiled/compile.log",
+    "ccl-bootstrap-front-r11/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r12/compiled/compile.log",
+    "ccl-bootstrap-front-r12/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-bootstrap-front-r13/compiled/compile.log",
+    "ccl-bootstrap-front-r13/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp"
+  ],
+  "notes": [
+    "r1: general front end exposes TYPED-FORM; r2: NOT; r3/r4: inverted :NE condition; r5: seven initial witnesses compile.",
+    "r6: harness missing close parenthesis. r7: native builtin-call; r8: native SET-CAR. r9: compiler succeeds; harness root base then zero-value primary assertions corrected. Those two harness failures appeared in tool output; only the original compile logs and proposals are retained here.",
+    "r10: LOAD-TIME-VALUE control exposes an early module return through the enclosing result tag. R11 refuses it through a private NX1 dispatch copy.",
+    "r12: stream-based target reader replaces column-zero chunk admission; recovery after a recorded failure remains diagnostic only.",
+    "r13 and final: fresh legacy baseline equality, expanded source refusals, 184 total comparisons. Final R6/R6a was rebuilt for the final compiler bytes; the earlier native run is not used."
+  ]
+}

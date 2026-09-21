@@ -2936,6 +2936,26 @@
       "scope": "Generated population PUSHNEW using CCL macro order, branch-loop membership and shared EQL table-service entry; no separately compiled comparator. Callable :test, NIL default, numeric EQL, duplicates, collection and exits. Twenty-seven modules, 34 native cases, 68 comparisons, 80 collections, forty exact allocation checks, 28 shared-service checks, seven source refusals and eight controls. Detached replay 212 deterministic files at 115 pins. Source adapter remains fixture scaffolding, not for integration; native accessor/REQUIRE-TYPE and public installation remain owed. Auxiliary proposal, not accepted/integrated; no LL15 credit. Audit 141: executable evidence has no defect. Shared EQL entry is durable; handwritten ADJOIN helpers and source walker are scaffolding, not for integration. Next work is the general compiler front end.",
       "review_commit": "79c9099db1c9caab64f185ea8e5616607ba7ea58",
       "review_sha256": "43b1fd05bf38477569a76505f44ef50472bb007875d98ebc6179aba9840df411"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-COVERAGE-DECISION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-coverage-decision-r1/packet.json",
+      "sha256": "6771b5c65bf88bb127fecb54759c1a9edf45ca1fceb3fb514e7651c0ee0e54bd",
+      "execution_status": "NOT_APPLICABLE",
+      "review_disposition": "USER_AUTHORIZED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "BT-0 explicitly authorized; add S1-LL15-c/d coverage criteria. All 31 prior tests and 21 accepted results unchanged. Stage 1 now 33 required, 21 accepted, 12 missing. No execution or acceptance credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FRONTEND-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-frontend-r1/packet.json",
+      "sha256": "3739a7f30366bc12d7d24eafb2b26a8453521d66b370836d6c7d42a54367df91",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Separate target-reader/CCL NX1 compiler entry; original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ execute unchanged. No consumer walker or new C/JS service. Native builtin calls, NOT/EQ condition senses, unchecked type forms preserving multiple values and value-returning cons setters. 426/2492 readable original DEFUNs admitted versus legacy 33, with 268 explicit read/name skips. Four definitions executed, 180 native comparisons plus four layout checks, 92 collections, 22 admission controls, ten byte-identical legacy modules. Native R6/R6a rebuilt: 21843 tests, 162/164 FASLs unchanged, all restored. Replay 100 deterministic files at 138 pins. Not integrated or accepted; no LL15/BT-0 slot credit. Checked type annotations, SETF function identities, complete worklist/dependency closure and target-specific macros remain owed."
     }
   ],
   "current_runs": [

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
-  "date": "2026-09-20",
-  "basis": "User accepts LL13-a and admission follow-up after audits 122/123; twenty earlier accepted records unchanged.",
+  "assessment": "AUTHORIZED_CRITERION_EXTENSION_NO_EXECUTION",
+  "date": "2026-09-21",
+  "basis": "User: \"I accept BT-0\". Add two required coverage variants; all 21 accepted results and all 31 prior criteria unchanged.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -15,12 +15,14 @@
       "missing S1-LL03-a [control]",
       "missing S1-LL22-a [control]",
       "missing S1-LL24-a [control]",
-      "missing S1-CONTRACTS-a [complete-report]"
+      "missing S1-CONTRACTS-a [complete-report]",
+      "missing S1-LL15-c [acode-coverage]",
+      "missing S1-LL15-d [source-coverage]"
     ]
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "d32c9a3eaee0f85a7cc5892b6dd1528f507527d6b7bc46d3b67dab2278a89f1d"
+    "sha256": "a63a4d6170a813ae8182f183691b4fca91bb0d74bb83c5b8d856e159c4516d22"
   },
   "active_results": [
     {
@@ -32,8 +34,8 @@
   "combined_results_sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79",
   "counts": {
     "accepted": 21,
-    "missing": 10,
+    "missing": 12,
     "unreviewed": 0,
-    "required": 31
+    "required": 33
   }
 }

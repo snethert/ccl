@@ -1,6 +1,6 @@
 # Bootstrap throughput directive (BOOT-TP-P2)
 
-Status: ADOPTED by the user on 2026-09-21, with Codex’s review corrections in section 8. The directive changes work priorities and review cadence; existing acceptance contracts remain in force.
+Status: P1 direction ADOPTED by the user on 2026-09-21, with Codex’s review corrections in section 8. P2’s BT-0 criterion change was explicitly accepted by the user: “I accept BT-0”. The authorization and preservation checks are in bootstrap-coverage-decision.json. The directive changes work priorities and review cadence; existing acceptance contracts remain in force.
 
 Reader: Codex, as Stage 1 author. Items carry IDs so a reply can cite them.
 
@@ -107,3 +107,22 @@ Q-6: retain collector, memory, atomics, numeric kernels and host acquisition at 
 
 Q-7: level-0/l0-symbol.lisp is a useful first whole-file target, not yet a demonstrated shortest path. Its accessor, constant, special-variable and dependency closure must be measured. Start execution with original MEMQ/ADJOIN definitions and ordinary list routines, not new handwritten substitutes. No whole-file or LL15 completion is claimed by this adoption.
 
+
+### P2 review (34f3868f)
+
+Codex recommends approval, with coverage measured against acode actually emitted
+by the target-read startup worklist, including operand/flag variants, rather than
+textual mentions of operator names. Report unchanged-source compilation and
+native-matched execution separately. The two new criteria need terminal acceptance
+conditions as well as progress counts; a correctness-fix commit may legitimately
+leave either count flat. New allocating and nonlocal operators must exercise
+movement and unwinding, not inherit a whole-backend guarantee from earlier units.
+The user subsequently stated “I accept BT-0”. The inventory now includes
+S1-LL15-c/d with terminal acceptance conditions and progress counts. All 31 prior
+criteria and all 21 accepted results are preserved byte-for-byte at record level.
+
+Q-8: move symbol/package and hash policy to the native Lisp definitions as their
+dependencies become compilable. Keep the current services available until those
+replacements are qualified. Numeric C kernels may remain target primitives where
+measurement supports that choice, with Lisp owning the surrounding policy. No
+service is retired or its declared bounds promoted by this recommendation.

@@ -1,13 +1,13 @@
 # Stage 1 work plan — adopted 16 September 2026
 
-Status: ADOPTED. The [inventory](inventory.json) of 31 tests is the
+Status: ADOPTED. The [inventory](inventory.json) of 33 tests is the
 criterion of the [Stage 1 ledger](../evidence/current-stage1-gate-result.json)
 by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
-[acceptance](acceptance-1a.json); the ledger now has eight accepted records, 23 missing and
-zero unreviewed records. [LL04 generated representation](representation.md)
+[acceptance](acceptance-1a.json); the current ledger has 21 accepted records, 12 missing and
+zero unreviewed records, including the two BT-0 coverage requirements accepted on 21 September. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
 [LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
 The [generated B call core](b-call-core.md) now executes required-argument
@@ -550,3 +550,20 @@ This supplies generated execution of the method-combination source shape, not
 actual GF layout or general macro admission. The source adapter remains
 scaffolding; native accessor/REQUIRE-TYPE compilation and real installation
 remain the durable next work. POP and :key/:test-not are still owed/out of scope.
+
+## Bootstrap compiler coverage — BT-0 adopted 21 September
+
+The user's “I accept BT-0” adds S1-LL15-c (emitted acode coverage) and S1-LL15-d
+(unchanged-source compilation). See [authorization](bootstrap-coverage-decision.json).
+Report numerator, denominator, unknowns and native-matched execution separately;
+correctness fixes need not increase a count. Coverage is qualified at actual
+operator/operand forms, including movement and unwinding for new allocating or
+nonlocal operators. Preserve all earlier contracts and accepted scopes.
+
+The [front-end proposal](../../../tests/wasm/stage1/bootstrap-frontend/README.md)
+compiles original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ through CCL's own front
+end. Its sample is not the full startup worklist. Next prioritize OR, %SVREF and
+%GVECTOR, checked type forms and symbol/special identity, then close dependencies
+of native MEMEQL/ADJOIN-EQL and the first complete level-0 file. Keep Lisp in CCL's
+style. No more per-consumer rewriting. Rework the pending population shape to
+native's zero-link/type/data fields when native accessors can be compiled.

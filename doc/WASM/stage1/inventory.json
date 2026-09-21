@@ -13,7 +13,7 @@
     "host-compiler",
     "options"
   ],
-  "acceptance_note": "All listed variants are required for Stage 1. Generated tests additionally require the complete build set (source, compiler, ABI, template, module, installed binary) and image tests require the image, per stage0/artifact-policy.md. Hand-built Stage 0 evidence cannot discharge any S1 ID. S1-LL11-b and S1-LL18-b are proposed from Stage 0 findings (the U1 stale-dcode defect and plan item 3) and need the same adoption decision as the rest.",
+  "acceptance_note": "All listed variants are required for Stage 1. Generated tests additionally require the complete build set (source, compiler, ABI, template, module, installed binary) and image tests require the image, per stage0/artifact-policy.md. Hand-built Stage 0 evidence cannot discharge any S1 ID. S1-LL11-b and S1-LL18-b are proposed from Stage 0 findings (the U1 stale-dcode defect and plan item 3) and need the same adoption decision as the rest. Extended on 2026-09-21 by the user: \"I accept BT-0\"; two required compiler-coverage variants, without changing the earlier 31 tests.",
   "tests": [
     {
       "id": "S1-LL08-a",
@@ -904,6 +904,66 @@
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [],
       "origin": "outline Stage 1 exit"
+    },
+    {
+      "id": "S1-LL15-c",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "acode-coverage"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL15-c:acode-coverage",
+          "description": "For the hash-bound target-read startup worklist, retain the full acode operator census including operand/flag forms and nested functions. Every emitted operator occurrence has a qualified Wasm pass-2 lowering or an already-authorized target primitive path; textual handler-name presence is insufficient. Newly allocating and nonlocal forms have native-derived execution, moving-root and unwind/restoration witnesses. Publish covered/required counts and all unsupported forms on compiler commits. Pass only when coverage is complete, with no unknown occurrence counted as covered."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "bootstrap-throughput.md BT-0; explicit user authorization 2026-09-21"
+    },
+    {
+      "id": "S1-LL15-d",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "source-coverage"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL15-d:source-coverage",
+          "description": "Every function of the hash-bound target-read startup worklist compiles from its original CCL definition through CCL macro expansion, with no consumer-source rewriting or symbol substitution. Target differences belong in CCL target branches/accessors and qualified primitives. Retain source/function identities, generated modules, dependency binding and the admission outcome for every function; missing bodies and unresolved dependencies remain explicit and cannot count as compiled. Publish compiled/required and separately executed/native-matched counts. Pass only when all required definitions compile and assemble and the production dependency closure is installable; counts alone do not discharge LL15-a execution."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "bootstrap-throughput.md BT-0; explicit user authorization 2026-09-21"
     }
   ],
   "adoption": {

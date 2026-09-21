@@ -1,0 +1,35 @@
+{
+  "id": "STAGE1-BOOTSTRAP-COVERAGE-DECISION-R1",
+  "date": "2026-09-21",
+  "authorization": {
+    "speaker": "user",
+    "quote": "I accept BT-0"
+  },
+  "proposal_commit": "34f3868fa815a20c75af50c59d8921f11a22fef2",
+  "before_inventory": {
+    "path": "inventory-before.json",
+    "sha256": "d32c9a3eaee0f85a7cc5892b6dd1528f507527d6b7bc46d3b67dab2278a89f1d"
+  },
+  "after_inventory": {
+    "path": "inventory-after.json",
+    "sha256": "a63a4d6170a813ae8182f183691b4fca91bb0d74bb83c5b8d856e159c4516d22"
+  },
+  "added_ids": [
+    "S1-LL15-c",
+    "S1-LL15-d"
+  ],
+  "existing_criteria_unchanged": 31,
+  "accepted_records_preserved": 21,
+  "accepted_results": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll13a-accepted-results.json",
+    "sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79"
+  },
+  "counts": {
+    "accepted": 21,
+    "missing": 12,
+    "unreviewed": 0,
+    "required": 33
+  },
+  "counting_rule": "Report counts per relevant commit, including honest flat or regressing counts; keep terminal acceptance requirements. Unknowns stay in the denominator or an explicit unresolved inventory, never in the numerator. Current level-0/level-1 sample is not the full startup worklist.",
+  "compatibility": "No acceptance revoked, widened or re-executed; no slot credit from this authorization."
+}

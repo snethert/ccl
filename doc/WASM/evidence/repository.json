@@ -1,35 +1,39 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0a5afe06a1329615eb1bebbf21635b0a84fa92ca81367e9a78481dea8c199468",
-  "commit": "a4452bb29af1633609b7ab6e65c676ffdddbdf10",
-  "immutable_evidence_files": 238118,
+  "catalog_sha256": "47e8e7cee6e9f09742237d99d5b496432fbaf3f52a63b6fb2ceab5a1f7d02f9d",
+  "commit": "fd42e23fd43e87d3e0d285a6b7c5877eedd52d2c",
+  "immutable_evidence_files": 238331,
   "last_scoped_addition": {
-    "bytes": 9673108,
-    "directory": "2026-09-21-stage1-population-pushnew-r1",
-    "files": 241
+    "bytes": 40526548,
+    "directory": "2026-09-21-stage1-bootstrap-frontend-r1 and bootstrap-coverage-decision-r1",
+    "files": 213
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Audit 140 bound. Typed populations and PUSHNEW through shared EQL executed; no acceptance/integration or LL15 credit.",
-  "source_index_sha256": "dd4d9a1228a2939d719e4336a8d6b3f33fb2122db3a468db9748308faf38bcc2",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-population-pushnew-r1.json",
+  "scope": "Stage 1: 21 accepted, 12 missing of 33 after explicit BT-0 authorization. Audit 141 bound. Bootstrap front-end proposal executed/replayed; no acceptance/integration or LL15 credit.",
+  "source_index_sha256": "20fb7fadbb9b259be3df89bc53730bed135fd5a8066fabe898fdaf234acd475c",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-bootstrap-frontend-r1.json",
   "verification": {
-    "STAGE1-POPULATION-PUSHNEW-R1": {
-      "deterministic_files": 212,
-      "source_pins": 115,
+    "STAGE1-BOOTSTRAP-FRONTEND-R1": {
+      "deterministic_files": 100,
+      "native_rebuilt": false,
+      "source_pins": 138,
       "status": "PASS",
       "summary": {
-        "admission_refusals": 7,
-        "comparisons": 68,
-        "compiler_unchanged": true,
-        "controls": 8,
-        "modules": 27,
-        "native_cases": 34,
-        "raw_checks": 28,
-        "slot_credit": false,
+        "admission_controls": 22,
+        "baseline_admitted": 33,
+        "collections": 92,
+        "comparisons": 184,
+        "executed_original_definitions": 4,
+        "inventory_functions": 2492,
+        "legacy_identical": 10,
+        "modules": 16,
+        "native_cases": 46,
+        "proposal_admitted": 426,
+        "reader_and_name_skips": 268,
         "status": "PASS"
       }
     }

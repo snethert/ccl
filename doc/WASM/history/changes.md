@@ -1,3 +1,21 @@
+## 2026-09-21 — bootstrap front end and explicitly adopted BT-0 criteria
+
+The user says “I accept BT-0”. Add S1-LL15-c/d without changing any of the 31
+prior criteria or 21 accepted result records. The current ledger is BLOCKED:
+33 required, 21 accepted, 12 missing. Preserve before/after inventory and ledger
+hashes with the exact authorization.
+
+The front-end proposal uses CCL's own macro environments and DEFUN expansion,
+reads in target context, lowers boolean condition senses, native builtin calls,
+unchecked type annotations with full values, and value-returning cons setters.
+Original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ execute unchanged. Stream-based
+measurement admits 426 of 2,492 readable definitions versus 33 through the old
+API without source renaming; 268 read/name skips remain explicit. Four source
+definitions have execution evidence, not all 426. Sixteen modules, 180 native
+comparisons plus four target-layout checks, 92 collections, 22 admission controls,
+ten identical legacy modules and native R6/R6a pass. Replay reproduces 100 files
+at 138 pins. No shared compiler/runtime change, acceptance or LL15 completion.
+
 ## 2026-09-21 — adopt bootstrap throughput direction and bind audit 141
 
 Import Claude's directive and audit from their original branches. The user adopts
