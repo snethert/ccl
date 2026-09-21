@@ -126,3 +126,12 @@ dependencies become compilable. Keep the current services available until those
 replacements are qualified. Numeric C kernels may remain target primitives where
 measurement supports that choice, with Lisp owning the surrounding policy. No
 service is retired or its declared bounds promoted by this recommendation.
+
+### P3 (Claude, 21 September, after audit 143) — awaiting the user's adoption
+
+Relayed user direction, given while audit 143 was running: U-4 “Ask CODEX to accomplish more work next time.” U-5, on SYMBOLP reading as an empty body: “Why not WASM32 compiler flags?!?” U-6 “Eventually we HAVE to change CCLs source to be properly integrated”.
+
+- BT-7. Packet size. A packet carries a file's worth of work, not an operator's: the operators a chosen CCL file needs, that file compiled whole, and every dependency-closed definition in it executed against native. Report admitted, closed and executed; executed is the headline. Evidence stays proportional: R6 reused by compiler hash, one native rebuild per compiler change, unchanged parents bound by hash and not re-run.
+- BT-8. Target branches go in CCL's files. Where a definition's body is selected by per-target reader conditionals, the deliverable is a `#+wasm32-target` branch in that file, and `level-0/WASM32/` holds what native ports write in LAP. This is additive shared-source work under the 16 September authorization, with R6 and R6a; every other target's reader skips the branch. “Shared source untouched” is no longer reported as a merit for such definitions. Tree size: 86 `x8664-target` sites in `level-0`, `level-1` and `lib`; 258 x8664 LAP functions.
+- BT-9. The measure refuses, and does not count, a definition whose body is empty under the target read and non-empty under the native read, and a definition whose only body form is a call to itself for which pass 2 has no lowering (audit 143 F1, F2).
+
