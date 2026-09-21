@@ -4,11 +4,17 @@
 ;;; function, supplying every called function as a call link.
 ;;; Tiers: :a source as written, CCL callees linked; :b also CL functions linked;
 ;;; :c non-SPECIAL declarations removed; :d MACROEXPAND-ALL first; :e (THE type x) -> x.
+;;; :f as :b with VALIDATE-B-SOURCE disabled (what pass 2 itself lowers); :g as :f without declarations.
+;;; Also counts acode operator names that appear in wasm32-backend.lisp.
 ;;; Tier :e refusals are classified by what the function contains (categories overlap).
 (in-package :wasm32-compiler)
 (load (merge-pathnames "export.lisp" *load-pathname*))
 (in-package :ccl)
 (defvar *tally* (make-hash-table :test #'equal))
+(defvar *real-validate* #'wasm32-compiler::validate-b-source)
+(defun set-validator (on)
+ (let ((*warn-if-redefine* nil) (*warn-if-redefine-kernel* nil))
+  (setf (symbol-function 'wasm32-compiler::validate-b-source) (if on *real-validate* (lambda (form) (declare (ignore form)) nil)))))
 (defvar *admitted* nil)
 (defvar *counter* 0)
 (defvar *link-cl* nil)
@@ -81,14 +87,17 @@
             ((and (consp form) (eq (car form) 'defun) (symbolp (cadr form)) (listp (caddr form)))
              (incf total)
              (let ((r (let* ((*link-cl* (not (eq tier :a))) (f `(lambda ,(caddr form) ,@(cdddr form))))
-                       (when (member tier '(:c :d :e)) (setq f (strip-declares f)))
+                       (when (member tier '(:c :d :e :g)) (setq f (strip-declares f)))
                        (when (member tier '(:d :e)) (setq f (strip-declares (expand-all f)))) (when (eq tier :e) (setq f (strip-the f)))
                        (let ((res (try f))) (when (and (eq tier :e) (not (eq res :admitted))) (blame f)) res))))
               (if (eq r :admitted) (progn (incf ok) (push (format nil "~a:~a" dir (cadr form)) *admitted*)) (incf (gethash r *tally* 0))))))))))
   (list tier dir total ok)))
 (with-open-file (o (getenv "BT_OUTPUT") :direction :output :if-exists :supersede)
- (format o "macroexpand-all fboundp: ~s~%" (fboundp 'macroexpand-all))
- (dolist (tier '(:a :b :c :d :e)) (clrhash *tally*) (setq *admitted* nil)
+ (let* ((text (with-open-file (i (format nil "~a/compiler/WASM32/wasm32-backend.lisp" (getenv "BT_ROOT"))) (let ((str (make-string (file-length i)))) (subseq str 0 (read-sequence str i)))))
+        (ops (let ((k nil)) (maphash (lambda (name v) (declare (ignore v)) (when (symbolp name) (push name k))) *nx1-operators*) k))
+        (hit (remove-if-not (lambda (op) (let ((n (format nil "ccl::~(~a~)" op)) (start 0) (found nil)) (loop (let ((p (search n text :start2 start :test #'char-equal))) (unless p (return)) (let ((e (+ p (length n)))) (when (or (>= e (length text)) (member (char text e) '(#\Space #\) #\Newline))) (setq found t) (return)) (setq start e)))) found)) ops)))
+  (format o "acode operators defined: ~d; named in wasm32-backend.lisp: ~d~%" (length ops) (length hit)))
+ (dolist (tier '(:a :b :c :d :e :f :g)) (set-validator (not (member tier '(:f :g)))) (clrhash *tally*) (setq *admitted* nil)
   (dolist (dir '("level-0" "level-1")) (format o "~s~%" (measure dir tier)))
   (let ((rows nil)) (maphash (lambda (k v) (push (cons v k) rows)) *tally*) (dolist (r (subseq (sort rows #'> :key #'car) 0 (min 8 (length rows)))) (format o "   ~6d  ~a~%" (car r) (cdr r)))))
  (let ((rows nil)) (maphash (lambda (k v) (push (cons v k) rows)) *tally*) (dolist (r (subseq (sort rows #'> :key #'car) 0 (min 14 (length rows)))) (format o "~6d  ~a~%" (car r) (cdr r))))
