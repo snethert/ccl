@@ -2691,3 +2691,74 @@ Closed: 146-F1, 146-F2, the NIL-callee question, the dispatcher style item. Open
 The work is right and it is the work that was asked for. On substance Claude recommends acceptance and integration of this proposal, which carries the corrected library proposal inside it. It cannot be accepted as retained, because its verifier fails (F1). Order: retain r2 with a passing verifier, then accept and integrate, reading the library's one-token SYMBOL-NAME change under the adopted R6 source-location allowance with its 17-target reader matrix.
 
 Suggested next packet, same size or larger, executed definitions still the target: input recipes for the 94 closed definitions; then TYPEP and REQUIRE-TYPE on the builtin types the accepted predicates already cover, LENGTH, `%BADARG`, ASSQ, LOGAND, LOGIOR, `-`; carry items C-5 to C-8. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-forty-eighth Claude audit — STAGE1-BOOTSTRAP-EXECUTION-R2 at 7ef90b2a, STAGE1-BOOTSTRAP-DIVISION-R1 at 99397c62, STAGE1-BOOTSTRAP-DEPENDENCIES-R1 at 4dd029e4 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-148`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Three Codex commits followed audit 147. Reviewer disposition only. Audit 147 is imported verbatim at 5dda5589: this file there hashes e6656bb5…, the hash of the file at 357de8a1.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 172 → 186 (execution R2) → 186 (division) → 252 (dependencies); +80 since audit 147. Native rows 1,978 → 2,472; comparisons 7,912 → 9,888; collections 4,066 → 5,270. Statically callee-closed definitions 254 → 373. Admission is unchanged at 1,864 of 2,492 and 1,522 of 1,919 (lower bound; the same 22 files stop early). No C or JS is added and no CCL source file changes in any of the three.
+
+What audit 147 asked for and what arrived: input recipes for closed definitions (done in part; 136 closed definitions still have none); TYPEP and REQUIRE-TYPE on constant types the accepted predicates cover, LENGTH, `%BADARG`, ASSQ, LOGAND, LOGIOR, `-` (all done); REGISTER-ISTRUCT-CELL and SET-ISTRUCT-CELL-INFO run unchanged (not asked for, and it was the second largest blocker). C-7 (more rows for the copy functions: six each now) and C-8 (exact integer quotients served) are closed. The native-error limit is answered the right way: error behaviour is now compared with native through HANDLER-CASE forms (division by zero, wrong operand types, REQUIRE-TYPE, `%BADARG`, LOGAND on a non-integer).
+
+One-sided witnesses. 59 of the 252 executed definitions return NIL for every input row, and 36 of the 80 new ones do: the fifteen `-CTYPE-P` predicates, LOCKP, RECURSIVE-LOCK-P, READ-WRITE-LOCK-P, SEMAPHOREP, HASH-TABLE-P, PATHNAMEP, LOGICAL-PATHNAME-P, READTABLEP, RANDOM-STATE-P, RESTARTP, LISP-THREAD-P, NATIVE-CLASS-P, SEQUENCE-TYPE, `%ARRAY-IS-HEADER`, ADJUSTABLE-ARRAY-P, ARRAY-HAS-FILL-POINTER-P, CONSTANT-SYMBOL-P, PROCLAIMED-SPECIAL-P, FROZEN-DEFINITION-P, SYMBOL-PACKAGE, `%SET-SYMBOL-PACKAGE`. The README says so ("structure predicates without instance recipes exercise nonmembers only"), so this is not a false claim. It does mean the headline is 252 executed of which 193 have a witness for more than the NIL answer. The frontier report should carry that second number, and the istruct predicates need one member each: the fixture already builds structure and slot-vector objects with `%GVECTOR`, and CORE-REGISTER already registers an istruct cell.
+
+### Evidence and replay
+
+| Packet | packet.json | Entries | Verifier, unmodified, detached worktree |
+|---|---|---|---|
+| execution R2 | aefd030f… | 1,180 | PASS, 70 s, 186 originals |
+| division R1 | 696aeb8b… | 1,199 | PASS, 71 s |
+| dependencies R1 | d7060e27… | 1,397 | PASS, 78 s, 252 originals, 9,888 comparisons |
+
+All three: NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash. Catalog 4ec18889… at 246,524 files (242,742 + 1,182 + 1,201 + 1,399); index snapshot 787ef3c1… equal to the committed index; evidence commit 7e9c5d4d; store clean. Audit 147's F1 is fixed: R2 is retained from the committed fixture, and `packet.py retain` now compares the compiler's input copies with the fixture before it writes anything. R1 is kept unchanged.
+
+### Division packet
+
+Integer `/` goes to the accepted `$integer` quotient/remainder helper; a non-zero remainder is checked error 45 and never a truncated quotient; a zero divisor signals DIVISION-BY-ZERO with the operands. Both operands are staged in a two-slot frame and the quotient is reloaded from it after the helper, which may move objects. Two controls (`integer-division-is-addition`, `truncated-quotient-escapes`) are rejected.
+
+The handler fix is a second wrong-code bug found in the integrated backend by running more code (the first was audit 147's NIL callee). Native HANDLER-BIND expansions keep the quoted class symbol in the handler list; the integrated signal loop shifts that pointer right and tests it as a bit mask, so which handlers match depends on the symbol's address. The proposal compares symbol identities for the twenty sealed classes and refuses anything else with checked error 12. The `handler-symbol-is-mask` control is rejected. Until this proposal is integrated, the integrated backend has both bugs.
+
+Limit to record: a handler for any class outside the twenty (END-OF-FILE, STREAM-ERROR, PACKAGE-ERROR, CELL-ERROR, STYLE-WARNING, a user class) stops every signal that walks past it with error 12, including signals it would not have handled. It is loud, but it is a run-time stop for a compile-time fact; the class symbol is a literal, so the refusal belongs at compile time.
+
+### Dependencies packet
+
+Read in full (`dependencies.lisp`, 245 lines). Operands are staged in rooted frames before any call; the subtraction accumulator is written back to its root after every step; `%BADARG` decodes CCL's compact type id through CCL's own `%TYPE-ERROR-TYPE` before the condition is built; a type specifier the lowering does not cover falls through to a real TYPEP call and stays an honest missing dependency (confirmed: a probe with `(member 1.5d0 :a)` compiled, was reported unclosed, and did not run). LDB masks after an arithmetic shift with the position clamped to 31, which is right for negative fixnums at any position. Fourteen controls in all, inherited ones included, are rejected.
+
+### Probes (scratch copy of the dependencies fixture, files restored, worktree clean)
+
+Match native at both placements; the last complete run was 10,104 comparisons PASS:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| ten TYPEP forms: `(integer 0 255)`, `(signed-byte 8)`, `(mod 10)`, `(or symbol cons)`, `(not null)`, `atom`, `(integer -5 (5))`, `(and number (not integer))`, `unsigned-byte`, `bit` | 23 values: every boundary of each range, NIL, T, a keyword, a cons, a double, both signs of a 2^60 bignum, a character, a string, a ratio | equal |
+| `(values (- x) (- 0 x))` | 0, 7, the most negative fixnum, the first positive bignum, ±0.0 double and single, a 2^60 bignum | equal, signed zeros included |
+| `(values (- x y) (+ x y))` | ±0.0 against integer 0 and 0.0, both orders | equal |
+| LDB at `(byte 8 28)`, `(byte 29 1)`, `(byte 1 29)`, `(byte 3 30)`, `(byte 8 22)` | 0, −1, both fixnum limits, 2^28, −2^28−1 | equal |
+| HANDLER-CASE on ARITHMETIC-ERROR then ERROR, around a HANDLER-BIND for WARNING and FLOATING-POINT-OVERFLOW that declines, around `(/ a b)` | 6/3, 1/0, NIL/1, doubles | equal: 2, :ARITH, :ERROR, 3.0 |
+| `(require-type x '(unsigned-byte 8))` under HANDLER-CASE | 0, 255, 256, −1, NIL, a double | equal, datum and expected type included |
+
+One mismatch:
+
+| Form | Input | Native | Wasm |
+|---|---|---|---|
+| `(- x 0)`, literal zero | −0.0d0 | 0.0d0 | −0.0d0 |
+
+With a variable zero native also returns −0.0d0, and Wasm agrees. So native's x86 path rewrites subtraction of a literal as addition of its negation, and −0.0 + 0 is +0.0. The Wasm answer is the IEEE one and equals native's own generic subtraction. Which lowering the two-operand form takes (most likely SUB2 from the execution packet, not this packet's `-` call) was not determined. Recorded as an observation (O-1), not a defect: it needs a decision on whether literal-operand rewrites in the native backend are part of the oracle, and no bootstrap definition is known to depend on it.
+
+### Style, for integration
+
+The proposal is now four generators deep (library → execution → division → dependencies), each a Python text patch on the last, and the dependencies layer hooks the dispatchers from the front (`bootstrap-dependency-call` and `bootstrap-dependency-operator` are tried before the CASE). That is better than the rename-and-override of audit 146 but it is the same habit. The file that is integrated should be the generated file with the new cases inside the existing CASE forms, reviewed as one diff against the integrated backend.
+
+ASSQ is a forty-line hand-written WAT loop in the backend. On x86 ASSQ is LAP because it is hot; on this target a four-line DEFUN in `level-0/WASM32/` compiles through the normal path, needs no backend code, and is what the user's direction on target differences asks for. Same remark for any later leaf that is only a loop over conses.
+
+### Carry items
+
+Closed: 147-F1, C-7, C-8, the native-error harness limit. Open: C-1 remainder (`%I<>`) and `%IZEROP` source witnesses; C-5 (refusal cases for the four condition-lowering refusals); C-6 (`:bootstrap-array-kind` refusal case); new C-9, a member witness for each NIL-only predicate and the two-number headline; new C-10, the handler-class refusal moved to compile time; O-1 above.
+
+### Disposition
+
+No defect found in three packets; every verifier passes; everything Claude ran agrees with native except O-1, which is native's quirk. Claude recommends acceptance of all three, and integration of the dependencies proposal as the single unit that carries library, execution and division inside it. Integration fixes two wrong-code bugs that are in the shared tree now (NIL callee, handler mask). Conditions on integration: the generated backend reviewed as one diff with the cases folded into the CASE forms; the library's one-token SYMBOL-NAME change read under the adopted R6 source-location allowance with its 17-target reader matrix; R6/R6a on the final generated file.
+
+Suggested next packet, same size or larger, executed definitions still the target: member witnesses (C-9); input recipes for the 136 closed definitions that have none; then what the frontier lists as the remaining common callees; and the 22 files that stop at reader or environment errors, since the denominator cannot be trusted until they read to the end. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
