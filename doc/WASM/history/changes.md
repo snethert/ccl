@@ -3186,3 +3186,8 @@ at 88 pins. All 35 callback rows are classified against the original selection
 hash, without changing retained selections or claiming closure for deferred
 subsystems. Packet STAGE1-STARTUP-RUNTIME-R1 awaits review; no shared-source
 change or LL15 credit.
+
+- 2026-09-20: EQL/EQUAL bootstrap table proposal with native predicates and hash
+  operations, captured 97/0/7-key tables, generated calls, moving collection,
+  measured-capacity owner and focused controls. No shared compiler/runtime
+  changes; unchanged components reused by hash. Awaiting independent review.

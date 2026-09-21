@@ -2816,6 +2816,16 @@
       "review_sha256": "c8b6b15e6245e47fba93be64367d00dbbc4e324ad2ff150fc34dff9812210107",
       "acceptance_record": "doc/WASM/stage1/acceptance-bootstrap-policies.json",
       "acceptance_sha256": "25f5338d99c7bb80ebd8ddeefd9da1d3f6f19fdbaa9e5e1b42d992e9cba22a37"
+    },
+    {
+      "id": "STAGE1-EQUALITY-TABLES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-equality-tables-r1/packet.json",
+      "sha256": "969819efebca326141b479bf816d03d4bde257dac9e852f76624fc26174ddb02",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "EQL numeric and EQUAL cons/string/bit-vector keys over strong backing vectors. 70688 matrix observations, 1248 captured bootstrap key lookups, 23596 collections, eight Workers, ten compiled faults. 97-entry and empty EQL plus seven-entry EQUAL table key graphs. Method values remain opaque identity placeholders. Default native NaN hash traps differ and are disclosed. Fixed capacity; no wrapper installation or LL15 credit. Compiler/collector/adapter unchanged. Auxiliary proposal, not integrated."
     }
   ],
   "current_runs": [

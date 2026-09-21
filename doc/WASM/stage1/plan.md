@@ -470,3 +470,11 @@ termination entry data, mapping, guard and five modules. Production-import
 checks reproduce four retained records. Remaining work is functional LL15
 closure: equality services, population consumers/roots, selected initializer
 implementation/dependency joins and READY. Acceptance is not slot credit.
+
+2026-09-20: [EQL/EQUAL services](../../../tests/wasm/stage1/equality-tables/README.md)
+now execute through unchanged generated callers and the integrated collector.
+The captured 97/0 EQL and seven-key EQUAL tables resolve copied key graphs after
+movement. Method objects remain identity placeholders; native NaN hashing's FP
+trap behavior is explicitly outside this leaf. This closes comparison-service
+implementation, subject to review; real wrappers, population consumers and the
+initializer/READY closure still remain. No LL15 credit or shared runtime edit.
