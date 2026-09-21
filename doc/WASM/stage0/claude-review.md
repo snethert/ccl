@@ -2035,3 +2035,37 @@ Packet 8387c634… (NOT_REVIEWED, slot_credit false, 127 manifest entries, all h
 ### Verdict
 
 One defect found in 43b9ca7a (STAGE1-STARTUP-WINNERS-REVIEW-R1): F1a, the raw-clear guard follows a SET that leaves the same three words, so an operation 5 that publishes only word 0 passes. Poisoning the result words before the raw call closes it with no change to the positive record. The ordering item is closed, and the service proposal itself remains correct. Follow-up recommended before the derived `hash.c` is integrated; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirtieth Claude audit — STAGE1-STARTUP-WINNERS-PUBLICATION-R1 at eefb34d3 (follow-up to audit 129) and STAGE1-STARTUP-DB-R1 at 8e8aef6b (both auxiliary LL15 prerequisites) — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 8e8aef6b. Author: Codex. Scope: `tests/wasm/stage1/startup-winners-publication/` and `tests/wasm/stage1/startup-db/` in full and both packets. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence
+
+Publication packet c663fcc1… (94 manifest entries) and database packet 1377627d… (66 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted file, every file cataloged, both indexed by packet hash; catalog, index snapshot and evidence commit bind to `repository.json`; store clean. The index binds audit 129 by the review-file hash recomputed from a6b7cea6. Neither commit touches `runtime/`, `compiler/` or an earlier fixture directory.
+
+### Replay
+
+Both `packet.py verify` runs in the detached worktree at 8e8aef6b pass. Publication: 24 deterministic files, 208 pins; positive execution byte-identical to the winners R1 record; six new faults, five escaping the audit-129 guard and all six refused by the new one; twelve earlier faults still refused. Database: 30 deterministic files, 213 pins; four modules and the native oracle recompiled; 96 scenarios, 30 refusals, six native answers, four faults refused.
+
+### Disposition of audit-129 F1a
+
+Closed. The guard now writes the bitwise complement of `[table, NIL, 1, 0]` into the four result words before the raw clear, so every bit of every word must be stored. It differs from the audit-129 harness by five lines. Beyond the author’s six faults, two partial-width mutants (a one-byte store of the count, a two-byte store of the rehashed word) are refused “raw clear publication”. The winners service proposal, with the registry-order overlay reviewed in audit 129, now has a complete qualification.
+
+### Database unit: review
+
+- Layout. `db.c` reads the header’s last and first links at elements 1 and 2, each directory’s predecessor and successor at elements 1 and 2, and clears elements 5 to 11 of a 12-element structure; the native oracle asserts `uvsize` 4 and 12, the name and subdirectory at elements 3 and 4, and each of the seven accessors against elements 5 to 11 in order, then runs the untouched registered callback (found exactly once, source form asserted at byte 28364 of `lib/db-io.lisp`) against a private `*target-ftd*` and requires a single NIL return with links, names and subdirectories unchanged. Structure subtag 122 agrees with `compiler/WASM32/wasm32-arch.lisp` as well as the pinned x8632 definition the runner reads.
+- Order of work. Operation, owner extent, result alignment, span and overlap, header identity and both descriptor identities, every arena object header, the forward walk with membership and predecessor checks, the complete count and the header’s last link all precede the first store; the mutation loop makes no call; all four result words are written, and the harness poisons them by complement first.
+- Finding F1 (database). Two admission checks are not isolated by the refusal set. With `member()` removed from the walk, or with the `seen!=count` test removed, the full harness passes at both placements with exit 0: every one of the fifteen refusal cases that reaches the walk is also caught by the predecessor or last-link test. Directed cases show what the checks are for and that the real service has them right: (a) a forged directory outside a two-directory arena, linked consistently in place of the first, is refused with status 3 by the real service, while the no-membership mutant returns 0, clears seven words outside the owner arena and leaves the real first directory uncleared; (b) a consistent list that omits the second arena directory is refused with status 3 by the real service, while the no-count mutant returns 0 and leaves that directory’s handles set. The membership test is the only thing that confines this leaf’s writes to the owner arena, so it needs its own refusal case; so does the complete-list count. A third untested clause, `header_type==dir_type`, also escapes when removed; it is reachable only when the owner passes one descriptor for both roles.
+- Other mutants, all refused: no predecessor check, no last-link check, no directory-descriptor check, no directory-header check, no header-descriptor check, no result-overlap check, clearing element 4, skipping the first directory, returning T.
+
+### Observations (none a defect)
+
+1. The leaf reuses the hash adapter’s eight-word signature: the adapter’s scratch bounds carry the arena and the key and value positions carry the two descriptors. The arena is therefore fixed per adapter instance, and the harness builds a new instance per scenario.
+2. The header’s fourth element and both objects’ padding are neither validated nor written.
+3. The 1,024-directory bound is not exercised; native answers stop at 128.
+4. Node-only, single Worker, pinned storage; the collector does not scan this structure kind, as stated. Registry ordinal 27 follows RESET-WINNERS at 26, matching the native execution order recorded in audit 129.
+
+### Verdict
+
+No defect found in eefb34d3 (STAGE1-STARTUP-WINNERS-PUBLICATION-R1); audit-129 F1a is closed. One defect found in 8e8aef6b (STAGE1-STARTUP-DB-R1): F1, the arena-membership and complete-list admission checks are correct in `db.c` but no refusal case isolates them, and a service without the membership check writes outside the owner arena while passing the harness. Two directed refusal cases close it. Follow-up recommended before acceptance of the database unit; the decisions are the user’s. Both auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
