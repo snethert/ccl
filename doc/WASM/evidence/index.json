@@ -2699,9 +2699,9 @@
       "sha256": "1377627d14cd65d675bbf6de134aa48a00336b10122cfe5b27cc1e5e10a32f83",
       "execution_status": "PASS",
       "review_disposition": "REVIEWED_DEFECT_FOUND",
-      "currency": "CURRENT",
+      "currency": "WITHDRAWN",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "RESET-DB-FILES now clears all seven cached handles per interface directory through an owner-admitted pinned D1 DLL service and unchanged generated calling forms. The untouched native callback supplies six cases; 96 placement/order/calling scenarios, 30 preserving refusals and four compiled faults pass. Complete DLL validation precedes mutation; all four publication words are poisoned and observed. Reuses compiler R6/R6a by hash. Auxiliary proposal, not integrated or joined; production FTD materialization and moving structures remain open, no LL15 credit. Fresh replay: 30 deterministic files at 213 pins. Audit 130 F1: membership and exact-count checks were not isolated by the harness. The sibling startup-db-review retains their escapes and directed refusals, plus descriptor distinctness. Service unchanged, awaiting follow-up review.",
+      "scope": "RESET-DB-FILES now clears all seven cached handles per interface directory through an owner-admitted pinned D1 DLL service and unchanged generated calling forms. The untouched native callback supplies six cases; 96 placement/order/calling scenarios, 30 preserving refusals and four compiled faults pass. Complete DLL validation precedes mutation; all four publication words are poisoned and observed. Reuses compiler R6/R6a by hash. Auxiliary proposal, not integrated or joined; production FTD materialization and moving structures remain open, no LL15 credit. Fresh replay: 30 deterministic files at 213 pins. Audit 130 F1: membership and exact-count checks were not isolated by the harness. The sibling startup-db-review retains their escapes and directed refusals, plus descriptor distinctness. Service unchanged, awaiting follow-up review. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline \u00a705; retain the no-live-handle bootstrap obligation.",
       "review_commit": "3cfbfe1ee6ad1a1f7d43cd83591cbab887da30b8",
       "review_sha256": "912d010b2721d1ca66485c095c6eb09780820079fb65b6085e2a2536f6b02b57"
     },
@@ -2711,9 +2711,9 @@
       "sha256": "829c70d874a70804152cc800ebc68cd5358a55a8f9d0330da63b596431193c96",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "WITHDRAWN",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh replay: 14 deterministic files at 218 pins."
+      "scope": "Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh replay: 14 deterministic files at 218 pins. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline \u00a705; retain the no-live-handle bootstrap obligation."
     },
     {
       "id": "STAGE1-STARTUP-COUNTERS-R1",
@@ -2721,9 +2721,9 @@
       "sha256": "1e2fd759f31275b4182280a05788055139278903db2664a7b46aab6ac3452b5d",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "WITHDRAWN",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Two more startup effects: fresh owner-reserved pinned buffers for TOTAL-GC-MICROSECONDS and TOTAL-BYTES-FREED, zeroed by a checked C/Wasm service and published by generated SET. Untouched native callbacks verify zero bytes, pointer/global identity and fresh repeated allocations. Four generated modules pass 32 scenarios at 4 MiB and 2 GiB, 38 refusals and six faults. Compiler and adapter unchanged; R6/R6a reused. Production allocation/disposal, moving macptrs and statistics consumers remain open. Auxiliary proposal, not integrated or joined, no LL15 credit. Fresh replay: 48 deterministic files at 221 pins."
+      "scope": "Two more startup effects: fresh owner-reserved pinned buffers for TOTAL-GC-MICROSECONDS and TOTAL-BYTES-FREED, zeroed by a checked C/Wasm service and published by generated SET. Untouched native callbacks verify zero bytes, pointer/global identity and fresh repeated allocations. Four generated modules pass 32 scenarios at 4 MiB and 2 GiB, 38 refusals and six faults. Compiler and adapter unchanged; R6/R6a reused. Production allocation/disposal, moving macptrs and statistics consumers remain open. Auxiliary proposal, not integrated or joined, no LL15 credit. Fresh replay: 48 deterministic files at 221 pins. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Replace native buffer storage with collector-owned statistics and its Lisp consumer."
     }
   ],
   "current_runs": [

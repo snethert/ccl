@@ -3052,3 +3052,12 @@ On the user’s reaction to audit 130 (“What files?!? We are aiming for the br
 ## 2026-09-20 — HOSTFM-P2: Codex’s review of the host and foreign-module proposal verified and adopted
 
 Codex reviewed HOSTFM-P1 (0ac8691c) with verdict AMEND before adoption; its review file was uncommitted when Claude read it (sha256 f77afb26…). Claude verified the four findings before accepting them: an independent Node v25.6.1 probe confirms that catch_all intercepts a Wasm throw but not unreachable or an out-of-bounds load; decisions.md:260,304 and outline.md:187–191 require the FOREIGN transitions around every foreign entry; the retained selection files are hash-pinned by the database packet; inventory.json:624 keeps a deferred initializer an unresolved dependency. Consumer citations for the GC counters, start timeval, fd limits and gctime read as stated, and a native image holds one interface directory (:LIBC) with no database open, correcting P1’s “empty list”. P2 rewrites FM-2, FM-7, the C++ call sequence, FMT-4, S-1, S-3, R-5, DB-1 and the affected capability and callback rows, drops multi-memory as a baseline dependency, records one partial disagreement (FM-9) and adds a review record as §10. Still a proposal; adoption is the user’s. manage.py check passes.
+
+## 2026-09-20 — withdraw native database and counter-buffer implementation
+
+The user directed “Get rid of the db thing” and substantial progress toward
+LL15. Withdraw the database reset and follow-up from implementation; retain
+their original evidence and reviews. Also retire the proposed native timeval
+and freed-byte buffers in favour of collector-owned statistics. No slot is
+closed by this decision: database exclusion still requires a no-live-handle
+check in the selected bootstrap.

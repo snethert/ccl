@@ -341,3 +341,11 @@ The [database-handle startup reset](../../../tests/wasm/stage1/startup-db/README
 The [database reset admission follow-up](../../../tests/wasm/stage1/startup-db-review/README.md) unit is executed and awaits review. Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit.
 
 The [GC counter startup storage](../../../tests/wasm/stage1/startup-counters/README.md) unit is executed and awaits review. Two more startup effects: fresh owner-reserved pinned buffers for TOTAL-GC-MICROSECONDS and TOTAL-BYTES-FREED, zeroed by a checked C/Wasm service and published by generated SET. Untouched native callbacks verify zero bytes, pointer/global identity and fresh repeated allocations. Four generated modules pass 32 scenarios at 4 MiB and 2 GiB, 38 refusals and six faults. Compiler and adapter unchanged; R6/R6a reused. Production allocation/disposal, moving macptrs and statistics consumers remain open. Auxiliary proposal, not integrated or joined, no LL15 credit.
+
+User direction, 20 September: “Get rid of the db thing” and make substantial
+progress toward LL15. The database reset and follow-up are withdrawn from
+implementation, with immutable evidence retained. The native-buffer counter
+proposal is also withdrawn in favour of collector-owned statistics and a
+five-value GCTIME consumer. New work first binds all 35 callback classifications
+to the unchanged selection; deferred/excluded dependencies remain open until
+the selected bootstrap demonstrates exclusion or a replacement.
