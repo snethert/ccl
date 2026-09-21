@@ -2531,3 +2531,42 @@ Throughput (R-1). Nothing new is compiled or executed by this commit. The entry 
 Verified. `compiler/WASM32/wasm32-backend.lisp` equals, byte for byte, 921baea9’s `backend.py` applied to the previous backend with `symbols.lisp` and `or.lisp` appended; it also equals the proposal copy retained in the packet, and the record’s before and after hashes are right. No other file under `compiler/`, `runtime/` or the Lisp sources changes; all 43 listed integrated files hash as recorded; the acceptance and previous-integration hashes bind; `manage.py check` passes. The acceptance record names the speaker and quotes “Accept the lowering and adopt P3”; it states that the 639 and 82 counts are not accepted. The provenance record answers audit 143’s question about the earlier acceptance: speaker user, confirmation “it was from me”, bound to the unchanged original record by hash, attribution only. Both quotations are relayed by Codex. P3 is marked adopted with BT-7 to BT-9 governing the next packet, and `runtime-obligations.md` carries F1 and F2 forward to the predicate and whole-file unit.
 
 Verdict. No defect. Nothing to follow up; the open work is the packet requested in audit 143. Ledger: 21 accepted, 12 missing, zero unreviewed.
+
+## Hundred-and-forty-fifth Claude audit — STAGE1-BOOTSTRAP-CORE-R1 at 6947f83b — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-145`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 144 had not landed when this was written; its record (d6464547) is carried as the parent commit of this branch so the two apply in order. One Codex commit followed b7ad4d38. Reviewer disposition only; acceptance is the user’s decision.
+
+### Throughput (R-1)
+
+This is the packet audit 143 asked for, in one commit. Admission of unchanged DEFUNs on the same 2,492 inventory: 639 (a figure that included the two audit-143 defects) → 1,539 (61.8%) with both defect shapes now refused by the measure. Original CCL definitions executed and matched against native: 8 → 129. `level-0/l0-pred.lisp` and `level-0/l0-utils.lisp` compile whole through CCL’s own `compile-file`, 78 named definitions, all admitted; the 44 of them that are callee-closed all execute. 193 definitions are callee-closed overall. Pass 2 gains tag and typecode readers, the predicate class, node reads and writes, rooted `%GVECTOR`, inline fixnum arithmetic and comparison, and calls to the accepted numeric and EQL services. No new C or JS, no source rewriter.
+
+Wasm branches are proposed in CCL’s own files, as U-5 and U-6 directed: `#+wasm32-target` bodies for SYMBOLP, LISTP, VECTORP, ARRAYP, GVECTORP, IVECTORP, MISCOBJP in `l0-pred.lisp`, LFUNP in `l0-def.lisp`, `s32->u32`, `u32->s32` and one call site in `l0-utils.lisp`, and a new `level-0/WASM32/w32-prims.lisp` with four callable primitive entries in the manner of the native LAP files. They follow the 32-bit native branches and read as CCL code.
+
+### Evidence and replay
+
+Packet 041dcefe… (757 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all 758 files cataloged; catalog, index snapshot and evidence commit 71738ad2 bind at 240,474 files; store clean. The verifier passes unmodified from the detached worktree in 44 seconds: 188 modules regenerated, 1,734 native rows, 6,936 comparisons at both placements before and after movement, 3,468 collections between calls and 52 inside, 20 malformed-access refusals, four focused faults rejected, ten legacy modules byte-identical. Worktree clean afterwards. The audit-143 cases now run in the corpus with thirty inputs each and are right: `(symbolp nil)` T, `(symbolp 1)` NIL, `(symbol-arg-p 1 t)` NIL, `(sequencep nil)` T.
+
+### R6 — a decision for the user
+
+R6 is not met as written, and Codex says so. The three edited files produce FASLs that differ from the baseline; the packet decodes all 136 function occurrences and finds executable bytes, flags and non-location data identical, with only source-note spans and PC-to-source maps different, and retains the strict comparison’s failure. Checked independently: on the pinned kernel and image, each edited file reads to a form list identical to the original’s under the native x86-64 reader (72, 18 and 36 forms; literal vectors compared by content), so the native compiler receives the same input and only character positions can move. 21,843 native tests pass and all 164 FASLs restore. The contract needs one sentence from the user: that a file gaining `#+wasm32-target` branches may differ in source locations only, shown by identical forms under every existing target’s reader and identical decoded code. Without it every such edit fails R6 forever; with it the check is cheap and exact.
+
+### Probes
+
+Six closed definitions Codex had no inputs for were given inputs in a scratch copy of the fixture and run through its oracle and moving harness. Five match native on every row (25 rows, 134 definitions and 7,036 comparisons in all): UNION-EQL with doubles and bignums through the EQL service, EQUAL-BUT-NO-CAR-RECURSION, CPL-INDEX, NEGATE-HI-LO, FLATTEN-METHOD-LAMBDA-LIST. The sixth, `%QUO-1`, stops with checked error 45 on `(/ 1 2)`: the numeric service does not produce the ratio. That is a loud refusal inside an accepted service’s declared limits, not wrong code, and one more instance of closed not meaning runnable.
+
+Integration-candidate sweep (R-3): nine single-site mutants of `operators.lisp`, each rebuilt and run through the whole harness. Four are refused at the malformed-access checks: index bound, element subtag, unbound slot, node-header. Five pass, and are carry items, not defects:
+
+- C-1. `%ILOGNOT` and the signed less-than sense of `%I<>` are lowered but no retained module emits them; changing either changes no generated byte. Lowerings with no executed witness should be listed beside the 57 that have one.
+- C-2. The operand fixnum check on the inline fixnum operators is stricter than native, which does not check at safety 0, and has no refusal case.
+- C-3. The object-tag test at the head of node access can be removed without failing the twenty refusals; a later test catches each wrongly tagged input tried.
+- C-4. The padding word of an even-length `%GVECTOR` is written NIL and nothing reads it; strong populations require that word to be zero. One convention, stated in the layout contract and tested, or no store.
+
+### Observations for the next packet
+
+Refusals now lead with `B-SIGNAL-ARITY` 121 and `B-SIGNAL-FORMAT-STRING` 18: any definition that calls ERROR with a format string and arguments is refused, which is most of CCL’s argument checking. Then `INT>0-P` 56, `B-LAMBDA` 51, `NEQ` 35, `%SBCHAR` 32, `LIST*` 31, `%FIXNUM-REF` 29, macptr construction 24, `CHAR-CODE` 23. 271 results are still host errors (SIMPLE-ERROR 198, COMPILE-TIME-PROGRAM-ERROR 44, TYPE-ERROR 29), now with messages. The denominator counts files this target will never build: `l0-bignum64.lisp` (27% admitted) is a 64-bit file, and `level-0/X86` LAP is absent by construction; the inventory should follow the Wasm module list. Lowest real files: `l0-symbol.lisp` 23%, `l1-numbers.lisp` 38%, `l1-lisp-threads.lisp` 40%.
+
+Suggested next packet, same size: ERROR and SIGNAL with arguments; character and string primitives; `l0-symbol.lisp` and `l0-misc.lisp` whole, with their Wasm branches, which starts the retirement path for `symbols.c` that Q-8 describes; the denominator taken from the target’s module list; carry items C-1 to C-4.
+
+### Verdict
+
+No defect found. The work is what was asked for, at the size asked for, and everything Claude ran against native agreed. Recommended: accept and integrate, subject to the user’s R6 sentence above, since integration puts the three edited files into the shared tree. Ledger: 21 accepted, 12 missing, zero unreviewed.
