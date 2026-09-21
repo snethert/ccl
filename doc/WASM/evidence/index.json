@@ -2998,10 +2998,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-library-r1/packet.json",
       "sha256": "82f7cbc994686df42bb01be6e5a9acbb08fafa3c1cb8cbb739cafbe45180fdce",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Compiler proposal for ERROR/SIGNAL arguments, characters/strings and native symbol definitions. 137 original definitions execute (was 129), 7236 native comparisons, 3618 between-call and 102 in-call collections. All 28 l0-symbol file records admitted; 31/56 l0-misc records admitted. Actual target worklist: 57 files, 35 fully read, 1520 admissions from 1919 parsed definitions; incomplete denominator, 22 reader failures retained. Historical census 1862/2492 is diagnostic only. Native tests ran once (21843 PASS); final proposal reuses that execution only after all 164 freshly rebuilt native FASLs and snapshot equal. New source reads identically under 17 existing targets; 51 unchanged reader checks reused. Four focused faults rejected; source-emitted %I<> witness remains owed. No shared-source change or LL15 credit. Audit 146: byte-vector store swaps index/value; README string-copy execution claim is false. Not accepted or integrated. Corrected and superseded by STAGE1-BOOTSTRAP-EXECUTION-R1; the original fixture and packet remain unchanged.",
+      "review_commit": "2ba647881f0e16b9ee598398707eb3f44b1634bd",
+      "review_sha256": "631d693675e8d04ffed42b027444ac2787a4a0d701018ad1e579d25b2b6f8ca5"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-EXECUTION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-execution-r1/packet.json",
+      "sha256": "50f5ba7c121f9a01dff803e05efaaab9486054fe6c9d41593b6b66fa55b092b3",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Compiler proposal for ERROR/SIGNAL arguments, characters/strings and native symbol definitions. 137 original definitions execute (was 129), 7236 native comparisons, 3618 between-call and 102 in-call collections. All 28 l0-symbol file records admitted; 31/56 l0-misc records admitted. Actual target worklist: 57 files, 35 fully read, 1520 admissions from 1919 parsed definitions; incomplete denominator, 22 reader failures retained. Historical census 1862/2492 is diagnostic only. Native tests ran once (21843 PASS); final proposal reuses that execution only after all 164 freshly rebuilt native FASLs and snapshot equal. New source reads identically under 17 existing targets; 51 unchanged reader checks reused. Four focused faults rejected; source-emitted %I<> witness remains owed. No shared-source change or LL15 credit."
+      "scope": "Audit-146 fixes plus execution-focused compiler proposal. 172 original CCL definitions match native (was 137), 1978 native cases, 7912 comparisons, 3956 between-call and 110 in-call collections. Correct typed byte-store order; both original copy functions execute. ADD2/SUB2/MUL2/DIV2/NUMCMP, scalar increment/decrement/zero calls, computed callable classification, ordinary/APPLY dynamic-dispatch accounting. Existing EQL service reused, not duplicated. Cases folded into existing dispatchers. 254 static dependency-closed definitions; runtime-dispatched tests and unexecuted candidates explicit. Historical 1864/2492 diagnostic; actual incomplete worklist 1522/1919 with 22 read stops. Six focused controls rejected; 112 fast-path checks; ten legacy files identical. Newly rebuilt 164 native FASLs and snapshot equal the qualified library packet, reusing 21843 tests and unchanged source-reader matrix. %IZEROP and %I<> source-emitted witnesses remain unexecuted. No shared-source edits, integration or LL15 credit."
     }
   ],
   "current_runs": [

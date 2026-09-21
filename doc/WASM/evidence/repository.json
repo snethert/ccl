@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d07336a8c510db6b52313c18aef65e562854f41d30701021d8bc1f9af399f5dc",
-  "commit": "54a9e9ec03cfda88eb2035c75a8a5ab8b621b6a5",
-  "immutable_evidence_files": 241590,
+  "catalog_sha256": "173a8751a217ea3459a542aed3691de8bb93f31535836caaf9ab720c1009c32e",
+  "commit": "07556120526b654fc649334d3f4c418d15ffaafa",
+  "immutable_evidence_files": 242742,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-library-r1",
-    "files": 1043,
-    "bytes": 44291798
+    "directory": "2026-09-21-stage1-bootstrap-execution-r1",
+    "files": 1152,
+    "bytes": 49375503
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap library compiler proposal executed and awaiting review; no additional slot credit.",
-  "source_index_sha256": "330b15c4b0dd8f20e4dabe2564e109caf8aca9166c711d9cd2bd8084bf1e243d",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-library-r1.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap execution proposal fixes audit 146 and increases original native-matched definitions to 172; awaiting review, no slot credit.",
+  "source_index_sha256": "762148a1fc7dbfb223d1eb212148e06300b66c77fa3d5f15f0426a873dc27769",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-execution-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "New proposal execution, four focused controls, native source-location comparisons and seventeen-target reader check. Native tests executed once; final native rebuild FASLs and snapshot identical to that run. Prior packet evidence reused; scoped catalog addition only.",
-    "native": "9c57cecf92afa7da66668129f49c946d64e7f6382812bb1e81a67ce7bd08a509",
-    "execution": "bc483626aa4cad5b4f77944e5280840d557334950953e7136df5a95dae414872"
+    "method": "New target execution, six focused controls and legacy-byte comparison. Fresh native FASLs and snapshot exactly match prior qualified build; native tests and unchanged readers reused. New packet files checked once, scoped catalog addition.",
+    "native": "5cda7f33f4e4f8ca351121911a9304d8a31d119724d1cc2acc91f63f16c6456a",
+    "execution": "52a7e5adac9d0de4a4df94c62b6a8bfcf0a60115fd6c054ff913f743ff177037"
   },
   "version": 1
 }

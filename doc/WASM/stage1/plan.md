@@ -598,3 +598,16 @@ recovery-based denominator with file-compiler observations in the actual target
 file/initialization environment; merely deleting a filename is insufficient.
 The historical 1,539/2,492 figures remain diagnostic, not target-worklist
 completion. The 129 executed-definition evidence is independent of this tally.
+
+2026-09-21: Audit 146's byte-store defect and false string-copy execution claim
+are addressed in the [execution proposal](../../../tests/wasm/stage1/bootstrap-execution/README.md).
+Native-matched definitions rise from 137 to 172. Computed-call classification,
+arithmetic operator lowering and cheap scalar calls now support real list,
+string, EQL and FUNCALL/APPLY consumers. The review candidates remain
+unintegrated. Next prioritize executable dependency closure and valid input
+recipes, including native TYPEP/REQUIRE-TYPE and initialized object layouts;
+continue the target file environment and remaining l0-misc work. Do not count
+primitive EQL as a newly compiled Lisp definition, dynamic callbacks as static
+closure, or an input recipe as an executed test. Numeric-ctype and stream-ioblock
+cases and the read-loop environment remain owed; %IZEROP and %I<> need emitted
+source witnesses. LL15 is unfinished.

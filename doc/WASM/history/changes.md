@@ -1,3 +1,21 @@
+## 2026-09-21 — fix byte stores and increase native-matched execution to 172
+
+Import Claude audit 146 verbatim at a3942dee, binding its original 2ba64788
+review hash. Integration ee5ad365 is clean; the library proposal remains
+unaccepted. Its byte store swapped index/value and its README falsely claimed
+that the two copy functions executed. Preserve that packet as superseded.
+
+The bootstrap-execution proposal fixes the store and runs both unchanged copy
+functions. Lower CCL arithmetic operators and cheap scalar calls, reuse the
+reviewed EQL implementation, and fix computed-call classification in all four
+ordinary/APPLY tail/internal paths. Put new cases in the existing dispatchers.
+172 original definitions now match native (previously 137), with 7,912
+comparisons, 4,066 collections, six focused rejected controls and ten unchanged
+legacy outputs. Static dependency closure is 254; tested runtime dispatch and
+candidates without input recipes are separate. Newly rebuilt native FASLs and
+snapshot equal the previous passing qualification; reuse its 21,843 native
+tests and unchanged source-reader checks. No shared-source change or LL15 credit.
+
 ## 2026-09-21 — implement bootstrap conditions, characters and native symbols
 
 Add the bootstrap-library compiler proposal. ERROR/SIGNAL now accept string

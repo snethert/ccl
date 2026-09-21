@@ -1,0 +1,37 @@
+{
+  "attempts": [
+    {
+      "log": "ccl-execution-r2/compiled/compile.log",
+      "reason": "A fixture input named the native CONS function, which has no compiled module in this inventory. Use the existing LIST function; assert missing input callables by name."
+    },
+    {
+      "log": "ccl-execution-r3/compiled/compile.log",
+      "reason": "Direct native EQL needs the untouched native function, not a DEFUN lookup."
+    },
+    {
+      "log": "ccl-execution-r4/compiled/compile.log",
+      "reason": "An effectful PROGN loses the vector type needed for specialized AREF; the test uses an explicit THE assertion to preserve its real input type."
+    },
+    {
+      "log": "ccl-execution-r5/execution.log",
+      "reason": "The reviewed EQL adapter deliberately refuses public entry. Exercise it through a generated wrapper, as its calling contract requires."
+    },
+    {
+      "log": "ccl-execution-final.log",
+      "reason": "The emitted-operator report caught the absence of a %IZEROP witness. Record it as unexecuted rather than claiming the EQ source probe covers it."
+    }
+  ],
+  "retained": [
+    "ccl-execution-r2/compiled/compile.log",
+    "ccl-execution-r3/compiled/compile.log",
+    "ccl-execution-r4/compiled/compile.log",
+    "ccl-execution-r5/execution.log",
+    "ccl-execution-final.log",
+    "ccl-execution-r1/compiled/core_byte_store.wat",
+    "ccl-execution-r1/execution.json",
+    "ccl-execution-r5-filtered.log",
+    "ccl-execution-final/summary.json",
+    "ccl-execution-final/compiled/throughput.json"
+  ],
+  "extra": "Final census comparison exposed INT>0-P using :GT as an EQ/NE Boolean selector during the dispatcher refactor. Restore its existing positive-test convention and add an executed loop witness; the before-fix census is retained. Intermediate runs are development only, not qualification."
+}
