@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8af1e8695fed988aa8065d9d4390f1dafe61c47175398c12de642d25a07bf796",
-  "commit": "8bf7335729803d3462c8a43f9b76ec631745ab42",
-  "immutable_evidence_files": 234263,
+  "catalog_sha256": "d08bc4198b757d4ffaa1dce1c5be31468ad202946aaaaf2a1e84abc9d8df7251",
+  "commit": "f146f0a186019a71561b37ef0e11f49faa12a5cf",
+  "immutable_evidence_files": 234359,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-winners-review-r1",
-    "files": 129,
-    "bytes": 7226884
+    "directory": "2026-09-20-stage1-startup-winners-publication-r1",
+    "files": 96,
+    "bytes": 1465621
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 41416,
+  "prior_indexed_references_verified": 41825,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary startup publication review executed; not reviewed or integrated.",
-  "source_index_sha256": "dc38fba13e5506703fea64b45d3ce1bf6515e6d119e27d6d51b4aa959499405b",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-winners-review-r1.json",
-  "verification": "Fresh replay: 73 deterministic files at 204 pins. New files and index references verified incrementally.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary startup clear publication completion executed; not reviewed or integrated.",
+  "source_index_sha256": "555ec472e290b1c1e43658692f13d14efb3507eb4b460871ab33eefce0be8873",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-winners-publication-r1.json",
+  "verification": "Fresh replay: 24 deterministic files at 208 pins. New files and index references verified incrementally.",
   "version": 1
 }

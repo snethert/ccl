@@ -2674,10 +2674,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-winners-review-r1/packet.json",
       "sha256": "8387c634ba20c27ec6bf992e320f73bafe084362d307804e8ac4816f181da691",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit-128 F1: direct CLR success checks all four publication words. Three faults reproduce their complete R1 escape and reject under the corrected harness; nine prior faults still reject and the positive execution record is identical. Unchanged compiler, service, adapter and native oracle. Registry-order execution of all eighteen callbacks matches grouped R1 semantics in Node and Chromium. Auxiliary, not integrated, no LL15 credit. Fresh replay: 73 deterministic files at 204 pins. Audit 129: registry ordering closed; F1a remains because trailing result words were already correct before CLR. The sibling publication follow-up poisons all four words and retains omitted/stale-store controls. Awaiting follow-up review before integration.",
+      "review_commit": "a6b7cea60a6e34be6f5ef863ddd7205fabb5a356",
+      "review_sha256": "c95c46a8f08209b4a6fbd70fc90856d56802a7932f745d018384bc0d90980b25"
+    },
+    {
+      "id": "STAGE1-STARTUP-WINNERS-PUBLICATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-winners-publication-r1/packet.json",
+      "sha256": "c663fcc13693469d417f0a82178aae9e63f49d2e4893aacaba08a311e110cb1c",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-128 F1: direct CLR success checks all four publication words. Three faults reproduce their complete R1 escape and reject under the corrected harness; nine prior faults still reject and the positive execution record is identical. Unchanged compiler, service, adapter and native oracle. Registry-order execution of all eighteen callbacks matches grouped R1 semantics in Node and Chromium. Auxiliary, not integrated, no LL15 credit. Fresh replay: 73 deterministic files at 204 pins."
+      "scope": "Audit-129 F1a: poison all four result words before direct CLR success. Six omitted/stale-store faults reject, including five that escape the prior guard; twelve older faults remain rejected. Positive execution is byte-identical. Compiler, service and adapter unchanged; audit-129 registry-order evidence reused. Auxiliary, not integrated, no LL15 credit. Fresh replay: 24 deterministic files at 208 pins."
     }
   ],
   "current_runs": [
