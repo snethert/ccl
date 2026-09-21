@@ -1,0 +1,1 @@
+{"id":"STAGE1-STARTUP-DB-REVIEW-R1","slot_credit":false,"integrated":false,"claim":"Isolated membership, complete-list and descriptor-identity refusal controls for the unchanged startup DB service","exclusions":["production FTD materialization","moving structs","joined startup qualification"]}
