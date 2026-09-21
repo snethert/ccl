@@ -2407,3 +2407,36 @@ Observations. (1) One real bootstrap consumer is outside the selection: `(pushne
 ### Verdict
 
 Supplement: no defect; audit-139 findings closed. Consumers: no defect in the claimed behaviour; F1, two stated refusals without a case and one of them partial. Recommended: a refused case each for an FLET shadow and a multi-place SETF in both place orders, or narrow the README sentence; record PUSHNEW as owed. With this the equality-table and population-access services and their four follow-ups carry no open finding; acceptance of host inputs (as corrected), equality tables and population access is the user’s decision. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-forty-first Claude audit — STAGE1-POPULATION-CONSUMER-REVIEW-R1, STAGE1-TYPED-POPULATIONS-R1 (a8a35ea9) and STAGE1-POPULATION-PUSHNEW-R1 (802387a6) — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-141`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 140 landed on wasm2 as be840f53. Two Codex commits followed, carrying three packets; both predate Codex seeing the proposed directive BOOT-TP-P1 (branch `claude-bootstrap-throughput`, 5e956f3d), whose review commitments R-1 to R-5 this audit follows. Reviewer disposition only; acceptance is the user’s decision.
+
+### Throughput (R-1, R-5)
+
+No file under `compiler/`, `runtime/` or the Lisp sources changes in either commit, so the instrument’s figure is unchanged: the compiler admits 178 of 2,823 level-0 and level-1 DEFUNs as written. None of the three units moves the ledger (21 accepted, 10 missing, zero unreviewed) or that number. Two of the three are work on a source rewriter that Codex’s own README marks “Do not integrate”.
+
+### Evidence and replay
+
+Packets a6222829… (30 entries), 7d3785dc… (123) and 141d3941… (240): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all cataloged with matching hashes; catalog, index snapshot (equal to the committed index) and evidence commit a4452bb2 bind to `repository.json` at 238,118 files; store clean. All three retained verifiers pass unmodified from the detached worktree: 13 deterministic files at 104 pins; 91 at 106 (22 modules, 64 native comparisons, 80 collections, 18 shape and 20 image checks, 40 owner checks, 12 faults); 212 at 115 (27 modules, 68 comparisons, 28 direct service checks, 7 source refusals, 8 faults). Worktree clean afterwards. Per R-3 no single-clause sweep was run; none of these packets is proposed for integration.
+
+### STAGE1-POPULATION-CONSUMER-REVIEW-R1 — audit-140 F1 closed
+
+The seven shapes audit 140 showed passing through the rewriter mis-lowered (PUSHNEW, POP, a setter function reference, MACROLET shadow, an API-named variable, and multi-place SETF with the population place second, the `macptr-termination.lisp:173` shape) were run through the new admission on the pinned kernel: all seven are refused, and the three legitimate shapes (SETF with DELQ, DOLIST, FLET refusal) behave as before. Closed. Under R-2 this would have been a carry item, not a packet; Codex had not seen R-2.
+
+### STAGE1-TYPED-POPULATIONS-R1
+
+Scope. Giving strong populations the population subtag so `(require-type p 'population)` can mean something is the right direction and answers audit 140’s observation. The derivation is small and sound as far as it goes: header 602 under D1 subtag 90, the collector and owner admit only that exact shape and trace both fields, ordinary vectors and native three- and four-field shapes are refused, twelve derived faults each fail at their named observation.
+
+- F1. The two-field shape manufactures a target difference that CCL’s own sources then have to be changed to match. Native `%cons-population` is `(gvector :population 0 type data)` (`library/lispequ.lisp:37–40`) and the accessors are `population.gclink`, `population.type`, `population.data` at indices 0, 1, 2 (`lispequ.lisp:48–52`). `make-population`, `population-type`, `population-contents` and its SETF (`lib/misc.lisp:701–724`), `%cons-mci` (`lispequ.lisp:1166`) and every `population-data` consumer are written against that layout. With the proposed layout (type at 0, contents at 1) the README correctly lists “target accessor definitions (type slot 0, contents slot 1)” as owed, and the constructor macro is owed too. With the native three-field shape — GC-link word present, written 0, ignored by a collector that traces type and data strongly — nothing is owed: constructor, accessors, the three public functions and all consumers compile unmodified once the front end admits them, which is BOOT-TP BT-4. It also removes a second image migration: when Stage 2 brings real weak processing the collector changes and the objects do not. Audit 140’s wording (“once the target’s accessor indices describe the strong layout”) pointed at the two-field answer; that was Claude’s error and is corrected here. The four-field termination shape stays refused under the accepted exclusion. Recommended: re-derive with `n==3`, word 4 the GC link required 0, type at 8, data at 12; the twelve faults carry over.
+
+### STAGE1-POPULATION-PUSHNEW-R1
+
+Scope. The README records the user’s “pushnew perhaps” and the instruction to call EQL and not duplicate it; the form is the real one at `lib/method-combination.lisp:155`. `ht_eql` is an added export on the reviewed EQL table module: it validates both operands with the module’s `keys_valid`, calls the module’s `same`, and publishes four words; the preceding source is byte-identical and the direct checks compare it with table lookups on the same instance. That part is durable and no defect was found. The evaluation order (item, place, test) is CCL’s own expansion and is observed natively with non-idempotent markers.
+
+- Observation (the directive’s D-4 in miniature). The unit hand-writes `pop_adjoin` and `pop_adjoin_test` as TAGBODY loops in the validator’s dialect. CCL already has `adjoin-eql` (`level-1/l1-utils.lisp:381`), and the instrument shows the unchanged compiler admits it as written today; what it refuses is `memeql` (`level-0/l0-utils.lisp:152`), because of `DO*`, `WHEN` and `RETURN`. One macro-expansion step in the front end would have replaced both helpers and the 53-line walker with two native definitions compiled verbatim.
+- Carry items (R-2): `:test` given as a symbol, `:key` and `:test-not` are refused by the scaffold and stay owed with it; the key validator does not yet admit the typed population as an opaque key (disclosed in the typed-populations README).
+
+### Verdict
+
+No defect in any of the three. Audit-140 F1 closed. F1 here is a design finding against the typed layout, not a fault in its implementation: use the native three-field shape so CCL’s population sources compile unmodified. Recommended next work is BOOT-TP BT-2(a), not further scaffold units. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
