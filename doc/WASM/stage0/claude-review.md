@@ -2440,3 +2440,37 @@ Scope. The README records the user’s “pushnew perhaps” and the instruction
 ### Verdict
 
 No defect in any of the three. Audit-140 F1 closed. F1 here is a design finding against the typed layout, not a fault in its implementation: use the native three-field shape so CCL’s population sources compile unmodified. Recommended next work is BOOT-TP BT-2(a), not further scaffold units. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-forty-second Claude audit — STAGE1-BOOTSTRAP-FRONTEND-R1 at 256795d0, with the adoption records fd5b2038 and the BT-0 criterion extension — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-142`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 141 landed on wasm2 as aa7edc09 and the directive as df004ba8 and e5cd0d44. Reviewer disposition only; acceptance is the user’s decision.
+
+### Records
+
+fd5b2038 records the user’s adoption of BOOT-TP (“remember that and proceed”) with Codex’s section-8 corrections, and adds the rule to `CLAUDE.md`. 256795d0 records “I accept BT-0” in `bootstrap-coverage-decision.json` and extends the inventory by S1-LL15-c and S1-LL15-d: 33 required, 21 accepted, 12 missing, zero unreviewed; the 31 earlier criteria and 21 accepted records are unchanged and `manage.py check` passes. Both quotations are relayed by Codex; Claude did not witness them. The wording of the two variants is stricter than Claude proposed and better: coverage is of operator occurrences actually emitted for the worklist, not of names in the backend text, and each has a terminal condition as well as a count. Codex’s corrections to Claude’s instrument are accepted: it applied SUBLIS to quoted data, skipped read failures silently, and read outside the TARGET binding; its totals are proxies.
+
+### Throughput (R-1, R-5)
+
+This is the first unit since audit 126 that moves the number. On one inventory of 2,492 readable DEFUNs, read inside the target binding with nothing rewritten, the integrated entry admits 33 and the proposed entry 426 (17.1%), with 268 read and name skips retained. That agrees with Claude’s independent figure for pass 2 with the whitelist off (456 of 2,823, 16.2%), and Codex’s refusal tally has the same head as Claude’s: heap constants 409, undeclared specials 204, OR 191, %SVREF 154, %GVECTOR 97. The integrated compiler is unchanged in this commit, so the instrument’s tier-A figure stays at 178 until integration. Four CCL definitions execute unchanged and match native: MEMQ, APPEND-2, ADJOIN-EQ, UNION-EQ. No walker, no renamed symbols, no new C or JS.
+
+### Evidence and replay
+
+Packet 3739a7f3… (204 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all 205 files cataloged; catalog, index snapshot and evidence commit fd42e23f bind at 238,331 files; store clean. The ordinary verifier passes unmodified from the detached worktree: 16 modules, 46 native cases, 184 comparisons, 92 collections, ten legacy modules byte-identical through both compilers, 22 admission controls; R6/R6a reused by exact compiler hash (the packet’s native rebuild: 21,843 tests, 162 of 164 FASLs unchanged, the two permitted differences). Worktree clean afterwards.
+
+### Reading of the change
+
+`backend.py` derives the proposal from the integrated backend by ten single-site replacements and appends `entry.lisp`. Every behavioural change is under `*bootstrap-front-end*`, bound only by the new entry; SET-CAR and SET-CDR join the checked cons emitter unguarded but the legacy validator cannot produce them. Checked by reading: NOT emits the NIL test in the sense of its condition operand; EQ stages both operands in a frame so the first survives a collection during the second, in source order; SET-CAR returns the stored value from the frame slot, not a second evaluation; an unchecked TYPED-FORM passes all values of its child and a checked one refuses; BUILTIN-CALL resolves the index through `%builtin-functions%` and takes the ordinary call path; DEFUN is taken from CCL’s own expansion and refused if that shape changes; LOAD-TIME-VALUE refuses at NX1 dispatch; host compiler macros are off for the entry. `target::node-size` read through the source entry is 4.
+
+### Probe
+
+Whether admitted means runnable. Four more definitions from the 426 were added to a scratch copy of the fixture and run through the same oracle and moving harness, unchanged from CCL’s files: LIST-REVERSE (DO*, PUSH, POP), NREMOVE (LOOP, a DYNAMIC-EXTENT cons, SETF of `%CDR` used as a condition), REMOVE-FROM-ALIST (WHILE, RETURN-FROM, `%RPLACD`) and CADDR, alongside the four originals. Result: 20 modules, 252 native comparisons at both placements with collection between invocations, all equal, arguments compared after mutation. Two others show what admitted does not mean: LIST-LENGTH and CHEAP-LIST are admitted in the record but refuse with HEAP-CONSTANT when linked only to real code, because `+`, `>` and the allocator are compiled as calls to linked names; the README says admission is not dependency closure, and these are concrete cases.
+
+### Carry items (R-2)
+
+- C-1. A DEFUN compiled alone does not see macros its file defines under `(eval-when (:compile-toplevel :execute) …)`; NX1 then compiles the macro call as a function call. 47 of the 89 DEFMACRO names in level-0 and level-1 are absent from the pinned image. An approximate text check finds none of the 426 admitted definitions using one and four in the whole inventory (MEMEQL’s `need-use-eql-macro` is one, refused today for another reason). Whole-file compilation, already listed as owed, removes this; until then the measure should refuse a call to an image-absent macro name.
+- C-2. 274 of the 2,492 results are host errors, not refusals (SIMPLE-ERROR 197, COMPILE-TIME-PROGRAM-ERROR 44, TYPE-ERROR 33). The record keeps the class and not the message; keep the message, since an emitter crash and an NX1 complaint need different work.
+- C-3. Report beside “admitted” the number whose callees are all admitted or primitive; that is the executable frontier.
+
+### Verdict
+
+No defect found; nothing here needs a follow-up packet. The entry is additive, leaves the legacy output byte-identical, passed R6/R6a, and its admitted code ran correctly on every definition Claude tried. Recommended: accept and integrate the entry, then heap constants, special references and OR, which together gate about 800 of the refused definitions. Ledger: 21 accepted, 12 missing, zero unreviewed.
