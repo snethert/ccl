@@ -1,0 +1,10 @@
+{
+  "id": "STAGE1-STARTUP-DB-R1",
+  "slot_credit": false,
+  "integrated": false,
+  "callback": "RESET-DB-FILES",
+  "snapshot_id": 13017,
+  "system_ordinal": 27,
+  "claim": "Native-derived seven cached-handle resets over an owner-admitted pinned interface-directory DLL, through unchanged generated calling forms",
+  "exclusions": ["production FTD and structure-descriptor materialization", "moving struct scanner", "joined startup schedule", "complete startup membership", "database I/O", "concurrent mutation", "browser and performance qualification"]
+}

@@ -3019,3 +3019,7 @@ Claude reviewed 43b9ca7a (STAGE1-STARTUP-WINNERS-REVIEW-R1, follow-up to audit 1
 ## 2026-09-20 — execute startup clear publication completion
 
 Audit-129 F1a: poison all four result words before direct CLR success. Six omitted/stale-store faults reject, including five that escape the prior guard; twelve older faults remain rejected. Positive execution is byte-identical. Compiler, service and adapter unchanged; audit-129 registry-order evidence reused. Auxiliary, not integrated, no LL15 credit. Fresh verifier reproduces 24 deterministic files at 208 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.
+
+## 2026-09-20 — execute database-handle startup reset
+
+RESET-DB-FILES now clears all seven cached handles per interface directory through an owner-admitted pinned D1 DLL service and unchanged generated calling forms. The untouched native callback supplies six cases; 96 placement/order/calling scenarios, 30 preserving refusals and four compiled faults pass. Complete DLL validation precedes mutation; all four publication words are poisoned and observed. Reuses compiler R6/R6a by hash. Auxiliary proposal, not integrated or joined; production FTD materialization and moving structures remain open, no LL15 credit. Fresh verifier reproduces 30 deterministic files at 213 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.
