@@ -2521,3 +2521,13 @@ One packet, not five:
 ### Verdict
 
 Integration verified. The values packet’s lowering is sound and its carry items are closed; F1 and F2 are defects in the throughput accounting with wrong code behind them, to be fixed in the next packet as items 1, 2 and 5 above, not in a follow-up of their own. Recommended: accept and integrate the constants, specials and OR lowering; correct the admitted and closed counts when F1 and F2 land. Ledger: 21 accepted, 12 missing, zero unreviewed.
+
+## Hundred-and-forty-fourth Claude audit — integration of STAGE1-BOOTSTRAP-VALUES-R1 and adoption of BOOT-TP P3 at b7ad4d38 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-144`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 143 landed on wasm2 as db06a331 (this file’s sha256 a1ebcaea…, equal to worktree commit 1cf0b8df, the value the acceptance record binds) and P3 as ef3ef848, identical to a12c3bca. One Codex commit followed; it integrates and records, and carries no new packet.
+
+Throughput (R-1). Nothing new is compiled or executed by this commit. The entry now in the tree admits 639 of 2,492 by Codex’s measure, a figure both records mark as carrying the two audit-143 defects and not as executable coverage; eight definitions execute and match native.
+
+Verified. `compiler/WASM32/wasm32-backend.lisp` equals, byte for byte, 921baea9’s `backend.py` applied to the previous backend with `symbols.lisp` and `or.lisp` appended; it also equals the proposal copy retained in the packet, and the record’s before and after hashes are right. No other file under `compiler/`, `runtime/` or the Lisp sources changes; all 43 listed integrated files hash as recorded; the acceptance and previous-integration hashes bind; `manage.py check` passes. The acceptance record names the speaker and quotes “Accept the lowering and adopt P3”; it states that the 639 and 82 counts are not accepted. The provenance record answers audit 143’s question about the earlier acceptance: speaker user, confirmation “it was from me”, bound to the unchanged original record by hash, attribution only. Both quotations are relayed by Codex. P3 is marked adopted with BT-7 to BT-9 governing the next packet, and `runtime-obligations.md` carries F1 and F2 forward to the predicate and whole-file unit.
+
+Verdict. No defect. Nothing to follow up; the open work is the packet requested in audit 143. Ledger: 21 accepted, 12 missing, zero unreviewed.
