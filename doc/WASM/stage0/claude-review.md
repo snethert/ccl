@@ -2624,3 +2624,70 @@ Closed from audit 145: C-2 (fixnum operand refusal), C-3 (mis-tagged node vector
 Integration ee5ad365: verified, no defect. STAGE1-BOOTSTRAP-LIBRARY-R1: not acceptable as committed — F1 is wrong code in an admitted CCL definition and F2 is a false execution claim (R-4 applies to both). Neither needs its own packet: exchange the two operands, execute both copy functions against native, and correct the README, at the head of the next substantive packet; integrate nothing from this proposal before then. The conditions, character, string and symbol work is otherwise sound under every probe tried.
 
 Requested of the next packet, same size or larger: make executed definitions the target, not admissions. Close EQL, `1+`, `1-`, ZEROP, LOGAND, LOGIOR, `-`, ASSQ and the NIL-callee rows, then give inputs to everything that becomes closed; by the packet's own figures 160 admitted definitions have one of those names as their only missing callee (NIL 64, EQL 34, `1+` 27, ASSQ 10, LOGAND 8, `1-` 7, LOGIOR 5, ZEROP 5). Report every new lowering as executed or unexecuted. Ledger unchanged: 21 accepted, 12 missing of 33, none unreviewed.
+
+## Hundred-and-forty-seventh Claude audit — STAGE1-BOOTSTRAP-EXECUTION-R1 at a8327744 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-147`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Reviewer disposition only. Audit 146 is imported verbatim: this file at a8327744 hashes 631d6936…, the hash of the file at 2ba64788.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 137 → 172 (+35), in 1,978 native rows and 7,912 comparisons at both placements with 4,066 collections. This is the largest execution gain of any packet so far and it is the counter the previous audit asked for. Diagnostic admission 1,862 → 1,864 of 2,492; real worklist 1,520 → 1,522 of 1,919 (still a lower bound, the same 22 files stop early). No C or JS is added; the CCL source proposals are the library packet's, unchanged (the one-token SYMBOL-NAME conditional and the fasloader's `:subdirs`).
+
+The new executions are real library bodies, not leaf predicates: LIST-LENGTH, `%SIMPLE-STRING=`, UTF-8-OCTETS-IN-STRING, UTF-16-OCTETS-IN-STRING, FIND-STR-PATTERN, UNION-EQL, EQUAL-BUT-NO-CAR-RECURSION, FLATTEN-METHOD-LAMBDA-LIST, ENCODE-FILE-RANGE, BYTE-MASK, CCL's own `1+` and `1-`, FUNCALL, APPLY, MEMBER-TEST, ASSOC-TEST and their -NOT forms with installed callables, and both `%COPY-` functions.
+
+What was asked for in audit 146 and what arrived: EQL, `1+`, `1-`, ZEROP closed; the NIL callee explained and fixed (an emitter bug, below); new cases folded into the existing dispatchers; every new lowering reported as executed or unexecuted (`lowering-coverage.json`); every admitted candidate without inputs listed (`execution-frontier.json`). Not closed: ASSQ, LOGAND, LOGIOR, `-` as a call. Carry items C-5 and C-6 were not touched; C-1's `%I<>` witness is still owed and is stated as owed.
+
+Where the next gain is, from the packet's own frontier: 254 definitions are statically callee-closed and 172 run; 94 closed definitions have no input recipe, among them BOUNDP, SYMBOL-PACKAGE, `%SYM-VALUE`, `%SET-SYM-VALUE`, `%SYMBOL-BITS`, TYPECODE, FULLTAG, LISPTAG, MOVE-STRING-BYTES, CHEAP-CONS, CHEAP-LIST, CONSTANT-SYMBOL-P, PROCLAIMED-SPECIAL-P. Those need inputs only. After them the missing callees are TYPEP (187 definitions), REGISTER-ISTRUCT-CELL (168), LENGTH (111), REQUIRE-TYPE (111), `%BADARG` (93), the two recursive-lock calls (72 each), INSTANCE-SLOTS (66).
+
+### F1 — the committed verifier cannot pass on this packet
+
+Packet 50f5ba7c… (1,150 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, 1,151 files cataloged; catalog 173a8751…, index snapshot 762148a1… equal to the committed index, evidence commit 07556120 at 242,742 files; store clean. Source pins, dependencies, tools and the native reuse check all pass.
+
+`packet.py verify`, unmodified, from the detached worktree, 71 seconds: `AssertionError: ['compiled/source/compile.lisp']`. 722 of 723 deterministic files are equal, including every emitted module, the native rows and all comparison counts. The one difference is a trailing newline. The packet contradicts itself: `source-pins.json` and the retained `source/compile.lisp` bind 8e049e62… (the committed file), while `deterministic.json` and the retained `execution/compiled/source/compile.lisp` bind a63add0d… (the same text plus one blank line). The final run was made before the fixture file lost that newline, and the packet was retained after. The README's verify command therefore fails for anyone, in any checkout.
+
+Nothing of substance is affected, and nothing was hidden. But an acceptance record binds a packet whose verifier passes, and this one does not. Remedy: retain r2 from the committed tree (one 70-second run) and run the verifier once from a clean checkout before committing. No dedicated packet is needed; it can sit at the head of the next one.
+
+### Audit 146 findings
+
+F1 of 146 (byte store): fixed. The lowering now reads vector, index, value. CORE-BYTE-STORE runs four stores against native, CORE-BYTE-ORDER checks operand effect order with a collection in the index and value operands, and the `swapped-byte-index-value` control restores the exact old mistake and is rejected. The emitted store checks the vector tag, subtag 199, a fixnum index below the header length, and a fixnum value below 256, each as a checked error.
+
+F2 of 146 (false claim): corrected in plain words in the new README, in STATUS and in the history entry; the old packet is kept unchanged and marked superseded. Both copy functions now have native rows and modules. Each has one input row; more rows (non-zero source start, zero length, a character above 255 into the byte vector) should come with the next packet.
+
+NIL callee: a computed callee left `name` NIL and `(symbolp nil)` took the named-call path, so the call compiled as a call to the function named NIL. All four sites now require an `immediate` callee. The same four sites are in the integrated backend, so the integrated emitter has this bug today for any computed callee; it was found because the previous audit asked what the NIL rows were. The callee value is stored in the rooted call frame before the arguments are evaluated.
+
+Style: one `bootstrap-operator`, one `bootstrap-numeric-call`, no `library-prior-` names in the generated proposal. The generated file equals the replayed proposal byte for byte.
+
+### Probes (scratch copy of the fixture, files restored, worktree clean)
+
+All rows below match native at both placements. The first four probes ran in one complete PASS of 7,992 comparisons; the last two ran in passes that were stopped later by the checked errors listed after the table:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| `(values (+ x y) (- x y) (* x y) (< x y) (= x y) (/= x y))` | fixnum/bignum boundary both ways (536870911+1, −536870912−1, 536870912 + −1 back to fixnum), 65536², 536870911², bignum × 3, fixnum with double, single with fixnum | equal |
+| `(values (1+ x) (1- x))` | both fixnum limits, the bignums just past them, a double | equal |
+| computed callee with `push` effects and a collection in both the callee and argument operands | `#'car`, `#'list` | equal, effect order equal |
+| `(funcall (if x #'car #'cdr) y)` | both arms | equal |
+| `(funcall f x)` with a symbol as `f` | `CAR`, `IDENTITY` | equal |
+| `(/ x y)` | double/double, fixnum/double, single/fixnum | equal |
+
+Stops that native does not have, all checked errors and none silent:
+
+| Form | Native | Wasm |
+|---|---|---|
+| `(/ 6 3)` | 2 | checked error 45 |
+| `(1+ 1/2)` | 3/2 | checked error 32 |
+| `(zerop 1/2)` | NIL | checked error 32 |
+
+The README states that rational arithmetic is outside the numeric subset and that ZEROP is not complete, so these are limits, not false claims. Two things follow. First, integer `/` stops even when the quotient is an integer, so the DIV2 witness is a float witness only; `lowering-coverage.json` should say so, or an exact integer quotient should be served. Second, the ZEROP, `1+` and `1-` call clauses replace calls to CCL's own definitions; CCL's `1+` and `1-` bodies now compile and run, so once CCL's ZEROP does too the call clauses are an optimisation and should be recorded as one.
+
+Harness limit seen while probing: a native error in any input row aborts the native compile step, so error behaviour (divide by zero, a non-number to ZEROP, an out-of-range byte store) cannot be compared with native at all. The Wasm side's checks on those paths are read, not run.
+
+### Carry items
+
+Closed: 146-F1, 146-F2, the NIL-callee question, the dispatcher style item. Open: this audit's F1 (retain r2, verifier passing); C-1 remainder (`%I<>` source-emitted witness) and the new `%IZEROP` emitter, both declared unexecuted; C-5 (refusal cases for `:bootstrap-condition-class`, `-initarg`, `-initargs`, `:bootstrap-signal-spread`); C-6 (`:bit-vector` kind answered with no lowering; needs a refusal case for `:bootstrap-array-kind`); new C-7, more input rows for the two copy functions; new C-8, DIV2 integer path either served or recorded as float-only.
+
+### Disposition
+
+The work is right and it is the work that was asked for. On substance Claude recommends acceptance and integration of this proposal, which carries the corrected library proposal inside it. It cannot be accepted as retained, because its verifier fails (F1). Order: retain r2 with a passing verifier, then accept and integrate, reading the library's one-token SYMBOL-NAME change under the adopted R6 source-location allowance with its 17-target reader matrix.
+
+Suggested next packet, same size or larger, executed definitions still the target: input recipes for the 94 closed definitions; then TYPEP and REQUIRE-TYPE on the builtin types the accepted predicates already cover, LENGTH, `%BADARG`, ASSQ, LOGAND, LOGIOR, `-`; carry items C-5 to C-8. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
