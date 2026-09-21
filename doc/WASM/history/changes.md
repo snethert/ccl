@@ -1,3 +1,14 @@
+## 2026-09-20 — record audit 136: termination correction reviewed
+
+Import Claude's audit-only branch as e153515d and bind its commit and review-file
+hash in the evidence index. No defect found in f8ad1da0; audit-135 F1 is closed.
+Replay reproduced 459 deterministic files at 111 pins, and Claude's three
+additional compiled faults were refused. Mark the corrected exclusion reviewed,
+awaiting acceptance. The strong substitute remains reviewed and awaiting
+acceptance too. Preserve the empty-state invariant and the remaining actual-image
+installation/READY obligations. No source, packet, acceptance or ledger-count
+changes. Reassert the corrected packet hash and 111 source pins; reuse execution.
+
 ## 2026-09-20 — audit 135 and termination empty-state correction
 
 Import Claude's audit-only branch as 0d63a00e. F1 is correct: registration

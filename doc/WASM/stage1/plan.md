@@ -453,3 +453,11 @@ Generated cancellation/flush/close and cleanup paths, native empty-state cases,
 and actual file closes execute. Registration exclusion and admission remain;
 no compiler/runtime changes or LL15 credit. Integrate only the corrected
 entries after independent review and acceptance.
+
+
+2026-09-20, audit 136: the corrected termination exclusion is reviewed with no
+defect; audit-135 F1 is closed. Import e153515d and bind its review-file hash in
+the index. Both this exclusion and the strong-table/ordinary-population chain
+(audits 132–134) await acceptance. Use the corrected exclusion packet for later
+integration. Actual CCL symbol installation, cross-dumped slot discovery,
+scheduling disablement and the READY join remain required; no LL15 credit.

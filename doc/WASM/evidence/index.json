@@ -2802,10 +2802,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-termination-exclusion-review-r1/packet.json",
       "sha256": "c1cc110216a0f9c433242f25552ce6c45cfa21dc3bdde808618c2f64c99ea752",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-135 F1 correction: cancellation, lookup and draining return exactly one NIL under the admitted empty-state invariant. Native reference uses untouched CCL consumers. Generated close/cleanup paths and real native file closes with corrected bindings execute. 21 modules, 76 comparisons, 38 collections, 64 admission checks, 21 native empty answers, four native file closes and fourteen controls. Fresh replay: 459 files at 111 pins. R1 source/pins and shared compiler/runtime unchanged. Actual image installation remains open; auxiliary, not integrated, no LL15 credit."
+      "scope": "Audit-135 F1 correction: cancellation, lookup and draining return exactly one NIL under the admitted empty-state invariant. Native reference uses untouched CCL consumers. Generated close/cleanup paths and real native file closes with corrected bindings execute. 21 modules, 76 comparisons, 38 collections, 64 admission checks, 21 native empty answers, four native file closes and fourteen controls. Fresh replay: 459 files at 111 pins. R1 source/pins and shared compiler/runtime unchanged. Actual image installation remains open; auxiliary, not integrated, no LL15 credit. Audit 136 found no defect and closes audit-135 F1. Claude reproduced the packet and rejected three additional compiled faults: T from draining or lookup, and two values from cancellation. Review complete at declared scope; acceptance and production integration remain pending. Integration must use this corrected packet, not the R1 error bodies.",
+      "review_commit": "e153515dcd91033d257f45f825c4ab4f2f97fe2f",
+      "review_sha256": "c8b6b15e6245e47fba93be64367d00dbbc4e324ad2ff150fc34dff9812210107"
     }
   ],
   "current_runs": [

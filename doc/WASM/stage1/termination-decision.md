@@ -1,6 +1,6 @@
 # Stage 1 termination exclusion — 20 September 2026
 
-Status: **user-approved policy; isolated enforcement proposal executed, awaiting review**.
+Status: **user-approved policy; corrected enforcement proposal reviewed, awaiting acceptance**.
 This records no result acceptance, integration or LL15 credit.
 
 The user answered “Exclude it in Stage 1 (recommended)” to this question:
@@ -50,3 +50,9 @@ real file close with the corrected bindings. Native registration/cancellation is
 observed separately and restored, without finalizing an object. Actual image
 slot discovery, digest-bound installation at the CCL symbols and the bootstrap
 READY join remain required. No shared runtime has changed.
+
+Audit 136, imported as e153515d, finds no defect and closes audit-135 F1.
+The retained replay and three additional compiled faults support the declared
+scope. Both this corrected exclusion and the strong-table/ordinary-population
+substitute are fully reviewed and await user acceptance. Production image
+installation and the READY join remain open; review is not bootstrap closure.
