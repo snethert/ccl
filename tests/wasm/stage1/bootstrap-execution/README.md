@@ -1,6 +1,10 @@
 # Bootstrap execution frontier
 
-172 original CCL definitions execute and match native, up from 137, in 7,912 comparisons across both placements and moving collection. This is a compiler proposal, not LL15 completion or integration. The final summary binds the comparison counts, compiled inventory and remaining bodies without input recipes. No C or JS implementation service is added.
+186 original CCL definitions execute and match native, up from 172, in 8,188 comparisons across both placements and moving collection. This is a compiler proposal, not LL15 completion or integration. The final summary binds the comparison counts, compiled inventory and remaining bodies without input recipes. No C or JS implementation service is added.
+
+Audit 147's retained-packet defect is corrected in R2. The R1 run copied `compile.lisp` with one extra trailing newline; its committed verifier therefore failed despite equal emitted code. R2 is retained from the current fixture and verified end to end before commit. Retention now compares the exact compiler input copies with the fixture and refuses the stale R1 copy. The compiler and runtime proposals are byte-identical to R1, so its qualified native build is reused by hash without rebuilding.
+
+Fourteen additional original definitions execute: the three binding/value readers, `GETF-TEST`, `RASSOC`, `ANY/TYPE`, `EVERY/TYPE`, `MOVE-STRING-BYTES`, and six symbol/lock/class predicates. These are finite input checks: symbol readers cover NIL, T and a bound keyword; lock/class predicates cover non-instance rejection, not initialized lock/class objects; the two type combinators exercise one-value callbacks whose missing certainty value is NIL. Both copy definitions have six offset/empty/boundary rows, with all mutated arguments checked. No admission increase is claimed: the compiler remains at the prior figures.
 
 Audit 146 is addressed at the head of this larger execution packet. The unsigned-byte-8 store now consumes NX1 operands in their actual order: kind, vector, index, value. A four-element vector of nines with index 3 and value 2 becomes `[9,9,9,2]`. The store's return value, mutated vector, operand effects and collection during later operands are compared with native. Restoring the old swap fails the focused control.
 
@@ -14,12 +18,14 @@ The compiler proposal contains one `bootstrap-operator` and one `bootstrap-numer
 
 New native executions include list length, simple-string comparison, UTF-8/UTF-16 encoded lengths, EQL unions, association/member tests with runtime predicates, method lambda-list flattening, file-range encoding, and primitive numeric helpers. `execution-frontier.json` gives every executed definition and every admitted candidate without inputs. This remains a finite input qualification. In particular, numeric ctype and stream-ioblock bodies still need valid object/environment recipes; read-loop dispatch needs initialized stream/scheduler state. They receive no execution credit. The real worklist reports 1,522 admissions from 1,919 parsed definitions, with the same 22 reader/environment stops. The historical diagnostic is 1,864/2,492. The incomplete denominator and the remaining 25 l0-misc records are unchanged obligations.
 
-`lowering-coverage.json` distinguishes emitters present in directly executed modules from unexecuted emitters. ADD2, SUB2, MUL2, DIV2, NUMCMP and the byte store have witnesses. The added `%IZEROP` emitter has no source witness: CCL translates the `%izerop` source probe into EQ. It is explicitly unexecuted, as is the previously owed source-emitted `%I<>` witness. Module presence does not claim all instruction branches ran.
+`lowering-coverage.json` distinguishes emitters present in directly executed modules from unexecuted emitters. ADD2, SUB2, MUL2, DIV2, NUMCMP and the byte store have witnesses. Division witnesses use floating operands only: integer `/` still refuses even when the quotient would be integral, and rational operations remain outside this subset. The added `%IZEROP` emitter has no source witness: CCL translates the `%izerop` source probe into EQ. It is explicitly unexecuted, as is the previously owed source-emitted `%I<>` witness. Module presence does not claim all instruction branches ran.
 
-The new proposal is rebuilt against pristine U1 for R6/R6a. All 164 native FASLs and the native snapshot equal the preceding qualified library build, so its 21,843 passing native tests are reused instead of rerun. The native-source files are identical to that packet; the existing-target reader matrix is reused by hash. Target execution, six focused controls and the ten legacy-byte comparisons run for this proposal. Original development failures are retained. No additional accepted ledger row is claimed.
+R1 rebuilt this unchanged proposal against pristine U1 for R6/R6a. All 164 native FASLs and the native snapshot equal the preceding qualified library build, so its 21,843 passing native tests are reused instead of rerun. The native-source files are identical to that packet; the existing-target reader matrix is reused by hash. R2 target execution, six focused controls and the ten legacy-byte comparisons run for this proposal. Original development failures are retained. No additional accepted ledger row is claimed.
 
 ```sh
 python3 tests/wasm/stage1/bootstrap-execution/packet.py verify \
-  --packet ../ccl-evidence/2026-09-21-stage1-bootstrap-execution-r1 \
+  --packet ../ccl-evidence/2026-09-21-stage1-bootstrap-execution-r2 \
   --output /tmp/bootstrap-execution-review
 ```
+
+Carry items from audit 147 remain explicit: native-error rows (the direct native oracle currently stops on an error), condition-lowering refusal cases, the bit-vector-kind refusal, `%I<>` and `%IZEROP` source witnesses, and unresolved ASSQ/LOGAND/LOGIOR/`-` call dependencies. The new input recipes do not establish full bootstrap state, package objects, stream objects or LL15 readiness.

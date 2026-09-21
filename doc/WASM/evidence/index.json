@@ -3010,10 +3010,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-execution-r1/packet.json",
       "sha256": "50f5ba7c121f9a01dff803e05efaaab9486054fe6c9d41593b6b66fa55b092b3",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-146 fixes plus execution-focused compiler proposal. 172 original CCL definitions match native (was 137), 1978 native cases, 7912 comparisons, 3956 between-call and 110 in-call collections. Correct typed byte-store order; both original copy functions execute. ADD2/SUB2/MUL2/DIV2/NUMCMP, scalar increment/decrement/zero calls, computed callable classification, ordinary/APPLY dynamic-dispatch accounting. Existing EQL service reused, not duplicated. Cases folded into existing dispatchers. 254 static dependency-closed definitions; runtime-dispatched tests and unexecuted candidates explicit. Historical 1864/2492 diagnostic; actual incomplete worklist 1522/1919 with 22 read stops. Six focused controls rejected; 112 fast-path checks; ten legacy files identical. Newly rebuilt 164 native FASLs and snapshot equal the qualified library packet, reusing 21843 tests and unchanged source-reader matrix. %IZEROP and %I<> source-emitted witnesses remain unexecuted. No shared-source edits, integration or LL15 credit."
+      "scope": "Audit-146 fixes plus execution-focused compiler proposal. 172 original CCL definitions match native (was 137), 1978 native cases, 7912 comparisons, 3956 between-call and 110 in-call collections. Correct typed byte-store order; both original copy functions execute. ADD2/SUB2/MUL2/DIV2/NUMCMP, scalar increment/decrement/zero calls, computed callable classification, ordinary/APPLY dynamic-dispatch accounting. Existing EQL service reused, not duplicated. Cases folded into existing dispatchers. 254 static dependency-closed definitions; runtime-dispatched tests and unexecuted candidates explicit. Historical 1864/2492 diagnostic; actual incomplete worklist 1522/1919 with 22 read stops. Six focused controls rejected; 112 fast-path checks; ten legacy files identical. Newly rebuilt 164 native FASLs and snapshot equal the qualified library packet, reusing 21843 tests and unchanged source-reader matrix. %IZEROP and %I<> source-emitted witnesses remain unexecuted. No shared-source edits, integration or LL15 credit. Audit 147: committed verifier fails on one trailing newline in compiled/source/compile.lisp; emitted modules and native rows agree. Not accepted; superseded by R2. Original packet is unchanged and its fixture must be read at a8327744.",
+      "review_commit": "357de8a174f7ba3ca79df2605375fd30afc55616",
+      "review_sha256": "e6656bb5430ac65d1628c86c61a1038681ad5e44c8fae59307a7524a76babb06"
+    },
+    {
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "currency": "CURRENT",
+      "execution_status": "PASS",
+      "id": "STAGE1-BOOTSTRAP-EXECUTION-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-execution-r2/packet.json",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "R2 fixes audit-147 retained-source mismatch and runs a passing unmodified verifier before commit. Compiler/runtime proposals byte-identical to R1. 186 original definitions match native (was 172), 2047 native rows, 8188 comparisons, 4094 between-call and 110 in-call collections. Fourteen new executions include binding/value readers, MOVE-STRING-BYTES, GETF-TEST, RASSOC and type combinators; narrow predicate inputs explicitly declared. Both copy functions have six boundary/offset rows. Division coverage explicitly float-only. Retention rejects stale compiler source copies. Six focused faults rejected, ten legacy files identical, 112 fast checks. Reuse the unchanged R1 native build and its qualified native tests/readers. Admissions unchanged: historical 1864/2492; incomplete real worklist 1522/1919. No integration, acceptance or LL15 credit.",
+      "sha256": "aefd030f5bacf86fef899041c4b16b295d28eedc5907f5e13613d38fb1f8aa45"
     }
   ],
   "current_runs": [

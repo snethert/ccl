@@ -611,3 +611,12 @@ primitive EQL as a newly compiled Lisp definition, dynamic callbacks as static
 closure, or an input recipe as an executed test. Numeric-ctype and stream-ioblock
 cases and the read-loop environment remain owed; %IZEROP and %I<> need emitted
 source witnesses. LL15 is unfinished.
+
+2026-09-21: Execution R2 repairs audit 147's retained-source mismatch and raises
+the original native-matched count to 186 without changing the compiler proposal.
+The finalized packet must pass its own unmodified verifier before commit;
+retention also rejects stale compiler input copies. Copy-function boundary rows
+and float-only division scope are now explicit. Continue implementation with
+TYPEP/REQUIRE-TYPE dependencies and initialized layouts, native-error comparison,
+ASSQ/LOGAND/LOGIOR/subtraction call closure, and the remaining actual file
+compilation environment. Do not rebuild unchanged native qualifications.

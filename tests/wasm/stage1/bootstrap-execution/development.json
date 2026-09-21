@@ -19,6 +19,10 @@
     {
       "log": "ccl-execution-final.log",
       "reason": "The emitted-operator report caught the absence of a %IZEROP witness. Record it as unexecuted rather than claiming the EQ source probe covers it."
+    },
+    {
+      "log": "ccl-execution-audit147.json",
+      "reason": "Audit 147: retained compiled source had one extra trailing newline. Retention now checks the actual compiler input copy against the fixture before publication."
     }
   ],
   "retained": [
@@ -31,7 +35,8 @@
     "ccl-execution-r1/execution.json",
     "ccl-execution-r5-filtered.log",
     "ccl-execution-final/summary.json",
-    "ccl-execution-final/compiled/throughput.json"
+    "ccl-execution-final/compiled/throughput.json",
+    "ccl-execution-audit147.json"
   ],
   "extra": "Final census comparison exposed INT>0-P using :GT as an EQ/NE Boolean selector during the dispatcher refactor. Restore its existing positive-test convention and add an executed loop witness; the before-fix census is retained. Intermediate runs are development only, not qualification."
 }

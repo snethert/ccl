@@ -1,3 +1,21 @@
+## 2026-09-21 — repair execution retention and run 186 original definitions
+
+Import audit 147 verbatim at 5dda5589 (original 357de8a1). R1's retained
+compile.lisp had an extra trailing newline, making its committed verifier fail.
+Preserve that evidence and supersede it with R2. Retention now compares actual
+compiler-input copies with the current fixture before publication. Run the
+unmodified verifier against the finalized R2 packet before committing.
+
+Extend execution by fourteen unchanged CCL definitions to 186, with 2,047
+native rows, 8,188 comparisons and 4,204 collections. Exercise symbol value
+readers, list callbacks, type combinators, string movement and predicate
+rejection paths within their declared input domains. Both copy functions get
+six offset/boundary/empty rows. Explicitly label division witnesses float-only.
+The compiler and runtime proposals are unchanged, so reuse the existing native
+qualification. Six focused faults and ten legacy outputs remain checked.
+No integration or LL15 completion is claimed. Native-error comparison and the
+remaining audit carry items stay open in the fixture README.
+
 ## 2026-09-21 — fix byte stores and increase native-matched execution to 172
 
 Import Claude audit 146 verbatim at a3942dee, binding its original 2ba64788

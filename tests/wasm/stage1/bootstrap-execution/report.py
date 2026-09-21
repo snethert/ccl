@@ -25,7 +25,7 @@ def report(out):
               for op in ['ADD2','SUB2','MUL2','DIV2','NUMCMP','%IZEROP','%TYPED-UVSET']}
     assert all(rows for op,rows in lowering.items() if op!='%IZEROP'),lowering
     assert not lowering['%IZEROP'], 'Update the declared unexecuted lowering when a source witness appears'
-    save('lowering-coverage.json',dict(operators=lowering,unexecuted=['%IZEROP'],explanation='The native %izerop source probe becomes EQ in NX1; its success is not a witness for the %IZEROP emitter.',scope='Each listed operator is emitted in a module directly executed against native. This is not instruction or branch coverage.'))
+    save('lowering-coverage.json',dict(operators=lowering,unexecuted=['%IZEROP'], division_scope='DIV2 and %QUO-1 witnesses use floating operands only. Integer / refuses even for an integral quotient; rational arithmetic is outside this packet.',explanation='The native %izerop source probe becomes EQ in NX1; its success is not a witness for the %IZEROP emitter.',scope='Each listed operator is emitted in a module directly executed against native. This is not instruction or branch coverage.'))
     save('execution-frontier.json',dict(original_definitions_executed=len(executed),names=sorted(executed),
         native_cases=dict(sorted(cases.items())),primitive_definitions_not_counted=sorted({r['definition'] for r in native if r['name'] in primitive}),
         missing_dependencies=dict(missing.most_common()),

@@ -7,7 +7,7 @@ PARENT=r.HERE.parent/'bootstrap-library'
 spec=importlib.util.spec_from_file_location('library_packet',PARENT/'packet.py')
 prior=importlib.util.module_from_spec(spec);spec.loader.exec_module(prior)
 sha=prior.sha;read=prior.read;files=prior.files;deterministic=prior.deterministic
-ID='STAGE1-BOOTSTRAP-EXECUTION-R1'
+ID='STAGE1-BOOTSTRAP-EXECUTION-R2'
 LIBRARY='2026-09-21-stage1-bootstrap-library-r1'
 
 def pins():
@@ -33,6 +33,13 @@ def native_check(n):
         assert text==(reference/'proposal/files'/name).read_text(),name
     assert sha(n/'proposal/files/compiler/WASM32/wasm32-backend.lisp')==hashlib.sha256(generate().encode()).hexdigest()
 
+def assert_source_copies(out):
+    # Compare the exact copies the compiler consumed, not just today's pins.
+    for name in ['compile.lisp','cases.lisp','execute.lisp','probes.lisp','controls.lisp','whole-file.lisp']:
+        source=r.fixture(name)
+        copied=out/('compiled/source' if name=='compile.lisp' else 'driver')/name
+        assert copied.read_bytes()==source.read_bytes(), 'stale compiled source: '+name
+
 def main():
     a=argparse.ArgumentParser();a.add_argument('mode',choices=['retain','verify'])
     for n in ['packet','execution','native-run','output']:a.add_argument('--'+n,type=Path)
@@ -40,6 +47,7 @@ def main():
     if args.mode=='retain':
         out=args.execution.resolve();n=args.native_run.resolve();native_check(n)
         assert read(out/'summary.json')['status']=='PASS'
+        assert_source_copies(out)
         p.mkdir()
         for name,data in [('source-pins',pins()),('dependencies',dependencies()),('tools',prior.tools()),('deterministic',deterministic(out))]:r.save(p/(name+'.json'),data)
         for f in files(out):
