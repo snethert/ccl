@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "operation": "CLARIFY_AUTHORIZATION_PROVENANCE",
+  "record": "acceptance-bootstrap-frontend.json",
+  "record_sha256": "1a8bd197a4c45d99f5ec47cb4fc4e5ed9e5414f1a2c09c4973b56bef047df2b5",
+  "speaker": "user",
+  "original_quote": "Accept and integrate the new entry.",
+  "confirmation": "it was from me",
+  "effect": "Attribution only. The immutable acceptance record and its integration binding remain unchanged."
+}

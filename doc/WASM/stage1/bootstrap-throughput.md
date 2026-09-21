@@ -127,7 +127,7 @@ replacements are qualified. Numeric C kernels may remain target primitives where
 measurement supports that choice, with Lisp owning the surrounding policy. No
 service is retired or its declared bounds promoted by this recommendation.
 
-### P3 (Claude, 21 September, after audit 143) — awaiting the user's adoption
+### P3 (Claude, 21 September, after audit 143) — adopted by the user
 
 Relayed user direction, given while audit 143 was running: U-4 “Ask CODEX to accomplish more work next time.” U-5, on SYMBOLP reading as an empty body: “Why not WASM32 compiler flags?!?” U-6 “Eventually we HAVE to change CCLs source to be properly integrated”.
 
@@ -135,3 +135,5 @@ Relayed user direction, given while audit 143 was running: U-4 “Ask CODEX to a
 - BT-8. Target branches go in CCL's files. Where a definition's body is selected by per-target reader conditionals, the deliverable is a `#+wasm32-target` branch in that file, and `level-0/WASM32/` holds what native ports write in LAP. This is additive shared-source work under the 16 September authorization, with R6 and R6a; every other target's reader skips the branch. “Shared source untouched” is no longer reported as a merit for such definitions. Tree size: 86 `x8664-target` sites in `level-0`, `level-1` and `lib`; 258 x8664 LAP functions.
 - BT-9. The measure refuses, and does not count, a definition whose body is empty under the target read and non-empty under the native read, and a definition whose only body form is a call to itself for which pass 2 has no lowering (audit 143 F1, F2).
 
+
+P3 adoption (2026-09-21): the user answered “Accept the lowering and adopt P3”. BT-7 through BT-9 now govern the next implementation packet. This also accepts the reviewed values lowering; it does not accept the two defective coverage counts from audit 143.

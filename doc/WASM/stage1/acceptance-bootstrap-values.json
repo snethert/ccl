@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user",
+    "quote": "Accept the lowering and adopt P3"
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-VALUES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-values-r1/packet.json",
+      "sha256": "9ee4c3fcc13013e688e1a321381a051225b358dff7fdb61c1239c53a7804b0ec"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "1cf0b8df6ff6b51ae009e3208533292be1e531c2",
+      "sha256": "a1ebcaeadc164f447fe5977ac84151992e0e7968b8e44c933f2fee839d8f01cd"
+    }
+  ],
+  "observations": [
+    "The user accepts the reviewed constants, special-variable and OR lowering and adopts P3 (BT-7 through BT-9).",
+    "Audit 143 finds the lowering sound. Its 639 admitted and 82 dependency-closed counts include empty-under-Wasm and unlowered self-call bodies and are not executable coverage. Correct these in the next substantive predicate/whole-file packet.",
+    "Eight unchanged CCL definitions execute against native in the author packet. No whole-file or LL15 completion is claimed.",
+    "Original fixture replay is pinned to proposal commit 921baea9 after integration; unchanged runtime and native qualification reused by exact compiler identity."
+  ],
+  "slot_credit": false
+}

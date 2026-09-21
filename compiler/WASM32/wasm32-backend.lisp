@@ -363,11 +363,16 @@
 (defvar *b-symbols* nil)
 (defvar *b-special-names* nil)
 (defun b-symbol (name)
+  (when *bootstrap-front-end*
+    (pushnew name *bootstrap-callees*)
+    (return-from b-symbol (bootstrap-symbol name)))
   (let ((entry (assoc name *b-call-links* :test #'eq)))
     (unless entry (refuse :b-symbol-identity))
     (pushnew (second entry) *b-symbols* :test #'equal)
     (b-wat "(global.get $symbol_~a)" (second entry))))
 (defun b-keyword (key)
+  (when *bootstrap-front-end*
+    (return-from b-keyword (bootstrap-symbol key)))
   (unless (keywordp key) (refuse :b-keyword-identity))
   (let ((name (string-downcase (symbol-name key))))
     (unless (and (string= (symbol-name key) (string-upcase name))
@@ -379,6 +384,8 @@
 (defun b-special-p (var)
   (and var (logbitp ccl::$vbitspecial (ccl::nx-var-bits var))))
 (defun b-special-symbol (symbol)
+  (when *bootstrap-front-end*
+    (return-from b-special-symbol (bootstrap-symbol symbol)))
   (let ((pair (assoc symbol '((ccl::*interrupt-level* . "interrupt_level") (ccl::%wasm-gc-service% . "gc_service") (ccl::%wasm-interrupt-service% . "interrupt_service")))))
     (when pair (pushnew (cdr pair) *b-symbols* :test #'equal)
       (return-from b-special-symbol (b-wat "(global.get $symbol_~a)" (cdr pair)))))
@@ -805,6 +812,9 @@
       (b-reserve-runtime (b-wat "(i64.and (i64.add (i64.mul (i64.extend_i32_u ~a) (i64.const 4)) (i64.const 23)) (i64.const -16))" count))
       (b-runtime-roots (b-local base) count) body (b-store wasm32::tcr.root_head (b-local root)) base)))
 (defun b-call (callee argument-list &optional local-self)
+  (when (and *bootstrap-front-end* (not local-self)
+             (not (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)))
+    (setq *bootstrap-dynamic-call* t))
   (unless *b-tail-position* (return-from b-call (b-internal-call callee argument-list local-self)))
   (unless (null (second argument-list)) (refuse :b-arguments))
   (let* ((args (first argument-list)) (n (length args)) (arg-slots (* 4 (ceiling n 4)))
@@ -1058,6 +1068,9 @@
             (format out "(local.set $count (local.get ~a)) ~a" saved-count (b-load-control retained))))))))
 
 (defvar *bootstrap-front-end* nil)
+(defvar *bootstrap-symbols* nil)
+(defvar *bootstrap-callees* nil)
+(defvar *bootstrap-dynamic-call* nil)
 
 (defun b-scalar (ir)
   (when (b-raw-code-p ir) (return-from b-scalar (b-raw-code-text ir)))
@@ -1102,7 +1115,9 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+       (cond ((and *bootstrap-front-end* (pool-literal-p (first args)))
+              (pool-load (first args)))
+             ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((and *b-float-service* (member (first args) '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact))) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
@@ -1111,7 +1126,7 @@
              ((member (first args) *b-restart-names*) (b-restart-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value_lisp ~a (local.get $top))" (b-symbol (first args))))
-      ((ccl::builtin-call ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
+      ((ccl::builtin-call ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::or ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr rplaca rplacd ccl::%rplaca ccl::%rplacd ccl::set-car ccl::set-cdr)
        (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" (b-checked-cons-operation op args)))
@@ -1120,6 +1135,7 @@
 ;;; producer finishes before its values are appended; no Lisp call or poll
 ;;; occurs while extending and publishing the argument root range.
 (defun b-multiple-call (callee forms)
+  (when *bootstrap-front-end* (setq *bootstrap-dynamic-call* t))
   (let* ((base (temporary)) (output (temporary)) (callable (temporary)) (context (temporary)) (root (temporary))
          (mv (temporary)) (owner (temporary)) (vsp (temporary)) (old-count (temporary))
          (n (temporary)) (slots (temporary)) (next-slots (temporary)) (i (temporary))
@@ -1202,6 +1218,9 @@
            (b-multiple (second args)))
          (b-multiple (make-b-raw-code :text (b-scalar ir)))))
       (ccl::%decls-body (b-multiple (first args)))
+      (ccl::or
+       (unless *bootstrap-front-end* (refuse :or))
+       (bootstrap-or (first args)))
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       (ccl::catch (b-catch (first args) (second args)))
       (ccl::throw (b-throw (first args) (second args)))
@@ -1408,7 +1427,9 @@
              (write-string "(throw_ref (local.get $exception)))" s)
              (write-string (b-entry-wrapper arity maximum (or keys rest) (length *b-bound-vars*)) s)
              (write-char #\) s))))
-      (list :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
+      (list :symbols (copy-list *bootstrap-symbols*)
+            :callees (copy-list *bootstrap-callees*)
+            :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
 ;;; Rest/APPLY sequences execute without calls, polls or collection while
 ;;; traversing or initializing heap cells. The allocator is a checked bump
 ;;; pointer in the thread-owned TCR area; exhaustion never publishes a list.
@@ -1692,6 +1713,9 @@
     (unless *b-callable-metadata* (b-plan-local-environments))
     (let ((modules (mapcar (lambda (entry) (let ((*module-name* (second entry))) (b-one-module (first entry)))) *b-functions*)))
       (setf (getf (first modules) :children) (rest modules))
+      (when *bootstrap-front-end*
+        (setf (getf (first modules) :dependencies) (copy-list *bootstrap-callees*)
+              (getf (first modules) :dynamic-call) *bootstrap-dynamic-call*))
       (throw *module-result-tag* (first modules)))))
 
 (defun validate-b-source (form)
@@ -2456,7 +2480,8 @@
 (defun pool-literal-p (x)
   (and (not (or (null x) (eq x t)
                 (and (integerp x) (<= -536870912 x 536870911))))
-       (or (integerp x) (floatp x) (characterp x) (consp x)
+       (or (and *bootstrap-front-end* (symbolp x))
+           (integerp x) (floatp x) (characterp x) (consp x)
            (typep x 'simple-array))))
 (defun pool-plan ()
   (setf *pool-layouts* nil)
@@ -3324,6 +3349,9 @@
                (= (length links) (length (remove-duplicates links :key #'second :test #'equal))))
     (refuse :bootstrap-links))
   (let ((*bootstrap-front-end* t)
+        (*bootstrap-symbols* nil)
+        (*bootstrap-callees* nil)
+        (*bootstrap-dynamic-call* nil)
         (*b-call-mode* t)
         (*b-special-names* '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))
         (*b-keywords* nil)
@@ -3392,3 +3420,31 @@
              ccl::*nx1-alphatizers*)
     (setf (gethash 'load-time-value table) #'bootstrap-no-load-time-value)
     table))
+
+(in-package :wasm32-compiler)
+
+(defun bootstrap-symbol (symbol)
+  ;; Imports name owner-supplied identities, not package lookups at run time.
+  ;; The module record retains the actual symbol, including uninterned ones.
+  (unless (symbolp symbol) (refuse :bootstrap-symbol))
+  (let ((entry (assoc symbol *bootstrap-symbols*)))
+    (unless entry
+      (setq entry (list symbol (format nil "bootstrap_~d" (length *bootstrap-symbols*))))
+      (push entry *bootstrap-symbols*))
+    (pushnew (second entry) *b-symbols* :test #'equal)
+    (b-wat "(global.get $symbol_~a)" (second entry))))
+
+(in-package :wasm32-compiler)
+
+(defun bootstrap-or (forms)
+  (if (null (cdr forms))
+    (b-multiple (car forms))
+    (let ((value (temporary)))
+      ;; Only the last operand inherits tail position and multiple values.
+      ;; No call or safepoint intervenes between testing and publishing a
+      ;; successful primary value. Result assurance cannot collect.
+      (b-wat "(local.set ~a ~a) (if (i32.ne (local.get ~a) (i32.const 77825)) (then ~a) (else ~a))"
+             value (let ((*b-tail-position* nil)) (b-scalar (car forms)))
+             value
+             (b-multiple (make-b-raw-code :text (b-local value)))
+             (bootstrap-or (cdr forms))))))

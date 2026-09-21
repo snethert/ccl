@@ -389,3 +389,7 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   The native reference now calls the untouched native functions, and real
   file close plus a generated close/cleanup model execute. Actual image
   installation and global empty-state admission remain owed.
+
+## Bootstrap values integration — audit 143
+
+The quoted-constant, special-variable and OR lowering is accepted. Admission and static dependency closure do not establish execution: target reader conditionals can erase a native body, and native self-call stubs need open coding. Correct both measurement defects in the predicate/whole-file unit under adopted P3. Existing eight native-matched functions remain the executed author count. The previous frontend acceptance was explicitly the user’s instruction, confirmed by “it was from me”; see `acceptance-bootstrap-frontend-provenance.json`.

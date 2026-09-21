@@ -2964,10 +2964,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-values-r1/packet.json",
       "sha256": "9ee4c3fcc13013e688e1a321381a051225b358dff7fdb61c1239c53a7804b0ec",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Quoted symbol identities through rooted pools, owner identities for special references and binding, and OR lowered directly from CCL acode. Ordered admission 426 -> 472 -> 574 -> 639 / 2492 unchanged definitions, 268 explicit skips; eight original definitions execute (previously four). 82 conservative static dependency closures are not an execution claim. 456 comparisons (452 native plus four layout witnesses), 228 between-call and 28 in-call collections, 22 admission controls and five compiled faults; ten legacy outputs unchanged. Host error messages and file-local macro diagnostics retained. Native R6/R6a rebuilt: 21843 tests, 162/164 FASLs unchanged and 164 restored. Fresh replay 940 deterministic files at 145 pins. Proposal only, no shared compiler/runtime change or LL15/BT-0 slot credit."
+      "scope": "Accepted and integrated on user authorization following audit 143. Lowering accepted; throughput accounting findings remain owed in the next substantive packet. The user accepts the reviewed constants, special-variable and OR lowering and adopts P3 (BT-7 through BT-9). Audit 143 finds the lowering sound. Its 639 admitted and 82 dependency-closed counts include empty-under-Wasm and unlowered self-call bodies and are not executable coverage. Correct these in the next substantive predicate/whole-file packet. Eight unchanged CCL definitions execute against native in the author packet. No whole-file or LL15 completion is claimed. Original fixture replay is pinned to proposal commit 921baea9 after integration; unchanged runtime and native qualification reused by exact compiler identity.",
+      "review_commit": "1cf0b8df6ff6b51ae009e3208533292be1e531c2",
+      "review_sha256": "a1ebcaeadc164f447fe5977ac84151992e0e7968b8e44c933f2fee839d8f01cd"
     }
   ],
   "current_runs": [
