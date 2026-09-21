@@ -177,13 +177,24 @@ IDE needs. Not native libraries. Not Stage 1. U-3 fixes the memory model.
 | FM-6 | **Encodings are declared.** `outline.md:244`: "The foreign/host boundary uses declared encodings and payload schemas." String arguments name an encoding; the copy-in helper encodes, never guesses a storage width. |
 | FM-7 | **Traps and exceptions are different, and neither unwinds across the boundary.** `[RUN]` Under the pinned Node a `try_table`/`catch_all` catches a Wasm `throw` but an `unreachable` or out-of-bounds access escapes it as `WebAssembly.RuntimeError` (Codex's probe and Claude's independent one agree; the exception-handling specification says traps are not caught). A direct Wasm-to-Wasm call therefore cannot turn a foreign trap into a Lisp error, and the trap would bypass Lisp cleanups too. Baseline: each foreign entry passes through a JavaScript boundary *inside* the live Lisp call that catches thrown exceptions and traps and rethrows a catchable exception on the port's tag; a library that trapped is invalidated, not reused. Direct calls are admitted only for exports declared non-trapping, with fatal handling defined if the declaration is false. A Lisp THROW, RETURN-FROM or GO never passes through foreign frames; a callback that would do so is caught at the callback boundary. `[SRC]` Generated code already uses `catch_all_ref` in places, so a foreign exception would run Lisp cleanups but be misattributed without this rule. |
 | FM-8 | **Callbacks.** `[ENG]` A C or C++ function pointer is an index into the library's own function table. Passing a Lisp function means growing that table and installing a trampoline of exactly the expected Wasm type; the trampoline re-admits into Lisp under D5 on the calling thread only. P2: the library must export or import a table with sufficient limits, or offer a registration ABI — not every library has a growable table. Each registered Lisp callback is a collector-visible root until deregistered, and table handles are versioned. A Lisp error inside a callback never throws through the foreign frame: it returns a declared error result or is deferred to the caller's boundary. Callbacks from a thread Lisp does not own are unsupported. |
-| FM-9 | **Thread ownership.** `[ENG]` An instance whose memory is unshared cannot leave the Worker that instantiated it (the determinant is the memory's shared flag, not whether the code uses atomic instructions). Worker affinity is the selected policy in every case; funnelled calls need a stated owner-thread and re-entrancy rule. Policy choices, to be declared per library: one instance per Lisp Worker (separate state), or one owning Worker with calls funnelled through the mailbox. Libraries built with a pthreads runtime that expects its own worker pool are out of scope. |
+| FM-9 | **Thread ownership.** A `WebAssembly.Instance` cannot be structured-cloned to another Worker, regardless of its memory's sharedness. A compiled `WebAssembly.Module` can be cloned and instantiated separately in each Worker; shared `WebAssembly.Memory` can be shared, while unshared memory cannot. `[RUN]` Node's structured-clone probe confirms these distinctions. Worker affinity is the selected policy for each instance; funnelled calls need a stated owner-thread and re-entrancy rule. Policy choices, to be declared per library: one instance per Lisp Worker (separate state), or one owning Worker with calls funnelled through the mailbox. Libraries built with a pthreads runtime that expects its own worker pool are out of scope. |
 | FM-10 | **Lifetime.** Foreign objects are integer handles or foreign-memory macptrs on the Lisp side. Release on collection uses the port's equivalent of `library/macptr-termination.lisp`; explicit release is always available. Dropping a library instance invalidates its macptrs detectably (generation in the library identity). P2: explicit release invalidates the handle and suppresses its finalizer, so nothing is freed twice; a library generation does not detect reuse of a freed offset inside a live instance, so allocation handles carry their own validity; finalization is queued to the owning Worker outside the collector's critical section. |
 | FM-11 | **Loading is digest-bound.** A foreign module is a named blob in the namespace under both providers, admitted by digest the way `bootstrap-install.mjs` admits generated modules, instantiated once per policy, and initialized exactly once, under FM-2's bracket, by the convention its declaration names (`_initialize`, a constructor export, or the start section `[ENG]` — not every module has `_initialize`) before any export is callable. The admission record binds the declared ABI, initialization convention, memory and table limits and the import set. No promise of arbitrary C++ binary compatibility. Its imports are an explicit, minimal set — a small WASI shim (clock, random, a stderr sink) — never a toolchain's JavaScript glue object. |
 | FM-12 | **Engine features are qualified, not assumed.** The exception-handling encoding a C++ library was built with needs an engine-matrix row for every deployment engine including Node (N-5); multi-memory needs one only if FM-4's optimization is taken. Copy and view behaviour is requalified after foreign memory growth. |
 | FM-13 | **JavaScript host functions use the same lower layer.** DOM, canvas and clipboard calls for the IDE (CAP-ui) are typed imports with copied payloads. `[SRC]` "The main thread never runs Lisp" (`outline.md:187`), so page calls from a Lisp Worker are mailbox requests to the page; anything answered by a Promise is a mailbox request or, in the deferred profile, JSPI. |
 | FM-14 | **Record layouts, later.** `pref` over C structs from a wasm32 library needs header translations for the wasm32 ABI. That is the one place `lib/db-io.lisp` and interface directories could return: wasm32 databases as named blobs (C-3's last sentence). It is optional, after FM-1…FM-11 work with hand-written declarations. |
 | FM-15 | **Trust.** `outline.md:224`: "Untrusted code requires separate processes and memories." FM-1 gives separate memory; it does not give a separate process. A foreign module is trusted to the extent of the imports it is handed and the CPU it can burn. Do not claim sandboxing. |
+
+**Failure cleanup (FM-7/FM-10).** A recoverable foreign exception may run the
+library's declared destructor and `free` under FM-2 while the instance remains
+valid. A trap invalidates the generation before Lisp cleanup starts. From that
+point, release retires handles and cancels queued foreign finalizers on the host
+side; it never invokes a destructor, `free`, or another export of that instance.
+Callback entries refuse new calls, and their collector roots and the instance's
+host references are released once active calls have unwound. The original trap
+remains the primary foreign failure; teardown diagnostics are secondary. If a
+foreign destructor itself traps, the same invalidation rule applies to all
+remaining releases. Lisp cleanup forms still run with ordinary Lisp semantics.
 
 ### 6.2 Worked example: a C++ library
 
@@ -210,20 +221,24 @@ extern "C" {
     (let ((h (wasm-call "tokenizer" "tok_new" :i32)))                      ; FM-3 lower
       (unwind-protect
            (wasm-call "tokenizer" "tok_feed" :i32 h :i32 p :i32 n :i32)    ; FM-2 bracket
-        (wasm-call "tokenizer" "tok_free" :i32 h :void)))))
+        (release-wasm-handle "tokenizer" h :destructor "tok_free")))))
 ```
 
 Sequence for one `tok_feed` (P2, corrected per FM-2 and FM-7): encode the string
 to UTF-8 in Lisp memory → **FOREIGN{** library `malloc` **}** → admit, reload
 roots, recompute the Lisp byte address → copy Lisp→library with no collecting
 call in between → **FOREIGN{** `tok_feed` through the catching boundary **}** →
-admit, reload roots, box the result → **FOREIGN{** library `free` **}**, on the
-failure path as well. The collector may run and move the Lisp string during any
-bracket; nothing foreign refers to it. P1 had `malloc` and `free` outside the
-bracket and the copy inside it; both were wrong.
+admit, reload roots, box the result → release the foreign allocation. On success
+or a recoverable exception, release calls library `free` under **FOREIGN{ }**.
+After a trap it only retires the host handle, as specified above.
+`release-wasm-handle` and `with-foreign-bytes` use this same validity-aware
+release protocol; they do not turn an invalidated handle into a fresh cleanup
+error. The collector may run and move the Lisp string during any bracket;
+nothing foreign refers to it. P1 omitted the allocator and deallocator brackets.
 
-C++-specific hazards, each `[ENG]`: static constructors do not run unless
-`_initialize` is called (FM-11); an uncaught C++ exception surfaces as a foreign
+C++-specific hazards, each `[ENG]`: static constructors must run exactly once
+through the declared initialization convention (FM-11), which may be
+`_initialize`, a constructor export, or a start section; an uncaught C++ exception surfaces as a foreign
 Wasm exception (FM-7); Emscripten's default exception scheme needs JavaScript
 glue and is excluded (FM-11); a library compiled with the legacy exception
 encoding needs its own matrix row (FM-12).
@@ -244,7 +259,7 @@ declaration format is left open (Q-7).
 | FMT-1 | Scalar call round trip, all four value types, both placements, browser and Node. |
 | FMT-2 | Byte-range copy in and out; non-ASCII and supplementary characters per `outline.md:244`. |
 | FMT-3 | Collection forced during a foreign call — from another thread or from an explicit callback, while foreign execution is active — moves the argument's Lisp source; result correct; no foreign reference to Lisp memory exists (checked by poisoning retired space, as the hash-table fixtures do). |
-| FMT-4 | Foreign *exception* and foreign *trap*, tested separately against the chosen FM-7 boundary: each becomes a Lisp error, cleanups run once, TCR fully restored (the audit-127 full-TCR check), and the trapped library is refused afterwards. |
+| FMT-4 | Foreign *exception* and foreign *trap*, tested separately against the chosen FM-7 boundary: each becomes a Lisp error, Lisp cleanups run once, and TCR is fully restored (the audit-127 full-TCR check). A recoverable exception runs the declared foreign releases; a trap runs none after invalidation, retires handles and queued finalizers, and preserves the original trap as the primary foreign failure. Also trap inside a destructor: subsequent releases must not enter foreign code. The trapped library and its callbacks refuse further calls, and callback roots retire after active calls unwind. |
 | FMT-5 | Lisp nonlocal exit attempted through a callback is refused at the boundary. |
 | FMT-6 | Callback re-admission under D5 with a collection pending. |
 | FMT-7 | Digest mismatch, missing initialization where the declared convention requires it, initialization failure, undeclared import and wrong signature each refuse before any call; start execution is inside the bracket tests; remove-one-check mutants of the admission code each fail a directed case (audit-130 lesson). |
@@ -304,8 +319,15 @@ Claude verified the review's factual claims before accepting them.
 | DB-1 amendment: `.cdb` exclusion does not empty the directory list | `[RUN]` Native image: one directory, `:LIBC`, no database open. `[SRC]` `foreign-types.lisp:161–168` as cited. P1's "iterates an empty list" was wrong. | DB-1, DB-2 rewritten; withdrawal stands, with the no-live-handle condition owed. |
 | CAP-exit: `process.exit` in a Worker | `[ENG]` Consistent with Node's documented behaviour; not executed here. | CAP-exit rewritten as an owner request. |
 | CAP-ns-ro, CAP-ns-rw, CAP-ns-enum, CAP-stdio, CAP-cpus, CAP-ui, the `Math` paragraph, FM-1, FM-8, FM-10, FM-11, FMT-3, FMT-7, FMT-9, Q-8 | Read against the outline and the accepted units; no contrary evidence. | Adopted as written above. CAP-stdio is split into CAP-stdio and CAP-tty. |
-| FM-9: affinity "is not a consequence of absence of atomic instructions" | Partly. The determinant is the memory's shared flag, as Codex implies; but an instance with unshared memory genuinely cannot move between Workers, so for such a library affinity is forced, not only chosen. | FM-9 states both. |
+| FM-9: affinity "is not a consequence of absence of atomic instructions" | P2 initially attributed instance mobility to memory sharedness. Codex's follow-up structured-clone probe confirms that instances never clone, modules clone, and only shared memory clones. | FM-9 corrected to distinguish instances, modules and memory. |
 | U-1…U-4, N-1, N-2 marked UNVERIFIED | Correct labels: the first are relayed conversation, the second are unexecuted engine statements. | Unchanged. |
+
+Codex's review of a5802033 identified a conflict between invalidation on trap
+and unconditional foreign cleanup. On the user's instruction to fix it, the
+failure-cleanup contract, example and FMT-4 now distinguish recoverable releases
+from host-only retirement after a trap. FM-9 and the constructor warning were
+also corrected. These are proposal corrections, not an adoption or execution
+of the foreign interface.
 
 Still open for the user after P2: adoption of H-1…H-6 and the provider split;
 withdrawal of STAGE1-STARTUP-DB-R1 and 44531e64; not integrating 541b4a3f

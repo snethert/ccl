@@ -1,3 +1,12 @@
+## 2026-09-20 — correct foreign trap teardown in HOSTFM-P2
+
+On the user's instruction to fix the review findings, distinguish foreign
+release after a recoverable exception from host-only retirement after a trap.
+The example and proposed FMT-4 checks now prohibit re-entering an invalidated
+library, including through queued finalizers or later destructors. Correct the
+Worker-cloning explanation and the initialization-convention warning. Document
+checks pass; no runtime, evidence, acceptance or inventory changes.
+
 ## 2026-09-19 — clarify the LL06 review follow-up
 
 Correct the plan's LL12 label to closures and callable metadata, schedule closed
