@@ -1,0 +1,10 @@
+{
+ "attempts": {
+  "r1": "Native oracle passed. Target compilation refused the first private call because its symbol was in CCL while compile-call-form binds links in WASM32-COMPILER. Added explicit private-link symbol mapping; selected IGNORE declarations become NIL without changing native oracle forms.",
+  "r2": "All 22 modules compiled; the first driver ran before check.mjs had been written. Running the completed harness against these bytes passed all native/movement comparisons.",
+  "r3": "Positive execution and first two controls passed. Reader-operation fault failed earlier, at pc_type's post-movement data read, than the expected pc_contents diagnostic. Corrected the retained diagnostic. No runtime fix.",
+  "r4": "All comparisons and four compiled controls passed, with non-idempotent operand-effect cases added before retention.",
+  "r5": "Final candidate also asserts the reused executable/service identities and native-R6 compiler binding. Fresh verifier recompiles corpus and all four controls."
+ },
+ "retained": ["ccl-pop-consumers-r1.log","ccl-pop-consumers-r1/build/compiled/compile.log","ccl-pop-consumers-r1/build/compiled/lowered.lisp","ccl-pop-consumers-r2.log","ccl-pop-consumers-harness-r1.log","ccl-pop-consumers-r3.log","ccl-pop-consumers-r3/faults/reader-operation/rejected.log","ccl-pop-consumers-r4.log"]
+}

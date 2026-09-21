@@ -515,3 +515,14 @@ while exposing another depth site and backed-region test gaps. The
 replays the prior unit with portable dependency keys and covers those guards
 without service changes. Review and acceptance still precede integration.
 Remaining LL15 implementation and worklist obligations above are unchanged.
+
+2026-09-21: [Population consumers](../../../tests/wasm/stage1/population-consumers/README.md)
+now generate the data/setter entries and keyword type answers for the strong
+representation, with selected native PUSH/SETF expansion and moving closure,
+cleanup and transfer cases. This advances consumer implementation beyond the
+raw service. The rewrite is scoped to selected runtime definitions, not general
+user-source admission. Real symbol/macro installation, Lisp condition mapping
+for bad inputs, real member layouts and production image-root discovery remain
+required. The [audit-139 supplement](../../../tests/wasm/stage1/startup-review-139/README.md)
+closes the residual refusal observations alongside this work. Neither is accepted
+or integrated and neither changes LL15 worklist membership or credit.

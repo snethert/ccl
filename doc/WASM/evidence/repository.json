@@ -1,34 +1,49 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "b3f93947c87b840ab5afd81a2f441f31c9b2dba448e021a6c4e55d5629f9a2c8",
-  "commit": "c88fde02537a7c3a59174fcd4271ffa887eca520",
-  "immutable_evidence_files": 237494,
+  "catalog_sha256": "da426fb313f427b356adabdc8c2c15b6221c72a8e0deb29670b6ba08f847892c",
+  "commit": "5ced73383858646447870295fe0103607c92392b",
+  "immutable_evidence_files": 237720,
   "last_scoped_addition": {
-    "bytes": 303553,
-    "directory": "2026-09-21-stage1-startup-review-138-r1",
-    "files": 91
+    "bytes": 4601059,
+    "directory": "2026-09-21-stage1-population-consumers-r1 + 2026-09-21-stage1-startup-review-139-r1",
+    "files": 225
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Audit 138 bound; portable replay and bounded-admission follow-up proposed, no LL15 credit.",
-  "source_index_sha256": "39612cd56fad64e1ef30402d1418f81b4753a97e652fd778d0e5172731ee1688",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-startup-review-138-r1.json",
+  "scope": "Stage 1: 21 accepted, 10 missing. Audit 139 bound. Generated population consumers and residual refusal controls executed; no acceptance/integration or LL15 credit.",
+  "source_index_sha256": "fb17f7926cee79a81a92b180d06d52f975883447f4e2f5df3728e4384659147c",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-population-consumers-r1.json",
   "verification": {
-    "deterministic_files": 45,
-    "source_pins": 88,
-    "status": "PASS",
-    "summary": {
-      "binaries_unchanged": true,
-      "dependencies": 201,
-      "directed_checks": 50,
-      "new_faults": 16,
-      "parent_deterministic_files": 258,
-      "parent_source_pins": 82,
-      "slot_credit": false,
-      "status": "PASS"
+    "STAGE1-POPULATION-CONSUMERS-R1": {
+      "deterministic_files": 168,
+      "source_pins": 98,
+      "status": "PASS",
+      "summary": {
+        "collections": 80,
+        "comparisons": 64,
+        "compiler_unchanged": true,
+        "faults": 4,
+        "modules": 22,
+        "native_cases": 32,
+        "slot_credit": false,
+        "status": "PASS"
+      }
+    },
+    "STAGE1-STARTUP-REVIEW-139-R1": {
+      "deterministic_files": 22,
+      "source_pins": 93,
+      "status": "PASS",
+      "summary": {
+        "directed_checks": 26,
+        "new_faults": 5,
+        "parent_replay": "reused by hash; audit 139 reproduced it",
+        "services_unchanged": true,
+        "slot_credit": false,
+        "status": "PASS"
+      }
     }
   },
   "version": 1

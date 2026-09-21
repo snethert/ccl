@@ -3222,3 +3222,16 @@ change or LL15 credit.
   sites, partial-SET preservation and trap-as-failure checks. Clause inventory
   and standing admission rule retained. No shared service/compiler changes,
   acceptance or LL15 credit.
+
+- 2026-09-21: Land Claude audit 139 from 30499270 as 5a34053b. All audit-138
+  findings closed; services correct in the review probes. Carry the three small
+  residual gaps as a test-only supplement: table/static overlap, nested sentinel
+  keys and a visibly mutating SET before result refusal; 26 checks and five
+  faults. Correct the clause inventory without changing earlier packets.
+- 2026-09-21: Implement selected generated population consumers on the approved
+  strong representation: contents/setter entries, keyword types and CCL-expanded
+  PUSH/SETF, with named/function/APPLY calls, local defaults, closures, cleanup
+  and exits under moving collection. 22 modules, 32 native cases at two
+  placements, 80 collections and four compiled faults. Fresh detached replay
+  reproduces 168 deterministic files at 98 pins. Compiler/runtime unchanged;
+  actual CCL symbol installation and public condition boundaries remain open.

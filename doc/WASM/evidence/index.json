@@ -2870,10 +2870,32 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-138-r1/packet.json",
       "sha256": "b4fdb34ae7547bee787b102ca4a97d679eef0c3225025d7fe220a4576ce35377",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit 138 follow-up: root-relative checkout/evidence dependencies and detached-checkout replay of all 258 prior deterministic files; independent numeric depth guards in EQL/EQUAL, independent cons depth, five backed-region guards, opaque static header and population clause isolation. Fifty new directed checks at low/high placements and sixteen compiled faults rejected. Exact service binaries unchanged. Clause inventory and standing admission rule. Auxiliary, not accepted or integrated, no LL15 credit. Audit 139 closes all audit-138 findings and finds no service defect. Three nonblocking test gaps remain: table/static sub-clauses, nested sentinels and observable SET-before-refusal. STAGE1-STARTUP-REVIEW-139-R1 carries those cases with the next consumer implementation; original services unchanged. Not accepted.",
+      "review_commit": "5a34053bc8bd5d3eeb2144000cf9136a61e99734",
+      "review_sha256": "5adc052f48022459ab544bceeeabffa05c82a9c60638493dd43e5d2c2031b3f0"
+    },
+    {
+      "id": "STAGE1-STARTUP-REVIEW-139-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-139-r1/packet.json",
+      "sha256": "e446d1db25c16c2258cca09eb93a43fa71642beb4d84d00142df72fd0040dacf",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit 138 follow-up: root-relative checkout/evidence dependencies and detached-checkout replay of all 258 prior deterministic files; independent numeric depth guards in EQL/EQUAL, independent cons depth, five backed-region guards, opaque static header and population clause isolation. Fifty new directed checks at low/high placements and sixteen compiled faults rejected. Exact service binaries unchanged. Clause inventory and standing admission rule. Auxiliary, not accepted or integrated, no LL15 credit."
+      "scope": "Audit 139 residual malformed-input controls: table/static forbidden sub-clauses, nested empty/deleted markers in both numeric fields/modes and cons cars, and SET preservation with a real replacement cons. Twenty-six checks at two placements, five separately compiled faults. Updated clause inventory. Service binaries unchanged. Prior native/browser replay reused by hash. No new runtime hold or LL15 credit; test supplement, not accepted."
+    },
+    {
+      "id": "STAGE1-POPULATION-CONSUMERS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-consumers-r1/packet.json",
+      "sha256": "88e16db3a60bf2872081737751621c906cf0af57b7f16d349998e1347eddfa56",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Selected generated population contents/setter and keyword type entries, native-expanded PUSH/SETF with non-idempotent ordering observations, function/APPLY calls, local defaults, closures, cleanup and nonlocal exits. Twenty-two modules, 32 native cases at two placements, 64 comparisons and 80 collections with poisoned old space; four compiled consumer faults. Fresh detached replay 168 deterministic files at 98 pins. Compiler/service/adapter/collector unchanged; native R6 reused by exact hash. Selected runtime lowering only; real symbol/macro installation, catchable bad-input errors, member layouts and image roots still owed. Auxiliary proposal, not accepted/integrated, no LL15 credit."
     }
   ],
   "current_runs": [

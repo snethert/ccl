@@ -1,0 +1,224 @@
+{
+  "scope": "Corrected audit-139 inventory. The forbidden helper is split into four sub-clauses; recursive sentinels require directed coverage. Original inventory retained as history.",
+  "clauses": [
+    {
+      "service": "population",
+      "clause": "object tag",
+      "disposition": "directed",
+      "case": "object tag",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "end == base+16",
+      "disposition": "directed",
+      "case": "exact extent",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "type aligned",
+      "disposition": "directed",
+      "case": "type alignment",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "result aligned",
+      "disposition": "directed",
+      "case": "result alignment",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "result disjoint from object",
+      "disposition": "directed",
+      "case": "publication alias",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "op <= 2",
+      "disposition": "directed",
+      "case": "operation bound",
+      "source": "startup-review-137/population-probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "backed(base,16)",
+      "disposition": "directed",
+      "case": "object backed",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "backed(result,16)",
+      "disposition": "directed",
+      "case": "SET before result validation; real cons replaces NIL",
+      "source": "startup-review-139/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "backed(key-1,8)",
+      "disposition": "directed",
+      "case": "key backed",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "header == 762",
+      "disposition": "directed",
+      "case": "population header",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "type <= 4",
+      "disposition": "directed",
+      "case": "population type range",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "pad == 0",
+      "disposition": "directed",
+      "case": "population padding",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "key cons tag",
+      "disposition": "directed",
+      "case": "key tag",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "population",
+      "clause": "base aligned",
+      "disposition": "equivalent",
+      "argument": "Removed in audit137 derivative: object tag 6 entails (object-6)%8 == 0. Binary identity with original asserted."
+    },
+    {
+      "service": "population",
+      "clause": "key != NIL before SET list guard",
+      "disposition": "equivalent",
+      "argument": "NIL is cons-tagged and its eight bytes are backed in every admitted layout; applying the guard to NIL also succeeds. Header admission itself requires the larger address range used by this fixture."
+    },
+    {
+      "service": "keys_valid",
+      "clause": "cons span",
+      "disposition": "directed",
+      "case": "cons span",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "header span",
+      "disposition": "directed",
+      "case": "header span",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "static header disjointness",
+      "disposition": "directed",
+      "case": "static opaque header",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "numeric pending depth",
+      "disposition": "directed",
+      "case": "number depth",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "cons pending depth (EQUAL)",
+      "disposition": "directed",
+      "case": "cons depth",
+      "source": "startup-review-138/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "steps <= KEY_STEPS",
+      "disposition": "directed",
+      "case": "cyclic-structural-key",
+      "source": "equality-tables/check.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "payload span",
+      "disposition": "directed",
+      "case": "unbacked-string",
+      "source": "equality-tables/check.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "EMPTY / DELETED rejected",
+      "disposition": "directed",
+      "case": "nested marker 243/251 in both fields of complex components; cons car 243/251",
+      "source": "startup-review-139/probe.mjs"
+    },
+    {
+      "service": "keys_valid",
+      "clause": "sz != NONE",
+      "disposition": "equivalent",
+      "argument": "NONE is UINT32_MAX. The following span uses 4+(W)sz, wider than the maximum admitted memory, and refuses every such shape independently."
+    },
+    {
+      "service": "same",
+      "clause": "a==TRUE",
+      "disposition": "equivalent",
+      "argument": "Canonical T has no inspected equality header; unequal operands reaching the generic header comparison return false without this early shortcut. Canonical identity itself is handled by a==b."
+    },
+    {
+      "service": "same",
+      "clause": "b==TRUE",
+      "disposition": "equivalent",
+      "argument": "Canonical T has no inspected equality header; unequal operands reaching the generic header comparison return false without this early shortcut. Canonical identity itself is handled by a==b."
+    },
+    {
+      "service": "same",
+      "clause": "a==NIL",
+      "disposition": "directed",
+      "case": "equal lookup 0,47",
+      "source": "startup-review-137 extended equality matrix"
+    },
+    {
+      "service": "same",
+      "clause": "b==NIL",
+      "disposition": "directed",
+      "case": "equal lookup 47,0",
+      "source": "startup-review-137 extended equality matrix"
+    },
+    {
+      "service": "forbidden",
+      "clause": "table overlap",
+      "disposition": "directed",
+      "case": "table overlap",
+      "source": "startup-review-139/probe.mjs"
+    },
+    {
+      "service": "forbidden",
+      "clause": "scratch overlap",
+      "disposition": "directed",
+      "case": "scratch-alias",
+      "source": "equality-tables/check.mjs"
+    },
+    {
+      "service": "forbidden",
+      "clause": "publication overlap",
+      "disposition": "directed",
+      "case": "publication-alias",
+      "source": "equality-tables/check.mjs"
+    },
+    {
+      "service": "forbidden",
+      "clause": "static data/stack overlap",
+      "disposition": "directed",
+      "case": "static cons overlap",
+      "source": "startup-review-139/probe.mjs"
+    }
+  ]
+}
