@@ -3785,6 +3785,12 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
     (case op
+      (ccl::eq
+       (let* ((left (second args)) (right (third args))
+              (form (cond ((eql (ccl::acode-fixnum-form-p left) 0) right)
+                          ((eql (ccl::acode-fixnum-form-p right) 0) left))))
+         (when (and form (ccl::acode-form-typep form 'fixnum t))
+           (b-scalar (ccl::make-acode (ccl::%nx1-operator ccl::%izerop) (first args) form)))))
       ((ccl::logand2 ccl::logior2)
        (bootstrap-primary (bootstrap-logical-call (if (eq op 'ccl::logand2) 'logand 'logior) args)))
       ((ccl::char-code ccl::%char-code ccl::code-char ccl::%code-char ccl::%valid-code-char)
@@ -3814,10 +3820,13 @@
         (bootstrap-numeric-call
          (ecase op (ccl::add2 '+) (ccl::sub2 '-) (ccl::mul2 '*) (ccl::div2 '/)) args)))
       (ccl::numcmp
-       (bootstrap-primary
-        (bootstrap-numeric-call
-         (ecase (ccl::acode-immediate-operand (car args))
-           (:lt '<) (:le '<=) (:eq '=) (:ne '/=) (:ge '>=) (:gt '>)) (cdr args))))
+       (if (every (lambda (x) (ccl::acode-form-typep x 'fixnum t)) (cdr args))
+         (b-scalar (ccl::make-acode (ccl::%nx1-operator ccl::%i<>)
+                                   (first args) (second args) (third args)))
+         (bootstrap-primary
+          (bootstrap-numeric-call
+           (ecase (ccl::acode-immediate-operand (car args))
+             (:lt '<) (:le '<=) (:eq '=) (:ne '/=) (:ge '>=) (:gt '>)) (cdr args)))))
       ((ccl::lisptag ccl::fulltag)
        (b-wat "(i32.shl (i32.and ~a (i32.const ~d)) (i32.const 2))"
               (b-scalar (first args)) (if (eq op 'ccl::lisptag) 3 7)))

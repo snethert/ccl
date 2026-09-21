@@ -134,7 +134,7 @@ EXPORT U collect(U config) {
     if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
     scan=n;size=4+(W)n*4;
    }
-   else if(node_subtag(tag)||(tag==130&&n==6)){scan=n;size=4+(W)n*4;}
+   else if(node_subtag(tag)||(tag==130&&n>=1)){scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;
   }

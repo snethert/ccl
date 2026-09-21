@@ -1,3 +1,24 @@
+## 2026-09-21 — accept audit 149 and integrate bootstrap witnesses
+
+On Steve’s “accept”, import audit 149 verbatim (8c3a6cf5 → d43f816f) and
+accept the witnesses packet. The prior “accept as advised” was Steve’s own
+message after audit 148, as the existing acceptance record already states.
+
+Integrate the reviewed architecture, collector and owner byte for byte. Fold
+the compiler’s fixnum selection into the existing CASE and remove the hook and
+helper; 885 generated/result files remain byte-identical, including every module,
+native answer and execution record. Fresh R6/R6a on the final compiler/arch
+passes; all 164 native FASLs restore. Reuse the 21,843 native tests only after
+exact rebuilt FASL/snapshot equality. All forty inherited collector-owner checks
+pass against the new collector and owner, closing audit-149 C-11.
+
+Throughput stays 301 originals executed, 290 with non-NIL witnesses. Carry Lisp
+ASSQ, unknown handler-class admission, SIGNAL spread refusal, signed zero,
+remaining input recipes and the corrected module list/target branches for the
+nineteen POSIX stops into the next implementation packet. Replace the harness
+patch chain when extending it next. No LL15 or BT-0 completion credit; the ledger
+stays 21 accepted and 12 missing of 33.
+
 ## 2026-09-21 — execute member and constructor witnesses, repair reader environments
 
 Following Steve’s requested order, add member inputs before more closed-body

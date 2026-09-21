@@ -427,3 +427,27 @@ Literal-zero subtraction of negative double zero differs from the native compile
 Exact integer division is supported; nonintegral quotients refuse rather than truncate. Ratios, bignum logical operations, the full dynamic type system, proper native improper-list conditions and initialized object layouts remain outside the current executable scope.
 
 The three original packet verifiers replay at their proposal commits after integration. No LL15 or BT-0 completion credit is claimed.
+
+## Audit 149 — accepted witnesses integration
+
+Audit-149 C-11 closed here: all forty collector-owner checks pass against the new collector and owner. The optional generated-boundary check is outside that count; generated execution is retained separately.
+
+The fixnum selection is folded into the existing operator CASE, with no helper hook. All generated modules and checked outputs remain byte-identical to the reviewed packet.
+
+ASSQ as a Lisp definition in level-0/WASM32 remains next-packet work.
+
+Literal handler classes outside the admitted set still need compile-time refusal; do not confuse this with the now-tested explicit condition-constructor refusal.
+
+The SIGNAL-spread refusal case remains owed; the other six condition/bit-vector refusal cases are retained.
+
+Literal-zero subtraction of negative double zero retains the native-compiler signed-zero observation from audit 148; no behavior change here.
+
+The next fixture extension should use a written harness instead of the current string-replacement chain.
+
+Correct the Wasm module list, including removing or replacing linux-files, and implement Wasm branches at the nineteen POSIX lookup sites. Do not substitute native OS values. The next denominator must use that corrected list.
+
+Eighty original closed definitions still have no input recipe (87 when the six fixture helpers and EQL primitive are included). Eleven executed definitions remain NIL-only as disclosed.
+
+%PATH-MEMBER is uncredited because native source reads beyond a string bound before testing termination. Raw array subtype/flag return values require representation-aware expectations.
+
+Original proposal replay stays at 9f5bd0cc after integration. No LL15 or BT-0 completion credit is claimed.

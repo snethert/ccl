@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept",
+    "context": "Direct reply to audit 149 recommending acceptance and integration of STAGE1-BOOTSTRAP-WITNESSES-R1."
+  },
+  "prior_authorization_attribution": {
+    "speaker": "user (Steve)",
+    "quote": "accept as advised",
+    "source": "Direct user message following audit 148 in this conversation, not reviewer text.",
+    "record": "acceptance-bootstrap-dependencies.json",
+    "record_sha256": "277197a1a6d0fa60646b2aeb16cb9f54ec63def705765daf56e3456f885733aa"
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-WITNESSES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-witnesses-r1/packet.json",
+      "sha256": "45e7858663bf3219cc84ecc167f81dd3dc62c7660186c79a63db5516bb7a2673"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "8c3a6cf578ddd3142514e3ced6742c334c3b7b3b",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "b4d46bee204d7eaa143f64d1c7d93dfc7b6808414c4429dc89e03e81a3b2e2a8",
+      "import_commit": "d43f816fecebb73d706b04e3b2a430dcfe186e0e"
+    }
+  ],
+  "observations": [
+    "Audit-149 C-11 closed here: all forty collector-owner checks pass against the new collector and owner. The optional generated-boundary check is outside that count; generated execution is retained separately.",
+    "The fixnum selection is folded into the existing operator CASE, with no helper hook. All generated modules and checked outputs remain byte-identical to the reviewed packet.",
+    "ASSQ as a Lisp definition in level-0/WASM32 remains next-packet work.",
+    "Literal handler classes outside the admitted set still need compile-time refusal; do not confuse this with the now-tested explicit condition-constructor refusal.",
+    "The SIGNAL-spread refusal case remains owed; the other six condition/bit-vector refusal cases are retained.",
+    "Literal-zero subtraction of negative double zero retains the native-compiler signed-zero observation from audit 148; no behavior change here.",
+    "The next fixture extension should use a written harness instead of the current string-replacement chain.",
+    "Correct the Wasm module list, including removing or replacing linux-files, and implement Wasm branches at the nineteen POSIX lookup sites. Do not substitute native OS values. The next denominator must use that corrected list.",
+    "Eighty original closed definitions still have no input recipe (87 when the six fixture helpers and EQL primitive are included). Eleven executed definitions remain NIL-only as disclosed.",
+    "%PATH-MEMBER is uncredited because native source reads beyond a string bound before testing termination. Raw array subtype/flag return values require representation-aware expectations.",
+    "Original proposal replay stays at 9f5bd0cc after integration. No LL15 or BT-0 completion credit is claimed."
+  ],
+  "slot_credit": false
+}
