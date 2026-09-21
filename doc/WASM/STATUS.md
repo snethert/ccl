@@ -169,3 +169,5 @@ Claude's sign-off includes the v2 evidence binding tooling and evidence reposito
 H(G) is optional future work and blocks no scheduled stage. Historical H1 archives remain explicitly unavailable where not retained; their prior claims are not promoted to U1.
 
 The isolated [measurement fixture](stage0/abi-measurements.md) passes 486 correctness cases, 279 controls, 72 batch checks and 27 batch controls. Its original report remains NO_SELECTION: the exploratory timings do not support a speed ranking. The separate [B choice](stage0/abi-choice.md) uses simplicity and correctness, not that statistical rule. The [LL21-a correction](stage0/project-acceptance.md) preserves all original execution evidence and the 26 valid acceptances. It changes no runtime execution. Policy version 3 explicitly defers comparative timing, retaining version 2 and its numerical parameters for optional future work.
+
+Bootstrap front-end entry: **accepted and integrated**, audit 142 (`01012704`); [integration](stage1/integration-bootstrap-frontend.json). Compiler admission 426/2492, four original definitions executed. No additional LL15 credit.

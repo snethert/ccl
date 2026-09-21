@@ -1,42 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "47e8e7cee6e9f09742237d99d5b496432fbaf3f52a63b6fb2ceab5a1f7d02f9d",
-  "commit": "fd42e23fd43e87d3e0d285a6b7c5877eedd52d2c",
-  "immutable_evidence_files": 238331,
+  "catalog_sha256": "c278ffcb50c87e4e620a242f900851ad3928f1978efc96a4921938fbe0914ae0",
+  "commit": "519bff2b9fe38d50f89cda8e0925eb3aaeaa53e4",
+  "immutable_evidence_files": 238335,
   "last_scoped_addition": {
-    "bytes": 40526548,
-    "directory": "2026-09-21-stage1-bootstrap-frontend-r1 and bootstrap-coverage-decision-r1",
-    "files": 213
+    "directory": "2026-09-21-stage1-bootstrap-frontend-accepted",
+    "files": 4,
+    "bytes": 442967
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 12 missing of 33 after explicit BT-0 authorization. Audit 141 bound. Bootstrap front-end proposal executed/replayed; no acceptance/integration or LL15 credit.",
-  "source_index_sha256": "20fb7fadbb9b259be3df89bc53730bed135fd5a8066fabe898fdaf234acd475c",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-bootstrap-frontend-r1.json",
+  "scope": "Stage 1 21 accepted, 12 missing of 33. Bootstrap entry accepted and integrated; no additional slot credit.",
+  "source_index_sha256": "434a98c4da12c6c5e68055ad88180b9b7ace7d281e9dc175415875b40ff6ae27",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-frontend-accepted.json",
   "verification": {
-    "STAGE1-BOOTSTRAP-FRONTEND-R1": {
-      "deterministic_files": 100,
-      "native_rebuilt": false,
-      "source_pins": 138,
-      "status": "PASS",
-      "summary": {
-        "admission_controls": 22,
-        "baseline_admitted": 33,
-        "collections": 92,
-        "comparisons": 184,
-        "executed_original_definitions": 4,
-        "inventory_functions": 2492,
-        "legacy_identical": 10,
-        "modules": 16,
-        "native_cases": 46,
-        "proposal_admitted": 426,
-        "reader_and_name_skips": 268,
-        "status": "PASS"
-      }
-    }
+    "status": "PASS",
+    "method": "Generator equals retained proposal before integration; integrated bytes equal retained execution and native proposal; native R6/R6a and deterministic execution reused by exact compiler identity.",
+    "native": "e2795be9b76b36bab83870b2d84036e907573efc7955f7a4bdc3d64d5e831b3d",
+    "execution": "5e9f43e0441685ffa317c1e39284ee76140849f86c7c00a323ed7fd273a5f31c"
   },
   "version": 1
 }

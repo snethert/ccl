@@ -1057,20 +1057,35 @@
             (write-string cleanup-code out)
             (format out "(local.set $count (local.get ~a)) ~a" saved-count (b-load-control retained))))))))
 
+(defvar *bootstrap-front-end* nil)
+
 (defun b-scalar (ir)
   (when (b-raw-code-p ir) (return-from b-scalar (b-raw-code-text ir)))
   (let ((*b-tail-position* nil) (*b-producer-target* nil)) (b-scalar-inner ir)))
 (defun b-scalar-inner (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
+      ((not)
+       (unless (and *bootstrap-front-end* (= (length args) 2)
+                    (member (ccl::acode-immediate-operand (first args)) '(:eq :ne)))
+         (refuse :bootstrap-not))
+       (b-wat "(if (result i32) (i32.~a ~a (i32.const 77825)) (then (i32.const 77838)) (else (i32.const 77825)))"
+              (if (eq (ccl::acode-immediate-operand (first args)) :eq) "eq" "ne")
+              (b-scalar (second args))))
       (ccl::list
        (b-raw-code-text (reduce (lambda (a b) (make-b-raw-code :text (b-cons a b))) (first args) :from-end t :initial-value (make-b-raw-code :text "(i32.const 77825)"))))
       (ccl::typed-form
+       (when *bootstrap-front-end*
+         ;; NX1's optional third operand requests a runtime type check.
+         ;; Do not erase a check which the target cannot yet implement.
+         (when (third args) (refuse :bootstrap-typecheck))
+         (return-from b-scalar-inner (b-scalar (second args))))
        (unless (and (eq (first args) 'list)
                     (member (ccl::acode-operator-name (ccl::acode-operator (second args))) '(ccl::special-ref ccl::bound-special-ref))
                     (member (first (ccl::acode-operands (second args))) '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))) (refuse :b-condition-typed-form))
        (b-scalar (second args)))
       (ccl::eq
+       (when *bootstrap-front-end* (return-from b-scalar-inner (bootstrap-eq args)))
        (unless (and (= (length args) 3) (eq (ccl::acode-immediate-operand (first args)) :eq)) (refuse :b-condition-comparison))
        (b-wat "(block (result i32) ~a)" (b-frame 2 (lambda (root)
          (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) (if (result i32) (i32.eq (i32.load offset=8 ~a) (i32.load offset=12 ~a)) (then (i32.const 77838)) (else (i32.const 77825)))"
@@ -1096,9 +1111,9 @@
              ((member (first args) *b-restart-names*) (b-restart-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value_lisp ~a (local.get $top))" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
+      ((ccl::builtin-call ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
-      ((car cdr ccl::%car ccl::%cdr rplaca rplacd ccl::%rplaca ccl::%rplacd)
+      ((car cdr ccl::%car ccl::%cdr rplaca rplacd ccl::%rplaca ccl::%rplacd ccl::set-car ccl::set-cdr)
        (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" (b-checked-cons-operation op args)))
       (t (emit-expression ir)))))
 ;;; Multiple-value arguments grow directly in a rooted continuation. Each
@@ -1180,6 +1195,12 @@
     (return-from b-multiple (b-wat "(local.set $value ~a) ~a (i32.store (local.get $results) (local.get $value)) (local.set $count (i32.const 1))" (b-raw-code-text ir) (b-ensure-results "(i32.const 1)"))))
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
+      (ccl::typed-form
+       (if *bootstrap-front-end*
+         (progn
+           (when (third args) (refuse :bootstrap-typecheck))
+           (b-multiple (second args)))
+         (b-multiple (make-b-raw-code :text (b-scalar ir)))))
       (ccl::%decls-body (b-multiple (first args)))
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       (ccl::catch (b-catch (first args) (second args)))
@@ -1202,6 +1223,14 @@
       (ccl::lexical-function-call
        (b-local-call 'b-local-function (first args) (second args) (third args)))
       ((ccl::let ccl::let*) (b-let op args))
+      (ccl::builtin-call
+       (unless *bootstrap-front-end* (refuse :bootstrap-builtin))
+       (let ((index (ccl::acode-fixnum-form-p (first args))))
+         (unless (and index (<= 0 index) (< index (length ccl::%builtin-functions%)))
+           (refuse :bootstrap-builtin-index))
+         (b-call (ccl::make-acode (ccl::%nx1-operator ccl::immediate)
+                                 (elt ccl::%builtin-functions% index))
+                 (second args))))
       (ccl::call
        (when (and *b-float-service* (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
          (member (first (ccl::acode-operands (first args))) '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double)))
@@ -2508,7 +2537,7 @@
 (in-package :wasm32-compiler)
 (defun b-checked-cons-operation (op forms)
   (let* ((readp (member op '(car cdr ccl::%car ccl::%cdr)))
-         (carp (member op '(car rplaca ccl::%car ccl::%rplaca)))
+         (carp (member op '(car rplaca ccl::%car ccl::%rplaca ccl::set-car)))
          (offset (if carp wasm32::cons.car wasm32::cons.cdr)))
     (b-frame (length forms)
       (lambda (root)
@@ -2521,7 +2550,7 @@
               (b-wat "(if (result i32) (i32.eq ~a (i32.const 77825)) (then ~a) (else (if ~a (then ~a)) (call $span (i32.sub ~a (i32.const 1)) (i32.const 8)) ~a))"
                 p (if readp "(i32.const 77825)" (b-type-failure p 'cons t)) bad (b-type-failure p (if readp 'list 'cons) t) p
                 (if readp (b-wat "(i32.load (i32.add ~a (i32.const ~d)))" p offset)
-                  (b-wat "(i32.store (i32.add ~a (i32.const ~d)) ~a) ~a" p offset v p))))) s)))))))
+                  (b-wat "(i32.store (i32.add ~a (i32.const ~d)) ~a) ~a" p offset v (if (member op '(ccl::set-car ccl::set-cdr)) v p)))))) s)))))))
 (defun b-unbound-runtime ()
  "(func $special_read_lisp (param $symbol i32) (param $top i32) (result i32) (local $value i32)
  (local.set $value (i32.load (call $special_location (local.get $symbol))))
@@ -3275,3 +3304,91 @@
  (if (i32.eq (i32.load (local.get $p)) (i32.const 791)) (then (call $span (local.get $p) (i32.const 16)) (return (i32.const 64))))
  (if (i32.or (i32.eq (local.get $tag) (i32.const 10)) (i32.or (i32.eq (local.get $tag) (i32.const 26)) (i32.or (i32.eq (local.get $tag) (i32.const 71)) (i32.eq (local.get $tag) (i32.const 79))))) (then (throw $call_error (i32.const 32))))
  (i32.const 0))")
+
+;;; Bootstrap source is trusted CCL source, read in the target environment.
+;;; CCL's front end handles lexical macro scope and declarations. Unsupported
+;;; acode still refuses in the Wasm emitter; the legacy source API is unchanged.
+(in-package :wasm32-compiler)
+
+(defun compile-bootstrap-form (form name links)
+  (unless (and (every (lambda (entry)
+                       (and (listp entry) (= (length entry) 2)
+                            (symbolp (first entry)) (first entry)
+                            (stringp (second entry))
+                            (<= 1 (length (second entry)) 64)
+                            (every (lambda (c)
+                                     (find c "abcdefghijklmnopqrstuvwxyz0123456789_-"))
+                                   (second entry))))
+                     links)
+               (= (length links) (length (remove-duplicates links :key #'first)))
+               (= (length links) (length (remove-duplicates links :key #'second :test #'equal))))
+    (refuse :bootstrap-links))
+  (let ((*bootstrap-front-end* t)
+        (*b-call-mode* t)
+        (*b-special-names* '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))
+        (*b-keywords* nil)
+        (*b-call-links* links)
+        (*module-name* name)
+        (*module-result-tag* (gensym "BOOTSTRAP"))
+        ;; Native compiler macros may fold using host representation facts.
+        ;; Ordinary macros and NX1's target-aware operators remain available.
+        (ccl::*nx-compile-time-compiler-macros* nil)
+        (ccl::*compiler-macros* (make-hash-table :test #'eq))
+        (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
+    (catch *module-result-tag*
+      (ccl::compile-named-function (bootstrap-function-form form)
+                                  :name (if (eq (car form) 'defun) (second form) name)
+                                  :target :wasm32
+                                  :policy ccl::*default-compiler-policy*)
+      (refuse :b-no-output))))
+
+(defun compile-bootstrap-source (source name links &optional (package "CCL"))
+  (call-with-target
+   (lambda ()
+     (let ((*read-eval* nil) (*package* (or (find-package package)
+                                         (refuse :bootstrap-package))))
+       (with-input-from-string (stream source)
+         (let ((form (read stream)) (end (gensym "EOF")))
+           (unless (eq end (read stream nil end)) (refuse :bootstrap-source))
+           (compile-bootstrap-form form name links)))))))
+
+(defun bootstrap-function-form (form)
+  (if (eq (car form) 'defun)
+    (let* ((expansion (macroexpand-1 form))
+           (definition (second expansion))
+           (function (second definition)))
+      ;; Extract the function from CCL's own DEFUN expansion. In particular,
+      ;; keep GLOBAL-FUNCTION-NAME, declarations and the implicit BLOCK.
+      (unless (and (eq (car expansion) 'progn)
+                   (eq (car definition) 'ccl::%defun)
+                   (eq (car function) 'ccl::nfunction)
+                   (equal (second function) (second form)))
+        (refuse :bootstrap-defun-expansion))
+      (third function))
+    form))
+
+(defun bootstrap-eq (args)
+  (unless (and (= (length args) 3)
+               (member (ccl::acode-immediate-operand (first args)) '(:eq :ne)))
+    (refuse :bootstrap-comparison))
+  (b-wat "(block (result i32) ~a)"
+         (b-frame 2
+                  (lambda (root)
+                    (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) (if (result i32) (i32.~a (i32.load offset=8 ~a) (i32.load offset=12 ~a)) (then (i32.const 77838)) (else (i32.const 77825)))"
+                           root (b-scalar (second args))
+                           root (b-scalar (third args))
+                           (if (eq (ccl::acode-immediate-operand (first args)) :eq) "eq" "ne")
+                           root root)))))
+
+(defun bootstrap-no-load-time-value (context form environment)
+  (declare (ignore context form environment))
+  ;; NX1 recursively compiles this form before emitting LOAD-TIME-VALUE.
+  ;; It must not escape through the enclosing module's pass-2 result tag.
+  (refuse :bootstrap-load-time-value))
+
+(defun bootstrap-alphatizers ()
+  (let ((table (make-hash-table :test #'eq)))
+    (maphash (lambda (name function) (setf (gethash name table) function))
+             ccl::*nx1-alphatizers*)
+    (setf (gethash 'load-time-value table) #'bootstrap-no-load-time-value)
+    table))

@@ -3284,3 +3284,7 @@ change or LL15 credit.
   and 80 collections; 28 raw/table comparisons and refusals, seven source
   refusals and eight controls. Source adapter stays fixture scaffolding; no
   compiler/runtime integration or LL15 credit.
+
+## 2026-09-21 — audit 142 and bootstrap compiler integration
+
+Accept and integrate the reviewed entry on the user authorization. Compiler bytes equal the packet and regenerated proposal; runtime files unchanged. Carry file-local macros, host error messages and executable dependency closure into the next substantive unit. Ledger remains 21 accepted and 12 missing of 33. Next: quoted constants, special references, then OR.

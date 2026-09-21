@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "quote": "Accept and integrate the new entry."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-FRONTEND-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-frontend-r1/packet.json",
+      "sha256": "3739a7f30366bc12d7d24eafb2b26a8453521d66b370836d6c7d42a54367df91"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "01012704e67320d1a4c1aa48795074983df47ef5",
+      "sha256": "0b99a0fe46c4578dcd2c3f9cc9dc8b1b3fcf3ccfb286544d9b04e522c62cbc21"
+    }
+  ],
+  "observations": [
+    "Compilation admission is not dependency closure; 426 of 2492 readable definitions admitted, four original definitions executed against native in the author packet.",
+    "File-local compile-time macros require whole-file compilation; no accepted definition affected in the reviewer approximation.",
+    "Next packet retains host error messages as well as classes and reports a conservative executable dependency frontier.",
+    "Original fixture is pinned to its proposal commit 256795d0; after integration replay it from that commit. No LL15 slot credit."
+  ],
+  "slot_credit": false
+}
