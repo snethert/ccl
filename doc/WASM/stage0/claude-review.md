@@ -1958,3 +1958,44 @@ Packet d5ff38f1… (STAGE1-STARTUP-CONFIG-R2, AUXILIARY_STARTUP_CONFIG_CORRECTIO
 ### Verdict
 
 No defect found in 2e3e08ea (STAGE1-STARTUP-CONFIG-R2). Audit-126 findings F1 and F2 are closed, F2 for the accepted startup-resets harness as well. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-twenty-eighth Claude audit — STAGE1-STARTUP-WINNERS-R1 at 272026c9, with STAGE1-STARTUP-JOINED-R1 at 2afe30f4 (both auxiliary LL15 prerequisites) — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 272026c9. Author: Codex. Scope: `tests/wasm/stage1/startup-winners/` and `tests/wasm/stage1/startup-joined/` in full (the first imports the second’s `compile.py` and `packet.py`), both packets, and the intermediate acceptance commit 3736f5ad. Reviewer disposition only; acceptance is the user’s decision.
+
+### Intermediate commit
+
+3736f5ad accepts STAGE1-STARTUP-CONFIG-R2 and integrates the portable owners on the user’s “accept. integrate and PROCEED” after audit 127. Verified: `runtime/wasm32/config.mjs` (2188a5e7…) and `browser-config.mjs` (1b103e5a…) equal the R2 retained copies and the files reviewed in audits 126 and 127; `acceptance-startup-config.json` binds review commit 8bd38558 by the claude-review.md hash 8393b031… (recomputed from that commit) and the R2 packet d5ff38f1…; `integration-startup-config.json` binds the acceptance record (5293f3a5…), the previous integration (216bbb93…) and 31 unchanged runtime and compiler files, all re-hashed unchanged at 272026c9; the acceptance packet (3a46ff13…, 10 files, all cataloged) holds Node and Chromium configuration records (2b6ce7c7…) and the reset record (19a96478…) byte-identical to the R2 retained records; the acceptance carries the audit-127 observation that the R1 spin body must never be used. Between audit 127 and 272026c9 the only shared files added are those two modules and the runtime README. Auxiliary; ledger unchanged.
+
+### Evidence
+
+Winners packet 52771801… (187 manifest entries) and joined packet 568ac73e… (177 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted file, every file cataloged; index entries equal the packet hashes; catalog, index snapshot and evidence commit bind to `repository.json`; store clean.
+
+### Replay
+
+Both `packet.py verify` runs in the detached worktree at 272026c9 pass. Winners: 88 deterministic files, 195 pins; 7 modules, 360 generated comparisons, 480 collections, 12 refusals, 9 mutants, inherited primitive and generated hash-table corpus identical against the proposed service. Joined: 131 deterministic files, 191 pins; 20 modules, 18 callbacks, 288 scenarios, 5,184 callback comparisons, 5,996 invocations, 180 refusals, 17,988 foreign checks, Node and Chromium. The derived `hash.c` (which the deterministic set binds only through `hash.wasm`) and the derived joined `check.mjs` equal the packet copies; `hash.c` differs from the integrated service by eight lines at the three anchored sites.
+
+### Finding
+
+- F1 (winners). Three of the four publication words of operation 5 are never observed. The adapter takes its value count from the operation number (two for GET, otherwise one) and reads only word 0 of the result, and the harness calls operation 5 directly only in refusal cases. Mutants of the derived service that publish a count of 2, a secondary value of T, or a rehashed word of 1 for operation 5 all pass the full harness at both placements with exit 0. A harness copy with one direct successful `ht_run(…,5,…)` asserting `[table, NIL, 1]` and a zero rehashed word passes the real service with an identical execution record and refuses all three mutants, so the service is correct and the gap is in the qualification. The service header defines four publication words for every operation, and the proposal is to integrate this operation into the shared service; the direct check should be added first.
+
+### Probes
+
+- A. Operation 5 placement: after the shape and owner checks, before the full-table refusal and before rehash, so a moved or full table clears without touching scratch; the key check is skipped, the other three operations’ paths are unchanged, and operation 4 stays refused by the service (the adapter owns it as the collector leaf).
+- B. Nine further service mutants are refused: live count left, cache value left, middle bucket key and value left, capacity word changed, no clear at all, clear skipped on a moved table, a write one word past the object (“entry objects unchanged”), and a returned pointer other than the table.
+- C. Native side: `*stack-access-winners*` in U1 is `(make-hash-table :test 'eq)`, strong, so the accepted strong EQ backing vector is the matching representation; the oracle runs the untouched registered function against a dynamically bound private table. The compiles inside that binding may add compiler entries to the private table before each clear; the count is asserted zero afterwards, so this is harmless.
+- D. Joined order. The snapshot registry order interleaves the two kinds (5 CPU reset, 6 page size, 7, 8 ticks, 9 period, 11, 13 listener sizes, 14 …, then SPIN-COUNT in the user registry); the joined schedule runs all thirteen resets and then the five configuration callbacks. Rerunning the derived harness with the sequence in registry order passes at both placements, and every reset answer, configuration answer and final readback equals the grouped run. The eighteen effects are order-independent apart from the CPU reset preceding SPIN-COUNT, which both orders keep.
+- E. Joined counts: 72 scenarios by 4 Workers; 45 refusals per Worker (20 module omissions, 20 matching plan omissions, 5 CPU-cell and completion faults). Reset tokens 201–213 come from a one-constant edit of the accepted `compile.lisp`, and the rebuilt native reset answers are asserted equal to the accepted ones.
+- F. Development records: winners four attempts and eleven retained files, joined two attempts and four files, all present in the tarballs.
+
+### Observations (none a defect)
+
+1. The joined schedule’s order is the fixture’s, not the native registry’s, and the README does not say so. It is harmless for these eighteen; callbacks joined later that read another callback’s effect will need registry order.
+2. Clearing skips the content validation that rehash performs on a moved table, so a table whose counts disagree with its buckets is cleared rather than refused. The result is a valid empty table.
+3. The native table grows; the backing vector is fixed-capacity and the clear preserves capacity. Production cache materialization remains open, as stated.
+4. Winners is Node-only; joined keeps R2’s single pinned Chromium.
+5. The selected-membership check in the joined unit is a fixture oracle; the scheduler itself trusts the owner’s plan, as stated.
+
+### Verdict
+
+No defect found in 2afe30f4 (STAGE1-STARTUP-JOINED-R1) or in the intermediate acceptance commit 3736f5ad. One defect found in 272026c9 (STAGE1-STARTUP-WINNERS-R1): F1, operation 5’s count, secondary and rehashed publication words are unobserved; the service itself publishes them correctly. A one-assertion follow-up closes it; I recommend that before the derived `hash.c` is integrated. Both auxiliary, no slot credit; the decisions are the user’s. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
