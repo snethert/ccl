@@ -3288,3 +3288,9 @@ change or LL15 credit.
 ## 2026-09-21 — audit 142 and bootstrap compiler integration
 
 Accept and integrate the reviewed entry on the user authorization. Compiler bytes equal the packet and regenerated proposal; runtime files unchanged. Carry file-local macros, host error messages and executable dependency closure into the next substantive unit. Ledger remains 21 accepted and 12 missing of 33. Next: quoted constants, special references, then OR.
+
+## 2026-09-21 — original-source constants, specials and OR
+
+Quoted symbol identities through rooted pools, owner identities for special references and binding, and OR lowered directly from CCL acode. Ordered admission 426 -> 472 -> 574 -> 639 / 2492 unchanged definitions, 268 explicit skips; eight original definitions execute (previously four). 82 conservative static dependency closures are not an execution claim. 456 comparisons (452 native plus four layout witnesses), 228 between-call and 28 in-call collections, 22 admission controls and five compiled faults; ten legacy outputs unchanged. Host error messages and file-local macro diagnostics retained. Native R6/R6a rebuilt: 21843 tests, 162/164 FASLs unchanged and 164 restored. Fresh replay 940 deterministic files at 145 pins. Proposal only, no shared compiler/runtime change or LL15/BT-0 slot credit.
+
+User order honored without consumer rewriting or a new C/JS implementation. Integration remains limited to the byte-exact audit-142 entry; this functional compiler extension is retained in disposable U1 for Claude review.

@@ -1,26 +1,44 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "c278ffcb50c87e4e620a242f900851ad3928f1978efc96a4921938fbe0914ae0",
-  "commit": "519bff2b9fe38d50f89cda8e0925eb3aaeaa53e4",
-  "immutable_evidence_files": 238335,
+  "catalog_sha256": "0ddc94d2da17ee2ec2a37e6ef8f6566eb14e8a150a9adf0e9b7457fe582aed2e",
+  "commit": "dd51d5b1b8c0c2fa5a288cc26611571bdbdebebd",
+  "immutable_evidence_files": 239711,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-frontend-accepted",
-    "files": 4,
-    "bytes": 442967
+    "directory": "2026-09-21-stage1-bootstrap-values-r1",
+    "files": 1376,
+    "bytes": 87476609
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 43058,
+  "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 21 accepted, 12 missing of 33. Bootstrap entry accepted and integrated; no additional slot credit.",
-  "source_index_sha256": "434a98c4da12c6c5e68055ad88180b9b7ace7d281e9dc175415875b40ff6ae27",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-frontend-accepted.json",
+  "scope": "Stage 1:21 accepted,12 missing of33. Audit142 entry integrated. Constants/specials/OR proposal executed and replayed; awaiting review, no slot credit.",
+  "source_index_sha256": "9dcfc3e6db2bc68cfb0e15f9afcb72497aaf51c560d2ad92e5ba1487702193d2",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-bootstrap-values-r1.json",
   "verification": {
-    "status": "PASS",
-    "method": "Generator equals retained proposal before integration; integrated bytes equal retained execution and native proposal; native R6/R6a and deterministic execution reused by exact compiler identity.",
-    "native": "e2795be9b76b36bab83870b2d84036e907573efc7955f7a4bdc3d64d5e831b3d",
-    "execution": "5e9f43e0441685ffa317c1e39284ee76140849f86c7c00a323ed7fd273a5f31c"
+    "STAGE1-BOOTSTRAP-VALUES-R1": {
+      "deterministic_files": 940,
+      "native_rebuilt": false,
+      "source_pins": 145,
+      "status": "PASS",
+      "summary": {
+        "admission_controls": 22,
+        "baseline_admitted": 33,
+        "collections": 228,
+        "comparisons": 456,
+        "executed_original_definitions": 8,
+        "internal_collections": 28,
+        "inventory_functions": 2492,
+        "legacy_identical": 10,
+        "modules": 50,
+        "native_cases": 114,
+        "proposal_admitted": 639,
+        "reader_and_name_skips": 268,
+        "static_dependency_closed": 82,
+        "status": "PASS"
+      }
+    }
   },
   "version": 1
 }

@@ -560,10 +560,13 @@ correctness fixes need not increase a count. Coverage is qualified at actual
 operator/operand forms, including movement and unwinding for new allocating or
 nonlocal operators. Preserve all earlier contracts and accepted scopes.
 
-The [front-end proposal](../../../tests/wasm/stage1/bootstrap-frontend/README.md)
+The accepted [front-end entry](../../../tests/wasm/stage1/bootstrap-frontend/README.md)
 compiles original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ through CCL's own front
-end. Its sample is not the full startup worklist. Next prioritize OR, %SVREF and
-%GVECTOR, checked type forms and symbol/special identity, then close dependencies
+end. Its sample is not the full startup worklist. The user ordered quoted constants, special references, then OR; the
+[values proposal](../../../tests/wasm/stage1/bootstrap-values/README.md) now implements
+that sequence (426 → 472 → 574 → 639 admissions) and awaits review. Eight original
+definitions execute; 82 have a conservative static dependency closure. Next lower
+%SVREF/%GVECTOR and checked types, discover macro-produced callees and close dependencies
 of native MEMEQL/ADJOIN-EQL and the first complete level-0 file. Keep Lisp in CCL's
 style. No more per-consumer rewriting. Rework the pending population shape to
 native's zero-link/type/data fields when native accessors can be compiled.

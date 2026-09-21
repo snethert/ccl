@@ -2958,6 +2958,16 @@
       "scope": "Separate target-reader/CCL NX1 compiler entry; original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ execute unchanged. No consumer walker or new C/JS service. Native builtin calls, NOT/EQ condition senses, unchecked type forms preserving multiple values and value-returning cons setters. 426/2492 readable original DEFUNs admitted versus legacy 33, with 268 explicit read/name skips. Four definitions executed, 180 native comparisons plus four layout checks, 92 collections, 22 admission controls, ten byte-identical legacy modules. Native R6/R6a rebuilt: 21843 tests, 162/164 FASLs unchanged, all restored. Replay 100 deterministic files at 138 pins. Accepted and integrated on the user authorization following audit 142; no LL15/BT-0 slot credit. Checked type annotations, SETF function identities, complete worklist/dependency closure and target-specific macros remain owed. Carry items: Compilation admission is not dependency closure; 426 of 2492 readable definitions admitted, four original definitions executed against native in the author packet. File-local compile-time macros require whole-file compilation; no accepted definition affected in the reviewer approximation. Next packet retains host error messages as well as classes and reports a conservative executable dependency frontier. Original fixture is pinned to its proposal commit 256795d0; after integration replay it from that commit. No LL15 slot credit.",
       "review_commit": "01012704e67320d1a4c1aa48795074983df47ef5",
       "review_sha256": "0b99a0fe46c4578dcd2c3f9cc9dc8b1b3fcf3ccfb286544d9b04e522c62cbc21"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-VALUES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-values-r1/packet.json",
+      "sha256": "9ee4c3fcc13013e688e1a321381a051225b358dff7fdb61c1239c53a7804b0ec",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Quoted symbol identities through rooted pools, owner identities for special references and binding, and OR lowered directly from CCL acode. Ordered admission 426 -> 472 -> 574 -> 639 / 2492 unchanged definitions, 268 explicit skips; eight original definitions execute (previously four). 82 conservative static dependency closures are not an execution claim. 456 comparisons (452 native plus four layout witnesses), 228 between-call and 28 in-call collections, 22 admission controls and five compiled faults; ten legacy outputs unchanged. Host error messages and file-local macro diagnostics retained. Native R6/R6a rebuilt: 21843 tests, 162/164 FASLs unchanged and 164 restored. Fresh replay 940 deterministic files at 145 pins. Proposal only, no shared compiler/runtime change or LL15/BT-0 slot credit."
     }
   ],
   "current_runs": [

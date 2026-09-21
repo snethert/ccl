@@ -1,0 +1,22 @@
+{
+  "retained": [
+    "ccl-bootstrap-values-r1.log",
+    "ccl-bootstrap-values-r1/compiled/compile.log",
+    "ccl-bootstrap-values-r2.log",
+    "ccl-bootstrap-values-r2-execute.log",
+    "ccl-bootstrap-values-r2-execute2.log",
+    "ccl-bootstrap-values-r3.log",
+    "ccl-bootstrap-values-r3-qualify.log",
+    "ccl-bootstrap-values-r3-qualify2.log",
+    "ccl-bootstrap-values-r4.log",
+    "ccl-bootstrap-values-r4-qualify.log"
+  ],
+  "failures": [
+    "r1 native oracle observed the driver's pathname through loading-file-source-file. Bind this global to NIL on both hosts for the original-definition case.",
+    "r2 owner fixture initialized a symbol's pname rather than value cell, then exposed NIL flags to PROGV. Correct D1 value and flags words; compiler unchanged.",
+    "r3 qualification helper lacked the copied driver's import path and the relocated encoder's schema path. Positive execution passed.",
+    "r4 collided with the registration fixture's Python module named qualify; rename/load the helper explicitly. Positive execution passed.",
+    "r4 quoted-symbol mutant failed first at the earlier cyclic-literal case rather than its intended focused case. Select and retain each fault's native case explicitly; the fault was already rejected."
+  ],
+  "scope": "All implementation source changes are retained in the final derived compiler. Only the accepted audit-142 proposal is integrated in the shared compiler."
+}
