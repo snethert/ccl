@@ -2155,3 +2155,35 @@ Findings.
 ### Verdict
 
 No defect in 0779bd79; audit-131 findings F1 to F4 are closed, with minor residual R1. Defects found in 0d99cb76 (STAGE1-BOOTSTRAP-TABLES-R1): F1 capacity against measured native populations, F2 a reached EQUAL table with no substitute, F3 populations undisposed, F4 un-isolated owner clauses. The policy, the selection and the retention behaviour are right; F1 to F3 are about what the substitute does not yet cover, and they decide whether a bootstrap image can actually be collected. Follow-up recommended before acceptance; the decisions are the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-third Claude audit — STAGE1-BOOTSTRAP-TABLES-REVIEW-R1 (follow-up to audit 132) at 1021bbcb — 20 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-133`; this commit changes only this file, and the STATUS row and history entry are owed at merge. Author: Codex. Audit 132 landed on wasm2 as 68afe0fc with content identical to the worktree commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packet 0e77a917… (NOT_REVIEWED, slot_credit false, 78 manifest entries, all hashes match, no unlisted file, every file cataloged, indexed); catalog, index snapshot and evidence commit bind; store clean; the index binds audit 132 by the review-file hash recomputed from 68afe0fc. `packet.py verify` at 1021bbcb: PASS, 33 deterministic files, 36 pins; 108 table and 30 population collections, 15 owner checks, 13 faults; the native probe rerun on the pinned kernel and image reports 1,281, 1,281, 1,049 and 8. The commit touches no shared source and neither parent fixture.
+
+### Disposition of audit-132 items
+
+- F1 (capacity): closed for the three tables it names. `plannedCapacity` requires a measured count, adds the larger of 16 and a quarter as headroom, rounds to a power of two and refuses above 16,384 before construction; the caller’s capacity must equal the plan. The harness inserts the measured number of distinct heap keys and values, keeps only the table rooted, moves it three times at both placements and checks every entry. A full 16,384-entry table refuses the next insertion with status 4 and unchanged table and result bytes.
+- F2 (EQUAL): recorded as BLOCKS_BOOTSTRAP in `dependencies.json`. See F2 below for EQL.
+- F3 (populations): dispositioned on the user’s extension, quoted in the README: “Use strong retention for populations too.” The builder makes an ordinary two-element vector over ordinary conses with no weak header; native `make-population` confirms the list spine and the alist pairs are copied. Eight of Claude’s eleven mutants of the builder are refused (policy, type, member validation, alignment, extent, swapped pair, swapped kind, reversed order).
+- F4 (owner clauses): closed. The redundant capacity clauses are one exact comparison; directed cases spy on both service entry points so downstream validation cannot mask a missing preflight; a real service bound to a smaller memory fails an otherwise admitted request and the owner throws.
+- R1 (NIL-snapshot words): closed by a direct call with all four words complement-poisoned and three faults.
+
+### Findings
+
+- F1. The capacity measurement covers three tables; a heap walk finds seven that exceed the default. Walking every object in the pinned native image: 19 weak hash tables holding 6,550 entries, seven of them above 60. Besides the three measured by global name there are an EQ weak-on-value table with 1,121 entries, EQ weak-on-key tables with 945 and 724, and an EQL table with 97. These are held in closures or structures (the binding-index reverse map, the slot-id table and similar), so a probe by symbol name cannot reach them, and the fixture runs them as one-entry scenarios at capacity 64. The README and `dependencies.json` do say other tables need their own measured counts; the point is that the measurement instrument should be a heap walk attributed to constructor sites, which yields all of them at once. Until then four bootstrap tables would still refuse FULL.
+- F2. EQL blocks the bootstrap as EQUAL does. The EQL weak-on-value table with 97 live entries (the eql-specializer table at `l1-dcode.lisp:731` by its shape) is populated in the base image. `dependencies.json` marks only `*combined-methods*` BLOCKS_BOOTSTRAP and the README says merely that EQL “remains unavailable as well”.
+
+### Observations (none a defect)
+
+1. Headroom is a cliff, not growth: at capacity 2,048 the two setf tables refuse FULL after 767 further entries and `%lambda-lists%` after 999. Adequate for a bootstrap image; any session that defines code will reach it. Declared (“no eviction or automatic growth”).
+2. The native image holds 22 population objects with 739 members in total. The unit is right that four constructor paths are not four instances; the instance census is owed with the table census.
+3. Strong populations keep every lock, thread and generic function ever registered; declared as extended lifetime.
+4. Three builder mutants pass: the end-of-memory bound (a DataView write past the end would throw, but after earlier writes, so “validates before writing” is unproved for that case), the vector’s pad word, and aliasing of the caller’s pair arrays (inert in synchronous JavaScript).
+
+### Verdict
+
+Audit-132 findings F3, F4 and R1 are closed, F1 is closed for the three named tables, and F2 is recorded. Two findings remain in 1021bbcb: F1 the measurement misses four of the seven oversized weak tables, F2 the populated EQL table is not recorded as blocking. Neither is an error in what the unit implements; both decide whether the substitute can carry a real image. A heap-walk census by constructor site and an EQL entry in the dependency record close them. Follow-up recommended before acceptance; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
