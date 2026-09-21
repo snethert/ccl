@@ -451,3 +451,17 @@ Eighty original closed definitions still have no input recipe (87 when the six f
 %PATH-MEMBER is uncredited because native source reads beyond a string bound before testing termination. Raw array subtype/flag return values require representation-aware expectations.
 
 Original proposal replay stays at 9f5bd0cc after integration. No LL15 or BT-0 completion credit is claimed.
+
+## Audit 149 carry proposal — awaiting review
+
+[Bootstrap carry packet](../../../tests/wasm/stage1/bootstrap-carry/README.md)
+implements Lisp ASSQ, macro-time refusal of unsupported handler classes, and
+SIGNAL/ERROR spread refusal cases. These obligations close at acceptance and
+integration, not merely at proposal publication. The written execution harness
+also replaces the accumulated harness replacement chain.
+
+The signed-zero observation now has a direct bit-pattern witness: native literal
+zero changes -0.0d0 to +0.0d0; target subtraction retains the sign. Variable zero
+agrees. No numeric behavior was changed and the four observed differences are
+excluded from the native-match count. Collector-owner checks already closed in
+b9de543d are reused only on exact source and rebuilt binary identity.

@@ -1,3 +1,24 @@
+## 2026-09-21 — Lisp ASSQ and the audit-149 carry items
+
+Propose ordinary Lisp ASSQ in the existing Wasm primitive file and remove its
+handwritten Wasm implementation. Its callers now use the generated entry.
+Validate native handler-macro class literals at expansion time, respecting local
+macro identity; add direct/nested handler refusals and SIGNAL/ERROR spread cases.
+Retain an EQ-sense control and an admission-guard omission. Replace generated
+harness patching with written check/install files. Shared source is unchanged.
+
+All 301 original matched definitions remain, 290 with a non-NIL witness. The new
+target ASSQ is tested but not credited as an unchanged native DEFUN. Admission
+corrects 1864 to 1862 because two unsupported handler definitions now refuse
+before generation. There are 11012 native matches plus four explicitly separated
+signed-zero differences, over 11016 executions and 5874 collections. The literal
+zero native compiler quirk is witnessed in bits; variable-zero subtraction agrees.
+
+Fresh R6/R6a passes; all 164 FASLs restore, and rebuilt native hashes justify
+reuse of 21843 tests. Bind the forty collector checks already passed at integration
+b9de543d; the sources and rebuilt collector binary remain identical. No LL15/BT-0
+credit. The packet awaits Claude review.
+
 ## 2026-09-21 — accept audit 149 and integrate bootstrap witnesses
 
 On Steve’s “accept”, import audit 149 verbatim (8c3a6cf5 → d43f816f) and

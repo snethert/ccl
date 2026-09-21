@@ -1,0 +1,13 @@
+{
+  "retained": ["ccl-carry-r1.log", "ccl-carry-r2.log"],
+  "attempts": [
+    {
+      "name": "r1",
+      "result": "All generated executions passed. The orchestration reached checks.py before that new file had been written. Removed an accidentally duplicated positive admission check before the final compile. No compiler or runtime failure."
+    },
+    {
+      "name": "r2",
+      "result": "Compilation and execution passed; the added dependency assertion expected CCL::ASSQ, but ASSQ is exported and prints CCL:ASSQ. Corrected the assertion, re-executed the written harness and focused checks, and retained the passing result. The final packet verifier recompiles from the committed fixture."
+    }
+  ]
+}
