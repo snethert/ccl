@@ -2319,3 +2319,37 @@ Scope. Reader, setter and raw type reader for the accepted strong population rep
 ### Verdict
 
 No defect in e9808520. Findings: F1 (host inputs) a Darwin-only composition implemented for a target that is not Darwin; F2 and F3 (equality tables) the NIL-versus-cons pair and the traversal depth bound are untested, the second a memory-safety guard; F4 (population access) six un-isolated admission clauses. In every case the implementation is correct where the harness cannot see it, except F1, where the implementation does something the port’s own source does not. Follow-ups recommended before acceptance of each; the decisions are the user’s. All auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-eighth Claude audit — STAGE1-STARTUP-REVIEW-137-R1 (follow-up to audit 137) at 0406237d — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-138`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 137 landed on wasm2 as 0c98b7b1 with this file identical to the worktree commit 323d1376 (sha256 6f203a1b…, the value the three parent index records bind). One Codex commit followed it. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packet 417749d2… (350 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all 351 files cataloged with matching hashes; catalog 89afe700…, index snapshot 6bd319db… (equal to the committed index) and evidence commit 28b662b3 bind to `repository.json`; store clean; the three parent records carry REVIEWED_DEFECT_FOUND and the host-inputs parent is SUPERSEDED. `manage.py check` passes. No file under `runtime/`, `compiler/` or the Lisp sources changes.
+
+- F1. The retained verifier cannot replay from any checkout but `~/Source/ccl`. `packet.py dependencies()` keys the two non-host parent inputs (`runtime/wasm32/collector.c`, `runtime/wasm32/hash.c`) by the absolute path of the checkout that retained the packet, and `verify` compares the whole dictionary; from the detached worktree it fails at that assertion before executing anything. All 201 hashes are equal; only the two keys differ. Every earlier verifier replayed from the worktree. With those keys normalised and nothing else changed, the replay passes: 258 deterministic files identical at 82 source pins, parent bindings equal before and after, worktree clean. Key the dependencies relative to `ROOT`, as the parents do.
+
+### Audit-137 F1 — image name (closed, no defect found)
+
+The derived host module imports no composition table and returns the owner’s image name unchanged; the rest of `inputs.mjs` is R1 byte for byte. The native oracle reads `heap-image-name` with every `-TARGET` feature removed and the backend’s four added, asserted against `wasm32-backend.lisp`. Probed on the pinned kernel and image: CCL’s own rule (`setup-target-features`, `lib/nfcomp.lisp:102`) yields the same feature set apart from `:cross-compiling`, and both read the identical form, whose body is the bare `STRING`. Three of the ten native cases are names NFC would change (combining acute, Hangul jamo, ring-plus-dot-below) and all ten native answers equal their input code points. Both the Darwin table and `String.prototype.normalize('NFC')` are rejected as faults; the Darwin table survives only as a fault input copied from the superseded packet. All 23 generated modules equal R1. Observation for the port, not this unit: the compiler’s rule leaves host features such as `:darwin` and `:unix` in force during a cross-compile; the bootstrap sources use them once (`l1-application.lisp:255`, the init-file names under `#+unix`).
+
+### Audit-137 F2 — NIL against a cons (closed)
+
+`(cons nil nil)` is appended as object 47; the old 47×47 answers are asserted unchanged; native says false in both modes and both directions. Removing `a==NIL` alone or `b==NIL` alone is now refused by the full matrix harness (`equal lookup 0,47` and `47,0`) as well as by the probe. The `a==TRUE` and `b==TRUE` clauses still pass when removed; they are equivalent, since T’s header is no inspected kind and the next test returns 0.
+
+### Audit-137 F3 — depth bound (half closed)
+
+The cons site is closed: depths 1,022 and 1,023 store and find, 1,024 and 3,000 refuse with table, publication and key preserved, and removing that one site is refused.
+
+- F2. The second depth site is un-isolated, and with it the EQL binary’s only depth guard. `keys_valid` tests `used+2>KEY_DEPTH` twice: for conses (EQUAL only) and for ratio and complex objects (both modes). Codex’s `depth` fault replaces both at once and the probe loads only `equal.wasm` with cons keys. Removing the number site alone passes the harness and the probe. Directed case, both modes: a chain of 1,024 or 3,000 complex-tagged objects nested through the second part. The real services refuse with status 3; the mutants return 0, having overrun the 1,024-word array. Well-formed numbers nest two deep, so only a malformed heap reaches this — which is what an admission validator is for, and `same` and `content_hash` carry no bound of their own.
+
+### Audit-137 F4 — population admission (the six named clauses closed)
+
+Each of the six removals is now refused at its named case, at both placements, with object, neighbours and publication preserved. `(base&7)` is indeed implied by the tag test and the rebuilt binary is identical to R1.
+
+- F3. Three further bounds clauses pass when removed, in population access and two in the key validator. Audit 137 did not name them; its sweep stopped at ten mutants. This sweep removes every clause of both admission predicates singly (14 and 14) against the full harness and the new probe. Population: `backed(base,16)` — real refuses an object beyond memory with 2, mutant traps; `backed(result,16)` — real refuses with 1, mutant writes the contents word and then traps, a half-done SET; `backed(key-1,8)` — real refuses with 3, mutant stores an unbacked pointer and returns 0. Equality: `span(k-1,8)` and `span(p,4)` — real refuses a cons or a header beyond memory with 3, mutants trap. The remaining passes are equivalent and need nothing: `key!=NIL` (NIL is a backed cons-tagged word), `sz==NONE` (the 64-bit span test refuses it), the static-region overlap and the EMPTY/DELETED test (another check refuses both directed cases). A trap is not a refusal on this port: HOSTFM records that a Wasm trap cannot be caught inside Wasm and unwinds through every Lisp frame.
+
+### Verdict
+
+Audit-137 F1, F2 and F4 are closed and the image-name correction has no defect. F3 of audit 137 is closed for conses and open for numbers (F2 here). New: F1, a verifier bound to one checkout path; F3, five memory-bounds clauses without a refusal case, none of them named by audit 137. The services are correct in every directed case. Recommended: one directed refusal each for the number depth site in both binaries and for the five bounds clauses, a root-relative dependency record, and as a standing rule for admission predicates, either a directed refusal or a written equivalence argument for every clause, so the sweep need not be repeated by the reviewer. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
