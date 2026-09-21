@@ -486,3 +486,17 @@ identity for NIL, proper, dotted and cyclic lists. Population-only member roots
 survive moving collection. This is the access primitive, not native macro
 lowering or public keyword type conversion. Binding those consumers and real
 lock/thread/GF member representations remains required for the selected image.
+
+2026-09-20: [Startup image name and arguments](../../../tests/wasm/stage1/startup-host-inputs/README.md)
+add two generated global publications and a readback to the registry-ordered
+schedule, taking the callback snapshot to twenty of thirty-five. Native U1
+pointer acquisitions alone are substituted; native string decoding, adjacent
+composition, argv ordering and global-write semantics supply the answers.
+Published graphs move under the integrated collector and survive poisoned old
+storage in Node and Chromium below and above 2 GiB. The owner accepts explicit
+application inputs; it does not infer browser arguments from the URL. This
+proposal does not change the worklist's membership or grant LL15 credit.
+Next implementation joins still include home/logical pathname effects, thread
+and scheduler state, static-cons disposition, the reviewed runtime services,
+and production image bindings. Definition/loading initializers and the census
+query/build-path proof remain separate required parts of LL15.

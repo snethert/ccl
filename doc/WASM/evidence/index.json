@@ -2836,6 +2836,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Checked strong-population data read/write and raw type code. Native empty/proper/dotted/cyclic list semantics, 792 observations, 296 collections, four Workers, six compiled faults. Constructor builder and collector unchanged. Generated adapter uses one value. Members here are conses, not lock/thread/GF representations. Public keyword type reader, macro lowering and image bindings remain open. Auxiliary proposal, not integrated, no LL15 credit."
+    },
+    {
+      "id": "STAGE1-STARTUP-HOST-INPUTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-host-inputs-r1/packet.json",
+      "sha256": "b9dab36bec60fa9c68acc7354dc970c5d91d5387c6ce465c07a73d750cd5fdf1",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Native image-name/argv acquisition adaptation and generated publications in a twenty-callback registry-ordered schedule. 288 joined scenarios and collections, 7172 invocations, Node and Chromium at 4 MiB and 2 GiB, complete TCR restoration, poisoned old storage, eight rejected faults. Native adjacent composition preserved; owner inputs explicit. Whole startup worklist and real image symbol binding remain open. Auxiliary proposal, not integrated, no LL15 credit."
     }
   ],
   "current_runs": [

@@ -3196,3 +3196,12 @@ change or LL15 credit.
   code, native setter semantics, generated calling forms and moving member
   retention. Six compiled faults rejected; fresh replay identical. No shared
   compiler/runtime change and no LL15 credit; independent review pending.
+
+- 2026-09-20: Startup image-name and argument publications run with eighteen
+  preceding reset/configuration callbacks in registry order. The owner preserves
+  native Darwin adjacent composition rather than JavaScript NFC. Fresh native
+  oracle, three freshly compiled modules, 288 joined Node/Chromium scenarios,
+  288 moving collections, 3,688 composition/owner comparisons, 96 owner refusals,
+  204 schedule refusals and eight focused faults. Retained replay reproduces
+  121 deterministic files at 51 source pins. Unchanged compiler/native R6 reused
+  by hash. Auxiliary proposal; no shared runtime edit or LL15 credit.

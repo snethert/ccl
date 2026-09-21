@@ -1,0 +1,60 @@
+(in-package :ccl)
+(defvar *owner-image*)
+(defvar *owner-argv*)
+(defun owner-strings (strings fn &optional (pointers nil))
+ (if strings
+  (with-utf-8-cstr (p (car strings)) (owner-strings (cdr strings) fn (cons p pointers)))
+  (funcall fn (reverse pointers))))
+(defun source-at (position)
+ (with-open-file (s "level-1/l1-pathnames.lisp") (file-position s position) (read s)))
+(let* ((image (source-at 1135)) (argv (source-at 1185))
+       (image-fn (with-open-file(s "level-1/l1-pathnames.lisp")
+                   (loop for f = (read s nil :eof) until(eq f :eof)
+                         when(and(consp f)(eq(car f)'defun)(eq(cadr f)'heap-image-name)) return f))))
+ (assert (equal image '(defloadvar *heap-image-name* (heap-image-name))))
+ (assert (and(eq(first argv)'defloadvar)(eq(second argv)'*command-line-argument-list*)))
+ (dolist (symbol '(*heap-image-name* *command-line-argument-list*))
+  (assert (= 1 (count symbol *lisp-system-pointer-functions* :key #'function-name))))
+ ;; Substitute only the two kernel pointer acquisitions; keep all native reads,
+ ;; decoding, ordering, list construction, normalization and final SETQ writes.
+ (labels ((change (tree target replacement)
+   (let ((count 0))
+    (labels ((walk(x)(cond((equal x target)(incf count) replacement)((consp x)(cons(walk(car x))(walk(cdr x))))(t x))))
+     (let ((result(walk tree)))(assert (= count 1)) result)))))
+  (let* ((a (change (cdddr image-fn) '(%get-kernel-global-ptr 'image-name p) '(%setf-macptr p *owner-image*)))
+         (b (change (third argv) '(%get-kernel-global-ptr 'argv argv) '(%setf-macptr argv *owner-argv*)))
+         (image-call (compile nil `(lambda () (setq *heap-image-name* (progn ,@a)))))
+         (argv-call (compile nil `(lambda () (setq *command-line-argument-list* ,b))))
+         (old-image *heap-image-name*) (old-argv *command-line-argument-list*))
+   (with-open-file(s (getenv "HOST_FORMS") :direction :output :if-exists :error)(print image-fn s)(print argv s)(print a s)(print b s))
+   (unwind-protect
+    (with-open-file(out (getenv "HOST_ANSWERS") :direction :output :if-exists :error)
+     (let ((cases (with-open-file(i (getenv "HOST_CASES"))(read i))))
+      (loop for (name image-name args) in cases for index from 0 do
+       (owner-strings (cons image-name args)
+        (lambda (pointers)
+         (%stack-block ((av (* target::node-size (1+ (length args)))))
+          (loop for ptr in (cdr pointers) for i from 0 do(%set-ptr av (* i target::node-size) ptr))
+          (%set-ptr av (* (length args) target::node-size) (%null-ptr))
+          (let ((*owner-image*(car pointers))(*owner-argv* av))
+           (setq *heap-image-name* 37 *command-line-argument-list* 91)
+           (let ((a (multiple-value-list(funcall image-call))))
+            (assert (= (length a) 1))(assert(eq(car a)*heap-image-name*))
+            (assert (= *command-line-argument-list* 91)))
+           (let ((b (multiple-value-list(funcall argv-call))))
+            (assert (= (length b) 1))(assert(eq(car b)*command-line-argument-list*)))
+           (assert (equal *command-line-argument-list* args))
+           (format out "~d|~a|~s|~s~%" index name
+             (map 'list #'char-code *heap-image-name*)
+             (mapcar(lambda(s)(map 'list #'char-code s))*command-line-argument-list*)))))))))
+    (setq *heap-image-name* old-image *command-line-argument-list* old-argv)))))
+;; Export the pinned image's complete precomposition pair domain. The source
+;; gate excludes Hangul and combiners >= #x1000; preserve that native behavior.
+(with-open-file(out (getenv "HOST_COMPOSITION") :direction :output :if-exists :error)
+ (loop for combiner across *bmp-combining-chars* for bases across *bmp-combining-base-chars* do
+  (loop for base across bases do
+   (let ((answer(precompose-simple-string (coerce(list base combiner)'simple-string))))
+    (format out "~d ~d ~{~d~^ ~}~%" (char-code base)(char-code combiner)(map 'list #'char-code answer)))))
+ (loop for c from 0 below #x10000 when(and(code-char c)(is-combinable(code-char c))) do
+  (assert (< c #x1000))))
+(quit)
