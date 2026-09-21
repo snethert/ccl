@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "aceb21d19e21c5c62bf3a98dbe47e349360a4ea06d82e1e86a9b296534e70516",
-  "commit": "b5dcdbe4b3252301577b84299958834157709948",
-  "immutable_evidence_files": 239715,
+  "catalog_sha256": "dedba463c72e383cd71d10d7f6b355fe52fcec87cc115a4605875a00906fe185",
+  "commit": "71738ad2b627a45fa93423a04c80a57ea2a5581c",
+  "immutable_evidence_files": 240474,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-values-accepted",
-    "files": 4,
-    "bytes": 444534
+    "directory": "2026-09-21-stage1-bootstrap-core-r1",
+    "files": 758,
+    "bytes": 33424931
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 21 accepted, 12 missing of 33. Bootstrap values lowering accepted and integrated; no additional slot credit.",
-  "source_index_sha256": "62317eac271f9f670d35c9389398b9c050955643fdcdeec6653244c1fa19a74d",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-values-accepted.json",
+  "scope": "Stage 1 remains 21 accepted, 12 missing of 33. Whole-file bootstrap core proposal executed and awaiting review; no LL15 slot credit.",
+  "source_index_sha256": "8a898ee8311fa770772a71820bb1dcc3a739dcc1f5ade177ec18abd705ca2e12",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-core-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Generator equals retained proposal before integration; integrated bytes equal retained execution and native proposal; native R6/R6a and deterministic execution reused by exact compiler identity.",
-    "native": "e2795be9b76b36bab83870b2d84036e907573efc7955f7a4bdc3d64d5e831b3d",
-    "execution": "b19181db14490c96326a4c29cad1aaf368f74943e222ba7d3aa37a42c1902bca"
+    "method": "Detached-checkout verifier: 469 deterministic artifacts at 219 source pins; native R6/R6a rebuilt for the exact compiler and source proposal, retained with explicit source-debug comparisons. Scoped catalog addition verified; prior archive not rescanned.",
+    "native": "2e18ec6cefadf124c408b467ca6ed4b0ab2a29087f8c288135bf0e0b2da40152",
+    "execution": "157c8414d97e0794f823087f997e784e6583c21c5f3acc0381469fb15a60888e"
   },
   "version": 1
 }

@@ -1,0 +1,27 @@
+{
+  "retained": [
+    "ccl-core-r10/execution-debug3.log",
+    "ccl-core-r14/compiled/compile.log",
+    "ccl-core-r18/compiled/compile.log",
+    "ccl-core-r19-harness.log",
+    "ccl-core-r20-harness.log",
+    "ccl-core-native-r1/run.json",
+    "ccl-core-native-r2.log",
+    "ccl-core-final-r3-harness.log",
+    "ccl-core-replay-r1.log",
+    "ccl-core-replay-r2.log"
+  ],
+  "failures": [
+    "FUNCTIONP initially reached LFUNP whose unchanged native body called FUNCTIONP again. The predicate stub needed its own Wasm branch; the counting guard alone was insufficient. Native input rows now execute both functions.",
+    "Compiling a native DEFUN body as an anonymous lambda lost its implicit BLOCK (REMOVE-FROM-ALIST). Native references now compile CCL's DEFUN expansion, with whole-file references taking precedence.",
+    "Native probe source was initially read under Wasm TARGET and incorrectly used target constants in the host oracle. Read it separately in each native/target environment; the node-size control distinguishes 8 and 4.",
+    "Test safepoint import was initially appended after definitions, which WABT refused. Insert it before definitions.",
+    "The moving structure probe exposed the missing subtag-122 collector scanner. The proposal extends both collector and pinned-image inventory; the old scanner is a focused rejected fault.",
+    "R6 initially failed because inserting reader branches changes native source debugger metadata. Compare executable bytes and all non-location data separately in the three intentional shared-source artifacts, retaining raw before/after hashes and source/PC maps.",
+    "The first expanded native comparator run passed its checks but cleanup failed because a tar handle shadowed the original-source dictionary. Rename that local; the subsequent final run restores every source and FASL.",
+    "A malformed-span test initially expected code 3; the existing span helper uses code 4. Correct the expectation and retain checked failure plus complete TCR restoration.",
+    "The first clean replay agreed on every executable and result artifact; raw native reader diagnostics differed only in CCL string-stream addresses. Retain the raw diagnostics and compare a separate report masking only that exact printed stream identity, preserving every class, position and message byte.",
+    "The first detached-checkout attempt exposed unused, ignored local native FASLs in the source-pin enumeration. Limit the Lisp-source directories to .lisp inputs; actual native inputs remain bound in dependencies.json."
+  ],
+  "scope": "Retain necessary original failures, not twenty duplicate development corpora. Shared checkout compiler/runtime/source files remain unchanged. Final executable evidence is authoritative."
+}

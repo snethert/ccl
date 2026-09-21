@@ -2970,6 +2970,16 @@
       "scope": "Accepted and integrated on user authorization following audit 143. Lowering accepted; throughput accounting findings remain owed in the next substantive packet. The user accepts the reviewed constants, special-variable and OR lowering and adopts P3 (BT-7 through BT-9). Audit 143 finds the lowering sound. Its 639 admitted and 82 dependency-closed counts include empty-under-Wasm and unlowered self-call bodies and are not executable coverage. Correct these in the next substantive predicate/whole-file packet. Eight unchanged CCL definitions execute against native in the author packet. No whole-file or LL15 completion is claimed. Original fixture replay is pinned to proposal commit 921baea9 after integration; unchanged runtime and native qualification reused by exact compiler identity.",
       "review_commit": "1cf0b8df6ff6b51ae009e3208533292be1e531c2",
       "review_sha256": "a1ebcaeadc164f447fe5977ac84151992e0e7968b8e44c933f2fee839d8f01cd"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-core-r1/packet.json",
+      "sha256": "041dcefeee9a693c09a51e8e8ea0d403b78c9bed68b1095ba42703ccfcbf0ac6",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "P3 whole-file compiler/source/runtime proposal, not integrated, no LL15 slot credit. 1539/2492 source admissions with empty/self-only guards; 129 original definitions execute in 6936 native comparisons. Both requested files compile whole (78 named definitions); all 44 callee-closed selected definitions execute. Actual whole-file emitter: 1826 IR-object visits, 57 operator names. R6/R6a: 21843 tests, 159/164 registered FASLs raw-identical, three intentional source artifacts preserve all code/non-location data in 136 function occurrences; all 164 FASLs restored. Detached-checkout replay: 469 deterministic artifacts, 219 source pins. Callee closure is not global initialization, all-input coverage or bootstrap readiness."
     }
   ],
   "current_runs": [

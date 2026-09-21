@@ -1,3 +1,32 @@
+## 2026-09-21 — whole-file bootstrap primitives and 129 executed definitions
+
+Implement the adopted audit-143 P3 packet as one compiler/source/runtime
+proposal. CCL's file compiler reads l0-pred and l0-utils whole, preserving file
+macro environments; all 78 named definitions compile. Wasm branches in the real
+source implement SYMBOLP and the self-calling predicate stubs, including the
+FUNCTIONP/LFUNP cycle exposed during execution. Add the target primitive file,
+rooted node reads/writes/construction, inline fixnum comparisons and existing
+numeric-service calls. EQL reuses its reviewed comparator. Generic structures
+now have a proposed collector and pinned-image scanner.
+
+The corrected census admits 1,539/2,492 definitions and keeps 268 read/name
+skips. Callee closure yields 193, without claiming initialized globals. Execute
+129 original CCL definitions against native, including every one of the 44
+callee-closed definitions from the selected two files: 6,936 comparisons,
+3,468 between-call and 52 internal collections, 80 inline-comparison checks,
+20 checked access refusals and four focused faults. The actual whole-file
+emitter observes 1,826 IR-object visits under 57 operator names. Ten legacy
+modules remain identical. Empty target bodies and unlowered self-only bodies
+are compiled as controls and rejected by measurement.
+
+R6/R6a passes 21,843 tests in pristine U1; native state agrees for all five
+architectures and 17 module profiles. Of 164 FASLs, 159 remain raw-identical.
+The three source files with new reader branches change source notes/PC maps;
+all 136 decoded function occurrences retain identical executable bytes and
+non-location data. Record that distinction explicitly for review. All restored
+FASLs agree. Proposal only, no acceptance, integration or additional LL15 credit.
+Ledger remains 21 accepted and 12 missing of 33.
+
 ## 2026-09-21 — bootstrap front end and explicitly adopted BT-0 criteria
 
 The user says “I accept BT-0”. Add S1-LL15-c/d without changing any of the 31

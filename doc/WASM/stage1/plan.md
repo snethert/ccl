@@ -563,10 +563,20 @@ nonlocal operators. Preserve all earlier contracts and accepted scopes.
 The accepted [front-end entry](../../../tests/wasm/stage1/bootstrap-frontend/README.md)
 compiles original MEMQ, APPEND-2, ADJOIN-EQ and UNION-EQ through CCL's own front
 end. Its sample is not the full startup worklist. The user ordered quoted constants, special references, then OR; the
-[values proposal](../../../tests/wasm/stage1/bootstrap-values/README.md) now implements
-that sequence (426 → 472 → 574 → 639 admissions) and awaits review. Eight original
-definitions execute; 82 have a conservative static dependency closure. Next lower
-%SVREF/%GVECTOR and checked types, discover macro-produced callees and close dependencies
-of native MEMEQL/ADJOIN-EQL and the first complete level-0 file. Keep Lisp in CCL's
-style. No more per-consumer rewriting. Rework the pending population shape to
-native's zero-link/type/data fields when native accessors can be compiled.
+[values lowering](../../../tests/wasm/stage1/bootstrap-values/README.md) is accepted
+and integrated. Its historical 639/82 counts included audit-143 F1/F2; eight
+original definitions executed. The [core proposal](../../../tests/wasm/stage1/bootstrap-core/README.md)
+now compiles l0-pred and l0-utils whole (78 named definitions), implements the
+Wasm predicate branches and node operators, and executes 129 original
+definitions including MEMEQL/ADJOIN-EQL and all 44 callee-closed definitions in
+those two files. Corrected admission is 1,539/2,492, with 193 callee-closed;
+this is not initialized bootstrap closure. The proposal awaits Claude review.
+
+After review and user acceptance, integrate the exact proposed compiler,
+source branches and structure scanners. Next close the files' remaining real
+callees (including TYPEP/REQUIRE-TYPE and error machinery), execute their
+initializers, and install them at actual image symbols. Continue measuring
+startup operator occurrences and source admissions without claiming terminal
+BT-0 credit prematurely. Keep Lisp in CCL's style and use no consumer source
+rewriters. Rework the pending population shape to native's zero-link/type/data
+fields when native accessors can be compiled.
