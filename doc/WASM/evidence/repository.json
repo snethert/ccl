@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d83a3673ce8153988878f0428e04bbf38e30e6e027b3cabeaa071649984220b7",
-  "commit": "1d02e0ec9bce2cfc347bd310afb04f7e5285ba9d",
-  "immutable_evidence_files": 234661,
+  "catalog_sha256": "2e90dd6067e19a577596645a82a5fe9a9fe1e3c0513e5af9a3e4c978629e91c3",
+  "commit": "fb7ac88d6d4980ea3039317d7d5382f52ed8b12c",
+  "immutable_evidence_files": 234798,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-runtime-r1",
-    "files": 87,
-    "bytes": 1094841
+    "bytes": 1676257,
+    "directory": "2026-09-20-stage1-startup-runtime-review-r1",
+    "files": 136
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Native DB reset and native counter-buffer proposals withdrawn; portable startup runtime executed, not reviewed or integrated.",
-  "source_index_sha256": "e387c362dff52c44c5500a5be4031eeccb1786c9d6c46019a0cb2d3a65074ae4",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-runtime-r1.json",
-  "verification": "Fresh replay: 56 deterministic files at 88 pins. New packet files and 413 current index references checked incrementally; earlier payloads reused by catalog hash.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Runtime audit-131 corrections executed; auxiliary, not reviewed or integrated.",
+  "source_index_sha256": "95877b54890bbfa4b95706b1fd68a011ecdc008513bd2f41b5810e40c28dee7b",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-runtime-review-r1.json",
+  "verification": "Fresh replay: 88 deterministic files at 94 pins. New artifacts and current index references checked incrementally.",
   "version": 1
 }

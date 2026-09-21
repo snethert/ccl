@@ -1,3 +1,12 @@
+## 2026-09-20 — close the four portable-statistics review findings
+
+Import audit 131, retain an immutable sibling follow-up, and rerun native and
+generated GCTIME with signed bignum boundaries, independently isolated admission
+refusals, and handleable SIMPLE-ERROR timing failures. Correct the browser-only
+configuration-provider status. Fresh replay reproduces 88 files at 94 pins.
+Shared compiler/runtime and all prior fixture sources are unchanged; no slot
+credit or acceptance.
+
 ## 2026-09-20 — correct foreign trap teardown in HOSTFM-P2
 
 On the user's instruction to fix the review findings, distinguish foreign
