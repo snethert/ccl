@@ -2821,3 +2821,63 @@ Closed: C-1, C-6, C-9; C-5 but for the signal-spread case. Open: C-5 remainder; 
 Integration 2ef0b70d: verified, no defect. Witnesses packet: no defect; the verifier passes; everything Claude ran agrees with native. Recommended: accept and integrate, with the selection step folded into the dispatcher, the owner checks run on the modified collector, and R6/R6a on the final backend and arch file.
 
 Suggested next packet, same size or larger: the 87 closed definitions that still have no inputs; the nineteen files that stop at foreign lookups (below); ASSQ in Lisp; C-10. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fiftieth Claude audit — acceptance and integration at b9de543d, STAGE1-BOOTSTRAP-CARRY-R1 at 97430f91 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-150`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed audit 149. Reviewer disposition only. Audit 149 is imported verbatim at d43f816f: this file there hashes b4d46bee…, the value `acceptance-bootstrap-witnesses.json` binds for 8c3a6cf5.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 301 → 301. With a non-NIL witness: 290 → 290. This packet claims no execution gain and says so in its first sentence. It is the carry packet audit 149 asked for, and it is small: every open carry item except input recipes and the POSIX source work is closed in it. Historical admission goes down, 1,864 → 1,862 of 2,492, because STANDARDIZED-TYPE-SPECIFIER and VERIFY-DEFERRED-TYPE-WARNING bind handlers for classes outside the twenty and are now refused at compile time instead of stopping at run time; that is the correction audit 148 asked for, and a falling number reported as falling is the right behaviour. Real worklist 1,573 of 2,006 (the new target ASSQ is one of each), 38 of 57 files read to the end. Closed definitions 373 → 374.
+
+Two packets in a row have now gone to review items and integration. The execution counter has not moved since 9f5bd0cc. The next packet should be an execution packet again.
+
+### Integration b9de543d
+
+`wasm32-arch.lisp`, `collector.c` and `collector-owner.mjs` equal the reviewed proposal bytes in packet 45e78586…; the collector change is the one-token predicate in each file (`n==6` → `n>=1`). The backend is `fold.py` applied to the reviewed file (65490003… → 5f712e28…): the front hook and its helper are removed, the `%IZEROP` selection is the single EQ clause of the operator CASE, and the `%I<>` selection is inside the existing NUMCMP clause with the old path as its else branch. Read: there is one EQ key in the CASE, so nothing is shadowed, and an EQ that does not select falls through to the general path as before. The 41 unchanged runtime files hash as recorded; the accepted packet bab3e272… binds a fresh pristine-U1 native build on the final backend, R6/R6a PASS, 164 FASLs restored.
+
+The acceptance record quotes the user as "accept", and the acceptance README adds that "accept as advised" was also the user's own message. Claude witnessed neither; both are Codex's relay and both are consistent with the advice given.
+
+### F1 — the documented integration replay fails on the integrated tree
+
+`bootstrap-witnesses-acceptance/run.py target`, unmodified, from the detached worktree: exit 1 after 60 seconds, `AssertionError` in `bootstrap-witnesses/backend.py` line 26. The runner replaces `backend.runtime_files` in its own process so that the collector sources come from the immutable packet, but the execution step is a subprocess (`execute.py`), which imports the fixture's `backend.py` afresh; that function asserts the pre-integration collector text (`tag==130&&n==6`), and the integrated collector no longer contains it. The run can only have passed before the two collector files were written into the tree. The README's sentence "this integration runner … works after integration" is false for the target mode, at b9de543d and at every later commit.
+
+With the one substitution the runner intended (the fixture's `runtime_files` reading the packet's `execution/runtime`, made in the scratch worktree and reverted), the replay passes in 86 seconds: 885 generated and result files byte-identical to the reviewed packet, the folded backend hashes to the file in the tree, the collector binary hashes to the recorded cdb7e9d4…, the forty owner checks pass, and the tree's collector sources equal the packet's. So the integration is right and the record of it does not replay. This is audit 147's F1 again in a new place: a verification that passed once, in a state the commit does not contain. Remedy: pass the runtime source through an argument or environment variable that the subprocess reads, rerun from a clean checkout of the commit, and re-retain the accepted packet's integration record. It can sit at the head of the next packet. The habit to adopt is the one 7ef90b2a adopted for packet verifiers: run every documented command from a clean checkout of the commit that documents it.
+
+### Evidence and replay, carry packet
+
+Packet cf66d596… (1,520 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog 394ccb43… at 249,746 files; index snapshot d3bc4f31… equal to the committed index; evidence commit 77540745; store clean. The verifier passes unmodified from the detached worktree in 79 seconds: 301 originals, 11,016 target comparisons, 11,012 native matches and four declared differences.
+
+### What the packet changes
+
+ASSQ is now five lines of Lisp in `level-0/WASM32/w32-prims.lisp` (DOLIST, skip NIL entries, EQ on the CAR), and the forty-line WAT loop and its call clause leave the backend. REGISTER-ISTRUCT-CELL, ASSEQL and ADJOIN-ASSQ link to the Lisp entry and still match native. This is the first backend lowering retired in favour of target Lisp in CCL's own file, which is the direction the user set.
+
+Handler classes are checked at compile time by a `*macroexpand-hook*` bound in the bootstrap entry only: when the expander is CCL's own HANDLER-BIND or HANDLER-CASE macro function, every clause's class goes through the existing mask registry, and anything else is refused with `:b-condition-type`; expansion itself is left to the native macros. Identity of the macro function, not the name, decides, so a MACROLET of the same name and a quoted form are untouched, and both have admitted cases. The guard-removal control shows the admission rule, not a later emitter, is what refuses. APPLY of SIGNAL or ERROR with a spread list has its two refusal cases, which closes C-5.
+
+O-1 is declared, not changed: eight signed-zero inputs at both placements before and after movement, four literal-zero executions differ from native, each asserted by name. That is an acceptable way to carry a native compiler quirk.
+
+The harness is now a written `check.mjs` and `install.mjs` instead of forty-six string replacements, as asked.
+
+### Probes (scratch copy of the carry fixture, files restored, worktree clean)
+
+All executed (rows confirmed) and match native at both placements, 11,064 target comparisons with the probes added:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| `(ignore-errors (/ 6 x))` | 3, 0, NIL | 2, NIL, NIL, as native |
+| HANDLER-CASE for TYPE-ERROR inside HANDLER-CASE for DIVISION-BY-ZERO and ERROR, around `(/ 6 x)` | 3, 0, NIL, a double | 2, :OUTER-ZERO, :INNER-TYPE, 4.0, as native |
+| Lisp ASSQ on a fresh alist with NIL entries and a duplicate key, after a collection; result value and identity of the pair | keyword, character, fixnum and NIL keys; present, second and absent | equal, first match by identity |
+
+Three compile-time refusals, added to the fixture's control list: a handler for END-OF-FILE, a handler for T, and a STREAM-ERROR HANDLER-BIND inside IGNORE-ERRORS. All three refuse with `:b-condition-type`.
+
+A probe of Claude's own was skipped without notice on the first run because it called FOURTH, which is not yet a compiled definition. That is the fixture working as designed, and it is also the reason every probe row in this file is confirmed by its native-case count before it is reported.
+
+### Carry items
+
+Closed: ASSQ in Lisp, C-5, C-10, C-11 (the forty owner checks ran at integration), the written harness. O-1 closed as a declared difference. Open: this audit's F1; input recipes for the closed definitions that have none; the corrected module list and the `#+wasm32-target` branches for the nineteen POSIX-stopped files.
+
+### Disposition
+
+Integration b9de543d: right on substance, verified byte for byte with one corrected substitution; its documented replay fails as committed (F1), to be repaired and re-retained at the head of the next packet. Carry packet: no defect; the verifier passes; everything Claude ran agrees with native. Recommended: accept and integrate the carry packet (backend minus the ASSQ lowering plus the handler hook, and ASSQ in `w32-prims.lisp`), with R6/R6a on the final files.
+
+Suggested next packet, an execution packet: recipes for the closed definitions without inputs (87 at the last count); the common remaining callees from the frontier; and a first source-branch unit for the POSIX stops, starting with the cheapest family (the `#$` constants `SEEK_SET`, `SEEK_CUR`, `EMFILE`, `EEXIST`, `EINTR`, which stop six files between them: `l0-io`, `nfasload`, `l1-boot-2`, `l1-files`, `l1-sysio`, `linux-files`), each as a `#+wasm32-target` branch in CCL's own file with the 17-target reader matrix. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
