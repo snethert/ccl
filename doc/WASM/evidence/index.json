@@ -3122,16 +3122,25 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-host-r1/packet.json",
       "sha256": "6f1888327e4664eecffe81b089c9b30bc881e99d88355be07081a97c83758ae4",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_EXECUTION_ONLY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "349 original CCL definitions execute (+17); 323 have non-NIL normal returns (+5), eight have error-only witnesses. 17 of the 49 prior closed originals gain recipes; 32 have named remaining dependencies. Restore linux-files in the 57-file worklist: 42 complete reads, 1685/2145 lower-bound admission. No shared source change. 108 source constant branches in twelve files, 58 target protocol identifiers, 409 foreign sites dispositioned and 100 active calls joined. Seven target OS entries compile whole and execute against explicit provider expectations, with observable wait-provider effects; CPU-COUNT refuses GLOBAL-SETQ and live providers/routing remain owed. Prototype rows excluded from original native and closure counters. 11820 native-compatible comparisons, four declared signed-zero differences, 64 target-protocol comparisons, 6310 collections. R6/R6a: 21843 tests, 146 identical / 164 restored FASLs; 204 compositional reader comparisons. Ledger unchanged; no LL15 credit."
+      "scope": "EXECUTION EVIDENCE ACCEPTED by Steve following audit152; ALL SOURCE HELD. 349 original CCL definitions execute (+17); 323 have non-NIL normal returns (+5), eight have error-only witnesses. 17 of the 49 prior closed originals gain recipes; 32 have named remaining dependencies. Restore linux-files in the 57-file worklist: 42 complete reads, 1685/2145 lower-bound admission. No shared source change. 108 source constant branches in twelve files, 58 target protocol identifiers, 409 foreign sites dispositioned and 100 active calls joined. Seven target OS entries compile whole and execute against explicit provider expectations, with observable wait-provider effects; CPU-COUNT refuses GLOBAL-SETQ and live providers/routing remain owed. Prototype rows excluded from original native and closure counters. 11820 native-compatible comparisons, four declared signed-zero differences, 64 target-protocol comparisons, 6310 collections. R6/R6a: 21843 tests, 146 identical / 164 restored FASLs; 204 compositional reader comparisons. Ledger unchanged; no LL15 credit. Audit152 F1: nineteen constants and thirty-five branches belong to excluded subsystems; remove the calling definitions from the Wasm target. Six other boundary constants need decisions. No source integrated.",
+      "review_commit": "9518d154113319d012a42de2ec43cee4bea958b0",
+      "review_sha256": "fc81f16474129e8c36c57c3cb346aa0122f2c23fb087b506b7ff1ec4047b9610"
     },
     {
       "id": "STAGE1-BOOTSTRAP-HOST-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-host-verification.json",
       "sha256": "30f4ed773311a2a68063aa1f607bcc9afe72c8092b14911209a9d9bd67cf7e8a",
       "scope": "Unmodified verifier passes from clean detached proposal commit 3d8fb085b8da61a84f7d4833a0bd2df8ad1a3393. Every deterministic file and reader comparison matches. Index publication snapshot is copied byte-for-byte from final UTF-8 serialization. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HOST-EXECUTION-ACCEPTED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-host-execution-accepted.json",
+      "sha256": "bd552c59455a2e853bb2f0e4a5636ee1e10dba7f5418e0f7466d7aa5035fcf64",
+      "review_disposition": "ACCEPTED",
+      "scope": "Execution-only acceptance on explicit user authorization, bound to audit152. No source integration and no slot credit."
     }
   ],
   "current_runs": [

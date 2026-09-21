@@ -1,3 +1,20 @@
+## 2026-09-21 — accept host execution evidence, hold every source change
+
+On Steve's “Go ahead and accept”, accept STAGE1-BOOTSTRAP-HOST-R1's execution
+scope following audit 152. Import the review verbatim as a08a0a72 and bind the
+original 9518d154 review blob, packet and clean replay in an explicit acceptance
+record. Reuse the independently replayed evidence; no unchanged native build or
+execution is rerun for this disposition.
+
+No source is integrated. The nineteen constants/thirty-five branches serving
+excluded process, mapping, signal, loading, resource and socket subsystems are
+held, along with all other source from this packet. Subsequent work must
+conditionalize excluded callers and supply explicit dispositions for boundary
+constants. The compiler worklist includes cheap operators, unavailable-target
+compiler failures, and GLOBAL-SETQ; target routing still owes scheduler blocking
+and owner authority. Counts remain 349 executed / 323 non-NIL witnesses, and
+21 accepted / 12 missing / zero unreviewed Stage 1 slots.
+
 ## 2026-09-21 — audit 151 and bootstrap host proposal
 
 Import audit 151 verbatim as 764ca6c1. Its correction is adopted: linux-files

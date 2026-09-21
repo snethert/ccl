@@ -1,28 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d96d217b0be9a74d2ec5afec8bbcef31ef3b8b188db7ffac075de7af6c835439",
-  "commit": "51a8981e7f7a7277a1db574be4ebcf2aec5ff5ee",
-  "immutable_evidence_files": 253252,
+  "catalog_sha256": "9540b956a22f9657ff035c0d44ece0fe88d7d8fe26c45e1957220c6547ebd930",
+  "commit": "f01242cc8ad5e7c568bc00447eec60483ae3f0cc",
+  "immutable_evidence_files": 253254,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-host-r1",
-    "files": 1827,
-    "bytes": 92430910
+    "files": 2,
+    "bytes": 457197,
+    "directory": "bootstrap-host-execution-acceptance"
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "21 accepted, 12 missing of 33. Inputs reviewed; linux-files removal held and not integrated. Bootstrap host proposal: 349 originals, 323 non-NIL witnesses, awaiting independent review. No slot credit.",
-  "source_index_sha256": "31ba28da0f47c1e423ef6aa98896469da17a6b5946f95a782e560f06231e2bcf",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-host-r1.json",
+  "scope": "Audit152 execution evidence accepted explicitly; every source change held. Stage1 unchanged: 21 accepted, 12 missing. No integration or extra slot credit.",
+  "source_index_sha256": "aaeefb23a6df1c247ca96caf270f86d0f0ff9e7941e5230f1911130a82022e09",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-host-execution-accepted.json",
   "verification": {
     "status": "PASS",
     "method": "Unmodified verifier from clean detached committed proposal. Native rows, modules, target comparisons and reader matrix replayed. Fresh R6/R6a retained by exact source identity; unchanged runtime qualification reused. Final serialized index copied byte-for-byte to snapshot.",
     "deterministic_files": 1127,
     "source_pins": 260,
     "execution": "85ef748372bcaaf3a8a8d4ccd09e0a96117e0f81cdff9b42ebd25cb31f8281be",
-    "native": "c10d004bf11fda98fac7bc692e968c3d47ca88bf5b7fd90d1bee382bb28c1c38"
+    "native": "c10d004bf11fda98fac7bc692e968c3d47ca88bf5b7fd90d1bee382bb28c1c38",
+    "acceptance": "Existing independent replay and hashes reused; no unchanged execution or native build rerun for disposition."
   },
   "version": 1
 }

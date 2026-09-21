@@ -1,0 +1,69 @@
+{
+  "id": "STAGE1-BOOTSTRAP-HOST-EXECUTION-ACCEPTED",
+  "authorization": {
+    "speaker": "Steve (user)",
+    "quote": "Go ahead and accept",
+    "scope": "Execution evidence accepted in accordance with audit 152; no source from this packet integrated."
+  },
+  "review": {
+    "commit": "9518d154113319d012a42de2ec43cee4bea958b0",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "fc81f16474129e8c36c57c3cb346aa0122f2c23fb087b506b7ff1ec4047b9610",
+    "import_commit": "a08a0a72a2719928a849589013dc5f9c49f20ae3"
+  },
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-host-r1/packet.json",
+    "sha256": "6f1888327e4664eecffe81b089c9b30bc881e99d88355be07081a97c83758ae4"
+  },
+  "verification": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-host-verification.json",
+    "sha256": "30f4ed773311a2a68063aa1f607bcc9afe72c8092b14911209a9d9bd67cf7e8a"
+  },
+  "accepted_scope": {
+    "original_definitions": 349,
+    "non_nil_normal_return_witnesses": 323,
+    "error_only_definitions": 8,
+    "native_compatible_comparisons": 11820,
+    "declared_signed_zero_differences": 4,
+    "protocol_comparisons": 64,
+    "protocol_scope": "Seven target routing entries only; not native OS compatibility or production host authority."
+  },
+  "held_source": {
+    "compiler_or_runtime_integrated": false,
+    "source_integrated": [],
+    "reason": "Audit152 F1: excluded POSIX subsystems must leave by definition, not acquire protocol constants. All host-packet source held, including routing prototype.",
+    "excluded_constants": [
+      "MAP_ANON",
+      "MAP_PRIVATE",
+      "MAP_FIXED",
+      "PROT_NONE",
+      "PROT_READ",
+      "PROT_WRITE",
+      "PROT_EXEC",
+      "RTLD_NOW",
+      "RTLD_NOLOAD",
+      "RUSAGE_SELF",
+      "SIGSTOP",
+      "SIGTSTP",
+      "SIGTTIN",
+      "SIGTTOU",
+      "WNOHANG",
+      "WUNTRACED",
+      "WCOREFLAG",
+      "SOL_SOCKET",
+      "SO_SNDLOWAT"
+    ]
+  },
+  "remaining": [
+    "Re-cut foreign table and conditionalize excluded definitions.",
+    "Six boundary constants need explicit disposition.",
+    "Cheap operator lowerings, compiler failures, GLOBAL-SETQ, and execution witnesses.",
+    "Scheduler blocking contract and unforgeable owner capabilities."
+  ],
+  "slot_credit": false,
+  "stage1_counts": {
+    "accepted": 21,
+    "missing": 12,
+    "unreviewed": 0
+  }
+}
