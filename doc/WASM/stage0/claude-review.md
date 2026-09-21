@@ -2353,3 +2353,31 @@ Each of the six removals is now refused at its named case, at both placements, w
 ### Verdict
 
 Audit-137 F1, F2 and F4 are closed and the image-name correction has no defect. F3 of audit 137 is closed for conses and open for numbers (F2 here). New: F1, a verifier bound to one checkout path; F3, five memory-bounds clauses without a refusal case, none of them named by audit 137. The services are correct in every directed case. Recommended: one directed refusal each for the number depth site in both binaries and for the five bounds clauses, a root-relative dependency record, and as a standing rule for admission predicates, either a directed refusal or a written equivalence argument for every clause, so the sweep need not be repeated by the reviewer. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-ninth Claude audit — STAGE1-STARTUP-REVIEW-138-R1 (follow-up to audit 138) at 30ce60dc — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-139`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Audit 138 landed on wasm2 as b7ffcd50 with this file identical to the worktree commit 21fa546c (sha256 d61d5455…, the value the parent index record binds). One Codex commit followed it. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packet b4fdb34a… (90 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all 91 files cataloged with matching hashes; catalog, index snapshot (equal to the committed index) and evidence commit c88fde02 bind to `repository.json` at 237,494 files; store clean; the audit-137 follow-up record carries REVIEWED_DEFECT_FOUND bound to b7ffcd50. No file under `runtime/`, `compiler/` or the Lisp sources changes. The commit also adds one paragraph to `CLAUDE.md`, the standing admission-predicate rule audit 138 recommended; the user should know the project rules file changed.
+
+Audit-138 F1 is closed. The retained verifier, unmodified, passes from the detached worktree: 45 deterministic files at 88 source pins, the parent’s 258 deterministic files reproduced inside it at 82 pins, 201 dependencies under `ROOT/`, `EVIDENCE/` and `TOOL/` keys, the old absolute-path record bound by hash and required equal after translating exactly its two checkout keys. Worktree clean afterwards.
+
+### Audit-138 F2 and F3 — closed
+
+The number depth site is now removed alone, in both binaries, and refused at `number depth`; the cons site is removed alone in EQUAL. Chains of 1,022 and 1,023 admit, 1,024 and 3,000 refuse with key, table and publication preserved, at both placements. The five bounds clauses each have a directed refusal and a separately compiled omission; a trap is reported as failure, never counted as refusal. Four older population clauses (header, type range, padding, key tag) are isolated as well. Fifty directed checks, sixteen compiled omissions, every one rejected at its named case; service binaries byte-identical to the parent.
+
+Correction to audit 138. It classed the static-region header test as equivalent because a directed key inside the service’s statics was still refused. Codex shows that was an artefact of the probe: the key used an inspected header, which `forbidden` also refuses; with an opaque header the clause alone decides, and its omission is now a rejected control. Codex is right and audit 138 was wrong.
+
+### Probes
+
+`admission-clauses.json` lists every clause of both predicates with a directed case or an equivalence argument. Swept what it does not list or argues away; seven mutants, each run against the full parent harness, the audit-137 probe and the new probe in both modes. Two are refused (scratch and result sub-clauses of `forbidden`, and a key check moved after the store). Four pass everything:
+
+- F1. `forbidden` is inventoried as one clause per call site but has four, and two decide nothing in any retained case. Without its table overlap, a cons key lying inside the table vector’s own header is admitted (real service: status 3 at four offsets) — a key whose contents the table rewrites on every store. Without its static-region overlap, a cons key inside the service’s data and stack is admitted (real: 3); the separate header test covers only uvector headers.
+- F2. One equivalence argument is incomplete. The inventory argues the EMPTY/DELETED test in `keys_valid` away because `ht_run` refuses those keys first. That holds for the top-level key only; `keys_valid` applies the test to every component. A cons whose car is the EMPTY word is refused by the real service and admitted with the test removed. Audit 138 made the same error with the same top-level probe.
+- F3. The README’s ordering claim is not tested. It says the unbacked-result case “performs SET” and that “the population must remain unchanged before any result store”. The case stores NIL over NIL, so the preservation check cannot see a store. Moving the whole result admission after the store passes all three harnesses; directed, with a real cons as the new list: the real service returns 1 with the contents word unchanged, the mutant returns 1 with it changed. One changed constant in `probe.mjs` closes it.
+
+### Verdict
+
+Audit-138 F1, F2 and F3 are closed; no defect in the portable verifier or the new controls. Three residual test gaps (F1–F3 here), all in refusal of malformed owner input, and in every directed case the services are correct: across audits 137–139 some sixty single-clause mutants and twenty directed cases have found no service defect in the three units. Reviewer’s view: these four cases are about twenty lines and need not hold a separate round; they can ride with the next commit, with the inventory’s EMPTY/DELETED entry changed from equivalent to directed and `forbidden` listed by sub-clause. Acceptance of host inputs (as corrected), equality tables and population access remains the user’s decision. Ledger unchanged: 21 accepted, 10 missing, zero unreviewed.
