@@ -2570,3 +2570,57 @@ Suggested next packet, same size: ERROR and SIGNAL with arguments; character and
 ### Verdict
 
 No defect found. The work is what was asked for, at the size asked for, and everything Claude ran against native agreed. Recommended: accept and integrate, subject to the user’s R6 sentence above, since integration puts the three edited files into the shared tree. Ledger: 21 accepted, 12 missing, zero unreviewed.
+
+## Hundred-and-forty-sixth Claude audit — integration of STAGE1-BOOTSTRAP-CORE-R1 at ee5ad365 and STAGE1-BOOTSTRAP-LIBRARY-R1 at 2ee05092 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-146`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed 6947f83b. Reviewer disposition only. Audits 144 and 145 are imported verbatim: this file at 2ee05092 hashes f163119d…, the value `acceptance-bootstrap-core.json` binds for af7c0075.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 129 → 137 (+8: GET, PUT, SYMBOL-PLIST, SYMBOL-NAME, NEED-CHAR-CODE, UTF-16-CHARACTER-SIZE-IN-OCTETS, REQUIRE-NUMARG, REQUIRE-NO-NUMARG). Diagnostic admission 1,539 → 1,862 of 2,492 (+323). `l0-symbol.lisp` compiles whole (28 of 28 records); `l0-misc.lisp` whole with 31 of 56 admitted and the rest refused by name. A denominator from the target's real 57-file worklist is begun, as audit 145 asked: 1,520 of 1,919 parsed, 22 files stopping at a read or environment error, stated as a lower bound; it reports zero definitions in `l0-bignum64.lisp`, which is correct. No new C or JS service, no source rewriter, one one-token `wasm32-target` addition to SYMBOL-NAME's existing reader conditional, `level-0/WASM32/` registered with the cross-loader.
+
+The two counters have come apart. Admission gained 323 and native-matched execution gained 8; 1,862 definitions compile and 137 run. The cause is measurable from the packet's own `throughput.json`: a definition executes only when every callee is admitted, and the callees most often missing from admitted definitions are EQL (198 definitions), an unnamed callee recorded as NIL (165), `1+` (130), FORMAT (48), STREAM-IS-CLOSED (42), `1-` (33), ZEROP (30), MAKE-STRING (30), ASSQ (28), LOGIOR (21), `-` (21), LOGAND (19). As the only missing callee: NIL 64, EQL 34, STREAM-IS-CLOSED 28, `1+` 27. EQL already has an accepted leaf and is not counted as closed; `1+`, `1-`, ZEROP, LOGAND, LOGIOR are arithmetic the numeric service or the inline fixnum operators already perform; the NIL rows need a look at what the dependency recorder is writing. Closing those few names is worth more executed definitions than any further operator.
+
+### Integration ee5ad365
+
+Eight files integrated; each equals the reviewed proposal bytes in packet 041dcefe… and the `before`/`after` hashes in `integration-bootstrap-core.json`; all 41 unchanged integrated files still hash as recorded. The collector change is the reviewed one (subtag 122 joins the node allowlist in `collector.c` and `collector-owner.mjs`). The R6 allowance is recorded in `r6-source-locations.json`, `acceptance.md` and `CLAUDE.md` with the sentence audit 145 proposed, quoted as the user's adoption (relayed by Codex; not witnessed by Claude), and is scoped to source locations only. `readers.lisp` adds a 17-target reader matrix (51 comparisons). No defect.
+
+### Evidence and replay, library packet
+
+Packet 82f7cbc9… (1,042 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, 1,043 files cataloged; catalog d07336a8…, index snapshot 330b15c4… equal to the committed index, evidence commit 54a9e9ec at 241,590 files; store clean. The verifier passes unmodified from the detached worktree in 68 seconds: 137 originals, 1,809 native rows, 7,236 comparisons at both placements.
+
+### F1 — byte-vector store writes the index at the value's position (defect)
+
+`bootstrap-array-operator` lowers `%typed-uvset` with `value` taken from the second operand after the kind and `index` from the third. CCL's acode order is kind, vector, index, value (`x862-%typed-uvset (seg vreg xfer subtag uvector index newval)`; `nx1-%typed-miscset`). The lowering appears to follow the parameter names of `nx1-1d-vset (context arr newval dim0 env)`, which are misleading: `nx1-aset` binds the form `(aset array index value)` to `arr newval dim0`, so the parameter called `newval` holds the index.
+
+Executed in a scratch copy of the fixture, against the packet's native oracle:
+
+| Form | Native | Wasm |
+|---|---|---|
+| `(setf (aref v 3) 2)`, v = #(9 9 9 9) of `(unsigned-byte 8)` | #(9 9 9 2) | #(9 9 3 9), no error |
+| the body of `%COPY-STRING-TO-U8` for one element ("A", dest 1) | #(99 65 99 99) | checked error 4 |
+| `(aref v 1)`, `(aref v 3)`, v = #(0 65 128 255) | 65, 255 | 65, 255 |
+
+The first row is a silent wrong store inside the vector's bounds. The read lowering is correct.
+
+### F2 — the README's execution claim for the string-copy functions is false
+
+README: “The two unchanged CCL string-copy functions now execute.” Neither `%COPY-U8-TO-STRING` nor `%COPY-STRING-TO-U8` has a row in `native.json`, a module in `modules.json`, or an entry in `closed.json`. Both are admitted with the dependency `1+` unresolved, so the executor never selects them; their input tables in `cases.lisp` and the octet support added to the harness are unused. `%typed-uvref` and `%typed-uvset` therefore have no executed witness in the packet, which is how F1 passed the verifier. This is the third instance of the pattern in audits 143 and 145 (admitted, counted, not run): a lowering with no executed witness should be reported as unexecuted.
+
+### Probes that match native
+
+Added to the scratch fixture and run through the oracle and moving harness (7,280 comparisons, PASS with the F1 cases removed): TYPE-ERROR with initargs in reverse order and a collection between them; a SIMPLE-ERROR re-signalled from a HANDLER-BIND handler with two format arguments; PUT of a new key, a second key and a replacement followed by GET present, GET absent with default, SYMBOL-PLIST and SYMBOL-NAME on a quoted symbol; CODE-CHAR at #xFFFE and #xFFFF; byte-vector reads.
+
+### Style, for integration
+
+The proposal renames the integrated `bootstrap-operator` to `library-prior-operator` and `bootstrap-numeric-call` to `library-prior-call`, then defines new functions under the old names at the end of the file that fall through to the renamed ones. Repeated per packet this becomes a chain of `prior` dispatchers. At integration the new cases belong in the existing CASE forms, the way the surrounding backend is written (the CLAUDE.md bootstrap-throughput rule). Symbol-vector accessors (`symptr->symvector` as identity) and the `symbol.*-cell` constants follow the 32-bit native targets and are right.
+
+### Carry items
+
+Closed from audit 145: C-2 (fixnum operand refusal), C-3 (mis-tagged node vector refusal), C-4 (even-length `%GVECTOR` pads with zero). C-1 half closed: `%ILOGNOT` has an emitted witness; Codex records that the signed `%I<>` witness is still owed, accurately. New: C-5, the condition lowering accepts six literal classes with two initargs each and refuses the rest by name; each refusal keyword (`:bootstrap-condition-class`, `-initarg`, `-initargs`, `:bootstrap-signal-spread`) wants one refusal case. C-6, `wasm32-array-type-name-from-ctype` answers `:bit-vector` for which no lowering exists; `bootstrap-array-operator` refuses it, and a case should show that.
+
+### Disposition
+
+Integration ee5ad365: verified, no defect. STAGE1-BOOTSTRAP-LIBRARY-R1: not acceptable as committed — F1 is wrong code in an admitted CCL definition and F2 is a false execution claim (R-4 applies to both). Neither needs its own packet: exchange the two operands, execute both copy functions against native, and correct the README, at the head of the next substantive packet; integrate nothing from this proposal before then. The conditions, character, string and symbol work is otherwise sound under every probe tried.
+
+Requested of the next packet, same size or larger: make executed definitions the target, not admissions. Close EQL, `1+`, `1-`, ZEROP, LOGAND, LOGIOR, `-`, ASSQ and the NIL-callee rows, then give inputs to everything that becomes closed; by the packet's own figures 160 admitted definitions have one of those names as their only missing callee (NIL 64, EQL 34, `1+` 27, ASSQ 10, LOGAND 8, `1-` 7, LOGIOR 5, ZEROP 5). Report every new lowering as executed or unexecuted. Ledger unchanged: 21 accepted, 12 missing of 33, none unreviewed.
