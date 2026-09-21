@@ -2992,6 +2992,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Steve adopts the narrow source-location allowance, resolving audit-145 acceptance condition. Eight reviewed files integrated byte-exactly; 41 prior runtime files unchanged. Additional all-existing-target reader check: 17 profiles, 51 comparisons, non-host-only fault rejected, independent fresh extraction replay identical. Original proposal remains replayable at 6947f83b. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LIBRARY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-library-r1/packet.json",
+      "sha256": "82f7cbc994686df42bb01be6e5a9acbb08fafa3c1cb8cbb739cafbe45180fdce",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Compiler proposal for ERROR/SIGNAL arguments, characters/strings and native symbol definitions. 137 original definitions execute (was 129), 7236 native comparisons, 3618 between-call and 102 in-call collections. All 28 l0-symbol file records admitted; 31/56 l0-misc records admitted. Actual target worklist: 57 files, 35 fully read, 1520 admissions from 1919 parsed definitions; incomplete denominator, 22 reader failures retained. Historical census 1862/2492 is diagnostic only. Native tests ran once (21843 PASS); final proposal reuses that execution only after all 164 freshly rebuilt native FASLs and snapshot equal. New source reads identically under 17 existing targets; 51 unchanged reader checks reused. Four focused faults rejected; source-emitted %I<> witness remains owed. No shared-source change or LL15 credit."
     }
   ],
   "current_runs": [

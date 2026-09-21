@@ -1,3 +1,26 @@
+## 2026-09-21 — implement bootstrap conditions, characters and native symbols
+
+Add the bootstrap-library compiler proposal. ERROR/SIGNAL now accept string
+format arguments and selected native condition classes through the existing
+rooted constructor and dispatcher. Add character/code, simple-string and byte
+vector operations, symbol pointer conversions and target symbol cell indices.
+All 28 l0-symbol whole-file records compile; l0-misc compiles 31 of 56 records,
+with the remaining kernel/foreign/thread requirements retained as refusals.
+No new C or JS implementation service and no shared-source change.
+
+137 original CCL definitions execute against native (up from 129), with 7,236
+comparisons and moving collection. Four focused faults reject. The real target
+worklist has 57 files; 35 read completely and 22 retain their first reader error.
+Its 1,520 admissions from 1,919 parsed definitions are a lower bound. The old
+1,862/2,492 count remains a historical diagnostic, not bootstrap completion.
+
+Native 21,843 tests ran once. Final Wasm-only additions reuse that execution
+only after all 164 freshly rebuilt native FASLs and the native snapshot match;
+all FASLs restore. The new l0-symbol branch reads identically under 17 targets,
+reusing 51 unchanged reader checks. Audit-145 padding and primitive carries
+have directed checks; a source-emitted %I<> witness is still owed. This proposal
+awaits Claude review, with no LL15 credit or acceptance inferred.
+
 ## 2026-09-21 — adopt narrow R6 allowance and integrate reviewed bootstrap core
 
 Import Claude audits 144 and 145 in order, preserving their original content.

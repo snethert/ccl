@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0b75a274a62217746722aeac6aa3e149e0885e827215f9656bddd64d341ac2a6",
-  "commit": "aa48b741670fc861c5f0a81c056c3f89bb1331ec",
-  "immutable_evidence_files": 240546,
+  "catalog_sha256": "d07336a8c510db6b52313c18aef65e562854f41d30701021d8bc1f9af399f5dc",
+  "commit": "54a9e9ec03cfda88eb2035c75a8a5ab8b621b6a5",
+  "immutable_evidence_files": 241590,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-core-accepted",
-    "files": 71,
-    "bytes": 728580
+    "directory": "2026-09-21-stage1-bootstrap-library-r1",
+    "files": 1043,
+    "bytes": 44291798
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap core reviewed, accepted and integrated after the user-adopted R6 allowance; no extra slot credit.",
-  "source_index_sha256": "fb2ebef32054922493749f6ab06610573a4753a1886eaf916f8bb9e287db89ce",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-core-accepted.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap library compiler proposal executed and awaiting review; no additional slot credit.",
+  "source_index_sha256": "330b15c4b0dd8f20e4dabe2564e109caf8aca9166c711d9cd2bd8084bf1e243d",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-library-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Exact reviewed-byte integration and decoded-code evidence reuse; new seventeen-target reader matrix replayed from fresh U1 extracts, with a non-host-only fault rejected. Scoped evidence addition verified.",
-    "native": "2e18ec6cefadf124c408b467ca6ed4b0ab2a29087f8c288135bf0e0b2da40152",
-    "execution": "6bf64f49500bd5206153782e5b2be68bfeab564f0c6be9da3e6bd86a6eba11a9"
+    "method": "New proposal execution, four focused controls, native source-location comparisons and seventeen-target reader check. Native tests executed once; final native rebuild FASLs and snapshot identical to that run. Prior packet evidence reused; scoped catalog addition only.",
+    "native": "9c57cecf92afa7da66668129f49c946d64e7f6382812bb1e81a67ce7bd08a509",
+    "execution": "bc483626aa4cad5b4f77944e5280840d557334950953e7136df5a95dae414872"
   },
   "version": 1
 }

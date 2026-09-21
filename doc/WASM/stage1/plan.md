@@ -573,9 +573,14 @@ those two files. Corrected admission is 1,539/2,492, with 193 callee-closed;
 this is not initialized bootstrap closure. The proposal is accepted and integrated following audit 145 and Steve’s R6
 source-location decision.
 
-The next packet adds ERROR/SIGNAL with arguments, character and string
-primitives, and whole-file l0-symbol/l0-misc compilation. Derive the denominator
-from the actual Wasm module list and carry audit-145 C-1–C-4 in that packet.
+The [library proposal](../../../tests/wasm/stage1/bootstrap-library/README.md)
+implements ERROR/SIGNAL arguments and character/string primitives, admits all
+l0-symbol file records, and admits 31/56 l0-misc records. It executes 137
+original definitions, up from 129. It follows the actual 57-file target list,
+but 22 reader/environment failures still prevent a complete denominator.
+Next close those compile-time and foreign-reader environments and the remaining
+l0-misc operators; preserve the explicit unsupported cases. Audit-145 carries
+have directed checks except the still-owed source-emitted %I<> witness.
 Continue closing the real TYPEP/REQUIRE-TYPE and error callees, then execute
 initializers and install definitions at actual image symbols. Continue measuring
 startup operator occurrences and source admissions without claiming terminal

@@ -1,0 +1,20 @@
+{
+  "summary": "Development found a character-tag decoding error, absent target symbol-index constants, and fixture omissions in plist rooting and native symbol isolation. Each is corrected in the final run. No production runtime service was rewritten.",
+  "retained": [
+    "ccl-library-r1/compiled/compile.log",
+    "ccl-library-r1/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-library-r2/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-library-r2/execution.log",
+    "ccl-library-r5/compiled/compile.log",
+    "ccl-library-r6/execution.log",
+    "ccl-library-r6/compiled/proposal/files/compiler/WASM32/wasm32-arch.lisp",
+    "ccl-library-r7-exec.log",
+    "ccl-library-r7-exec-r2.log",
+    "ccl-library-native-qualified-driver.log"
+  ],
+  "notes": [
+    "The first plist-root failure log was overwritten during harness development; its exact omission is re-executed and retained as unrooted-symbol-plist in the final focused controls, not represented as the original log.",
+    "r7 also revealed that PUT and SYMBOL-PLIST shared a native test symbol across rows while target rows reset. The final cases use separate symbols.",
+    "An early native wrapper quoting error occurred before starting a build. The successful qualification reuses the full native test execution only after rebuilding and matching every native FASL and the native snapshot."
+  ]
+}
