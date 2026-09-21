@@ -2995,3 +2995,7 @@ Claude reviewed 2e3e08ea (STAGE1-STARTUP-CONFIG-R2, auxiliary follow-up to audit
 ## 2026-09-20 — accept and integrate startup configuration R2
 
 On “accept. integrate and PROCEED”, bind audit 127 and integrate the two exact portable configuration modules. Production Node and Chromium execution and both corrected R2 harnesses reproduce reviewed records. Retain corrected generated effects in R2, preserve original sources as historical evidence, and carry scope limits. No compiler changes or LL15 credit. Continue with joined initializer execution and further concrete callback work.
+
+## 2026-09-20 — execute joined startup callbacks
+
+Eighteen selected reset/configuration effects execute in one schedule over 21 live globals; the CPU reset and cache publication share a cell. Thirteen reset completion constants recompiled through unchanged compiler; native resets rerun, R2 configuration bytes and native answers reused. Node and Chromium at both placements: 5184 callback comparisons, 5996 invocations, 180 refusals. Full-TCR and foreign-region checks; no LL15 credit. Fresh verifier reproduces 131 deterministic files at 191 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.

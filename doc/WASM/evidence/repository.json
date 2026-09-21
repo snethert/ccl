@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e9437b32d2a545701ca7c581931bea72d13ef9a022395f01c3a512bb71d47691",
-  "commit": "e8fbb56c3dd3428608886df8d1a6fb45e71c8fe9",
-  "immutable_evidence_files": 233766,
+  "catalog_sha256": "5875474043aa1d2188bd7f703c8e2996689a49b403a26522d89717c51202ba5b",
+  "commit": "5c954096a8a14484339f5431f53a985bbc52aeab",
+  "immutable_evidence_files": 233945,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-config-acceptance-r2",
-    "files": 12,
-    "bytes": 2276851
+    "directory": "2026-09-20-stage1-startup-joined-r1",
+    "files": 179,
+    "bytes": 12177181
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 40195,
+  "prior_indexed_references_verified": 40601,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Startup configuration R2 accepted and portable modules integrated; no LL15 credit.",
-  "source_index_sha256": "a62253d569ef9f656f947cdc72d94954477efbdf96509a77c8abf6cbbc683e73",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-config-acceptance-r2.json",
-  "verification": "Exact reviewed modules; production-import Node and Chromium replay and corrected reset replay identical. New files and index references verified.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary joined startup callbacks executed; not reviewed or integrated.",
+  "source_index_sha256": "1548612cc5d9f97528922a1a584fb2c13c08a0fbb267efe7f6955cac734120f0",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-joined-r1.json",
+  "verification": "Fresh replay: 131 deterministic files at 191 pins. New files and index references verified incrementally.",
   "version": 1
 }

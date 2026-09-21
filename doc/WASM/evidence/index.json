@@ -2644,6 +2644,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "User accepts R2 after audit 127; exact configuration modules integrated, production imports and both corrected harnesses replay. Auxiliary, no slot credit."
+    },
+    {
+      "id": "STAGE1-STARTUP-JOINED-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-joined-r1/packet.json",
+      "sha256": "568ac73e32233a7d2f5136e7200c4c2d58ce9f3b64933f1177145c3749f55eaa",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Eighteen selected reset/configuration effects execute in one schedule over 21 live globals; the CPU reset and cache publication share a cell. Thirteen reset completion constants recompiled through unchanged compiler; native resets rerun, R2 configuration bytes and native answers reused. Node and Chromium at both placements: 5184 callback comparisons, 5996 invocations, 180 refusals. Full-TCR and foreign-region checks; no LL15 credit. Fresh replay: 131 deterministic files at 191 pins."
     }
   ],
   "current_runs": [
