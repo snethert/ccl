@@ -1923,3 +1923,38 @@ Packet adffb559… (STAGE1-STARTUP-CONFIG-R1, NOT_REVIEWED, slot_credit false, 2
 ### Verdict
 
 Two defects found in 3189606d (STAGE1-STARTUP-CONFIG-R1): F1, an omitted native `*cpu-count*` write hidden by a substitution described as read-only; F2, a restored-pointer check that reads `csp_base` instead of `csp` and omits `tsp`, inherited from the accepted startup-resets harness. No defect in the intermediate acceptance commit 36aeff78. Both are small and fixable in a follow-up; I do not recommend acceptance before one. Auxiliary packet, no slot credit; the decision is the user’s. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-twenty-seventh Claude audit — STAGE1-STARTUP-CONFIG-R2 (auxiliary follow-up to audit 126) at 2e3e08ea — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 2e3e08ea. Author: Codex. Scope: `tests/wasm/stage1/startup-config-review/` in full (`derive.py`, `run.py`, `regression.py`, `native-cpu.lisp`, `packet.py`, README, scope and development records), the STAGE1-STARTUP-CONFIG-R2 packet, and the index changes to the R1 and accepted startup-resets entries. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence
+
+Packet d5ff38f1… (STAGE1-STARTUP-CONFIG-R2, AUXILIARY_STARTUP_CONFIG_CORRECTION, NOT_REVIEWED, slot_credit false, 444 manifest entries, all hashes match, no unlisted file); catalog d912abf5…; index snapshot fbc45fe2…; evidence commit 25be6a27, store clean; 445 packet files all cataloged with matching hashes. The R1 index entry is now REVIEWED_DEFECT_FOUND / SUPERSEDED and binds audit 126 by commit 0b21e16d and review-file hash 10d9682f… (recomputed from that commit). The accepted startup-resets entry keeps its locator, hash and disposition and gains the follow-up review binding and a statement of the oracle gap. The commit touches no file under `startup-config/`, `startup-resets/`, `runtime/` or `compiler/`.
+
+### Replay
+
+`packet.py verify` in the detached worktree at 2e3e08ea: PASS, 258 deterministic files, 179 source pins (the 171 R1 pins re-asserted at HEAD plus eight follow-up sources), summary equal to the retained summary: 7 modules, 36 cases, 4 Workers, 360 distinct native answers compared 1,440 times, 2,032 invocations, 120 refusals, 2,016 installed-digest checks, 6,096 foreign-region checks, 12 inherited faults, 10 publication controls, 20 regression rows, reset replay byte-identical. The replay re-derived both overlays, recompiled the seven modules and the native oracles, re-probed the pinned Chromium Worker and reran the untouched registered SPIN-COUNT callback in the pinned kernel and image: cache NIL publishes 16 with 1,024 tries, cache 1 stays 1 with one try, cache 2 stays 2 with 1,024 tries, each returning `*SPIN-LOCK-TIMEOUTS*`. The four overlay Python files, which the deterministic set does not hash, equal the packet copies byte for byte.
+
+### Disposition of audit-126 findings
+
+- F1 closed. `native-cpu.lisp` reads the `cpu-count` DEFUN from pinned U1 at its byte position, asserts the OR / cache / SETQ shape and replaces only the acquisition expression; all 72 adapted SPIN-COUNT forms read `(EQL 1 (OR *CPU-COUNT* (SETQ *CPU-COUNT* n)))`. The generated body reads the cache, stores the owner’s count only when it is NIL and chooses from the resulting count. `*cpu-count*` is a ninth checked global in the native oracle, the Python model, the schedule’s before and after states, the image-write window and the preflight and readback modules. In the expected data the cold start leaves the cache NIL through the first four callbacks and equal to the owner’s count after the fifth in all 36 cases; the warm start preserves a count that differs from the owner’s in all 36; and the spin tries differ between cold and warm in all 36, so a body that preserved the cache but chose from the owner’s count would fail the postcondition in every case.
+- F2 closed. Both derived harnesses compare all 64 TCR words except `mv_count`, which must equal the returned count, and assert the schema positions of `tsp`, `csp` and `mv_count`. The derived reset harness differs from the accepted one by seven lines, all of them that check, and reproduces the retained execution record byte for byte against the accepted binaries. The four displaced-`tsp` and displaced-`csp` modules still escape both original harnesses and are retained as such.
+
+### Probes
+
+- A. TCR words not in the author’s fault list: modules that return with word 0, `alloc_limit` (52), `tlb_pointer` (104) or the last reserved word (252) displaced are refused “TCR preservation” by both corrected harnesses, eight of eight.
+- B. The derived configuration harness differs from R1 by 25 lines: the TCR check, the ninth symbol in admission, preflight, readback, destinations, plan and arguments. Nothing else changed.
+- C. Development record: two attempts, five retained files, all present in `development.tar.gz`.
+- D. Counts: 14 TCR faults plus 2 cache faults make the sixteen new rejections; 4 retained escapes; 20 regression rows.
+
+### Observations (none a defect)
+
+1. The corrected configuration unit exists only as an overlay derived at run time and as the retained copy in the packet; the R1 directory in the tree still holds the superseded body and README. The plan says to use the corrected overlays; anything that later integrates these effects must take them from R2, not from `startup-config/`.
+2. `native-cpu-probe.json` records this machine’s 16 processors and is in the deterministic set, so the replay is bound to this host, as the pinned kernel and browser already are.
+3. Full-TCR preservation is asserted for these allocation-free startup bodies only, as the README states; memory outside the declared regions remains unobserved.
+4. The owner’s count is published only on a cold cache; after a warm image restore the accepted literal reset at system-pointer 5 runs first, so the cold path is the one startup takes.
+
+### Verdict
+
+No defect found in 2e3e08ea (STAGE1-STARTUP-CONFIG-R2). Audit-126 findings F1 and F2 are closed, F2 for the accepted startup-resets harness as well. Auxiliary packet, no slot credit; acceptance is the user’s decision. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
