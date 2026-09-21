@@ -349,3 +349,14 @@ proposal is also withdrawn in favour of collector-owned statistics and a
 five-value GCTIME consumer. New work first binds all 35 callback classifications
 to the unchanged selection; deferred/excluded dependencies remain open until
 the selected bootstrap demonstrates exclusion or a replacement.
+
+The [portable startup runtime](../../../tests/wasm/stage1/startup-runtime/README.md)
+implements collector-owned session counters and a generated five-value GCTIME
+reader, including named calls through real function cells. It replaces the
+withdrawn native buffer proposal and binds a new 35-row callback classification
+to the untouched historical selection. Seven modules execute at both placements
+with collection, large counters and complete value preservation; auxiliary and
+awaiting review. Next: host namespace/image/argument/home effects, thread and
+stream dependency disposition, then the concrete 167-unit initializer/definition
+and ordinary-condition activation join. Classification alone closes none of
+those dependencies; no native database leaf should return to that worklist.

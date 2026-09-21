@@ -1,0 +1,572 @@
+{
+  "version": 1,
+  "snapshot": "2026-09-13-startup-seeds-r2/image.json.gz",
+  "selection": {
+    "path": "tests/wasm/stage1/startup-resets/selection.json",
+    "sha256": "24492ad2324651a014c88edea986b3d812615fd478dd49f4765199216344a169"
+  },
+  "order": "system_pointers ascending ordinal, then user_pointers ascending ordinal",
+  "callbacks": [
+    {
+      "key": "system_pointers:0",
+      "group": "system_pointers",
+      "ordinal": 0,
+      "function": 2427,
+      "name": "CCL::*TOTAL-GC-MICROSECONDS*",
+      "source": "level-1/l1-init.lisp",
+      "position": 11356,
+      "classification": "RT",
+      "providers": {
+        "browser": "REPLACEMENT_PROPOSED",
+        "node": "REPLACEMENT_PROPOSED"
+      },
+      "obligation": "Port GCTIME to collector statistics; join its generated consumer and owner into bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:1",
+      "group": "system_pointers",
+      "ordinal": 1,
+      "function": 2426,
+      "name": "CCL::*TOTAL-BYTES-FREED*",
+      "source": "level-1/l1-init.lisp",
+      "position": 11746,
+      "classification": "RT",
+      "providers": {
+        "browser": "NO_LIVE_LISP_READER",
+        "node": "NO_LIVE_LISP_READER"
+      },
+      "obligation": "Native kernel writes this buffer; the sole Lisp read is disabled by NOT-ANY-MORE. Prove native GC path excluded from selected image.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:2",
+      "group": "system_pointers",
+      "ordinal": 2,
+      "function": 2582,
+      "name": "CCL::KERNEL-LOCKS",
+      "source": "level-1/l1-aprims.lisp",
+      "position": 1586,
+      "classification": "RT",
+      "providers": {
+        "browser": "REPLACEMENT_REQUIRED",
+        "node": "REPLACEMENT_REQUIRED"
+      },
+      "obligation": "Route consumers of kernel locks to D5 owner/coordination operations.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:3",
+      "group": "system_pointers",
+      "ordinal": 3,
+      "function": 5081,
+      "name": "CCL::*FD-SET-SIZE*",
+      "source": "level-1/l1-streams.lisp",
+      "position": 212577,
+      "classification": "EXCL",
+      "providers": {
+        "browser": "EXCLUSION_REQUIRED",
+        "node": "EXCLUSION_REQUIRED"
+      },
+      "obligation": "Exclude or replace native SELECT and its bitmap consumer in linux-files.lisp.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:4",
+      "group": "system_pointers",
+      "ordinal": 4,
+      "function": 5538,
+      "name": "CCL::*MAX-OS-OPEN-FILES*",
+      "source": "level-1/linux-files.lisp",
+      "position": 40638,
+      "classification": "EXCL",
+      "providers": {
+        "browser": "EXCLUSION_REQUIRED",
+        "node": "EXCLUSION_REQUIRED"
+      },
+      "obligation": "Exclude or replace native EXECVP descriptor-closing path; no invented descriptor-table limit.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:5",
+      "group": "system_pointers",
+      "ordinal": 5,
+      "function": 5568,
+      "name": "CCL::*CPU-COUNT*",
+      "source": "level-1/linux-files.lisp",
+      "position": 86059,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:6",
+      "group": "system_pointers",
+      "ordinal": 6,
+      "function": 5564,
+      "name": "CCL::*HOST-PAGE-SIZE*",
+      "source": "level-1/linux-files.lisp",
+      "position": 88722,
+      "classification": "HOST",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind configuration R2 effect; cold/warm CPU cache and full-TCR checks.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:7",
+      "group": "system_pointers",
+      "ordinal": 7,
+      "function": 5548,
+      "name": "CCL::*LAST-RDTSC-TIME*",
+      "source": "level-1/linux-files.lisp",
+      "position": 103196,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:8",
+      "group": "system_pointers",
+      "ordinal": 8,
+      "function": 6151,
+      "name": "CCL::*TICKS-PER-SECOND*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 930,
+      "classification": "HOST",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind configuration R2 effect; cold/warm CPU cache and full-TCR checks.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:9",
+      "group": "system_pointers",
+      "ordinal": 9,
+      "function": 6150,
+      "name": "CCL::*NS-PER-TICK*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 1051,
+      "classification": "HOST",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind configuration R2 effect; cold/warm CPU cache and full-TCR checks.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:10",
+      "group": "system_pointers",
+      "ordinal": 10,
+      "function": 6147,
+      "name": "CCL::*LISP-START-TIMEVAL*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 2687,
+      "classification": "HOST",
+      "providers": {
+        "browser": "NO_LIVE_LISP_READER",
+        "node": "NO_LIVE_LISP_READER"
+      },
+      "obligation": "Only its definition refers to this symbol; no native timeval object in the port. Recheck selected compiled consumers.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:11",
+      "group": "system_pointers",
+      "ordinal": 11,
+      "function": 6146,
+      "name": "CCL::*INTERNAL-REAL-TIME-SESSION-SECONDS*",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 2812,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:12",
+      "group": "system_pointers",
+      "ordinal": 12,
+      "function": 6131,
+      "name": "CCL::INITIAL-THREAD",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 7420,
+      "classification": "RT",
+      "providers": {
+        "browser": "DEFERRED",
+        "node": "DEFERRED"
+      },
+      "obligation": "LL20 initial-thread/TCR materialization and owner identity required.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:13",
+      "group": "system_pointers",
+      "ordinal": 13,
+      "function": 6127,
+      "name": "CCL::LISTENER-STACK-SIZES",
+      "source": "level-1/l1-lisp-threads.lisp",
+      "position": 8509,
+      "classification": "HOST",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind configuration R2 effect; cold/warm CPU cache and full-TCR checks.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:14",
+      "group": "system_pointers",
+      "ordinal": 14,
+      "function": 6189,
+      "name": "CCL::*UNPROCESSED-COMMAND-LINE-ARGUMENTS*",
+      "source": "level-1/l1-application.lisp",
+      "position": 2195,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:15",
+      "group": "system_pointers",
+      "ordinal": 15,
+      "function": 6171,
+      "name": "CCL::*LOAD-LISP-INIT-FILE*",
+      "source": "level-1/l1-application.lisp",
+      "position": 8939,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:16",
+      "group": "system_pointers",
+      "ordinal": 16,
+      "function": 6170,
+      "name": "CCL::*LISP-STARTUP-PARAMETERS*",
+      "source": "level-1/l1-application.lisp",
+      "position": 8976,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:17",
+      "group": "system_pointers",
+      "ordinal": 17,
+      "function": 6716,
+      "name": "CCL::*QUITTING*",
+      "source": "level-1/l1-readloop.lisp",
+      "position": 4998,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:18",
+      "group": "system_pointers",
+      "ordinal": 18,
+      "function": 7277,
+      "name": "CCL::*EVENT-DISPATCH-TASK*",
+      "source": "level-1/l1-events.lisp",
+      "position": 9812,
+      "classification": "DEFER",
+      "providers": {
+        "browser": "DEFERRED",
+        "node": "DEFERRED"
+      },
+      "obligation": "Periodic tasks and interactive-stream flushing require scheduler/stream implementations.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:19",
+      "group": "system_pointers",
+      "ordinal": 19,
+      "function": 7592,
+      "name": "CCL::*HEAP-IMAGE-NAME*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 1135,
+      "classification": "HOST",
+      "providers": {
+        "browser": "IMPLEMENTATION_REQUIRED",
+        "node": "IMPLEMENTATION_REQUIRED"
+      },
+      "obligation": "Publish the owner-provided image namespace name.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:20",
+      "group": "system_pointers",
+      "ordinal": 20,
+      "function": 7591,
+      "name": "CCL::*COMMAND-LINE-ARGUMENT-LIST*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 1185,
+      "classification": "HOST",
+      "providers": {
+        "browser": "IMPLEMENTATION_REQUIRED",
+        "node": "IMPLEMENTATION_REQUIRED"
+      },
+      "obligation": "Publish the owner-provided argument list as Lisp strings.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:21",
+      "group": "system_pointers",
+      "ordinal": 21,
+      "function": 7632,
+      "name": "CCL::*USER-HOMEDIR-PATHNAME*",
+      "source": "level-1/l1-pathnames.lisp",
+      "position": 29363,
+      "classification": "HOST",
+      "providers": {
+        "browser": "IMPLEMENTATION_REQUIRED",
+        "node": "IMPLEMENTATION_REQUIRED"
+      },
+      "obligation": "Publish a non-NIL home pathname under both providers.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:22",
+      "group": "system_pointers",
+      "ordinal": 22,
+      "function": 7626,
+      "name": "CCL::*DID-SHOW-MARKETING-BLURB*",
+      "source": "level-1/l1-boot-lds.lisp",
+      "position": 2210,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:23",
+      "group": "system_pointers",
+      "ordinal": 23,
+      "function": 7648,
+      "name": "CCL::INIT-LOGICAL-DIRECTORIES",
+      "source": "level-1/l1-boot-1.lisp",
+      "position": 3449,
+      "classification": "HOST",
+      "providers": {
+        "browser": "IMPLEMENTATION_REQUIRED",
+        "node": "IMPLEMENTATION_REQUIRED"
+      },
+      "obligation": "Initialize HOME: and CCL: after the home pathname, in registry order.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:24",
+      "group": "system_pointers",
+      "ordinal": 24,
+      "function": 7661,
+      "name": "CCL::*AUTO-FLUSH-STREAMS*",
+      "source": "level-1/l1-boot-2.lisp",
+      "position": 2478,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:25",
+      "group": "system_pointers",
+      "ordinal": 25,
+      "function": 7660,
+      "name": "CCL::*QUIET-FLAG*",
+      "source": "level-1/l1-boot-2.lisp",
+      "position": 2674,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:26",
+      "group": "system_pointers",
+      "ordinal": 26,
+      "function": 10263,
+      "name": "CCL::RESET-WINNERS",
+      "source": "compiler/nx.lisp",
+      "position": 8001,
+      "classification": "RT",
+      "providers": {
+        "browser": "REVIEWED_PROPOSAL",
+        "node": "REVIEWED_PROPOSAL"
+      },
+      "obligation": "Join reviewed RESET-WINNERS with complete poisoned publication control.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:27",
+      "group": "system_pointers",
+      "ordinal": 27,
+      "function": 13017,
+      "name": "CCL::RESET-DB-FILES",
+      "source": "lib/db-io.lisp",
+      "position": 28364,
+      "classification": "DEFER",
+      "providers": {
+        "browser": "WITHDRAWN_IMPLEMENTATION",
+        "node": "WITHDRAWN_IMPLEMENTATION"
+      },
+      "obligation": "Native interface database not loaded (outline \u00a705). Require absent subsystem or no live handles; metadata need not be empty.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:28",
+      "group": "system_pointers",
+      "ordinal": 28,
+      "function": 13226,
+      "name": "CCL::*MACHINE-VERSION*",
+      "source": "lib/misc.lisp",
+      "position": 1981,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:29",
+      "group": "system_pointers",
+      "ordinal": 29,
+      "function": 13364,
+      "name": "CCL::*USE-CYGWIN-SVN*",
+      "source": "lib/misc.lisp",
+      "position": 31932,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:30",
+      "group": "system_pointers",
+      "ordinal": 30,
+      "function": 13324,
+      "name": "CCL::*STATIC-CONS-ADDRESS*",
+      "source": "lib/misc.lisp",
+      "position": 59148,
+      "classification": "DEFER",
+      "providers": {
+        "browser": "DEFERRED",
+        "node": "DEFERRED"
+      },
+      "obligation": "Static cons facility unscoped; no native-global pointer may survive image construction.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:31",
+      "group": "system_pointers",
+      "ordinal": 31,
+      "function": 13323,
+      "name": "CCL::*FREE-STATIC-CONS-ADDRESS*",
+      "source": "lib/misc.lisp",
+      "position": 59237,
+      "classification": "DEFER",
+      "providers": {
+        "browser": "DEFERRED",
+        "node": "DEFERRED"
+      },
+      "obligation": "As ordinal 30: static cons free-list pointer excluded or replaced.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:32",
+      "group": "system_pointers",
+      "ordinal": 32,
+      "function": 6299,
+      "name": "CCL::STARTUP-SHUTDOWN-PROCESSES",
+      "source": "level-1/l1-processes.lisp",
+      "position": 2216,
+      "classification": "DEFER",
+      "providers": {
+        "browser": "DEFERRED",
+        "node": "DEFERRED"
+      },
+      "obligation": "Saved application process revival belongs to image lifecycle/scheduler work.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "system_pointers:33",
+      "group": "system_pointers",
+      "ordinal": 33,
+      "function": 15376,
+      "name": "CCL::*IP-INTERFACES*",
+      "source": "library/sockets.lisp",
+      "position": 53935,
+      "classification": "RT",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind retained generated reset and completion into final bootstrap.",
+      "closure": "NOT_ESTABLISHED"
+    },
+    {
+      "key": "user_pointers:0",
+      "group": "user_pointers",
+      "ordinal": 0,
+      "function": 5566,
+      "name": "CCL::SPIN-COUNT",
+      "source": "level-1/linux-files.lisp",
+      "position": 88304,
+      "classification": "HOST",
+      "providers": {
+        "browser": "ACCEPTED_EFFECT",
+        "node": "ACCEPTED_EFFECT"
+      },
+      "obligation": "Bind configuration R2 effect; cold/warm CPU cache and full-TCR checks.",
+      "closure": "NOT_ESTABLISHED"
+    }
+  ],
+  "scope": "Callback snapshot only; 167-unit definition bodies, loader prerequisites and condition activation remain separate LL15 dependencies."
+}

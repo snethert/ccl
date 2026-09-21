@@ -3061,3 +3061,17 @@ their original evidence and reviews. Also retire the proposed native timeval
 and freed-byte buffers in favour of collector-owned statistics. No slot is
 closed by this decision: database exclusion still requires a no-live-handle
 check in the selected bootstrap.
+
+## 2026-09-20 — execute portable collector statistics and classify startup
+
+Replace native counter-buffer work with a collector-owner proposal that records
+successful full collections, reclaimed bytes and monotonic time. Generated
+GCTIME returns native-compatible five values in the selected units, including
+large counts and values retained across movement; a named reader uses live
+function cells. Seven modules pass 770 comparisons and 588 collections, forty
+unchanged owner checks and eleven fault/classification controls. Native U1
+supplies microsecond and half-even millisecond answers. Replay matches 56 files
+at 88 pins. All 35 callback rows are classified against the original selection
+hash, without changing retained selections or claiming closure for deferred
+subsystems. Packet STAGE1-STARTUP-RUNTIME-R1 awaits review; no shared-source
+change or LL15 credit.

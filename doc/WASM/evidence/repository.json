@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "71a89f922155500830d10f644aa400ec162e38dee31353d058db40fee95331b3",
-  "commit": "a90bbc0e34eb10be7b828fa3aa0ed645cf71ed14",
-  "immutable_evidence_files": 234573,
+  "catalog_sha256": "d83a3673ce8153988878f0428e04bbf38e30e6e027b3cabeaa071649984220b7",
+  "commit": "1d02e0ec9bce2cfc347bd310afb04f7e5285ba9d",
+  "immutable_evidence_files": 234661,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-counters-r1",
-    "files": 94,
-    "bytes": 968707
+    "directory": "2026-09-20-stage1-startup-runtime-r1",
+    "files": 87,
+    "bytes": 1094841
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary GC counter startup storage executed; not reviewed or integrated.",
-  "source_index_sha256": "a9d2b4718d857ff774ae89127932392609dbbbb206e3d9fe5e05be89847ab5e2",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-counters-r1.json",
-  "verification": "Fresh replay: 48 deterministic files at 221 pins. New files and index references verified incrementally.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Native DB reset and native counter-buffer proposals withdrawn; portable startup runtime executed, not reviewed or integrated.",
+  "source_index_sha256": "e387c362dff52c44c5500a5be4031eeccb1786c9d6c46019a0cb2d3a65074ae4",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-runtime-r1.json",
+  "verification": "Fresh replay: 56 deterministic files at 88 pins. New packet files and 413 current index references checked incrementally; earlier payloads reused by catalog hash.",
   "version": 1
 }
