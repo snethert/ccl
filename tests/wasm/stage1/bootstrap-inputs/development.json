@@ -1,0 +1,65 @@
+{
+  "attempts": [
+    {
+      "id": "execution-r1",
+      "result": "Native fixture serialization failed on IOBLOCK structure-class metadata. Keep native class identity while serializing its target type-name list."
+    },
+    {
+      "id": "execution-r2",
+      "result": "PASS: 323 originals, 309 non-NIL. Expanded further on Steve's do more."
+    },
+    {
+      "id": "execution-r3",
+      "result": "Lock pointer fixture serialized all first fields as NIL. Preserve the declared sentinel; old OS-pointer fixtures continue to declare NIL."
+    },
+    {
+      "id": "execution-r4",
+      "result": "PASS: 332 originals, 318 non-NIL; 31 additional original CCL definitions."
+    },
+    {
+      "id": "native-r1",
+      "result": "Nonexecuting decoder lacked UTF-8 strings. No source/runtime failure."
+    },
+    {
+      "id": "native-r2",
+      "result": "Decoder additions cover counted characters and float bits. Source-note parent on one level-1.lisp load changed; record its location hierarchy explicitly."
+    },
+    {
+      "id": "native-r3",
+      "result": "PASS: 21,843 native tests, 150 identical FASLs, 164 restored."
+    },
+    {
+      "id": "readers-r1-r3",
+      "result": "Full-file cross-target reader encountered file-local read-time constants, pathname identity, then an unrelated Windows foreign function unavailable in macOS. Use exact inverse-source proof and actual reader equality for substituted forms, all seventeen profiles."
+    },
+    {
+      "id": "readers-r4",
+      "result": "Projection runner accidentally used full source for before-side; corrected environment routing."
+    },
+    {
+      "id": "readers-r5-r6",
+      "result": "PASS: 136 file/profile joins; final replay prepares a fresh source archive and pinned kernel."
+    },
+    {
+      "id": "integration-replay",
+      "result": "Initial /tmp worktree lacked sibling evidence; moved clean checkout under Source. Documented command passes at f63a4a3b: 885 files and 40 collector checks."
+    }
+  ],
+  "retained": [
+    "ccl-inputs-r1.log",
+    "ccl-inputs-r2.log",
+    "ccl-inputs-r3.log",
+    "ccl-inputs-r3/execution.log",
+    "ccl-inputs-r4.log",
+    "ccl-inputs-native.log",
+    "ccl-inputs-native/run.json",
+    "ccl-inputs-native-r2.log",
+    "ccl-inputs-native-r2/run.json",
+    "ccl-inputs-readers-r1/run.log",
+    "ccl-inputs-readers-r2/run.log",
+    "ccl-inputs-readers-r3/run.log",
+    "ccl-inputs-readers-r4/run.log",
+    "ccl-audit150-replay.log",
+    "ccl-audit150-clean.log"
+  ]
+}
