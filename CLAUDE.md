@@ -15,3 +15,5 @@ This is the clean upstream Clozure/ccl v1.13 restart at `c994217adc56b3f8a564526
 - Follow the R6 and R7 contracts in `doc/WASM/acceptance.md`. Do not weaken a test or silently waive an obligation to obtain PASS. Shared native changes require their own qualified before/after evidence and review.
 
 These rules record the user's 2026-09-11 platform decision and supplied audit instructions. They do not import unpublished memory or rules from the archived attempt.
+
+- Admission predicates: retain a directed refusal for each independent validation clause, or record why its omission is equivalent under the admitted contract. Isolate depth checks by site and mode, require checked refusals rather than traps, and check refusal preserves state before publication.

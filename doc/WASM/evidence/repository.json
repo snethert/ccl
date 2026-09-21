@@ -1,60 +1,32 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "89afe700f2f6fd4ad3417ef94139f9fc7e923821a0d0257a26bf5583503e7428",
-  "commit": "28b662b33c99bcbe109dd67c9ec7c98c477ecff2",
-  "immutable_evidence_files": 237402,
+  "catalog_sha256": "b3f93947c87b840ab5afd81a2f441f31c9b2dba448e021a6c4e55d5629f9a2c8",
+  "commit": "c88fde02537a7c3a59174fcd4271ffa887eca520",
+  "immutable_evidence_files": 237494,
   "last_scoped_addition": {
-    "bytes": 15777246,
-    "directory": "2026-09-21-stage1-startup-review-137-r1",
-    "files": 351
+    "bytes": 303553,
+    "directory": "2026-09-21-stage1-startup-review-138-r1",
+    "files": 91
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Audit 137 bound; target-branch and admission follow-up proposed, no LL15 credit.",
-  "source_index_sha256": "6bd319dbc920f3e150511de0a3ab256ecdfe9a71d708dca167d8eb9668a5e0e3",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-startup-review-137-r1.json",
+  "scope": "Stage 1: 21 accepted, 10 missing. Audit 138 bound; portable replay and bounded-admission follow-up proposed, no LL15 credit.",
+  "source_index_sha256": "39612cd56fad64e1ef30402d1418f81b4753a97e652fd778d0e5172731ee1688",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-startup-review-138-r1.json",
   "verification": {
-    "deterministic_files": 258,
-    "source_pins": 82,
+    "deterministic_files": 45,
+    "source_pins": 88,
     "status": "PASS",
     "summary": {
-      "equality": {
-        "bootstrap_lookups": 1248,
-        "collections": 24612,
-        "comparisons": 73728,
-        "slot_credit": false,
-        "status": "PASS",
-        "workers": 8
-      },
-      "equality_new_faults": 2,
-      "equality_objects": 48,
-      "host": {
-        "callbacks": 20,
-        "collections": 288,
-        "faults": 9,
-        "input_and_owner_comparisons": 60,
-        "invocations": 7172,
-        "modules": 23,
-        "owner_refusals": 96,
-        "refusals": 204,
-        "scenarios": 288,
-        "slot_credit": false,
-        "status": "PASS",
-        "workers": 4
-      },
-      "population": {
-        "collections": 296,
-        "comparisons": 792,
-        "controls": 6,
-        "slot_credit": false,
-        "status": "PASS",
-        "workers": 4
-      },
-      "population_new_faults": 6,
-      "population_new_refusals": 12,
+      "binaries_unchanged": true,
+      "dependencies": 201,
+      "directed_checks": 50,
+      "new_faults": 16,
+      "parent_deterministic_files": 258,
+      "parent_source_pins": 82,
       "slot_credit": false,
       "status": "PASS"
     }

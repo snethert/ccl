@@ -3214,3 +3214,11 @@ change or LL15 credit.
   the native equality matrix and adds bounded-depth and six admission controls.
   Equality and population binaries remain unchanged, with byte identity required.
   No shared compiler/runtime edit or LL15 credit. Original fixtures stay intact.
+
+- 2026-09-21: Land Claude audit 138 from 21fa546c as b7ffcd50. Three audit-137
+  findings closed; numeric depth and memory bounds need additional isolation,
+  and prior verifier dependency keys were checkout-specific. Add a sibling
+  follow-up with logical dependency roots, both numeric modes, independent depth
+  sites, partial-SET preservation and trap-as-failure checks. Clause inventory
+  and standing admission rule retained. No shared service/compiler changes,
+  acceptance or LL15 credit.

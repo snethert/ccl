@@ -2858,10 +2858,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-137-r1/packet.json",
       "sha256": "417749d2d9d54df3aaec232c6efc5a3b480e4ce9d73c27ca2708b9c6f9c6662e",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit 137 follow-up for F1-F4. Native HEAP-IMAGE-NAME read with Wasm target features; namespace names unchanged; 288 Node/Chromium joined scenarios and collections, nine host faults. Equality adds native NIL/cons matrix pair, 73728 comparisons, 24612 collections, pending-depth boundary refusals and two new faults. Population adds six isolated admission refusals at both placements and six C faults; redundant alignment trim rebuilds byte-identically. Original binaries and compiler unchanged except host JS behavior. Fresh replay 258 deterministic files at 82 pins. All parent scopes and production joins remain open. Auxiliary proposal, not accepted or integrated; no LL15 credit. Audit 138 closes target-branch, NIL/cons and six population checks. Remaining findings: absolute checkout dependency keys, numeric depth site, and five backed-region guards. Follow-up STAGE1-STARTUP-REVIEW-138-R1 provides portable verification and isolated controls. Not accepted.",
+      "review_commit": "b7ffcd50044396e837b6a0d1d1544d8d12ca0b7c",
+      "review_sha256": "d61d54554b7bea65dca2ac9ab64699f3d5fb193add6ac12f39ca5aa992670129"
+    },
+    {
+      "id": "STAGE1-STARTUP-REVIEW-138-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-138-r1/packet.json",
+      "sha256": "b4fdb34ae7547bee787b102ca4a97d679eef0c3225025d7fe220a4576ce35377",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit 137 follow-up for F1-F4. Native HEAP-IMAGE-NAME read with Wasm target features; namespace names unchanged; 288 Node/Chromium joined scenarios and collections, nine host faults. Equality adds native NIL/cons matrix pair, 73728 comparisons, 24612 collections, pending-depth boundary refusals and two new faults. Population adds six isolated admission refusals at both placements and six C faults; redundant alignment trim rebuilds byte-identically. Original binaries and compiler unchanged except host JS behavior. Fresh replay 258 deterministic files at 82 pins. All parent scopes and production joins remain open. Auxiliary proposal, not accepted or integrated; no LL15 credit."
+      "scope": "Audit 138 follow-up: root-relative checkout/evidence dependencies and detached-checkout replay of all 258 prior deterministic files; independent numeric depth guards in EQL/EQUAL, independent cons depth, five backed-region guards, opaque static header and population clause isolation. Fifty new directed checks at low/high placements and sixteen compiled faults rejected. Exact service binaries unchanged. Clause inventory and standing admission rule. Auxiliary, not accepted or integrated, no LL15 credit."
     }
   ],
   "current_runs": [

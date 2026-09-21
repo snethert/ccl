@@ -508,3 +508,10 @@ owner namespace strings unchanged and uses the target-selected native body as
 oracle. It also closes the named equality/population test gaps with directed
 cases and compiled faults. All three proposals remain unaccepted pending
 Claude review; this does not change LL15's membership or grant slot credit.
+
+2026-09-21: Audit 138 confirms the target-branch correction and NIL/cons semantics,
+while exposing another depth site and backed-region test gaps. The
+[audit-138 follow-up](../../../tests/wasm/stage1/startup-review-138/README.md)
+replays the prior unit with portable dependency keys and covers those guards
+without service changes. Review and acceptance still precede integration.
+Remaining LL15 implementation and worklist obligations above are unchanged.

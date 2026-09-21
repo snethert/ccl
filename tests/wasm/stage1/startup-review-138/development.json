@@ -1,0 +1,11 @@
+{
+  "attempts": {
+    "r1": "Full parent replay passed. New high-placement probe requested 32770 pages with a 32769 maximum; corrected its extra reservation to the 65536 bytes used by the parent. No service change.",
+    "r2": "All 50 new directed checks and 16 compiled omissions pass. Development reused the byte-verified parent execution from r1; final retained verification reruns it from a detached checkout."
+  },
+  "retained": [
+    "ccl-review138-r1.log",
+    "ccl-review138-r1/eql.log",
+    "ccl-review138-r2.log"
+  ]
+}
