@@ -2742,20 +2742,34 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-runtime-review-r1/packet.json",
       "sha256": "e4397e4decc19fb5232ffe25b712109513b7311782ce7cb66813f237e4678a2e",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-131 follow-up: signed bignum oracle, isolated admission checks, generated SIMPLE-ERROR clock failures and browser-only provider status. Nine unchanged-compiler modules, 1,058 comparisons, 818 collections, 19 controls, 40 owner checks. Fresh replay: 88 deterministic files at 94 pins. Original sources unchanged; auxiliary, not integrated, no LL15 credit."
+      "scope": "Audit-131 follow-up: signed bignum oracle, isolated admission checks, generated SIMPLE-ERROR clock failures and browser-only provider status. Nine unchanged-compiler modules, 1,058 comparisons, 818 collections, 19 controls, 40 owner checks. Fresh replay: 88 deterministic files at 94 pins. Original sources unchanged; auxiliary, not integrated, no LL15 credit. Audit 132 closes all four audit-131 findings. Minor NIL-snapshot publication coverage is supplied by STAGE1-BOOTSTRAP-TABLES-REVIEW-R1. Still unaccepted.",
+      "review_commit": "68afe0fcbb9f2fa307337b9d62122fe5b84befc3",
+      "review_sha256": "ecee83b8bd50430467a8c3b964e011aad0187f18adec00de605f150993588da3"
     },
     {
       "id": "STAGE1-BOOTSTRAP-TABLES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-tables-r1/packet.json",
       "sha256": "7f32faa277e212c3b423c184c3bf1bfa5da842ade12f2cfab96b1cceba40e12e",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "User-authorized Stage 1 strong substitute for bootstrap weak tables. 21 native constructor pairs preserve equality/options while disabling weakness. 18 EQ sites materialize with unchanged accepted Wasm service at two placements, 108 collections, 171 refusals and six controls. Two EQL and one EQUAL plans preserve their tests but refuse target construction pending equality services. No wrapper, growth, complete startup membership or LL15 credit. Auxiliary proposal, not integrated. Replay: 16 deterministic files at 24 pins. Audit 132 findings: measured population capacity, populated EQUAL dependency, weak population disposition, and owner admission controls. Follow-up STAGE1-BOOTSTRAP-TABLES-REVIEW-R1; R1 remains unaccepted.",
+      "review_commit": "68afe0fcbb9f2fa307337b9d62122fe5b84befc3",
+      "review_sha256": "ecee83b8bd50430467a8c3b964e011aad0187f18adec00de605f150993588da3"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-TABLES-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-bootstrap-tables-review-r1/packet.json",
+      "sha256": "0e77a917af95f0a49de955c1737e989d29568c3d8d42bda439abb572ca6745b2",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "User-authorized Stage 1 strong substitute for bootstrap weak tables. 21 native constructor pairs preserve equality/options while disabling weakness. 18 EQ sites materialize with unchanged accepted Wasm service at two placements, 108 collections, 171 refusals and six controls. Two EQL and one EQUAL plans preserve their tests but refuse target construction pending equality services. No wrapper, growth, complete startup membership or LL15 credit. Auxiliary proposal, not integrated. Replay: 16 deterministic files at 24 pins."
+      "scope": "Audit-132 follow-up: measured 1281/1281/1049 entries use 2048-slot plans; EQUAL table with eight entries explicitly blocks bootstrap. User authorized strong populations; portable vector/cons constructor retains list/alist members over movement, with native accessors and actual member scanners still unjoined. Owner admission clauses isolated, full ceiling checked, NIL statistics publication fully observed. Replay: 33 files at 36 pins, 108 table and 30 population collections, 15 owner checks, 13 faults. Shared sources unchanged; not integrated, no LL15 credit."
     }
   ],
   "current_runs": [

@@ -1,3 +1,18 @@
+## 2026-09-20 — audit 132 and bootstrap table/population follow-up
+
+Import Claude's audit-only branch as 68afe0fc and bind its review-file hash in
+the evidence index. Statistics follow-up: reviewed with no defect, not accepted.
+Tables R1: four findings, not accepted. Preserve both original source trees.
+
+Measure native table populations, size the owner proposal with headroom, execute
+full populations under movement, and check the 16,384-entry ceiling. Record the
+populated EQUAL table as blocking bootstrap. On the user's explicit extension,
+implement strong population storage with list/alist copy conventions; native
+population-accessor integration remains open. Isolate owner checks and observe
+all NIL-snapshot publication words. Replay passes over 33 files at 36 pins,
+with 138 collections and 13 rejected faults. Shared runtime/compiler untouched;
+auxiliary proposal awaiting review, ledger counts unchanged.
+
 ## 2026-09-20 — implement the authorized bootstrap strong-table substitute
 
 Record the explicit strong-retention decision with Stage 2 weak semantics owed.

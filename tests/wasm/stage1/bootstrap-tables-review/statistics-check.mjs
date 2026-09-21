@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+import {statisticsService} from './statistics-service.mjs';
+const memory=new WebAssembly.Memory({initial:1}),view=new DataView(memory.buffer),NIL=77825,descriptor=1024+6,result=2048;
+view.setUint32(descriptor-6,250,true);
+const owner={view,statistics:{timingValid:false},gctime(){throw Error('must not read invalid clock');},atSafepoint(){throw Error('must not allocate');}};
+const service=statisticsService({memory,owner,descriptor,result});const expected=[NIL,NIL,1,0];
+expected.forEach((v,i)=>view.setUint32(result+4*i,~v,true));
+assert.equal(service(descriptor,descriptor+2,5,NIL,NIL,0,0,result),0);
+assert.deepEqual(expected.map((_,i)=>view.getUint32(result+4*i,true)),expected,'NIL snapshot publication');
+fs.writeFileSync(process.argv[3],JSON.stringify({status:'PASS',publication:expected},null,2)+'\n');

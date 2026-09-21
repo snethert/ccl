@@ -377,3 +377,21 @@ missing HASH-TABLE wrapper materialization remain explicit. Stage 2 owes weak
 semantics. This is not a new closure claim or slot credit, and the proposal is
 not integrated. The next startup joins must use these declared differences,
 not native weak flags or EQ substitutions for other tests.
+
+
+2026-09-20, audit 132: the [table/population follow-up](../../../tests/wasm/stage1/bootstrap-tables-review/README.md)
+uses pinned-image population measurements (1,281, 1,281, 1,049) rather than
+constructor size hints alone. Each needs 2,048 slots with headroom. Requests
+beyond the fixed service ceiling refuse, and post-install FULL preserves state.
+The EQUAL `*combined-methods*` table has eight live entries: its missing service
+and wrapper are a bootstrap blocker, not an optional refinement. Other selected
+image populations must be measured before construction too.
+
+The user extended the policy with “Use strong retention for populations too.”
+All four constructor paths are explicitly assigned strong retention for Stage 1,
+with weak semantics owed in Stage 2. A portable ordinary-vector/cons proposal
+now copies list/alist structure and preserves member identities across movement.
+It does not install native population accessors or qualify scanners for arbitrary
+lock/thread/GF instances. Those joins and the EQUAL service remain required
+before claiming a collectable bootstrap image. Follow-up executed, not reviewed
+or integrated; no LL15 credit.

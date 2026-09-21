@@ -324,3 +324,18 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
   covers the EQ backing vectors only. Production still needs full wrapper and
   equality services, placement/root publication, capacity/growth policy, and
   linkage of the selected constructors to the actual startup worklist.
+
+
+- **Bootstrap population extension (user decision, 2026-09-20).** “Use strong
+  retention for populations too” extends the earlier table decision to system
+  locks, threads, generic functions and public population construction. Retain
+  members strongly in Stage 1, disclose longer lifetimes and changed post-GC
+  membership, and implement weak behavior in Stage 2. The reviewed native weak
+  headers remain refused by the collector; the new proposal uses ordinary
+  vectors/conses and requires explicit constructor/accessor lowering before
+  installation. A generic constructor site is not a count of live populations.
+- **Bootstrap capacities (audit 132).** Require actual image-entry counts plus
+  headroom; source `:size` is only a hint. The current service is capped at
+  16,384 slots. Oversized plans refuse before construction and installed FULL
+  refuses without eviction, mutation or growth. The populated EQUAL combined-
+  methods table remains a hard dependency until its equality service exists.

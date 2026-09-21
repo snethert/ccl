@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "7e3c2826e5bc9a4a9211ed178c57309693b145f52eb1ed27a672a24c5ab5c61d",
-  "commit": "f14f5673be27c6e78721d1411a4fed1c3acb6a6f",
-  "immutable_evidence_files": 234848,
+  "catalog_sha256": "61e858bd21e0d0a59d1208e7c87ee47ca68e7cbfbbc1ca70275de4c1e3c6588e",
+  "commit": "df84488c6d4159e25b09850314c7a7ce22ba55d2",
+  "immutable_evidence_files": 234928,
   "last_scoped_addition": {
-    "bytes": 167146,
-    "directory": "2026-09-20-stage1-bootstrap-tables-r1",
-    "files": 49
+    "bytes": 151125,
+    "directory": "2026-09-20-stage1-bootstrap-tables-review-r1",
+    "files": 79
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Audit-131 fixes and authorized bootstrap strong-table proposal executed; auxiliary, not reviewed or integrated.",
-  "source_index_sha256": "2b6bd13bf7387ff36ae0116884044292acbecf44cb836173c8aa18895305b4f8",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-tables-r1.json",
-  "verification": "Fresh replay: 16 deterministic files at 24 pins. New artifacts and current index references checked incrementally.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Audit 132 bound; bootstrap table/population follow-up executed, not reviewed or integrated.",
+  "source_index_sha256": "b96ac9e3b725f10d296744364ee4a92f31faa1bf9b4f72c2c9d8c78f31407ee5",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-bootstrap-tables-review-r1.json",
+  "verification": "Fresh replay: 33 deterministic files at 36 pins. New artifacts and current index references checked incrementally.",
   "version": 1
 }
