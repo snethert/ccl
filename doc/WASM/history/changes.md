@@ -3235,3 +3235,15 @@ change or LL15 credit.
   placements, 80 collections and four compiled faults. Fresh detached replay
   reproduces 168 deterministic files at 98 pins. Compiler/runtime unchanged;
   actual CCL symbol installation and public condition boundaries remain open.
+
+- 2026-09-21: Import Claude audit 140 as be840f53, bound by review blob hash.
+  All audit-139 findings closed; population consumer admission finding carried
+  into a sibling follow-up. Thirteen refusals and eight omission controls; all
+  sixteen admitted rewrites remain alpha-equivalent. Keep rewriter scaffolding
+  out of integration and record PUSHNEW/POP as owed.
+- 2026-09-21: Propose a typed two-field strong population under D1 subtag 90,
+  with builder/service and exact copying/pinned-image scanners. Existing 22
+  generated modules reproduce 64 native comparisons and 80 collections. Twelve
+  focused controls, 18 shape, 20 image and 40 owner checks pass. Both new packets
+  replay from the detached checkout (13/104 and 91/106 files/pins). No shared
+  runtime/compiler changes, acceptance or LL15 credit.

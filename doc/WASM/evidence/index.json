@@ -2882,20 +2882,44 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-startup-review-139-r1/packet.json",
       "sha256": "e446d1db25c16c2258cca09eb93a43fa71642beb4d84d00142df72fd0040dacf",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit 139 residual malformed-input controls: table/static forbidden sub-clauses, nested empty/deleted markers in both numeric fields/modes and cons cars, and SET preservation with a real replacement cons. Twenty-six checks at two placements, five separately compiled faults. Updated clause inventory. Service binaries unchanged. Prior native/browser replay reused by hash. No new runtime hold or LL15 credit; test supplement, not accepted."
+      "scope": "Audit 139 residual malformed-input controls: table/static forbidden sub-clauses, nested empty/deleted markers in both numeric fields/modes and cons cars, and SET preservation with a real replacement cons. Twenty-six checks at two placements, five separately compiled faults. Updated clause inventory. Service binaries unchanged. Prior native/browser replay reused by hash. No new runtime hold or LL15 credit; test supplement, not accepted. Audit 140 closes all three audit-139 findings with no defect; corrected host inputs, equality services and population service remain awaiting acceptance.",
+      "review_commit": "be840f5321489d4bcfb5e3a2ef81e059e3330df3",
+      "review_sha256": "f5ebc63262214a6014e5640b756d9b135600e1fd44ef95f11c73a67c0c9cab79"
     },
     {
       "id": "STAGE1-POPULATION-CONSUMERS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-consumers-r1/packet.json",
       "sha256": "88e16db3a60bf2872081737751621c906cf0af57b7f16d349998e1347eddfa56",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Selected generated population contents/setter and keyword type entries, native-expanded PUSH/SETF with non-idempotent ordering observations, function/APPLY calls, local defaults, closures, cleanup and nonlocal exits. Twenty-two modules, 32 native cases at two placements, 64 comparisons and 80 collections with poisoned old space; four compiled consumer faults. Fresh detached replay 168 deterministic files at 98 pins. Compiler/service/adapter/collector unchanged; native R6 reused by exact hash. Selected runtime lowering only; real symbol/macro installation, catchable bad-input errors, member layouts and image roots still owed. Auxiliary proposal, not accepted/integrated, no LL15 credit. Audit 140 finds no executable defect but a minor admission-test/scope finding: multi-place SETF guard is order-dependent and stated refusals lack cases. Follow-up provides explicit source guards and directed omissions. Rewriter is scaffold only, not for integration. Native accessor indices and REQUIRE-TYPE, PUSHNEW and POP remain owed.",
+      "review_commit": "be840f5321489d4bcfb5e3a2ef81e059e3330df3",
+      "review_sha256": "f5ebc63262214a6014e5640b756d9b135600e1fd44ef95f11c73a67c0c9cab79"
+    },
+    {
+      "id": "STAGE1-POPULATION-CONSUMER-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-consumer-review-r1/packet.json",
+      "sha256": "a6222829b4ca880d91377ba5f85533152c70b6e53e380f0a56285c22b710a5e7",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Selected generated population contents/setter and keyword type entries, native-expanded PUSH/SETF with non-idempotent ordering observations, function/APPLY calls, local defaults, closures, cleanup and nonlocal exits. Twenty-two modules, 32 native cases at two placements, 64 comparisons and 80 collections with poisoned old space; four compiled consumer faults. Fresh detached replay 168 deterministic files at 98 pins. Compiler/service/adapter/collector unchanged; native R6 reused by exact hash. Selected runtime lowering only; real symbol/macro installation, catchable bad-input errors, member layouts and image roots still owed. Auxiliary proposal, not accepted/integrated, no LL15 credit."
+      "scope": "Audit 140 F1: explicit pre-normalization scaffold admission, both SETF place orders, function and macro shadows, API variables and setter references. Thirteen native refusals and eight omission controls; sixteen admitted forms rewrite alpha-equivalently to the reviewed corpus. Fresh detached replay: 13 files at 104 pins. Rewriter not for integration; native accessors and REQUIRE-TYPE are the intended path. Auxiliary, not accepted/integrated, no LL15 credit."
+    },
+    {
+      "id": "STAGE1-TYPED-POPULATIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-typed-populations-r1/packet.json",
+      "sha256": "7d3785dc32dd555bf141b596c704a7f2f972e3b47b09daf2d4b580dbb93bb9a4",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Exact two-field strong population shape under existing D1 subtag 90, with derived builder, leaf service, copying scanner and pinned-image inventory. Native weak and termination layouts remain refused. Twenty-two unchanged generated modules, 64 native comparisons, 80 collections, 18 shape checks, 20 pinned-image checks, 40 inherited owner checks, 12 focused faults. Fresh detached replay: 91 files at 106 pins. Native compiler/R6 and oracle reused by hash; no shared source changed. Prerequisite for target population accessor indices and REQUIRE-TYPE; production roots/installation and v1 migration remain owed. Auxiliary runtime proposal, not accepted/integrated, no LL15 credit."
     }
   ],
   "current_runs": [

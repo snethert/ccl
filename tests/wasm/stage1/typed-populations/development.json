@@ -1,0 +1,8 @@
+{
+ "attempts": {
+  "r1": "Generated consumers and shape checks passed. Image test failed to import bytes.mjs, a dependency of the copied portable digest. Added the unchanged module to the driver copies.",
+  "r2": "All positive generated, shape, image and forty owner checks passed. Control construction stopped because the padding-removal anchor also matched an unrelated collector shape. Anchored the removal to the population type-and-padding predicate.",
+  "r3": "All positives and twelve focused controls passed. No service or collector correction was required after the initial proposal."
+ },
+ "retained": ["ccl-typed-pop-r1.log","ccl-typed-pop-r1/image.log","ccl-typed-pop-r2.log"]
+}

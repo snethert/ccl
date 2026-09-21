@@ -526,3 +526,15 @@ for bad inputs, real member layouts and production image-root discovery remain
 required. The [audit-139 supplement](../../../tests/wasm/stage1/startup-review-139/README.md)
 closes the residual refusal observations alongside this work. Neither is accepted
 or integrated and neither changes LL15 worklist membership or credit.
+
+2026-09-21: Audit 140 closes the equality/population service test findings. The
+consumer rewriter remains fixture scaffolding and must not be integrated. Its
+[admission follow-up](../../../tests/wasm/stage1/population-consumer-review/README.md)
+now covers both SETF place orders and lexical/macro shadows explicitly. PUSHNEW
+at method-combination.lisp:155 and POP remain owed. The
+[typed population proposal](../../../tests/wasm/stage1/typed-populations/README.md)
+provides a distinguishable strong D1 shape and both moving and pinned-image
+scanners, a prerequisite for target accessor indices and native REQUIRE-TYPE.
+The two-field strong shape excludes native weak/termination layouts. Migration
+from v1 vectors, actual member layouts, real symbols and READY remain open.
+No acceptance, integration or LL15 credit is claimed.

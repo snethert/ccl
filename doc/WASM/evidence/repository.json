@@ -1,46 +1,49 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "da426fb313f427b356adabdc8c2c15b6221c72a8e0deb29670b6ba08f847892c",
-  "commit": "5ced73383858646447870295fe0103607c92392b",
-  "immutable_evidence_files": 237720,
+  "catalog_sha256": "5a2922b9c369737a2d497a2415f816e19331b11c553fd001be1326c400cdea4a",
+  "commit": "c769fe35cb2fa948134c75c312c5ab23f0399a34",
+  "immutable_evidence_files": 237876,
   "last_scoped_addition": {
-    "bytes": 4601059,
-    "directory": "2026-09-21-stage1-population-consumers-r1 + 2026-09-21-stage1-startup-review-139-r1",
-    "files": 225
+    "bytes": 3706773,
+    "directory": "2026-09-21-stage1-typed-populations-r1 + 2026-09-21-stage1-population-consumer-review-r1",
+    "files": 155
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Audit 139 bound. Generated population consumers and residual refusal controls executed; no acceptance/integration or LL15 credit.",
-  "source_index_sha256": "fb17f7926cee79a81a92b180d06d52f975883447f4e2f5df3728e4384659147c",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-population-consumers-r1.json",
+  "scope": "Stage 1: 21 accepted, 10 missing. Audit 140 bound. Typed strong populations and explicit scaffold admission executed; no acceptance/integration or LL15 credit.",
+  "source_index_sha256": "4ed42560e0e77417ae3ab2d95eb6d0ecc66dced794d5668868806ee2dfd573bb",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-typed-populations-r1.json",
   "verification": {
-    "STAGE1-POPULATION-CONSUMERS-R1": {
-      "deterministic_files": 168,
-      "source_pins": 98,
+    "STAGE1-POPULATION-CONSUMER-REVIEW-R1": {
+      "deterministic_files": 13,
+      "source_pins": 104,
       "status": "PASS",
       "summary": {
-        "collections": 80,
-        "comparisons": 64,
-        "compiler_unchanged": true,
-        "faults": 4,
-        "modules": 22,
-        "native_cases": 32,
+        "controls": 8,
+        "positive_forms": 16,
+        "refusals": 13,
+        "scaffold_only": true,
         "slot_credit": false,
         "status": "PASS"
       }
     },
-    "STAGE1-STARTUP-REVIEW-139-R1": {
-      "deterministic_files": 22,
-      "source_pins": 93,
+    "STAGE1-TYPED-POPULATIONS-R1": {
+      "deterministic_files": 91,
+      "source_pins": 106,
       "status": "PASS",
       "summary": {
-        "directed_checks": 26,
-        "new_faults": 5,
-        "parent_replay": "reused by hash; audit 139 reproduced it",
-        "services_unchanged": true,
+        "compiler_unchanged": true,
+        "faults": 12,
+        "generated_collections": 80,
+        "generated_modules": 22,
+        "image_checks": 20,
+        "native_cases": 32,
+        "native_comparisons": 64,
+        "owner_checks": 40,
+        "shape_checks": 18,
         "slot_credit": false,
         "status": "PASS"
       }
