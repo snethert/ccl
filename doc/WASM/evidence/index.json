@@ -3052,6 +3052,16 @@
       "scope": "Accepted by Steve after audit 148 and integrated through the folded dependency proposal, with fresh final-backend R6/R6a and byte-identical generated execution. No slot credit. Original proposal history: Execution-focused bootstrap dependency proposal: 252 unchanged original definitions match native (+66), 2472 native rows, 9888 comparisons, 5270 collections, 14 faults rejected and 38 checked refusals. Admission unchanged at 1864/2492 historically and 1522/1919 in the incomplete target list. Lowers ASSQ, fixnum LOGAND/LOGIOR, subtraction calls, literal TYPEP/REQUIRE-TYPE and constant LDB fields through existing primitives. Original LENGTH, SEQUENCE-TYPE, registration cells, string/array/list/symbol consumers execute unchanged. %BADARG decodes NX1 compact type IDs through original %TYPE-ERROR-TYPE and its rooted native vector. Three target representation primitives have separate native witnesses and are excluded from original-definition credit. Fresh native R6/R6a build; exact native FASL/snapshot equality permits test reuse. Unmodified retained verifier passes. No new C/JS runtime service or LL15 credit. Dynamic type system, bignum logical operations, improper-list condition semantics, initialized layouts and complete file environments remain open. Audit-148 witness split: 252 original definitions executed, 193 with a non-NIL answer; 59 NIL-only. Remaining member-input, error-admission and Lisp ASSQ work is recorded in runtime obligations.",
       "review_commit": "d3acc0a09735730f4d28e7b5a8081ef21b9f99e9",
       "review_sha256": "662728e0e24e14682e5eef74eb039f4de08355fc6f225715de14c270e0b4e9cc"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-WITNESSES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-witnesses-r1/packet.json",
+      "sha256": "45e7858663bf3219cc84ecc167f81dd3dc62c7660186c79a63db5516bb7a2673",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Bootstrap member and execution proposal: 301 original definitions match native (+49), 290 with a non-NIL witness (+97), 2736 native rows, 10944 comparisons and 5798 collections. Prior recipes retained. Native layout members, moving ISTRUCT constructors and portable global post-state execute. Missing D1 lock/array-header constants supplied; typed source emits %I<> and %IZEROP. Six condition/bit-vector source refusals, 38 runtime refusals, 20 ISTRUCT checks and 20 rejected faults. General-length nonempty ISTRUCT scanner and owner inventory proposed; no new runtime service. Three compile-time reader environments fixed: 38/57 complete files, 1574/2005 parsed definitions admitted; 19 foreign-interface stops remain. Historical admission 1864/2492 unchanged. Eighty formerly closed original definitions still lack recipes; raw representation returns and %PATH-MEMBER checked bounds remain uncredited. Fresh R6/R6a build, exact native hashes permit test/reader reuse. Unmodified retained verifier passes. No shared-source edit, integration or LL15 credit."
     }
   ],
   "current_runs": [

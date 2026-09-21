@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "run": "ccl-witnesses-r1",
+      "reason": "Native member recipe used a fresh rather than canonical ISTRUCT registration cell.",
+      "log": "ccl-witnesses-r1/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r2",
+      "reason": "Pinned fixture arena was outside initial memory.",
+      "log": "ccl-witnesses-r2/execution.log"
+    },
+    {
+      "run": "ccl-witnesses-r3",
+      "reason": "Native lock constructor needed its CCL package qualifier.",
+      "log": "ccl-witnesses-r3/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r4",
+      "reason": "Raw array subtype differs between x86-64 and D1; primitive result cannot count as an exact native match.",
+      "log": "ccl-witnesses-r4/execution.log"
+    },
+    {
+      "run": "ccl-witnesses-r5",
+      "reason": "Per-case owner symbols retained a mutated type-predicate cell after heap reset.",
+      "log": "ccl-witnesses-r5/execution.log"
+    },
+    {
+      "run": "ccl-witnesses-r6",
+      "reason": "Native symbol bits uses the optional setter argument, not a SETF function.",
+      "log": "ccl-witnesses-r6/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r7",
+      "reason": "Passing intermediate member corpus.",
+      "log": "ccl-witnesses-r7/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r8",
+      "reason": "New %IZEROP witness required updating the old coverage assertion; NUMCMP selector used APPLY on a macro.",
+      "log": "ccl-witnesses-r8/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r9",
+      "reason": "%PATH-MEMBER reaches a checked string-bound refusal; no execution credit.",
+      "log": "ccl-witnesses-r9/execution.log"
+    },
+    {
+      "run": "ccl-witnesses-r10",
+      "reason": "PROGV refuses DEFGLOBAL cells; oracle must preserve their global cells instead.",
+      "log": "ccl-witnesses-r10/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r11",
+      "reason": "Same global-cell fixture refusal.",
+      "log": "ccl-witnesses-r11/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r12",
+      "reason": "Passing execution and reader work; %I<> probe still called the general comparison entry.",
+      "log": "ccl-witnesses-r12/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r13",
+      "reason": "Passing execution including scalar raw members; same outstanding %I<> source witness.",
+      "log": "ccl-witnesses-r13/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-r14",
+      "reason": "%SET-SIMPLE-ARRAY-P returns a representation-specific flag word; no exact-native credit.",
+      "log": "ccl-witnesses-r14/execution.log"
+    },
+    {
+      "run": "ccl-witnesses-r15",
+      "reason": "Final candidate execution, later supplemented with the empty pinned ISTRUCT fault.",
+      "log": "ccl-witnesses-r15/compiled/compile.log"
+    },
+    {
+      "run": "ccl-witnesses-final",
+      "reason": "Final current-tree run includes all members, executed constructors, source refusals, reader constants and both ISTRUCT inventories."
+    }
+  ],
+  "retained": [
+    "ccl-witnesses-r1/compiled/compile.log",
+    "ccl-witnesses-r2/execution.log",
+    "ccl-witnesses-r3/compiled/compile.log",
+    "ccl-witnesses-r4/execution.log",
+    "ccl-witnesses-r5/execution.log",
+    "ccl-witnesses-r6/compiled/compile.log",
+    "ccl-witnesses-r7/compiled/compile.log",
+    "ccl-witnesses-r8/compiled/compile.log",
+    "ccl-witnesses-r9/execution.log",
+    "ccl-witnesses-r10/compiled/compile.log",
+    "ccl-witnesses-r11/compiled/compile.log",
+    "ccl-witnesses-r12/compiled/compile.log",
+    "ccl-witnesses-r13/compiled/compile.log",
+    "ccl-witnesses-r14/execution.log",
+    "ccl-witnesses-r15/compiled/compile.log",
+    "ccl-witnesses-r14/compiled/native-original.json"
+  ],
+  "scope": "Only original diagnostics retained per attempt, not duplicate U1 trees. The r14 diagnostic rerun omitted the representation-specific row to inspect later cases; final source omits that unqualified recipe and r15 is regenerated in full."
+}

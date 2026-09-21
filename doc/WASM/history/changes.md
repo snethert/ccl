@@ -1,3 +1,30 @@
+## 2026-09-21 — execute member and constructor witnesses, repair reader environments
+
+Following Steve’s requested order, add member inputs before more closed-body
+recipes, then establish the compile-time constants in three reader environments.
+301 original CCL definitions now match native (+49); 290 have a non-NIL witness
+(+97). Preserve the prior negative and boundary recipes. New executions include
+native environment, CTYPE and restart constructors, pathname/readtable accessors,
+string searches and configuration functions with their global post-state checked.
+
+The proposal adds the missing D1 lock/array-header constants and routes typed
+comparisons/zero tests to the existing `%I<>`/`%IZEROP` emitters. Both have executed
+source witnesses and wrong-sense controls. Add the requested condition and
+bit-vector source refusals. Generalize the existing moving and pinned ISTRUCT
+inventories to trace all tagged fields, including constructor results; retain
+empty-object refusal and preservation. No new runtime service or CCL source edit.
+SYMBOL-NAME remains the already-integrated token change under the R6 allowance.
+
+Three reader failures close without rewriting source: l0-bignum32, l0-float and
+l1-cl-package. The worklist lower bound is now 1,574 admitted of 2,005 parsed,
+with 38/57 files fully read. Nineteen foreign-interface lookups still require a
+Wasm provider; no native OS constants are borrowed. Historical admission remains
+1,864/2,492. Eighty of the prior closed original definitions still lack qualified
+recipes. Raw subtype/flag returns and %PATH-MEMBER’s pre-bound-check string read
+remain explicitly uncredited. Fresh R6/R6a passes; exact native FASL/snapshot and
+source equality permits native test/reader reuse. New packet awaits review and
+integration; the ledger stays 21 accepted, 12 missing of 33.
+
 ## 2026-09-21 — accept audit 148 and integrate library, execution and dependencies
 
 On Steve’s “accept as advised”, accept execution R2, division and dependencies.

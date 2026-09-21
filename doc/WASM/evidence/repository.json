@@ -1,26 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1a4559c257bf65fbdd0a711c565e6d27df36cb87cd8324ee5564d67344d58fc6",
-  "commit": "664c44d4234a591f2953d87aa9c97519ad3d8eac",
-  "immutable_evidence_files": 246565,
+  "catalog_sha256": "4b669906580a33f3eaf4ee4d2c42a83aecb233943341b572f54f196881c31df0",
+  "commit": "7d6406449ebf72b2cf7724ebe68f23e87eb54f48",
+  "immutable_evidence_files": 248125,
   "last_scoped_addition": {
-    "bytes": 5122784,
-    "directory": "2026-09-21-stage1-bootstrap-dependencies-accepted",
-    "files": 41
+    "bytes": 70604070,
+    "directory": "2026-09-21-stage1-bootstrap-witnesses-r1",
+    "files": 1560
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Audit 148 acceptance and folded compiler integration. Stage 1 stays 21 accepted and 12 missing of 33. 252 original definitions execute, 193 have non-NIL witnesses; no new slot credit.",
-  "source_index_sha256": "36b431d9bd3b80b0272ca15b649c2b212b7d747a3b577db3ee642ab542f3c73b",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-dependencies-accepted.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap witness proposal executes 301 originals, 290 with non-NIL witnesses, awaiting review; no slot credit.",
+  "source_index_sha256": "4fb61221a23851657727debfc6eee31766e87476a429f9d18a8d62f4bad21520",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-witnesses-r1.json",
   "verification": {
-    "execution": "7da5bf4caec0dec278fe5fbfb0f7eaca706d382b82f3b178aef0111f7e633dfb",
-    "method": "All new packet files and integrated bytes checked. Folded compiler has 785 byte-identical generated/results files against reviewed dependencies. Fresh native R6/R6a rebuild passes; exact FASL/snapshot equality binds native test reuse. Both services and prior packets reused by reviewed identity.",
-    "native": "4785a94a1e1ba22b89d074a4538a4a6c5185121ad979c385a7c4d4ea9be9b220",
-    "packet": "3afc193eeaf37608e1082b70c892a15573722231e14f32b37a2f73623222bb14",
+    "deterministic_files": 994,
+    "execution": "245c398275a528ab658554f1d377e65c57326adb7ca2c99d7c83a8bdc7307470",
+    "method": "Unmodified retained verifier passes. Fresh native R6/R6a build equals qualified native FASLs/snapshot; native tests/readers reused by exact hash. New native cases, generated execution, scanner and all 20 faults re-execute.",
+    "native": "5cda7f33f4e4f8ca351121911a9304d8a31d119724d1cc2acc91f63f16c6456a",
+    "source_pins": 301,
     "status": "PASS"
   },
   "version": 1
