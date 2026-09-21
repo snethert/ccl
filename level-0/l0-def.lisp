@@ -27,7 +27,8 @@
   (functionp arg))
 
 (defun lfunp (arg)
-  (functionp arg))
+  #-wasm32-target (functionp arg)
+  #+wasm32-target (= (the fixnum (typecode arg)) target::subtag-function))
 
 (defun %proclaim-special (sym &optional initp)
   (let* ((oldbits (%symbol-bits sym)))

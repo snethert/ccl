@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "dedba463c72e383cd71d10d7f6b355fe52fcec87cc115a4605875a00906fe185",
-  "commit": "71738ad2b627a45fa93423a04c80a57ea2a5581c",
-  "immutable_evidence_files": 240474,
+  "catalog_sha256": "0b75a274a62217746722aeac6aa3e149e0885e827215f9656bddd64d341ac2a6",
+  "commit": "aa48b741670fc861c5f0a81c056c3f89bb1331ec",
+  "immutable_evidence_files": 240546,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-core-r1",
-    "files": 758,
-    "bytes": 33424931
+    "directory": "2026-09-21-stage1-bootstrap-core-accepted",
+    "files": 71,
+    "bytes": 728580
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 remains 21 accepted, 12 missing of 33. Whole-file bootstrap core proposal executed and awaiting review; no LL15 slot credit.",
-  "source_index_sha256": "8a898ee8311fa770772a71820bb1dcc3a739dcc1f5ade177ec18abd705ca2e12",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-core-r1.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap core reviewed, accepted and integrated after the user-adopted R6 allowance; no extra slot credit.",
+  "source_index_sha256": "fb2ebef32054922493749f6ab06610573a4753a1886eaf916f8bb9e287db89ce",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-core-accepted.json",
   "verification": {
     "status": "PASS",
-    "method": "Detached-checkout verifier: 469 deterministic artifacts at 219 source pins; native R6/R6a rebuilt for the exact compiler and source proposal, retained with explicit source-debug comparisons. Scoped catalog addition verified; prior archive not rescanned.",
+    "method": "Exact reviewed-byte integration and decoded-code evidence reuse; new seventeen-target reader matrix replayed from fresh U1 extracts, with a non-host-only fault rejected. Scoped evidence addition verified.",
     "native": "2e18ec6cefadf124c408b467ca6ed4b0ab2a29087f8c288135bf0e0b2da40152",
-    "execution": "157c8414d97e0794f823087f997e784e6583c21c5f3acc0381469fb15a60888e"
+    "execution": "6bf64f49500bd5206153782e5b2be68bfeab564f0c6be9da3e6bd86a6eba11a9"
   },
   "version": 1
 }

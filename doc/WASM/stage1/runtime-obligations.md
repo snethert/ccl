@@ -393,3 +393,19 @@ Full TCR preservation is a check for these nonallocating startup bodies only; mv
 ## Bootstrap values integration — audit 143
 
 The quoted-constant, special-variable and OR lowering is accepted. Admission and static dependency closure do not establish execution: target reader conditionals can erase a native body, and native self-call stubs need open coding. Correct both measurement defects in the predicate/whole-file unit under adopted P3. Existing eight native-matched functions remain the executed author count. The previous frontend acceptance was explicitly the user’s instruction, confirmed by “it was from me”; see `acceptance-bootstrap-frontend-provenance.json`.
+
+## Bootstrap core — audit 145
+
+C-1: add executed witnesses for %ILOGNOT and signed less-than %I<>; neither has one in the accepted corpus. Distinguish implemented operators from emitted/executed operators.
+
+C-2: isolate the inline fixnum operand check with a refusal. This check is stricter than native safety-0 code.
+
+C-3: isolate the node-access object-tag check; existing malformed objects also fail later checks.
+
+C-4: reconcile the even-length %GVECTOR padding convention (NIL) with strong-population padding (zero), and test it. Integration preserves reviewed bytes pending that next-packet decision.
+
+Callee closure is not all-input execution: %QUO-1 refuses ratio-producing division under the accepted numeric service scope.
+
+Next packet: ERROR/SIGNAL with arguments, character/string primitives, l0-symbol and l0-misc whole, and a denominator from the real Wasm module list.
+
+Original proposal verifier replays from 6947f83b after integration; no additional LL15 credit.

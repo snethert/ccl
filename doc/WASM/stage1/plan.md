@@ -570,13 +570,26 @@ now compiles l0-pred and l0-utils whole (78 named definitions), implements the
 Wasm predicate branches and node operators, and executes 129 original
 definitions including MEMEQL/ADJOIN-EQL and all 44 callee-closed definitions in
 those two files. Corrected admission is 1,539/2,492, with 193 callee-closed;
-this is not initialized bootstrap closure. The proposal awaits Claude review.
+this is not initialized bootstrap closure. The proposal is accepted and integrated following audit 145 and Steve’s R6
+source-location decision.
 
-After review and user acceptance, integrate the exact proposed compiler,
-source branches and structure scanners. Next close the files' remaining real
-callees (including TYPEP/REQUIRE-TYPE and error machinery), execute their
-initializers, and install them at actual image symbols. Continue measuring
+The next packet adds ERROR/SIGNAL with arguments, character and string
+primitives, and whole-file l0-symbol/l0-misc compilation. Derive the denominator
+from the actual Wasm module list and carry audit-145 C-1–C-4 in that packet.
+Continue closing the real TYPEP/REQUIRE-TYPE and error callees, then execute
+initializers and install definitions at actual image symbols. Continue measuring
 startup operator occurrences and source admissions without claiming terminal
 BT-0 credit prematurely. Keep Lisp in CCL's style and use no consumer source
 rewriters. Rework the pending population shape to native's zero-link/type/data
 fields when native accessors can be compiled.
+
+Denominator diagnosis after audit 145: U1's `target-xcompile-directory` visits
+all root level-0 files, including l0-bignum64; target reader conditionals remove
+that file's definitions. On the pinned kernel with Wasm features, the normal
+reader (`*read-eval*` T) reads only `(IN-PACKAGE "CCL")`. The diagnostic census
+uses `*read-eval*` NIL, gets a read-time-evaluation error inside the suppressed
+form, then its recovery resumes inside that excluded form. Replace this
+recovery-based denominator with file-compiler observations in the actual target
+file/initialization environment; merely deleting a filename is insufficient.
+The historical 1,539/2,492 figures remain diagnostic, not target-worklist
+completion. The 129 executed-definition evidence is independent of this tally.

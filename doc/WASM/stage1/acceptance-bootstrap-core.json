@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Adopt \"A file gaining `#+wasm32-target` branches may differ in source locations only, shown by identical forms under every existing target's reader and identical decoded code.\"",
+    "context": "Resolves the sole acceptance condition in the supplied audit-145 recommendation, under the ongoing instruction to accept, integrate and finish LL15."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-core-r1/packet.json",
+      "sha256": "041dcefeee9a693c09a51e8e8ea0d403b78c9bed68b1095ba42703ccfcbf0ac6"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "af7c0075b7062cd34ed2b006cbfd0b39ce090c5b",
+      "sha256": "f163119d71354146d1d47aa790c4ea57ed1b1edb74ec27b6118083071b9a8104"
+    }
+  ],
+  "r6_decision": {
+    "path": "r6-source-locations.json",
+    "sha256": "6f56acf2d94d90d98cdb69fc33d836740a0da41e895eb35837e306978b18ef52"
+  },
+  "reader_evidence": {
+    "locator": "2026-09-21-stage1-bootstrap-core-accepted/readers/result.json",
+    "sha256": "827c914b346d5ca70dc9f75c8a308c2487b0d6981eb2d682f7235aa268ecbdfd"
+  },
+  "observations": [
+    "C-1: add executed witnesses for %ILOGNOT and signed less-than %I<>; neither has one in the accepted corpus. Distinguish implemented operators from emitted/executed operators.",
+    "C-2: isolate the inline fixnum operand check with a refusal. This check is stricter than native safety-0 code.",
+    "C-3: isolate the node-access object-tag check; existing malformed objects also fail later checks.",
+    "C-4: reconcile the even-length %GVECTOR padding convention (NIL) with strong-population padding (zero), and test it. Integration preserves reviewed bytes pending that next-packet decision.",
+    "Callee closure is not all-input execution: %QUO-1 refuses ratio-producing division under the accepted numeric service scope.",
+    "Next packet: ERROR/SIGNAL with arguments, character/string primitives, l0-symbol and l0-misc whole, and a denominator from the real Wasm module list.",
+    "Original proposal verifier replays from 6947f83b after integration; no additional LL15 credit."
+  ],
+  "slot_credit": false
+}

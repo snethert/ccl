@@ -59,6 +59,8 @@ R6 prohibits edits to existing target-specific implementation source. Shared add
 
 A native-host compiler FASL modified to support Wasm is not an unchanged-input output-equivalence sample. Mark it as an intentional shared-artifact change, not a normalization. Every differing artifact must belong to a reviewed category; unattributed differences fail. New executable branches must never be erased by normalization. This clarifies how additive shared changes satisfy R6; it does not authorize existing-target source edits or behavior changes.
 
+User decision, 21 September 2026: A file gaining `#+wasm32-target` branches may differ in source locations only, shown by identical forms under every existing target's reader and identical decoded code. This allowance is limited to source-location metadata; executable bytes, non-location data, behavior and ABI remain subject to the comparisons above. See [the decision and evidence](stage1/r6-source-locations.json).
+
 ### Baselines and variance
 
 The native regression reference is **macOS x86-64 at U1 v1.13**. Its bootstrap, tests, toolchain and execution disposition are recorded in [baseline.json](stage0/baseline.json), [current status](STATUS.md) and the [evidence index](evidence/index.json). The [13 September project decision](stage0/second-mac-decision.md) retires S0-LL08-c. Native behavior and same-host repeatability remain required; cross-host reproduction is outside the required scope.

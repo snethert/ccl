@@ -397,3 +397,6 @@
     :array-data-size-function #'unavailable-array-size
     :array-type-name-from-ctype-function #'unavailable-array-type))
 (cl:provide "WASM32-ARCH")
+
+(cl:in-package :wasm32)
+(cl:defconstant subtag-function 42)

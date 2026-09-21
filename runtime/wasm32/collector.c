@@ -33,7 +33,7 @@ static Update *updates(State *s) { return (Update *)(unsigned long)s->log; }
  * The allowlist is intentional: admitting a new layout requires its scanner.
  */
 static U node_subtag(U t) {
- return t==10||t==26||t==42||t==58||t==106||t==114||t==250;
+ return t==10||t==26||t==42||t==58||t==106||t==114||t==122||t==250;
 }
 /* Header counts are 24 bits; even 16-byte elements fit U arithmetic. */
 static U raw_bytes(U tag,U n) {

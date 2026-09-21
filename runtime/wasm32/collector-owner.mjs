@@ -69,7 +69,7 @@ export class CollectorOwner {
     const h=this.#get(p),tag=h%256,n=Math.floor(h/256);let bytes=8,offset=0,count=2;
     if(tag%8===2||tag%8===7){
      offset=4;
-     if([10,26,42,58,106,114,250].includes(tag)||(tag===130&&n===6)){count=n;bytes=align(4+4*n,8);}
+     if([10,26,42,58,106,114,122,250].includes(tag)||(tag===130&&n===6)){count=n;bytes=align(4+4*n,8);}
      else{count=0;let raw;
       if(tag===7&&n>0)raw=n*4;else if(tag===15&&n===1)raw=4;else if(tag===23&&n===3)raw=12;else if([159,167,175,183,191].includes(tag))raw=n*4;else if([199,207].includes(tag))raw=n;else if([215,223].includes(tag))raw=n*2;else if([231,239].includes(tag))raw=4+8*n;else if(tag===247)raw=4+16*n;else if(tag===255)raw=Math.ceil(n/8);
       need(raw!==undefined,'image kind');bytes=align(4+raw,8);

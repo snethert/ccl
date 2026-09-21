@@ -1,3 +1,27 @@
+## 2026-09-21 — adopt narrow R6 allowance and integrate reviewed bootstrap core
+
+Import Claude audits 144 and 145 in order, preserving their original content.
+Steve adopts the exact source-location allowance proposed in audit 145. Add it
+to acceptance.md and the standing rules, with an explicit decision record.
+Qualify the three changed source files under all seventeen existing target
+readers using their source-declared features and architecture constants: all
+51 complete form-list comparisons agree. An added PPC32-only form is rejected.
+Reuse the reviewed 136 decoded-function comparisons and native 21,843-test run
+by exact hash; no repeated native build or foreign execution claim.
+
+Integrate the eight reviewed compiler, source and collector files byte-exactly;
+41 other runtime files stay unchanged. Standing admission/execution figures
+remain 1,539/2,492 and 129 original definitions. Audit-145 C-1–C-4 are retained
+for the next substantive packet: missing inline-operator witnesses, fixnum and
+node-tag refusal isolation, and a common padding convention. Next work is
+variadic ERROR/SIGNAL, characters/strings, l0-symbol/l0-misc whole, and a target
+module-list denominator. No additional slot credit: 21 accepted, 12 missing.
+
+The next-packet investigation also reproduces the denominator failure: with
+Wasm features the native reader sees only IN-PACKAGE in l0-bignum64, whereas
+READ-EVAL NIL errors inside the suppressed form and census recovery enters
+excluded definitions. This tally is diagnostic; execution counts stay separate.
+
 ## 2026-09-21 — whole-file bootstrap primitives and 129 executed definitions
 
 Implement the adopted audit-143 P3 packet as one compiler/source/runtime

@@ -10,9 +10,9 @@
     },
     {
       "source": "acceptance.md",
-      "source_sha256": "feb6c3de099b0a594381f20556336a5678046f53f60b2dfcc1598c53eff02639",
+      "source_sha256": "abc5424a9acc287a90be12388f58ebf5290e4803da34950d8431a5cada9525a1",
       "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
-      "output_sha256": "304e864a65e1a30bb822e34772732e239bdd825e51f255db5fc389346ad8409a"
+      "output_sha256": "a57ba8dbcd961243b880cb2b75d38a2c14ba79b1b34730aa84cdd1bece41cb71"
     },
     {
       "source": "decisions.md",

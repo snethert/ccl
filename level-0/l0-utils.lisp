@@ -85,7 +85,8 @@
 (defun %map-lfuns (f)
   (let* ((filter #'(lambda (obj) (when (= (the fixnum (typecode obj))
                                           target::subtag-function)
-                                   (funcall f (lfun-vector-lfun obj))))))
+                                   (funcall f #+wasm32-target obj
+                                              #-wasm32-target (lfun-vector-lfun obj))))))
     (declare (dynamic-extent filter))
     (%map-areas filter '(:dynamic :static :managed-static :readonly))))
 
@@ -181,14 +182,22 @@
         (when (funcall test-fn item (car l)) (return l))))))
 
 (defun s32->u32 (s32)
+  #-wasm32-target
   (%stack-block ((buf 4))
     (setf (%get-signed-long buf) s32)
-    (%get-unsigned-long buf)))
+    (%get-unsigned-long buf))
+  #+wasm32-target
+  (let ((s32 (require-type s32 '(signed-byte 32))))
+    (if (< s32 0) (+ s32 #x100000000) s32)))
 
 (defun u32->s32 (u32)
+  #-wasm32-target
   (%stack-block ((buf 4))
     (setf (%get-unsigned-long buf) u32)
-    (%get-signed-long buf)))
+    (%get-signed-long buf))
+  #+wasm32-target
+  (let ((u32 (require-type u32 '(unsigned-byte 32))))
+    (if (>= u32 #x80000000) (- u32 #x100000000) u32)))
 
 
 (defun car (x) (car x))

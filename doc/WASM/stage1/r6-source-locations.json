@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "operation": "AUTHORIZED_R6_SOURCE_LOCATION_ALLOWANCE",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Adopt \"A file gaining `#+wasm32-target` branches may differ in source locations only, shown by identical forms under every existing target's reader and identical decoded code.\""
+  },
+  "scope": "Only source locations in files gaining Wasm reader branches. Every existing target reader must receive identical forms; decoded executable bytes and non-location data must agree. Existing ABI and native test obligations are unchanged. No ledger slot credit.",
+  "review": "af7c0075b7062cd34ed2b006cbfd0b39ce090c5b",
+  "qualification": "tests/wasm/stage1/bootstrap-core-acceptance/run.py"
+}

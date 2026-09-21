@@ -143,11 +143,24 @@
 
 (defun arrayp (x)
   "Return true if OBJECT is an ARRAY, and NIL otherwise."
-  (arrayp x))
+  #-wasm32-target
+  (arrayp x)
+  #+wasm32-target
+  (let ((code (typecode x)))
+    (or (= code target::subtag-arrayH)
+        (= code target::subtag-vectorH)
+        (= code target::subtag-simple-vector)
+        (>= (the fixnum (ivector-typecode-p code)) target::min-cl-ivector-subtag))))
 
 (defun vectorp (x)
   "Return true if OBJECT is a VECTOR, and NIL otherwise."
-  (vectorp x))
+  #-wasm32-target
+  (vectorp x)
+  #+wasm32-target
+  (let ((code (typecode x)))
+    (or (= code target::subtag-vectorH)
+        (= code target::subtag-simple-vector)
+        (>= (the fixnum (ivector-typecode-p code)) target::min-cl-ivector-subtag))))
 
 
 (defun stringp (x)
@@ -197,6 +210,8 @@
 ;;; Note that this is true of symbols and functions and many other
 ;;; things that it wasn't true of on the 68K.
 (defun gvectorp (x)
+  #+wasm32-target
+  (= (logand (the fixnum (typecode x)) target::fulltagmask) target::fulltag-nodeheader)
   #+(or ppc32-target x8632-target arm-target)
   (= (the fixnum (logand (the fixnum (typecode x)) target::fulltagmask)) target::fulltag-nodeheader)
   #+ppc64-target
@@ -214,6 +229,8 @@
 (setf (type-predicate 'gvector) 'gvectorp)
 
 (defun ivectorp (x)
+  #+wasm32-target
+  (= (logand (the fixnum (typecode x)) target::fulltagmask) target::fulltag-immheader)
   #+(or ppc32-target x8632-target arm-target)
   (= (the fixnum (logand (the fixnum (typecode x)) target::fulltagmask))
      target::fulltag-immheader)
@@ -230,6 +247,8 @@
 (setf (type-predicate 'ivector) 'ivectorp)
 
 (defun miscobjp (x)
+  #+wasm32-target
+  (= (the fixnum (lisptag x)) target::tag-misc)
   #+(or ppc32-target x8632-target x8664-target arm-target)
   (= (the fixnum (lisptag x)) target::tag-misc)
   #+ppc64-target
@@ -1041,6 +1060,8 @@
 
 (defun symbolp (thing)
   "Return true if OBJECT is a SYMBOL, and NIL otherwise."
+  #+wasm32-target
+  (if thing (= (the fixnum (typecode thing)) target::subtag-symbol) t)
   #+(or ppc32-target x8632-target arm-target)
   (if thing
     (= (the fixnum (typecode thing)) target::subtag-symbol)
@@ -1073,7 +1094,10 @@
 (setf (type-predicate 'uvector) 'uvectorp)
 
 (defun listp (x)
-  (listp x))
+  #-wasm32-target
+  (listp x)
+  #+wasm32-target
+  (= (the fixnum (lisptag x)) target::tag-list))
 
 (defparameter *type-cells* nil)
 

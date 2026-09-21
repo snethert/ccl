@@ -2976,10 +2976,22 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-core-r1/packet.json",
       "sha256": "041dcefeee9a693c09a51e8e8ea0d403b78c9bed68b1095ba42703ccfcbf0ac6",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "P3 whole-file compiler/source/runtime proposal, not integrated, no LL15 slot credit. 1539/2492 source admissions with empty/self-only guards; 129 original definitions execute in 6936 native comparisons. Both requested files compile whole (78 named definitions); all 44 callee-closed selected definitions execute. Actual whole-file emitter: 1826 IR-object visits, 57 operator names. R6/R6a: 21843 tests, 159/164 registered FASLs raw-identical, three intentional source artifacts preserve all code/non-location data in 136 function occurrences; all 164 FASLs restored. Detached-checkout replay: 469 deterministic artifacts, 219 source pins. Callee closure is not global initialization, all-input coverage or bootstrap readiness."
+      "scope": "Accepted and integrated after audit 145 and the user-adopted R6 source-location allowance, with all 17 existing readers checked (51 comparisons). Original proposal verifier replays at 6947f83b. P3 whole-file compiler/source/runtime proposal, no LL15 slot credit. 1539/2492 source admissions with empty/self-only guards; 129 original definitions execute in 6936 native comparisons. Both requested files compile whole (78 named definitions); all 44 callee-closed selected definitions execute. Actual whole-file emitter: 1826 IR-object visits, 57 operator names. R6/R6a: 21843 tests, 159/164 registered FASLs raw-identical, three intentional source artifacts preserve all code/non-location data in 136 function occurrences; all 164 FASLs restored. Detached-checkout replay: 469 deterministic artifacts, 219 source pins. Callee closure is not global initialization, all-input coverage or bootstrap readiness.",
+      "review_commit": "af7c0075b7062cd34ed2b006cbfd0b39ce090c5b",
+      "review_sha256": "f163119d71354146d1d47aa790c4ea57ed1b1edb74ec27b6118083071b9a8104"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CORE-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-core-accepted/packet.json",
+      "sha256": "c12b54aa272f558fbf586bae398d828417ce781d77e8449ad377776c37ac450c",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Steve adopts the narrow source-location allowance, resolving audit-145 acceptance condition. Eight reviewed files integrated byte-exactly; 41 prior runtime files unchanged. Additional all-existing-target reader check: 17 profiles, 51 comparisons, non-host-only fault rejected, independent fresh extraction replay identical. Original proposal remains replayable at 6947f83b. No slot credit."
     }
   ],
   "current_runs": [
