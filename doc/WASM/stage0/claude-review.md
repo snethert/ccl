@@ -1999,3 +1999,39 @@ Both `packet.py verify` runs in the detached worktree at 272026c9 pass. Winners:
 ### Verdict
 
 No defect found in 2afe30f4 (STAGE1-STARTUP-JOINED-R1) or in the intermediate acceptance commit 3736f5ad. One defect found in 272026c9 (STAGE1-STARTUP-WINNERS-R1): F1, operation 5’s count, secondary and rehashed publication words are unobserved; the service itself publishes them correctly. A one-assertion follow-up closes it; I recommend that before the derived `hash.c` is integrated. Both auxiliary, no slot credit; the decisions are the user’s. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-twenty-ninth Claude audit — STAGE1-STARTUP-WINNERS-REVIEW-R1 (auxiliary follow-up to audit 128) at 43b9ca7a — 20 September 2026
+
+Reviewer: Claude Fable 5.1, detached worktree `~/Source/ccl-claude` at 43b9ca7a. Author: Codex. Scope: `tests/wasm/stage1/startup-winners-review/` in full (`run.py`, `packet.py`, README, scope), the STAGE1-STARTUP-WINNERS-REVIEW-R1 packet and the index changes. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence
+
+Packet 8387c634… (NOT_REVIEWED, slot_credit false, 127 manifest entries, all hashes match, no unlisted file, every file cataloged); catalog, index snapshot and evidence commit bind to `repository.json`; store clean. The index binds audit 128 by commit 3dc1be90 and the review-file hash recomputed from that commit. The commit adds four files under `startup-winners-review/` and changes nothing under the original fixtures, `runtime/` or `compiler/`.
+
+### Replay
+
+`packet.py verify` in the detached worktree at 43b9ca7a: PASS, 73 deterministic files, 204 source pins (the winners and joined pins re-asserted at HEAD plus four follow-up sources). Winners: corrected positive execution byte-identical to R1; the three publication faults rebuilt from source, each reproducing the full R1 escape under the original harness and refused “raw clear publication” under the corrected one; the nine R1 faults still refused. Ordering: 144 Node and 144 Chromium scenarios in registry order, every reset answer, configuration answer, readback and installed digest equal to the grouped run, entry order checked against the selection.
+
+### Disposition of audit-128 items
+
+- Joined order: closed. The registry-order sequence in the packet is the one audit 128 derived independently. Native check (main-checkout `dx86cl64`, U1 source): `restore-lisp-pointers` runs `(reverse *lisp-system-pointer-functions*)` and then the user registry, and that reversed list equals the snapshot’s 34 ordinals in order, so ascending ordinal is native execution order. The README now states the grouped order is fixture order and that later joins must follow the registry.
+- F1: narrowed, not closed. See F1a.
+
+### Finding
+
+- F1a. The added guard cannot tell a published word from a stale one. It runs `primitive(1,T,28)` and then the raw clear, asserting `[table, NIL, 1, 0]`. A successful SET has just published `[28, NIL, 1, 0]`, so words 1 to 3 already hold the expected values before operation 5 runs. A service whose operation 5 clears the table, writes only word 0 and returns passes the corrected harness at both placements with exit 0, as does one that rewrites words 1 to 3 with their prior contents. The three retained faults are caught only because each writes a wrong value; omission is not. With the four result words poisoned before the raw call the real service still passes with a byte-identical execution record and both mutants are refused “raw clear publication”. The README’s “independently checks all four words” holds for wrong values, not for missing writes.
+
+### Probes
+
+- A. The corrected harness differs from the R1 harness by the six guard lines only; `return-identity` now fails at the guard, as declared.
+- B. The ordering derivation selects by module membership from the R2 selection and asserts (group, ordinal) sorted; `system_pointers` sorts before `user_pointers`, which is also native order.
+- C. Clang is bound through the hash-tables toolchain record and `tools.json`; node and the browser through the R2 tool pins.
+
+### Observations (none a defect)
+
+1. Codex rewrote the two status rows that carried the audit-128 wording; the audit text remains in this file and the history.
+2. The guard exercises one unmoved four-slot table; a moved table would exercise a non-zero prior rehashed word, which is another way to make word 3 observable.
+
+### Verdict
+
+One defect found in 43b9ca7a (STAGE1-STARTUP-WINNERS-REVIEW-R1): F1a, the raw-clear guard follows a SET that leaves the same three words, so an operation 5 that publishes only word 0 passes. Poisoning the result words before the raw call closes it with no change to the positive record. The ordering item is closed, and the service proposal itself remains correct. Follow-up recommended before the derived `hash.c` is integrated; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
