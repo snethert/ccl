@@ -3031,3 +3031,7 @@ Claude reviewed eefb34d3 (STAGE1-STARTUP-WINNERS-PUBLICATION-R1) and 8e8aef6b (S
 ## 2026-09-20 — execute database reset admission follow-up
 
 Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh verifier reproduces 14 deterministic files at 218 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.
+
+## 2026-09-20 — execute GC counter startup storage
+
+Two more startup effects: fresh owner-reserved pinned buffers for TOTAL-GC-MICROSECONDS and TOTAL-BYTES-FREED, zeroed by a checked C/Wasm service and published by generated SET. Untouched native callbacks verify zero bytes, pointer/global identity and fresh repeated allocations. Four generated modules pass 32 scenarios at 4 MiB and 2 GiB, 38 refusals and six faults. Compiler and adapter unchanged; R6/R6a reused. Production allocation/disposal, moving macptrs and statistics consumers remain open. Auxiliary proposal, not integrated or joined, no LL15 credit. Fresh verifier reproduces 48 deterministic files at 221 pins. Retain development evidence and leave shared runtime/compiler/kernel files untouched. Stage 1 ledger unchanged.

@@ -2714,6 +2714,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh replay: 14 deterministic files at 218 pins."
+    },
+    {
+      "id": "STAGE1-STARTUP-COUNTERS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-counters-r1/packet.json",
+      "sha256": "1e2fd759f31275b4182280a05788055139278903db2664a7b46aab6ac3452b5d",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Two more startup effects: fresh owner-reserved pinned buffers for TOTAL-GC-MICROSECONDS and TOTAL-BYTES-FREED, zeroed by a checked C/Wasm service and published by generated SET. Untouched native callbacks verify zero bytes, pointer/global identity and fresh repeated allocations. Four generated modules pass 32 scenarios at 4 MiB and 2 GiB, 38 refusals and six faults. Compiler and adapter unchanged; R6/R6a reused. Production allocation/disposal, moving macptrs and statistics consumers remain open. Auxiliary proposal, not integrated or joined, no LL15 credit. Fresh replay: 48 deterministic files at 221 pins."
     }
   ],
   "current_runs": [

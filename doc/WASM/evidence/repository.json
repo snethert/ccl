@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "82cb3c597c03cf5509dc5afcec90375618b7a41a27e9f0c1cb11c0c62020ca2d",
-  "commit": "7b3ece824f8e374efcab7303b5c95b48cf3fda14",
-  "immutable_evidence_files": 234479,
+  "catalog_sha256": "71a89f922155500830d10f644aa400ec162e38dee31353d058db40fee95331b3",
+  "commit": "a90bbc0e34eb10be7b828fa3aa0ed645cf71ed14",
+  "immutable_evidence_files": 234573,
   "last_scoped_addition": {
-    "directory": "2026-09-20-stage1-startup-db-review-r1",
-    "files": 52,
-    "bytes": 549920
+    "directory": "2026-09-20-stage1-startup-counters-r1",
+    "files": 94,
+    "bytes": 968707
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 42646,
+  "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary database reset admission follow-up executed; not reviewed or integrated.",
-  "source_index_sha256": "59f62a6b0a03485d3bfa523de658db395e6a60527bec70b07bdb91b491941300",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-db-review-r1.json",
-  "verification": "Fresh replay: 14 deterministic files at 218 pins. New files and index references verified incrementally.",
+  "scope": "Stage 1:21 accepted,10 missing,0 unreviewed. Auxiliary GC counter startup storage executed; not reviewed or integrated.",
+  "source_index_sha256": "a9d2b4718d857ff774ae89127932392609dbbbb206e3d9fe5e05be89847ab5e2",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-startup-counters-r1.json",
+  "verification": "Fresh replay: 48 deterministic files at 221 pins. New files and index references verified incrementally.",
   "version": 1
 }
