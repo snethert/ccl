@@ -2474,3 +2474,50 @@ Whether admitted means runnable. Four more definitions from the 426 were added t
 ### Verdict
 
 No defect found; nothing here needs a follow-up packet. The entry is additive, leaves the legacy output byte-identical, passed R6/R6a, and its admitted code ran correctly on every definition Claude tried. Recommended: accept and integrate the entry, then heap constants, special references and OR, which together gate about 800 of the refused definitions. Ledger: 21 accepted, 12 missing, zero unreviewed.
+
+## Hundred-and-forty-third Claude audit — STAGE1-BOOTSTRAP-VALUES-R1 at 921baea9, with the integration commit 8872610e — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-143`; the first commit changes only this file, a second adds the directive’s P3 section; the STATUS rows and history entry are owed at merge. Author: Codex. Audit 142 landed on wasm2 as c45b74a9. Reviewer disposition only; acceptance is the user’s decision.
+
+### Integration commit 8872610e
+
+Verified: `compiler/WASM32/wasm32-backend.lisp` equals, byte for byte, the derivation audit 142 reviewed (256795d0’s `backend.py` applied to the prior backend, plus `entry.lisp`); no other shared source changes. Observation: `acceptance-bootstrap-frontend.json` records the authorization as the quotation “Accept and integrate the new entry.” with no speaker. Those are the words of Claude’s recommendation in the audit-142 report. If the user said them, the record should say so; if Codex took them from the report, a reviewer’s recommendation is not an acceptance. The user should confirm.
+
+### Throughput (R-1, R-5)
+
+Admission of unchanged DEFUNs, same 2,492 inventory: 426 → 472 (quoted symbols through pools) → 574 (special reads, SETQ, bindings) → 639 (OR), 25.6%. Eight definitions execute and match native, four more than before. `frontier.json` reports 82 statically dependency-closed. The carry items of audit 142 are done: error messages retained, frontier reported, file-macro calls flagged (62, none admitted). This is the largest single movement so far and it is the right work.
+
+### Evidence and replay
+
+Packet 9ee4c3fc… (1,374 entries): NOT_REVIEWED, slot_credit false, all hashes match, no unlisted or missing file, all cataloged; catalog, index snapshot and evidence commit dd51d5b1 bind at 239,711 files; store clean. The verifier passes unmodified from the detached worktree: 940 deterministic files; 50 modules, 114 rows, 456 comparisons, 228 collections between calls and 28 inside calls, five compiled faults rejected, ten legacy modules byte-identical, R6/R6a reused by exact compiler hash. Worktree clean afterwards. OR was read against `nx1-or`: nonfinal operands single-valued and non-tail, the successful primary held in a Wasm local with no call or safepoint before publication, the last operand keeping tail position and all values.
+
+### Probe — run more of the closed frontier against native
+
+Fourteen further unchanged definitions from the 82 were added to a scratch copy of the fixture and run through its oracle and moving harness. Four match native on every input at both placements: `%PL-SEARCH`, `CPL-MEMQ`, `FINAL-CONS`, and `HEAP-AREA-NAME` on thirteen codes (named constants in, keywords out). Two defects:
+
+- F1. A definition whose body lies wholly inside per-target reader conditionals is read as empty, compiled, and counted as admitted and dependency-closed. `SYMBOLP` (`level-0/l0-pred.lisp`) has branches for ppc32, x8632, arm, ppc64 and x8664 and none for Wasm; the inventory’s retained form is `(DEFUN SYMBOLP (THING) "Return true if OBJECT is a SYMBOL, and NIL otherwise.")`. The generated function returns the docstring for every argument: `(symbolp nil)` yields a heap string where native yields T, and `SYMBOL-ARG-P`, which calls it, returns T for the fixnum 1 where native returns NIL. By a text scan, 25 of the 639 admitted definitions and 14 of the 82 closed ones contain per-target conditionals (`GVECTORP`, `IVECTORP`, `MISCOBJP`, `SYMBOL-NAME`, `%CURRENT-EXCEPTION-FRAME`, `XP-FLAGS-REGISTER` among them). This is the reader-conditional trap of audit 137 from the other side: there the port took a branch meant for another target; here it takes none and does not notice. There is no `#+wasm32-target` or `#+wasm-target` anywhere in `level-0`, `level-1`, `lib` or `library`.
+- F2. `(sequencep nil)` never returns (20 minutes at full CPU before it was killed). `SEQUENCEP` is `(or (listp form) (vectorp form))`, and native `LISTP`, `VECTORP` and `ARRAYP` are each defined as a call to themselves, relying on the compiler to open-code the operator. `CAR`, `CDR` and `EQ` have the same shape and are correct because pass 2 lowers them; `LISTP` and its kind have no lowering, so the definition compiles to a tail call of itself. All three are counted admitted and closed; the frontier rule lets a recursive component stand. Which of the two calls loops was not isolated.
+
+Neither is a fault in the constants, specials or OR lowering, which held on everything tried. Both are faults in what the measure counts, and they sit exactly in the functions everything else calls.
+
+### Relayed user direction (21 September, during this audit)
+
+- U-4. “Ask CODEX to accomplish more work next time.”
+- U-5. On F1: “Why not WASM32 compiler flags?!?”
+- U-6. “Eventually we HAVE to change CCLs source to be properly integrated”
+
+Claude’s reading for Codex. U-5 and U-6 name the mechanism every CCL port uses: target features select branches in CCL’s own files, and a `level-0/<ARCH>/` directory supplies what native ports write in LAP. The features exist (`:wasm-target :wasm32-target`); the branches do not. The 16 September authorization already covers additive shared-source changes under R6 and R6a, and a `#+wasm32-target` branch is invisible to every other target’s reader, so R6 holds by construction and is cheap to show. “Shared source untouched” has been reported as a merit in every README; for a per-target definition it is the defect. Size, from the tree: 86 `x8664-target` conditional sites in `level-0`, `level-1` and `lib`; 258 x8664 LAP functions in `level-0/X86` (303 for ARM).
+
+### Request to Codex for the next packet (U-4)
+
+One packet, not five:
+1. Add the Wasm branch to every per-target definition in `level-0/l0-pred.lisp` and `level-0/l0-utils.lisp`, in those files, with R6/R6a; start `level-0/WASM32/` for what they need beneath them.
+2. Lower together the operators those two files use: the tag and typecode readers, `CONSP`/`LISTP`/`VECTORP`-class predicates, `%SVREF`, `%GVECTOR`, `STRUCT-REF`, `%SLOT-REF`, and inline fixnum arithmetic and comparison (LIST-LENGTH still needs `+` and `>` as external calls).
+3. Compile both files whole, so file-local macros exist (the 62 flagged definitions), and report admitted, closed and executed for them.
+4. Execute every dependency-closed definition against native from a table of inputs, not a chosen eight. Target for the packet: at least 100 executed and matched.
+5. Make the measure refuse what F1 and F2 show: a body that is empty under the target read while non-empty under the native read, and a definition whose only body form is a call to itself with no pass-2 lowering.
+6. Keep evidence proportional: reuse R6 by hash, one native rebuild per compiler change, no re-qualification of unchanged parents.
+
+### Verdict
+
+Integration verified. The values packet’s lowering is sound and its carry items are closed; F1 and F2 are defects in the throughput accounting with wrong code behind them, to be fixed in the next packet as items 1, 2 and 5 above, not in a follow-up of their own. Recommended: accept and integrate the constants, specials and OR lowering; correct the admitted and closed counts when F1 and F2 land. Ledger: 21 accepted, 12 missing, zero unreviewed.
