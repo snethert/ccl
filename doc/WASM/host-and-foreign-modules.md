@@ -1,7 +1,7 @@
 # Host providers, startup callback scope and foreign Wasm modules
 
 ```
-DOC-ID        HOSTFM-P1
+DOC-ID        HOSTFM-P2 (P1 was 0ac8691c; P2 amends it after Codex's review — see §10)
 STATUS        PROPOSAL — not adopted, not a decision record, no gate or ledger effect
 AUTHOR        Claude (Fable 5.1), 20 September 2026
 REVIEWER      Codex (cross-provider review requested by the user)
@@ -80,27 +80,29 @@ Capability table. "Absent" means H-2 applies.
 
 | Cap ID | Capability | CCL surface (main source) | Browser provider | Node provider |
 | --- | --- | --- | --- | --- |
-| CAP-ns-ro | Read-only namespace | `l1-streams`, `l1-pathnames`, loader | fetched named blobs | blobs or mounted directories (`fs` sync) |
-| CAP-ns-rw | Writable store (Stage 3) | `compile-file`, `save-application` | OPFS `[ENG]` | memory or disk |
-| CAP-ns-enum | List, delete, rename (Stage 3, gated) | `directory`, `delete-file`, `rename-file` | OPFS only `[ENG]` | mounted directories |
-| CAP-stdio | Standard streams, terminal | `l1-streams`, `l1-boot-2` | absent; listener is page UI | fds 0/1/2, TTY |
+| CAP-ns-ro | Read-only namespace | `l1-streams`, `l1-pathnames`, loader | fetched named blobs | blobs or mounted directories, served through the mailbox (H-4, Q-2); already-resident bytes need no OS path |
+| CAP-ns-rw | Writable store (Stage 3) | `compile-file`, `save-application` | a virtual store; OPFS is one candidate `[ENG]`; availability is per deployment | memory or disk |
+| CAP-ns-enum | List, delete, rename (Stage 3, gated) | `directory`, `delete-file`, `rename-file` | within the virtual store only | mounted directories |
+| CAP-stdio | Lisp standard streams | `l1-streams`, `l1-boot-2` | present: listener input and output routed to the page | present: routed by the Node owner to fds 0/1/2 |
+| CAP-tty | POSIX fds and terminal behaviour | `l1-streams`, `pty` | absent | owner-side only; interactive terminal needs stream and LL20 suspension support |
 | CAP-args | Command line | `*command-line-argument-list*` | owner-supplied list, default empty | `process.argv` tail |
 | CAP-env | Environment, cwd, home, user, hostname | `linux-files`, `misc` | absent except namespace cwd and a virtual home (see CB-21) | `process.env`, `os.*`, mapped into the namespace |
-| CAP-exit | Exit status | `quit` | absent; terminate Workers, report to page | `process.exit(n)` |
+| CAP-exit | Exit status | `quit` | absent; terminate Workers, report to page | an exit *request* to the Node owner, which flushes, terminates sibling Workers and sets the status. `[ENG]` `process.exit` inside a Worker stops only that Worker. |
 | CAP-signal | OS interrupt to break | `l1-lisp-threads`, trap support | absent; UI control posts the same interrupt | SIGINT on the main thread posts the interrupt |
 | CAP-proc | External processes | `run-program` | absent | `child_process` `[ENG]`; asynchronous pipes need H-4 |
 | CAP-sock | TCP/UDP, listen, DNS, interfaces | `library/sockets.lisp` | absent; WebSocket/fetch are a different, later surface | `net`, `dgram`, `dns`, `os.networkInterfaces()` `[ENG]`; all asynchronous, need H-4 |
 | CAP-clock | Wall and monotonic time | `lib/time.lisp` | `Date.now`, `performance.now` (coarsened) | same, finer |
 | CAP-cputime | CPU time, resource usage | `get-internal-run-time`, `time`, `room` | absent; wall clock substitutes only where the standard allows | `process.cpuUsage`, `resourceUsage` `[ENG]` |
-| CAP-cpus | Logical processors | `cpu-count` | `navigator.hardwareConcurrency` (accepted, R2) | `os.availableParallelism()` `[ENG]` |
+| CAP-cpus | Processor count | `cpu-count` | `navigator.hardwareConcurrency` (accepted, R2; provenance kept) | `os.availableParallelism()` `[ENG]` — a scheduling-capacity estimate, recorded as such |
 | CAP-image | Image source and name | `*heap-image-name*`, loader | namespace name of a fetched blob | namespace name of a mounted file |
-| CAP-ui | Page surface: DOM, canvas, input, clipboard | CLIM IDE (`ui-overview.md`) | present | absent |
+| CAP-ui | Page surface: DOM, canvas, input, clipboard | CLIM IDE (`ui-overview.md`) | present *on the Page*; the Lisp Worker reaches it by proxy (FM-13) | absent |
 | CAP-ffi-native | Native C libraries, ObjC, JNI, GTK, pty, ELF/Mach-O tools | `%ff-call` users, `library/*` | absent | absent |
 | CAP-ffi-wasm | Foreign Wasm modules (§6) | new | present | present |
 
 `[SRC]` for the CCL-surface column: foreign-call density ranks
-`level-1/linux-files.lisp` 132, `level-1/l1-numbers.lisp` 62 (libm; both
-providers cover it through `Math`, last-bit differences possible),
+`level-1/linux-files.lisp` 132, `level-1/l1-numbers.lisp` 62 (libm; governed by
+the accepted LL16 numeric boundary — calling `Math` does not by itself establish
+libm coverage, coercion behaviour or FP conditions; classify each call),
 `library/sockets.lisp` 43, `level-0/l0-cfm-support.lisp` 28, `l1-streams` 14,
 `lib/time.lisp` 13.
 
@@ -118,12 +120,12 @@ registry, equal to the snapshot's 34 ordinals).
 
 | ID | Ord | Callback | What the native form does | Class | Browser | Node | Recommendation |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| CB-0 | 0 | `*total-gc-microseconds*` | `malloc` of five timevals the kernel GC writes into | RT | same | same | The port's collector owns GC time. Represent as collector counters, not a foreign buffer; consumers (`gctime`, `room`) read them. 541b4a3f is unreviewed. |
-| CB-1 | 1 | `*total-bytes-freed*` | `malloc` of 8 bytes, zeroed | RT | same | same | As CB-0. |
-| CB-2 | 2 | `kernel-locks` | revives macptrs to two kernel recursive locks | RT/EXCL | — | — | D5 replaces kernel locks. Expected: no effect; record as replaced-by-D5, confirm no Lisp caller needs the macptrs. |
-| CB-3 | 3 | `*fd-set-size*` | kernel import, `select()` bitmap size | EXCL | absent | absent | No `select` on either provider. Leave unbound or bind per H-2; audit consumers in `l1-streams`. |
-| CB-4 | 4 | `*max-os-open-files*` | `getdtablesize` | EXCL | absent | absent | `[ENG]` Node exposes no equivalent. As CB-3. |
-| CB-10 | 10 | `*lisp-start-timeval*` | `gettimeofday` into a foreign `:timeval` record | HOST | CAP-clock | CAP-clock | Needs a record representation decision (it is a macptr natively). Value from the provider's wall clock at start. |
+| CB-0 | 0 | `*total-gc-microseconds*` | `malloc` of five timevals the kernel GC writes into | RT | same | same | `[SRC]` `gctime` (`lib/time.lisp:30–43`) `memmove`s the five-timeval buffer and returns five values. Replace the consumer with one that reads collector counters and keeps the five-value contract; do not impose macOS timeval buffers on the port, and do not integrate 541b4a3f merely to empty the list. |
+| CB-1 | 1 | `*total-bytes-freed*` | `malloc` of 8 bytes, zeroed | RT | same | same | `[SRC]` The only Lisp read is under `#+not-any-more` (`level-0/l0-misc.lisp:118`); natively the kernel writes it (it is in the x86 kernel-symbol list). No live Lisp consumer: nothing to implement until one exists. |
+| CB-2 | 2 | `kernel-locks` | revives macptrs to two kernel recursive locks | RT (replaced) | — | — | D5 replaces kernel locks. Closed only when consumer routing is proved: a leftover use must not see nil locks. |
+| CB-3 | 3 | `*fd-set-size*` | kernel import, `select()` bitmap size | EXCL | absent | absent | No `select` on either provider. `[SRC]` Still consumed at `linux-files.lisp:1326` (`%stack-block ((in-fd-set *fd-set-size*))`). Closed only when that path is excluded or replaced; never a fabricated size. |
+| CB-4 | 4 | `*max-os-open-files*` | `getdtablesize` | EXCL | absent | absent | `[ENG]` Node exposes no equivalent. `[SRC]` Consumed at `linux-files.lisp:1137` (fd-closing loop before `%execvp`), which belongs to CAP-proc. As CB-3. |
+| CB-10 | 10 | `*lisp-start-timeval*` | `gettimeofday` into a foreign `:timeval` record | HOST | CAP-clock | CAP-clock | `[SRC]` Repository search finds the symbol only at its definition (`l1-lisp-threads.lisp:79`): no live consumer. Do not manufacture a record to implement the initializer. If the port needs a start timestamp, use a port clock value with explicit units, wall time distinguished from elapsed. |
 | CB-12 | 12 | `initial-thread` | `init-thread-from-tcr` for the current TCR | RT | same | same | Threads stage (LL20). DEFER until then. |
 | CB-18 | 18 | `*event-dispatch-task*` | installs the 3 Hz periodic task that flushes interactive streams | DEFER | — | — | Depends on periodic tasks and interactive streams; both providers need a timer path through H-4. |
 | CB-19 | 19 | `*heap-image-name*` | kernel global | HOST | CAP-image | CAP-image | Namespace name under both providers. |
@@ -136,20 +138,24 @@ registry, equal to the snapshot's 34 ordinals).
 | CB-31 | 31 | `*free-static-cons-address*` | as CB-30 | DEFER | — | — | As CB-30. |
 | CB-32 | 32 | `startup-shutdown-processes` | re-creates threads for processes shut down at image save | DEFER | — | — | Application image save/restore is Stage 5. |
 
-Requirement **S-1**: before another callback is implemented, the selection
-record gains a `class` and a per-provider disposition for all 35 rows, reviewed
-once, so that implementation effort goes only to RT and HOST rows whose
+Requirement **S-1**: before another callback is implemented, **one new
+classification manifest** — keyed by snapshot identity and ordinal and binding
+the original selection's hash — gives a `class` and a per-provider disposition
+for all 35 rows, reviewed once. The existing `startup-*/selection.json` files are
+hash-pinned by retained packets `[SRC]` and are not edited, so that implementation effort goes only to RT and HOST rows whose
 subsystem exists. **S-2**: later joins follow registry order (audit 129 finding,
 already accepted by Codex in the winners-review README). **S-3**: a DEFER or
-EXCL row is a recorded disposition with its reason and the consumer audit it
-owes, not an open item counted against LL15.
+EXCL row records its reason and the consumer audit it owes. It is **closed** only
+when the selected bootstrap profile omits the subsystem or its consumers use a
+qualified replacement; until then it remains an unresolved dependency under
+`S1-LL15-a:initializers` (`stage1/inventory.json:624`). No gate change.
 
 ### 5.1 Disposition of STAGE1-STARTUP-DB-R1 (and its follow-up 44531e64)
 
 | ID | Statement |
 | --- | --- |
-| DB-1 | Recommend **withdraw as an implementation**. No interface directory exists in the Wasm profile (C-3), so natively-shaped RESET-DB-FILES iterates an empty list and stores nothing. |
-| DB-2 | Record CB-27 as DEFER with reason "interface database not loaded; outline §05". It returns only if CAP-ffi-wasm later adopts wasm32 interface databases (FM-14), and then the callback's own Lisp body, compiled by the port's compiler over structure accessors, is the implementation — not a C leaf with an owner-admitted arena. |
+| DB-1 | Recommend **withdraw as an implementation**. Corrected in P2: excluding `.cdb` loading (C-3) does not make the directory list empty. `[SRC]` `ensure-interface-dir` builds directory metadata without opening a database (`lib/foreign-types.lisp:161–168`); `[RUN]` a native image holds one directory, `:LIBC`, with no database open. The reset's effect is nil-to-nil as long as nothing opens a `.cdb`. Owed before closure: establish that the selected image has no live handle, or exclude the subsystem (S-3). |
+| DB-2 | Record CB-27 as DEFER with reason "interface database not loaded; outline §05". Foreign declarations (FM-5, FM-14) do not by themselves require the native interface database to return. If wasm32 databases are ever adopted, the callback's own Lisp body, compiled by the port's compiler over structure accessors, is the implementation — not a C leaf with an owner-admitted arena. |
 | DB-3 | Audit-130 F1 (membership and complete-list checks not isolated) is moot if DB-1 is adopted. 44531e64 answers F1; Claude has not reviewed it and proposes not to, unless the user keeps the unit. |
 | DB-4 | Worth keeping from the unit as harness practice, independent of its subject: complement-poisoned publication words, validate-everything-before-first-store, refusal cases that assert an unchanged image. |
 
@@ -163,18 +169,18 @@ IDE needs. Not native libraries. Not Stage 1. U-3 fixes the memory model.
 
 | ID | Requirement |
 | --- | --- |
-| FM-1 | **Separate memory (U-3).** A foreign module instance has its own linear memory. It never receives a Lisp heap address. Arguments and results are scalars, or byte ranges copied between memories. Consequence: the moving collector needs no pinning for foreign calls, and a foreign module cannot corrupt the Lisp heap. |
-| FM-2 | **FOREIGN bracket.** A Lisp thread enters FOREIGN before a foreign call and re-admits under D5 after it (`outline.md:187`), exactly as for host I/O. A thread inside foreign code cannot poll; the collector treats it as parked. `[SRC]` The TCR already carries `foreign_descriptor` and `c_stack_pointer` (`contracts/tcr.v2.json`). |
+| FM-1 | **Separate memory (U-3).** A foreign module instance has its own linear memory. It never receives a Lisp heap address. Arguments and results are scalars, or byte ranges copied between memories. Consequence: the moving collector needs no pinning for the foreign callee. The trusted adapter and callback code still touch Lisp memory and must obey the bounds and root protocols; separation alone does not prove the heap safe. |
+| FM-2 | **FOREIGN bracket on every foreign entry.** Allocator, destructor, constructor, start function and the principal export alike: each is foreign execution that may call imports, grow memory, throw, trap or not return, and each is entered from FOREIGN and followed by D5 admission (`outline.md:187–191`, `decisions.md:260,304`). Lisp bytes are copied only while admitted, with no collecting call between obtaining the Lisp address and the copy; after any re-entry, roots are reloaded and addresses recomputed. Callbacks make the reverse transitions, on errors too. A thread inside foreign code cannot poll; the collector treats it as parked. FOREIGN is not interruptibility: CPU-bound foreign work cannot be interrupted by a mailbox word. `[SRC]` The TCR already carries `foreign_descriptor` and `c_stack_pointer` (`contracts/tcr.v2.json`). |
 | FM-3 | **Two layers.** Lower: a typed call to a named export with i32/i64/f32/f64 arguments and results, plus copy-in/copy-out of byte ranges and access to the library's `malloc`/`free`. Upper: CCL's surface — `external-call`/`ff-call`-style forms, macptrs addressing *a foreign memory* (library identity plus offset), `rlet`/`pref`-style record access, `defcallback`. |
-| FM-4 | **One adapter module per library.** Each Lisp function is its own Wasm module importing `env.memory` `[SRC]` (every generated `.wat` in the Stage 1 fixtures). Rather than give each of them a second memory import, a per-library adapter imports both memories and the library's exports, does copies with `memory.copy`, and calls Wasm-to-Wasm. This generalizes `runtime/wasm32/hash-adapter.wat`, which today carries one fixed eight-word signature. `[ENG]` Requires the multi-memory feature; see FM-12. |
+| FM-4 | **One adapter per library.** Each Lisp function is its own Wasm module importing `env.memory` `[SRC]` (every generated `.wat` in the Stage 1 fixtures). Rather than give each of them a second memory import, a per-library adapter imports both memories and the library's exports, does copies with `memory.copy`, and calls Wasm-to-Wasm. This generalizes `runtime/wasm32/hash-adapter.wat`, which today carries one fixed eight-word signature. P2: FM-7 puts a JavaScript frame between Lisp and foreign frames for any export that can trap; that frame can also copy between memories, so **multi-memory is an optimization for admitted non-trapping exports, not a baseline dependency**. Adapters are generated from binary types *and* explicit pointer/ownership declarations. |
 | FM-5 | **Signatures from the binary.** Export and import names and function types come from the module's own sections; `runtime/wasm32/binary.mjs` already reads imports and exports `[SRC]`. No database is needed for scalar signatures. The binary cannot say which i32 is a pointer, a length or a handle: that comes from declarations (FM-14). |
 | FM-6 | **Encodings are declared.** `outline.md:244`: "The foreign/host boundary uses declared encodings and payload schemas." String arguments name an encoding; the copy-in helper encodes, never guesses a storage width. |
-| FM-7 | **No unwinding across the boundary.** The adapter catches everything a foreign call throws and raises a Lisp error carrying what is known. A Lisp THROW, RETURN-FROM or GO never passes through foreign frames; a callback that would do so is caught at the callback boundary. `[SRC]` Generated code already uses `catch_all_ref` in places, so a foreign exception would run Lisp cleanups but be misattributed without this rule. |
-| FM-8 | **Callbacks.** `[ENG]` A C or C++ function pointer is an index into the library's own function table. Passing a Lisp function means growing that table and installing a trampoline of exactly the expected Wasm type; the trampoline re-admits into Lisp under D5 on the calling thread only. Callbacks from a thread Lisp does not own are unsupported. |
-| FM-9 | **Thread ownership.** `[ENG]` A library built without atomics has unshared memory and belongs to the Worker that instantiated it. Policy choices, to be declared per library: one instance per Lisp Worker (separate state), or one owning Worker with calls funnelled through the mailbox. Libraries built with a pthreads runtime that expects its own worker pool are out of scope. |
-| FM-10 | **Lifetime.** Foreign objects are integer handles or foreign-memory macptrs on the Lisp side. Release on collection uses the port's equivalent of `library/macptr-termination.lisp`; explicit release is always available. Dropping a library instance invalidates its macptrs detectably (generation in the library identity). |
-| FM-11 | **Loading is digest-bound.** A foreign module is a named blob in the namespace under both providers, admitted by digest the way `bootstrap-install.mjs` admits generated modules, instantiated once per policy, and initialized (`_initialize` or `__wasm_call_ctors` `[ENG]`) before any export is callable. Its imports are an explicit, minimal set — a small WASI shim (clock, random, a stderr sink) — never a toolchain's JavaScript glue object. |
-| FM-12 | **Engine features are qualified, not assumed.** Multi-memory, and the exception-handling encoding a C++ library was built with, each need an engine-matrix row for every deployment engine including Node (N-5). Fallback for FM-4 without multi-memory: a host copy helper in JavaScript, slower, same semantics. |
+| FM-7 | **Traps and exceptions are different, and neither unwinds across the boundary.** `[RUN]` Under the pinned Node a `try_table`/`catch_all` catches a Wasm `throw` but an `unreachable` or out-of-bounds access escapes it as `WebAssembly.RuntimeError` (Codex's probe and Claude's independent one agree; the exception-handling specification says traps are not caught). A direct Wasm-to-Wasm call therefore cannot turn a foreign trap into a Lisp error, and the trap would bypass Lisp cleanups too. Baseline: each foreign entry passes through a JavaScript boundary *inside* the live Lisp call that catches thrown exceptions and traps and rethrows a catchable exception on the port's tag; a library that trapped is invalidated, not reused. Direct calls are admitted only for exports declared non-trapping, with fatal handling defined if the declaration is false. A Lisp THROW, RETURN-FROM or GO never passes through foreign frames; a callback that would do so is caught at the callback boundary. `[SRC]` Generated code already uses `catch_all_ref` in places, so a foreign exception would run Lisp cleanups but be misattributed without this rule. |
+| FM-8 | **Callbacks.** `[ENG]` A C or C++ function pointer is an index into the library's own function table. Passing a Lisp function means growing that table and installing a trampoline of exactly the expected Wasm type; the trampoline re-admits into Lisp under D5 on the calling thread only. P2: the library must export or import a table with sufficient limits, or offer a registration ABI — not every library has a growable table. Each registered Lisp callback is a collector-visible root until deregistered, and table handles are versioned. A Lisp error inside a callback never throws through the foreign frame: it returns a declared error result or is deferred to the caller's boundary. Callbacks from a thread Lisp does not own are unsupported. |
+| FM-9 | **Thread ownership.** `[ENG]` An instance whose memory is unshared cannot leave the Worker that instantiated it (the determinant is the memory's shared flag, not whether the code uses atomic instructions). Worker affinity is the selected policy in every case; funnelled calls need a stated owner-thread and re-entrancy rule. Policy choices, to be declared per library: one instance per Lisp Worker (separate state), or one owning Worker with calls funnelled through the mailbox. Libraries built with a pthreads runtime that expects its own worker pool are out of scope. |
+| FM-10 | **Lifetime.** Foreign objects are integer handles or foreign-memory macptrs on the Lisp side. Release on collection uses the port's equivalent of `library/macptr-termination.lisp`; explicit release is always available. Dropping a library instance invalidates its macptrs detectably (generation in the library identity). P2: explicit release invalidates the handle and suppresses its finalizer, so nothing is freed twice; a library generation does not detect reuse of a freed offset inside a live instance, so allocation handles carry their own validity; finalization is queued to the owning Worker outside the collector's critical section. |
+| FM-11 | **Loading is digest-bound.** A foreign module is a named blob in the namespace under both providers, admitted by digest the way `bootstrap-install.mjs` admits generated modules, instantiated once per policy, and initialized exactly once, under FM-2's bracket, by the convention its declaration names (`_initialize`, a constructor export, or the start section `[ENG]` — not every module has `_initialize`) before any export is callable. The admission record binds the declared ABI, initialization convention, memory and table limits and the import set. No promise of arbitrary C++ binary compatibility. Its imports are an explicit, minimal set — a small WASI shim (clock, random, a stderr sink) — never a toolchain's JavaScript glue object. |
+| FM-12 | **Engine features are qualified, not assumed.** The exception-handling encoding a C++ library was built with needs an engine-matrix row for every deployment engine including Node (N-5); multi-memory needs one only if FM-4's optimization is taken. Copy and view behaviour is requalified after foreign memory growth. |
 | FM-13 | **JavaScript host functions use the same lower layer.** DOM, canvas and clipboard calls for the IDE (CAP-ui) are typed imports with copied payloads. `[SRC]` "The main thread never runs Lisp" (`outline.md:187`), so page calls from a Lisp Worker are mailbox requests to the page; anything answered by a Promise is a mailbox request or, in the deferred profile, JSPI. |
 | FM-14 | **Record layouts, later.** `pref` over C structs from a wasm32 library needs header translations for the wasm32 ABI. That is the one place `lib/db-io.lisp` and interface directories could return: wasm32 databases as named blobs (C-3's last sentence). It is optional, after FM-1…FM-11 work with hand-written declarations. |
 | FM-15 | **Trust.** `outline.md:224`: "Untrusted code requires separate processes and memories." FM-1 gives separate memory; it does not give a separate process. A foreign module is trusted to the extent of the imports it is handed and the CPU it can burn. Do not claim sandboxing. |
@@ -207,11 +213,14 @@ extern "C" {
         (wasm-call "tokenizer" "tok_free" :i32 h :void)))))
 ```
 
-Sequence for one `tok_feed`: encode the string to UTF-8 in Lisp memory → adapter
-calls the library's `malloc` → `memory.copy` Lisp→library → thread enters FOREIGN
-→ direct Wasm call → D5 re-admission, roots reloaded → result boxed → library
-`free`. The collector may run and move the Lisp string during the call; nothing
-foreign refers to it.
+Sequence for one `tok_feed` (P2, corrected per FM-2 and FM-7): encode the string
+to UTF-8 in Lisp memory → **FOREIGN{** library `malloc` **}** → admit, reload
+roots, recompute the Lisp byte address → copy Lisp→library with no collecting
+call in between → **FOREIGN{** `tok_feed` through the catching boundary **}** →
+admit, reload roots, box the result → **FOREIGN{** library `free` **}**, on the
+failure path as well. The collector may run and move the Lisp string during any
+bracket; nothing foreign refers to it. P1 had `malloc` and `free` outside the
+bracket and the copy inside it; both were wrong.
 
 C++-specific hazards, each `[ENG]`: static constructors do not run unless
 `_initialize` is called (FM-11); an uncaught C++ exception surfaces as a foreign
@@ -234,13 +243,13 @@ declaration format is left open (Q-7).
 | --- | --- |
 | FMT-1 | Scalar call round trip, all four value types, both placements, browser and Node. |
 | FMT-2 | Byte-range copy in and out; non-ASCII and supplementary characters per `outline.md:244`. |
-| FMT-3 | Collection forced during a foreign call moves the argument's Lisp source; result correct; no foreign reference to Lisp memory exists (checked by poisoning retired space, as the hash-table fixtures do). |
-| FMT-4 | Foreign trap and foreign exception become Lisp errors; cleanups run once; TCR fully restored (the audit-127 full-TCR check). |
+| FMT-3 | Collection forced during a foreign call — from another thread or from an explicit callback, while foreign execution is active — moves the argument's Lisp source; result correct; no foreign reference to Lisp memory exists (checked by poisoning retired space, as the hash-table fixtures do). |
+| FMT-4 | Foreign *exception* and foreign *trap*, tested separately against the chosen FM-7 boundary: each becomes a Lisp error, cleanups run once, TCR fully restored (the audit-127 full-TCR check), and the trapped library is refused afterwards. |
 | FMT-5 | Lisp nonlocal exit attempted through a callback is refused at the boundary. |
 | FMT-6 | Callback re-admission under D5 with a collection pending. |
-| FMT-7 | Digest mismatch, missing `_initialize`, undeclared import and wrong signature each refuse before any call; remove-one-check mutants of the admission code each fail a directed case (audit-130 lesson). |
+| FMT-7 | Digest mismatch, missing initialization where the declared convention requires it, initialization failure, undeclared import and wrong signature each refuse before any call; start execution is inside the bracket tests; remove-one-check mutants of the admission code each fail a directed case (audit-130 lesson). |
 | FMT-8 | Two Workers, per-Worker instances: independent state; funnelled policy: serialized calls, interruptible wait (R2). |
-| FMT-9 | Handle release on collection and on explicit free; use after library drop is detected. |
+| FMT-9 | Handle release on collection and on explicit free; explicit free followed by collection frees once; offset reuse is detected; callback deregistration; finalization runs on the owning Worker; use after library drop is detected. |
 
 ## 7. Effect on existing records if adopted
 
@@ -250,7 +259,7 @@ declaration format is left open (Q-7).
 | R-2 | `outline.md` §05 | File-system table gains the provider column already implied by line 237; a host-capability table replaces per-feature prose; interface-database row gains FM-14's condition. |
 | R-3 | `contracts/kernel-imports.v1` | Today profiled by suspension profile only `[SRC]`. Needs a provider dimension for the host-service rows, or a statement that provider differences live wholly behind the mailbox. Q-3. |
 | R-4 | `stage0/engine-matrix.md` | Node as deployment engine (N-5); multi-memory and C++ exception-encoding rows (FM-12). |
-| R-5 | `tests/wasm/stage1/startup-*/selection.json` | `class` and per-provider disposition for all 35 rows (S-1). |
+| R-5 | new classification manifest | One new file binding the original selection hash (S-1). Retained `selection.json` inputs are untouched. |
 | R-6 | `doc/WASM/evidence/index.json`, STATUS | STAGE1-STARTUP-DB-R1 and its follow-up marked withdrawn if DB-1 is adopted; packets stay retained as history. |
 | R-7 | CLAUDE.md | No change needed. Codex's authorship, R6/R6a and the review rule apply unchanged. |
 
@@ -274,6 +283,31 @@ they are possible, not that they are planned.
 | Q-5 | CB-10: what represents a `:timeval` record before FM-3 exists — a Lisp-side struct, or a port-owned pinned word pair? | Port-owned pinned words; revisit with FM-3. |
 | Q-6 | FM-4: is a per-library adapter the right seam given lazy installation and the digest-bound installer, or should the generic adapter take the library as data? | Per-library, generated from the binary's export section, admitted by digest like any module. |
 | Q-7 | Should declarations for FM-5/FM-14 use WIT, a Lisp `def-foreign` form, or both? | Lisp form first; WIT import later if libraries ship it. |
-| Q-8 | Is there any accepted Stage 1 unit whose claims change under H-1…H-6? | Claude found none; `browser-config.mjs` becomes the browser provider's first member and needs a Node sibling for CAP-cpus. |
+| Q-8 | Is there any accepted Stage 1 unit whose claims change under H-1…H-6? | Claude found none; existing executions keep their scope and gain no Node or provider-neutral claim; `browser-config.mjs` becomes the browser provider's first member and needs a Node sibling for CAP-cpus. |
 | Q-9 | DB-1…DB-3: agree to withdraw? If not, state the consumer that needs RESET-DB-FILES before CAP-ffi-wasm exists. | Withdraw. |
 | Q-10 | Which stage owns the Node provider's first deliverable (namespace mount plus stdio plus args, enough for DEP-C batch use)? | Alongside the Stage 1 read-only namespace, since the fixtures already run there; stdio and args are small. The user decides. |
+
+## 10. Review record (P1 → P2)
+
+Codex reviewed P1 (0ac8691c) in `doc/WASM/host-and-foreign-modules-review.md`,
+uncommitted when Claude read it, sha256
+`f77afb260e8ae222076f79048fa365dc416cf79f759c8dfa5ca49d862be124ab`. Verdict: AMEND before adoption.
+Claude verified the review's factual claims before accepting them.
+
+| Codex item | Claude's verification | Disposition in P2 |
+| --- | --- | --- |
+| Finding 1 (P1): a Wasm catch cannot contain a foreign trap | `[RUN]` Independent probe under Node v25.6.1: `catch_all` returned 1 for a `throw`; `unreachable` and an out-of-bounds load each escaped as `RuntimeError`. Codex is right; P1's FM-7 and FMT-4 were wrong. | FM-7, FMT-4, FM-4, FM-12 rewritten. Added consequence Codex did not state: with a JavaScript boundary in the baseline, multi-memory stops being a dependency. |
+| Finding 2 (P1): allocator calls escape the FOREIGN protocol | `[SRC]` `decisions.md:260,304` and `outline.md:187–191` read as cited. P1's sequence also copied Lisp bytes while in FOREIGN, which is the same error from the other side. | FM-2 and the §6.2 sequence rewritten. |
+| Finding 3 (P2): do not edit retained selection inputs | `[SRC]` `startup-resets/selection.json` hashes to 24492ad2…, and the database packet pins both selection files. | S-1, R-5: new overlay manifest. |
+| Finding 4 (P2): deferral does not discharge a dependency | `[SRC]` `stage1/inventory.json:624` reads as cited. | S-3 rewritten. |
+| Q-1, Q-4, Q-5 consumer audits | `[SRC]` `*total-bytes-freed*` read only under `#+not-any-more`; `*lisp-start-timeval*` found only at its definition; `gctime` copies the five-timeval buffer. | CB-0, CB-1, CB-10 rewritten; CB-2, CB-3, CB-4 now cite the live consumers. |
+| DB-1 amendment: `.cdb` exclusion does not empty the directory list | `[RUN]` Native image: one directory, `:LIBC`, no database open. `[SRC]` `foreign-types.lisp:161–168` as cited. P1's "iterates an empty list" was wrong. | DB-1, DB-2 rewritten; withdrawal stands, with the no-live-handle condition owed. |
+| CAP-exit: `process.exit` in a Worker | `[ENG]` Consistent with Node's documented behaviour; not executed here. | CAP-exit rewritten as an owner request. |
+| CAP-ns-ro, CAP-ns-rw, CAP-ns-enum, CAP-stdio, CAP-cpus, CAP-ui, the `Math` paragraph, FM-1, FM-8, FM-10, FM-11, FMT-3, FMT-7, FMT-9, Q-8 | Read against the outline and the accepted units; no contrary evidence. | Adopted as written above. CAP-stdio is split into CAP-stdio and CAP-tty. |
+| FM-9: affinity "is not a consequence of absence of atomic instructions" | Partly. The determinant is the memory's shared flag, as Codex implies; but an instance with unshared memory genuinely cannot move between Workers, so for such a library affinity is forced, not only chosen. | FM-9 states both. |
+| U-1…U-4, N-1, N-2 marked UNVERIFIED | Correct labels: the first are relayed conversation, the second are unexecuted engine statements. | Unchanged. |
+
+Still open for the user after P2: adoption of H-1…H-6 and the provider split;
+withdrawal of STAGE1-STARTUP-DB-R1 and 44531e64; not integrating 541b4a3f
+(Codex's own review now advises against it); who authors the classification
+manifest; and Q-10's staging of the first Node deliverable.
