@@ -1,0 +1,47 @@
+{
+  "attempts": [
+    {
+      "id": "r1",
+      "result": "target refusal",
+      "reason": "More rooted literal fields exhausted the old fixture root-list capacity. Enlarged the declared root-list region; no runtime change."
+    },
+    {
+      "id": "r2",
+      "result": "PASS",
+      "reason": "349 count not yet reached: preliminary 348 original definitions, full constant proposal, before the OS prototype."
+    },
+    {
+      "id": "r3",
+      "result": "compile failure",
+      "reason": "Fixture used CCL:YIELD, which is not exported. Corrected to CCL::YIELD."
+    },
+    {
+      "id": "r4",
+      "result": "compile failure",
+      "reason": "Existing core-add-probes enumerated its original forms rather than the supplied provider forms. Added an explicit forms argument."
+    },
+    {
+      "id": "r5",
+      "result": "target PASS, summary gate failure",
+      "reason": "All 11888 comparisons passed. Summary gate incorrectly required CPU-COUNT to compile; preserve its GLOBAL-SETQ refusal explicitly instead. Provider-effect observation was then added for waits."
+    },
+    {
+      "id": "r6",
+      "result": "PASS",
+      "reason": "349 originals, provider effects and independent protocol assertions. Final reporting excludes prototype entries and error sentinels from the respective native/non-NIL counters."
+    }
+  ],
+  "retained": [
+    "ccl-host-r1.log",
+    "ccl-host-r1/execution.log",
+    "ccl-host-r2.log",
+    "ccl-host-r3.log",
+    "ccl-host-r3/compiled/compile.log",
+    "ccl-host-r4.log",
+    "ccl-host-r4/compiled/compile.log",
+    "ccl-host-r5.log",
+    "ccl-host-r6.log",
+    "ccl-host-native.log"
+  ],
+  "source_freeze": "packet retain asserts every compiler input copy equals the fixture. The documented verifier is subsequently run from the clean committed proposal; metadata is recomputed from retained execution without rerunning unchanged code."
+}

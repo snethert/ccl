@@ -1,0 +1,158 @@
+(in-package :wasm32-compiler)
+
+(defun input-structure (object)
+  (setf (gethash object *witness-nodes*)
+        (cons 'struct (cons (list (type-of object))
+                           (loop for i from 1 below (ccl::uvsize object)
+                                 collect (ccl::%svref object i)))))
+  object)
+
+(defun input-ioblock (shift sharing)
+  (input-structure (ccl::make-ioblock :element-shift shift :sharing sharing)))
+
+(defun more-inputs (name)
+  (let ((s (symbol-name name)))
+    (cond
+      ((equal s "CORE-HOST-ENV") (values '(("PRESENT") ("MISSING")) t))
+      ((member s '("CORE-HOST-COUNT" "CORE-HOST-TIME" "CORE-HOST-ACTION") :test #'equal)
+       (values '(()) t))
+      ((equal s "GETENV") (values '(("PRESENT") ("MISSING") (7)) t))
+      ((member s '("GET-UNIVERSAL-TIME" "CPU-COUNT" "YIELD") :test #'equal) (values '(()) t))
+      ((equal s "WASM-HOST-SERVICE") (values '((:missing)) t))
+      ((equal s "SIGNAL-SEMAPHORE") (values '((:semaphore)) t))
+      ((equal s "WAIT-ON-SEMAPHORE") (values '((:semaphore) (:semaphore :flag "waiting")) t))
+      ((equal s "TIMED-WAIT-ON-SEMAPHORE") (values '((:semaphore 0) (:semaphore 3 :notification)) t))
+      ((equal s "%IOBLOCK-INPUT-FILE-LENGTH")
+       (values (loop for n in '(0 1 4096) append
+                     (loop for new in '(nil 17) collect
+                           (list (input-structure (ccl::make-file-ioblock :fileeof n)) new))) t))
+      ((equal s "THREAD-EXHAUSTED-P")
+       (values (list (list nil)
+                     (list (witness-istruct 'ccl::lisp-thread (cons nil (make-list 10))))
+                     (list (witness-istruct 'ccl::lisp-thread (cons 7 (make-list 10))))) t))
+      ((equal s "THREAD-TOTAL-RUN-TIME")
+       (values (list (list nil) (list (witness-istruct 'ccl::lisp-thread (cons 7 (make-list 10))))) t))
+      ((equal s "SHUTDOWN-LISP-THREADS") (values '(()) t))
+      ((equal s "INIT-CLASS-CELL-INSTANTIATOR")
+       (values (list (list nil) (list (witness-istruct 'ccl::class-cell '(:class nil :old :extra)))) t))
+      ((equal s "%PKG-REF-FIND-PACKAGE")
+       (values (loop for value in '(nil :package (1 . 2)) collect
+                     (list (witness-istruct 'ccl::package-ref (list "reference" value)))) t))
+      ((equal s "SPECIALIZED-ELEMENT-TYPE-MAYBE")
+       (values (loop for (a b) in '((integer fixnum) (character character) (nil t)) collect
+                     (list (witness-istruct 'ccl::array-ctype (list nil nil '* nil a b nil)))) t))
+      ((equal s "%VECTOR-OUTPUT-STREAM-CLOSE")
+       (values (loop for (count offset) in '((0 0) (3 0) (3 1) (4 4)) collect
+                     (list nil (input-structure (ccl::make-vector-output-stream-ioblock
+                                :displaced (witness-array 0) :displacement offset
+                                :outbuf (input-structure (ccl::make-io-buffer :count count)))))) t))
+      ((equal s "NOT-IN-CURRENT-PROCESS") (values '((:current :reset) (:other :reset)) t))
+      ((equal s "MISSING-TYPE-METHOD") (values '(() (nil) (:method 7)) t))
+      ((equal s "SORT-LIST-ERROR") (values '(()) t))
+      ((equal s "%INVALID-METHOD-ERROR") (values '((nil "bad") (:method "bad ~s" 7)) t))
+      ((equal s "%BADARG") (values '((7 symbol) (nil integer) ("text" cons)) t))
+      ((member s '("IOBLOCK-NO-BINARY-INPUT" "IOBLOCK-NO-BINARY-OUTPUT"
+                   "IOBLOCK-NO-CHAR-INPUT" "IOBLOCK-NO-CHAR-OUTPUT") :test #'equal)
+       (values (list (list (input-ioblock 0 nil)) (list (input-ioblock 0 nil) 7 8)) t))
+      ((member s '("RECURSIVE-LOCK-PTR" "READ-WRITE-LOCK-PTR") :test #'equal)
+       (values (loop for pointer in '(nil 0 7) collect
+                     (list (witness-node 'lock
+                             (list pointer (if (equal s "RECURSIVE-LOCK-PTR")
+                                             'ccl::recursive-lock 'ccl::read-write-lock)
+                                   0 "input lock" nil nil)))) t))
+      ((equal s "%IOBLOCK-UNTYI")
+       (values (loop for char in '(#\a #\Newline #\Null #\U+03BB) collect
+                     (list (input-ioblock 0 nil) char)) t))
+      ((member s '("IOBLOCK-INPOS" "IOBLOCK-OUTPOS") :test #'equal)
+       (values (loop for index in '(0 1 31) collect
+                     (let ((buffer (input-structure (ccl::make-io-buffer :idx index :count (+ index 4)))))
+                       (list (input-structure (ccl::make-ioblock :inbuf buffer :outbuf buffer))))) t))
+      ((member s '("STRING-INPUT-STREAM-IOBLOCK-READ-CHAR"
+                   "STRING-INPUT-STREAM-IOBLOCK-PEEK-CHAR") :test #'equal)
+       (values (loop for (text index) in '(("" 0) ("a" 0) ("a" 1) ("aλz" 1) ("aλz" 3))
+                     collect (list (input-structure
+                                    (ccl::make-string-input-stream-ioblock
+                                     :string text :index index :end (length text))))) t))
+      ((equal s "STRING-INPUT-STREAM-IOBLOCK-UNREAD-CHAR")
+       (values (loop for (text index) in '(("a" 1) ("aλz" 2) ("aλz" 3))
+                     collect (list (input-structure
+                                    (ccl::make-string-input-stream-ioblock
+                                     :string text :index index :end (length text)))
+                                   (char text (1- index)))) t))
+      ((equal s "%EPUSHVAL")
+       (values (loop for push in '(nil t) append
+                     (loop for val in '(nil 17 (1 . 2)) collect
+                           (list (witness-istruct 'ccl::faslstate
+                                   (list "input" (make-array 3 :initial-element nil)
+                                         1 nil nil nil nil nil nil 0 0 push nil nil)) val))) t))
+      ((equal s "CHEAP-CONS") (values '((nil nil) (1 (2 3)) ((1 2) :tail)) t))
+      ((member s '("FREE-CONS" "CHEAP-COPY-LIST" "CHEAP-FREE-LIST") :test #'equal)
+       (values '((nil) ((1)) ((1 2 3)) ((1 2 . :tail))) t))
+      ((equal s "CHEAP-LIST") (values '(() (1) (1 nil :three)) t))
+      ((equal s "OBJECT-IN-APPLICATION-HEAP-P") (values '((nil) (0) (7) ((1 . 2))) t))
+      ((equal s "USING-LINEAR-SCAN") (values '(()) t))
+      ((equal s "UCS-4-STREAM-DECODE")
+       (values '((0 nil nil) (65 nil nil) (255 nil nil) (65535 nil nil)) t))
+      ((member s '("LOCK-ACQUISITION-STATUS" "CLEAR-LOCK-ACQUISITION-STATUS"
+                   "SEMAPHORE-NOTIFICATION-STATUS" "CLEAR-SEMAPHORE-NOTIFICATION-STATUS") :test #'equal)
+       (let ((kind (if (search "SEMAPHORE" s) 'ccl::semaphore-notification 'ccl::lock-acquisition)))
+         (values (loop for value in '(nil t :waiting (1 2))
+                       collect (list (witness-istruct kind (list value)))) t)))
+      ((member s '("IOBLOCK-OCTETS-TO-ELEMENTS" "IOBLOCK-ELEMENTS-TO-OCTETS") :test #'equal)
+       (values (loop for shift in '(0 1 2 3) append
+                    (loop for n in '(0 1 7 8 65) collect
+                          (list (input-ioblock shift nil) n))) t))
+      ((member s '("INSTALL-IOBLOCK-INPUT-LINE-TERMINATION"
+                   "INSTALL-IOBLOCK-OUTPUT-LINE-TERMINATION") :test #'equal)
+       (values (loop for sharing in '(nil :private :lock) append
+                    (loop for mode in '(nil :cr :crlf :unicode)
+                          collect (list (input-ioblock 0 sharing) mode))) t))
+      ((equal s "COERCE-TO-VALUES")
+       (values (list (list (witness-istruct 'ccl::values-ctype '(nil nil (integer) nil t nil nil nil)))
+                     (list (witness-istruct 'ccl::named-ctype '(nil nil integer)))) t))
+      ((equal s "MAKE-INTERSECTION-CTYPE")
+       (values '((nil nil) (t (integer symbol))) t))
+      ((equal s "NUMERIC-TYPES-ADJACENT")
+       (values (loop for (low high) in '((nil 3) (3 nil) (3 4) (3 5) ((3) 3) (3 (3)))
+                     collect (list (witness-istruct 'ccl::numeric-ctype (list nil nil 'integer nil nil nil low nil))
+                                   (witness-istruct 'ccl::numeric-ctype (list nil nil 'integer nil nil high nil nil)))) t))
+      ((member s '("EVENT-TICKS" "FIND-NAMED-PERIODIC-TASK") :test #'equal)
+       (values (if (equal s "EVENT-TICKS") '(()) '((:first) (:second) (:missing))) t))
+      ((equal s "SET-EVENT-TICKS") (values '((0) (1) (32767)) t))
+      (t (values nil nil)))))
+
+(defun more-environment (name)
+  (let ((s (symbol-name name)))
+    (cond
+      ((or (host-os-name-p name) (equal s "CORE-HOST-ACTION"))
+       (list (cons '*core-host-events* nil) (cons 'ccl::*cpu-count* nil)
+             (cons 'ccl::*wasm-host-services*
+                   (list (cons :getenv (core-native-function 'core-host-env))
+                         (cons :cpu-count (core-native-function 'core-host-count))
+                         (cons :universal-time (core-native-function 'core-host-time))
+                         (cons :signal-semaphore (core-native-function 'core-host-action))
+                         (cons :wait-on-semaphore (core-native-function 'core-host-action))
+                         (cons :timed-wait-on-semaphore (core-native-function 'core-host-action))
+                         (cons :yield (core-native-function 'core-host-action))))))
+      ((equal s "NOT-IN-CURRENT-PROCESS") '((ccl::*current-process* . :current)))
+      ((equal s "SPECIALIZED-ELEMENT-TYPE-MAYBE") '((ccl::*use-implementation-types* . t)))
+      ((member s '("CHEAP-CONS" "FREE-CONS" "CHEAP-COPY-LIST" "CHEAP-LIST" "CHEAP-FREE-LIST") :test #'equal)
+       (list (cons 'ccl::*cons-pool* (witness-node 'pool (list '(nil nil nil nil))))))
+      ((equal s "USING-LINEAR-SCAN") '((ccl::*backend-use-linear-scan* . t)))
+      ((member s '("COERCE-TO-VALUES" "MAKE-INTERSECTION-CTYPE") :test #'equal)
+       '((ccl::*type-classes* . ((values . :values) (intersection . :intersection)))))
+      ((member s '("EVENT-TICKS" "SET-EVENT-TICKS" "FIND-NAMED-PERIODIC-TASK") :test #'equal)
+       (let* ((first (witness-istruct 'ccl::periodic-task
+                      (list (witness-istruct 'ccl::ptaskstate '(0 7 nil 0)) :first nil)))
+              (second (witness-istruct 'ccl::periodic-task
+                       (list (witness-istruct 'ccl::ptaskstate '(0 9 nil 0)) :second nil))))
+         (if (equal s "FIND-NAMED-PERIODIC-TASK")
+           (list (cons 'ccl::*%periodic-tasks%* (list first second)))
+           (list (cons 'ccl::*event-dispatch-task* first))))))))
+
+(defun host-guarded-p (name)
+  (member (symbol-name name)
+          '("GETENV" "WASM-HOST-SERVICE" "NOT-IN-CURRENT-PROCESS" "MISSING-TYPE-METHOD" "SORT-LIST-ERROR"
+            "%INVALID-METHOD-ERROR" "%BADARG" "IOBLOCK-NO-BINARY-INPUT"
+            "IOBLOCK-NO-BINARY-OUTPUT" "IOBLOCK-NO-CHAR-INPUT" "IOBLOCK-NO-CHAR-OUTPUT")
+          :test #'equal))

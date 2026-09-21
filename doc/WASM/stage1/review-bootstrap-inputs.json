@@ -1,0 +1,10 @@
+{
+  "audit": 151,
+  "review_commit": "99079c0fbb01a0ca4712544e131840e15d833a78",
+  "review_sha256": "fcd42b1fcc6fa314acadd53b14497ea997224534eebcdff16f86194059636f5b",
+  "import_commit": "764ca6c13859eeee2234b127c87f6d21059ff04e",
+  "inputs_disposition": "Execution reviewed with no defect; module-list removal held. User acceptance of inputs not inferred.",
+  "carry_integration": "f63a4a3b verified; user authorization was the explicit async reply Accept and integrate.",
+  "finding": "Index JSON equal but bytes differed through Unicode escaping. New publication copies final serialized index bytes to its snapshot; old immutable snapshot remains bound.",
+  "module_list": "Keep linux-files in both lists. Prototype is not a replacement startup admission."
+}

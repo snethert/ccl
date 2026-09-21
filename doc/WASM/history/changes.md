@@ -1,3 +1,22 @@
+## 2026-09-21 — audit 151 and bootstrap host proposal
+
+Import audit 151 verbatim as 764ca6c1. Its correction is adopted: linux-files
+remains in the module and startup lists until its platform interface is replaced.
+The prior input execution and constant branches are reviewed, not silently
+accepted. Carry integration authorization came directly from Steve's async reply.
+
+Add seventeen original-definition recipes, including guarded error paths; retain
+349 executed, 323 with normal non-NIL returns. Eight error-only witnesses stay
+separate. Supply a disposition for every remaining prior recipe. Branch all
+active foreign constants in one proposal and inventory the restored 57-file
+foreign surface. Seven entries in a first target OS file execute through observed
+provider calls; CPU-COUNT's GLOBAL-SETQ lowering and live providers remain owed.
+Native code is unchanged outside source locations across the twelve branched
+files; native tests and reader comparisons pass. The packet changes no shared
+source and claims no LL15 credit. The new publication uses one serialization for
+the authoritative index and its retained snapshot, closing audit-151 F1 without
+rewriting historical evidence.
+
 ## 2026-09-21 — execute 31 more CCL definitions and branch portable I/O constants
 
 Proposal 6e3bdcc5 adds input recipes for pooled list operations, I/O buffers and
