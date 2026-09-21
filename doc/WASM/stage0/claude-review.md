@@ -2253,3 +2253,30 @@ Packet 50d97e3f… (NOT_REVIEWED, slot_credit false, 317 manifest entries, all h
 ### Verdict
 
 One defect found in fc0e834b (STAGE1-TERMINATION-EXCLUSION-R1): F1, cancellation, lookup and draining refuse where native returns NIL for the never-registered case, and `fd-stream-close` calls cancellation on every close, so installing these bindings would make stream close fail. Registration refusal, the automatic hook and the admission guard are right. Follow-up: make the three entries return the native not-registered answers, with native oracle rows for the unregistered case and a generated `fd-stream-close`-shaped caller. No defect in a3b084d5. Follow-up recommended before acceptance; the decision is the user’s. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
+
+## Hundred-and-thirty-sixth Claude audit — STAGE1-TERMINATION-EXCLUSION-REVIEW-R1 (follow-up to audit 135) at f8ad1da0 — 20 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-136`; this commit changes only this file, and the STATUS row and history entry are owed at merge. Author: Codex. Audit 135 landed on wasm2 as 0d63a00e with content identical to the worktree commit. Reviewer disposition only; acceptance is the user’s decision.
+
+### Evidence and replay
+
+Packet c1cc1102… (NOT_REVIEWED, slot_credit false, 686 manifest entries, all hashes match, no unlisted file, every file cataloged, indexed); catalog, index snapshot and evidence commit bind; store clean; the index binds audit 135 by the review-file hash recomputed from 0d63a00e. `packet.py verify` at f8ad1da0: PASS, 459 deterministic files, 111 pins; 21 modules, 19 scenarios, 76 native comparisons, 38 collections, 64 admission checks, 14 controls, 21 native empty-state answers and 4 native file closes. The R1 fixture and the shared sources are unchanged; the R1 pins are asserted before and after.
+
+### Disposition of audit-135 F1
+
+Closed.
+- Semantics. `termination_cancel`, `termination_lookup` and `termination_drain` return exactly one NIL; registration still signals the owner’s SIMPLE-ERROR. The automatic hook no longer reaches its refusal through the drain entry: disabled it returns NIL, enabled it signals directly, and the byte-identical admission guard still refuses an image with scheduling enabled.
+- Oracle independence. The native reference for the three entries is now the untouched native functions, bound to the fixture names after asserting the native termination population, pending list and function table empty; it no longer compiles the proposed bodies. Registration and the enabled hook keep the chosen exclusion oracle, which is declared as a choice and not native behaviour.
+- Native probes. Twenty-one exact one-value NIL answers over five object kinds, three cancellation argument shapes, lookup and an empty drain. Real `fd-stream-close` runs four times on the pinned kernel and image — ordinary `with-open-file` and an explicit `close` in a cleanup during a THROW, each with untouched functions and with the corrected replacements installed at the real CCL symbols — and every case flushes the content and closes the stream, with bindings restored afterwards. `close :abort t` is declared unqualified; the exploratory failure there occurred in untouched native CCL and is retained.
+- Close path. The runner asserts from U1 source that `fd-stream-close` cancels before `stream-force-output` and `fd-close`, retains that excerpt, and the generated `termination_fd_close_path` and its UNWIND-PROTECT caller execute cancel, flush, close in that order with the close recording the flush’s effect. The control that restores the cancellation refusal fails on that path before the flush, reproducing F1.
+- Claude’s mutants, each recompiled through the unchanged compiler and run against the native answers: drain returning T, lookup returning T, and cancellation returning two values are all refused at “Lisp result”. Codex’s four new controls cover the three restored refusals and cancellation returning T.
+
+### Observations (none a defect)
+
+1. NIL from these three entries is truthful only while nothing can be registered and the image was admitted empty. The unit says so and keeps the guard; installing the entries without the guard would make NIL a false answer for an image that carried registrations.
+2. The close-path modules model call order, not streams; real fd-stream lowering is later work, as stated.
+3. Owed and recorded: installation at the real CCL symbols, slot discovery on the cross-dumped heap, disabling scheduling, and the READY join.
+
+### Verdict
+
+No defect found in f8ad1da0 (STAGE1-TERMINATION-EXCLUSION-REVIEW-R1). Audit-135 F1 is closed. The Stage 1 termination exclusion — registration refused, empty-state answers native, automatic hook inert, image admission guarded — has a complete qualification at its declared scope; later integration must take the entries from this packet, not from R1. Acceptance is the user’s decision. Auxiliary, no slot credit. Ledger unchanged at 21 accepted, 10 missing, zero unreviewed.
