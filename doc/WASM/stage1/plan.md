@@ -478,3 +478,11 @@ movement. Method objects remain identity placeholders; native NaN hashing's FP
 trap behavior is explicitly outside this leaf. This closes comparison-service
 implementation, subject to review; real wrappers, population consumers and the
 initializer/READY closure still remain. No LL15 credit or shared runtime edit.
+
+2026-09-20: [strong-population access](../../../tests/wasm/stage1/population-access/README.md)
+implements checked data read/write and raw type codes through the generated B
+call paths. Native constructors copy their spines; setters preserve supplied
+identity for NIL, proper, dotted and cyclic lists. Population-only member roots
+survive moving collection. This is the access primitive, not native macro
+lowering or public keyword type conversion. Binding those consumers and real
+lock/thread/GF member representations remains required for the selected image.

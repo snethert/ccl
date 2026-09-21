@@ -1,32 +1,32 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d966b4cc131f789a044ad92c89fea608079776eefac4d97b17e33e6217f07c1d",
-  "commit": "38f7b03e164d5b5f0e466b75101e6f20c413aeb4",
-  "immutable_evidence_files": 236557,
+  "catalog_sha256": "05587445c74d8e365248209e568d32e3fa478c65a2de84b9e2266263456acea5",
+  "commit": "8536463cd76606179333ada8adbde84f57394335",
+  "immutable_evidence_files": 236892,
   "last_scoped_addition": {
-    "bytes": 21148377,
-    "directory": "2026-09-20-stage1-equality-tables-r1",
-    "files": 558
+    "bytes": 12547813,
+    "directory": "2026-09-20-stage1-population-access-r1",
+    "files": 334
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Reviewed bootstrap policies integrated; equality services proposed, no LL15 credit.",
-  "source_index_sha256": "455f56d16fb71b7dcc3fbb0d7b1e451f81e71bf6f4df3594e5228e27db08c2fb",
-  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-equality-tables-r1.json",
+  "scope": "Stage 1: 21 accepted, 10 missing. Reviewed bootstrap policies integrated; population access proposed, no LL15 credit.",
+  "source_index_sha256": "1b1dab32bb0f46bfa69d9e66169c78acfdd51c421c3b2af5b51979da47bac6f4",
+  "source_index_snapshot": "catalog/source-index-2026-09-20-stage1-population-access-r1.json",
   "verification": {
-    "files": 382,
-    "pins": 17,
+    "files": 225,
+    "pins": 13,
     "status": "PASS",
     "summary": {
-      "bootstrap_lookups": 1248,
-      "collections": 23596,
-      "comparisons": 70688,
+      "collections": 296,
+      "comparisons": 792,
+      "controls": 6,
       "slot_credit": false,
       "status": "PASS",
-      "workers": 8
+      "workers": 4
     }
   },
   "version": 1

@@ -3191,3 +3191,8 @@ change or LL15 credit.
   operations, captured 97/0/7-key tables, generated calls, moving collection,
   measured-capacity owner and focused controls. No shared compiler/runtime
   changes; unchanged components reused by hash. Awaiting independent review.
+
+- 2026-09-20: Strong-population access proposal: data read/write and raw type
+  code, native setter semantics, generated calling forms and moving member
+  retention. Six compiled faults rejected; fresh replay identical. No shared
+  compiler/runtime change and no LL15 credit; independent review pending.
