@@ -2650,20 +2650,34 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-joined-r1/packet.json",
       "sha256": "568ac73e32233a7d2f5136e7200c4c2d58ce9f3b64933f1177145c3749f55eaa",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Eighteen selected reset/configuration effects execute in one schedule over 21 live globals; the CPU reset and cache publication share a cell. Thirteen reset completion constants recompiled through unchanged compiler; native resets rerun, R2 configuration bytes and native answers reused. Node and Chromium at both placements: 5184 callback comparisons, 5996 invocations, 180 refusals. Full-TCR and foreign-region checks; no LL15 credit. Fresh replay: 131 deterministic files at 191 pins."
+      "scope": "Eighteen selected reset/configuration effects execute in one schedule over 21 live globals; the CPU reset and cache publication share a cell. Thirteen reset completion constants recompiled through unchanged compiler; native resets rerun, R2 configuration bytes and native answers reused. Node and Chromium at both placements: 5184 callback comparisons, 5996 invocations, 180 refusals. Full-TCR and foreign-region checks; no LL15 credit. Fresh replay: 131 deterministic files at 191 pins. Audit 128: grouped reset-then-configuration order differs from native registry order. The follow-up executes the retained registry order and checks identical semantic results; future joins must use registry order and explicit dependencies.",
+      "review_commit": "3dc1be90c64052e044362f995aff8976b77ab198",
+      "review_sha256": "39779bc9891a1c9125a719e8ccfd010c7088c04ab259a2d2993c117cab32060e"
     },
     {
       "id": "STAGE1-STARTUP-WINNERS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-winners-r1/packet.json",
       "sha256": "527718019fa2fc488a5eae07bba88dd892f51484323837b6f96c179617ecdf32",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "RESET-WINNERS native registered callback and six generated calling forms over the strong EQ backing vector. Clear preserves identity/capacity and retires buckets, cache, tombstones and moved state; collection reclaims prior keys/values. Proposed hash service extension, unchanged compiler and adapter, inherited hash corpus replayed. No LL15 credit or production hash wrapper claim. Fresh replay: 88 deterministic files at 195 pins. Audit 128 F1: the success path did not observe three primitive publication words. The service is correct; startup-winners-review adds a direct four-word oracle and retains the three escapes. Awaiting follow-up review and user acceptance before integration.",
+      "review_commit": "3dc1be90c64052e044362f995aff8976b77ab198",
+      "review_sha256": "39779bc9891a1c9125a719e8ccfd010c7088c04ab259a2d2993c117cab32060e"
+    },
+    {
+      "id": "STAGE1-STARTUP-WINNERS-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-startup-winners-review-r1/packet.json",
+      "sha256": "8387c634ba20c27ec6bf992e320f73bafe084362d307804e8ac4816f181da691",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "RESET-WINNERS native registered callback and six generated calling forms over the strong EQ backing vector. Clear preserves identity/capacity and retires buckets, cache, tombstones and moved state; collection reclaims prior keys/values. Proposed hash service extension, unchanged compiler and adapter, inherited hash corpus replayed. No LL15 credit or production hash wrapper claim. Fresh replay: 88 deterministic files at 195 pins."
+      "scope": "Audit-128 F1: direct CLR success checks all four publication words. Three faults reproduce their complete R1 escape and reject under the corrected harness; nine prior faults still reject and the positive execution record is identical. Unchanged compiler, service, adapter and native oracle. Registry-order execution of all eighteen callbacks matches grouped R1 semantics in Node and Chromium. Auxiliary, not integrated, no LL15 credit. Fresh replay: 73 deterministic files at 204 pins."
     }
   ],
   "current_runs": [
