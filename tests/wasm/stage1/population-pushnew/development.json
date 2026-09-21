@@ -1,0 +1,20 @@
+{
+  "attempts": {
+    "r1": "Native loading caught extra closing parentheses in the hand-written corpus. Rebuilt balanced case forms; original error retained.",
+    "r2": "Native oracle passed. The disposable compiler's controlled environment omitted POP_BASE_LOWER, so loading the derived base failed. Changed to a path relative to the loading Lisp file.",
+    "r3": "All 29 modules and 68 comparisons passed using a separately compiled copy of EQL. The user objected to duplication. This design was discarded; the retained design adds an entry to the shared EQL table module and uses its existing comparator.",
+    "r4": "Shared-service generated and direct checks passed. Fault construction found an ambiguous alignment anchor because the table entry also validates result alignment. Restricted all omission edits to the new export text, keeping shared comparison/table source unchanged.",
+    "r5": "All generated and direct comparisons, seven source refusals and eight faults passed.",
+    "r6": "Replaced recursive local-function searches with branch loops to avoid closure allocation per operation. All 27 modules, positives and controls passed.",
+    "r7": "Added exact allocation observations to forty placement/type cases, including zero allocation on duplicates. Final retention candidate."
+  },
+  "retained": [
+    "ccl-pushnew-r1.log",
+    "ccl-pushnew-r1/native.log",
+    "ccl-pushnew-r1/consumers.lisp",
+    "ccl-pushnew-r2.log",
+    "ccl-pushnew-r2/build/compiled/compile.log",
+    "ccl-pushnew-r3.log",
+    "ccl-pushnew-r4.log"
+  ]
+}

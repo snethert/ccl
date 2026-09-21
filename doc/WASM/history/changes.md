@@ -3247,3 +3247,12 @@ change or LL15 credit.
   focused controls, 18 shape, 20 image and 40 owner checks pass. Both new packets
   replay from the detached checkout (13/104 and 91/106 files/pins). No shared
   runtime/compiler changes, acceptance or LL15 credit.
+
+- 2026-09-21: Implement generated population PUSHNEW on user direction.
+  Default comparison calls the shared EQL module through an added entry; discard
+  the separate-copy candidate on the user's correction. Explicit :test uses
+  generated FUNCALL. Branch-loop searches allocate no closures; forty cases
+  assert exact heap bytes. Native corpus: 27 modules, 34 cases, 68 comparisons
+  and 80 collections; 28 raw/table comparisons and refusals, seven source
+  refusals and eight controls. Source adapter stays fixture scaffolding; no
+  compiler/runtime integration or LL15 credit.

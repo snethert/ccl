@@ -1,49 +1,34 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5a2922b9c369737a2d497a2415f816e19331b11c553fd001be1326c400cdea4a",
-  "commit": "c769fe35cb2fa948134c75c312c5ab23f0399a34",
-  "immutable_evidence_files": 237876,
+  "catalog_sha256": "0a5afe06a1329615eb1bebbf21635b0a84fa92ca81367e9a78481dea8c199468",
+  "commit": "a4452bb29af1633609b7ab6e65c676ffdddbdf10",
+  "immutable_evidence_files": 238118,
   "last_scoped_addition": {
-    "bytes": 3706773,
-    "directory": "2026-09-21-stage1-typed-populations-r1 + 2026-09-21-stage1-population-consumer-review-r1",
-    "files": 155
+    "bytes": 9673108,
+    "directory": "2026-09-21-stage1-population-pushnew-r1",
+    "files": 241
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 43058,
   "remote": null,
-  "scope": "Stage 1: 21 accepted, 10 missing. Audit 140 bound. Typed strong populations and explicit scaffold admission executed; no acceptance/integration or LL15 credit.",
-  "source_index_sha256": "4ed42560e0e77417ae3ab2d95eb6d0ecc66dced794d5668868806ee2dfd573bb",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-typed-populations-r1.json",
+  "scope": "Stage 1: 21 accepted, 10 missing. Audit 140 bound. Typed populations and PUSHNEW through shared EQL executed; no acceptance/integration or LL15 credit.",
+  "source_index_sha256": "dd4d9a1228a2939d719e4336a8d6b3f33fb2122db3a468db9748308faf38bcc2",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-stage1-population-pushnew-r1.json",
   "verification": {
-    "STAGE1-POPULATION-CONSUMER-REVIEW-R1": {
-      "deterministic_files": 13,
-      "source_pins": 104,
+    "STAGE1-POPULATION-PUSHNEW-R1": {
+      "deterministic_files": 212,
+      "source_pins": 115,
       "status": "PASS",
       "summary": {
-        "controls": 8,
-        "positive_forms": 16,
-        "refusals": 13,
-        "scaffold_only": true,
-        "slot_credit": false,
-        "status": "PASS"
-      }
-    },
-    "STAGE1-TYPED-POPULATIONS-R1": {
-      "deterministic_files": 91,
-      "source_pins": 106,
-      "status": "PASS",
-      "summary": {
+        "admission_refusals": 7,
+        "comparisons": 68,
         "compiler_unchanged": true,
-        "faults": 12,
-        "generated_collections": 80,
-        "generated_modules": 22,
-        "image_checks": 20,
-        "native_cases": 32,
-        "native_comparisons": 64,
-        "owner_checks": 40,
-        "shape_checks": 18,
+        "controls": 8,
+        "modules": 27,
+        "native_cases": 34,
+        "raw_checks": 28,
         "slot_credit": false,
         "status": "PASS"
       }

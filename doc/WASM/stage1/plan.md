@@ -538,3 +538,15 @@ scanners, a prerequisite for target accessor indices and native REQUIRE-TYPE.
 The two-field strong shape excludes native weak/termination layouts. Migration
 from v1 vectors, actual member layouts, real symbols and READY remain open.
 No acceptance, integration or LL15 credit is claimed.
+
+2026-09-21: On the user's “pushnew perhaps”, implement the selected population
+PUSHNEW default form plus callable :test. The subsequent instruction to call
+EQL is implemented by adding an entry to the shared EQL table module, which
+calls its existing comparator; the separate comparison-module candidate was
+discarded. Generated branch loops avoid local-function closure allocation.
+The [packet](../../../tests/wasm/stage1/population-pushnew/README.md) checks
+native effect order, duplicates, numeric members, movement and exact allocation.
+This supplies generated execution of the method-combination source shape, not
+actual GF layout or general macro admission. The source adapter remains
+scaffolding; native accessor/REQUIRE-TYPE compilation and real installation
+remain the durable next work. POP and :key/:test-not are still owed/out of scope.

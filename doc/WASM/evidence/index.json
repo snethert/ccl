@@ -2920,6 +2920,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Exact two-field strong population shape under existing D1 subtag 90, with derived builder, leaf service, copying scanner and pinned-image inventory. Native weak and termination layouts remain refused. Twenty-two unchanged generated modules, 64 native comparisons, 80 collections, 18 shape checks, 20 pinned-image checks, 40 inherited owner checks, 12 focused faults. Fresh detached replay: 91 files at 106 pins. Native compiler/R6 and oracle reused by hash; no shared source changed. Prerequisite for target population accessor indices and REQUIRE-TYPE; production roots/installation and v1 migration remain owed. Auxiliary runtime proposal, not accepted/integrated, no LL15 credit."
+    },
+    {
+      "id": "STAGE1-POPULATION-PUSHNEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-population-pushnew-r1/packet.json",
+      "sha256": "141d39411ae2480ae3f9c891d782554bd1ec3f99739f9f6002a8ec1b5ff8268f",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Generated population PUSHNEW using CCL macro order, branch-loop membership and shared EQL table-service entry; no separately compiled comparator. Callable :test, NIL default, numeric EQL, duplicates, collection and exits. Twenty-seven modules, 34 native cases, 68 comparisons, 80 collections, forty exact allocation checks, 28 shared-service checks, seven source refusals and eight controls. Detached replay 212 deterministic files at 115 pins. Source adapter remains fixture scaffolding, not for integration; native accessor/REQUIRE-TYPE and public installation remain owed. Auxiliary proposal, not accepted/integrated; no LL15 credit."
     }
   ],
   "current_runs": [
