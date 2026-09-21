@@ -3098,6 +3098,22 @@
         "path": "doc/WASM/stage1/acceptance-bootstrap-carry.json",
         "sha256": "9cb256060eb375e5ce8b06943a17f6aaa78ffddc828b81d11a6b0db1cf1f2376"
       }
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-INPUTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-inputs-r1/packet.json",
+      "sha256": "8336b0a6aff34c5ab34fdcbc61b95c135c63cc3c0fb219b7a9c3c098574148a8",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "332 original CCL definitions executed (+31), 318 with non-NIL witnesses (+28); 49 closed originals lack recipes. Unchanged compiler/runtime. 2913 native cases; 11648 equal target comparisons plus four declared signed-zero differences; 6192 collections. Seven CCL source files gain explicit Wasm seek/error constant branches; target-only module and startup filters remove linux-files. 56 target files, 39 complete reads, 1582/2027 lower-bound admission; 17 real foreign stops. Fresh native R6/R6a: 21843 tests, 150 identical and 164 restored FASLs; source-note parent metadata accounted. Compositional reader proof over 17 profiles restores surrounding bytes exactly. File-provider protocol constants, not implemented POSIX. Clean committed replay also closes audit-150 F1 with 885 identical files and 40 collector checks. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-INPUTS-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-inputs-verification.json",
+      "sha256": "171b045ddf97718e895ef7b13106641ed6a1fb97452fafa3b4791c9483f534bf",
+      "scope": "Unmodified verifier run from clean detached proposal commit 6e3bdcc5; all deterministic files and reader comparisons match. No slot credit."
     }
   ],
   "current_runs": [

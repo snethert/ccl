@@ -1,3 +1,25 @@
+## 2026-09-21 — execute 31 more CCL definitions and branch portable I/O constants
+
+Proposal 6e3bdcc5 adds input recipes for pooled list operations, I/O buffers and
+string-stream character operations, lock/semaphore fields, FASL value publication,
+periodic tasks and type records. Original matched definitions rise 301 to 332;
+non-NIL witnesses rise 290 to 318. Forty-nine closed originals remain without
+recipes. Retain 11,648 native comparisons, four declared signed-zero differences
+and 6,192 collections. No backend or runtime change is proposed.
+
+Add source-level Wasm alternatives for six seek/error constants and remove
+linux-files from the target module list and startup sequence. These define a
+future provider's protocol; they do not implement file I/O. Seventeen genuine
+foreign read stops remain. Native qualification passes 21,843 tests and restores
+164 FASLs; executable code and non-location data in source-branch files are exact.
+Reader substitutions compare under seventeen existing target profiles, with
+inverse edits proving all surrounding source bytes unchanged.
+
+Audit 150's broken integration command now passes from a clean checkout of
+f63a4a3b, matching 885 files and passing the forty collector checks. Retain that
+result with this packet. New proposal awaits Claude; ledger stays 21 accepted,
+12 missing, zero unreviewed slots.
+
 ## 2026-09-21 — accept audit 150 carry packet; repair replay source selection
 
 On Steve’s “Accept and integrate”, integrate the reviewed compiler and Lisp ASSQ byte for byte, with all runtime files unchanged. Reuse the reviewed final-byte qualification. Import audit 150 verbatim. Correct the witnesses integration replay: the execution subprocess now selects and hashes its collector sources from the immutable packet, instead of re-deriving a pre-integration patch against the shared tree. The original successful result is unchanged, but the former documented command was broken after integration. Next packet supplies a committed-clean-checkout replay and new execution work. 301 originals, 290 non-NIL witnesses, no slot credit.
