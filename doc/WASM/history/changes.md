@@ -16,6 +16,7 @@ files; native tests and reader comparisons pass. The packet changes no shared
 source and claims no LL15 credit. The new publication uses one serialization for
 the authoritative index and its retained snapshot, closing audit-151 F1 without
 rewriting historical evidence.
+Clean detached replay at 3d8fb085 reproduces 1,127 deterministic files at 260 pins. Evidence is committed as 51a8981e7f7a7277a1db574be4ebcf2aec5ff5ee.
 
 ## 2026-09-21 — execute 31 more CCL definitions and branch portable I/O constants
 

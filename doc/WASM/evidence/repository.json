@@ -1,28 +1,28 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "991a7274c9ff5a74cdbe11663b32654973ce30e86d934ebf8bfddd791bb67e1d",
-  "commit": "1c11ce24fb782f50bf98fa6d31c1f122131082ca",
-  "immutable_evidence_files": 251425,
+  "catalog_sha256": "d96d217b0be9a74d2ec5afec8bbcef31ef3b8b188db7ffac075de7af6c835439",
+  "commit": "51a8981e7f7a7277a1db574be4ebcf2aec5ff5ee",
+  "immutable_evidence_files": 253252,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-inputs-r1",
-    "files": 1679,
-    "bytes": 83248812
+    "directory": "2026-09-21-stage1-bootstrap-host-r1",
+    "files": 1827,
+    "bytes": 92430910
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "21 accepted and 12 missing of 33. Carry accepted and integrated; bootstrap inputs/source proposal executes 332 originals, 318 with non-NIL witnesses, awaiting Claude. No slot credit.",
-  "source_index_sha256": "657d8986c72cbdc8782de05adadcdb45eb6d47b40e3e9b34b3b17d93c2ba052a",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-inputs-r1.json",
+  "scope": "21 accepted, 12 missing of 33. Inputs reviewed; linux-files removal held and not integrated. Bootstrap host proposal: 349 originals, 323 non-NIL witnesses, awaiting independent review. No slot credit.",
+  "source_index_sha256": "31ba28da0f47c1e423ef6aa98896469da17a6b5946f95a782e560f06231e2bcf",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-host-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Unmodified verifier from clean detached committed proposal. Native cases, modules, target comparisons and reader-substitution matrix re-executed. Fresh native R6/R6a retained by source identity; unchanged runtime evidence reused.",
-    "deterministic_files": 1042,
-    "source_pins": 254,
-    "execution": "b9f4ae452b6a9472b8726bb7bd8f8ea8bf3952ff106272f452d900ba1a202490",
-    "native": "fb795697088e4d5920474d812627ccc656b38c3b33fa8af0ecf3b97240a4bcfe"
+    "method": "Unmodified verifier from clean detached committed proposal. Native rows, modules, target comparisons and reader matrix replayed. Fresh R6/R6a retained by exact source identity; unchanged runtime qualification reused. Final serialized index copied byte-for-byte to snapshot.",
+    "deterministic_files": 1127,
+    "source_pins": 260,
+    "execution": "85ef748372bcaaf3a8a8d4ccd09e0a96117e0f81cdff9b42ebd25cb31f8281be",
+    "native": "c10d004bf11fda98fac7bc692e968c3d47ca88bf5b7fd90d1bee382bb28c1c38"
   },
   "version": 1
 }
