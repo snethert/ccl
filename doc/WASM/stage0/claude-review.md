@@ -2762,3 +2762,62 @@ Closed: 147-F1, C-7, C-8, the native-error harness limit. Open: C-1 remainder (`
 No defect found in three packets; every verifier passes; everything Claude ran agrees with native except O-1, which is native's quirk. Claude recommends acceptance of all three, and integration of the dependencies proposal as the single unit that carries library, execution and division inside it. Integration fixes two wrong-code bugs that are in the shared tree now (NIL callee, handler mask). Conditions on integration: the generated backend reviewed as one diff with the cases folded into the CASE forms; the library's one-token SYMBOL-NAME change read under the adopted R6 source-location allowance with its 17-target reader matrix; R6/R6a on the final generated file.
 
 Suggested next packet, same size or larger, executed definitions still the target: member witnesses (C-9); input recipes for the 136 closed definitions that have none; then what the frontier lists as the remaining common callees; and the 22 files that stop at reader or environment errors, since the denominator cannot be trusted until they read to the end. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-forty-ninth Claude audit — acceptance and integration at 2ef0b70d, STAGE1-BOOTSTRAP-WITNESSES-R1 at 9f5bd0cc — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-149`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed audit 148. Reviewer disposition only. Audit 148 is imported verbatim at 78250fda: this file there hashes 662728e0…, the value `acceptance-bootstrap-dependencies.json` binds for d3acc0a0.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 252 → 301 (+49). With a witness for more than the NIL answer: 193 → 290 (+97). Claude's own recount from the replayed native rows agrees: 301 executed, 11 NIL-only, and the 11 are what the README says they are (EXTENDED-CHAR-P is NIL by definition in this CCL; the rest are empty-state readers and no-op functions). Native rows 2,472 → 2,736; comparisons 9,888 → 10,944. Closed definitions without an input recipe 136 → 87. Real worklist: three of the 22 stopped files now read to the end by evaluating the files' own DEFCONSTANTs, so the parsed lower bound is 1,919 → 2,005 and admitted 1,522 → 1,574; nineteen files still stop, all at a foreign function, variable or type lookup. Historical admission unchanged at 1,864 of 2,492.
+
+Everything audit 148 asked for first arrived first: a member for every structure predicate (each istruct predicate is given its member, NIL, a fixnum and an istruct of another type), the two-number headline in `member-witnesses.json`, recipes for closed definitions, reader environments. The 49 new executions include the ctype constructors, environments, MAKE-RESTART, TOKEN2INT, MASK-FIELD, CHECK-SEQUENCE-BOUNDS, DECODE-FILE-RANGE, FILL-POINTER and `%SET-FILL-POINTER` on a real adjustable vector header.
+
+### Integration 2ef0b70d
+
+`level-0/l0-symbol.lisp`, `xdump/xwasm32-fasload.lisp` and `compiler/WASM32/wasm32-arch.lisp` equal the reviewed proposal bytes in packet d7060e27…. The backend is not the reviewed file; it is `fold.py` applied to it (reviewed 2e5134b2… → integrated 7b46ecbe…), which is what audit 148 asked for. Checked three ways. Read: the fold deletes the two front hooks and puts the same calls first in the existing COND and CASE, so precedence is unchanged; the COND has no default clause, so a lowering that answers NIL still yields NIL and the call stays an ordinary dependency; `%ERR-DISP` keeps its fallback. Replayed: `integrate.py target` on the integrated tree, 80 seconds, PASS, 785 generated files byte-identical to the reviewed packet (every WAT and Wasm module, native rows, execution, faults, summary), and the folded file hashes to the file in the tree. Recorded: the accepted packet 3afc193e… holds a fresh pristine-U1 native build with the final backend, R6/R6a PASS, 164 FASLs restored, `l0-symbol` identical in code with source locations recorded separately. The 43 unchanged runtime files hash as recorded. Both wrong-code bugs named in audits 147 and 148 (NIL callee, handler symbol used as a mask) are now fixed in the shared tree.
+
+The acceptance record quotes the user as "accept as advised". Claude did not witness that sentence; it is Codex's relay, and it is consistent with audit 148's advice. Every observation from audit 148 is carried into the acceptance record and `runtime-obligations.md` in its own words. No defect.
+
+### Evidence and replay, witnesses packet
+
+Packet 45e78586… (1,558 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog 4b669906… at 248,125 files; index snapshot 4fb61221… equal to the committed index; evidence commit 7d640644; store clean. The verifier passes unmodified from the detached worktree in 87 seconds: 301 originals, 10,944 comparisons, 20 istruct collector checks.
+
+### What the packet changes
+
+Compiler: one selection step. NUMCMP with both operands typed fixnum becomes `%I<>`, and EQ against literal zero with a fixnum-typed operand becomes `%IZEROP`. Both emitters now have source-emitted executed witnesses and wrong-sense controls, which closes C-1. The step is a hook in front of `bootstrap-operator`; at integration it goes inside the dispatcher like the last one.
+
+Arch: `subtag-lock` 66 and the lock, vectorH and arrayH cell indices. Checked against `x8632-arch.lisp`: 66 is the 32-bit value and fits the wasm32 subtag table, which already follows the 32-bit scheme (istruct 130, struct 122, symbol 58).
+
+Runtime: the collector and its owner admitted an istruct only at six fields; the proposal admits any non-empty istruct and traces every field. That is what `%istruct` is in `lispequ.lisp`. The packet checks lengths 1 to 33 at both placements and the empty refusal. It does not rerun the collector's own forty owner checks against the modified collector. Claude ran them: `collector-owner/check.mjs` against the packet's `collector.wasm` and modified owner, PASS, 40 of 40. They belong in the integration step.
+
+Refusals: six new source refusal cases (SIGNAL arity, unknown condition class, odd initargs, unknown initarg, condition-reader arity, bit-vector AREF kind). That closes C-6 and C-5 except `:bootstrap-signal-spread`, which still has no case.
+
+Two honest non-credits. `%PATH-MEMBER` reads `(%schar big pstart)` before it tests `pstart` against the end, so native reads one character past the string and the target's checked load refuses; that is a bug in CCL's source, not in the port, and leaving it uncredited is right. `%SET-SIMPLE-ARRAY-P` returns a raw header word whose subtype byte differs by target; it needs a representation-aware comparison and was not labelled a match.
+
+### Probes (scratch copy of the witnesses fixture, files restored, worktree clean)
+
+Both executed (rows confirmed) and match native at both placements, 10,992 comparisons PASS:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| all six comparisons, `(eql x 0)`, ZEROP and a nested comparison, operands declared fixnum | zeros, ±1, both fixnum limits in both orders, equal limits | equal; the emitted module contains the signed compares |
+| a four-field istruct built by compiled `%ISTRUCT`, collected, then ISTRUCT-TYPEP for its own and another name and three field reads | fixnums, a cons and a string, NIL and a 2^60 bignum | equal |
+
+### The nineteen stopped files (scope)
+
+Every remaining stop is a POSIX reference read through `#_` or `#$`: `EMFILE`, `EEXIST`, `EINTR`, `SEEK_SET`, `SEEK_CUR`, `memmove`, `memset`, `pow`, `_exit`, `exit`, `sysconf`, `fpathconf`, `sched_yield`, `mmap`, and the foreign type `:TIMEVAL`, in `l0-io`, `nfasload`, `l1-boot-2`, `l1-utils`, `l1-init`, `l1-numbers`, `l1-aprims`, `l1-streams`, `l1-files`, `l1-readloop`, `l1-sysio`, `l1-events`, `l1-readloop-lds`, `l1-lisp-threads`, `l1-application`, `l1-processes`, `l1-error-signal`, `l1-callbacks` and `linux-files`. Codex is right not to substitute Darwin constants. But no reader environment will make these read: the outline excludes the POSIX layer on both hosts, so each site needs a `#+wasm32-target` branch in CCL's own source (the user's direction of audit 143), or the file leaves the target's module list. `linux-files.lisp` is the plain case: it is the POSIX file layer and it is on the wasm32 worklist. The next denominator should come from a module list with such files removed or replaced, and the per-site source branches are implementation work that should be counted, not a reader problem to be worked around.
+
+### Style
+
+`execute.py` now builds its harness by forty-six string replacements on the previous fixture's `check.mjs`. It works and it replays, but each layer makes the next failure harder to read. When this fixture line is next extended it should be one written harness, not a patch stack. Same remark as the compiler generators, which the fold has now retired for the backend.
+
+### Carry items
+
+Closed: C-1, C-6, C-9; C-5 but for the signal-spread case. Open: C-5 remainder; C-10 (unknown handler class refused at compile time); ASSQ as a Lisp definition in `level-0/WASM32/` (the acceptance record schedules it for the next implementation packet); O-1; new C-11, the forty owner checks run on the modified collector as part of integration.
+
+### Disposition
+
+Integration 2ef0b70d: verified, no defect. Witnesses packet: no defect; the verifier passes; everything Claude ran agrees with native. Recommended: accept and integrate, with the selection step folded into the dispatcher, the owner checks run on the modified collector, and R6/R6a on the final backend and arch file.
+
+Suggested next packet, same size or larger: the 87 closed definitions that still have no inputs; the nineteen files that stop at foreign lookups (below); ASSQ in Lisp; C-10. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
