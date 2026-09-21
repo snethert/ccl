@@ -360,3 +360,20 @@ awaiting review. Next: host namespace/image/argument/home effects, thread and
 stream dependency disposition, then the concrete 167-unit initializer/definition
 and ordinary-condition activation join. Classification alone closes none of
 those dependencies; no native database leaf should return to that worklist.
+
+
+2026-09-20: the [portable runtime follow-up](../../../tests/wasm/stage1/startup-runtime-review/README.md)
+answers audit 131 without changing the original fixture: signed counter decoding,
+isolated admission controls, generated timing conditions and corrected provider
+classification. It is executed and awaits review.
+
+The user chose “Use the Stage 1 strong substitute” for bootstrap weak tables.
+The [bootstrap table proposal](../../../tests/wasm/stage1/bootstrap-tables/README.md)
+implements explicit owner admission and strong EQ backing-vector construction
+for 18 source sites, with native adaptation checks over all 21 candidate sites.
+It retains both keys and values across collection. EQL/EQUAL tests are preserved
+and target construction refuses until those services exist; fixed capacity and
+missing HASH-TABLE wrapper materialization remain explicit. Stage 2 owes weak
+semantics. This is not a new closure claim or slot credit, and the proposal is
+not integrated. The next startup joins must use these declared differences,
+not native weak flags or EQ substitutions for other tests.

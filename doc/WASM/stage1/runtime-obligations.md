@@ -313,3 +313,14 @@ Use the retained R2 callback and both corrected harnesses. Original startup-conf
 Browser concurrency may differ from native. Millisecond units and Lisp stack extents are explicit runtime/owner policy, not measured native clock frequency or browser stack size.
 
 Full TCR preservation is a check for these nonallocating startup bodies only; mv_count is separately verified. Seventeen snapshot callbacks, wider startup membership, definition effects and ordinary-condition activation remain open. No LL15 credit.
+
+
+- **Bootstrap weak tables (user decision, 2026-09-20).** The user authorized
+  “Use the Stage 1 strong substitute.” Both keys and values may remain live in
+  Stage 1; expose NIL weakness rather than claiming weak behavior. Preserve EQ,
+  EQL and EQUAL separately. Counts, enumeration and lifetime after collection
+  can differ; do not introduce finalizer callbacks. Stage 2 owes weak semantics.
+  [The executable proposal](../../../tests/wasm/stage1/bootstrap-tables/README.md)
+  covers the EQ backing vectors only. Production still needs full wrapper and
+  equality services, placement/root publication, capacity/growth policy, and
+  linkage of the selected constructors to the actual startup worklist.

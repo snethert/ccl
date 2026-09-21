@@ -1,3 +1,13 @@
+## 2026-09-20 — implement the authorized bootstrap strong-table substitute
+
+Record the explicit strong-retention decision with Stage 2 weak semantics owed.
+Preserve all 21 candidate constructor forms except their weak argument; native
+checks distinguish EQ/EQL/EQUAL. Materialize the 18 EQ sites through the unchanged
+Wasm hash service and prove table-only-root retention across 108 collections,
+including above 2 GiB. Refuse unavailable EQL/EQUAL target services explicitly.
+Fresh replay: 16 deterministic files at 24 pins; six controls. No shared source
+change, integration or LL15 credit. Review packet and development failures retained.
+
 ## 2026-09-20 — close the four portable-statistics review findings
 
 Import audit 131, retain an immutable sibling follow-up, and rerun native and
