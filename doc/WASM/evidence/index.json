@@ -3036,6 +3036,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Exact integer division proposal, following the user's instruction to fix the integer witness. Reuses accepted integer quotient/remainder service and its fast fixnum path; exact quotients return one value, nonzero remainders refuse code 45. Integer / and source-emitted DIV2, %QUO-1 integer reciprocals, signed/bignum quotients, mixed floats, operand effects and collection, division-by-zero and invalid-operand handlers all run against native. Fixes newly exposed bootstrap handler-symbol/mask identity mismatch; restart/type/operation names use bootstrap symbol identity. 186 original definitions unchanged, 2085 native cases, 8340 comparisons, 4170 between-call and 166 in-call collections. Nine directed faults, legacy byte comparison, fresh native R6/R6a build with identical native FASLs and snapshot allowing test reuse. Unmodified retained verifier passes. No new arithmetic service, shared-source edit, integration or LL15 credit. Ratios remain unsupported."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-DEPENDENCIES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-dependencies-r1/packet.json",
+      "sha256": "d7060e27fa5ed00e1b8898f28f7a9a6b3f59798c8c7f1f5bc379a6ac6316c50d",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Execution-focused bootstrap dependency proposal: 252 unchanged original definitions match native (+66), 2472 native rows, 9888 comparisons, 5270 collections, 14 faults rejected and 38 checked refusals. Admission unchanged at 1864/2492 historically and 1522/1919 in the incomplete target list. Lowers ASSQ, fixnum LOGAND/LOGIOR, subtraction calls, literal TYPEP/REQUIRE-TYPE and constant LDB fields through existing primitives. Original LENGTH, SEQUENCE-TYPE, registration cells, string/array/list/symbol consumers execute unchanged. %BADARG decodes NX1 compact type IDs through original %TYPE-ERROR-TYPE and its rooted native vector. Three target representation primitives have separate native witnesses and are excluded from original-definition credit. Fresh native R6/R6a build; exact native FASL/snapshot equality permits test reuse. Unmodified retained verifier passes. No new C/JS runtime service, shared-source changes, integration or LL15 credit. Dynamic type system, bignum logical operations, improper-list condition semantics, initialized layouts and complete file environments remain open."
     }
   ],
   "current_runs": [

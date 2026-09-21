@@ -629,3 +629,13 @@ refuse. Mixed handler clauses exposed the symbol-versus-mask dispatch bug;
 bootstrap condition and restart names now share the literal symbol owner.
 This remains a review candidate, with 186 original definitions executed and no
 change to the admission count or LL15 disposition.
+
+2026-09-21: The [dependency execution packet](../../../tests/wasm/stage1/bootstrap-dependencies/README.md)
+raises native-matched original definitions to 252 (+66), with admission
+unchanged. ASSQ, fixnum logical calls, subtraction, constant type tests and LDB
+fields close real callers; original LENGTH/SEQUENCE-TYPE and %BADARG/type-ID
+decoding execute. Continue with initialized object recipes, the complete Lisp
+type system and its environment, bignum logical operations, proper native
+improper-list conditions, and the remaining file compilation environment.
+Representation primitive witnesses and fixture adapters are excluded from
+original-definition credit. The packet is unintegrated and LL15 remains open.

@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "run": "ccl-dependencies-r1",
+      "log": "ccl-dependencies-r1/compiled/compile.log",
+      "reason": "Lisp helper parenthesis error during compilation."
+    },
+    {
+      "run": "ccl-dependencies-r2",
+      "log": "ccl-dependencies-r2/compiled/compile.log",
+      "reason": "Lisp type-dispatch clause nested at the wrong level."
+    },
+    {
+      "run": "ccl-dependencies-r3",
+      "log": "ccl-dependencies-r3/compiled/compile.log",
+      "reason": "Synthesized fixnum used the immediate-symbol acode instead of fixnum acode."
+    },
+    {
+      "run": "ccl-dependencies-r4",
+      "log": "ccl-dependencies-r4/compiled/compile.log",
+      "reason": "The expanded closure revealed missing ASSEQL input recipes."
+    },
+    {
+      "run": "ccl-dependencies-r5",
+      "log": "ccl-dependencies-r5/compiled/compile.log",
+      "reason": "Merge recipe referenced the still-uninstalled general < function; use an explicit tested callable predicate."
+    },
+    {
+      "run": "ccl-dependencies-r6",
+      "log": "ccl-dependencies-r6/compiled/compile.log",
+      "reason": "LDB helper had an unmatched parenthesis."
+    },
+    {
+      "run": "ccl-dependencies-r7",
+      "log": "ccl-dependencies-r7/compiled/compile.log",
+      "reason": "Recipe named a fixture predicate before installing any native global function; use its already-compiled native function object."
+    },
+    {
+      "run": "ccl-dependencies-r8",
+      "log": "ccl-dependencies-r8/compiled/compile.log",
+      "reason": "The %SET-SCHARCODE recipe supplied integers; native requires characters despite its name."
+    },
+    {
+      "run": "ccl-dependencies-r9",
+      "log": "ccl-dependencies-r9/compiled/compile.log",
+      "reason": "FULLTAG/LISPTAG/TYPECODE are target primitive bodies, not native DEFUNs; use real native callable entries and exclude these from original-definition count."
+    },
+    {
+      "run": "ccl-dependencies-r10",
+      "log": "ccl-dependencies-r10/compiled/compile.log",
+      "reason": "INVALID-HASH-KEY-P needs lexical marker bindings from its enclosing source environment; leave the standalone recipe unexecuted explicitly."
+    },
+    {
+      "run": "ccl-dependencies-r11",
+      "log": "ccl-dependencies-r11/compiled/compile.log",
+      "reason": "ASSQ used multiple-value emitter output where scalar WAT was required; wrap the three checked CAR/CDR emissions in the existing primary-result context."
+    },
+    {
+      "run": "ccl-dependencies-r12",
+      "log": "ccl-dependencies-r12/execution.log",
+      "reason": "Real %BADARG execution exposed compact native type IDs being treated as expected-type names. Call unchanged %TYPE-ERROR-TYPE with its rooted native table."
+    },
+    {
+      "run": "ccl-dependencies-r13",
+      "log": "ccl-dependencies-r13/execution.log",
+      "reason": "Passing expanded corpus before final direct LDB, logical error and decoded-type rows; final run adds focused controls."
+    }
+  ],
+  "retained": [
+    "ccl-dependencies-r1/compiled/compile.log",
+    "ccl-dependencies-r2/compiled/compile.log",
+    "ccl-dependencies-r3/compiled/compile.log",
+    "ccl-dependencies-r4/compiled/compile.log",
+    "ccl-dependencies-r5/compiled/compile.log",
+    "ccl-dependencies-r6/compiled/compile.log",
+    "ccl-dependencies-r7/compiled/compile.log",
+    "ccl-dependencies-r8/compiled/compile.log",
+    "ccl-dependencies-r9/compiled/compile.log",
+    "ccl-dependencies-r10/compiled/compile.log",
+    "ccl-dependencies-r11/compiled/compile.log",
+    "ccl-dependencies-r12/execution.log",
+    "ccl-dependencies-r13/execution.log",
+    "ccl-dependencies-r11/compiled/core_56.wabt.log",
+    "ccl-dependencies-r11/compiled/core_56.wat",
+    "ccl-dependencies-r12/compiled/scan_686.wat",
+    "ccl-dependencies-r13/summary.json"
+  ],
+  "prior_development": "2026-09-21-stage1-bootstrap-division-r1/development.tar.gz"
+}

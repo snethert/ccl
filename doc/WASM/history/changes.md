@@ -1,3 +1,25 @@
+## 2026-09-21 — execute 252 native bootstrap definitions
+
+On the user's demand for a larger execution packet, close ASSQ, fixnum
+LOGAND/LOGIOR and subtraction calls, then literal TYPEP/REQUIRE-TYPE,
+constant LDB fields and the %BADARG error path. No C or JavaScript runtime
+service is added. Existing predicates, EQL and numeric services are reused.
+CCL's original LENGTH uses its original SEQUENCE-TYPE; source bodies are
+unchanged. Native-matched original definitions rise from 186 to 252, with
+admission unchanged, 2,472 native rows, 9,888 comparisons, 5,270 collections,
+38 checked refusals and 14 rejected faults. Representation primitive entries
+have separate native witnesses and receive no original-definition credit.
+
+The new %BADARG execution exposed NX1's compact typespec IDs. Decode them
+through original %TYPE-ERROR-TYPE and a rooted native typespec vector before
+constructing TYPE-ERROR. Fresh uninterned-symbol recipes carry explicit empty
+state and zero binding indices; standalone INVALID-HASH-KEY-P stays unexecuted
+without its enclosing lexical marker bindings. Fixnum-only logical calls,
+proper-sequence LENGTH coverage and remaining dynamic type-system dependencies
+are stated explicitly. Fresh native R6/R6a build, exact native test reuse,
+retained source-copy checks and unmodified packet replay accompany the proposal.
+No shared-source changes, acceptance or LL15 credit.
+
 ## 2026-09-21 — implement exact integer division and correct handler identity
 
 On the user's instruction to fix the division witness with integers, add a

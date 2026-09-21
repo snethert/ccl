@@ -1,27 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "53f767ca2e53a3ffa14e56a1a6b67864a471a9d7475d0b4c67add79709b46918",
-  "commit": "717c6c0020cb900eea34aebaf7652f12914e63cb",
-  "immutable_evidence_files": 245125,
+  "catalog_sha256": "4ec1888914d21e3a5ca1ab86cf6d498948c4d0165ed6d1da1980db8e2d806074",
+  "commit": "7e9c5d4d3e4044a48df22425184d9f38f64d279f",
+  "immutable_evidence_files": 246524,
   "last_scoped_addition": {
-    "bytes": 53113144,
-    "directory": "2026-09-21-stage1-bootstrap-division-r1",
-    "files": 1201
+    "bytes": 62815748,
+    "directory": "2026-09-21-stage1-bootstrap-dependencies-r1",
+    "files": 1399
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Exact integer division and bootstrap handler identity proposal awaits review, no slot credit.",
-  "source_index_sha256": "0bf17d5a330c66310b101df750d89898d393854125957dd78df22aacce4e79ef",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-division-r1.json",
+  "scope": "Stage 1 remains 21 accepted and 12 missing of 33. Bootstrap dependency proposal executes 252 original definitions and awaits review, no slot credit.",
+  "source_index_sha256": "787ef3c11acd72f526fb4fa1b4256c6b30540def9a29c8f5839dde32dc779ee7",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-dependencies-r1.json",
   "verification": {
-    "deterministic_files": 755,
-    "execution": "c5279ef77494c9f7d261f7ef1e5b5112ed001d310a4aa9d4cb28f6901af3e449",
-    "method": "Unmodified retained verifier passes. New compiler has a fresh native R6/R6a build equal to the qualified native FASLs/snapshot; native tests reused. New target witnesses, faults and prior corpus executed.",
+    "deterministic_files": 886,
+    "execution": "ed2d6d2e12eedaf768e48fb89a509170b052181ab38f7a6837eecf1f4205abb6",
+    "method": "Unmodified retained verifier passes. New compiler has a fresh native R6/R6a build equal to the qualified native FASLs/snapshot; native tests reused. 252 original definitions and the new dependency/error paths execute; all 14 faults reject.",
     "native": "5cda7f33f4e4f8ca351121911a9304d8a31d119724d1cc2acc91f63f16c6456a",
-    "source_pins": 280,
+    "source_pins": 301,
     "status": "PASS"
   },
   "version": 1
