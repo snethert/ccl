@@ -24,6 +24,10 @@ written comparator checks exact native code and non-location data; three
 controls reject code, semantic-bit and callee changes. No shared compiler,
 runtime or CCL source changes, no new C/JS service, and no slot credit.
 
+The unmodified verifier passes from clean detached proposal `93603a17`: 1,247
+deterministic files at 267 pins. Evidence `fda758cc` binds the packet and exact
+UTF-8 index snapshot. Both ledger checks pass; no source is integrated.
+
 ## 2026-09-21 — accept host execution evidence, hold every source change
 
 On Steve's “Go ahead and accept”, accept STAGE1-BOOTSTRAP-HOST-R1's execution
