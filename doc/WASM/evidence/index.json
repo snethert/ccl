@@ -3303,6 +3303,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-verification/verification.json",
       "sha256": "2c12c67be036d25fd4d3f011c151eb71ee62645cd6afe4a3ee22b9458b4e77c0",
       "scope": "Documented verifier passes unmodified from clean committed checkout 34842a3117f5c152a39be452ed9500b38f12a323. Hyperbolic recount, generated execution, raw regression and fault controls reproduce retained artifacts; no additional execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-r1/packet.json",
+      "sha256": "a76586c238c38bcd5c151a3997738471571a303c5007f000bc8f904a2b3ed96d",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Isolated funcallable storage proposal over HYPERBOLIC-R2: 470 original executions, 439 non-NIL witnesses, 2043/2231 comparable admissions. Three unchanged CCL generic-function getters execute; 17156 comparisons, 42 generated layout checks, 10 installer checks, 12 pinned-owner checks, 10 snapshot checks, 40 owner and 20 structure regressions; four faults rejected. Final R6/R6a and ten unchanged legacy outputs. Separate seven-field vector preserves ordinary callable prefix. Method selection, class/wrapper fixtures, production image materialization and CLOS READY remain owed; no slot credit."
     }
   ],
   "current_runs": [

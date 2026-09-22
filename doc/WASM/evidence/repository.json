@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "c270d1a0989384380ef6814cb0a1cbd505ba61b33fe367e7ed2f415971a99190",
-  "commit": "97cf5c969f186e223bbba550dd41a18504542ad7",
-  "immutable_evidence_files": 265986,
+  "catalog_sha256": "8546dc2063f2e3fbddfc58c5d4c6c9efcd5ca3df3db682adafa8f03b68ebd649",
+  "commit": "43363c3dbf8950957715ed88d6598de6564d8412",
+  "immutable_evidence_files": 266170,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-hyperbolic-verification",
-    "files": 3,
-    "bytes": 478191
+    "directory": "2026-09-22-stage1-bootstrap-funcallable-r1",
+    "files": 184,
+    "bytes": 55065248
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Hyperbolic proposal retained for review; no shared-source changes or LL15 credit.",
-  "source_index_sha256": "a39a51c24b37612dd3b2a018d37aca15644cb7f93dc1ef3d0d03a7b7591e4737",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-hyperbolic-verification.json",
+  "scope": "Funcallable storage and immediate access proposal retained for independent review. No shared-source integration or slot credit.",
+  "source_index_sha256": "cb34c3f5191f1660c25e03f84f144043b7997ec265fb585bb1fa8a7cf36faea2",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented verifier run unmodified from a clean committed detached checkout.",
-    "checkout": "34842a3117f5c152a39be452ed9500b38f12a323",
-    "verification": "2c12c67be036d25fd4d3f011c151eb71ee62645cd6afe4a3ee22b9458b4e77c0"
+    "method": "Whole-file recount, native/generated execution, movement and admission controls. Final native R6/R6a passes with 21843 tests and 164 restored FASLs.",
+    "recount": "5221f9d4140a0c90544934503f15fe77136a319340bab710f62a4ee9ede9535a",
+    "target": "54b32e9d6a3da7a0d1e3f6fe7f0e7c31bdce4685d8297bdb1df3e484e5ba997a"
   },
   "version": 1
 }

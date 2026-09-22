@@ -3708,3 +3708,9 @@ The clean verifier for `dd70c054` refused a symlink archive entry before executi
 ## 2026-09-22 — bind clean hyperbolic R2 replay
 
 The documented verifier passes unmodified from clean committed checkout `34842a31`: 3,076 artifact hashes match at 435 source pins. Bind the verification and checkout record; preserve the superseded archive failure. No source or runtime change, no additional execution or slot credit.
+
+## 2026-09-22 — funcallable storage and CCL immediate access
+
+On the user's “proceed with the generic function work”, implement the proposed separate-vector layout in an isolated compiler/runtime proposal. Keep the ordinary six-field callable prefix; expose seven CCL Lisp immediates only on a distinct seven-field function shape. Add a rooted constructor, checked reads/writes, collection and pinned-image tracing, explicit installer manifest binding and fixture snapshot relocation. Admit the existing floating-owner loader profile through its existing trusted capability bundle; keep the range reader's legacy default unchanged.
+
+Whole-file CLOS admission lifts the comparable numerator from 1,950 to 2,043. Three unchanged generic-function getters lift original native-matched executions from 467 to 470 and non-NIL witnesses from 436 to 439. Preserve explicit non-credit for newly reachable class-cell recipes that lack real class inputs. Retain 17,156 comparisons, movement/refusal/publication checks, four changed-site faults, final native qualification and unchanged legacy output. No shared compiler/runtime integration or slot acceptance; method selection remains future work.

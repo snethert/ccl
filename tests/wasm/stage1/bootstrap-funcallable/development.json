@@ -1,0 +1,30 @@
+{
+  "attempts": {
+    "environment-r1": "Setup needed the inherited measurement driver beside it.",
+    "numeric-r1": "Whole-file CLOS introduces SETF names; serialize compound names and keep them outside the symbol-only execution list.",
+    "numeric-r2": "Old refusal controls correctly reported immediate access as newly admitted; update their expected disposition.",
+    "numeric-r3-r4": "An old unexecuted class-cell recipe became reachable and supplied NIL to native REQUIRE-TYPE-CLASS-CELL. Leave newly closed class operations without honest inputs uncredited.",
+    "numeric-r5-r6": "Production installer and range reader admitted only the legacy profile. Add the existing floating-owner profile with its original bundle identity checks.",
+    "native-r1": "Inherited native runner omitted the two already-reviewed source files l1-utils/l1-aprims from its expected FASL list; no code difference was waived.",
+    "native-r3": "Final compiler preserves legacy output text exactly and updates the arch comment. Final qualification passes.",
+    "numeric-r7": "Final compiler and corpus pass. The manifest-identity control now points at another valid seven-element vector, isolating identity from vector shape."
+  },
+  "retained": [
+    "ccl-funcallable-r1.log",
+    "ccl-funcallable-r1/compiled/compile.log",
+    "ccl-funcallable-r2.log",
+    "ccl-funcallable-r2/compiled/compile.log",
+    "ccl-funcallable-r3.log",
+    "ccl-funcallable-r3/compiled/compile.log",
+    "ccl-funcallable-r4.log",
+    "ccl-funcallable-r4/compiled/compile.log",
+    "ccl-funcallable-r5.log",
+    "ccl-funcallable-r5/compiled/compile.log",
+    "ccl-funcallable-r6.log",
+    "ccl-funcallable-r6/compiled/compile.log",
+    "ccl-funcallable-env-r1/setup.log",
+    "ccl-funcallable-native/run.json",
+    "ccl-funcallable-native-r2/run.json",
+    "ccl-funcallable-faults-r1.log"
+  ]
+}
