@@ -3844,3 +3844,17 @@ and native bignum32 reader forms agree in eight feature assignments. Retained
 as an isolated proposal with no slot credit. Numeric-dispatch clean committed
 replay passes 4,244 deterministic artifacts and 610 pins. The larger requested
 scope and LL15 are still unfinished.
+
+### 2026-09-22 — Execute original CCL long division and remainder
+
+Continued with Lisp equivalents of the digit-division, quotient-correction and
+carry-addition LAP entries. Original CCL long division, quotient-only division
+and remainder now execute. Signed comparisons exposed the 32-bit source's
+NO-REM early-return bug; a Wasm-only branch fixes it while preserving every
+native reader form. Direct callers also compare the single-digit loops against
+native arithmetic and require checked refusals for zero/overflowing division.
+
+537 originals / 502 non-NIL / 22,480 comparisons; admission 2,060/2,231. Final
+native qualification and all eight reader assignments pass. The multiplication
+packet's clean committed replay passes 4,270 artifacts and 630 pins. All work
+remains isolated for independent review, with no new LL15 credit.

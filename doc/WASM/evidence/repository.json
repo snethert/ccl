@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "35bcc1184e193168dee95573ea97bc87d35368f7e3c56122461a96d2f5f62c21",
-  "commit": "b20f1a409ec2c4e1823e6b18a85055347c72862f",
-  "immutable_evidence_files": 267157,
+  "catalog_sha256": "66a6039a89ed1c1ba88350808c74e3dff167556f36620a1aaf481ffaf59fb75c",
+  "commit": "d5d99686173159b23fa11ae5eb834a6aed61f3bd",
+  "immutable_evidence_files": 267327,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-limb-multiply-r1",
-    "files": 171,
-    "bytes": 48147180
+    "directory": "2026-09-22-stage1-bootstrap-limb-division-r1",
+    "files": 170,
+    "bytes": 47493678
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Unreviewed limb multiplication: 2,060 admitted, 534 original executions and 499 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "afc0a8fd970f0f4de10988073528f76da658e9857c6ccc42a185a20fd439dcef",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-limb-multiply.json",
+  "scope": "Unreviewed long division: 2,060 admitted, 537 original executions and 502 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
+  "source_index_sha256": "9363215af5aec9aef4ea1fb1e8920f68d06d7b335744cd6738ed5493b83f1bb2",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-limb-division.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Numeric dispatch clean replay at 52f3d4d0: 4,244 deterministic artifacts, 610 pins. Limb multiplication has final-source native R6/R6a and target execution; its committed replay follows.",
-    "packet_sha256": "246912a13cc7c6df8a9b06883204edf97c4683fc492c0df563d2790b88c4bfef"
+    "method": "Limb multiplication clean replay at d1af2a09: 4,270 deterministic artifacts, 630 pins. Division has final-source native R6/R6a and target execution; committed replay follows.",
+    "packet_sha256": "5e158491e5b910de419c1bc8f96d7e929dbc6d8188fcf5d6116cd18480decceb"
   }
 }

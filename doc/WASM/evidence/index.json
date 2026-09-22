@@ -3416,6 +3416,14 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Original CCL bignum multiplication and float MINUSP helpers: 531 to 534 executions, 496 to 499 non-NIL witnesses, 21,760 comparisons. Admission 2,060/2,231. Native R6/R6a passes 21,843 tests, 164 FASLs restored; eight native reader feature assignments preserve the whole bignum32 file. Positive fixnum-loop and signed-zero callers receive no original-definition credit. Final counts are bound in summary.json. Unreviewed and unintegrated; remaining numeric dependencies, full GF dispatch and LL15 image work remain unfinished, no slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LIMB-DIVISION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-limb-division-r1/packet.json",
+      "sha256": "5e158491e5b910de419c1bc8f96d7e929dbc6d8188fcf5d6116cd18480decceb",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Original CCL bignum long division, quotient-only division and remainder: 534 to 537 executions, 499 to 502 non-NIL witnesses; 22,480 comparisons. Admission remains 2,060/2,231. Target Lisp LAP equivalents, with a Wasm-only fix for the 32-bit source early return leaking a second value when NO-REM is true. Final-source R6/R6a and whole-file native reader proof pass. Mathematical digit-loop callers receive no original-definition credit. Unreviewed, unintegrated and no LL15 credit; larger requested scope still unfinished."
     }
   ],
   "current_runs": [

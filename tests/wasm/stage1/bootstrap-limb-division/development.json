@@ -1,0 +1,29 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "result": "Compiled the floor primitives; the closure record identified BIGNUM-ADD-LOOP-+ as the remaining dependency, so no original long-division credit was claimed."
+    },
+    {
+      "attempt": "r2",
+      "result": "All BIGNUM-TRUNCATE rows passed, then quotient-only division exposed the original 32-bit early return leaking a remainder for |x|<|y|."
+    },
+    {
+      "attempt": "r3",
+      "result": "Adds the Wasm-only early-return correction, BIGNUM-REM and direct single-digit loop witnesses. Final-source native and target records bound in summary.json."
+    }
+  ],
+  "retained": [
+    "ccl-limb-division-r1.log",
+    "ccl-limb-division-r1/compiled/compile.log",
+    "ccl-limb-division-r2.log",
+    "ccl-limb-division-r2/compiled/compile.log",
+    "ccl-limb-division-r2/execution.log",
+    "ccl-limb-division-half-probe.lisp",
+    "ccl-limb-division-half-probe.log",
+    "ccl-limb-division-half-probe-r2.log",
+    "ccl-limb-division-r3.log",
+    "ccl-limb-division-r3/compiled/compile.log",
+    "ccl-limb-division-r3/execution.log"
+  ]
+}

@@ -424,3 +424,19 @@ remain unreviewed and unintegrated. Generic MINUSP, mixed multiplication's
 kernel restart, division/GCD, full generic dispatch, the remaining condition,
 kernel-global and metadata work, and the image/READY join remain unfinished.
 Stage 1 remains **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22: Original CCL long division (proposal)
+
+Execution rises **534 → 537**, with **502 non-NIL witnesses** and **22,480
+comparisons**; admission remains **2,060/2,231**. Original `BIGNUM-TRUNCATE`,
+`BIGNUM-TRUNCATE-NO-REM` and `BIGNUM-REM` execute using target Lisp digit
+operations. A Wasm-only branch fixes the original 32-bit quotient-only early
+return leaking a remainder when the dividend is smaller. Native R6/R6a passes
+21,843 tests with 164 FASLs restored; the whole-file native reader proof passes
+all eight assignments. Target execution includes 70 direct checks and 20
+structural collector checks. [Proposal](../../tests/wasm/stage1/bootstrap-limb-division/README.md).
+The preceding multiplication commit `d1af2a09` replays from a clean checkout:
+**4,270 deterministic artifacts, 630 pins**. These proposals are unreviewed and
+unintegrated. GCD, numeric restarts, full GF dispatch, remaining condition,
+kernel-global and metadata work, and the image/READY join remain unfinished.
+Stage 1 remains **21 accepted, 12 missing, zero unreviewed of 33**.
