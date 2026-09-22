@@ -3775,3 +3775,5 @@ keep the historical denominator fixed; admission is 2,051/2,231. Final native
 qualification passes 21,843 tests, restores 164 FASLs and binds source-location
 proofs on seventeen reader profiles. Retain changed artifacts as a delta over
 the introspection packet. Nothing is accepted or integrated by this proposal.
+
+Clean replay from `848f3c46` passes unmodified: 3,787 main artifact paths plus 12,492 repeated control-corpus paths match. Those aliases add no execution credit and should be removed from retention in the next substantive packet. The proposal remains unreviewed.

@@ -347,3 +347,5 @@ This stacks on the unreviewed introspection proposal. No shared integration or
 slot credit: **21 accepted, 12 missing, zero unreviewed of 33**. Remaining work
 includes numeric/CLOS dependencies, further condition classes, owner-backed
 kernel globals, heap constants and lexpr spread calls.
+
+Clean replay from `848f3c46` passes unmodified: 3,787 main artifact paths plus 12,492 repeated control-corpus paths match. Those aliases add no execution credit and should be removed from retention in the next substantive packet. The proposal remains unreviewed.

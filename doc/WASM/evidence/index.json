@@ -3366,6 +3366,12 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Pending introspection plus nine condition classes, native defaults and five-slot rooted construction; 486 original definitions, 451 non-NIL, two new error-only originals; 17,660 comparisons and four rejected faults. Sixteen native pointer/FFI definitions excluded with required callers left open. Admission 2,051/2,231; final native R6/R6a and seventeen-profile source proof retained. No shared integration or LL15 credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CONDITION-FRONTIER-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-verification/verification.json",
+      "sha256": "7e008dbf0217f8f50e8501e4ba5d85910d7e76af7706b64df1643f8d0a578c3d",
+      "scope": "Unmodified clean committed replay at 848f3c46c6da51a82a851c189189eec7bc9d1878: 3787 main artifact paths and 12492 repeated control-corpus paths identical; 486 original definitions, 451 non-NIL, 17,660 comparisons. No acceptance or integration."
     }
   ],
   "current_runs": [

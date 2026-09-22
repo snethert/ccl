@@ -1,20 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "30ae9afc5f26e0ce84d4bbdce3e3726eca388dc8cca8ef2430546b9cc668e290",
-  "commit": "6f926db5de99d39eb55d343e41519ea739453c76",
-  "immutable_evidence_files": 266581,
+  "catalog_sha256": "92f18e1e03438313dbc00906a55480ccbe588b921627dfb3687c49f0dfab441f",
+  "commit": "edf966db27890441531f2c1aa819e1392fb766c4",
+  "immutable_evidence_files": 266584,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-condition-frontier-r1",
-    "files": 199,
-    "bytes": 199578811
+    "directory": "2026-09-22-stage1-bootstrap-condition-frontier-verification",
+    "files": 3,
+    "bytes": 483078
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Condition and FFI proposal, unreviewed and unintegrated; 486 original executions, 451 non-NIL; Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "70e9386985afb1c083405e79c605e961b4f15b07d9ef3c1b182f9351eab33bb9",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-condition-frontier.json",
-  "version": 1
+  "source_index_sha256": "17972f35c436f1832037ea4deab1b5ebf280854fbd696d10546a8406ebec03c9",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-condition-frontier-verification.json",
+  "version": 1,
+  "verification": {
+    "status": "PASS",
+    "method": "Unmodified documented verifier from clean committed checkout",
+    "checkout": "848f3c46c6da51a82a851c189189eec7bc9d1878",
+    "verification": "7e008dbf0217f8f50e8501e4ba5d85910d7e76af7706b64df1643f8d0a578c3d"
+  }
 }
