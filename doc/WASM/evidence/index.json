@@ -3179,6 +3179,12 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "423 originals execute (+41), 394 non-NIL witnesses (+39); 1993/2231 admitted in the lower-bound 57-file target inventory, 44 files read completely. 38 of 82 prior original closed names gain recipes; 44 have explicit remaining dispositions; seven fixture/primitive names excluded. Portable coercions, word shifts, proven uint32 logical arithmetic and ARRAY-ELEMENT-TYPE target branch. 26 libm entries on the existing float service; 504 finite native comparisons, 68 one-ULP differences counted separately, proposed four-ULP envelope only. Checked inexact/underflow trap modes refuse. 12480 independent raw libm comparisons, unchanged 59083-case raw arithmetic regression at three placements, 756 width-specific shift comparisons, four emitted-code controls. Native final proposal: 21843 tests, 144 identical/164 restored FASLs; 34 new reader comparisons. New compiler/source/runtime proposal isolated for review, no slot credit or full-domain numerical/ready-image claim."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-MATH-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-verification.json",
+      "sha256": "13dce1de21a0bfd3e1435da547b11544693eddb5e9feba5a6ed0ed5d601b74f1",
+      "scope": "Unmodified verifier from clean detached commit cef139cfa2b04a8f6921a1d1b286ae148e8f1956: 1476 deterministic files at 355 pins. Native/generated execution, raw regression, direct checks, controls and reader matrix replay. Documented admission integration replay also passes with 1152 byte-identical files. No new slot credit."
     }
   ],
   "current_runs": [
