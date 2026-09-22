@@ -3675,3 +3675,8 @@ Steve asked “work on the 64 recipes”. The isolated bootstrap-recipes packet 
 
 
 Proposal `7267519e` passes the documented verifier unmodified from a clean committed checkout: **1,709 deterministic files identical at 356 pins**. Native qualification is reused by exact final-source hashes. The retained summary correctly reports 1,986/2,231 admissions; the README inherited 1,993 from its predecessor. The [errata](../stage1/bootstrap-recipes-errata.json) records the seven newly exposed %ILLEGAL-MARKER refusals after loading the hash file's real macro environment. Execution remains 458 originals, 427 with non-NIL witnesses.
+
+
+### 2026-09-22 — Audit156 and the file-environment recount
+
+Import audit156 verbatim and bind its closure/recipes reviews without treating the reviewer's recommendation as user acceptance. Repair the counter with CCL's real compile-file environments, retaining complete outcomes and explicit stops. On the same 2,231 definitions the corrected count is 1,895; 893 additional definitions are separate. The three numeric files all reach their ends, and their generated entries run against native file-compiled references. Two new recipes raise execution to 460/429; the whole-file numeric subset has 644 comparisons. Compiler/runtime/CCL sources are unchanged and no slot credit is claimed. Original harness and oracle development failures are retained.

@@ -3217,8 +3217,14 @@
       "id": "STAGE1-BOOTSTRAP-CLOSURE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-r1/packet.json",
       "sha256": "79acf40b256834d410256a5faf11b3fa3e47211f8d61a041eac2f53595c61847",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount.",
+      "review": {
+        "commit": "5fe0ce3c9a73373e60e486be3c3514efb9514048",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "628a6925cd1f513ce1e86ebf3b1a915b12adbe09c0789875d66f30a6858b4bb5",
+        "import_commit": "57df0b7685f15c4f68456570758bdce62a19e388"
+      }
     },
     {
       "id": "STAGE1-BOOTSTRAP-CLOSURE-VERIFICATION",
@@ -3230,14 +3236,27 @@
       "id": "STAGE1-BOOTSTRAP-RECIPES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-recipes-r1/packet.json",
       "sha256": "8ce6fbc11a6d204e2beda87f315072789a7c7da77354f473316d96d61e652142",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Recipes over the unchanged closure compiler: 458 original definitions executed, 427 non-NIL witnesses, 16340 target/14992 exact native comparisons. Twenty-one of the requested 64 plus newly closed NEED-USE-EQL execute. All 64 dispositioned; eight fixture/target primitives, thirteen paired single-float interfaces, nine excluded native interfaces and thirteen substantive dependencies remain. Whole-file l0-hash compilation fixes INVALID-HASH-KEY-P file-local symbol macros; 76/95 file records admitted. Eight faults plus trap control rejected. Native R6/R6a reused by exact compiler/source hash. No shared source changes or slot credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
+      "scope": "Recipes over the unchanged closure compiler: 458 original definitions executed, 427 non-NIL witnesses, 16340 target/14992 exact native comparisons. Twenty-one of the requested 64 plus newly closed NEED-USE-EQL execute. All 64 dispositioned; eight fixture/target primitives, thirteen paired single-float interfaces, nine excluded native interfaces and thirteen substantive dependencies remain. Whole-file l0-hash compilation fixes INVALID-HASH-KEY-P file-local symbol macros; 76/95 file records admitted. Eight faults plus trap control rejected. Native R6/R6a reused by exact compiler/source hash. No shared source changes or slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount.",
+      "review": {
+        "commit": "5fe0ce3c9a73373e60e486be3c3514efb9514048",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "628a6925cd1f513ce1e86ebf3b1a915b12adbe09c0789875d66f30a6858b4bb5",
+        "import_commit": "57df0b7685f15c4f68456570758bdce62a19e388"
+      }
     },
     {
       "id": "STAGE1-BOOTSTRAP-RECIPES-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-recipes-verification/verification.json",
       "sha256": "01ef05b2093f5806874044d1a607bdba5d93f0a5f7754129ec69576c7bf8af72",
       "scope": "Unmodified recipe verifier passes from clean committed checkout 7267519ee3563dbcc8f48bde59b1073292c6b721. No new execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FILE-ENVIRONMENTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-file-environments-r1/packet.json",
+      "sha256": "d886aaeac2eb677285d2b05163a1147242c37808b91436bb6783dbbeb239b6e4",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Whole-file environment recount corrects audit156 F1: 1895/2231 in the comparable cohort; 2747/3124 total DEFUN records with 893 additional definitions reported separately; 44/57 files complete. All 57 suspect macro-callee names dispositioned (51 target, six excluded). Numeric files fully processed: 147/224 definitions lower and 155 modules assemble. 460 originals execute, 429 non-NIL; 21 whole-file numeric definitions, 644 numeric comparisons and 16560 full-corpus comparisons. Three compile-time environment omissions and two body guards tested. Compiler/runtime/CCL source unchanged from reviewed closure; native R6/R6a reused by hash. No slot credit."
     }
   ],
   "current_runs": [

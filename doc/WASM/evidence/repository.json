@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ad7521bedce80513911c0e666ed56e4b762612d10c75a3861047af6528290984",
-  "commit": "5778999c40e46915a33603ad0225a96194c3e285",
-  "immutable_evidence_files": 265416,
+  "catalog_sha256": "eef9aa0f2ec6b7b91a9fb2caf19f2b360aac4d3e9996f18c38e752b13de30d85",
+  "commit": "4d34511edc571156b04d0c2c38107a70060eeb95",
+  "immutable_evidence_files": 265441,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-recipes-verification",
-    "files": 4,
-    "bytes": 492150
+    "directory": "2026-09-22-stage1-bootstrap-file-environments-r1",
+    "files": 25,
+    "bytes": 24828479
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Recipe expansion and whole-file hash environment retained for review. Compiler/runtime/CCL source unchanged; LL15 open, 21 accepted and 12 missing of33.",
-  "source_index_sha256": "807a13c987f02eeb377f2ca6530687b2e025dc4becb6216a68410631dd3b99b8",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-recipes-verification.json",
+  "scope": "Whole-file recount and numeric execution retained for review; no shared-source changes or LL15 credit.",
+  "source_index_sha256": "9a61a310670c193dfc5b52bf057578f2c5f30d248b6af8b8915791bbd0bf5043",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-file-environments-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented verifier runs unmodified from clean committed detached checkout.",
-    "checkout": "7267519ee3563dbcc8f48bde59b1073292c6b721",
-    "verification": "01ef05b2093f5806874044d1a607bdba5d93f0a5f7754129ec69576c7bf8af72"
+    "method": "Fresh file-compiler environments, comparable-cohort joins, macro omission controls, numeric module assembly and moving native execution. Native qualification reused by source hash.",
+    "recount": "b105cc2a4a60ea0d22c5dfae8abeeabff7918fd99456b827c921967c6000f69e",
+    "target": "1c4f54e94e035e471d11debcc8e222bc34e2fdc073cd5d5a4297ea08d3d79941"
   },
   "version": 1
 }

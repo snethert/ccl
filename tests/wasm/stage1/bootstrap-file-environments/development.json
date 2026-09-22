@@ -1,0 +1,19 @@
+{
+  "attempts": [
+    {"id": "environment-r1", "result": "Harness omitted the dynamic kernel-redefinition permission used by the existing file sink; stopped before measuring."},
+    {"id": "environment-r2", "result": "Emission records were correct, but adding an absent plist outcome key updated only a local cons. Definitions displayed NOT-COMPILED. Reserve the key before capturing the row."},
+    {"id": "environment-r3", "result": "Full recount completed; macro-expansion traces and omission controls added next."},
+    {"id": "environment-r4", "result": "Full recount and controls passed. Python imported the parent's report module instead of this fixture's; fixed with an explicit module path."},
+    {"id": "environment-r5", "result": "Final recount, controls and numeric assembly passed."},
+    {"id": "numeric-r1", "result": "19 whole-file numeric definitions and inherited executions passed. The old whole-file JSON formatter did not escape a multi-line compiler message; corrected in this fixture."},
+    {"id": "numeric-r2", "result": "Added two recipes. MULTIPLY-FIXNUMS passed; UPGRADED-COMPLEX-PART-TYPE exposed use of a later saved-image definition instead of the l0-numbers source body. Native file compilation supplies the correct source-stage reference."},
+    {"id": "numeric-r3", "result": "Final native file oracle, new recipes and inherited comparisons."}
+  ],
+  "retained": [
+    "ccl-file-env-r1/files/l0-bignum32/compile.log",
+    "ccl-file-env-r2/files/l0-numbers/result.json",
+    "ccl-file-env-r4.log",
+    "ccl-file-numeric-r1/compiled/whole-file.json",
+    "ccl-file-numeric-r2/execution.log"
+  ]
+}
