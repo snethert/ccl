@@ -3811,3 +3811,19 @@ inputs before native mutation. Two transport controls reject. No compiler,
 runtime or CCL source changes; native R6/R6a reused by source hash. No slot credit.
 
 Clean committed replay at `bc43011e` passes unmodified: 3,243 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated. The immutable R1 README/development note says 40 structural collector checks; this is a transcription error: the retained report has 20.
+
+### 2026-09-22 — Execute original bignum algorithms and method combination
+
+Continued under the user's “finish them”. Added target Lisp equivalents of
+bignum LAP entries and checked digit allocation/access/copy/shortening; CCL's
+original algorithms provide the arithmetic. Added callable dcode forwarding and
+method-context application, executing unchanged before/primary/after combination
+from the whole l1-dcode file. A general &LEXPR values change was tried, found to
+differ from native and withdrawn; the final trampoline uses &REST/APPLY.
+
+531 original definitions match native, 496 with non-NIL witnesses, 21,432
+comparisons; all 507 previous executions remain. Admission stays 2,059/2,231.
+The final source passed R6/R6a with 21,843 tests and 164 restored FASLs. Direct
+checks bind digit refusals and collection after shrinking. This is an isolated,
+unreviewed proposal with no shared integration or LL15 credit. The retained
+frontier records the still-unfinished requested work.

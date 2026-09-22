@@ -1,0 +1,73 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "result": "Input recipe had an unmatched parenthesis; compile refused."
+    },
+    {
+      "attempt": "r2",
+      "result": "Malformed LET bindings in the recipe; compile refused."
+    },
+    {
+      "attempt": "r3",
+      "result": "Extra WAT closing parenthesis in digit validation; assembler refused."
+    },
+    {
+      "attempt": "r4",
+      "result": "Native dispatch helpers were not installed in the private reference process; undefined-function error."
+    },
+    {
+      "attempt": "r5",
+      "result": "The &LEXPR trampoline returned one value. Native probing established this is CCL semantics, not a backend defect."
+    },
+    {
+      "attempt": "r6",
+      "result": "An attempted general &LEXPR change differed from native and was withdrawn. The final trampoline uses &REST/APPLY."
+    },
+    {
+      "attempt": "r7",
+      "result": "Direct-check helpers were added after the compile driver was copied; missing installed module. Final source-copy assertions prevent retaining this."
+    },
+    {
+      "attempt": "r8",
+      "result": "Method functions held in native method slots were not in the explicit installed helper list; checked refusal. They are explicitly linked in the final driver."
+    },
+    {
+      "attempt": "r9",
+      "result": "PASS: 526 original definitions. Superseded only by additional recipes."
+    },
+    {
+      "attempt": "r10",
+      "result": "PASS: 531 original definitions, 496 non-NIL witnesses, 21,432 comparisons. Compiler and target source unchanged from the passing R6/R6a build."
+    }
+  ],
+  "retained": [
+    "ccl-numeric-dispatch-r1.log",
+    "ccl-numeric-dispatch-r1/compiled/compile.log",
+    "ccl-numeric-dispatch-r10.log",
+    "ccl-numeric-dispatch-r10/compiled/compile.log",
+    "ccl-numeric-dispatch-r10/execution.log",
+    "ccl-numeric-dispatch-r2.log",
+    "ccl-numeric-dispatch-r2/compiled/compile.log",
+    "ccl-numeric-dispatch-r3.log",
+    "ccl-numeric-dispatch-r3/compiled/compile.log",
+    "ccl-numeric-dispatch-r4.log",
+    "ccl-numeric-dispatch-r4/compiled/compile.log",
+    "ccl-numeric-dispatch-r5.log",
+    "ccl-numeric-dispatch-r5/compiled/compile.log",
+    "ccl-numeric-dispatch-r5/execution.log",
+    "ccl-numeric-dispatch-r6.log",
+    "ccl-numeric-dispatch-r6/compiled/compile.log",
+    "ccl-numeric-dispatch-r6/execution.log",
+    "ccl-numeric-dispatch-r7.log",
+    "ccl-numeric-dispatch-r7/compiled/compile.log",
+    "ccl-numeric-dispatch-r7/execution.log",
+    "ccl-numeric-dispatch-r8.log",
+    "ccl-numeric-dispatch-r8/compiled/compile.log",
+    "ccl-numeric-dispatch-r8/execution.log",
+    "ccl-numeric-dispatch-r9.log",
+    "ccl-numeric-dispatch-r9/compiled/compile.log",
+    "ccl-numeric-dispatch-r9/execution.log"
+  ],
+  "scope": "Failure logs only; no duplicate build trees. The abandoned general &LEXPR change is absent from the final proposal."
+}

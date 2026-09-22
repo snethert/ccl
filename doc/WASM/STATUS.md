@@ -386,3 +386,21 @@ Only 69 changed artifacts are retained; 3,174 reuse their predecessor hashes.
 Unreviewed execution evidence; no integration or slot credit. Ledger unchanged.
 
 Clean committed replay at `bc43011e` passes unmodified: 3,243 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated. The immutable R1 README/development note says 40 structural collector checks; this is a transcription error: the retained report has 20.
+
+### 2026-09-22 — Original bignum algorithms and method combination
+
+Original native-matched execution rises **507 → 531**, non-NIL witnesses
+**472 → 496**, over **21,432 comparisons**. Admission stays **2,059/2,231**.
+CCL's whole-file bignum addition, subtraction, logical operations, shifts,
+normalization and byte extraction now execute over target Lisp LAP replacements.
+CCL's original before/after combined-method dcode runs with real native method
+records; target callers exercise dcode replacement, method context, multiple
+values and cleanup under collection. No new C or runtime JS service.
+
+Final native R6/R6a passes 21,843 tests and restores 164 FASLs. Target execution
+includes 4,208 collections during calls, 98 retries, 58 direct digit checks and
+20 structural collector checks. [Proposal and replay](../../tests/wasm/stage1/bootstrap-numeric-dispatch/README.md).
+The proposal stacks on the pending lexpr/CLOS packets and is not integrated.
+Full method selection, remaining numeric dependencies, kernel-global owners,
+heap literals, further condition classes and image/READY remain unfinished.
+No slot credit: **21 accepted, 12 missing, zero unreviewed of 33**.

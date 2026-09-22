@@ -3400,6 +3400,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-clos-accessors-verification/verification.json",
       "sha256": "0dd659418235e7053b15a38571031f9854cf2b93f21ed903d847e46ce9ee138f",
       "scope": "Unmodified clean committed replay at bc43011e7c1d543c908e93995d2d310a01197406: 3243 deterministic artifacts identical; 507 original definitions, 472 non-NIL, 18,040 comparisons, 20 structural collector checks and two rejected transport faults. The immutable R1 README/development note overstates the structural collector checks as 40; the actual retained report has 20. No acceptance or integration."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-NUMERIC-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-numeric-dispatch-r1/packet.json",
+      "sha256": "94aa346dc006ddaba843f8ae38bf96454925f0553e42c118d50778acadfa0e0a",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Original bignum algorithms and before/after method combination: 507 to 531 originals, 472 to 496 non-NIL witnesses; 21,432 comparisons, 4,208 collections during calls, 98 retries, 58 digit checks and 20 structural collector checks. Admission unchanged at 2,059/2,231. Final R6/R6a passes 21,843 tests and restores 164 FASLs. Target Lisp LAP replacements plus checked digit backend; no new runtime service. Full generic dispatch, numeric dependencies and the image/READY join remain unfinished. Unreviewed and unintegrated, no slot credit."
     }
   ],
   "current_runs": [
