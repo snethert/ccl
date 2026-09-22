@@ -1,26 +1,20 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "92f18e1e03438313dbc00906a55480ccbe588b921627dfb3687c49f0dfab441f",
-  "commit": "edf966db27890441531f2c1aa819e1392fb766c4",
-  "immutable_evidence_files": 266584,
+  "catalog_sha256": "625325b9187819491472e3e448b71a310ed016db2b6256d965c3d5a3febd1e93",
+  "commit": "10eb5db95b214681eea17b9d93bbf94b139f5c61",
+  "immutable_evidence_files": 266786,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-condition-frontier-verification",
-    "files": 3,
-    "bytes": 483078
+    "directory": "2026-09-22-stage1-bootstrap-lexpr-spread-r1",
+    "files": 202,
+    "bytes": 22017182
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Condition and FFI proposal, unreviewed and unintegrated; 486 original executions, 451 non-NIL; Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "17972f35c436f1832037ea4deab1b5ebf280854fbd696d10546a8406ebec03c9",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-condition-frontier-verification.json",
-  "version": 1,
-  "verification": {
-    "status": "PASS",
-    "method": "Unmodified documented verifier from clean committed checkout",
-    "checkout": "848f3c46c6da51a82a851c189189eec7bc9d1878",
-    "verification": "7e008dbf0217f8f50e8501e4ba5d85910d7e76af7706b64df1643f8d0a578c3d"
-  }
+  "scope": "Lexpr spread proposal, unreviewed and unintegrated; 2,059 admitted, 486 original executions and 451 non-NIL; Stage 1 remains 21 accepted and 12 missing.",
+  "source_index_sha256": "9acec6391abe535e96635d1511e2de2861084e295040920b4032cfa4df2d93aa",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-lexpr-spread.json",
+  "version": 1
 }

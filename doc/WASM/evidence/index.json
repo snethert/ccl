@@ -3372,6 +3372,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-verification/verification.json",
       "sha256": "7e008dbf0217f8f50e8501e4ba5d85910d7e76af7706b64df1643f8d0a578c3d",
       "scope": "Unmodified clean committed replay at 848f3c46c6da51a82a851c189189eec7bc9d1878: 3787 main artifact paths and 12492 repeated control-corpus paths identical; 486 original definitions, 451 non-NIL, 17,660 comparisons. No acceptance or integration."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LEXPR-SPREAD-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-lexpr-spread-r1/packet.json",
+      "sha256": "67228f536ec25e0c512aef3bc8f87e86d6eff5a8258abdb7185848ad7a40ca75",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Bootstrap lexpr spreading through existing APPLY roots, reservation and dispatch; 2,059/2,231 admitted, 486 original executions and 451 non-NIL unchanged. Seven observers pass 100 new comparisons, 17,760 total; thirty directed frame checks and three rejected faults; all eight newly admitted modules assemble. Final R6/R6a bound. Stacks on unreviewed condition and introspection proposals; no shared integration or LL15 credit."
     }
   ],
   "current_runs": [

@@ -3777,3 +3777,23 @@ proofs on seventeen reader profiles. Retain changed artifacts as a delta over
 the introspection packet. Nothing is accepted or integrated by this proposal.
 
 Clean replay from `848f3c46` passes unmodified: 3,787 main artifact paths plus 12,492 repeated control-corpus paths match. Those aliases add no execution credit and should be removed from retention in the next substantive packet. The proposal remains unreviewed.
+
+### 2026-09-22 — Bootstrap lexpr spreading
+
+Continued under the user's “proceed.” The isolated proposal lowers CCL's spread
+kind 0 through the existing APPLY emitters for tail and internal calls. It
+validates an active lexpr root frame and copies reversed source arguments into
+the normal call frame. No runtime service or CCL definition is replaced.
+
+Admission moves 2,051 → 2,059 of 2,231, closing all eight spread-kind refusals;
+486 original executions and 451 non-NIL witnesses are unchanged. Seven source
+callers execute 25 native cases in four target settings: 100 new comparisons,
+17,760 total. Thirty frame checks, three wrong-output controls and ten unchanged
+legacy outputs bind the new path. Final native R6/R6a passes 21,843 tests and
+restores all 164 FASLs. The packet retains 115 changed deterministic artifacts
+and reuses 3,729; inherited condition controls are reused by hash and the old
+control-directory corpus aliases are no longer retained.
+
+The proposal stacks on the pending condition/FFI and introspection proposals.
+It is not integrated or independently reviewed and awards no LL15 or method
+dispatch credit. The frontier names the remaining dependencies.

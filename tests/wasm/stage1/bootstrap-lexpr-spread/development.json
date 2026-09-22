@@ -1,0 +1,29 @@
+{
+  "attempts": [
+    {
+      "name": "r1",
+      "result": "Observer used unsupported MULTIPLE-VALUE-LIST; changed to MULTIPLE-VALUE-BIND."
+    },
+    {
+      "name": "r2",
+      "result": "New caller names resolved in the fixture package instead of CCL, so dependency closure omitted them. Qualified CCL internal names explicitly."
+    },
+    {
+      "name": "r3",
+      "result": "Native oracle refused the incorrectly unqualified &LEXPR lambda-list marker. Qualified it as CCL::&LEXPR."
+    },
+    {
+      "name": "r4",
+      "result": "Five observers executed correctly. The required-all-observers assertion caught two missing dependencies: VALUES as a callable and one remaining unqualified %APPLY-LEXPR. Used a real local multiple-value producer and qualified the call."
+    },
+    {
+      "name": "r5",
+      "result": "Final seven-observer corpus and focused controls."
+    }
+  ],
+  "retained": [
+    "ccl-lexpr-r1/compiled/compile.log",
+    "ccl-lexpr-r3/compiled/compile.log",
+    "ccl-lexpr-r4.log"
+  ]
+}

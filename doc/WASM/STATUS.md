@@ -349,3 +349,25 @@ includes numeric/CLOS dependencies, further condition classes, owner-backed
 kernel globals, heap constants and lexpr spread calls.
 
 Clean replay from `848f3c46` passes unmodified: 3,787 main artifact paths plus 12,492 repeated control-corpus paths match. Those aliases add no execution credit and should be removed from retention in the next substantive packet. The proposal remains unreviewed.
+
+## 2026-09-22 — lexpr spread proposal
+
+Admission rises **2,051 → 2,059/2,231**; original native-matched execution stays
+**486**, with **451** non-NIL witnesses. All eight `B-SPREAD-KIND` refusals are
+now admitted and their emitted modules assemble. Their remaining callees are
+still explicit dependencies, not execution credit.
+
+The bootstrap compiler routes `%APPLY-LEXPR` through existing APPLY machinery,
+reading the accepted reversed root-frame layout without allocating a list.
+Seven callers pass 100 new comparisons, **17,760 total**, including collecting
+operand evaluation, multiple values, local and computed callees and nonlocal
+exit through cleanup. Thirty checked frame cases and three focused faults
+pass; ten legacy outputs are identical. Native R6/R6a passes 21,843 tests and
+restores all 164 FASLs.
+
+[Proposal and replay](../../tests/wasm/stage1/bootstrap-lexpr-spread/README.md).
+Only 115 changed deterministic artifacts are retained; 3,729 reuse their
+predecessor hashes. The previous control-corpus aliases are excluded.
+No shared integration or slot credit: **21 accepted, 12 missing, zero
+unreviewed of 33**. Numeric/CLOS dependency closure, method-context dispatch,
+further condition classes, kernel globals and heap constants remain open.
