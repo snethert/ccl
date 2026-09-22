@@ -1,0 +1,16 @@
+{
+  "retained": [
+    "ccl-introspection-r1/compiled/compile.log",
+    "ccl-introspection-r2/compiled/compile.log",
+    "ccl-introspection-r3/compiled/compile.log",
+    "ccl-introspection-r4/compiled/compile.log",
+    "ccl-introspection-r5/compiled/compile.log",
+    "ccl-introspection-r6/compiled/compile.log",
+    "ccl-introspection-r7/execution.log",
+    "ccl-introspection-r8/execution.log"
+  ],
+  "notes": [
+    "Native setup failures: image single-float names differ from 32-bit destructive names; narrowed inputs to non-trapping finite domain; native slot vector needs UVSIZE/%SVREF, CLASS slot explicitly initialized; bind named fixture probe references.",
+    "Unwrap native closure trampoline for the representation observer. Preserve previously selected whole-file native bodies when L1-APRIMS defines a later version of the same symbol. Runtime/backend unchanged during these harness corrections."
+  ]
+}

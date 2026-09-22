@@ -3344,6 +3344,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-acceptance-verification/verification.json",
       "sha256": "0077c9270ad43016443d89e22b2b6a6cf973f6796a7d5be554f9882ad18591cc",
       "scope": "Post-integration command passed from clean committed checkout b37dcb156cef15e355f4f0dd466d381086770c91; seven result records byte-identical. No additional execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-INTROSPECTION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-introspection-r1/packet.json",
+      "sha256": "53d7630563b013f85bbd3167d0aa34c9a24cf73bd4cb54e88766ef7246db495c",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "470 to 484 original definitions executed; 451 non-NIL witnesses; 20 architecture-counterpart definitions separately. Ordinary keyword metadata, slot getters, bounded class/wrapper graph under movement. 17,480 comparisons and 50 metadata refusals. Admission unchanged at 2,043/2,231. Native R6/R6a and seventeen-profile reader proof retained. No shared-source integration or LL15 credit. Remaining numeric/CLOS dependencies, FFI exclusions, conditions, globals, constants and spread kinds remain open."
     }
   ],
   "current_runs": [

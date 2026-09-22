@@ -3742,3 +3742,17 @@ admitted definitions.
 ## 2026-09-22 — bind committed integration replay
 
 Run the documented acceptance command unmodified from clean checkout `b37dcb15`; all seven result records reproduce byte for byte. Bind the checkout and verification record. No source change or new qualification credit.
+
+## 2026-09-22 — numeric recipes and CLOS introspection proposal
+
+Continue Steve's numeric/CLOS execution request and retain the rest of the
+queue explicitly. Execute fourteen more original definitions (484 total,
+451 non-NIL), plus twenty separately counted single-float architecture
+counterparts. Implement ordinary LFUN-KEYVECT over existing arity metadata and
+the target funcallable slots fallback; no runtime service is added. Real slot
+definition getters and a bounded cyclic class/wrapper graph survive movement.
+The generated run passes 17,480 comparisons and fifty metadata refusals.
+Admission remains 2,043/2,231. Native qualification and existing-target reader
+proofs bind the exact proposed source bytes. The packet remains unreviewed and
+unintegrated; full CLOS behavior and the remaining FFI/condition/global/constant/
+spread work are not claimed complete.

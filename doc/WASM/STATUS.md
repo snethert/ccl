@@ -301,3 +301,24 @@ READY join remain open. Stage 1 stays **21 accepted, 12 missing, zero unreviewed
 of 33**, with no new slot credit.
 
 The acceptance command passes unmodified from clean integration commit `b37dcb15`: seven result records are byte-identical, including production execution, forty owner checks and the single-float observer. No additional execution or slot credit.
+
+## Bootstrap introspection proposal — 2026-09-22
+
+**Proposed execution: 484 original definitions (+14), 451 non-NIL witnesses
+(+12); admission unchanged at 2,043/2,231.** Twenty additional destructive
+single-float definitions execute against architecture-specific native
+counterparts, counted separately. The run passes 17,480 comparisons at both
+placements with movement and fifty metadata refusals.
+
+The proposal implements ordinary keyword-vector lookup through accepted arity
+metadata, executes ten native slot-definition getters, and adds a bounded real
+class/wrapper projection with cyclic links surviving movement. It does not
+provide complete CLOS dispatch or an image. Native R6/R6a passes 21,843 tests,
+restores all 164 FASLs, and the two new source branches have seventeen-profile
+reader proofs. [Fixture and replay](../../tests/wasm/stage1/bootstrap-introspection/README.md).
+
+The requested numeric/CLOS frontier is retained by definition. Remaining
+callee dependencies are implementation work, not missing recipes. Full
+class/wrapper behavior, FFI definition exclusions, condition classes, kernel
+globals, heap constants and spread kinds remain open. No new integration or
+slot credit: **21 accepted, 12 missing, zero unreviewed of 33**.
