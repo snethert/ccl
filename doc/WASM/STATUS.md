@@ -404,3 +404,23 @@ The proposal stacks on the pending lexpr/CLOS packets and is not integrated.
 Full method selection, remaining numeric dependencies, kernel-global owners,
 heap literals, further condition classes and image/READY remain unfinished.
 No slot credit: **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22: CCL limb multiplication (proposal)
+
+Execution rises **531 → 534**, with **499 non-NIL witnesses** and **21,760
+comparisons**; admission rises **2,059 → 2,060 of 2,231**. Original
+`MULTIPLY-BIGNUMS` now uses target Lisp implementations of its LAP entries;
+float sign primitives close both original float MINUSP helpers. The positive
+fixnum loop is tested separately, including the boxed magnitude of the most
+negative target fixnum. Inputs extend beyond the integer service's capacity.
+Final native R6/R6a passes 21,843 tests and restores 164 FASLs; all eight native
+reader assignments preserve the bignum32 forms. Target checks include 66 direct
+checks, 20 structural collector checks, 4,208 collections during calls and 98
+retry collections. [Proposal](../../tests/wasm/stage1/bootstrap-limb-multiply/README.md).
+
+The preceding numeric-dispatch proposal also replays from its clean committed
+tree at `52f3d4d0`: **4,244 deterministic artifacts, 610 pins**. Both proposals
+remain unreviewed and unintegrated. Generic MINUSP, mixed multiplication's
+kernel restart, division/GCD, full generic dispatch, the remaining condition,
+kernel-global and metadata work, and the image/READY join remain unfinished.
+Stage 1 remains **21 accepted, 12 missing, zero unreviewed of 33**.

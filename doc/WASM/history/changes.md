@@ -3827,3 +3827,20 @@ The final source passed R6/R6a with 21,843 tests and 164 restored FASLs. Direct
 checks bind digit refusals and collection after shrinking. This is an isolated,
 unreviewed proposal with no shared integration or LL15 credit. The retained
 frontier records the still-unfinished requested work.
+
+### 2026-09-22 — Execute CCL limb multiplication
+
+Continued implementation under “finish them”. Added target Lisp LAP equivalents
+for multiplication, native-preserving bignum32 reader branches and checked float
+sign operations. CCL's original schoolbook multiplication handles signs and
+allocation. A separate raw-loop witness exposed and fixed the boxed positive
+magnitude of the target's most-negative fixnum. The final execution rerun uses
+the immediate parent's harness; summary generation caught selection of an older
+harness that omitted direct digit checks.
+
+534 original executions / 499 non-NIL witnesses / 21,760 comparisons;
+2,060 of 2,231 admitted. Final-source R6/R6a passes, all 164 FASLs restored,
+and native bignum32 reader forms agree in eight feature assignments. Retained
+as an isolated proposal with no slot credit. Numeric-dispatch clean committed
+replay passes 4,244 deterministic artifacts and 610 pins. The larger requested
+scope and LL15 are still unfinished.

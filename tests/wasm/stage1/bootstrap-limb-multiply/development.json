@@ -1,0 +1,76 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "result": "Driver inheritance omitted witnesses.lisp; file lookup failed before compile."
+    },
+    {
+      "attempt": "r2",
+      "result": "The fallback selected old controls; FUNCTION-IMMEDIATE-READ expected a refusal already superseded by the parent proposal. Corrected the fallback chain."
+    },
+    {
+      "attempt": "r3",
+      "result": "PASS for the inherited corpus; new multiplication bodies still lacked dependencies and got no execution credit. This exposed the front end visiting the dead GMP arm and MINUSP needing float signs."
+    },
+    {
+      "attempt": "r4",
+      "result": "Float-sign lowering had an unmatched parenthesis; native build and target compiler refused."
+    },
+    {
+      "attempt": "r5",
+      "result": "Source-copy assertion refused retention after extra sign witnesses were added during development."
+    },
+    {
+      "attempt": "r6",
+      "result": "PASS: bignum multiplication and float MINUSP bodies execute. Generic MINUSP remains blocked by %KERNEL-RESTART. Added a separate mathematical-product witness for the new fixnum loop next."
+    },
+    {
+      "attempt": "r7",
+      "result": "PASS for inherited and bignum multiplication rows; the positive fixnum-loop witness was not emitted because its source used the IR name %MAKE-UVECTOR instead of the source allocator %ALLOC-MISC. No credit was claimed for that witness."
+    },
+    {
+      "attempt": "r8",
+      "result": "The corrected allocator made the fixnum-loop witness execute. Multiplying by 2^29 refused because this positive magnitude is a boxed bignum on the target; LOGAND in the half split expected a fixnum."
+    },
+    {
+      "attempt": "r9",
+      "result": "Use the existing bignum digit reader for the boxed magnitude. Final execution and final-source native qualification are bound by summary.json."
+    },
+    {
+      "attempt": "r9-target",
+      "result": "Summary refused the older inherited harness because it had no digit-check results. Corrected fixture precedence to use the immediate parent harness and reran execution on the unchanged generated modules; clean verifier also recompiles."
+    }
+  ],
+  "reader_development": "Initial 64-bit-only read was vacuous; final proof includes the 32-bit body. Trusted read-time DIGIT-SIZE is explicitly bound. Initial read-eval refusal and unbound-variable logs are retained.",
+  "retained": [
+    "ccl-limb-multiply-r1.log",
+    "ccl-limb-multiply-r2.log",
+    "ccl-limb-multiply-r2/compiled/compile.log",
+    "ccl-limb-multiply-r3.log",
+    "ccl-limb-multiply-r3/compiled/compile.log",
+    "ccl-limb-multiply-r3/execution.log",
+    "ccl-limb-multiply-r4.log",
+    "ccl-limb-multiply-r4/compiled/compile.log",
+    "ccl-limb-multiply-r5.log",
+    "ccl-limb-multiply-r5/compiled/compile.log",
+    "ccl-limb-multiply-r6.log",
+    "ccl-limb-multiply-r6/compiled/compile.log",
+    "ccl-limb-multiply-r6/execution.log",
+    "ccl-limb-multiply-r7.log",
+    "ccl-limb-multiply-r7/compiled/compile.log",
+    "ccl-limb-multiply-readers/readers.log",
+    "ccl-limb-multiply-readers-r2/readers.json",
+    "ccl-limb-multiply-readers-r3/readers.log",
+    "ccl-limb-multiply-readers-r4/readers.json",
+    "ccl-limb-multiply-native-r2/registered-build.log",
+    "ccl-limb-multiply-r7/execution.log",
+    "ccl-limb-multiply-r8.log",
+    "ccl-limb-multiply-r8/compiled/compile.log",
+    "ccl-limb-multiply-r8/execution.log",
+    "ccl-limb-multiply-r9.log",
+    "ccl-limb-multiply-r9/compiled/compile.log",
+    "ccl-limb-multiply-r9/execution.log",
+    "ccl-limb-multiply-retain.log",
+    "ccl-limb-multiply-r9-target.log"
+  ]
+}

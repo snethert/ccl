@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d904f392702caf5d70d527899422b9e65b90a706df50b3c5f10f821fef338892",
-  "commit": "c7054eeba24845fd1d4dd6aceeaa3dee83d4dd7e",
-  "immutable_evidence_files": 266986,
+  "catalog_sha256": "35bcc1184e193168dee95573ea97bc87d35368f7e3c56122461a96d2f5f62c21",
+  "commit": "b20f1a409ec2c4e1823e6b18a85055347c72862f",
+  "immutable_evidence_files": 267157,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-numeric-dispatch-r1",
-    "files": 168,
-    "bytes": 56505117
+    "directory": "2026-09-22-stage1-bootstrap-limb-multiply-r1",
+    "files": 171,
+    "bytes": 48147180
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Unreviewed numeric and method-combination execution: 2,059 admitted, 531 original executions and 496 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "65918e0cfc2912e3303a82c6561d5d7c14beacd6e960251dbb9a0a9c15a1e78e",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-numeric-dispatch.json",
+  "scope": "Unreviewed limb multiplication: 2,060 admitted, 534 original executions and 499 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
+  "source_index_sha256": "afc0a8fd970f0f4de10988073528f76da658e9857c6ccc42a185a20fd439dcef",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-limb-multiply.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final-source native R6/R6a, target comparisons and whole-file recount; clean retained replay pending.",
-    "packet_sha256": "94aa346dc006ddaba843f8ae38bf96454925f0553e42c118d50778acadfa0e0a"
+    "method": "Numeric dispatch clean replay at 52f3d4d0: 4,244 deterministic artifacts, 610 pins. Limb multiplication has final-source native R6/R6a and target execution; its committed replay follows.",
+    "packet_sha256": "246912a13cc7c6df8a9b06883204edf97c4683fc492c0df563d2790b88c4bfef"
   }
 }
