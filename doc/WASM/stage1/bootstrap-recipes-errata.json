@@ -1,0 +1,59 @@
+{
+  "status": "CORRECTION",
+  "proposal": "7267519e",
+  "admitted": 1986,
+  "parsed": 2231,
+  "executed": 458,
+  "non_nil": 427,
+  "reason": "The retained README repeats the prior admission figure 1993. Whole-file hash compilation installs the real symbol-macro environment; seven lock-free definitions now expose unsupported %ILLEGAL-MARKER instead of being counted as admitted global reads. Both retained and replayed summaries already report 1986. Execution counts are unchanged.",
+  "changes": [
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "%LOCK-FREE-REHASH",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-GETHASH",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-REMHASH",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-CLRHASH",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-PUTHASH",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-COUNT-ENTRIES",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-hash.lisp",
+      "name": "LOCK-FREE-ENUMERATE-HASH-KEYS-AND-VALUES",
+      "before": "admitted",
+      "after": "%ILLEGAL-MARKER"
+    },
+    {
+      "file": "level-0/l0-numbers.lisp",
+      "name": "COMPLEX",
+      "before": "COMPILE-TIME-PROGRAM-ERROR",
+      "after": "%MAKE-COMPLEX-SINGLE-FLOAT"
+    }
+  ]
+}

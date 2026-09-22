@@ -3232,6 +3232,12 @@
       "sha256": "8ce6fbc11a6d204e2beda87f315072789a7c7da77354f473316d96d61e652142",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Recipes over the unchanged closure compiler: 458 original definitions executed, 427 non-NIL witnesses, 16340 target/14992 exact native comparisons. Twenty-one of the requested 64 plus newly closed NEED-USE-EQL execute. All 64 dispositioned; eight fixture/target primitives, thirteen paired single-float interfaces, nine excluded native interfaces and thirteen substantive dependencies remain. Whole-file l0-hash compilation fixes INVALID-HASH-KEY-P file-local symbol macros; 76/95 file records admitted. Eight faults plus trap control rejected. Native R6/R6a reused by exact compiler/source hash. No shared source changes or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-RECIPES-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-recipes-verification/verification.json",
+      "sha256": "01ef05b2093f5806874044d1a607bdba5d93f0a5f7754129ec69576c7bf8af72",
+      "scope": "Unmodified recipe verifier passes from clean committed checkout 7267519ee3563dbcc8f48bde59b1073292c6b721. No new execution or slot credit."
     }
   ],
   "current_runs": [

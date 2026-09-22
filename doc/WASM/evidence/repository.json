@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8de8063a2adc9b0139dfca0b90f722609273d06d0efb331f7162c8054712e8e8",
-  "commit": "08ded04057508584f5dce91dfeb8cca403e97e9e",
-  "immutable_evidence_files": 265412,
+  "catalog_sha256": "ad7521bedce80513911c0e666ed56e4b762612d10c75a3861047af6528290984",
+  "commit": "5778999c40e46915a33603ad0225a96194c3e285",
+  "immutable_evidence_files": 265416,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-recipes-r1",
-    "files": 2545,
-    "bytes": 135907330
+    "directory": "2026-09-21-stage1-bootstrap-recipes-verification",
+    "files": 4,
+    "bytes": 492150
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Recipe expansion and whole-file hash environment retained for review. Compiler/runtime/CCL source unchanged; LL15 open, 21 accepted and 12 missing of33.",
-  "source_index_sha256": "38b17270a8f79fb0a929d3ec286e0876058f7e5396942d95def2d87bebaa9363",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-recipes-r1.json",
+  "source_index_sha256": "807a13c987f02eeb377f2ca6530687b2e025dc4becb6216a68410631dd3b99b8",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-recipes-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Original definitions executed against native with movement and observed post-state; standalone macro-environment regression rejected. Unchanged native qualification reused by hash.",
-    "native": "2b845b142aee129aa9e628c706ef4c1159f7f848211b2d8f64e68512448d4925",
-    "target": "2d996fdaf8a8dd55b3d5bd1e23ac7d86f9a854100ac53231e876131e123e7c5a"
+    "method": "Documented verifier runs unmodified from clean committed detached checkout.",
+    "checkout": "7267519ee3563dbcc8f48bde59b1073292c6b721",
+    "verification": "01ef05b2093f5806874044d1a607bdba5d93f0a5f7754129ec69576c7bf8af72"
   },
   "version": 1
 }
