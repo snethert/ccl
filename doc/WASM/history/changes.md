@@ -3892,3 +3892,19 @@ non-NIL witnesses / 2,060 admitted of 2,231**. The seven packets are accepted
 and integrated; there is no new LL15 credit. Stage 1 remains **21 accepted,
 12 missing, zero unreviewed of 33**. GCD, generic numeric restarts, method
 selection, the condition successor and the image/READY join remain unfinished.
+
+### 2026-09-22 — Original bignum GCD and numeric restarts
+
+Unreviewed proposal: **547 original executions / 512 non-NIL witnesses**,
+up from 537 / 502, with **23,308 comparisons** and no execution loss.
+CCL's bignum GCD, MINUSP and restart functions run through whole-file modules.
+Generic UVREF/UVSET gains checked bignum digits; ordinary target Lisp supplies
+the numeric restart fallback and portable INIT-MISC. The restart association,
+repeated replacement and exact native error payloads are exercised under movement.
+
+Admission is **2,044 / 2,231**, down sixteen: unsupported constant condition
+classes now refuse explicitly instead of compiling unresolved MAKE-CONDITION
+calls. Final-source R6/R6a passes 21,843 native tests and restores all 164 FASLs.
+The retained verifier passes. Generic GCD/ABS, method selection, the real-CPL
+condition successor and image/READY remain unfinished. No shared source changes
+in this proposal; Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.

@@ -1,26 +1,60 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "44c5f50eb78d09e862e01bc2e9a470743bc7e7eeb6b3cbd0755580e0dfaf92d9",
-  "commit": "e9c92e8c8e8b392b8bb9f410e948e3377b22ce70",
-  "immutable_evidence_files": 267390,
+  "catalog_sha256": "9be59885943aad38eeb6371c00da06565dfb11d8f982b395550cc678af02e867",
+  "commit": "8509cb6496f1d11bca79cdf5757bb0b7dae3bb36",
+  "immutable_evidence_files": 267558,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-stack-acceptance",
-    "files": 59,
-    "bytes": 38226409
+    "directory": "2026-09-22-stage1-bootstrap-gcd-r1",
+    "files": 168,
+    "bytes": 57380533
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Seven accepted proposals integrated in cumulative stack order, byte-equal to final reviewed files. All runtime services unchanged. 537 original executions, 502 non-NIL witnesses, 2,060/2,231 admitted; no new throughput or LL15 slot credit.",
-  "source_index_sha256": "9a501edca79d48751ff0a941436f1ea26e8f61e8059238d10525e942486e09ff",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-stack-acceptance.json",
+  "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit.",
+  "source_index_sha256": "de22843487d4f0d26bc762cea5b4d428f5701683663f7c2f45418cc8de9bfcf5",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-gcd.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final integrated source R6/R6a executed; reviewed artifacts executed through byte-verified production imports.",
-    "record": "2026-09-22-stage1-bootstrap-stack-acceptance/integration.json",
-    "sha256": "8cb8f87612c1cb292d4291fd382d0913c740ff5717bcc6dbcdbdbb06f8c7ad16"
+    "method": "Final-source native R6/R6a, target execution and complete retained verifier replay. Prior accepted payloads reused by exact hash.",
+    "packet_sha256": "97094d38525d65beafde3910092319c5c26be72ecd588b349b839a8dcc6f9958",
+    "replay": {
+      "deterministic_files": 5268,
+      "native_reused_by_final_source_hash": true,
+      "source_pins": 669,
+      "status": "PASS",
+      "summary": {
+        "admitted": 2044,
+        "collections_during_calls": 4526,
+        "comparisons": 23308,
+        "constructor_controls": 5,
+        "denominator": 2231,
+        "direct_digit_checks": 88,
+        "native_rows": 5827,
+        "native_tests": 21843,
+        "new_executions": [
+          "%ACTIVE-RESTART",
+          "%BIGNUM-BIGNUM-GCD",
+          "%POSITIVE-BIGNUM-BIGNUM-GCD",
+          "APPLICABLE-RESTART-P",
+          "BIGNUM-FIXNUM-GCD",
+          "FIND-RESTART",
+          "INVOKE-RESTART",
+          "MINUSP",
+          "MULTIPLY-BIGNUM-AND-FIXNUM",
+          "RESTART-NAME"
+        ],
+        "non_nil_witness": 512,
+        "original_definitions_executed": 547,
+        "restored_fasls": 164,
+        "retry_collections": 98,
+        "scope": "Original CCL bignum GCD and numeric type-error restart execution. Generic GCD/ABS is still not closed. Native restart functions and their condition associations execute; the target has no machine frame pointer and custom kernel-restart hooks receive NIL. The fallback supports canonical numeric type names only. The excluded read-time EXIT still stops l1-error-signal after the selected definitions. Method selection, real condition CPL tests, image startup and READY remain owed. No LL15 credit.",
+        "status": "PASS",
+        "structural_collector_checks": 20
+      }
+    }
   }
 }

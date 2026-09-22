@@ -3453,6 +3453,14 @@
       "review": "ACCEPTED",
       "slot_credit": false,
       "scope": "Seven accepted proposals integrated in cumulative stack order, byte-equal to final reviewed files. All runtime services unchanged. 537 original executions, 502 non-NIL witnesses, 2,060/2,231 admitted; no new throughput or LL15 slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-GCD-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-gcd-r1/packet.json",
+      "sha256": "97094d38525d65beafde3910092319c5c26be72ecd588b349b839a8dcc6f9958",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit."
     }
   ],
   "current_runs": [

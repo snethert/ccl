@@ -1,0 +1,26 @@
+{
+  "retained": [
+    "ccl-gcd-r1.log",
+    "ccl-gcd-r2.log",
+    "ccl-gcd-r3.log",
+    "ccl-gcd-r4.log",
+    "ccl-gcd-r5.log",
+    "ccl-gcd-r6.log",
+    "ccl-gcd-r6/execution.log",
+    "gcd-trace.log",
+    "ccl-gcd-r7.log",
+    "ccl-gcd-r8.log",
+    "ccl-gcd-r8/compiled/compile.log",
+    "ccl-gcd-r5/compiled/compile.log"
+  ],
+  "notes": [
+    "r1 encountered the existing excluded EXIT lookup; retain the whole-file prefix and its explicit stop.",
+    "r2 exposed the CONDITION-ARG dependency in CCL's own RESTART-CASE expansion.",
+    "r3 passed 22,728 comparisons; INVOKE-RESTART and bignum GCD dependencies remained open.",
+    "r4 rejected a fixture input changed after the compiler copied it. No credit taken.",
+    "r5's native oracle established XTMINPS is SIMPLE-ERROR with the native resource string, not PROGRAM-ERROR.",
+    "r6 stopped in INIT-MISC because generic UVSET had no bignum arm. A disposable diagnostic binary identified that arm; it is never retained as production evidence.",
+    "r7 passed 23,256 comparisons. r8 adds signed GCD inputs, constructor refusals and direct digit-access checks over the same final shared-source proposal.",
+    "r8 corrected a control expectation: literal NIL is a dedicated acode operator and falls through to an unresolved MAKE-CONDITION call. It does not enter the constant-symbol arm."
+  ]
+}
