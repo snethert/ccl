@@ -3380,6 +3380,12 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Bootstrap lexpr spreading through existing APPLY roots, reservation and dispatch; 2,059/2,231 admitted, 486 original executions and 451 non-NIL unchanged. Seven observers pass 100 new comparisons, 17,760 total; thirty directed frame checks and three rejected faults; all eight newly admitted modules assemble. Final R6/R6a bound. Stacks on unreviewed condition and introspection proposals; no shared integration or LL15 credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LEXPR-SPREAD-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-lexpr-spread-verification/verification.json",
+      "sha256": "8258a0fd07d27df6abbfd52ea05a2cee1ce2979720b2aa8eed097a476ce0da12",
+      "scope": "Unmodified clean committed replay at fc9613d59bb54837e32351251bf7b5f8599acb54: 3844 deterministic artifacts identical; 486 original definitions, 451 non-NIL, 17,760 comparisons, 30 frame checks and three rejected faults. No acceptance or integration."
     }
   ],
   "current_runs": [

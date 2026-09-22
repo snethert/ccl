@@ -371,3 +371,5 @@ predecessor hashes. The previous control-corpus aliases are excluded.
 No shared integration or slot credit: **21 accepted, 12 missing, zero
 unreviewed of 33**. Numeric/CLOS dependency closure, method-context dispatch,
 further condition classes, kernel globals and heap constants remain open.
+
+Clean committed replay at `fc9613d5` passes unmodified: 3,844 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.

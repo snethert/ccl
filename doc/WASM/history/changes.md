@@ -3797,3 +3797,5 @@ control-directory corpus aliases are no longer retained.
 The proposal stacks on the pending condition/FFI and introspection proposals.
 It is not integrated or independently reviewed and awards no LL15 or method
 dispatch credit. The frontier names the remaining dependencies.
+
+Clean committed replay at `fc9613d5` passes unmodified: 3,844 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.
