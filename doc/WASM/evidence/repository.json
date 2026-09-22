@@ -1,24 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "76f15b7125917ad5305425a6783542b9a4d90ce6cd5250a8d75267eea8e3d926",
-  "commit": "48602421acc637dd07f0d752b33223b5e7c478df",
-  "immutable_evidence_files": 266379,
+  "catalog_sha256": "84ad7213e7f041aa0171428cd7b03d72b4fd7762f3ec882fec628e92a7a3f9b1",
+  "commit": "9440a83a148606d21db7190b5b0b6bccbbd1faa7",
+  "immutable_evidence_files": 266382,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-introspection-r1",
-    "files": 188,
-    "bytes": 58950562
+    "directory": "2026-09-22-stage1-bootstrap-introspection-verification",
+    "files": 3,
+    "bytes": 481843
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Unintegrated introspection proposal; 484 original definitions, 451 non-NIL; 20 architecture counterparts separate; Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "fbbb79751998a8f408de0be56e0e1ec3e49e282677cb5698f5f1d149041a03b7",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-introspection-r1.json",
+  "source_index_sha256": "3e310e85665d8d555717ef7bb50a725ad722ecabbda87fb749a49159d9129531",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-introspection-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "New packet source/binary identities and deterministic results verified at retention; clean committed replay is separate."
+    "method": "Unmodified documented verifier from clean committed checkout",
+    "checkout": "55e5ee16a7bab76249b3ceb0a2551f0c78ae6094",
+    "verification": "b09ae68034cd204a4f727a2895ec4028c96a65431f9a956331230ee85684d275"
   },
   "version": 1
 }

@@ -322,3 +322,5 @@ callee dependencies are implementation work, not missing recipes. Full
 class/wrapper behavior, FFI definition exclusions, condition classes, kernel
 globals, heap constants and spread kinds remain open. No new integration or
 slot credit: **21 accepted, 12 missing, zero unreviewed of 33**.
+
+Clean committed replay at `55e5ee16` passes unmodified: 3728 deterministic artifacts identical at 471 source pins. This verifies the proposal's replay, not independent acceptance.

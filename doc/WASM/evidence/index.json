@@ -3352,6 +3352,12 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "470 to 484 original definitions executed; 451 non-NIL witnesses; 20 architecture-counterpart definitions separately. Ordinary keyword metadata, slot getters, bounded class/wrapper graph under movement. 17,480 comparisons and 50 metadata refusals. Admission unchanged at 2,043/2,231. Native R6/R6a and seventeen-profile reader proof retained. No shared-source integration or LL15 credit. Remaining numeric/CLOS dependencies, FFI exclusions, conditions, globals, constants and spread kinds remain open."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-INTROSPECTION-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-introspection-verification/verification.json",
+      "sha256": "b09ae68034cd204a4f727a2895ec4028c96a65431f9a956331230ee85684d275",
+      "scope": "Clean committed replay at 55e5ee16a7bab76249b3ceb0a2551f0c78ae6094; 3728 deterministic artifacts identical at 471 pins; 484 original definitions and 20 architecture counterparts remain unreviewed proposal evidence. No integration or additional credit."
     }
   ],
   "current_runs": [

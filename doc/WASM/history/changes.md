@@ -3756,3 +3756,5 @@ Admission remains 2,043/2,231. Native qualification and existing-target reader
 proofs bind the exact proposed source bytes. The packet remains unreviewed and
 unintegrated; full CLOS behavior and the remaining FFI/condition/global/constant/
 spread work are not claimed complete.
+
+Clean committed replay at `55e5ee16` passes unmodified: 3728 deterministic artifacts identical at 471 source pins. This verifies the proposal's replay, not independent acceptance.
