@@ -3908,3 +3908,16 @@ calls. Final-source R6/R6a passes 21,843 native tests and restores all 164 FASLs
 The retained verifier passes. Generic GCD/ABS, method selection, the real-CPL
 condition successor and image/READY remain unfinished. No shared source changes
 in this proposal; Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Cached method dispatch
+
+Unreviewed proposal: **549 original executions / 514 non-NIL witnesses**,
+up two each, with **23,916 comparisons** including **608 new comparisons**.
+CCL's unchanged EQ/EQL dcode routines now run through the funcallable trampoline
+with list and lexpr arguments, rebinding and movement. Two-argument ASSOC calls
+CCL's own ASSEQL; literal program errors reuse the rooted condition constructor.
+Final-source R6/R6a and the retained verifier pass. Admission is not recounted.
+The owner supplies the cache: class applicability, specificity ordering,
+ADD-METHOD, cache construction/invalidation and LL15's READY join remain owed.
+No shared source changed; this stacks on the unintegrated GCD proposal.
+Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.

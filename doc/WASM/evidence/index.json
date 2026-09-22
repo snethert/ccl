@@ -3461,6 +3461,14 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit."
+    },
+    {
+      "id": "STAGE1-METHOD-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-method-dispatch-r1/packet.json",
+      "sha256": "809510ed83a38201db88d50b6ea6441477e0be67f88eacb224fd1a683c906017",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Original CCL EQ/EQL cached method dispatch: 549 original executions, 514 non-NIL witnesses, 23,916 comparisons (608 new). List/lexpr calls, funcallable GF trampoline, rebinding and heap-key identity under movement. ASSEQL reuses accepted EQL. Final-source R6/R6a passes. Owner supplies cached method functions; class applicability, specificity ordering, ADD-METHOD and cache construction/invalidation remain owed. Admission not recounted. Unreviewed, unintegrated, stacked on the GCD proposal; no LL15 credit."
     }
   ],
   "current_runs": [

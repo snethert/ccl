@@ -1,0 +1,45 @@
+{
+  "attempts": [
+    {
+      "run": "r1",
+      "result": "The witness used SIMPLE-PROGRAM-ERROR as a handler class, which the existing mask cannot name independently. The corrected witness catches its PROGRAM-ERROR superclass."
+    },
+    {
+      "run": "r2",
+      "result": "Synthetic class/initarg symbols were absent from the fixed literal pool. The lowering now calls the existing rooted constructor directly, without injecting pool entries."
+    },
+    {
+      "run": "r3",
+      "result": "The native oracle rejected the test caller's unqualified &LEXPR as ordinary arguments. The caller now uses CCL::&LEXPR, matching CCL sources."
+    },
+    {
+      "run": "r4",
+      "result": "The native oracle contains EQ dispatch rows. EQL and GF callers are honestly uncredited because general ASSOC is not closed. The next derivation specializes only the two-argument ASSOC call to original ASSEQL. The target check exposed loss of a shared cons key through the tree-only input transport, not a dispatch mismatch. Heap identity cases are now constructed inside the generated caller, and direct transported EQ keys are immediates."
+    },
+    {
+      "run": "r5",
+      "result": "The native observer reached rebinding and exposed that its separately compiled helper functions were not installed at their test symbols. The driver now installs those native probe definitions, like its existing make/set helpers."
+    },
+    {
+      "run": "r6",
+      "result": "Stopped before execution to apply the r5 native-helper binding correction; no credit."
+    },
+    {
+      "run": "r7",
+      "result": "Driver-copy assertion caught applying its transform twice when snapshotting compile.lisp; derivation now applies only when creating the driver, and later copies are byte-exact."
+    }
+  ],
+  "retained": [
+    "ccl-method-dispatch-r1.log",
+    "ccl-method-dispatch-r1/compiled/compile.log",
+    "ccl-method-dispatch-r2.log",
+    "ccl-method-dispatch-r2/compiled/compile.log",
+    "ccl-method-dispatch-r3.log",
+    "ccl-method-dispatch-r3/compiled/compile.log",
+    "ccl-method-dispatch-r4.log",
+    "ccl-method-dispatch-r4/execution.log",
+    "ccl-method-dispatch-r5.log",
+    "ccl-method-dispatch-r5/compiled/compile.log",
+    "ccl-method-dispatch-r7.log"
+  ]
+}

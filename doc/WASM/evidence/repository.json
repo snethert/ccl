@@ -1,59 +1,96 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "9be59885943aad38eeb6371c00da06565dfb11d8f982b395550cc678af02e867",
-  "commit": "8509cb6496f1d11bca79cdf5757bb0b7dae3bb36",
-  "immutable_evidence_files": 267558,
+  "catalog_sha256": "a49863ce798270f99c1ef21c87e3987fe2ced4e4951a1d1f0e5e7fa0a6066b7a",
+  "commit": "ed67c27daa769796b247b62a315d983393850dcc",
+  "immutable_evidence_files": 267716,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-gcd-r1",
-    "files": 168,
-    "bytes": 57380533
+    "directory": "2026-09-22-stage1-method-dispatch-r1",
+    "files": 158,
+    "bytes": 22763132
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit.",
-  "source_index_sha256": "de22843487d4f0d26bc762cea5b4d428f5701683663f7c2f45418cc8de9bfcf5",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-gcd.json",
+  "scope": "Original CCL EQ/EQL cached method dispatch: 549 original executions, 514 non-NIL witnesses, 23,916 comparisons (608 new). List/lexpr calls, funcallable GF trampoline, rebinding and heap-key identity under movement. ASSEQL reuses accepted EQL. Final-source R6/R6a passes. Owner supplies cached method functions; class applicability, specificity ordering, ADD-METHOD and cache construction/invalidation remain owed. Admission not recounted. Unreviewed, unintegrated, stacked on the GCD proposal; no LL15 credit.",
+  "source_index_sha256": "8473fd4b57ec52244e1e20ec267f30679f00be126a7ea60819fa90c3d26e1b87",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-method-dispatch.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final-source native R6/R6a, target execution and complete retained verifier replay. Prior accepted payloads reused by exact hash.",
-    "packet_sha256": "97094d38525d65beafde3910092319c5c26be72ecd588b349b839a8dcc6f9958",
+    "method": "Final-source native R6/R6a and target execution; retained verifier replay, without a worklist recount or repeated native build.",
+    "packet_sha256": "809510ed83a38201db88d50b6ea6441477e0be67f88eacb224fd1a683c906017",
     "replay": {
-      "deterministic_files": 5268,
+      "deterministic_files": 4714,
       "native_reused_by_final_source_hash": true,
-      "source_pins": 669,
+      "source_pins": 678,
       "status": "PASS",
       "summary": {
-        "admitted": 2044,
-        "collections_during_calls": 4526,
-        "comparisons": 23308,
-        "constructor_controls": 5,
-        "denominator": 2231,
-        "direct_digit_checks": 88,
-        "native_rows": 5827,
+        "admission": "Not recounted; prior proposal is 2044 of 2231.",
+        "cases": {
+          "%%ASSOC-COMBINED-METHOD-DCODE": 24,
+          "%%ASSQ-COMBINED-METHOD-DCODE": 12,
+          "CORE-SELECTION-ERROR": 4,
+          "CORE-SELECTION-GENERIC": 36,
+          "CORE-SELECTION-HEAP": 4,
+          "CORE-SELECTION-LEXPR-EQ": 12,
+          "CORE-SELECTION-LEXPR-EQL": 24,
+          "CORE-SELECTION-REBIND": 36
+        },
+        "collections_during_calls": 5790,
+        "comparisons": 23916,
+        "files": {
+          "tests/wasm/stage1/bootstrap-method-dispatch/README.md": "8c867689d5ddc3586cc3cb3b2da387be30661e0051aea51ef2f436de362016ba",
+          "tests/wasm/stage1/bootstrap-method-dispatch/backend.py": "63e483d5d7705ec8bbf267cff7f58a7329527e09f508cf684d1b7d57fc82ec77",
+          "tests/wasm/stage1/bootstrap-method-dispatch/check.py": "a4b183d8cfda0e47cd4c28e9ed1d66530f21396428e0fa28691029895eb1e52f",
+          "tests/wasm/stage1/bootstrap-method-dispatch/development.json": "dfe0929857dd300fd6572de8564342f7095d3c90a68f52cd6937989fde47320a",
+          "tests/wasm/stage1/bootstrap-method-dispatch/inputs.lisp": "44ebf28225d2cd3deee45db1d9423121140421a1c37e161ccbfece9ceafe1213",
+          "tests/wasm/stage1/bootstrap-method-dispatch/native.py": "2cbfb2e45bbbba84d64a4db0d5d6cd61bb35dc388c8ce0b7dc083e151a854507",
+          "tests/wasm/stage1/bootstrap-method-dispatch/packet.py": "f0fa06b83afc7ac753296886b06784450e99ecac520bf1604174844562cf43aa",
+          "tests/wasm/stage1/bootstrap-method-dispatch/probes.lisp": "a9deaebbedf677759c0b81d1c8f804f0fa1b54bf3e2c8156193dd32f65b998b5",
+          "tests/wasm/stage1/bootstrap-method-dispatch/run.py": "262883b2f31c3e35b16410f5601b3871ea2c06f07a3bbd99a0ef963f8126f034"
+        },
+        "native_rows": 5979,
         "native_tests": 21843,
+        "new_comparisons": 608,
         "new_executions": [
-          "%ACTIVE-RESTART",
-          "%BIGNUM-BIGNUM-GCD",
-          "%POSITIVE-BIGNUM-BIGNUM-GCD",
-          "APPLICABLE-RESTART-P",
-          "BIGNUM-FIXNUM-GCD",
-          "FIND-RESTART",
-          "INVOKE-RESTART",
-          "MINUSP",
-          "MULTIPLY-BIGNUM-AND-FIXNUM",
-          "RESTART-NAME"
+          "%%ASSOC-COMBINED-METHOD-DCODE",
+          "%%ASSQ-COMBINED-METHOD-DCODE"
         ],
-        "non_nil_witness": 512,
-        "original_definitions_executed": 547,
+        "non_nil_witness": 514,
+        "original_definitions_executed": 549,
         "restored_fasls": 164,
-        "retry_collections": 98,
-        "scope": "Original CCL bignum GCD and numeric type-error restart execution. Generic GCD/ABS is still not closed. Native restart functions and their condition associations execute; the target has no machine frame pointer and custom kernel-restart hooks receive NIL. The fallback supports canonical numeric type names only. The excluded read-time EXIT still stops l1-error-signal after the selected definitions. Method selection, real condition CPL tests, image startup and READY remain owed. No LL15 credit.",
-        "status": "PASS",
-        "structural_collector_checks": 20
+        "scope": "Original EQ/EQL cached method selection, list/lexpr delivery, callable GF dcode and rebinding. Method tables are constructed by the owner fixture. Class applicability, specificity sorting, ADD-METHOD and cache construction/invalidation remain owed. No LL15 credit.",
+        "source_proof": [
+          {
+            "dependencies": [
+              "CCL:ASSQ",
+              "NTH",
+              "CCL::%METHOD-GF",
+              "LIST-LENGTH",
+              "LISTP"
+            ],
+            "file": "ccl:level-1;l1-dcode.lisp",
+            "module": "core_1607",
+            "name": "%%ASSQ-COMBINED-METHOD-DCODE",
+            "status": "ADMITTED"
+          },
+          {
+            "dependencies": [
+              "CCL::ASSEQL",
+              "NTH",
+              "CCL::%METHOD-GF",
+              "LIST-LENGTH",
+              "LISTP"
+            ],
+            "file": "ccl:level-1;l1-dcode.lisp",
+            "module": "core_1608",
+            "name": "%%ASSOC-COMBINED-METHOD-DCODE",
+            "status": "ADMITTED"
+          }
+        ],
+        "status": "PASS"
       }
     }
   }
