@@ -469,3 +469,6 @@ b9de543d are reused only on exact source and rebuilt binary identity.
 ## Audit 150 — carry acceptance
 
 Steve accepted the carry packet explicitly. Lisp ASSQ, compile-time handler admission, spread refusals and the written harness are integrated byte-exact; those carry items are closed. Literal signed zero remains a tested, declared difference. The witnesses replay source override now crosses the subprocess boundary; its documented command must be run from the committed clean checkout and retained with the next execution packet. Remaining execution recipes and POSIX source/module work continue.
+
+
+Math R2 (audit155, accepted by Steve): pinned musl implements the 26 finite single/double transcendental entries. The adopted two-ULP native comparison limit leaves signed zeros, exact identities and domain conditions exact; it is not a global error bound. Checked underflow/inexact trap modes still refuse. The runtime build must include every pinned libm header and retain COPYRIGHT. Production primitive results use the boxed destination; native optimized unboxed locals may not expose destructive mutation. The immediate-bignum uint32 proof limit and MINUS1 witness continue as compiler work.

@@ -166,3 +166,12 @@ image-admission guard. Cancellation, lookup and draining return one NIL in the
 admitted empty state; registration refuses. Entry data is compiler input, not
 an automatically loaded native Lisp file. Production root discovery, installation
 at CCL symbols, scheduling disablement and the READY join remain required.
+
+The accepted math R2 service includes pinned musl transcendental algorithms.
+Build it with `python3 runtime/wasm32/build-float.py --output /tmp/ccl-float-build`.
+`libm/COPYRIGHT` and `libm/provenance.json` carry licence and source identities.
+The checked finite-input profile uses nearest rounding; inexact and underflow
+trap modes remain explicit refusals. Native comparisons use the adopted two-ULP
+limit, with exact identities, signed zeros and domain conditions exact. This
+is not a full-domain accuracy bound or a new performance claim. `transcend.c`
+is retained separately for provenance; its reviewed text is already in float.c.

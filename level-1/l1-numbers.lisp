@@ -508,6 +508,7 @@
 ;;; transcendental stuff.  Should go in level-0;l0-float
 ;;; but shleps don't work in level-0.  Or do they ?
 ; Destructively set z to x^y and return z.
+#-wasm32-target
 (defun %double-float-expt! (b e result)
   (declare (double-float b e result))
   (with-stack-double-floats ((temp))
@@ -517,6 +518,7 @@
     (%setf-double-float result TEMP)))
 
 #+(and 32-bit-target (not win32-target))
+#-wasm32-target
 (defun %single-float-expt! (b e result)
   (declare (single-float b e result))
   (target::with-stack-short-floats ((temp))
@@ -526,6 +528,7 @@
     (%setf-short-float result TEMP)))
 
 #+win32-target
+#-wasm32-target
 (defun %single-float-expt! (b e result)
   (declare (single-float b e result))
   (with-stack-double-floats ((temp) (db b) (de e))
@@ -540,6 +543,7 @@
     (%sf-check-exception-2 'expt b e (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-sin! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -549,6 +553,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-sin! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -564,6 +569,7 @@
     (%sf-check-exception-1 'sin n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-cos! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -573,6 +579,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-cos! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -588,6 +595,7 @@
     (%sf-check-exception-1 'cos n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-acos! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -597,6 +605,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-acos! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -612,6 +621,7 @@
     (%sf-check-exception-1 'acos n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-asin! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -621,6 +631,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-asin! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -636,6 +647,7 @@
     (%sf-check-exception-1 'asin n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-cosh! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -645,6 +657,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-cosh! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -660,6 +673,7 @@
     (%sf-check-exception-1 'cosh n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-log! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -669,6 +683,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-log! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -683,6 +698,7 @@
     (%sf-check-exception-1 'log n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-tan! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -692,6 +708,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-tan! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -707,6 +724,7 @@
     (%sf-check-exception-1 'tan n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-atan! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -717,6 +735,7 @@
 
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-atan! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -737,11 +756,13 @@
 ;;; returns the correct answer but generates an intermediate
 ;;; invalid-operation exception. #_atan2[f] is documented to never
 ;;; raise fp exceptions, so don't check for them.
+#-wasm32-target
 (defun %double-float-atan2! (x y result)
   (declare (double-float x y result))
   (%setf-double-float result (#_atan2 x y)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-atan2! (x y result)
   (declare (single-float x y result))
   (%setf-short-float result (#_atan2f x y)))
@@ -751,6 +772,7 @@
   (declare (single-float x y))
   (#_atan2f x y))
 
+#-wasm32-target
 (defun %double-float-exp! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -767,6 +789,7 @@
     (%setf-double-float result TEMP)))
 
 #+(and 32-bit-target (not windows-target))
+#-wasm32-target
 (defun %single-float-exp! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -783,6 +806,7 @@
     (%setf-short-float result TEMP)))
 
 #+(and 32-bit-target windows-target)
+#-wasm32-target
 (defun %single-float-exp! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -804,6 +828,7 @@
                 :operands (list n)))
     result))
 
+#-wasm32-target
 (defun %double-float-sinh! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -813,6 +838,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-sinh! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -828,6 +854,7 @@
     (%sf-check-exception-1 'sinh n (%ffi-exception-status))
     result))
 
+#-wasm32-target
 (defun %double-float-tanh! (n result)
   (declare (double-float n result))
   (with-stack-double-floats ((temp))
@@ -837,6 +864,7 @@
     (%setf-double-float result TEMP)))
 
 #+32-bit-target
+#-wasm32-target
 (defun %single-float-tanh! (n result)
   (declare (single-float n result))
   (target::with-stack-short-floats ((temp))
@@ -1012,3 +1040,133 @@
     (%sf-check-exception-1 'atanh n (%ffi-exception-status))
     result))
 )
+
+#+wasm32-target
+(defun %double-float-expt! (x y result)
+  (declare (double-float x y result))
+  (%wasm-float-store result (%wasm-float-transcend 12 x y)))
+
+#+wasm32-target
+(defun %single-float-expt! (x y result)
+  (declare (single-float x y result))
+  (%wasm-float-store result (%wasm-float-transcend 13 x y)))
+
+#+wasm32-target
+(defun %double-float-sin! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 14 x 0)))
+
+#+wasm32-target
+(defun %single-float-sin! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 15 x 0)))
+
+#+wasm32-target
+(defun %double-float-cos! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 16 x 0)))
+
+#+wasm32-target
+(defun %single-float-cos! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 17 x 0)))
+
+#+wasm32-target
+(defun %double-float-acos! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 18 x 0)))
+
+#+wasm32-target
+(defun %single-float-acos! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 19 x 0)))
+
+#+wasm32-target
+(defun %double-float-asin! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 20 x 0)))
+
+#+wasm32-target
+(defun %single-float-asin! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 21 x 0)))
+
+#+wasm32-target
+(defun %double-float-cosh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 22 x 0)))
+
+#+wasm32-target
+(defun %single-float-cosh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 23 x 0)))
+
+#+wasm32-target
+(defun %double-float-log! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 24 x 0)))
+
+#+wasm32-target
+(defun %single-float-log! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 25 x 0)))
+
+#+wasm32-target
+(defun %double-float-tan! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 26 x 0)))
+
+#+wasm32-target
+(defun %single-float-tan! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 27 x 0)))
+
+#+wasm32-target
+(defun %double-float-atan! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 28 x 0)))
+
+#+wasm32-target
+(defun %single-float-atan! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 29 x 0)))
+
+#+wasm32-target
+(defun %double-float-atan2! (x y result)
+  (declare (double-float x y result))
+  (%wasm-float-store result (%wasm-float-transcend 30 x y)))
+
+#+wasm32-target
+(defun %single-float-atan2! (x y result)
+  (declare (single-float x y result))
+  (%wasm-float-store result (%wasm-float-transcend 31 x y)))
+
+#+wasm32-target
+(defun %double-float-exp! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 32 x 0)))
+
+#+wasm32-target
+(defun %single-float-exp! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 33 x 0)))
+
+#+wasm32-target
+(defun %double-float-sinh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 34 x 0)))
+
+#+wasm32-target
+(defun %single-float-sinh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 35 x 0)))
+
+#+wasm32-target
+(defun %double-float-tanh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 36 x 0)))
+
+#+wasm32-target
+(defun %single-float-tanh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 37 x 0)))

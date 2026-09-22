@@ -218,6 +218,12 @@
                (%svref x8664::*immheader-1-array-types* idx))
               (t
                (%svref x8664::*immheader-0-array-types* idx))))
+      #+wasm32-target
+      (svref '#(short-float (unsigned-byte 32) (signed-byte 32) fixnum
+                character (unsigned-byte 8) (signed-byte 8)
+                (unsigned-byte 16) (signed-byte 16) double-float
+                (complex single-float) (complex double-float) bit)
+             (ash (the fixnum (- subtag target::min-cl-ivector-subtag)) -3))
       #+arm-target
       (svref arm::*immheader-array-types*
              (ash (the fixnum (- subtag arm::min-cl-ivector-subtag)) -3))

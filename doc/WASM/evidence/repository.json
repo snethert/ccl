@@ -1,31 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "01cbc200d004122072eb41f22779b9b8d379f4d69d5e731abc59c671e5959806",
-  "commit": "c0d2b18c204c28d32a1442c2cc4d7f55d5a240ae",
-  "immutable_evidence_files": 260361,
+  "catalog_sha256": "db75da8d00c04800aff0d0e19da6f497a894b35187e2f9fd94dabaf13b176776",
+  "commit": "4abfc1fcdfd8d605f7698445a0b4f521570bd78f",
+  "immutable_evidence_files": 260498,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-math-r2-verification.json",
-    "files": 2,
-    "bytes": 486058
+    "directory": "2026-09-21-stage1-bootstrap-math-integrated",
+    "files": 137,
+    "bytes": 33698267
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "21 accepted, 12 missing of 33. Math R2 repairs audit154 harness modes and applies Steve’s libm decision. Compiler/source/runtime unchanged proposals; awaiting independent review. No slot credit.",
-  "source_index_sha256": "61b1ff7721ccd421180c1aed3d5d307817d2d3dab529ec639cd50dc2e74e1a31",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-r2-verification.json",
+  "scope": "Math R2 accepted and integrated after audit155. LL15 remains open; 21 accepted, 12 missing of 33.",
+  "source_index_sha256": "65dc051c1a0328223ee4ef3b090aebc22b82bd9f35e0001fd90728d5b100bc63",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-integrated.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented R2 verifier passes unmodified from clean detached committed checkout. Native qualification reused by exact source hashes; all deterministic files identical. Index snapshot copied byte-for-byte.",
-    "checkout_commit": "897adfea0f06565463f4fb010654d044104da45b",
-    "deterministic_files": 1481,
-    "source_pins": 356,
-    "record": "2026-09-21-stage1-bootstrap-math-r2-verification.json",
-    "record_sha256": "8230ef5cde03fecdc960a3990f9e068afc5b0be99ef977b0307078eebc86f6f6",
-    "execution": "00a88bb2ae51f8088b00cefc07c19624446355885576ad733fb483449d1bbdcf",
-    "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85"
+    "method": "Final installed files rebuilt in pristine native U1 and target fixture; reviewed byte identities and production float binary asserted; 40 collector owner checks.",
+    "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85",
+    "target": "b0e424821ab3ce89652a874544d9bfd23ca961a440e088b304b5ae3d0598e35a"
   },
   "version": 1
 }

@@ -3654,3 +3654,8 @@ Clean committed-checkout verification for `cef139cf`: 1476 math files identical 
 Import audit154 verbatim. Fix its case-name-dependent FP mask by running every generated row at CCL's default mask 7. Add CORE-LOG-CONDITION, whose name does not select the former special mode, and retain a control that restores the bug and fails. Tighten both native and independent sampled libm comparisons to the user-adopted two ULP, with exact identity and signed-zero checks. Record the decision in acceptance.md without asserting a global mathematical error bound. Compiler, source and runtime bytes remain the reviewed proposal; reuse native qualification by their hashes. No new original-definition execution or LL15 credit. Correct the status distinction between the old cohort's 44 recipes and the current closed frontier's 77 names.
 
 Math R2 clean-checkout replay: 1481 files identical at 356 pins; retained as evidence `c0d2b18c204c28d32a1442c2cc4d7f55d5a240ae`. No shared-source change.
+
+
+## 2026-09-21 — accept and integrate audit155 math R2
+
+On Steve's “accept, integrate and proceed”, install the exact reviewed compiler, native-preserving source branches, floating service and musl sources. Retain the licence and all nested headers; the first production build caught an omitted header directory, repaired before qualification. Final-file native R6/R6a passes 21,843 tests with 144 identical and 164 restored FASLs. Target execution and rebuilt float binary equal the reviewed packet, and 40 collector owner checks pass. New compiler work continues isolated; no LL15 credit.

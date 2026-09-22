@@ -21,10 +21,11 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
  const fail=n=>{throw new WebAssembly.Exception(callError,[n]);};
  const regions=pinned.map(r=>({...r}));
  for(const r of regions)if(!Number.isSafeInteger(r.start)||!Number.isSafeInteger(r.end)||r.start<0||r.start%8||r.end%8||r.end<r.start||r.end>memory.buffer.byteLength)throw Error('FLOAT_PINNED');
+ if(!(wasm.__stack_pointer instanceof WebAssembly.Global)||wasm.__stack_pointer.value>input)throw Error('FLOAT_STACK');
  let busy=false;
  return (op,root,safe)=>{
   op>>>=0;root>>>=0;safe>>>=0;
-  if(busy||op>11||safe>1||root%8||root<get(tcr+68)||root+24>get(tcr+72)||
+  if(busy||op>37||safe>1||root%8||root<get(tcr+68)||root+24>get(tcr+72)||
      get(tcr+128)!==root||get(root+4)!==4||get(root+16)!==77825||get(root+20)!==77825)fail(41);
   const mask=get(tcr+200);if(mask>31)fail(41);
   busy=true;
@@ -40,7 +41,7 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
     if(!size||p+size>region.end||cursor+size>inputEnd)fail(42);
     const dest=cursor;cursor+=size;pb.set(new Uint8Array(memory.buffer,p,size),dest);return dest+6;
    };
-   const a=stage(get(root+8)),b=op>=10?0:stage(get(root+12));
+   const a=stage(get(root+8)),b=op>=10&&![12,13,30,31].includes(op)?0:stage(get(root+12));
    const status=wasm.float_calculate_lisp(op,a,b,input,inputEnd,output,outputEnd,result,mask,safe);
    if(status)fail(40+status);
    const read=o=>pv.getUint32(result+o,true),v=read(0),flags=read(4),selected=read(8),phase=read(12),size=read(16)-output,width=read(20),fa=read(24),fb=read(28);

@@ -3112,3 +3112,31 @@ Closed: O-2; the four operators asked for; recipes for the 82. Open: this audit'
 Integration cef139cf: verified, no defect. Math packet: the execution work, the compiler additions, the ARRAY-ELEMENT-TYPE branch and the shift declaration are sound and recommended for acceptance. F1 must be repaired and the packet re-retained before its condition claims are accepted; the transcendental entries, their 26 source branches and the libm runtime wait on the user's envelope decision. With those two settled, Claude recommends integration of the whole, with R6/R6a on the final files and the forty owner checks against the new `float.wasm` build.
 
 Suggested next packet, same size or larger, execution first: F1 and re-retention at its head; C-12; MINUS1; recipes for the 77; then the remaining active foreign calls that are file-namespace operations (`getcwd`, `chdir`, `mkdir`, `unlink`, `isatty`), which belong with the file-provider protocol the constants already declare. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-fifth Claude audit — STAGE1-BOOTSTRAP-MATH-R2 at 897adfea and 1bad7e41 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-155`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed audit 154. Reviewer disposition only. Audit 154 is imported verbatim inside 897adfea: this file there hashes 392e6f10…, the hash of the file at 12f738e3.
+
+### Throughput (R-1)
+
+Unchanged by design: 423 original definitions executed and matched against native, 394 with a non-NIL return witness, 486 callee-closed, 77 without a recipe, 1,993 of 2,231 admitted. This is the repair audit 154 asked for, at the head of a packet, and it is small: two commits, twenty-one files, no compiler, runtime or CCL source change beyond R1's.
+
+### Evidence and replay
+
+Packet 1ea1c54e… (2,548 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog 01cbc200… at 260,361 files; committed index byte-equal to the snapshot; evidence commit c0d2b18c; store clean. R2 binds R1's `packet.json`, summary and native run by hash. The verifier passes unmodified from the detached worktree in 148 seconds. (A first run failed its final source check on `probes.lisp` because Claude was editing that file for a probe in the same worktree while the verifier ran; the rerun on the clean tree is the one reported. Recorded so the log is explicable.)
+
+### 154-F1 — repaired
+
+`check.mjs` now writes CCL's default trap word (7: invalid, division by zero, overflow) for every generated case, and the name test is gone. A new witness, CORE-LOG-CONDITION, has neither of the old prefixes and compares log 0, log −1 and log 1 with native. `trap-control.py` restores the old name-dependent line in a scratch copy and requires the run to fail on that witness; it does (`REJECTED`). Claude's probe of audit 154, under an ordinary name and extended to the accepted arithmetic path: `(/ 1.0d0 0.0d0)` → DIVISION-BY-ZERO, `(* 1d300 1d300)` → FLOATING-POINT-OVERFLOW, log 0 → DIVISION-BY-ZERO, log −1 → FLOATING-POINT-INVALID-OPERATION, `(expt -2.5d0 0.0d0)` → 1.0d0 and `(expt 4.0d0 2.0d0)` → 16.0d0, all equal to native at both placements, 15,652 target comparisons. All rows of R1 that were compared with traps off have been recompared with traps on, and every one still matches, so no earlier execution credit rested on the wrong mode.
+
+### The envelope
+
+`acceptance.md` records the user's decision ("Adopt musl and two ULP") as a Stage 1 rule in the terms audit 154 proposed: at most two ULP on finite tested inputs; signed zeros, exact results and domain conditions exact; not a full-domain bound and not permission to mask conditions; unsupported trap modes remain refusals. The harness enforces it in both places (the corpus comparison and the raw `math-check.mjs`), and the raw check now asserts seventeen literal identities bit-exactly (pow 2 3, sin 0, sin −0, cos 0, acos 1, log 1, exp 0, atan2 −0 1, …) in both widths, outside the allowance. The 504 comparisons still show 436 bit-identical and 68 at one ULP; the retained maximum is one. Claude did not witness the user's sentence; it is consistent with the recommendation and it is what the rule says.
+
+Two things the R2 README states correctly and which are worth carrying: the 44 recipes in `progress.json` are the audit-153 cohort only and the live frontier is 77; and the immediate-bignum operand limit (C-12) is unchanged.
+
+### Disposition
+
+No defect. The verifier passes; the repair is complete and controlled; the rule is recorded as adopted. Recommended: accept the math packet as R2 and integrate it whole — the compiler additions, the arch file, the `l1-numbers` and `l0-array` branches, and the libm runtime (`float.c` with `transcend.c` and the pinned musl sources, `float-service.mjs`) — with R6/R6a on the final files, the forty owner checks against the new `float.wasm`, and the licence file carried into `runtime/wasm32/`.
+
+Suggested next packet, same size or larger, execution first: C-12; MINUS1's witness; recipes for the 77; the file-namespace foreign calls (`getcwd`, `chdir`, `mkdir`, `unlink`, `isatty`) on the provider protocol; and the next refusal names (`BOOTSTRAP-CONDITION-CLASS` 15, `HEAP-CONSTANT` 9, `%GET-KERNEL-GLOBAL` 8, `B-SPREAD-KIND` 8). Ledger: 21 accepted, 12 missing of 33, zero unreviewed.

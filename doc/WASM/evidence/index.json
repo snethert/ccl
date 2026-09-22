@@ -3194,16 +3194,24 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r2/packet.json",
       "sha256": "1ea1c54e5739674eb6e505a67a905c3b2b90c880e6eceaf37d715b8cb64bdbbf",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit154 repair: every generated case uses native default FP mask 7; unprefixed log-condition witness and rejected old-harness control. Steve adopted pinned musl and two-ULP comparisons with exact signed zeros, identities and conditions. 423 originals, 394 non-NIL; 15636 target comparisons, 504 native libm comparisons with 68 one-ULP differences; 12480 independent raw comparisons (maximum two ULP), 102 literal exact-identity checks, four emitted-code faults plus one harness control. Compiler/source/runtime unchanged from R1; native R6/R6a reused by exact hash. Current closed frontier has 77 names without inputs, not just the prior cohort remainder of 44. No slot credit; implementation still awaits review/acceptance."
+      "scope": "Audit154 repair: every generated case uses native default FP mask 7; unprefixed log-condition witness and rejected old-harness control. Steve adopted pinned musl and two-ULP comparisons with exact signed zeros, identities and conditions. 423 originals, 394 non-NIL; 15636 target comparisons, 504 native libm comparisons with 68 one-ULP differences; 12480 independent raw comparisons (maximum two ULP), 102 literal exact-identity checks, four emitted-code faults plus one harness control. Compiler/source/runtime unchanged from R1; native R6/R6a reused by exact hash. Current closed frontier has 77 names without inputs, not just the prior cohort remainder of 44. No slot credit; implementation still awaits review/acceptance. Accepted by Steve after audit155 and integrated with 21843 native tests, byte-identical float binary and 40 owner checks.",
+      "review_commit": "2cc3d73d626fa330e88bbc08964248aa1ef7e9ef",
+      "review_sha256": "563ef8d8346775a927ffa0d2b238702c485bd90caf115d44f64bfb00226b387f"
     },
     {
       "id": "STAGE1-BOOTSTRAP-MATH-R2-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r2-verification.json",
       "sha256": "8230ef5cde03fecdc960a3990f9e068afc5b0be99ef977b0307078eebc86f6f6",
       "scope": "Unmodified verifier from clean detached commit 897adfea0f06565463f4fb010654d044104da45b: 1481 deterministic files at 356 pins. Uniform default trap modes, raw regression, two-ULP samples, exact identities, old-mode control and reader matrix replay. Native qualification reused by exact source hashes. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-MATH-INTEGRATED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-integrated/packet.json",
+      "sha256": "656ee78282bdd8c817b9b00b82c35d778625e05d764df712cf8b9d077da5d557",
+      "scope": "Steve accepted audit155. Exact reviewed compiler/source/libm installed, with production build helper reproducing reviewed Wasm and licence included. Final-file native R6/R6a 21843 tests, 144 identical/164 restored FASLs; target execution identical and 40 owner checks. No slot credit."
     }
   ],
   "current_runs": [

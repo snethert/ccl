@@ -1,0 +1,573 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-bootstrap-math.json",
+  "acceptance_sha256": "d3f6d68fe2733b76a4c387a171469552f1e0d90ca62c12cc9775c64fb7d2dd14",
+  "previous_integration": "integration-bootstrap-admission.json",
+  "previous_integration_sha256": "af5c191ed7990442844aee648f494eecbb7c7308bf822c0e3b140cf3d3dad48c",
+  "files": [
+    {
+      "after": "47dc9a2154abe1e048170350becf958562756e49f204e7036cbe3e8babe6034c",
+      "before": "6e5aaa24a3882cb5f39eb7915e2d7592abf1231b89df61ed217e25a887cc8fd5",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "47dc9a2154abe1e048170350becf958562756e49f204e7036cbe3e8babe6034c"
+    },
+    {
+      "after": "5563329cd276b9f417e11e62bb2d407ef5b2ee99f9ee630716814f9962146926",
+      "before": "b969ca7f23efda0b9704ca80e035014f20f6a98ef449444f9ec396d59a153131",
+      "file": "level-1/l1-numbers.lisp",
+      "reviewed": "5563329cd276b9f417e11e62bb2d407ef5b2ee99f9ee630716814f9962146926"
+    },
+    {
+      "after": "c77510e0bb984d2bf11259ad8144ce1beefaf9ffa3cf0359b12ad46de1c70e43",
+      "before": "4866b3eac43866c80d00f3eef5d4dfac907f697f832b8d5768abd200abef887f",
+      "file": "level-0/l0-array.lisp",
+      "reviewed": "c77510e0bb984d2bf11259ad8144ce1beefaf9ffa3cf0359b12ad46de1c70e43"
+    },
+    {
+      "after": "dadba40a0d41998855b6b2e5939b9b39f018036abe7add7552ca21b0812f6100",
+      "before": "672ae8b7603e3d373ed905203189488bd5a047839125c2008f6bce452aa0fafa",
+      "file": "runtime/wasm32/float.c",
+      "reviewed": "dadba40a0d41998855b6b2e5939b9b39f018036abe7add7552ca21b0812f6100"
+    },
+    {
+      "after": "3509108e2e89a894124cad72a26a37c23af65e44ccea1e9432893cb9b7afc5e5",
+      "before": "c7009477d5de4f20730c4bdd7a1c3b1ab24754994c7c4e43ade4a05f669fece5",
+      "file": "runtime/wasm32/float-service.mjs",
+      "reviewed": "3509108e2e89a894124cad72a26a37c23af65e44ccea1e9432893cb9b7afc5e5"
+    },
+    {
+      "after": "26d2d476668200718e077f104c6371ea2f4e9a3fb8aae4bbba0c8144410cb69f",
+      "before": null,
+      "file": "runtime/wasm32/transcend.c",
+      "reviewed": "26d2d476668200718e077f104c6371ea2f4e9a3fb8aae4bbba0c8144410cb69f"
+    },
+    {
+      "after": "0d49f81e5f9abff1d0a72d16bb0fc5f55cb950623627abac0402ee4c900a1734",
+      "before": null,
+      "file": "runtime/wasm32/libm/fabsf.c",
+      "reviewed": "0d49f81e5f9abff1d0a72d16bb0fc5f55cb950623627abac0402ee4c900a1734"
+    },
+    {
+      "after": "1cffb67a65456ae0bc5f07a94df04a4f18ebc1ac0bffe3219250c4e0555ee01d",
+      "before": null,
+      "file": "runtime/wasm32/libm/atan.c",
+      "reviewed": "1cffb67a65456ae0bc5f07a94df04a4f18ebc1ac0bffe3219250c4e0555ee01d"
+    },
+    {
+      "after": "a0694d8587a0d145d0f8ae87cbffba014d7988bc2ebcbfad94cea73b394c9ecc",
+      "before": null,
+      "file": "runtime/wasm32/libm/log.c",
+      "reviewed": "a0694d8587a0d145d0f8ae87cbffba014d7988bc2ebcbfad94cea73b394c9ecc"
+    },
+    {
+      "after": "d939ee9586584db7c673652b2054b15805d601a38ee71c6c409ac50909d86ccc",
+      "before": null,
+      "file": "runtime/wasm32/libm/expm1f.c",
+      "reviewed": "d939ee9586584db7c673652b2054b15805d601a38ee71c6c409ac50909d86ccc"
+    },
+    {
+      "after": "e96bcd99d88fc57e0f3686299014f4b949a6212603ce237f39e16cedc155617a",
+      "before": null,
+      "file": "runtime/wasm32/libm/log_data.c",
+      "reviewed": "e96bcd99d88fc57e0f3686299014f4b949a6212603ce237f39e16cedc155617a"
+    },
+    {
+      "after": "fb52b690bef63df2e8996f2d2b3fd77f9ea08795863e73afdc882df04460e850",
+      "before": null,
+      "file": "runtime/wasm32/libm/exp2f_data.h",
+      "reviewed": "fb52b690bef63df2e8996f2d2b3fd77f9ea08795863e73afdc882df04460e850"
+    },
+    {
+      "after": "5d632276e5f21cdcd47f35c53cf792640ad347aabce1e1bd5774fad5371fc8d8",
+      "before": null,
+      "file": "runtime/wasm32/libm/powf_data.h",
+      "reviewed": "5d632276e5f21cdcd47f35c53cf792640ad347aabce1e1bd5774fad5371fc8d8"
+    },
+    {
+      "after": "b56e1a56f73a8700caa9787cd399fecf7f96038af56c2a590aeb6f0f8662ea8e",
+      "before": null,
+      "file": "runtime/wasm32/libm/log2_data.h",
+      "reviewed": "b56e1a56f73a8700caa9787cd399fecf7f96038af56c2a590aeb6f0f8662ea8e"
+    },
+    {
+      "after": "676b8d3c8555b56475da225bd6ecb13da09e5bb18395334a09d2b6e36c974b2d",
+      "before": null,
+      "file": "runtime/wasm32/libm/provenance.json",
+      "reviewed": "676b8d3c8555b56475da225bd6ecb13da09e5bb18395334a09d2b6e36c974b2d"
+    },
+    {
+      "after": "5feafe10347636884a071a5096f912d5ca4a0939844804ca09b88241405648ad",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_xflow.c",
+      "reviewed": "5feafe10347636884a071a5096f912d5ca4a0939844804ca09b88241405648ad"
+    },
+    {
+      "after": "6d228e77b88b69f70f9157548b6ec673ffc6b998ce6035fbbee0caddb8442903",
+      "before": null,
+      "file": "runtime/wasm32/libm/features.h",
+      "reviewed": "6d228e77b88b69f70f9157548b6ec673ffc6b998ce6035fbbee0caddb8442903"
+    },
+    {
+      "after": "a2e766283ed30c2b30c71e01dbdabef58faf92cc9aa84a01c1ce1069b6625696",
+      "before": null,
+      "file": "runtime/wasm32/libm/scalbn.c",
+      "reviewed": "a2e766283ed30c2b30c71e01dbdabef58faf92cc9aa84a01c1ce1069b6625696"
+    },
+    {
+      "after": "b20b3dcb58ce7cc55963945f8cb83efbf064b29d2da3011f2cec5d08459f2aa7",
+      "before": null,
+      "file": "runtime/wasm32/libm/acosf.c",
+      "reviewed": "b20b3dcb58ce7cc55963945f8cb83efbf064b29d2da3011f2cec5d08459f2aa7"
+    },
+    {
+      "after": "e0533d7b72aabce311a758a1f94fd15e5d4067be73b716cb1f425df5bc9039d6",
+      "before": null,
+      "file": "runtime/wasm32/libm/atanf.c",
+      "reviewed": "e0533d7b72aabce311a758a1f94fd15e5d4067be73b716cb1f425df5bc9039d6"
+    },
+    {
+      "after": "4414084736937798abcc075d1f8053e116d873c81dda0908013bfca3331771b9",
+      "before": null,
+      "file": "runtime/wasm32/libm/endian.h",
+      "reviewed": "4414084736937798abcc075d1f8053e116d873c81dda0908013bfca3331771b9"
+    },
+    {
+      "after": "ab082814c4b1bbad8ea7dcfde1e36167cd72be5ef0e8b3ef3def0e052dd74261",
+      "before": null,
+      "file": "runtime/wasm32/libm/sinh.c",
+      "reviewed": "ab082814c4b1bbad8ea7dcfde1e36167cd72be5ef0e8b3ef3def0e052dd74261"
+    },
+    {
+      "after": "24e53a9d85f196f66919cc19247be5480bb607ef38844b1a24bc47c4fe4974ef",
+      "before": null,
+      "file": "runtime/wasm32/libm/sin.c",
+      "reviewed": "24e53a9d85f196f66919cc19247be5480bb607ef38844b1a24bc47c4fe4974ef"
+    },
+    {
+      "after": "225123b9b3a47a083c06f2580c6b73d5cadae5cec545f9e928f7041ff837b4b4",
+      "before": null,
+      "file": "runtime/wasm32/libm/expf.c",
+      "reviewed": "225123b9b3a47a083c06f2580c6b73d5cadae5cec545f9e928f7041ff837b4b4"
+    },
+    {
+      "after": "e18b65b69fced8dbb2d3ed1a3dc6daea0e9f857f2762f274380bd89a6f89d2c4",
+      "before": null,
+      "file": "runtime/wasm32/libm/__tan.c",
+      "reviewed": "e18b65b69fced8dbb2d3ed1a3dc6daea0e9f857f2762f274380bd89a6f89d2c4"
+    },
+    {
+      "after": "38da031cfed0ba90e68a14dfbc57404ebcb827c9ac34648161c7d11cb212c9ba",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_xflowf.c",
+      "reviewed": "38da031cfed0ba90e68a14dfbc57404ebcb827c9ac34648161c7d11cb212c9ba"
+    },
+    {
+      "after": "3a74e054057d636fa494bdd76a53a40db5cee618264f6ab31cb0538ba63c6bda",
+      "before": null,
+      "file": "runtime/wasm32/libm/cos.c",
+      "reviewed": "3a74e054057d636fa494bdd76a53a40db5cee618264f6ab31cb0538ba63c6bda"
+    },
+    {
+      "after": "2583af55446f07da3225186c368a7aae5a0a0a0edab268967f4122b92e222b87",
+      "before": null,
+      "file": "runtime/wasm32/libm/sinf.c",
+      "reviewed": "2583af55446f07da3225186c368a7aae5a0a0a0edab268967f4122b92e222b87"
+    },
+    {
+      "after": "7db56f21ca9b8915d36dd5099b707aafeb6a736eae798e19b76b074764e75f34",
+      "before": null,
+      "file": "runtime/wasm32/libm/exp.c",
+      "reviewed": "7db56f21ca9b8915d36dd5099b707aafeb6a736eae798e19b76b074764e75f34"
+    },
+    {
+      "after": "329525397cc2169cad5ab60d2f75886a2ea97f9b27dbe708e9773ea77f20fa4f",
+      "before": null,
+      "file": "runtime/wasm32/libm/__expo2f.c",
+      "reviewed": "329525397cc2169cad5ab60d2f75886a2ea97f9b27dbe708e9773ea77f20fa4f"
+    },
+    {
+      "after": "5014345a7958adcf6ff835b5e96afa99dd5a98c40dfe968442288e002b8e01a3",
+      "before": null,
+      "file": "runtime/wasm32/libm/pow_data.h",
+      "reviewed": "5014345a7958adcf6ff835b5e96afa99dd5a98c40dfe968442288e002b8e01a3"
+    },
+    {
+      "after": "a5f94b09b10b4e72bb15d94ae403c9dfd27d7ad881ecd729000004429acfca63",
+      "before": null,
+      "file": "runtime/wasm32/libm/atan2.c",
+      "reviewed": "a5f94b09b10b4e72bb15d94ae403c9dfd27d7ad881ecd729000004429acfca63"
+    },
+    {
+      "after": "f6387612e1f879cac47fa71a808b584c76d78c23df4e44274ed9c7b1ddf24eff",
+      "before": null,
+      "file": "runtime/wasm32/libm/fabs.c",
+      "reviewed": "f6387612e1f879cac47fa71a808b584c76d78c23df4e44274ed9c7b1ddf24eff"
+    },
+    {
+      "after": "d2af8360271109d77dfab3c538eb158e34633454707dea4efa9f2f1e7e2bd0c7",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_invalidf.c",
+      "reviewed": "d2af8360271109d77dfab3c538eb158e34633454707dea4efa9f2f1e7e2bd0c7"
+    },
+    {
+      "after": "80176d1f045f162e917ca5c2879994ab0ed9e27b479086d752e5793c91135adf",
+      "before": null,
+      "file": "runtime/wasm32/libm/logf_data.h",
+      "reviewed": "80176d1f045f162e917ca5c2879994ab0ed9e27b479086d752e5793c91135adf"
+    },
+    {
+      "after": "c55dff64e369fe816cd8ce367064989bb119f85783599680d1a329031c660689",
+      "before": null,
+      "file": "runtime/wasm32/libm/exp_data.c",
+      "reviewed": "c55dff64e369fe816cd8ce367064989bb119f85783599680d1a329031c660689"
+    },
+    {
+      "after": "2c52f2c26163f8b7a0048465343510a5856d9c8cc954931722e121040fe81024",
+      "before": null,
+      "file": "runtime/wasm32/libm/sinhf.c",
+      "reviewed": "2c52f2c26163f8b7a0048465343510a5856d9c8cc954931722e121040fe81024"
+    },
+    {
+      "after": "5fa47a8b8c1afbee4dcd10f71d2f6c433a24f9aa5ce7a90924cd1db236cbc03c",
+      "before": null,
+      "file": "runtime/wasm32/libm/sqrt_data.h",
+      "reviewed": "5fa47a8b8c1afbee4dcd10f71d2f6c433a24f9aa5ce7a90924cd1db236cbc03c"
+    },
+    {
+      "after": "16b15cf815d4ab954a52038bd8a80cb3ca080d7c38c2bfe792e79f70a025968d",
+      "before": null,
+      "file": "runtime/wasm32/libm/floor.c",
+      "reviewed": "16b15cf815d4ab954a52038bd8a80cb3ca080d7c38c2bfe792e79f70a025968d"
+    },
+    {
+      "after": "0ba872cc7e26b93bb9784d19fee84b263e1fa3543a76ec3c0893aea47453a2a7",
+      "before": null,
+      "file": "runtime/wasm32/libm/__cosdf.c",
+      "reviewed": "0ba872cc7e26b93bb9784d19fee84b263e1fa3543a76ec3c0893aea47453a2a7"
+    },
+    {
+      "after": "938329e0939cd83ee2185a52154b41242f618d4a6df1b08395f344da33d4f1e6",
+      "before": null,
+      "file": "runtime/wasm32/libm/__rem_pio2.c",
+      "reviewed": "938329e0939cd83ee2185a52154b41242f618d4a6df1b08395f344da33d4f1e6"
+    },
+    {
+      "after": "de7026bcd159b7d06a8cbcc162df722014f3b1a3cc4183116b6b7829eef1d118",
+      "before": null,
+      "file": "runtime/wasm32/libm/__sindf.c",
+      "reviewed": "de7026bcd159b7d06a8cbcc162df722014f3b1a3cc4183116b6b7829eef1d118"
+    },
+    {
+      "after": "b06f0a08d74fcff8cced7afa2c0e47e301e3e8a19c0de5becdec28cd7b014027",
+      "before": null,
+      "file": "runtime/wasm32/libm/pow.c",
+      "reviewed": "b06f0a08d74fcff8cced7afa2c0e47e301e3e8a19c0de5becdec28cd7b014027"
+    },
+    {
+      "after": "c834656b0af1d4055167badf60afb062b4d71385a7d5a44769d1039bb9417b7c",
+      "before": null,
+      "file": "runtime/wasm32/libm/coshf.c",
+      "reviewed": "c834656b0af1d4055167badf60afb062b4d71385a7d5a44769d1039bb9417b7c"
+    },
+    {
+      "after": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "before": null,
+      "file": "runtime/wasm32/libm/fp_arch.h",
+      "reviewed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "after": "60455f3cc0ac743f3eaf0017a3a4f0adbab37c0ee30d29397852d22904c40444",
+      "before": null,
+      "file": "runtime/wasm32/libm/__tandf.c",
+      "reviewed": "60455f3cc0ac743f3eaf0017a3a4f0adbab37c0ee30d29397852d22904c40444"
+    },
+    {
+      "after": "b73a0219ba4a34e39ed904b5008126ff1b12dfa1a4a380941363c8db5088d756",
+      "before": null,
+      "file": "runtime/wasm32/libm/__rem_pio2f.c",
+      "reviewed": "b73a0219ba4a34e39ed904b5008126ff1b12dfa1a4a380941363c8db5088d756"
+    },
+    {
+      "after": "3da38c471cc5eb8dc1c2e283c6c00a36b1d353ba5c8ca1e82d95180948e26bd5",
+      "before": null,
+      "file": "runtime/wasm32/libm/exp2f_data.c",
+      "reviewed": "3da38c471cc5eb8dc1c2e283c6c00a36b1d353ba5c8ca1e82d95180948e26bd5"
+    },
+    {
+      "after": "cb65ee48f557b19c8a6366a05f16ffba38aa46b00c4c136faf2dea8f53675a9b",
+      "before": null,
+      "file": "runtime/wasm32/libm/log2f_data.h",
+      "reviewed": "cb65ee48f557b19c8a6366a05f16ffba38aa46b00c4c136faf2dea8f53675a9b"
+    },
+    {
+      "after": "f6c0afcf727688d834b8ba892e7a5903a914682e62c3ad330842c5702b24f622",
+      "before": null,
+      "file": "runtime/wasm32/libm/sqrt.c",
+      "reviewed": "f6c0afcf727688d834b8ba892e7a5903a914682e62c3ad330842c5702b24f622"
+    },
+    {
+      "after": "a8dced6f0821f30cad040ba326b03e419fbe0a750ed8f3b0d7145992bee4bccc",
+      "before": null,
+      "file": "runtime/wasm32/libm/log_data.h",
+      "reviewed": "a8dced6f0821f30cad040ba326b03e419fbe0a750ed8f3b0d7145992bee4bccc"
+    },
+    {
+      "after": "4787b2f6be28bb2ae9721d510b12d2b9aebf96a594f26f25a3dc267f029800df",
+      "before": null,
+      "file": "runtime/wasm32/libm/tanhf.c",
+      "reviewed": "4787b2f6be28bb2ae9721d510b12d2b9aebf96a594f26f25a3dc267f029800df"
+    },
+    {
+      "after": "a8c94bce0768d80a14c74cb27a64427ebdd7c58b26fff617381f7d1dd67f5121",
+      "before": null,
+      "file": "runtime/wasm32/libm/sqrtf.c",
+      "reviewed": "a8c94bce0768d80a14c74cb27a64427ebdd7c58b26fff617381f7d1dd67f5121"
+    },
+    {
+      "after": "23275ffd35f333d0242eb8bb962d3fa35496c312c4bca4e46fc9eff6e5bd372e",
+      "before": null,
+      "file": "runtime/wasm32/libm/logf.c",
+      "reviewed": "23275ffd35f333d0242eb8bb962d3fa35496c312c4bca4e46fc9eff6e5bd372e"
+    },
+    {
+      "after": "9a841197bbe9ade9bbd684f8bc65424a97c481d37dabb9fa1790bafe7959034a",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_uflow.c",
+      "reviewed": "9a841197bbe9ade9bbd684f8bc65424a97c481d37dabb9fa1790bafe7959034a"
+    },
+    {
+      "after": "cc6f9017e7e2e0ef01516fa12c68aa63865e6415c90dc039dfce9abffae09a4c",
+      "before": null,
+      "file": "runtime/wasm32/libm/acos.c",
+      "reviewed": "cc6f9017e7e2e0ef01516fa12c68aa63865e6415c90dc039dfce9abffae09a4c"
+    },
+    {
+      "after": "8fc8d5938575438c73320038d5b6612f33e7b130f72e3f39db1e68d994276b93",
+      "before": null,
+      "file": "runtime/wasm32/libm/copysignf.c",
+      "reviewed": "8fc8d5938575438c73320038d5b6612f33e7b130f72e3f39db1e68d994276b93"
+    },
+    {
+      "after": "74069b3a380cf954361e0243b38de2094ae680e2ecfb3e50af61ab576f13babf",
+      "before": null,
+      "file": "runtime/wasm32/libm/powf.c",
+      "reviewed": "74069b3a380cf954361e0243b38de2094ae680e2ecfb3e50af61ab576f13babf"
+    },
+    {
+      "after": "136f491b0f904842b926784134d0adba7a9103d2ce8a226276dd6e9260457398",
+      "before": null,
+      "file": "runtime/wasm32/libm/powf_data.c",
+      "reviewed": "136f491b0f904842b926784134d0adba7a9103d2ce8a226276dd6e9260457398"
+    },
+    {
+      "after": "194c95f6cd238ffa14e78087b9acffca3a064f2fe46320d67b090bb7a559b1ca",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_divzerof.c",
+      "reviewed": "194c95f6cd238ffa14e78087b9acffca3a064f2fe46320d67b090bb7a559b1ca"
+    },
+    {
+      "after": "9302dd0b2f302f7b7decce82e737ed250bae1bcc65c19eaf3d7ec19010892e63",
+      "before": null,
+      "file": "runtime/wasm32/libm/asin.c",
+      "reviewed": "9302dd0b2f302f7b7decce82e737ed250bae1bcc65c19eaf3d7ec19010892e63"
+    },
+    {
+      "after": "5559892c51d9625616fde0c4d25609f1e68e0aa3aee090d1842c6f894e63352a",
+      "before": null,
+      "file": "runtime/wasm32/libm/math.h",
+      "reviewed": "5559892c51d9625616fde0c4d25609f1e68e0aa3aee090d1842c6f894e63352a"
+    },
+    {
+      "after": "b56440ed59fa1e1aaaf6bf8b672c8bb71eaf844457906f7773da1d67d7ef013b",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_invalid.c",
+      "reviewed": "b56440ed59fa1e1aaaf6bf8b672c8bb71eaf844457906f7773da1d67d7ef013b"
+    },
+    {
+      "after": "86066c5fef654b3aa1eb742e11a92f9efcbd0f3dd7abdd9e3c2ac1e7002e6690",
+      "before": null,
+      "file": "runtime/wasm32/libm/floorf.c",
+      "reviewed": "86066c5fef654b3aa1eb742e11a92f9efcbd0f3dd7abdd9e3c2ac1e7002e6690"
+    },
+    {
+      "after": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af",
+      "before": null,
+      "file": "runtime/wasm32/libm/COPYRIGHT",
+      "reviewed": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+    },
+    {
+      "after": "c4764166cea03420f2dfc1840a6a7615934192d851b96d5d2dcc321cc1e39460",
+      "before": null,
+      "file": "runtime/wasm32/libm/expm1.c",
+      "reviewed": "c4764166cea03420f2dfc1840a6a7615934192d851b96d5d2dcc321cc1e39460"
+    },
+    {
+      "after": "74669de53bc4b250183cfa262a8a03ee8106f33a83e3aca6b217bafc7363b83c",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_oflow.c",
+      "reviewed": "74669de53bc4b250183cfa262a8a03ee8106f33a83e3aca6b217bafc7363b83c"
+    },
+    {
+      "after": "2371ed08fc95e48833a67122b5ef538ce7fc87f40fc7a4df451d71e1787d1d42",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_uflowf.c",
+      "reviewed": "2371ed08fc95e48833a67122b5ef538ce7fc87f40fc7a4df451d71e1787d1d42"
+    },
+    {
+      "after": "8cb6cc4af4b96b92f5af9d4e20609c8b8456bded8908c3d58f5b8e8f37620f67",
+      "before": null,
+      "file": "runtime/wasm32/libm/libm.h",
+      "reviewed": "8cb6cc4af4b96b92f5af9d4e20609c8b8456bded8908c3d58f5b8e8f37620f67"
+    },
+    {
+      "after": "29cc9dd6d656cd0fbf921a8a1aeee81b430558d880194832a8d44d82c8d37d94",
+      "before": null,
+      "file": "runtime/wasm32/libm/__expo2.c",
+      "reviewed": "29cc9dd6d656cd0fbf921a8a1aeee81b430558d880194832a8d44d82c8d37d94"
+    },
+    {
+      "after": "84aa910bdc5e7ccfed42098c37c44e278aa942d46e5a51d5ee8273336c79e719",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_divzero.c",
+      "reviewed": "84aa910bdc5e7ccfed42098c37c44e278aa942d46e5a51d5ee8273336c79e719"
+    },
+    {
+      "after": "4ebd1f5161d32e379b0545d423cd2065c6ead6bd9334810901d971ebcd3822c0",
+      "before": null,
+      "file": "runtime/wasm32/libm/copysign.c",
+      "reviewed": "4ebd1f5161d32e379b0545d423cd2065c6ead6bd9334810901d971ebcd3822c0"
+    },
+    {
+      "after": "6bc9b2392b81efa4c6a80c8602a2c0898d3b5c77444f6d3266ac71c18df222c5",
+      "before": null,
+      "file": "runtime/wasm32/libm/asinf.c",
+      "reviewed": "6bc9b2392b81efa4c6a80c8602a2c0898d3b5c77444f6d3266ac71c18df222c5"
+    },
+    {
+      "after": "7e290e86729cba6ccc8eb1f7db2452736daf1a2a8ce01b210db5787fee5cb762",
+      "before": null,
+      "file": "runtime/wasm32/libm/tanh.c",
+      "reviewed": "7e290e86729cba6ccc8eb1f7db2452736daf1a2a8ce01b210db5787fee5cb762"
+    },
+    {
+      "after": "5e5ed87e1a80e68734f4c87a4907a55f50a54df58261698aa94d5cb3276a3d43",
+      "before": null,
+      "file": "runtime/wasm32/libm/cosh.c",
+      "reviewed": "5e5ed87e1a80e68734f4c87a4907a55f50a54df58261698aa94d5cb3276a3d43"
+    },
+    {
+      "after": "df77fca837edd02b260dd09a2914202775909ae67a059218ae38cfab104e6d16",
+      "before": null,
+      "file": "runtime/wasm32/libm/exp_data.h",
+      "reviewed": "df77fca837edd02b260dd09a2914202775909ae67a059218ae38cfab104e6d16"
+    },
+    {
+      "after": "f3a37ef9bcfb8a2f9c809d8c7f1aa2c17c8c3319ad7fb2fe7c0a6284ea8859d2",
+      "before": null,
+      "file": "runtime/wasm32/libm/__sin.c",
+      "reviewed": "f3a37ef9bcfb8a2f9c809d8c7f1aa2c17c8c3319ad7fb2fe7c0a6284ea8859d2"
+    },
+    {
+      "after": "590aaadff964dcfc36ef9e5302423a779cda4f1608e15dbeee8e43e6e5f1c6fe",
+      "before": null,
+      "file": "runtime/wasm32/libm/sqrt_data.c",
+      "reviewed": "590aaadff964dcfc36ef9e5302423a779cda4f1608e15dbeee8e43e6e5f1c6fe"
+    },
+    {
+      "after": "b97f19fb5951c83a0c10506fab35646caefde13bd03100ad2af55ef00af0b9fb",
+      "before": null,
+      "file": "runtime/wasm32/libm/__rem_pio2_large.c",
+      "reviewed": "b97f19fb5951c83a0c10506fab35646caefde13bd03100ad2af55ef00af0b9fb"
+    },
+    {
+      "after": "69414934bb798f5261e2d80f4b878e2bbe4dfa6025adbd06586195ba5554b04a",
+      "before": null,
+      "file": "runtime/wasm32/libm/__math_oflowf.c",
+      "reviewed": "69414934bb798f5261e2d80f4b878e2bbe4dfa6025adbd06586195ba5554b04a"
+    },
+    {
+      "after": "3fb36f1cf8d9c118bfe85b462e6e0c034543835e5ffee4661f5ab8de997813e5",
+      "before": null,
+      "file": "runtime/wasm32/libm/scalbnf.c",
+      "reviewed": "3fb36f1cf8d9c118bfe85b462e6e0c034543835e5ffee4661f5ab8de997813e5"
+    },
+    {
+      "after": "3f0f774aab60a18d7ef935ffdf121bcda17cbadabff14096c614da22e31a42c1",
+      "before": null,
+      "file": "runtime/wasm32/libm/__cos.c",
+      "reviewed": "3f0f774aab60a18d7ef935ffdf121bcda17cbadabff14096c614da22e31a42c1"
+    },
+    {
+      "after": "60b08342fcef877b393a76fc36d92c576d6340ce153459aad03aad3d4716f9b5",
+      "before": null,
+      "file": "runtime/wasm32/libm/logf_data.c",
+      "reviewed": "60b08342fcef877b393a76fc36d92c576d6340ce153459aad03aad3d4716f9b5"
+    },
+    {
+      "after": "38b39aaf03d33341e606b67b3743ee5fa436b7e8338af155994d4b794b366003",
+      "before": null,
+      "file": "runtime/wasm32/libm/tanf.c",
+      "reviewed": "38b39aaf03d33341e606b67b3743ee5fa436b7e8338af155994d4b794b366003"
+    },
+    {
+      "after": "422d411bac962a1077ae394d14e54313012a6faa3476c20b2a66d3fb3f7a923f",
+      "before": null,
+      "file": "runtime/wasm32/libm/tan.c",
+      "reviewed": "422d411bac962a1077ae394d14e54313012a6faa3476c20b2a66d3fb3f7a923f"
+    },
+    {
+      "after": "31a61a0a4c7b00db625b708525f24673a83df868a3e363042c9cc9dcf0aaeec8",
+      "before": null,
+      "file": "runtime/wasm32/libm/atan2f.c",
+      "reviewed": "31a61a0a4c7b00db625b708525f24673a83df868a3e363042c9cc9dcf0aaeec8"
+    },
+    {
+      "after": "2052ec913f9b4a2170a98a6fcbcd7694f5dec220036b00c36106a2b4b65a4c55",
+      "before": null,
+      "file": "runtime/wasm32/libm/pow_data.c",
+      "reviewed": "2052ec913f9b4a2170a98a6fcbcd7694f5dec220036b00c36106a2b4b65a4c55"
+    },
+    {
+      "after": "33cf828e8e733da2b72c723b9ff20057b9a4f10df72a3923dadcb626c23d222c",
+      "before": null,
+      "file": "runtime/wasm32/libm/cosf.c",
+      "reviewed": "33cf828e8e733da2b72c723b9ff20057b9a4f10df72a3923dadcb626c23d222c"
+    },
+    {
+      "after": "804be6ddc03236f3b1de88c943f1d699f4a7be40a0963256c98029f29cbb28ff",
+      "before": null,
+      "file": "runtime/wasm32/libm/bits/endian.h",
+      "reviewed": "804be6ddc03236f3b1de88c943f1d699f4a7be40a0963256c98029f29cbb28ff"
+    },
+    {
+      "after": "08dc2bec6a4a0875dca5f61657c1be84a243fb945fb87431cbdbe38457683634",
+      "before": null,
+      "file": "runtime/wasm32/libm/bits/alltypes.h",
+      "reviewed": "08dc2bec6a4a0875dca5f61657c1be84a243fb945fb87431cbdbe38457683634"
+    },
+    {
+      "file": "runtime/wasm32/build-float.py",
+      "before": null,
+      "after": "a7c405aeb28d182bceb8f71fe3a4a33d1fe27f7426d712f7cebb036d35591c6f",
+      "scope": "Production build helper using the reviewed command; rebuilt binary is byte-identical."
+    },
+    {
+      "file": "runtime/wasm32/README.md",
+      "before": "8bf52464f44ea14dd5367d0bdd819db9c4e4d4431ead88f009b6929a1b8cf013",
+      "after": "fc51cef22c2c0d3f6991a2c0e6d2d9ede8ead54fcb158695b14938d2f65b0c68",
+      "scope": "Accepted libm build, licence and numerical limitations."
+    }
+  ],
+  "qualification": {
+    "native_record_sha256": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85",
+    "target_record_sha256": "b0e424821ab3ce89652a874544d9bfd23ca961a440e088b304b5ae3d0598e35a",
+    "native_tests": 21843,
+    "identical_fasls": 144,
+    "restored_fasls": 164,
+    "identical_generated_files": 1354,
+    "owner_checks": 40,
+    "float_binary": "91f693f9d283fe27ba2d3a479d794608a74b038bdce70665a5a1c90d35beb036"
+  },
+  "scope": "Reviewed final compiler, CCL source and libm runtime installed; musl licence and pinned headers included. No LL15 slot credit."
+}
