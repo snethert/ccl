@@ -3652,3 +3652,5 @@ Clean committed-checkout verification for `cef139cf`: 1476 math files identical 
 ## 2026-09-21 — audit154 math trap repair and adopted libm limit
 
 Import audit154 verbatim. Fix its case-name-dependent FP mask by running every generated row at CCL's default mask 7. Add CORE-LOG-CONDITION, whose name does not select the former special mode, and retain a control that restores the bug and fails. Tighten both native and independent sampled libm comparisons to the user-adopted two ULP, with exact identity and signed-zero checks. Record the decision in acceptance.md without asserting a global mathematical error bound. Compiler, source and runtime bytes remain the reviewed proposal; reuse native qualification by their hashes. No new original-definition execution or LL15 credit. Correct the status distinction between the old cohort's 44 recipes and the current closed frontier's 77 names.
+
+Math R2 clean-checkout replay: 1481 files identical at 356 pins; retained as evidence `c0d2b18c204c28d32a1442c2cc4d7f55d5a240ae`. No shared-source change.

@@ -224,3 +224,5 @@ Combined implementation `cef139cf` replays unmodified from its clean detached ch
 
 
 Audit **154** (`12f738e3`, imported verbatim) verifies the admission integration and finds one math harness defect: FP traps were selected by case name. Math R2 sets native default mask 7 for every case and adds an ordinary-name condition witness plus the old-harness failure control. The compiler/source/runtime proposal is unchanged; native R6/R6a is reused by exact source hash. The numerical limit is recorded in acceptance.md on Steve's “Adopt musl and two ULP”. The present closed frontier has 77 names without inputs; the earlier 44 was only the remainder of the previous cohort. Immediate-bignum uint32 type proof remains owed. No new original execution or slot credit; R2 awaits independent review.
+
+Math R2 `897adfea` passes the documented verifier from its clean detached checkout: **1481 deterministic files identical at 356 pins**, 15,636 generated comparisons, and the old case-name trap switch rejected. No new original-definition or slot credit. Evidence `c0d2b18c204c28d32a1442c2cc4d7f55d5a240ae`.

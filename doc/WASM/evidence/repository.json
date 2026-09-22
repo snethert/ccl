@@ -1,26 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "3dc3f8c0a6194d4879b90e932a70cd17a0786c0bdea92341a076ae0513fc474e",
-  "commit": "aea39afc4fbc947b520082dfe3156552b19b4244",
-  "immutable_evidence_files": 260359,
+  "catalog_sha256": "01cbc200d004122072eb41f22779b9b8d379f4d69d5e731abc59c671e5959806",
+  "commit": "c0d2b18c204c28d32a1442c2cc4d7f55d5a240ae",
+  "immutable_evidence_files": 260361,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-math-r2",
-    "files": 2550,
-    "bytes": 149325973
+    "directory": "2026-09-21-stage1-bootstrap-math-r2-verification.json",
+    "files": 2,
+    "bytes": 486058
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "21 accepted, 12 missing of 33. Math R2 repairs audit154 harness modes and applies Steve’s libm decision. Compiler/source/runtime unchanged proposals; awaiting independent review. No slot credit.",
-  "source_index_sha256": "39998fa95bc63cd04320d58d8fe9ed46358e9caf3841593e5d51c22f8d81f1b4",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-r2.json",
+  "source_index_sha256": "61b1ff7721ccd421180c1aed3d5d307817d2d3dab529ec639cd50dc2e74e1a31",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-r2-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Generated/native execution rerun with uniform default trap mode, unchanged raw regression, tightened numerical checks and focused controls. Native final proposal qualification reused by exact file hashes. Clean committed-checkout replay follows.",
+    "method": "Documented R2 verifier passes unmodified from clean detached committed checkout. Native qualification reused by exact source hashes; all deterministic files identical. Index snapshot copied byte-for-byte.",
+    "checkout_commit": "897adfea0f06565463f4fb010654d044104da45b",
     "deterministic_files": 1481,
     "source_pins": 356,
+    "record": "2026-09-21-stage1-bootstrap-math-r2-verification.json",
+    "record_sha256": "8230ef5cde03fecdc960a3990f9e068afc5b0be99ef977b0307078eebc86f6f6",
     "execution": "00a88bb2ae51f8088b00cefc07c19624446355885576ad733fb483449d1bbdcf",
     "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85"
   },
