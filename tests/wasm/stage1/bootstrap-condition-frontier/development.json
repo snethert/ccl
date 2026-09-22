@@ -1,0 +1,29 @@
+{
+  "attempts": [
+    "r1: derivation parenthesis corrected",
+    "r2: previously unsupported FILE-ERROR control moved to still unsupported READER-ERROR",
+    "r3: condition dispatch identity map extended alongside the class masks",
+    "r4: final execution and native qualification",
+    "control: mutation moved from caller to raising module"
+  ],
+  "retained": [
+    "ccl-condition-frontier-r1/compiled/compile.log",
+    "ccl-condition-frontier-r1/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-condition-frontier-r1/driver/controls.lisp",
+    "ccl-condition-frontier-r1/driver/arch-probes.lisp",
+    "ccl-condition-frontier-r1/driver/class-shapes.lisp",
+    "ccl-condition-frontier-r2/compiled/compile.log",
+    "ccl-condition-frontier-r2/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-condition-frontier-r2/driver/controls.lisp",
+    "ccl-condition-frontier-r2/driver/arch-probes.lisp",
+    "ccl-condition-frontier-r2/driver/class-shapes.lisp",
+    "ccl-condition-frontier-r3/compiled/compile.log",
+    "ccl-condition-frontier-r3/compiled/proposal/files/compiler/WASM32/wasm32-backend.lisp",
+    "ccl-condition-frontier-r3/driver/controls.lisp",
+    "ccl-condition-frontier-r3/driver/arch-probes.lisp",
+    "ccl-condition-frontier-r3/driver/class-shapes.lisp",
+    "ccl-condition-frontier-r3/execution.log",
+    "ccl-condition-frontier-controls.log",
+    "ccl-condition-frontier-control-attempt/stream-parent-mask/refusal.log"
+  ]
+}

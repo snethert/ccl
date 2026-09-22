@@ -3758,3 +3758,20 @@ unintegrated; full CLOS behavior and the remaining FFI/condition/global/constant
 spread work are not claimed complete.
 
 Clean committed replay at `55e5ee16` passes unmodified: 3728 deterministic artifacts identical at 471 source pins. This verifies the proposal's replay, not independent acceptance.
+
+## 2026-09-22 — condition classes and native-entry exclusions
+
+Continue Steve's “proceed” with a fixture-only proposal over introspection.
+Extend the rooted constructor beyond two slots, preserve native defaults, add
+nine independently joined class masks and typed readers, and execute inherited
+handlers through movement. The two new original definitions are explicitly
+error-only: 486 originals total, 451 non-NIL, 17,660 comparisons. Four focused
+controls reject missing publication, lost defaults, wrong inheritance offset
+and wrong dispatch bit.
+
+Conditionalize sixteen native pointer/FFI definitions, without success stubs or
+protocol constants. Preserve their remaining emitted callers as open work and
+keep the historical denominator fixed; admission is 2,051/2,231. Final native
+qualification passes 21,843 tests, restores 164 FASLs and binds source-location
+proofs on seventeen reader profiles. Retain changed artifacts as a delta over
+the introspection packet. Nothing is accepted or integrated by this proposal.

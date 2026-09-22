@@ -1,0 +1,10 @@
+{
+  "level-0/l0-def.lisp": ["%fixnum-ref-macptr", "%fixnum-set-macptr"],
+  "level-0/l0-cfm-support.lisp": ["foreign-symbol-address"],
+  "level-0/l0-io.lisp": ["malloc", "free"],
+  "level-1/l1-aprims.lisp": ["register-xmacptr-dispose-function"],
+  "level-1/l1-utils.lisp": ["%put-cstring", "%composite-pointer-ref"],
+  "level-1/l1-streams.lisp": ["%make-heap-ivector", "dispose-heap-ivector", "fd-zero", "fd-set", "fd-clr", "fd-is-set"],
+  "level-1/l1-io.lisp": ["write-a-macptr"],
+  "level-1/l1-callbacks.lisp": ["%allocate-callback-pointer"]
+}

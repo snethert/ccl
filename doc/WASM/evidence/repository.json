@@ -1,26 +1,20 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "84ad7213e7f041aa0171428cd7b03d72b4fd7762f3ec882fec628e92a7a3f9b1",
-  "commit": "9440a83a148606d21db7190b5b0b6bccbbd1faa7",
-  "immutable_evidence_files": 266382,
+  "catalog_sha256": "30ae9afc5f26e0ce84d4bbdce3e3726eca388dc8cca8ef2430546b9cc668e290",
+  "commit": "6f926db5de99d39eb55d343e41519ea739453c76",
+  "immutable_evidence_files": 266581,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-introspection-verification",
-    "files": 3,
-    "bytes": 481843
+    "directory": "2026-09-22-stage1-bootstrap-condition-frontier-r1",
+    "files": 199,
+    "bytes": 199578811
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Unintegrated introspection proposal; 484 original definitions, 451 non-NIL; 20 architecture counterparts separate; Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "3e310e85665d8d555717ef7bb50a725ad722ecabbda87fb749a49159d9129531",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-introspection-verification.json",
-  "verification": {
-    "status": "PASS",
-    "method": "Unmodified documented verifier from clean committed checkout",
-    "checkout": "55e5ee16a7bab76249b3ceb0a2551f0c78ae6094",
-    "verification": "b09ae68034cd204a4f727a2895ec4028c96a65431f9a956331230ee85684d275"
-  },
+  "scope": "Condition and FFI proposal, unreviewed and unintegrated; 486 original executions, 451 non-NIL; Stage 1 remains 21 accepted and 12 missing.",
+  "source_index_sha256": "70e9386985afb1c083405e79c605e961b4f15b07d9ef3c1b182f9351eab33bb9",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-condition-frontier.json",
   "version": 1
 }

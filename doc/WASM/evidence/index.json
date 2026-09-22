@@ -3358,6 +3358,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-introspection-verification/verification.json",
       "sha256": "b09ae68034cd204a4f727a2895ec4028c96a65431f9a956331230ee85684d275",
       "scope": "Clean committed replay at 55e5ee16a7bab76249b3ceb0a2551f0c78ae6094; 3728 deterministic artifacts identical at 471 pins; 484 original definitions and 20 architecture counterparts remain unreviewed proposal evidence. No integration or additional credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CONDITION-FRONTIER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-r1/packet.json",
+      "sha256": "c198e93522d689c6bb39b7849bf52da8bc181cff03b30eaff556281fa51d12d6",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Pending introspection plus nine condition classes, native defaults and five-slot rooted construction; 486 original definitions, 451 non-NIL, two new error-only originals; 17,660 comparisons and four rejected faults. Sixteen native pointer/FFI definitions excluded with required callers left open. Admission 2,051/2,231; final native R6/R6a and seventeen-profile source proof retained. No shared integration or LL15 credit."
     }
   ],
   "current_runs": [

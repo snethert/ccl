@@ -324,3 +324,26 @@ globals, heap constants and spread kinds remain open. No new integration or
 slot credit: **21 accepted, 12 missing, zero unreviewed of 33**.
 
 Clean committed replay at `55e5ee16` passes unmodified: 3728 deterministic artifacts identical at 471 source pins. This verifies the proposal's replay, not independent acceptance.
+
+## 2026-09-22 — condition and foreign-entry proposal
+
+The next proposal raises original native-matched execution **484 → 486** and
+admission **2,043 → 2,051 of 2,231**. Both new originals signal errors, so the
+non-NIL return count remains **451**. Nine additional condition classes use
+native precedence lists, slots and defaults. The collecting constructor handles
+five-field conditions, and typed observers check fields, inherited handlers,
+initarg order and native defaults. The full corpus passes **17,660 comparisons**
+and four focused faults are rejected.
+
+Sixteen native pointer/FFI definitions gain target exclusions. Fifteen are in
+the historical cohort and receive no admission credit. Required callers remain
+explicit implementation dependencies; file IO, synchronization, bignum scratch
+storage and host exit are not declared implemented or unnecessary.
+
+Native R6/R6a passes 21,843 tests and restores all 164 FASLs; 153 local reader
+comparisons bind the source exclusions and inherited branches. Runtime bytes
+are unchanged. [Fixture and replay](../../tests/wasm/stage1/bootstrap-condition-frontier/README.md).
+This stacks on the unreviewed introspection proposal. No shared integration or
+slot credit: **21 accepted, 12 missing, zero unreviewed of 33**. Remaining work
+includes numeric/CLOS dependencies, further condition classes, owner-backed
+kernel globals, heap constants and lexpr spread calls.
