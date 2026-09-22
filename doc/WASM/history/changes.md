@@ -3688,3 +3688,6 @@ Proposal `13388525` passes the documented verifier unmodified from a clean commi
 ### 2026-09-22 — Audit157 and numeric arch macros
 
 Import audit157 verbatim and bind the reviewed file-environment packet without inferring acceptance from the reviewer. Implement six missing macros and explicit refusals for native function-vector and kernel-global access. Add float allocation/copy/store/conversion support through existing rooted helpers; implement the native short-float binding macro without claiming stack allocation. Recount the same cohort at 1,950/2,231 and execute three additional original numeric functions, giving 463/432 with 16,728 comparisons. Exclude two native FFI pointer definitions at their source boundaries, bringing complete files to 46/57; retain the nine other foreign stops as unresolved owner/libm/scheduler work. Record the O-5 layout proposal as pending. Native R6/R6a passes and restores all 164 FASLs. No shared functional source change and no slot credit.
+
+
+Proposal `06066644` passes its documented verifier unmodified from a clean committed detached checkout: **2,506 deterministic artifacts identical at 391 pins**. The recount and all 16,728 comparisons reproduce; final native qualification is reused by exact compiler/arch/source hashes. No extra execution or slot credit.

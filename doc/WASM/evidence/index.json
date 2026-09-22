@@ -3276,6 +3276,12 @@
       "sha256": "bcdf301c8cfc357d4da0dc886019c911811781bf6a9bc6416f1248790f7ad9d9",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Arch macros and numeric execution: 1950/2231 comparable admissions, 463 original executions and 432 non-NIL witnesses. Six macros implemented, four native-layout/kernel macros explicitly refused. 199/224 whole-file numeric definitions admit, 207 modules assemble, 16728 comparisons including 100 arch checks. Two FFI pointer exclusions allow 46/57 files to complete; nine foreign stops and the O-5 layout remain open. R6/R6a 21843 tests and 164 restored FASLs. Unintegrated proposal, no slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-ARCH-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-arch-verification/verification.json",
+      "sha256": "deb478d3f1d30de4720b26b36308070f9108ef09b18074018e5682e9d5c4f789",
+      "scope": "Documented verifier passes unmodified from clean committed checkout 06066644ea328b6fcef33e93e8af2bf820aaca47. Arch-macro recount and whole-file numeric execution reproduce retained artifacts; no additional execution or slot credit."
     }
   ],
   "current_runs": [
