@@ -1,0 +1,17 @@
+{
+  "attempts": {
+    "r1": "Stacking #-wasm32-target beneath an existing #+32-bit-target caused an unmatched reader delimiter under Wasm. Preserve native groups intact and exclude each entire non-Windows group. A probe parenthesis was also corrected before r2.",
+    "native-r1": "Native build passed on the initial target exclusion spelling; final native-r2 binds the corrected grouped spelling.",
+    "owner-control-r1": "Symlinked check.mjs resolved imports through the original runtime, so the deliberately old owner ceiling escaped. Copy the importing modules into the control directory; the fault now refuses at the first hyperbolic call.",
+    "r2": "Final grouped source proposal, generated execution, raw regression and changed-site controls pass."
+  },
+  "retained": [
+    "ccl-bootstrap-hyperbolic-r1.log",
+    "ccl-bootstrap-hyperbolic-r1/compiled/compile.log",
+    "ccl-bootstrap-hyperbolic-r1/compiled/proposal/files/level-1/l1-numbers.lisp",
+    "ccl-bootstrap-hyperbolic-environment-r1.log",
+    "ccl-bootstrap-hyperbolic-native-r1/run.json",
+    "ccl-bootstrap-hyperbolic-owner-control-r1.log",
+    "ccl-bootstrap-hyperbolic-faults-r1.log"
+  ]
+}

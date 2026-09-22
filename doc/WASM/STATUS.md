@@ -263,3 +263,8 @@ Two native FFI pointer definitions are excluded under target reader branches; **
 
 
 Proposal `06066644` passes its documented verifier unmodified from a clean committed detached checkout: **2,506 deterministic artifacts identical at 391 pins**. The recount and all 16,728 comparisons reproduce; final native qualification is reused by exact compiler/arch/source hashes. No extra execution or slot credit.
+
+
+Bootstrap hyperbolic proposal: **467 original definitions execute (+4), 436 with non-NIL witnesses (+4)**. [Packet](../../tests/wasm/stage1/bootstrap-hyperbolic/README.md). Comparable admission remains **1,950/2,231**; **47/57** files now read completely. `l1-numbers.lisp` compiles whole with **67/68** definitions admitted. The ASINH/ACOSH/ATANH foreign stop is replaced by six target entries on the existing pinned musl float service. Four unchanged destructive double-float arithmetic definitions supply the new execution credit. No host Math imports or fabricated foreign readers.
+
+The generated run passes **17,064** comparisons, including **176** new hyperbolic comparisons (one ULP observed maximum) and **80** exact condition comparisons. Raw sampled checks pass **15,360** comparisons plus **837** directed checks; all **177,249** accepted primitive comparisons pass. Three changed-site faults are rejected. Final R6/R6a passes **21,843** tests with **164** FASLs restored and the reader inverse proof covers 17 existing target profiles. This is an unintegrated proposal over the arch packet; no acceptance or slot credit. Eight foreign reader stops, the boot kernel-global/TIMEVAL stops and the pending generic-function layout remain open.

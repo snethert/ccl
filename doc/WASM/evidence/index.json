@@ -3282,6 +3282,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-arch-verification/verification.json",
       "sha256": "deb478d3f1d30de4720b26b36308070f9108ef09b18074018e5682e9d5c4f789",
       "scope": "Documented verifier passes unmodified from clean committed checkout 06066644ea328b6fcef33e93e8af2bf820aaca47. Arch-macro recount and whole-file numeric execution reproduce retained artifacts; no additional execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HYPERBOLIC-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r1/packet.json",
+      "sha256": "e3c14c6ae0925fb4753e078b5d5e163741c54d957ff93831ffeb08fe0eff551b",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Whole-file hyperbolic proposal: 467 original executions, 436 non-NIL witnesses, 1950/2231 comparable admissions, 47/57 files complete. l1-numbers admits 67/68; six hyperbolic entries use the existing pinned musl service. 17064 generated comparisons, 176 new hyperbolic comparisons and 80 exact condition comparisons; 15360 raw sampled, 837 directed checks and 177249 accepted primitive comparisons. Three faults rejected. Final R6/R6a and 17-profile reader proof. Unintegrated proposal over ARCH-R1; no slot credit."
     }
   ],
   "current_runs": [
