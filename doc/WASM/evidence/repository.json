@@ -1,26 +1,20 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0e705bba16a55ac2d0d87307b83d612ad0bd7053db51fc361a8082f436a16585",
-  "commit": "dada21c8ae606052ca1850664d3008dee848467c",
-  "immutable_evidence_files": 266789,
+  "catalog_sha256": "5c22835ac527181b1500991490c49720f19eb1a84131bf77053c7963ec0c8a94",
+  "commit": "9965dbc010cc81ee0d93ce960e508d481b9a8620",
+  "immutable_evidence_files": 266815,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-lexpr-spread-verification",
-    "files": 3,
-    "bytes": 484209
+    "directory": "2026-09-22-stage1-bootstrap-clos-accessors-r1",
+    "files": 26,
+    "bytes": 2443272
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Lexpr spread proposal, unreviewed and unintegrated; 2,059 admitted, 486 original executions and 451 non-NIL; Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "482659375d167e5f67b866c9751a4fe631055e8fae5fea1a932e1da23e618eb6",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-lexpr-spread-verification.json",
-  "version": 1,
-  "verification": {
-    "status": "PASS",
-    "method": "Unmodified documented verifier from clean committed checkout",
-    "checkout": "fc9613d59bb54837e32351251bf7b5f8599acb54",
-    "verification": "8258a0fd07d27df6abbfd52ea05a2cee1ce2979720b2aa8eed097a476ce0da12"
-  }
+  "scope": "CLOS execution recipes, unreviewed; 2,059 admitted, 507 original executions and 472 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
+  "source_index_sha256": "0a3c4417def5e6c7762350c3f8784f4e07da5204dc997d11bddd0e7fa488d175",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-clos-accessors.json",
+  "version": 1
 }

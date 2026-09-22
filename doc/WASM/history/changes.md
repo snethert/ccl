@@ -3799,3 +3799,13 @@ It is not integrated or independently reviewed and awards no LL15 or method
 dispatch credit. The frontier names the remaining dependencies.
 
 Clean committed replay at `fc9613d5` passes unmodified: 3,844 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.
+
+### 2026-09-22 — Execute twenty-one more original CLOS definitions
+
+Continued under “Fit in more work before another heavy round of damn
+documentation!” Added native method/class/effective-slot recipes and observer
+callers: 507 originals, 472 non-NIL witnesses, 18,040 comparisons. Method removal,
+slot-cache invalidation, key metadata and dispatch hooks run through unchanged
+whole-file CCL bodies. The transport preserves self backpointers and snapshots
+inputs before native mutation. Two transport controls reject. No compiler,
+runtime or CCL source changes; native R6/R6a reused by source hash. No slot credit.

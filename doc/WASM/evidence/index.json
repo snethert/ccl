@@ -3386,6 +3386,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-lexpr-spread-verification/verification.json",
       "sha256": "8258a0fd07d27df6abbfd52ea05a2cee1ce2979720b2aa8eed097a476ce0da12",
       "scope": "Unmodified clean committed replay at fc9613d59bb54837e32351251bf7b5f8599acb54: 3844 deterministic artifacts identical; 486 original definitions, 451 non-NIL, 17,760 comparisons, 30 frame checks and three rejected faults. No acceptance or integration."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CLOS-ACCESSORS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-clos-accessors-r1/packet.json",
+      "sha256": "318359d5ed0def505891d5442222a0c9e01b19f8e125664f84d5053ccd3a3f6d",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Original CLOS accessor execution: 486 to 507 originals, 451 to 472 non-NIL witnesses; 70 new native rows and 280 new target comparisons, 18,040 total. Native slot projections preserve self backpointers; mutation callers collect across cycles, cache updates and dispatch hook calls. Two transport controls reject. Compiler/runtime/source unchanged from the pending lexpr proposal; native qualification reused by exact hash. No integration or slot credit."
     }
   ],
   "current_runs": [

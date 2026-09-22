@@ -1,0 +1,20 @@
+{
+  "attempts": [
+    {"run":"r1","result":"Native method construction annotates its function name; replaced reused function with a fresh same-body callable and an explicit identity mapping."},
+    {"run":"r2","result":"Observer depended on unavailable ACONS; wrote the ordinary nested CONS construction instead."},
+    {"run":"r3","result":"Native SLOT-VECTOR requires %SVREF; static dispatch-hook variable cannot be dynamically bound. Use native accessor and UNWIND-PROTECT save/update/restore."},
+    {"run":"r4","result":"Post-call serialization mutated the next target input. MULTI-METHOD-INDEX exposed different after-state. Snapshot inputs before native execution."},
+    {"run":"r5","result":"PASS: 507 originals, 472 non-NIL witnesses, 18,040 comparisons and 40 collector checks. Both transport controls reject."}
+  ],
+  "retained": [
+    "ccl-clos-accessors-r1/compiled/compile.log",
+    "ccl-clos-accessors-r1/driver/clos-inputs.lisp",
+    "ccl-clos-accessors-r2/compiled/compile.log",
+    "ccl-clos-accessors-r2/driver/observers.lisp",
+    "ccl-clos-accessors-r3/compiled/compile.log",
+    "ccl-clos-accessors-r3/driver/observers.lisp",
+    "clos-extra-probe-r2.log",
+    "ccl-clos-accessors-r4/execution.log",
+    "ccl-clos-accessors-r4/driver/execute.lisp"
+  ]
+}
