@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8546dc2063f2e3fbddfc58c5d4c6c9efcd5ca3df3db682adafa8f03b68ebd649",
-  "commit": "43363c3dbf8950957715ed88d6598de6564d8412",
-  "immutable_evidence_files": 266170,
+  "catalog_sha256": "829b377f9cffcf21d9895156882d576ca18f106d535fe2ea7c3b057c4d9c3aff",
+  "commit": "96abba9522187f6f0a84b3cb34c55b55e19a2459",
+  "immutable_evidence_files": 266173,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-funcallable-r1",
-    "files": 184,
-    "bytes": 55065248
+    "directory": "2026-09-22-stage1-bootstrap-funcallable-verification",
+    "files": 3,
+    "bytes": 477641
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Funcallable storage and immediate access proposal retained for independent review. No shared-source integration or slot credit.",
-  "source_index_sha256": "cb34c3f5191f1660c25e03f84f144043b7997ec265fb585bb1fa8a7cf36faea2",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-r1.json",
+  "source_index_sha256": "6191a7f115a7fe7f3a88aea13cf17b06655be0c1ea0107eaa2717802fbbbaeff",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Whole-file recount, native/generated execution, movement and admission controls. Final native R6/R6a passes with 21843 tests and 164 restored FASLs.",
-    "recount": "5221f9d4140a0c90544934503f15fe77136a319340bab710f62a4ee9ede9535a",
-    "target": "54b32e9d6a3da7a0d1e3f6fe7f0e7c31bdce4685d8297bdb1df3e484e5ba997a"
+    "method": "Documented verifier run unmodified from a clean committed detached checkout.",
+    "checkout": "1a696fe3d314755af9ef9390631c1b072b2efe58",
+    "verification": "a35f2b573c2a84fb8adfb3c1b09a229fcbc886d49190d563efca7822e281d2c9"
   },
   "version": 1
 }
