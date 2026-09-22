@@ -3338,6 +3338,12 @@
       "execution_status": "PASS",
       "review_disposition": "ACCEPTED_INTEGRATION_RECORD",
       "scope": "Steve accepts audit-158 stack. Exact reviewed source integration and production-import replay; O-6 decision, O-7 observer, O-8 profile widening. No additional execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-ACCEPTANCE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-acceptance-verification/verification.json",
+      "sha256": "0077c9270ad43016443d89e22b2b6a6cf973f6796a7d5be554f9882ad18591cc",
+      "scope": "Post-integration command passed from clean committed checkout b37dcb156cef15e355f4f0dd466d381086770c91; seven result records byte-identical. No additional execution or slot credit."
     }
   ],
   "current_runs": [

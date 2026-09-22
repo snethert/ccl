@@ -3738,3 +3738,7 @@ Retain a post-integration runner that reads immutable inputs instead of applying
 old source patchers to the integrated tree. No additional definition or slot
 credit; the integrated frontier is 470/439 executed witnesses and 2,043/2,231
 admitted definitions.
+
+## 2026-09-22 — bind committed integration replay
+
+Run the documented acceptance command unmodified from clean checkout `b37dcb15`; all seven result records reproduce byte for byte. Bind the checkout and verification record. No source change or new qualification credit.

@@ -1,25 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "07fbe23a1cff465d1e7a3a009c0ae83135b2431bca6c366ca96691b2ae9a886f",
-  "commit": "b349b118b7ab9d57b53432bb39adfcb2f912eb31",
-  "immutable_evidence_files": 266189,
+  "catalog_sha256": "097de2265506b3cf865729ba3f2e176937c78789ffe187351c9d1e8711e0cbc1",
+  "commit": "de9fcd43033d759c8fd11ef961c1e4a85b74a160",
+  "immutable_evidence_files": 266191,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-funcallable-acceptance",
-    "files": 16,
-    "bytes": 21435394
+    "directory": "2026-09-22-stage1-bootstrap-funcallable-acceptance-verification",
+    "files": 2,
+    "bytes": 476721
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Accepted arch/hyperbolic/funcallable integration with audit-158 obligations; Stage 1 remains 21 accepted, 12 missing, zero unreviewed.",
-  "source_index_sha256": "4bd91b9457d080c0a780dce8af8725e09b29611b21d80672be32ec2be38f3ced",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-acceptance.json",
+  "source_index_sha256": "b85e6b503b862c99537ba74d4cbfa8f532d683e6e14893c61d6f4db75de16df8",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-acceptance-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Exact final reviewed source hashes; production float/collector rebuild and generated execution; native qualification reused by exact proposal identity.",
-    "verification": "b620353cfbbc86a904cf8542c97473c830954dea21d035fc28edac1f56ec4231"
+    "method": "Documented integration command run unmodified from a clean committed checkout.",
+    "checkout": "b37dcb156cef15e355f4f0dd466d381086770c91",
+    "verification": "0077c9270ad43016443d89e22b2b6a6cf973f6796a7d5be554f9882ad18591cc"
   },
   "version": 1
 }

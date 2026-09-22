@@ -299,3 +299,5 @@ accessor implementation remains owed. O-7 is explicitly observed. O-8's
 floating-owner installer admission is recorded. Method selection and the CLOS
 READY join remain open. Stage 1 stays **21 accepted, 12 missing, zero unreviewed
 of 33**, with no new slot credit.
+
+The acceptance command passes unmodified from clean integration commit `b37dcb15`: seven result records are byte-identical, including production execution, forty owner checks and the single-float observer. No additional execution or slot credit.
