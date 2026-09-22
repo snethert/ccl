@@ -3680,3 +3680,6 @@ Proposal `7267519e` passes the documented verifier unmodified from a clean commi
 ### 2026-09-22 — Audit156 and the file-environment recount
 
 Import audit156 verbatim and bind its closure/recipes reviews without treating the reviewer's recommendation as user acceptance. Repair the counter with CCL's real compile-file environments, retaining complete outcomes and explicit stops. On the same 2,231 definitions the corrected count is 1,895; 893 additional definitions are separate. The three numeric files all reach their ends, and their generated entries run against native file-compiled references. Two new recipes raise execution to 460/429; the whole-file numeric subset has 644 comparisons. Compiler/runtime/CCL sources are unchanged and no slot credit is claimed. Original harness and oracle development failures are retained.
+
+
+Proposal `13388525` passes the documented verifier unmodified from a clean committed detached checkout: **2,261 deterministic artifacts identical at 369 pins**. The 57-file recount, compile-time environment controls, numeric module assembly and all 16,560 target comparisons reproduce. Native qualification remains reused by exact source hashes. No additional execution or slot credit.

@@ -3257,6 +3257,12 @@
       "sha256": "d886aaeac2eb677285d2b05163a1147242c37808b91436bb6783dbbeb239b6e4",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Whole-file environment recount corrects audit156 F1: 1895/2231 in the comparable cohort; 2747/3124 total DEFUN records with 893 additional definitions reported separately; 44/57 files complete. All 57 suspect macro-callee names dispositioned (51 target, six excluded). Numeric files fully processed: 147/224 definitions lower and 155 modules assemble. 460 originals execute, 429 non-NIL; 21 whole-file numeric definitions, 644 numeric comparisons and 16560 full-corpus comparisons. Three compile-time environment omissions and two body guards tested. Compiler/runtime/CCL source unchanged from reviewed closure; native R6/R6a reused by hash. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FILE-ENVIRONMENTS-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-file-environments-verification/verification.json",
+      "sha256": "3cccce9150616e484d8806044aaa08a1071407facb491fbe67811b3cd0006292",
+      "scope": "Documented verifier passes unmodified from clean committed checkout 13388525e8804de50e0c7018725e985c3a999e8b. Recount and whole-file numeric execution reproduce retained artifacts; no additional execution or slot credit."
     }
   ],
   "current_runs": [

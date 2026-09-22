@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "eef9aa0f2ec6b7b91a9fb2caf19f2b360aac4d3e9996f18c38e752b13de30d85",
-  "commit": "4d34511edc571156b04d0c2c38107a70060eeb95",
-  "immutable_evidence_files": 265441,
+  "catalog_sha256": "ab552b2fe02a6b8d297370936f2f3f64e6ad2f1964323bf47460cb0a503594cc",
+  "commit": "cc382f419b1ccd45d007ad13d4fdda553eb7134e",
+  "immutable_evidence_files": 265444,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-file-environments-r1",
-    "files": 25,
-    "bytes": 24828479
+    "directory": "2026-09-22-stage1-bootstrap-file-environments-verification",
+    "files": 3,
+    "bytes": 472379
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Whole-file recount and numeric execution retained for review; no shared-source changes or LL15 credit.",
-  "source_index_sha256": "9a61a310670c193dfc5b52bf057578f2c5f30d248b6af8b8915791bbd0bf5043",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-file-environments-r1.json",
+  "source_index_sha256": "f985d3ac94fb275c7b3d4398e4ecaf28dceb0c838426321e32346d9c9baee8a9",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-file-environments-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Fresh file-compiler environments, comparable-cohort joins, macro omission controls, numeric module assembly and moving native execution. Native qualification reused by source hash.",
-    "recount": "b105cc2a4a60ea0d22c5dfae8abeeabff7918fd99456b827c921967c6000f69e",
-    "target": "1c4f54e94e035e471d11debcc8e222bc34e2fdc073cd5d5a4297ea08d3d79941"
+    "method": "Documented verifier run unmodified from a clean committed detached checkout.",
+    "checkout": "13388525e8804de50e0c7018725e985c3a999e8b",
+    "verification": "3cccce9150616e484d8806044aaa08a1071407facb491fbe67811b3cd0006292"
   },
   "version": 1
 }
