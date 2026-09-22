@@ -1,0 +1,36 @@
+(in-package :wasm32-compiler)
+
+(defun closure-controls (out)
+  (flet ((emit (form name file)
+           (let ((module (call-with-target
+                          (lambda () (compile-bootstrap-form form name nil)))))
+             (with-open-file (stream (concatenate 'string out file)
+                                     :direction :output :if-exists :error)
+               (write-string (getf module :wat) stream)))))
+    (let ((prior (fdefinition 'bootstrap-word-logical)))
+      (unwind-protect
+          (progn
+            (setf (fdefinition 'bootstrap-word-logical)
+                  (lambda (name forms)
+                    (when (every (lambda (form)
+                                   (ccl::acode-form-typep form '(unsigned-byte 32) t))
+                                 forms)
+                      (funcall prior name forms))))
+            (emit '(defun core-word-and-mask (x)
+                     (declare (type (unsigned-byte 32) x))
+                     (logand x #xffff0000))
+                  "core_word_and_mask" "omission-word-mask.wat"))
+        (setf (fdefinition 'bootstrap-word-logical) prior)))
+    (let ((prior (fdefinition 'bootstrap-operator)))
+      (unwind-protect
+          (progn
+            (setf (fdefinition 'bootstrap-operator)
+                  (lambda (ir)
+                    (if (and (ccl::acode-p ir)
+                             (eq (ccl::acode-operator-name (ccl::acode-operator ir))
+                                 'ccl::minus1))
+                      (b-scalar (car (ccl::acode-operands ir)))
+                      (funcall prior ir))))
+            (emit '(defun core-minus1 (x) (ccl::%negate x))
+                  "core_minus1" "omission-minus1.wat"))
+        (setf (fdefinition 'bootstrap-operator) prior)))))

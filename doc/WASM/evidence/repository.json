@@ -1,27 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "28b6543ef83a5183cef57b8410b9e0dcfc13fffcbc4a7f96134cfa983a3c62f2",
-  "commit": "f1feb2ca6a05180ee483036691a2fc46161c31eb",
-  "immutable_evidence_files": 262867,
+  "catalog_sha256": "8de8063a2adc9b0139dfca0b90f722609273d06d0efb331f7162c8054712e8e8",
+  "commit": "08ded04057508584f5dce91dfeb8cca403e97e9e",
+  "immutable_evidence_files": 265412,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-closure-verification",
-    "files": 5,
-    "bytes": 547334
+    "directory": "2026-09-21-stage1-bootstrap-recipes-r1",
+    "files": 2545,
+    "bytes": 135907330
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Reviewed math R2 integrated; next closure proposal retained for independent review. LL15 open; Stage1 21 accepted,12 missing of33.",
-  "source_index_sha256": "31085f0f9f94a995ab50a20ffacaea1b288ce3417a8cb092b731b649748d5969",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-closure-verification.json",
+  "scope": "Recipe expansion and whole-file hash environment retained for review. Compiler/runtime/CCL source unchanged; LL15 open, 21 accepted and 12 missing of33.",
+  "source_index_sha256": "38b17270a8f79fb0a929d3ec286e0876058f7e5396942d95def2d87bebaa9363",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-recipes-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented commands run unmodified from clean committed detached checkout.",
-    "checkout": "5612391ef54c55adc9fa155aaf21ca6a243f01c2",
-    "verification": "9566e95280e358047d53c0e2a3398c72403584fa36cfc33daba8a2307961494e",
-    "integration": "b0e424821ab3ce89652a874544d9bfd23ca961a440e088b304b5ae3d0598e35a"
+    "method": "Original definitions executed against native with movement and observed post-state; standalone macro-environment regression rejected. Unchanged native qualification reused by hash.",
+    "native": "2b845b142aee129aa9e628c706ef4c1159f7f848211b2d8f64e68512448d4925",
+    "target": "2d996fdaf8a8dd55b3d5bd1e23ac7d86f9a854100ac53231e876131e123e7c5a"
   },
   "version": 1
 }

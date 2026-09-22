@@ -3225,6 +3225,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-verification/verification.json",
       "sha256": "9566e95280e358047d53c0e2a3398c72403584fa36cfc33daba8a2307961494e",
       "scope": "Unmodified verifier and math integration command pass from clean committed checkout 5612391ef54c55adc9fa155aaf21ca6a243f01c2. No new execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-RECIPES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-recipes-r1/packet.json",
+      "sha256": "8ce6fbc11a6d204e2beda87f315072789a7c7da77354f473316d96d61e652142",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Recipes over the unchanged closure compiler: 458 original definitions executed, 427 non-NIL witnesses, 16340 target/14992 exact native comparisons. Twenty-one of the requested 64 plus newly closed NEED-USE-EQL execute. All 64 dispositioned; eight fixture/target primitives, thirteen paired single-float interfaces, nine excluded native interfaces and thirteen substantive dependencies remain. Whole-file l0-hash compilation fixes INVALID-HASH-KEY-P file-local symbol macros; 76/95 file records admitted. Eight faults plus trap control rejected. Native R6/R6a reused by exact compiler/source hash. No shared source changes or slot credit."
     }
   ],
   "current_runs": [

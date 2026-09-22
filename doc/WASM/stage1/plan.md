@@ -662,3 +662,6 @@ Audit154 repair: use native CCL's default FP mask for every generated case, with
 
 
 Audit155: math R2 is accepted and integrated on Steve's authorization, including the production musl build and all 40 owner checks. The next closure proposal executes 436 original definitions, 407 with non-NIL witnesses. Immediate uint32 masks and MINUS1 are exercised; 13 new destructive double-float primitives have exact native mutation witnesses. 64 current closed names still lack recipes. Continue with substantive execution and the file-namespace provider boundary; these counts do not complete the startup closure or READY join.
+
+
+Recipe cohort update: 21 of the prior 64 names and newly closed NEED-USE-EQL now execute, bringing the headline to 458/427. Keep fixture/target primitives (8), paired single-float interfaces (13), excluded native interfaces (9) and substantive remaining work (13) distinct. The latter comprises boxed uint32 stores/random state and bignum LOGBITP (3), target representation oracles (5), dynamic GVECTOR construction (1), cyclic pool graph transport (1), unbound-function cell state (1), a live catch-frame oracle (1), and the known PATH-MEMBER source bug (1). Do not fill these with bypass-only inputs. Continue toward actual startup closure and the file-provider boundary; no READY or LL15 completion follows from the execution count.

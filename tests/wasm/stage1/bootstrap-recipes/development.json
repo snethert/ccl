@@ -1,0 +1,56 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "diagnosis": "First seven recipes pass; output directory was accidentally named --help by the positional runner, then moved intact to /tmp/ccl-recipes-r1."
+    },
+    {
+      "attempt": "r2",
+      "diagnosis": "Recipe referred to file-local symbol macros as native variables. Use the real marker intrinsics in the input builder."
+    },
+    {
+      "attempt": "r3/r4",
+      "diagnosis": "Observer called generic NREVERSE, whose vector branch is not dependency-closed. Use the existing LIST-NREVERSE definition for this list result."
+    },
+    {
+      "attempt": "r5",
+      "diagnosis": "SET observer initialization pulled in an unavailable error dispatcher. Use the existing native global-value primitive."
+    },
+    {
+      "attempt": "r6/r8",
+      "diagnosis": "Observer used an unqualified &LEXPR symbol in WASM32-COMPILER, making a native ordinary parameter rather than CCL lambda-list syntax. Qualify CCL::&LEXPR. The final caller consumes the result before returning."
+    },
+    {
+      "attempt": "r7",
+      "diagnosis": "Actual wrong target answer: INVALID-HASH-KEY-P compiled without its file-local symbol macros. Process l0-hash.lisp through CCL compile-file; retain standalone output as a rejected control."
+    },
+    {
+      "attempt": "r9",
+      "diagnosis": "All generated comparisons pass. The new control was added after this run compiled, so its source snapshot was missing. A development replay used the identical old standalone output; final retention must rebuild that output in its own compile."
+    }
+  ],
+  "retained": [
+    "ccl-recipes-r1/summary.json",
+    "ccl-recipes-r2.log",
+    "ccl-recipes-r2/compiled/compile.log",
+    "ccl-recipes-r3.log",
+    "ccl-recipes-r3/compiled/compile.log",
+    "ccl-recipes-r4.log",
+    "ccl-recipes-r4/compiled/compile.log",
+    "ccl-recipes-r5.log",
+    "ccl-recipes-r5/compiled/compile.log",
+    "ccl-recipes-r6.log",
+    "ccl-recipes-r6/compiled/compile.log",
+    "ccl-recipes-r7.log",
+    "ccl-recipes-r8.log",
+    "ccl-recipes-r8/compiled/compile.log",
+    "ccl-recipes-r9.log",
+    "ccl-recipes-r7/execution.log",
+    "ccl-recipes-r7/compiled/scan_298.wat",
+    "ccl-recipes-r6/driver/observers.lisp",
+    "ccl-recipes-r8/driver/observers.lisp",
+    "ccl-recipes-r9-controls.log",
+    "recipe-array-index.lisp",
+    "recipe-array-index-list.log"
+  ]
+}

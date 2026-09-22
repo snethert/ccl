@@ -3667,3 +3667,8 @@ Following Steve's “accept, integrate and proceed”, math R2 is integrated in 
 
 
 Proposal `5612391e` passes its documented verifier unmodified from a clean committed detached checkout: **1506 deterministic files identical at 354 pins**. The documented math integration command also passes there, including the forty owner checks and the reviewed binary/execution identities. No further execution or slot credit; the new closure proposal awaits Claude review.
+
+
+### 2026-09-21 — Recipes for the pending cohort
+
+Steve asked “work on the 64 recipes”. The isolated bootstrap-recipes packet executes 21 of those names and NEED-USE-EQL, raising original-definition execution to 458 and non-NIL witnesses to 427. Array/closure observers call unchanged real definitions; input/global post-state is compared under movement. Whole-file l0-hash compilation closes a wrong-answer environment gap in INVALID-HASH-KEY-P, with the standalone compilation retained as a rejected control. The 64-name cohort is fully dispositioned, including eight fixture/target entries and thirteen single-float interfaces already tested through native counterparts. Thirteen substantive implementation/representation obligations remain beyond the nine excluded native interfaces. No shared source or acceptance criteria changed; native R6/R6a reused by exact final-source identity.
