@@ -3858,3 +3858,5 @@ native arithmetic and require checked refusals for zero/overflowing division.
 native qualification and all eight reader assignments pass. The multiplication
 packet's clean committed replay passes 4,270 artifacts and 630 pins. All work
 remains isolated for independent review, with no new LL15 credit.
+
+Clean committed division replay at `2ba65ee2` passes unmodified: **4288 deterministic artifacts, 649 pins**. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.

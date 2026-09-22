@@ -1,25 +1,28 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "66a6039a89ed1c1ba88350808c74e3dff167556f36620a1aaf481ffaf59fb75c",
-  "commit": "d5d99686173159b23fa11ae5eb834a6aed61f3bd",
-  "immutable_evidence_files": 267327,
+  "catalog_sha256": "c4f11debfed4a376004b5d89ae8019ebb6294d5818e72780cf5eec6a587a9579",
+  "commit": "5172c157c323708b666b5865bbe91f6cdfc8a715",
+  "immutable_evidence_files": 267331,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-limb-division-r1",
-    "files": 170,
-    "bytes": 47493678
+    "directory": "2026-09-22-stage1-bootstrap-limb-division-verification",
+    "files": 4,
+    "bytes": 491197
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Unreviewed long division: 2,060 admitted, 537 original executions and 502 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "9363215af5aec9aef4ea1fb1e8920f68d06d7b335744cd6738ed5493b83f1bb2",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-limb-division.json",
+  "source_index_sha256": "e4bd5793c15afc8368e6d52443db860588685d71777d4c16179996efba148f93",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-limb-division-verification.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Limb multiplication clean replay at d1af2a09: 4,270 deterministic artifacts, 630 pins. Division has final-source native R6/R6a and target execution; committed replay follows.",
-    "packet_sha256": "5e158491e5b910de419c1bc8f96d7e929dbc6d8188fcf5d6116cd18480decceb"
+    "method": "Unmodified verifier from clean committed worktree at 2ba65ee2; final native build reused by exact source hashes.",
+    "record": "2026-09-22-stage1-bootstrap-limb-division-verification/verification.json",
+    "sha256": "92561609f4cc4e4ffd96ce2d3c614c997e04a7b11ebff1feb3546928465be446",
+    "deterministic_files": 4288,
+    "source_pins": 649
   }
 }

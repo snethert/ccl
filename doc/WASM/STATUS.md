@@ -440,3 +440,5 @@ The preceding multiplication commit `d1af2a09` replays from a clean checkout:
 unintegrated. GCD, numeric restarts, full GF dispatch, remaining condition,
 kernel-global and metadata work, and the image/READY join remain unfinished.
 Stage 1 remains **21 accepted, 12 missing, zero unreviewed of 33**.
+
+Clean committed division replay at `2ba65ee2` passes unmodified: **4288 deterministic artifacts, 649 pins**. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.
