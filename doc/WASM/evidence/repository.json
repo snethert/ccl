@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ab552b2fe02a6b8d297370936f2f3f64e6ad2f1964323bf47460cb0a503594cc",
-  "commit": "cc382f419b1ccd45d007ad13d4fdda553eb7134e",
-  "immutable_evidence_files": 265444,
+  "catalog_sha256": "63984fd629a59ad4d7b55d9f31795e6c5eb1f02de1247147b84fd99508297f1e",
+  "commit": "08747eab8f5d9bb3e497181371e8926692ee6d60",
+  "immutable_evidence_files": 265608,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-file-environments-verification",
-    "files": 3,
-    "bytes": 472379
+    "directory": "2026-09-22-stage1-bootstrap-arch-r1",
+    "files": 164,
+    "bytes": 43507418
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Whole-file recount and numeric execution retained for review; no shared-source changes or LL15 credit.",
-  "source_index_sha256": "f985d3ac94fb275c7b3d4398e4ecaf28dceb0c838426321e32346d9c9baee8a9",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-file-environments-verification.json",
+  "scope": "Numeric arch proposal retained for review; no shared-source changes or LL15 credit.",
+  "source_index_sha256": "fa3f2886a1a73e81bcf977fcc126de921d2ede1d4d0bf99e81842b7482041b51",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-arch-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented verifier run unmodified from a clean committed detached checkout.",
-    "checkout": "13388525e8804de50e0c7018725e985c3a999e8b",
-    "verification": "3cccce9150616e484d8806044aaa08a1071407facb491fbe67811b3cd0006292"
+    "method": "Fresh whole-file recount, direct arch controls and moving numeric execution. Final R6/R6a passes with 21843 tests and 164 restored FASLs.",
+    "recount": "bbe4d90de4b559f927695c83b72df9ee543234ae50813f23fb7b211c1e53149a",
+    "target": "3fae869098154ee627c48297c66fcd3da5deab89b55bf95792835f14e792b2f5"
   },
   "version": 1
 }

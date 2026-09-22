@@ -253,3 +253,10 @@ The three numeric files compile to the end: **147/224** definitions lower, **155
 
 
 Proposal `13388525` passes the documented verifier unmodified from a clean committed detached checkout: **2,261 deterministic artifacts identical at 369 pins**. The 57-file recount, compile-time environment controls, numeric module assembly and all 16,560 target comparisons reproduce. Native qualification remains reused by exact source hashes. No additional execution or slot credit.
+
+
+Audit **157** (`01f01d98`, imported verbatim as `a82d31ed`) finds no defect in the file-environment recount and execution evidence. It is recorded as reviewed, with acceptance still pending. Its next-work observations identify ten missing arch macros, eleven foreign reader stops and the funcallable-instance immediate layout.
+
+Bootstrap arch proposal: **1,950/2,231 admitted (+55); 463 originals executed (+3), 432 non-NIL witnesses (+3)**. [Packet](../../tests/wasm/stage1/bootstrap-arch/README.md). Six numeric/identity macros are implemented; the four native kernel/function-vector macros have explicit capability/layout refusals. Native float construction, copy/store and fixnum-conversion paths execute through existing helpers and services. Whole-file numeric admission is **199/224**, with 207 modules assembled and 24 numeric definitions executed. **16,728** comparisons pass, including 100 direct arch checks; symbol hashing has an explicit x8632-versus-x8664 representation observer. The initialized WITH-STACK-SHORT-FLOATS caller remains unexecuted because its full conversion dependency is open.
+
+Two native FFI pointer definitions are excluded under target reader branches; **46/57** files now read to completion. The other nine foreign stops remain named implementation obligations, not fabricated foreign entries. [O-5 layout proposal](../../tests/wasm/stage1/bootstrap-arch/function-immediates.md) awaits the user's decision. Final R6/R6a passes 21,843 tests and restores all 164 FASLs. Shared compiler/runtime/Lisp sources are unchanged; no LL15 credit or new acceptance.

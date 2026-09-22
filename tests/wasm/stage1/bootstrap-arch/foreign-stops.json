@@ -1,0 +1,18 @@
+{
+  "scope": "Audit-157 reader stops. Removing a native implementation does not discharge an included portable interface. No dummy foreign definitions, host addresses or host constant reads are supplied.",
+  "resolved": [
+    {"file": "level-1/l1-utils.lisp", "definition": "%set-composite-pointer-ref", "foreign": "memmove", "disposition": "Native FFI composite-pointer mutation excluded with its definition. Not a linear-memory copy service."},
+    {"file": "level-1/l1-aprims.lisp", "definition": "%new-gcable-ptr", "foreign": "memset", "disposition": "Native malloc/macptr/finalizer allocation excluded with its definition. Not the portable heap allocator."}
+  ],
+  "unresolved": [
+    {"file": "level-1/l1-numbers.lisp", "definition": "%double-float-asinh!", "foreign": "asinh", "disposition": "Included numeric operation; needs additional pinned musl entries, condition handling and two-ULP qualification. The accepted transcendental export list ends at tanh."},
+    {"file": "level-1/linux-files.lisp", "definition": "%os-getcwd", "foreign": "getcwd", "disposition": "Included virtual-namespace current directory; needs owner binding and UTF-8 buffer semantics, not the Node process cwd."},
+    {"file": "level-1/l1-processes.lisp", "definition": "process-yield", "foreign": "sched_yield", "disposition": "Included Lisp scheduler yield; requires the scheduler protocol, not a native process call or no-op."},
+    {"file": "level-1/l1-lisp-threads.lisp", "definition": "%nanosleep", "foreign": "nanosleep", "disposition": "Included interruptible sleep; requires owner timer and suspension support. No blocking browser main-thread wait."},
+    {"file": "level-1/l1-readloop.lisp", "definition": "quit", "foreign": "_exit", "disposition": "Included application shutdown; requires owner request, flush and sibling-Worker policy."},
+    {"file": "level-1/l1-readloop-lds.lisp", "definition": "abnormal-application-exit", "foreign": "_exit", "disposition": "Included abnormal shutdown; same owner protocol with failed-cleanup handling."},
+    {"file": "level-1/l1-events.lisp", "definition": "force-async-quit", "foreign": "_exit", "disposition": "Native signal-resend path is excluded, but its quit-hook and owner-exit replacement remain unresolved."},
+    {"file": "level-1/l1-error-signal.lisp", "definition": "%error", "foreign": "exit", "disposition": "Included fatal startup error; route through owner fatal boundary without removing ordinary Lisp error handling."},
+    {"file": "level-1/l1-application.lisp", "definition": "process-application-arguments", "foreign": "_exit", "disposition": "Included help/version completion; needs owner stdio and exit protocol, not Worker-only process.exit."}
+  ]
+}

@@ -1,0 +1,41 @@
+(in-package :wasm32-compiler)
+
+(defun arch-probe-forms ()
+  '((defun core-arch-ratio (x)
+      (let ((n (ccl::%numerator x)))
+        (core-collect)
+        (values n (ccl::%denominator x))))
+    (defun core-arch-identity (x)
+      (values (ccl::immediate-p-macro x) (ccl::hashed-by-identity x)))
+    (defun core-arch-symbol-identity (x)
+      ;; Assert each architecture's own answer, not native equality. D1
+      ;; follows x8632's symbol subtag; x8664's macro returns NIL here.
+      #+32-bit-target (eq (ccl::hashed-by-identity x) (not (null x)))
+      #+64-bit-target (null (ccl::hashed-by-identity x)))
+    (defun core-arch-double (x)
+      (let ((result (ccl::%make-dfloat)))
+        (core-collect)
+        (ccl::%setf-double-float result x)
+        (core-collect)
+        result))
+    (defun core-arch-single (x)
+      #+32-bit-target
+      (let ((result (ccl::%make-sfloat)))
+             (core-collect)
+             (ccl::%setf-short-float result x)
+             (core-collect)
+             result)
+      #+64-bit-target x)
+    (defun core-arch-copy-order (x y)
+      (let ((order nil))
+        (values
+         (ccl::%copy-double-float
+          (progn (push 1 order) (core-collect) x)
+          (progn (push 2 order) (core-collect) y))
+         order)))
+    (defun core-arch-stack-single (x)
+      #+32-bit-target
+      (wasm32::with-stack-short-floats ((result x))
+             (core-collect)
+             result)
+      #+64-bit-target (ccl::%short-float x))))

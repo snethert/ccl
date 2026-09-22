@@ -1,0 +1,31 @@
+{
+  "attempts": {
+    "arch-r1-r2": "Arch file begins in a package with no CL use list; qualify IN-PACKAGE before reading macro bodies. Both fail compilation; r3 corrects this.",
+    "numeric-r1": "Native LFUN identity macros exposed D1 fields and newly admitted COMPILED-FUNCTION-P without an input. Changed both to explicit layout refusals, not native vector aliases.",
+    "numeric-r2": "Positive development run: three new originals execute; no direct arch probes yet.",
+    "numeric-r3": "TARGET-WORD-SIZE-CASE is a runtime CASE, so the native compiler still sees the 32-bit constructor. Probe uses reader conditionals instead.",
+    "numeric-r4": "Raw hashed-by-identity result for symbols differs on x8664 and x8632. Retain failure; assert both architectural answers in a representation observer.",
+    "native-r1": "Python decoded-FASL comparison exceeded the default recursion limit on l1-aprims. Same comparison rerun with limit 10000; no normalization changed.",
+    "arch-r4-numeric-r5-native-r2": "Final proposal and positive execution/build inputs."
+  },
+  "retained": [
+    "ccl-bootstrap-arch-r1.log",
+    "ccl-bootstrap-arch-r1/setup.log",
+    "ccl-bootstrap-arch-r1/proposal/files/compiler/WASM32/wasm32-arch.lisp",
+    "ccl-bootstrap-arch-r2.log",
+    "ccl-bootstrap-arch-r2/setup.log",
+    "ccl-bootstrap-arch-r2/proposal/files/compiler/WASM32/wasm32-arch.lisp",
+    "ccl-bootstrap-arch-numeric-r1.log",
+    "ccl-bootstrap-arch-numeric-r1/compiled/compile.log",
+    "ccl-bootstrap-arch-numeric-r1/compiled/source/compile.lisp",
+    "ccl-bootstrap-arch-numeric-r3.log",
+    "ccl-bootstrap-arch-numeric-r3/compiled/compile.log",
+    "ccl-bootstrap-arch-numeric-r3/compiled/source/compile.lisp",
+    "ccl-bootstrap-arch-numeric-r4.log",
+    "ccl-bootstrap-arch-numeric-r4/compiled/compile.log",
+    "ccl-bootstrap-arch-numeric-r4/compiled/source/compile.lisp",
+    "ccl-bootstrap-arch-numeric-r4/execution.log",
+    "ccl-bootstrap-arch-native/failure.log",
+    "ccl-bootstrap-arch-native/run.json"
+  ]
+}
