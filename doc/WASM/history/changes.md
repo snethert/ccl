@@ -1,3 +1,29 @@
+## 2026-09-21 — bootstrap admission, 33 new executions, and foreign exclusions
+
+On Steve's “proceed with ALL of the requests”, carry audit152's accepted
+execution evidence into one compiler/source proposal. Execute 382 original CCL
+definitions (+33), 355 with non-NIL witnesses (+32). Admit 1,983 of 2,231 parsed
+worklist definitions, with 44/57 files read completely. AUX and LEXPR arguments,
+global SETQ, list/vector constructors, typed integer access and primitive
+self-calls close real arithmetic, logical and library bodies. Seventeen missing
+native-FFI-hook crashes now refuse explicitly. Function-immediate reflection
+remains a named D1 layout dependency, not a guessed host offset.
+
+Remove excluded native definitions instead of giving their POSIX constants a
+protocol. Retain both module lists, inventory all 409 foreign sites, remove 27
+constants and leave 55 active function dependencies. Compiled CPU-cache and
+semaphore callers run against explicit protocol expectations. Scheduler blocking
+and sealed production capability authority remain unclaimed.
+
+The execution passes 13,336 comparisons with 7,434 collections, including 96
+allocation retries; ten legacy outputs stay identical. Fresh native R6/R6a
+passes 21,843 tests and restores all 164 FASLs. Retain development failures:
+wrong typed string view, LEXPR multiple-value convention, recursive primitive
+self-calls, and source-note presence changes in the native comparison. The
+written comparator checks exact native code and non-location data; three
+controls reject code, semantic-bit and callee changes. No shared compiler,
+runtime or CCL source changes, no new C/JS service, and no slot credit.
+
 ## 2026-09-21 — accept host execution evidence, hold every source change
 
 On Steve's “Go ahead and accept”, accept STAGE1-BOOTSTRAP-HOST-R1's execution

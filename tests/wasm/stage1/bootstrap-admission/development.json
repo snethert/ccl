@@ -1,0 +1,92 @@
+{
+  "attempts": [
+    {
+      "id": "r1",
+      "reason": "Initial admission: seventeen native FFI hook crashes became named refusals. No new original witnesses yet."
+    },
+    {
+      "id": "r2",
+      "reason": "Newly closed COMPLEX-ARRAY-P required member and nonmember inputs; added them."
+    },
+    {
+      "id": "r3",
+      "reason": "Fixture &LEXPR symbol was read in the wrong package. Qualified CCL::&LEXPR."
+    },
+    {
+      "id": "r4",
+      "reason": "DISPLACED-ARRAY-P recipe supplied NIL, outside its native array contract. Corrected the recipe."
+    },
+    {
+      "id": "r5",
+      "reason": "Execution exposed unsigned-word string reads becoming character reads. Preserved the native array-type mapper and implemented typed integer access."
+    },
+    {
+      "id": "r6",
+      "reason": "Target LEXPR propagated several values where pinned native returns its primary value. Matched the native convention, including zero values."
+    },
+    {
+      "id": "r7",
+      "reason": "Compile-only development run of the corrected array and argument paths."
+    },
+    {
+      "id": "r8",
+      "reason": "Captured LEXPR refuses earlier at B-LOCAL-OWNER; control now names the actual admission boundary."
+    },
+    {
+      "id": "r9",
+      "reason": "Original unary minus recursively self-called instead of entering the primitive lowering. Fixed top-level primitive self-call dispatch."
+    },
+    {
+      "id": "r10",
+      "reason": "Original LOGXOR exposed the corresponding missing fixnum primitive dispatch. Added XOR to the existing rooted logical helper."
+    },
+    {
+      "id": "r11",
+      "reason": "Python quoting error in the derivation script; corrected before compilation."
+    },
+    {
+      "id": "r12",
+      "reason": "PASS: 382 originals, 355 non-NIL witnesses, 13336 target comparisons and 96 collecting allocation retries."
+    },
+    {
+      "id": "native1",
+      "reason": "Old comparator rejected disappearing source-location records; all code bytes were identical. Written location comparator now records and validates those metadata changes."
+    },
+    {
+      "id": "native2",
+      "reason": "Fresh R6/R6a with the written comparator; original failed registered FASL hashes must equal final ones."
+    }
+  ],
+  "retained": [
+    "ccl-admission-r1.log",
+    "ccl-admission-r1/execution.log",
+    "ccl-admission-r2.log",
+    "ccl-admission-r3.log",
+    "ccl-admission-r3/compiled/compile.log",
+    "ccl-admission-r4.log",
+    "ccl-admission-r5.log",
+    "ccl-admission-r5/execution.log",
+    "ccl-admission-r6.log",
+    "ccl-admission-r6/execution.log",
+    "ccl-admission-r7.log",
+    "ccl-admission-r8.log",
+    "ccl-admission-r8/compiled/compile.log",
+    "ccl-admission-r9.log",
+    "ccl-admission-r9/execution.log",
+    "ccl-admission-r10.log",
+    "ccl-admission-r10/execution.log",
+    "ccl-admission-r11.log",
+    "ccl-admission-r12.log",
+    "ccl-admission-r12/execution.log",
+    "ccl-admission-r9/compiled/scan_1475.wat",
+    "ccl-admission-r10/compiled/scan_1471.wat",
+    "ccl-admission-lexpr-native.log",
+    "ccl-admission-lexpr-zero-native.log",
+    "ccl-admission-native.log",
+    "ccl-admission-native/failure.log",
+    "ccl-admission-native/run.json",
+    "ccl-admission-native/registered-fasls.json",
+    "ccl-admission-native2.log"
+  ],
+  "source_freeze": "Retention asserts every compiler/harness input copy. Final verifier runs from a clean committed worktree; reports derive from the retained execution, not another run."
+}
