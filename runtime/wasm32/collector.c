@@ -134,12 +134,24 @@ EXPORT U collect(U config) {
     if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
     scan=n;size=4+(W)n*4;
    }
-   else if(node_subtag(tag)||(tag==130&&n>=1)){scan=n;size=4+(W)n*4;}
+   else if(node_subtag(tag)||(tag==130&&n>=1)){if(tag==42&&n!=6&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;
   }
   if(size>(W)s->used-p)return reject(s,BAD_OBJECT);
   objects(s)[s->count++]=(Object){p,(U)size,scan,0};p+=(U)size;
+ }
+ /* Validate the extra callable field after inventory, before any copy. */
+ for(index=0;index<s->count;index++){
+  p=objects(s)[index].old;
+  if(LOAD(p)==1834){
+   U value=LOAD(p+28),q=value-6,i;
+   if((value&7)!=6||!extent(q,32)||LOAD(q)!=2042||inside(q,s->to,s->end))return reject(s,BAD_OBJECT);
+   if(inside(q,s->from,s->limit)){
+    i=find(s,q);if(i==0xffffffffu||objects(s)[i].size!=32)return reject(s,BAD_OBJECT);
+   }
+   if(inside(q,s->stacklo,s->stackhi))return reject(s,BAD_OBJECT);
+  }
  }
  /* Root chain uses the actual current descriptor shapes, including indirect
   * arena result buffers. Saved binding/control payloads are already on it.

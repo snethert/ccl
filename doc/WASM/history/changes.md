@@ -3718,3 +3718,23 @@ Whole-file CLOS admission lifts the comparable numerator from 1,950 to 2,043. Th
 ## 2026-09-22 — bind clean funcallable replay
 
 The documented verifier passes unmodified from clean checkout `1a696fe3`: 3,620 deterministic artifacts match at 477 source pins. Recount, generated/native execution, movement, publication and changed-site controls reproduce. Retain the clean checkout and verification records. No functional change or additional slot credit.
+
+## 2026-09-22 — accept and integrate the audit-158 stack
+
+Import Claude audit 158 verbatim from `a87f4576` at `91e417c1`. On Steve's direct
+“address the obligations and accept/integrate”, accept arch and hyperbolic as a
+cumulative implementation, the inherited reviewed closure proof, and the D1
+funcallable storage design. Install the exact reviewed compiler, arch, source
+branches, eight musl files and runtime changes. Keep ordinary callable storage
+unchanged and state that discriminating-code dispatch is not implemented.
+
+Decide O-6's ordinary keyword-vector home in existing arity metadata, explicitly
+leaving accessor execution owed. Add O-7's raw native/target single-float
+observer under movement. Record O-8's installer profile widening and retained
+trusted capability checks. Production imports reproduce the reviewed generated
+record, rebuilt float/collector bytes and forty owner checks. Reuse R6/R6a only
+by exact final proposal source hashes; do not repeat the independent full review.
+Retain a post-integration runner that reads immutable inputs instead of applying
+old source patchers to the integrated tree. No additional definition or slot
+credit; the integrated frontier is 470/439 executed witnesses and 2,043/2,231
+admitted definitions.

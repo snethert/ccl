@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-bootstrap-funcallable.json",
+  "acceptance_sha256": "5e5daaa0c48b5a6ff05168b786110599492579b7a8809c8346e9880fa2a9bee1",
+  "previous_integration": "integration-bootstrap-math.json",
+  "previous_integration_sha256": "5a0ada2b3fdf0a3cb0de5ce9ad07564b745a472f725e3e788b84b872c73fea51",
+  "files": [
+    {
+      "after": "011dcfa8526dec3e625226d7a24df3247163d8bd5acda7ab7df6f39daa268110",
+      "before": "4d242a9ea04860e9b82ab5a01b54324ffd53efd5239fa383c327ab34ccc9ce85",
+      "file": "compiler/WASM32/wasm32-arch.lisp",
+      "reviewed": "011dcfa8526dec3e625226d7a24df3247163d8bd5acda7ab7df6f39daa268110"
+    },
+    {
+      "after": "6b3c6b947c0b6a1de6f644bfe072f4ee41c75225a174a2f6385f9a82396b48e2",
+      "before": "47dc9a2154abe1e048170350becf958562756e49f204e7036cbe3e8babe6034c",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "6b3c6b947c0b6a1de6f644bfe072f4ee41c75225a174a2f6385f9a82396b48e2"
+    },
+    {
+      "after": "c1c200f559105f45c4d27473e5afa82307b7f379b1e686522dc8df936909f233",
+      "before": "5563329cd276b9f417e11e62bb2d407ef5b2ee99f9ee630716814f9962146926",
+      "file": "level-1/l1-numbers.lisp",
+      "reviewed": "c1c200f559105f45c4d27473e5afa82307b7f379b1e686522dc8df936909f233"
+    },
+    {
+      "after": "a342f7910b8b94a4c3c2184746f1864a5819286ab9b2a31ce08f646fa6ee6ba1",
+      "before": "c17fb1e590e0563722aa658f9f7063ecc7bcbb87ebcff3d6e81805d799078d62",
+      "file": "level-1/l1-utils.lisp",
+      "reviewed": "a342f7910b8b94a4c3c2184746f1864a5819286ab9b2a31ce08f646fa6ee6ba1"
+    },
+    {
+      "after": "7c374b8effd203d2cb42eb96b4c253ad3ce071da52ed18b744cf99ff18494b5f",
+      "before": "589baffc9f62b643d73fc1df9bee7f0b0289c739ba8ea33884f3ab1e1daab8cc",
+      "file": "level-1/l1-aprims.lisp",
+      "reviewed": "7c374b8effd203d2cb42eb96b4c253ad3ce071da52ed18b744cf99ff18494b5f"
+    },
+    {
+      "after": "5c8faa845d585f78f8c995ff507542013127f66f573fc8fa5922430b19c0f566",
+      "before": "e242a5cf0c6f870e08dca1fe68efcc7bf52d0cabf573d513846b20edb6854417",
+      "file": "runtime/wasm32/collector.c",
+      "reviewed": "5c8faa845d585f78f8c995ff507542013127f66f573fc8fa5922430b19c0f566"
+    },
+    {
+      "after": "3e28180e4385feeb36d796163853857ed541c22e94a25bc2e695875f16eaa568",
+      "before": "af09cfeb643a787965d040648fc120477aa063b1dac36974914c674667cd016e",
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "reviewed": "3e28180e4385feeb36d796163853857ed541c22e94a25bc2e695875f16eaa568"
+    },
+    {
+      "after": "0ddd3c1e719c25aad5b027f3a889220c26e147582f31c863971343969c405a3a",
+      "before": "edd1cc0adffdfd2b8dac994fa3016237c7061fa6484f1d5a8bbba89b8fff6e74",
+      "file": "runtime/wasm32/installer.mjs",
+      "reviewed": "0ddd3c1e719c25aad5b027f3a889220c26e147582f31c863971343969c405a3a"
+    },
+    {
+      "after": "2100929e8ae264ef4ad326d56f032d3f53eb5fcc6cec8b080da486941571b04b",
+      "before": "cdceac3f860b15538a84cc270ab2d979d3b5627b6613d3726a3b1879063c53e0",
+      "file": "runtime/wasm32/ranges.mjs",
+      "reviewed": "2100929e8ae264ef4ad326d56f032d3f53eb5fcc6cec8b080da486941571b04b"
+    },
+    {
+      "after": "09566997c0e506073b3934519c189e40a43d889f78a219db45e3e9d988233800",
+      "before": "dadba40a0d41998855b6b2e5939b9b39f018036abe7add7552ca21b0812f6100",
+      "file": "runtime/wasm32/float.c",
+      "reviewed": "09566997c0e506073b3934519c189e40a43d889f78a219db45e3e9d988233800"
+    },
+    {
+      "after": "448832a536e950a04a326e6e01be0387e65fe7742ec9e334ff2f9025364babf3",
+      "before": "26d2d476668200718e077f104c6371ea2f4e9a3fb8aae4bbba0c8144410cb69f",
+      "file": "runtime/wasm32/transcend.c",
+      "reviewed": "448832a536e950a04a326e6e01be0387e65fe7742ec9e334ff2f9025364babf3"
+    },
+    {
+      "after": "870ac20c798c9385cf5d4deaeb7ca917a20c5fcfd95f255f3993fb748fb08a1d",
+      "before": "3509108e2e89a894124cad72a26a37c23af65e44ccea1e9432893cb9b7afc5e5",
+      "file": "runtime/wasm32/float-service.mjs",
+      "reviewed": "870ac20c798c9385cf5d4deaeb7ca917a20c5fcfd95f255f3993fb748fb08a1d"
+    },
+    {
+      "after": "3de72682dc18817fcc3b521d574cbe5a0f3c01af371ca4ccb2fd1bc3441b359a",
+      "before": null,
+      "file": "runtime/wasm32/libm/atanhf.c",
+      "reviewed": "3de72682dc18817fcc3b521d574cbe5a0f3c01af371ca4ccb2fd1bc3441b359a"
+    },
+    {
+      "after": "6c01aff9fcee1dcaca4d4581f17357e0f069643321c00288c672adc3521d0cc8",
+      "before": null,
+      "file": "runtime/wasm32/libm/log1pf.c",
+      "reviewed": "6c01aff9fcee1dcaca4d4581f17357e0f069643321c00288c672adc3521d0cc8"
+    },
+    {
+      "after": "eef97dad984a78f7afabb0a62aee7b11113753984157cf44ffb8ac137697207c",
+      "before": null,
+      "file": "runtime/wasm32/libm/acosh.c",
+      "reviewed": "eef97dad984a78f7afabb0a62aee7b11113753984157cf44ffb8ac137697207c"
+    },
+    {
+      "after": "1bfda6f427e5cb7e350cfc2ab08e022968f5d13e9728d35cbe7d601e9977d44f",
+      "before": null,
+      "file": "runtime/wasm32/libm/atanh.c",
+      "reviewed": "1bfda6f427e5cb7e350cfc2ab08e022968f5d13e9728d35cbe7d601e9977d44f"
+    },
+    {
+      "after": "f89fa2a2568593641d16135887c02f7d3da37251ed36fb39dc58930bfd44c731",
+      "before": null,
+      "file": "runtime/wasm32/libm/acoshf.c",
+      "reviewed": "f89fa2a2568593641d16135887c02f7d3da37251ed36fb39dc58930bfd44c731"
+    },
+    {
+      "after": "c76bbf714cd456a9f0de6e2c94853c27e7865581a2edfdef6d1f861739bbcb46",
+      "before": null,
+      "file": "runtime/wasm32/libm/log1p.c",
+      "reviewed": "c76bbf714cd456a9f0de6e2c94853c27e7865581a2edfdef6d1f861739bbcb46"
+    },
+    {
+      "after": "86c6ccaf2da48664366fb876b4858564d780ab2e437d64a406b43ea0dffd4518",
+      "before": null,
+      "file": "runtime/wasm32/libm/asinhf.c",
+      "reviewed": "86c6ccaf2da48664366fb876b4858564d780ab2e437d64a406b43ea0dffd4518"
+    },
+    {
+      "after": "a0a31b87d1f7b11c43500602fc537097c7f59a483c27a82513944df0b1d6c4f3",
+      "before": null,
+      "file": "runtime/wasm32/libm/asinh.c",
+      "reviewed": "a0a31b87d1f7b11c43500602fc537097c7f59a483c27a82513944df0b1d6c4f3"
+    },
+    {
+      "file": "runtime/wasm32/libm/hyperbolic-provenance.json",
+      "before": null,
+      "after": "ac0205d31f2714e5ff5e258249d22283758c05407e2a8c2c787c744bcee08dfd",
+      "scope": "Reviewed additional musl provenance"
+    },
+    {
+      "file": "runtime/wasm32/README.md",
+      "before": "fc51cef22c2c0d3f6991a2c0e6d2d9ede8ead54fcb158695b14938d2f65b0c68",
+      "after": "7593afd0dda8c7b41a93d72a3f037b1fb9657c4bc1283e84b83294971d38299f",
+      "scope": "Integrated libm and callable-profile obligations"
+    }
+  ],
+  "qualification": {
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-acceptance/packet.json",
+    "packet_sha256": "d5103a34a694af5b8ff2a3428909a313e88f56ec8dce14635a78b8fd039e93db",
+    "production_record": "b620353cfbbc86a904cf8542c97473c830954dea21d035fc28edac1f56ec4231",
+    "native_reuse": {
+      "exact_proposal_source": true,
+      "record": "4c2c923180617b54f8c6d99898c626889c2cf5cc947d7c79184b5aa3686d9fed"
+    },
+    "native_tests": 21843,
+    "identical_fasls": 142,
+    "restored_fasls": 164,
+    "owner_checks": 40,
+    "comparisons": 17156,
+    "single_float_observations": 4
+  },
+  "observations": [
+    "O-6 decision: ordinary keyword vectors remain in arity-record element 6, reached through function byte offset 16. No ordinary immediate-index alias and no new field. Target lfun-keyvect implementation, coverage notes and trampoline reflection remain owed; no execution credit for those admitted callers.",
+    "O-7: 1.5s0 raw native x8664 answers (T T), target boxed x8632 answers (NIL NIL); four target observations below/above 2 GiB before/after collection. Declared architecture difference, no native-match credit.",
+    "O-8: installer admission widens from legacy only to legacy plus existing floating-owner profile for allocation retry, with loader digest/trusted-bundle identity and manifest immediate-vector checks. Default range-reader admission remains unchanged.",
+    "Funcallable storage is accepted: seven-field function with separately traced seven-element vector at CCL indices; ordinary six-field functions unchanged. Calling still executes template code, not discriminating code at vector index 4.",
+    "Method selection, class/wrapper fixtures, actual image materialization and CLOS READY remain owed. Next work is numeric execution recipes, CLOS accessors and the recorded remaining refusal families."
+  ],
+  "scope": "Accept arch and hyperbolic as one cumulative implementation, and the reviewed D1 funcallable layout. Includes inherited reviewed closure proof. No method-dispatch, ordinary-reflection or LL15 credit."
+}

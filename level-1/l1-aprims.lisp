@@ -1197,6 +1197,7 @@ are rounded up to a multiple of 64Kbytes."
     (setf (%svref macptr TARGET::XMACPTR.FLAGS-CELL) value)
     value))
 
+#-wasm32-target
 (defun %new-gcable-ptr (size &optional clear-p)
   (let ((p (make-gcable-macptr $flags_DisposPtr)))
     (%setf-macptr p (malloc size))

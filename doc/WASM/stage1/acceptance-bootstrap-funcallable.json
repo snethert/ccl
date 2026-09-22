@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "address the obligations and accept/integrate",
+    "context": "Direct instruction supplied with audit 158; confirms the proposed D1 funcallable storage design and the stacked arch/hyperbolic implementation, including the reviewed inherited closure proof."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-ARCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-arch-r1/packet.json",
+      "sha256": "bcdf301c8cfc357d4da0dc886019c911811781bf6a9bc6416f1248790f7ad9d9"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HYPERBOLIC-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r2/packet.json",
+      "sha256": "c4c053cb425ffac049a3a8cfc9d62cf30d701795cc796fc748eb1f86d4432d23"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-r1/packet.json",
+      "sha256": "a76586c238c38bcd5c151a3997738471571a303c5007f000bc8f904a2b3ed96d"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "a87f4576d184dc34e7f7b3a2daa65103efc8db4c",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "6952d2a070ecc4c85374465dd1f05eeed6df92156bb5d34ac71495bcb5b3a4d6",
+      "import_commit": "91e417c1dbe532d8af82455b0a6a4e833dcf84d1"
+    }
+  ],
+  "observations": [
+    "O-6 decision: ordinary keyword vectors remain in arity-record element 6, reached through function byte offset 16. No ordinary immediate-index alias and no new field. Target lfun-keyvect implementation, coverage notes and trampoline reflection remain owed; no execution credit for those admitted callers.",
+    "O-7: 1.5s0 raw native x8664 answers (T T), target boxed x8632 answers (NIL NIL); four target observations below/above 2 GiB before/after collection. Declared architecture difference, no native-match credit.",
+    "O-8: installer admission widens from legacy only to legacy plus existing floating-owner profile for allocation retry, with loader digest/trusted-bundle identity and manifest immediate-vector checks. Default range-reader admission remains unchanged.",
+    "Funcallable storage is accepted: seven-field function with separately traced seven-element vector at CCL indices; ordinary six-field functions unchanged. Calling still executes template code, not discriminating code at vector index 4.",
+    "Method selection, class/wrapper fixtures, actual image materialization and CLOS READY remain owed. Next work is numeric execution recipes, CLOS accessors and the recorded remaining refusal families."
+  ],
+  "slot_credit": false
+}

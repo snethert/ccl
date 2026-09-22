@@ -1112,6 +1112,7 @@ vector
   (declare (ignorable size))
   (%inc-ptr pointer offset))
 
+#-wasm32-target
 (defun %set-composite-pointer-ref (size pointer offset new)
   (#_memmove (%inc-ptr pointer offset)
              new

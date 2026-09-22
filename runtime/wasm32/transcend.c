@@ -5,6 +5,7 @@
  */
 #define DECLARE(name) extern double name(double); extern float name##f(float);
 DECLARE(sin) DECLARE(cos) DECLARE(acos) DECLARE(asin) DECLARE(cosh)
+DECLARE(asinh) DECLARE(acosh) DECLARE(atanh)
 DECLARE(log) DECLARE(tan) DECLARE(atan) DECLARE(exp) DECLARE(sinh) DECLARE(tanh)
 extern double pow(double,double),atan2(double,double);
 extern float powf(float,float),atan2f(float,float);
@@ -22,10 +23,11 @@ static U transcend(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U saf
  UNARY(6,log) UNARY(7,tan) UNARY(8,atan)
  case 9:r=width==32?atan2f((float)x,(float)y):atan2(x,y);break;
  UNARY(10,exp) UNARY(11,sinh) UNARY(12,tanh)
+ UNARY(13,asinh) UNARY(14,acosh) UNARY(15,atanh)
  default:return 5;
  }
 #undef UNARY
- U f=nan(r)?1:inf(r)?((i==6&&x==0)||(i==0&&x==0&&y<0)?2:4):0;
+ U f=nan(r)?1:inf(r)?((i==6&&x==0)||(i==15&&(x==1||x==-1))||(i==0&&x==0&&y<0)?2:4):0;
  U chosen=enabled(f,mask,safe),size=chosen?0:width==32?8:16;
  if((W)out+size>limit)return 3;
  if(size){if(width==32){F v={.f=(float)r};GET(out)=271;GET(out+4)=v.u;}

@@ -76,6 +76,10 @@ export class CollectorOwner {
      }
     }
     need(p+bytes<=region.end,'image object extent');
+    if(tag===42){
+     need(n===6||n===7,'image function shape');
+     if(n===7){const q=this.#get(p+28);need(q%8===6&&q-6+32<=this.#view.byteLength,'image immediates extent');need(this.#get(q-6)===2042,'image immediates shape');}
+    }
     for(let i=0;i<count;i++)result.push(p+offset+4*i);
     p+=bytes;
    }

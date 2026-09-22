@@ -905,7 +905,7 @@
     (%sf-check-exception-1 'asinh n (%ffi-exception-status))
     result)))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (progn
 (defun %double-float-asinh! (n result)
   (declare (double-float n result))
@@ -960,7 +960,7 @@
 
 )
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (progn
 (defun %double-float-acosh! (n result)
   (declare (double-float n result))
@@ -1014,7 +1014,7 @@
 
 )
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (progn
 (defun %double-float-atanh! (n result)
   (declare (double-float n result))
@@ -1170,3 +1170,33 @@
 (defun %single-float-tanh! (x result)
   (declare (single-float x result))
   (%wasm-float-store result (%wasm-float-transcend 37 x 0)))
+
+#+wasm32-target
+(defun %double-float-asinh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 38 x 0)))
+
+#+wasm32-target
+(defun %single-float-asinh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 39 x 0)))
+
+#+wasm32-target
+(defun %double-float-acosh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 40 x 0)))
+
+#+wasm32-target
+(defun %single-float-acosh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 41 x 0)))
+
+#+wasm32-target
+(defun %double-float-atanh! (x result)
+  (declare (double-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 42 x 0)))
+
+#+wasm32-target
+(defun %single-float-atanh! (x result)
+  (declare (single-float x result))
+  (%wasm-float-store result (%wasm-float-transcend 43 x 0)))

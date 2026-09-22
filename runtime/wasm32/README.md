@@ -175,3 +175,16 @@ trap modes remain explicit refusals. Native comparisons use the adopted two-ULP
 limit, with exact identities, signed zeros and domain conditions exact. This
 is not a full-domain accuracy bound or a new performance claim. `transcend.c`
 is retained separately for provenance; its reviewed text is already in float.c.
+
+Audit-158 integration adds the six single/double inverse-hyperbolic operations to
+the existing float module. The eight unmodified musl source files are bound by
+`libm/hyperbolic-provenance.json`; the existing COPYRIGHT and two-ULP policy apply.
+`build-float.py` includes them in its ordinary source glob.
+
+Funcallable objects use a seven-field function header with the last field
+pointing to the seven-element traced vector at CCL's logical immediate indices.
+Ordinary functions retain the six-field layout. The installer now admits the
+existing floating-owner profile as well as the legacy profile, using the same
+trusted bundle and digest checks. This permits constructor allocation retry;
+it does not implement method dispatch. See
+[the storage decision and remaining obligations](../../doc/WASM/stage1/function-storage.md).

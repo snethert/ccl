@@ -3217,14 +3217,16 @@
       "id": "STAGE1-BOOTSTRAP-CLOSURE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-r1/packet.json",
       "sha256": "79acf40b256834d410256a5faf11b3fa3e47211f8d61a041eac2f53595c61847",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
-      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount.",
+      "review_disposition": "ACCEPTED",
+      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount. Accepted and integrated as the inherited reviewed proof in audit-158’s cumulative compiler on Steve’s authorization; see acceptance-bootstrap-funcallable.json.",
       "review": {
         "commit": "5fe0ce3c9a73373e60e486be3c3514efb9514048",
         "path": "doc/WASM/stage0/claude-review.md",
         "sha256": "628a6925cd1f513ce1e86ebf3b1a915b12adbe09c0789875d66f30a6858b4bb5",
         "import_commit": "57df0b7685f15c4f68456570758bdce62a19e388"
-      }
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-funcallable.json",
+      "integration": "doc/WASM/stage1/integration-bootstrap-funcallable.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-CLOSURE-VERIFICATION",
@@ -3274,8 +3276,12 @@
       "id": "STAGE1-BOOTSTRAP-ARCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-arch-r1/packet.json",
       "sha256": "bcdf301c8cfc357d4da0dc886019c911811781bf6a9bc6416f1248790f7ad9d9",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Arch macros and numeric execution: 1950/2231 comparable admissions, 463 original executions and 432 non-NIL witnesses. Six macros implemented, four native-layout/kernel macros explicitly refused. 199/224 whole-file numeric definitions admit, 207 modules assemble, 16728 comparisons including 100 arch checks. Two FFI pointer exclusions allow 46/57 files to complete; nine foreign stops and the O-5 layout remain open. R6/R6a 21843 tests and 164 restored FASLs. Unintegrated proposal, no slot credit."
+      "review_disposition": "ACCEPTED",
+      "scope": "Accepted and integrated after audit 158. Six target arch macros, four honest native-layout/kernel refusals and the reviewed numeric execution. Final integration stacks hyperbolic and funcallable changes. No slot credit.",
+      "review_commit": "a87f4576d184dc34e7f7b3a2daa65103efc8db4c",
+      "review_sha256": "6952d2a070ecc4c85374465dd1f05eeed6df92156bb5d34ac71495bcb5b3a4d6",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-funcallable.json",
+      "integration": "doc/WASM/stage1/integration-bootstrap-funcallable.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-ARCH-VERIFICATION",
@@ -3295,8 +3301,12 @@
       "id": "STAGE1-BOOTSTRAP-HYPERBOLIC-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r2/packet.json",
       "sha256": "c4c053cb425ffac049a3a8cfc9d62cf30d701795cc796fc748eb1f86d4432d23",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Whole-file hyperbolic proposal: 467 original executions, 436 non-NIL witnesses, 1950/2231 comparable admissions, 47/57 files complete. l1-numbers admits 67/68; six hyperbolic entries use the existing pinned musl service. 17064 generated comparisons, 176 new hyperbolic comparisons and 80 exact condition comparisons; 15360 raw sampled, 837 directed checks and 177249 accepted primitive comparisons. Three faults rejected. Final R6/R6a and 17-profile reader proof. Unintegrated proposal over ARCH-R1; no slot credit."
+      "review_disposition": "ACCEPTED",
+      "scope": "Accepted and integrated after audit 158. Six inverse-hyperbolic entries use eight pinned unmodified musl additions; reviewed source branches, 176 comparisons within one ULP and 80 exact condition comparisons. R1 remains superseded for packaging. Final production float binary equals the reviewed binary. No slot credit.",
+      "review_commit": "a87f4576d184dc34e7f7b3a2daa65103efc8db4c",
+      "review_sha256": "6952d2a070ecc4c85374465dd1f05eeed6df92156bb5d34ac71495bcb5b3a4d6",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-funcallable.json",
+      "integration": "doc/WASM/stage1/integration-bootstrap-funcallable.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-HYPERBOLIC-VERIFICATION",
@@ -3308,14 +3318,26 @@
       "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-r1/packet.json",
       "sha256": "a76586c238c38bcd5c151a3997738471571a303c5007f000bc8f904a2b3ed96d",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Isolated funcallable storage proposal over HYPERBOLIC-R2: 470 original executions, 439 non-NIL witnesses, 2043/2231 comparable admissions. Three unchanged CCL generic-function getters execute; 17156 comparisons, 42 generated layout checks, 10 installer checks, 12 pinned-owner checks, 10 snapshot checks, 40 owner and 20 structure regressions; four faults rejected. Final R6/R6a and ten unchanged legacy outputs. Separate seven-field vector preserves ordinary callable prefix. Method selection, class/wrapper fixtures, production image materialization and CLOS READY remain owed; no slot credit."
+      "review_disposition": "ACCEPTED",
+      "scope": "Accepted D1 funcallable storage and integrated after audit 158 on Steve’s direct authorization. Final compiler/source/runtime match reviewed bytes; 470 original executions, 439 non-NIL witnesses, 2043/2231 admissions. Production replay matches all 17156 comparisons and 40 owner checks; single-float representation difference observed explicitly. O-6 keyword metadata location decided; ordinary accessors and method dispatch remain unimplemented. Installer floating-owner profile widening recorded. No slot credit.",
+      "review_commit": "a87f4576d184dc34e7f7b3a2daa65103efc8db4c",
+      "review_sha256": "6952d2a070ecc4c85374465dd1f05eeed6df92156bb5d34ac71495bcb5b3a4d6",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-funcallable.json",
+      "integration": "doc/WASM/stage1/integration-bootstrap-funcallable.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-verification/verification.json",
       "sha256": "a35f2b573c2a84fb8adfb3c1b09a229fcbc886d49190d563efca7822e281d2c9",
       "scope": "Documented verifier passes unmodified from clean committed checkout 1a696fe3d314755af9ef9390631c1b072b2efe58. Hyperbolic recount, generated execution, movement, installer, snapshot and fault controls reproduce retained artifacts; no additional execution or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-FUNCALLABLE-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-acceptance/packet.json",
+      "sha256": "d5103a34a694af5b8ff2a3428909a313e88f56ec8dce14635a78b8fd039e93db",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED_INTEGRATION_RECORD",
+      "scope": "Steve accepts audit-158 stack. Exact reviewed source integration and production-import replay; O-6 decision, O-7 observer, O-8 profile widening. No additional execution or slot credit."
     }
   ],
   "current_runs": [

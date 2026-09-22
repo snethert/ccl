@@ -472,3 +472,35 @@ Steve accepted the carry packet explicitly. Lisp ASSQ, compile-time handler admi
 
 
 Math R2 (audit155, accepted by Steve): pinned musl implements the 26 finite single/double transcendental entries. The adopted two-ULP native comparison limit leaves signed zeros, exact identities and domain conditions exact; it is not a global error bound. Checked underflow/inexact trap modes still refuse. The runtime build must include every pinned libm header and retain COPYRIGHT. Production primitive results use the boxed destination; native optimized unboxed locals may not expose destructive mutation. The immediate-bignum uint32 proof limit and MINUS1 witness continue as compiler work.
+
+## Audit 158 — accepted arch, hyperbolic and funcallable integration
+
+Steve's “address the obligations and accept/integrate” accepts the cumulative
+reviewed compiler and runtime, including the seven-field D1 funcallable storage
+layout. [The storage record](function-storage.md) is authoritative for these
+integration obligations; ordinary six-field functions are unchanged.
+
+- O-6's storage decision is settled: ordinary keyword vectors live at element 6
+  of the existing arity record, reached through function byte offset 16. Target
+  `lfun-keyvect` implementation remains owed. Ordinary `nth-immediate`, coverage
+  notes and trampoline reflection still refuse; admission is not execution.
+- O-7 is retained as an explicit observer: `1.5s0` gives native `(T T)` and
+  target `(NIL NIL)` before/after movement at both placements. Boxed singles
+  follow x8632. No native-match or new-definition credit.
+- O-8 is an explicit admission widening: the installer accepts legacy and the
+  existing floating-owner profile. The loader still enforces its digest and
+  trusted bundle identity checks. The default range reader still refuses
+  function imports.
+
+The production float and collector builds equal the reviewed binaries; the
+17,156-comparison record and forty owner checks reproduce through installed
+imports. R6/R6a is reused only after every final compiler, arch and CCL source
+file matches the qualified proposal by hash. Prior proposal verifiers replay at
+their recorded commits; the acceptance runner works after integration.
+
+Method dispatch still invokes template code rather than vector index 4. Real
+class/wrapper fixtures, production image materialization and CLOS READY remain
+owed. Execution-first follow-on work is the 175 admitted numeric definitions
+without execution, roughly 90 CLOS accessors, FFI definition exclusions, then
+condition classes, kernel globals, heap constants and spread kinds. No LL15 or
+BT-0 completion is claimed.

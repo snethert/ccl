@@ -1,0 +1,45 @@
+{
+  "origin": "Same Emscripten 3.1.12 bundled musl as the integrated libm; all eight source files unmodified",
+  "files": [
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/asinh.c",
+      "path": "asinh.c",
+      "sha256": "a0a31b87d1f7b11c43500602fc537097c7f59a483c27a82513944df0b1d6c4f3"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/asinhf.c",
+      "path": "asinhf.c",
+      "sha256": "86c6ccaf2da48664366fb876b4858564d780ab2e437d64a406b43ea0dffd4518"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/acosh.c",
+      "path": "acosh.c",
+      "sha256": "eef97dad984a78f7afabb0a62aee7b11113753984157cf44ffb8ac137697207c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/acoshf.c",
+      "path": "acoshf.c",
+      "sha256": "f89fa2a2568593641d16135887c02f7d3da37251ed36fb39dc58930bfd44c731"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atanh.c",
+      "path": "atanh.c",
+      "sha256": "1bfda6f427e5cb7e350cfc2ab08e022968f5d13e9728d35cbe7d601e9977d44f"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atanhf.c",
+      "path": "atanhf.c",
+      "sha256": "3de72682dc18817fcc3b521d574cbe5a0f3c01af371ca4ccb2fd1bc3441b359a"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log1p.c",
+      "path": "log1p.c",
+      "sha256": "c76bbf714cd456a9f0de6e2c94853c27e7865581a2edfdef6d1f861739bbcb46"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log1pf.c",
+      "path": "log1pf.c",
+      "sha256": "6c01aff9fcee1dcaca4d4581f17357e0f069643321c00288c672adc3521d0cc8"
+    }
+  ]
+}

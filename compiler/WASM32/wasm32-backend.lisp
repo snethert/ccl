@@ -1628,13 +1628,13 @@
 ;;; metadata is raw. Symbol layout is D1's seven-slot object. No native code
 ;;; vector, host pointer or name-based resolver is admitted.
 (defun b-object-runtime ()
-  "(func $span (param $p i32) (param $n i32)
+  (b-wat "(func $span (param $p i32) (param $n i32)
     (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $p)) (i64.extend_i32_u (local.get $n))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4)))))
   (func $object_base (param $node i32) (param $bytes i32) (param $header i32) (result i32) (local $p i32)
     (if (i32.ne (i32.and (local.get $node) (i32.const 7)) (i32.const 6)) (then (throw $call_error (i32.const 4))))
     (local.set $p (i32.sub (local.get $node) (i32.const 6)))
     (call $span (local.get $p) (local.get $bytes))
-    (if (i32.ne (i32.load (local.get $p)) (local.get $header)) (then (throw $call_error (i32.const 4)))) (local.get $p))
+~a    (if (i32.ne (i32.load (local.get $p)) (local.get $header)) (then (throw $call_error (i32.const 4)))) (local.get $p))
   (func $function_value (param $symbol i32) (result i32) (local $node i32)
     (local.set $node (i32.load offset=12 (call $object_base (local.get $symbol) (i32.const 32) (i32.const 1850))))
     (drop (call $object_base (local.get $node) (i32.const 32) (i32.const 1578))) (local.get $node))
@@ -1659,7 +1659,15 @@
     (local.set $slot (i32.load (local.get $row)))
     (if (i32.or (i32.eqz (local.get $slot)) (i32.ge_u (local.get $slot) (table.size))) (then (throw $call_error (i32.const 4))))
     (if (ref.is_null (table.get (local.get $slot))) (then (throw $call_error (i32.const 4))))
-    (local.get $node) (local.get $slot))")
+    (local.get $node) (local.get $slot))"
+    (if *bootstrap-front-end*
+      "(if (i32.and (i32.eq (local.get $header) (i32.const 1578))
+                    (i32.eq (i32.load (local.get $p)) (i32.const 1834)))
+        (then (call $span (local.get $p) (i32.const 32))
+              (drop (call $object_base (i32.load offset=28 (local.get $p)) (i32.const 32) (i32.const 2042)))
+              (local.set $header (i32.const 1834))))
+"
+      "")))
 
 ;;; Closure proposal: function.environment -> D1 simple-vector of shared cons
 ;;; cells. A cell's CAR is its mutable value; CDR is NIL. No code is in the heap.
@@ -3338,7 +3346,7 @@
      (if (result i32) (i32.eq (local.get $kind) (i32.const 37)) (then (i32.const 1114140)) (else
      (if (result i32) (i32.eq (local.get $kind) (i32.const 38)) (then (i32.const 2162716)) (else (i32.const 156))))))))))") s)))
 (defun b-float-call (name forms)
- (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double %libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32))
+ (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double %libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32))
         (op (position name names)) (operation (nth op '(+ - * / < <= = /= >= > float float expt expt sin sin cos cos acos acos asin asin cosh cosh log log tan tan atan atan atan atan exp exp sinh sinh tanh tanh))) (unary (and (>= op 10) (not (member op '(12 13 30 31))))))
   (unless (= (length forms) 2) (refuse :float-arity))
   (b-frame 4 (lambda (root)
@@ -3831,6 +3839,61 @@
            (funcall emit (b-local base) (b-local size))
            (b-store wasm32::tcr.alloc_pointer (b-wat "(i32.add (local.get ~a) (local.get ~a))" base size)) base)))
 
+(defun bootstrap-allocate-float (forms)
+  (let* ((count (ccl::acode-fixnum-form-p (first forms)))
+         (subtag (ccl::acode-fixnum-form-p (second forms)))
+         (bytes (cond ((and (eql count 1)
+                           (eql subtag wasm32::subtag-single-float)) 8)
+                      ((and (eql count 3)
+                           (eql subtag wasm32::subtag-double-float)) 16))))
+    (when (and bytes (= (length forms) 2))
+      (b-wat "(i32.add ~a (i32.const 6))"
+             (b-heap-block bytes
+               (lambda (base)
+                 (b-wat "(memory.fill ~a (i32.const 0) (i32.const ~d))
+                          (i32.store ~a (i32.const ~d))"
+                        base bytes base (+ (ash count 8) subtag))))))))
+
+;;; Funcallable instances retain the ordinary callable prefix. Their final
+;;; word points to the seven Lisp immediates described by LISPEQU.
+(defun bootstrap-function-immediate (forms storep)
+  (unless (= (length forms) (if storep 3 2))
+    (refuse :funcallable-immediate-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (let* ((function (first values)) (index (second values))
+             (value (third values)) (vector (temporary)))
+        (b-wat "(block (result i32)
+                 (local.set ~a (call $object_base
+                   (i32.load offset=28 (call $object_base ~a (i32.const 32) (i32.const 1834)))
+                   (i32.const 32) (i32.const 2042)))
+                 ~a ~a)"
+          vector function
+          (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.ge_u ~a (i32.const 28)))" index index) 4)
+          (let ((address (b-wat "(i32.add (local.get ~a) (i32.add (i32.const 4) ~a))" vector index)))
+            (if storep (b-wat "(i32.store ~a ~a) ~a" address value value)
+                (b-wat "(i32.load ~a)" address))))))))
+
+(defun bootstrap-make-funcallable (forms)
+  (unless (= (length forms) 2) (refuse :funcallable-constructor-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (destructuring-bind (function immediates) values
+        (b-wat "(block (result i32)
+          (drop (call $object_base ~a (i32.const 32) (i32.const 1578)))
+          (drop (call $object_base ~a (i32.const 32) (i32.const 2042)))
+          (i32.add ~a (i32.const 38)))"
+          function immediates
+          (b-heap-block 64
+            (lambda (base)
+              ;; Assurance precedes these loads. Both operands are rooted,
+              ;; and every field is initialized before publication.
+              (b-wat "(memory.copy ~a (i32.sub ~a (i32.const 6)) (i32.const 32))
+                      (memory.copy (i32.add ~a (i32.const 32)) (i32.sub ~a (i32.const 6)) (i32.const 32))
+                      (i32.store (i32.add ~a (i32.const 32)) (i32.const 1834))
+                      (i32.store (i32.add ~a (i32.const 60)) (i32.add ~a (i32.const 6)))"
+                     base immediates base function base base base))))))))
+
 (defun bootstrap-make-vector (forms)
   (bootstrap-operands forms
     (lambda (values)
@@ -4000,7 +4063,13 @@
 
 (defun bootstrap-word-logical (name forms)
   (when (and (= (length forms) 2)
-             (every (lambda (form) (ccl::acode-form-typep form '(unsigned-byte 32) t)) forms))
+             (every (lambda (form)
+                      (or (ccl::acode-form-typep form '(unsigned-byte 32) t)
+                          (and (ccl::acode-p form)
+                               (member (ccl::acode-operator-name (ccl::acode-operator form))
+                                       '(ccl::fixnum ccl::immediate))
+                               (typep (car (ccl::acode-operands form)) '(unsigned-byte 32)))))
+                    forms))
     (b-multiple
      (make-b-raw-code :text
        (bootstrap-operands forms
@@ -4032,6 +4101,8 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
     (case op
+      ((ccl::%setf-double-float ccl::%setf-short-float)
+       (bootstrap-float-store args))
       ((ccl::%single-float ccl::%double-float)
        (bootstrap-primary
         (b-float-call (if (eq op 'ccl::%single-float) '%float-single '%float-double)
@@ -4052,7 +4123,8 @@
                :initial-value (b-scalar (car (second (first args))))))
       (ccl::vector
        (bootstrap-gvector (cons (bootstrap-constant wasm32::subtag-simple-vector) (car args))))
-      (ccl::%make-uvector (bootstrap-make-vector args))
+      (ccl::%make-uvector (or (bootstrap-allocate-float args)
+                                 (bootstrap-make-vector args)))
       (ccl::make-list (bootstrap-make-list args))
       (ccl::nth-value
        (let ((*b-tail-position* nil) (*b-producer-target* nil))
@@ -4215,13 +4287,39 @@
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((eq name 'ccl::%wasm-float-store)
+    (cond ((eq name 'ccl::%wasm-function-immediate)
+           (b-multiple (make-b-raw-code :text (bootstrap-function-immediate forms nil))))
+          ((eq name 'ccl::%wasm-set-function-immediate)
+           (b-multiple (make-b-raw-code :text (bootstrap-function-immediate forms t))))
+          ((eq name 'ccl::%wasm-make-funcallable-instance)
+           (b-multiple (make-b-raw-code :text (bootstrap-make-funcallable forms))))
+          ((member name '(ccl::%copy-double-float ccl::%copy-short-float
+                          ccl::%int-to-dfloat ccl::%int-to-sfloat!))
+           (unless (= (length forms) 2) (refuse :bootstrap-float-store-arity))
+           (b-multiple
+            (make-b-raw-code :text
+              (bootstrap-operands forms
+                (lambda (values)
+                  (let* ((source (make-b-raw-code :text (first values)))
+                         (destination (make-b-raw-code :text (second values)))
+                         (conversion (member name '(ccl::%int-to-dfloat ccl::%int-to-sfloat!))))
+                    (when conversion
+                      (setq source
+                            (make-b-raw-code :text
+                              (b-wat "~a ~a"
+                                     (b-condition (b-wat "(i32.and ~a (i32.const 3))" (first values)) 5)
+                                     (bootstrap-primary
+                                      (b-float-call (if (eq name 'ccl::%int-to-dfloat)
+                                                     '%float-double '%float-single)
+                                                    (list source (bootstrap-constant 0))))))))
+                    (bootstrap-float-store (list destination source))))))))
+          ((eq name 'ccl::%wasm-float-store)
            (b-multiple (make-b-raw-code :text (bootstrap-float-store forms))))
           ((eq name 'ccl::%wasm-float-transcend)
            (let ((op (ccl::acode-fixnum-form-p (car forms))))
-             (unless (and op (<= 12 op 37) (= (length forms) 3))
+             (unless (and op (<= 12 op 43) (= (length forms) 3))
                (refuse :bootstrap-transcend-operation))
-             (b-float-call (nth (- op 12) '(%libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32)) (cdr forms))))
+             (b-float-call (nth (- op 12) '(%libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32)) (cdr forms))))
           ((eq name 'ldb) (bootstrap-ldb forms))
           ((member name '(logand logior logxor)) (or (bootstrap-word-logical name forms) (bootstrap-logical-call name forms)))
           ((eq name '-) (bootstrap-subtract forms))

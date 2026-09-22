@@ -280,3 +280,22 @@ Bootstrap funcallable proposal: **470 original definitions execute (+3), 439 wit
 The packet passes **17,156** native comparisons, **42** generated layout checks, **10** installer checks, **12** pinned-owner checks and **10** snapshot checks; four changed-site faults are rejected. The existing **40** owner and **20** structure checks pass. Final native R6/R6a passes **21,843** tests, with all **164** FASLs restored; ten legacy outputs are text-identical. This is an isolated proposal over hyperbolic R2. Method selection, actual class/wrapper fixtures, production image materialization and the CLOS READY join remain open. No LL15 or other slot credit.
 
 Funcallable proposal `1a696fe3` passes its documented verifier unmodified from a clean committed detached checkout: **3,620 deterministic artifacts identical at 477 pins**. Admission and all 17,156 comparisons, movement, installer, snapshot and fault checks reproduce. Native qualification is reused only after exact final source checks. Ready for independent review; no integration or slot credit.
+
+Audit 158 (`a87f4576`, imported verbatim at `91e417c1`) found no defect in the
+arch, hyperbolic and funcallable proposals. Steve explicitly accepted and asked
+for integration. [Acceptance](stage1/acceptance-bootstrap-funcallable.json) and
+[integration](stage1/integration-bootstrap-funcallable.json) bind the review and
+all three packets, including the inherited reviewed closure proof.
+
+**Integrated: 470 original definitions execute, 439 with non-NIL witnesses;
+2,043/2,231 admit; 47/57 files read completely.** Production-import execution
+reproduces 17,156 comparisons, both rebuilt binaries match, and forty owner
+checks pass. The final native qualification is reused by exact source identity:
+21,843 tests and all 164 FASLs restored. The single-float observer adds four
+architecture-specific observations without changing execution credit.
+
+O-6's keyword-vector home is decided in the existing arity metadata; its target
+accessor implementation remains owed. O-7 is explicitly observed. O-8's
+floating-owner installer admission is recorded. Method selection and the CLOS
+READY join remain open. Stage 1 stays **21 accepted, 12 missing, zero unreviewed
+of 33**, with no new slot credit.

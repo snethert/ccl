@@ -1,26 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "829b377f9cffcf21d9895156882d576ca18f106d535fe2ea7c3b057c4d9c3aff",
-  "commit": "96abba9522187f6f0a84b3cb34c55b55e19a2459",
-  "immutable_evidence_files": 266173,
+  "catalog_sha256": "07fbe23a1cff465d1e7a3a009c0ae83135b2431bca6c366ca96691b2ae9a886f",
+  "commit": "b349b118b7ab9d57b53432bb39adfcb2f912eb31",
+  "immutable_evidence_files": 266189,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-funcallable-verification",
-    "files": 3,
-    "bytes": 477641
+    "directory": "2026-09-22-stage1-bootstrap-funcallable-acceptance",
+    "files": 16,
+    "bytes": 21435394
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Funcallable storage and immediate access proposal retained for independent review. No shared-source integration or slot credit.",
-  "source_index_sha256": "6191a7f115a7fe7f3a88aea13cf17b06655be0c1ea0107eaa2717802fbbbaeff",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-verification.json",
+  "scope": "Accepted arch/hyperbolic/funcallable integration with audit-158 obligations; Stage 1 remains 21 accepted, 12 missing, zero unreviewed.",
+  "source_index_sha256": "4bd91b9457d080c0a780dce8af8725e09b29611b21d80672be32ec2be38f3ced",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-funcallable-acceptance.json",
   "verification": {
     "status": "PASS",
-    "method": "Documented verifier run unmodified from a clean committed detached checkout.",
-    "checkout": "1a696fe3d314755af9ef9390631c1b072b2efe58",
-    "verification": "a35f2b573c2a84fb8adfb3c1b09a229fcbc886d49190d563efca7822e281d2c9"
+    "method": "Exact final reviewed source hashes; production float/collector rebuild and generated execution; native qualification reused by exact proposal identity.",
+    "verification": "b620353cfbbc86a904cf8542c97473c830954dea21d035fc28edac1f56ec4231"
   },
   "version": 1
 }

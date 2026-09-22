@@ -1,5 +1,5 @@
 import {snapshotBytes,utf8} from './bytes.mjs';
-import {LazyLoader,validate,sha,PROFILE} from './loader.mjs';
+import {LazyLoader,validate,sha,PROFILE,FLOAT_PROFILE} from './loader.mjs';
 import {entryRanges} from './ranges.mjs';
 const need=(x,s)=>{if(!x)throw Error(s);},same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const key=pair=>{need(Array.isArray(pair)&&pair.length===2&&pair.every(x=>typeof x==='string'&&x.length),'BINDING_NAME');return JSON.stringify(pair);};
@@ -32,16 +32,16 @@ export class BindingInstaller {
   need(m.modules.length===rows.length,'COMPLETE_MODULES');
   const staged=new Map(),slots=new Set(),bytes=new Map();
   for(const r of m.modules){const c=cats.get(r.name);need(c&&!staged.has(r.name)&&!this.#modules.has(r.name),'MODULE_IDENTITY');
-   need(same(r,c),'MODULE_MANIFEST');need(r.profile===PROFILE,'PROFILE');
+   need(same(r,c),'MODULE_MANIFEST');need([PROFILE,FLOAT_PROFILE].includes(r.profile),'PROFILE');
    need(Number.isInteger(r.slot)&&r.slot>=o.reserved&&r.slot<get(o.registry)&&r.slot<o.table.length&&r.slot<o.tail_table.length&&!this.#slots.has(r.slot)&&!slots.has(r.slot),'SLOT_OWNER');
    need(r.code===r.slot&&r.version===4&&r.signature===17&&r.role===23,'CODE_ROLE');
    span(o.registry+8+16*r.code,16);need([0,4,8,12].every(i=>get(o.registry+8+16*r.code+i)===0)&&o.table.get(r.slot)===null&&o.tail_table.get(r.slot)===null,'SLOT_EMPTY');
-   const b=snapshotBytes(readBytes(r.name));validate(b,r);need(same(r.ranges,entryRanges(b)),'ENTRY_RANGES');
+   const b=snapshotBytes(readBytes(r.name));validate(b,r);need(same(r.ranges,entryRanges(b,{ownerRetry:r.profile===FLOAT_PROFILE})),'ENTRY_RANGES');
    need(Array.isArray(r.arity)&&r.arity.length===6&&Number.isInteger(r.captures)&&r.captures>=0,'CALLABLE_SHAPE');
    slots.add(r.slot);staged.set(r.name,r);bytes.set(r.name,b);
   }
   const functions=new Map();for(const f of m.functions){need(!functions.has(f.object),'FUNCTION_DUPLICATE');const c=staged.get(f.module)??this.#modules.get(f.module);need(c,'FUNCTION_CODE');
-   const raw=object(f.object,1578,32);need(get(raw+4)===c.code*4&&get(raw+12)===c.version,'FUNCTION_IDENTITY');
+   const raw=object(f.object,f.immediates===undefined?1578:1834,32);if(f.immediates!==undefined){need(get(raw+28)===f.immediates,'IMMEDIATES_IDENTITY');vector(f.immediates,7);}need(get(raw+4)===c.code*4&&get(raw+12)===c.version,'FUNCTION_IDENTITY');
    const pool=get(raw+24);need(uint(pool)&&pool%8===6,'POOL_SHAPE');span(pool-6,4);const h=get(pool-6);need(h%256===250&&Math.floor(h/256)>=2,'POOL_SHAPE');const pv=vector(pool,Math.floor(h/256));need(get(raw+16)===pv[0]&&get(raw+20)===pv[1],'METADATA_IDENTITY');
    need(same(ownerArity(raw),c.arity),'ARITY_IDENTITY');const debug=vector(get(raw+20),3);need(debug[0]===4,'DEBUG_SCHEMA');vector(debug[2],c.captures);
    if(c.captures){for(const cell of vector(get(raw+8),c.captures)){need(uint(cell)&&cell!==NIL&&cell%8===1,'CAPTURE_CELL');span(cell-1,8);}}
