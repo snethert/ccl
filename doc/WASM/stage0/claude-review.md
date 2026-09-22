@@ -3140,3 +3140,51 @@ Two things the R2 README states correctly and which are worth carrying: the 44 r
 No defect. The verifier passes; the repair is complete and controlled; the rule is recorded as adopted. Recommended: accept the math packet as R2 and integrate it whole — the compiler additions, the arch file, the `l1-numbers` and `l0-array` branches, and the libm runtime (`float.c` with `transcend.c` and the pinned musl sources, `float-service.mjs`) — with R6/R6a on the final files, the forty owner checks against the new `float.wasm`, and the licence file carried into `runtime/wasm32/`.
 
 Suggested next packet, same size or larger, execution first: C-12; MINUS1's witness; recipes for the 77; the file-namespace foreign calls (`getcwd`, `chdir`, `mkdir`, `unlink`, `isatty`) on the provider protocol; and the next refusal names (`BOOTSTRAP-CONDITION-CLASS` 15, `HEAP-CONSTANT` 9, `%GET-KERNEL-GLOBAL` 8, `B-SPREAD-KIND` 8). Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-sixth Claude audit — acceptance and integration at 75c7d5c7, STAGE1-BOOTSTRAP-CLOSURE-R1 at 5612391e and 65367a32, STAGE1-BOOTSTRAP-RECIPES-R1 at 7267519e and a97dcedc — 22 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-156`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Five Codex commits followed audit 155. Reviewer disposition only. Audit 155 is imported verbatim at 75c7d5c7: this file there hashes 563ef8d8…, the value `acceptance-bootstrap-math.json` binds for 2cc3d73d. The acceptance record quotes the user as "accept, integrate and proceed", which Claude did not witness.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 423 → 436 (closure, +13) → 458 (recipes, +22); with a non-NIL return witness 394 → 407 → 427. Claude's recount from the replayed native rows agrees (458 executed, 21 NIL-only, none lost; 35 new since the math packet). Callee-closed 486 → 487; closed without a recipe 77 → 64 → 43, and the recipes README gives every one of the 64 it started from a disposition, seven of them fixture names, thirteen the single-float destructive primitives that the 64-bit native image does not have and which are therefore not creditable as originals. Native rows 3,906 → 4,145; target comparisons 15,636 → 16,340.
+
+Admission: 1,993 → 1,986 of 2,231, and the correction is the right kind. The recipes README repeated 1,993; `bootstrap-recipes-errata.json` at a97dcedc corrects it to 1,986, names the seven `l0-hash` lock-free definitions that were counted as admitted and now refuse at `%ILLEGAL-MARKER`, and states that both retained summaries already carried 1,986. The number went down because the compile got more honest, and the errata record says so.
+
+The new executions include the thirteen `%DOUBLE-FLOAT-…!` primitives run directly, `%ARRAY-INDEX`, `%ARRAY-HEADER-SUBTYPE`, `%SET-SIMPLE-ARRAY-P` (through an observer that reads the flag back rather than the raw header word, which is the representation-aware oracle audit 149 asked for), INVALID-HASH-KEY-P, LOCK-FREE-HASH-TABLE-COUNT, the truncating string-output-stream functions, TOPLEVEL through a real transfer, THREAD-PRESET, and the closure returned by MAKE-NUMERIC-CTYPE-PREDICATE, called after a collecting poll.
+
+### Integration 75c7d5c7
+
+Ninety-two files. `wasm32-backend.lisp`, `l1-numbers.lisp` and `l0-array.lisp` equal the reviewed proposal bytes in packet 1ea1c54e…. `runtime/wasm32/float.c`, `float-service.mjs`, `transcend.c` and the 84 files under `runtime/wasm32/libm/` (sources, headers, `COPYRIGHT`, `provenance.json`) each equal the reviewed fixture source they came from, checked file by file against the fixture at 1bad7e41 and the packet's retained runtime. `build-float.py` is the reviewed build command as a helper and rebuilds the binary to the recorded hash 91f693f9…; `README.md` records the licence, the two-ULP rule and the trap-mode refusals. `bootstrap-math-acceptance/run.py target`, unmodified, from the detached worktree: PASS in 139 seconds, 1,354 generated files identical, forty owner checks against the new build. The retained native run has 21,843 tests, 144 FASLs identical and all 164 restored. No defect.
+
+### Evidence and replay
+
+Closure packet 79acf40b… (2,362 entries) and recipes packet 8ce6fbc1… (2,543 entries): both NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog ad7521be… at 265,416 files; committed index byte-equal to the snapshot; evidence commit 5778999c; store clean. Both verifiers pass unmodified from the detached worktree, 149 and 156 seconds.
+
+### Closure packet
+
+C-12 closed: the 32-bit logical proof accepts an immediate integer when it is in `(unsigned-byte 32)`, and only then; the matrix has the fixnum limit, both bignum encodings and 2^32−1 in either operand position; a control restores the old proof and fails. MINUS1 has its source-emitted witness through CCL's own `%NEGATE` on fixnums, a bignum, both float widths and signed zero, with a control that makes it return its operand. The thirteen double-float primitives run directly against the native image's compiled entries with `%COPY-FLOAT` snapshots so that the destructive write cannot rewrite the input; every destination starts at a sentinel and must change. Runtime and CCL source are byte-identical to the accepted integration; native R6/R6a for the new backend passes 21,843 tests.
+
+### Recipes packet, and F1
+
+The compiler, runtime and CCL source are unchanged. The work is input recipes and observers: callers that declare the original NOTINLINE and consume a result that cannot be compared raw. Read: they are callers, not replacements. Hash-table backing vectors come from the native constructor with the GC link and back-pointer detached for transport; that is a fixture representation and the README says so.
+
+The INVALID-HASH-KEY-P recipe found something larger than itself. That function reads `free-hash-marker` and `deleted-hash-key-marker`, which `l0-hash.lisp` defines as symbol macros inside a compile-time-only `eval-when`; compiled standalone in the native image, where those macros do not exist, both names read as special variables and the function returned NIL for a real marker — and it had been counted as admitted. Codex now compiles `l0-hash.lisp` through CCL's file compiler, retains the standalone module as a control that must fail the marker recipe, and corrects the count.
+
+F1 (scope of that finding). The same mechanism is not confined to one file. The worklist measure (`measure.lisp`, `library-measure-worklist`) reads each `defun` and compiles it alone in the native image's global environment. Any macro that the image does not have at that moment compiles as a call to a function of that name, and the definition is counted as admitted with a missing callee. From the replayed frontier's `missing_dependencies`, 13 of the 1,613 missing callee names are CCL macro names — NUMBER-CASE (33 definitions), `%IMAGPART` and `%REALPART` (6 each), INVOKE-TYPE-METHOD (5), WITH-NEGATED-BIGNUM-BUFFERS (5), WITH-ONE-NEGATED-BIGNUM-BUFFER (4), WITH-XP-REGISTERS-AND-GPR-OFFSET (4), HTVEC (3), HTCOUNT, HTLIMIT, APPLY-KEY, `%CHAR-NEEDS-ESCAPE-P`, `%WRITE-ESCAPED-CHAR` — and 57 admitted definitions carry one of them (25 in `l0-numbers`, 7 in `l0-float`, 5 in `l1-typesys`, 4 in `l0-bignum32`, 3 in `nfasload`, the rest scattered). NUMBER-CASE is `lib/number-case-macro.lisp`, which `l0-complex.lisp` pulls in with `(eval-when (:compile-toplevel) (require "NUMBER-MACROS"))`; the bignum buffer macros are in `lib/number-macros.lisp`. None of the 57 has executed, so no execution credit is wrong; 57 admissions are, in the same way the seven lock-free ones were. Codex's own audit-146 throughput table already showed NUMBER-CASE as a "missing callee", and Claude repeated it there without asking why a macro was a callee; that is Claude's miss.
+
+Remedy, at the head of the next packet: the worklist measure should compile each file in the environment CCL's file compiler gives it (the `core-compile-file` path the recipes packet already has, with the file's own `eval-when` forms and `require`s), or at least refuse a definition whose expansion contains a call to a name that is a macro in the U1 source tree; recount; and record the corrected admission with the seven-plus-fifty-seven named. The whole-file path is the right one and the packet shows it works for `l0-hash`.
+
+### Probes
+
+Claude ran no compiled probes this audit: the compiler is unchanged from the math R2 bytes verified in audit 155, the two packets' new work is recipes and observers, and the reviewer's time went to the replay of three verifiers and the F1 measurement. The replays themselves reran every comparison.
+
+### Carry items
+
+Closed: C-12, MINUS1, the 77 → 43. Open: this audit's F1 (57 admissions); the 43 closed definitions without recipes, most needing OS, stack, class-wrapper or stream state; the file-namespace foreign calls; `BOOTSTRAP-CONDITION-CLASS` (15), `HEAP-CONSTANT` (9), `%GET-KERNEL-GLOBAL` (8), `B-SPREAD-KIND` (8).
+
+### Disposition
+
+Integration 75c7d5c7: verified, no defect. Closure packet: no defect; recommended for acceptance and integration (the one compiler change, with R6/R6a on the final backend). Recipes packet: no defect in what it claims, the correction was made before review, and its execution evidence is recommended for acceptance; F1 is a scope finding about the admission counter that the packet exposed rather than caused, to be repaired at the head of the next packet, and until then the admission figure should be read as "at most 1,986".
+
+Suggested next packet, same size or larger: F1 and the recount first; then execution through whole-file compilation of `l0-numbers`, `l0-float` and `l0-bignum32`, which is where the NUMBER-CASE definitions are and where the bignum arithmetic the port still lacks lives; the remaining refusal names above. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
