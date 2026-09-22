@@ -232,3 +232,6 @@ Audit **155** (`2cc3d73d`, imported verbatim) finds no defect in math R2. Steve 
 
 
 Closure execution and unsigned masks: **PROPOSED; 436 original definitions execute (+13), 407 with non-NIL witnesses (+13)**. [Packet](../../tests/wasm/stage1/bootstrap-closure/README.md). Admission remains **1,993/2,231**, with 44/57 complete files; 64 current closed names have no inputs. Immediate unsigned 32-bit literals now enter the existing checked word-logic lowering, and MINUS1 has a source-emitted witness. Thirteen original destructive double-float primitives run against native compiled entries with independent input snapshots and observed destination mutation. **15,888** target comparisons include **14,540** exact native comparisons; inherited numerical differences remain separately declared. Seven faults and the old trap-mode harness are rejected. Final-backend native R6/R6a passes **21,843** tests, 144 identical/164 restored FASLs. No runtime or CCL source changes and no LL15 credit.
+
+
+Proposal `5612391e` passes its documented verifier unmodified from a clean committed detached checkout: **1506 deterministic files identical at 354 pins**. The documented math integration command also passes there, including the forty owner checks and the reviewed binary/execution identities. No further execution or slot credit; the new closure proposal awaits Claude review.

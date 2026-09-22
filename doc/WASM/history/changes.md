@@ -3664,3 +3664,6 @@ On Steve's “accept, integrate and proceed”, install the exact reviewed compi
 ### 2026-09-21 — Closure execution and immediate unsigned masks
 
 Following Steve's “accept, integrate and proceed”, math R2 is integrated in `75c7d5c7`. The next isolated packet raises executed originals from 423 to 436 and non-NIL witnesses from 394 to 407. It extends the existing uint32 proof to literal integers in range, executes MINUS1 from source, and adds thirteen original double-float primitive definitions using exact identities. Native destructive calls now copy double-float arguments, so destination mutation cannot corrupt the input oracle. Original development failures are retained. Native qualification passes on the final proposal; seven faults and the bad trap-mode control are rejected. Review and acceptance of this new compiler proposal remain pending.
+
+
+Proposal `5612391e` passes its documented verifier unmodified from a clean committed detached checkout: **1506 deterministic files identical at 354 pins**. The documented math integration command also passes there, including the forty owner checks and the reviewed binary/execution identities. No further execution or slot credit; the new closure proposal awaits Claude review.

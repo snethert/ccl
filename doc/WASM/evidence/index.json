@@ -3219,6 +3219,12 @@
       "sha256": "79acf40b256834d410256a5faf11b3fa3e47211f8d61a041eac2f53595c61847",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CLOSURE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-verification/verification.json",
+      "sha256": "9566e95280e358047d53c0e2a3398c72403584fa36cfc33daba8a2307961494e",
+      "scope": "Unmodified verifier and math integration command pass from clean committed checkout 5612391ef54c55adc9fa155aaf21ca6a243f01c2. No new execution or slot credit."
     }
   ],
   "current_runs": [

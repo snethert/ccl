@@ -1,26 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "3b3562476a9f1b50a8a58e7b298a212cb90c4efca220e463536235f823ba8704",
-  "commit": "907397d6540b0b5ecc9dfb5f1d4f1b7e61b4737d",
-  "immutable_evidence_files": 262862,
+  "catalog_sha256": "28b6543ef83a5183cef57b8410b9e0dcfc13fffcbc4a7f96134cfa983a3c62f2",
+  "commit": "f1feb2ca6a05180ee483036691a2fc46161c31eb",
+  "immutable_evidence_files": 262867,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-closure-r1",
-    "files": 2364,
-    "bytes": 130922802
+    "directory": "2026-09-21-stage1-bootstrap-closure-verification",
+    "files": 5,
+    "bytes": 547334
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Reviewed math R2 integrated; next closure proposal retained for independent review. LL15 open; Stage1 21 accepted,12 missing of33.",
-  "source_index_sha256": "0ff4573c30e84ddef42a2953704541c6d707fd3049d97120610b3c0aee1aa5b6",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-closure-r1.json",
+  "source_index_sha256": "31085f0f9f94a995ab50a20ffacaea1b288ce3417a8cb092b731b649748d5969",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-closure-verification.json",
   "verification": {
     "status": "PASS",
-    "method": "Changed compiler executed against native with movement, two compiled omission controls and five emitted-code faults; final compiler R6/R6a.",
-    "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85",
-    "target": "648fd8375ddaccdde3f9fcedf1830f23ebd73ef357329de2a5e6165ef007c795"
+    "method": "Documented commands run unmodified from clean committed detached checkout.",
+    "checkout": "5612391ef54c55adc9fa155aaf21ca6a243f01c2",
+    "verification": "9566e95280e358047d53c0e2a3398c72403584fa36cfc33daba8a2307961494e",
+    "integration": "b0e424821ab3ce89652a874544d9bfd23ca961a440e088b304b5ae3d0598e35a"
   },
   "version": 1
 }
