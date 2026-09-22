@@ -8,7 +8,7 @@ import backend
 spec=importlib.util.spec_from_file_location('environment_packet',HERE.parent/'bootstrap-file-environments/packet.py')
 parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(parent)
 sha,read,files,save=parent.sha,parent.read,parent.files,parent.save
-ID='STAGE1-BOOTSTRAP-HYPERBOLIC-R1'
+ID='STAGE1-BOOTSTRAP-HYPERBOLIC-R2'
 
 def pins():
     result=parent.pins()
@@ -59,7 +59,7 @@ def main():
         packet.mkdir();records=deterministic(environment,numeric)
         for name,value in [('source-pins',pins()),('dependencies',dependencies()),('tools',parent.parent.base.tools()),('deterministic',records)]:save(packet/(name+'.json'),value)
         for source,name in [(environment/'summary.json','recount.json'),(numeric/'numeric-execution.json','execution.json'),(environment/'cohort-changes.json','cohort-changes.json')]:shutil.copyfile(source,packet/name)
-        with tarfile.open(packet/'artifacts.tar.gz','w:gz') as archive:
+        with tarfile.open(packet/'artifacts.tar.gz','w:gz',dereference=True) as archive:
             for name,digest in records.items():
                 group,relative=name.split('/',1)
                 p=(environment if group=='environment' else numeric)/relative

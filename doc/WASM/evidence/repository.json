@@ -1,21 +1,21 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "734ae8eea5841d7aedded29542e4511b69554b540c0ea60ffc3f30a1ed98510a",
-  "commit": "54997cbf5abf0a84cfe4372297c2809479a2e3ec",
-  "immutable_evidence_files": 265797,
+  "catalog_sha256": "ab4e48dfc858540d88d70d4c137d725179c05c78fa4186f10989bf75a4596c97",
+  "commit": "643a468dc8bc09bc74d081c11561b6eb18b191e7",
+  "immutable_evidence_files": 265983,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-hyperbolic-r1",
+    "directory": "2026-09-22-stage1-bootstrap-hyperbolic-r2",
     "files": 186,
-    "bytes": 46155902
+    "bytes": 46190868
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "Hyperbolic proposal retained for review; no shared-source changes or LL15 credit.",
-  "source_index_sha256": "2aea768ca0aeccada18870b85c52cf3b9c565ac169e17dd505f06e7e31fb207a",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-hyperbolic-r1.json",
+  "source_index_sha256": "e0db19a6c0da678b459fab9667e692b34eb0104f1642af2e8b1559c153c6bd65",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-hyperbolic-r2.json",
   "verification": {
     "status": "PASS",
     "method": "Fresh whole-file recount, libm controls, raw regression and moving numeric execution. Final R6/R6a passes with 21843 tests and 164 restored FASLs.",

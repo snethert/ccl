@@ -3698,3 +3698,8 @@ Proposal `06066644` passes its documented verifier unmodified from a clean commi
 On Steve's “proceed”, extend the existing pinned musl float service with single/double ASINH, ACOSH and ATANH and compile `l1-numbers.lisp` to its end. Preserve native conditional groups and add ordinary Wasm target definitions. The file admits 67/68 definitions; file completion rises to 47/57 while the comparable admission cohort stays 1,950/2,231. Four real macro-generated destructive double-float definitions execute, raising originals from 463 to 467 and non-NIL witnesses from 432 to 436.
 
 Retain 17,064 generated comparisons, the six new entries' 176 two-ULP comparisons and 80 exact condition comparisons, 15,360 sampled raw comparisons and 837 directed controls, and all 177,249 original primitive comparisons. Wrong dispatch, missing pole classification and the old owner ceiling are rejected. Final native build and reader proof bind the proposal. Shared files remain unchanged; no slot credit. Keep the generic-function immediate-layout decision pending and leave the remaining owner-backed foreign interfaces explicit.
+
+
+## 2026-09-22 — portable hyperbolic artifact retention
+
+The clean verifier for `dd70c054` refused a symlink archive entry before executing. Retain R2 with archive dereferencing and the same 3,076 deterministic artifact hashes. Preserve the failed R1 record and log. This changes packaging only; final native and generated execution inputs stay byte-identical.

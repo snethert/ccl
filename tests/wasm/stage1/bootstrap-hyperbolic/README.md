@@ -58,7 +58,7 @@ From a clean checkout of this commit:
 
 ```sh
 python3 tests/wasm/stage1/bootstrap-hyperbolic/packet.py verify \
-  --packet ../ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r1 \
+  --packet ../ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r2 \
   --output /tmp/ccl-hyperbolic-replay
 ```
 
@@ -71,3 +71,7 @@ Eight foreign-name file stops remain, plus the boot kernel-global and TIMEVAL
 stops. They need real owner interfaces; this packet does not hide them with
 reader stubs. The generic-function immediate layout is still a separate
 pending decision. LL15 remains open.
+
+R2 corrects archive storage only: fault-control symlinks are retained as the
+regular-file bytes their recorded hashes already describe. The initial R1
+verifier rejected those archive entries before running execution.

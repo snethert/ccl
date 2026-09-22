@@ -3288,6 +3288,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r1/packet.json",
       "sha256": "e3c14c6ae0925fb4753e078b5d5e163741c54d957ff93831ffeb08fe0eff551b",
       "review_disposition": "NOT_REVIEWED",
+      "scope": "Whole-file hyperbolic proposal: 467 original executions, 436 non-NIL witnesses, 1950/2231 comparable admissions, 47/57 files complete. l1-numbers admits 67/68; six hyperbolic entries use the existing pinned musl service. 17064 generated comparisons, 176 new hyperbolic comparisons and 80 exact condition comparisons; 15360 raw sampled, 837 directed checks and 177249 accepted primitive comparisons. Three faults rejected. Final R6/R6a and 17-profile reader proof. Unintegrated proposal over ARCH-R1; no slot credit. Superseded by R2: clean verifier rejects symlink tar entries before execution. R2 retains their bytes as regular files; executable artifacts unchanged.",
+      "superseded_by": "STAGE1-BOOTSTRAP-HYPERBOLIC-R2"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-HYPERBOLIC-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-hyperbolic-r2/packet.json",
+      "sha256": "c4c053cb425ffac049a3a8cfc9d62cf30d701795cc796fc748eb1f86d4432d23",
+      "review_disposition": "NOT_REVIEWED",
       "scope": "Whole-file hyperbolic proposal: 467 original executions, 436 non-NIL witnesses, 1950/2231 comparable admissions, 47/57 files complete. l1-numbers admits 67/68; six hyperbolic entries use the existing pinned musl service. 17064 generated comparisons, 176 new hyperbolic comparisons and 80 exact condition comparisons; 15360 raw sampled, 837 directed checks and 177249 accepted primitive comparisons. Three faults rejected. Final R6/R6a and 17-profile reader proof. Unintegrated proposal over ARCH-R1; no slot credit."
     }
   ],
