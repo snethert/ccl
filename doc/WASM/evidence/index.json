@@ -3147,16 +3147,38 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-admission-r1/packet.json",
       "sha256": "69b78d9eb8e51e93a520d85c2af15ffed041b3503377f81e0bde048f8a566a3a",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "382 original CCL definitions execute (+33); 355 have non-NIL normal returns (+32). AUX/LEXPR, global SETQ, constructors, shifts, typed integer access and primitive self-calls; no new C/JS runtime service or shared-source changes. The 57-file worklist reads 44 completely and admits 1983/2231 parsed definitions, still a lower bound. All 17 previous TYPE-ERROR compiler crashes become explicit native-FFI refusals. Native function-immediate reflection remains a named layout dependency. 13336 target comparisons: 13248 native matches, four declared signed-zero differences, 84 protocol rows. 7434 collections, including 96 allocation retries. Re-cut 409 foreign sites: 124 excluded with their definitions, 169 existing-platform branches, 61 constant substitutions and 55 active function dependencies; 27 excluded/boundary constants removed, 31 retained. Both module lists retain linux-files. Compiled CPU-cache and wait callers qualify a prototype only; production scheduler and sealed capability authority remain owed. R6/R6a passes 21843 tests, 146 identical/164 restored FASLs and 204 reader comparisons; exact native code/non-location data under the adopted source-location allowance. No LL15 credit; awaiting independent review."
+      "scope": "382 original CCL definitions execute (+33); 355 have non-NIL normal returns (+32). AUX/LEXPR, global SETQ, constructors, shifts, typed integer access and primitive self-calls; no new C/JS runtime service or shared-source changes. The 57-file worklist reads 44 completely and admits 1983/2231 parsed definitions, still a lower bound. All 17 previous TYPE-ERROR compiler crashes become explicit native-FFI refusals. Native function-immediate reflection remains a named layout dependency. 13336 target comparisons: 13248 native matches, four declared signed-zero differences, 84 protocol rows. 7434 collections, including 96 allocation retries. Re-cut 409 foreign sites: 124 excluded with their definitions, 169 existing-platform branches, 61 constant substitutions and 55 active function dependencies; 27 excluded/boundary constants removed, 31 retained. Both module lists retain linux-files. Compiled CPU-cache and wait callers qualify a prototype only; production scheduler and sealed capability authority remain owed. R6/R6a passes 21843 tests, 146 identical/164 restored FASLs and 204 reader comparisons; exact native code/non-location data under the adopted source-location allowance. No LL15 credit; Reviewed by Claude in audit153 with no defect; accepted by Steve and integrated with arch macros relocated. Native final-file qualification passes.",
+      "review": {
+        "commit": "2a72401191b97749ee1ae24821cabde4cc53c21a",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "1897307fa3ee82d405f0fa970b51010419a3ad2847f84cfa1cd967a5b236c523",
+        "import_commit": "0e0bb4a28456b04b58eb2254535da01415faf910"
+      }
     },
     {
       "id": "STAGE1-BOOTSTRAP-ADMISSION-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-admission-verification.json",
       "sha256": "356e1a48d37a2022be2023777aee927c7d0d3558ff24ca858683cf2873bd5f58",
       "scope": "Unmodified verifier passes from clean detached proposal commit 93603a1712f348dc72f8a78fbf6d961387f51bfd. Modules, native comparisons, collector runs and reader comparisons replay identically. Native binaries are re-decoded and code/semantic-bit/callee mutations refused. Final source-index snapshot copied byte-for-byte. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-ADMISSION-INTEGRATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r1/accepted-integration/integration-bootstrap-admission.json",
+      "sha256": "af5c191ed7990442844aee648f494eecbb7c7308bf822c0e3b140cf3d3dad48c",
+      "scope": "Steve accepted audit153. Final installed compiler, architecture and re-cut CCL sources reproduce 1152 reviewed files; 21843 native tests, 146 identical and 164 restored FASLs. Two reviewed arch macros moved intact. Runtime unchanged; no slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-MATH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r1/packet.json",
+      "sha256": "5bf5d0e3931743fd77f92ead80dfbf9b0b77dc260d4aa20e50d3b97cd36186ca",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "423 originals execute (+41), 394 non-NIL witnesses (+39); 1993/2231 admitted in the lower-bound 57-file target inventory, 44 files read completely. 38 of 82 prior original closed names gain recipes; 44 have explicit remaining dispositions; seven fixture/primitive names excluded. Portable coercions, word shifts, proven uint32 logical arithmetic and ARRAY-ELEMENT-TYPE target branch. 26 libm entries on the existing float service; 504 finite native comparisons, 68 one-ULP differences counted separately, proposed four-ULP envelope only. Checked inexact/underflow trap modes refuse. 12480 independent raw libm comparisons, unchanged 59083-case raw arithmetic regression at three placements, 756 width-specific shift comparisons, four emitted-code controls. Native final proposal: 21843 tests, 144 identical/164 restored FASLs; 34 new reader comparisons. New compiler/source/runtime proposal isolated for review, no slot credit or full-domain numerical/ready-image claim."
     }
   ],
   "current_runs": [

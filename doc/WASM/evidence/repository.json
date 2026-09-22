@@ -1,28 +1,28 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "fb3f1ce1dcff94e9822943e25a14ee907e3ae392bfbd7d686942459a70d71b3d",
-  "commit": "fda758ccf29fcb36a4e9d8f9694f91e1a423b551",
-  "immutable_evidence_files": 255265,
+  "catalog_sha256": "757b34ebfcd9ce09e3ca398924ca7fdd873138cc5e083b0d9b2e97520edf1ab2",
+  "commit": "ec9c176a6f37f67a8aa66491f4a4cc2df513994b",
+  "immutable_evidence_files": 257807,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-admission-r1",
-    "files": 2011,
-    "bytes": 101112031
+    "directory": "2026-09-21-stage1-bootstrap-math-r1",
+    "files": 2542,
+    "bytes": 149091858
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "21 accepted, 12 missing of 33. Audit152 execution accepted, host source held. Bootstrap admission proposal: 382 originals, 355 non-NIL witnesses, awaiting independent review. No slot credit.",
-  "source_index_sha256": "f6c32fbd1560fd6bbbb4a0769e6836abb0ef0287b3482575b73180f27343ca4e",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-admission-r1.json",
+  "scope": "21 accepted, 12 missing of 33. Audit153 compiler/source accepted and integrated. Combined math proposal: 423 originals, 394 non-NIL; numerical differences declared separately; awaiting independent review. No slot credit.",
+  "source_index_sha256": "1584a0baebf1c26d5bad33168a626856945c0c2258fabb40a847a7dafce381c6",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Unmodified verifier from clean detached committed proposal. Native rows, modules, comparisons and reader matrix replayed. Fresh R6/R6a bound by exact source identity; native binaries decoded again with three semantic controls. Unchanged runtime qualification reused. Final serialized index copied byte-for-byte to snapshot.",
-    "deterministic_files": 1247,
-    "source_pins": 267,
-    "execution": "5c7f1147ffb1865b76e98e7917062f95c1b49b3bbdf6377aeb98a7416818a342",
-    "native": "c10d004bf11fda98fac7bc692e968c3d47ca88bf5b7fd90d1bee382bb28c1c38"
+    "method": "Final author run recompiles generated/native cases, runtime modules, direct checks and arithmetic regression; focused controls and reader matrix pass. Final proposal native qualification bound by source identity. Clean committed-checkout verification is the following publication step.",
+    "deterministic_files": 1476,
+    "source_pins": 355,
+    "execution": "564398d411476decb698edb753ce327fa8ddeddb587a6737b7bc953b5a56bc35",
+    "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85"
   },
   "version": 1
 }

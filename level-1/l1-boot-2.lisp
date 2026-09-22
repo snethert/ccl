@@ -129,7 +129,7 @@ present and false otherwise. This variable shouldn't be set by user code.")
                                   :sharing :lock
                                   :direction :input
                                   :interactive (or (not *batch-flag*)
-                                                   (< (fd-lseek infd 0 #$SEEK_CUR)                                                      
+                                                   (< (fd-lseek infd 0 #+wasm32-target target::io-seek-cur #-wasm32-target #$SEEK_CUR)                                                      
                                                       0))
                                   :encoding encoding-name
                                   #+windows-target :line-termination #+windows-target :cp/m)))
@@ -146,7 +146,7 @@ present and false otherwise. This variable shouldn't be set by user code.")
     (if *batch-flag*
       (let* ((tty-fd
               #-windows-target
-               (let* ((fd (fd-open "/dev/tty" #$O_RDWR)))
+               (let* ((fd (fd-open "/dev/tty" #+wasm32-target target::os-o-rdwr #-wasm32-target #$O_RDWR)))
                  (if (>= fd 0) fd)))
              (can-use-tty #-windows-target (and tty-fd (eql (tcgetpgrp tty-fd) (getpid)))))
         (if can-use-tty

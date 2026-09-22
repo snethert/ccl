@@ -1,0 +1,96 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "diagnosis": "Native global-symbol recipe used NIL instead of a symbol with the global flag."
+    },
+    {
+      "attempt": "r2",
+      "diagnosis": "Sparse-vector transport encountered an unused native lock; later read-only recipes clear it after population."
+    },
+    {
+      "attempt": "r5",
+      "diagnosis": "Unsigned byte-order logical arithmetic hit the existing fixnum-only path; added proven unsigned-word logical lowering."
+    },
+    {
+      "attempt": "r6",
+      "diagnosis": "Full Unicode case tables exceeded the fixture heap; retained recipes use the needed actual prefix."
+    },
+    {
+      "attempt": "r7",
+      "diagnosis": "Definition-environment recipe passed the internal definition record rather than its enclosing lexical environment."
+    },
+    {
+      "attempt": "r8",
+      "diagnosis": "Native upgraded s32 storage for signed-byte-30 values did not match target fixnum-vector layout; added value-aware transport."
+    },
+    {
+      "attempt": "r9",
+      "diagnosis": "ARRAY-ELEMENT-TYPE lacked a Wasm branch. Added it in the original source file."
+    },
+    {
+      "attempt": "r10",
+      "diagnosis": "CL EXPT takes a complex path for a negative real base. Changed the primitive oracle to CCL actual float entries."
+    },
+    {
+      "attempt": "r11",
+      "diagnosis": "Independent shift model omitted native zero-count identity; corrected the model, retaining both width-specific tables."
+    },
+    {
+      "attempt": "r12",
+      "diagnosis": "New natural-shift refusal recipe passed two arguments to a unary probe; corrected the harness call."
+    },
+    {
+      "attempt": "r14",
+      "diagnosis": "Confused source name %SHORT-FLOAT with its IR operator %SINGLE-FLOAT. Restored the correct IR case and used the native source entry in probes."
+    },
+    {
+      "attempt": "r15",
+      "diagnosis": "Passing 423-original run; 26 libm entries and focused controls pass. Final run adds destructive destination identity."
+    },
+    {
+      "attempt": "r16",
+      "diagnosis": "Native EQ on float values is not a portable object-identity oracle. The final destructive-result witness compares both returned value and destination payload with native, and separately asserts target raw-pointer identity."
+    },
+    {
+      "attempt": "r17",
+      "diagnosis": "Native optimizer kept a numeric lexical value in an unboxed register across the destructive call. Store the result object in a cons and reread CAR; a pinned-native probe confirms both returned and mutated values agree. Target still separately checks pointer identity."
+    },
+    {
+      "attempt": "r18",
+      "diagnosis": "Final full execution passes: 423 original definitions, all 26 math entries, destination contents and target identity, condition paths, raw regression and four emitted-code faults."
+    }
+  ],
+  "retained": [
+    "ccl-math-r1.log",
+    "ccl-math-r2.log",
+    "ccl-math-r5.log",
+    "ccl-math-r5/execution.log",
+    "ccl-math-r6.log",
+    "ccl-math-r6/execution.log",
+    "ccl-math-r7.log",
+    "ccl-math-r8.log",
+    "ccl-math-r8/execution.log",
+    "ccl-math-r9.log",
+    "ccl-math-r9/execution.log",
+    "ccl-math-r10.log",
+    "ccl-math-r10/execution.log",
+    "ccl-math-r11.log",
+    "ccl-math-r11/execution.log",
+    "ccl-math-r12.log",
+    "ccl-math-r12/execution.log",
+    "ccl-math-r14.log",
+    "ccl-math-r14/compiled/compile.log",
+    "ccl-math-r15.log",
+    "ccl-math-r15/execution.log",
+    "ccl-math-raw.log",
+    "ccl-math-direct.log",
+    "ccl-math-faults.log",
+    "ccl-math-r16.log",
+    "ccl-math-r16/execution.log",
+    "ccl-math-r17.log",
+    "ccl-math-r17/execution.log",
+    "ccl-float-destination-probe.lisp"
+  ],
+  "scope": "Original logs retained; fixture-only failed attempts were not integrated. Additional syntax-only edit attempts r3/r4 produced no qualification. The final proposal equals the successfully qualified native backend; a transient IR-name experiment was discarded."
+}

@@ -3636,3 +3636,12 @@ User order honored without consumer rewriting or a new C/JS implementation. Inte
 ## 2026-09-21 — audit 143, values integration and P3 adoption
 
 The user confirmed the prior frontend acceptance quote was theirs ("it was from me"), then accepted the values lowering and adopted P3. Integrate the reviewed compiler byte for byte; all runtime files unchanged. Eight original definitions match native; reported admission 639/2492 and closure 82 are historical counts with the two audit-143 measurement defects, not executable coverage. Fix empty target bodies and self-call-only stubs with the next predicate/whole-file packet. No slot credit.
+
+
+## 2026-09-21 — audit153 integration and combined bootstrap math execution
+
+Import Claude audit153 verbatim (`2a724011` → `0e0bb4a2`). On Steve's “accept and integrate.”, integrate the reviewed admission compiler, architecture and re-cut CCL source. Move the reviewed arch macros intact into wasm32-arch.lisp. Installed target replay matches 1,152 files; final native R6/R6a passes 21,843 tests, 146 identical and 164 restored FASLs. All runtime files remain unchanged. Acceptance and integration are explicitly attributed to Steve, not the reviewer.
+
+Continue in the same combined packet as requested: 382 → 423 original definitions executed, 355 → 394 non-NIL witnesses; 1,983 → 1,993 admitted of the 2,231 parsed target definitions. Add portable coercions, natural word shifts, proven uint32 logical arithmetic and input recipes. Repair ARRAY-ELEMENT-TYPE's absent Wasm branch in its original source. Declare 30/61-bit shift differences with an admitted-source inventory. Disposition all 82 original closed names and seven fixture/primitive names, without fabricating host or frame state.
+
+Propose 26 destructive transcendental entries using pinned musl inside the existing float module, with native primitive oracles and collecting generated callers. Keep 68 one-ULP differences among 504 comparisons separate from exact matches. The four-ULP sampled envelope and checked inexact/underflow refusals are proposed scope, not accepted compatibility. Retain original development failures and unchanged arithmetic regression. New source stays isolated pending independent review; no slot credit. See bootstrap-math/README.md for commands, scope and outstanding recipe work.

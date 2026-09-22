@@ -28,6 +28,7 @@
 
 (setf (type-predicate 'lisp-thread) 'lisp-thread-p)
 
+#-wasm32-target
 (defloadvar *ticks-per-second*
     #+windows-target 1000
     #-windows-target
@@ -52,7 +53,7 @@
           (let* ((result (#_nanosleep aptr bptr)))
             (declare (type (signed-byte 32) result))
             (if (and (< result 0)
-                     (eql (%get-errno) (- #$EINTR)))
+                     (eql (%get-errno) (- #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR)))
               (progn
                 ;; Some versions of OSX have a bug: if the call to #_nanosleep
                 ;; is interrupted near the time when the timeout would

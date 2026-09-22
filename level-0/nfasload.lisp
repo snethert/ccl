@@ -858,7 +858,7 @@
             (return-from %simple-fasl-set-file-pos nil)))))
     (progn
       (setf (faslstate.bufcount s) 0)
-      (fd-lseek fd new #$SEEK_SET))))
+      (fd-lseek fd new #+wasm32-target target::io-seek-set #-wasm32-target #$SEEK_SET))))
 
 (defun %simple-fasl-get-file-pos (s)
   (- (fd-tell (faslstate.faslfd s)) (faslstate.bufcount s)))
@@ -868,17 +868,17 @@
 ;;; the default fasl file opener sets up the fasl state and checks the header
 (defun %simple-fasl-open (string s)
   (let* ((ok nil)
-	 (fd (fd-open string #$O_RDONLY))
+	 (fd (fd-open string #+wasm32-target target::os-o-rdonly #-wasm32-target #$O_RDONLY))
 	 (err 0))
     (declare (fixnum fd))
     (if (>= fd 0)
-      (if (< (fd-lseek fd 0 #$SEEK_END) 4)
+      (if (< (fd-lseek fd 0 #+wasm32-target target::os-seek-end #-wasm32-target #$SEEK_END) 4)
         (setq err $xnotfasl)
         (progn
           (setq err 0)
           (setf (faslstate.bufcount s) 0
                 (faslstate.faslfd s) fd)
-          (fd-lseek fd 0 #$SEEK_SET)
+          (fd-lseek fd 0 #+wasm32-target target::io-seek-set #-wasm32-target #$SEEK_SET)
           (multiple-value-setq (ok err) (%fasl-check-header s))))
       (setq err fd))
     (unless (eql err 0) (setf (faslstate.faslerr s) err))

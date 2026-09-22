@@ -140,7 +140,7 @@ atomically decremented."
                     (%wait-on-semaphore-ptr semptr secs millis notification))
                 (when success
                   (return t))
-                (when (or (not (eql err #$EINTR))
+                (when (or (not (eql err #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR))
                           (>= (setq now (get-internal-real-time)) stop))
                   (return nil))
                 (unless (zerop duration)
@@ -182,8 +182,8 @@ atomically decremented, or until a timeout expires."
   (or (multiple-value-bind (result err)
           (%timed-wait-for-signal s 0 0)
         (or result
-            (if (or (eql err #$EINTR) ; probably not possible
-                    (eql err #-windows-target #$ETIMEDOUT #+windows-target #$WAIT_TIMEOUT))
+            (if (or (eql err #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR) ; probably not possible
+                    (eql err #-windows-target #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT #+windows-target #$WAIT_TIMEOUT))
               nil
               (error "Error waiting for signal ~d: ~a." s (%strerror err)))))
       (with-process-whostate ("signal wait")
@@ -196,10 +196,10 @@ atomically decremented, or until a timeout expires."
                     (%timed-wait-for-signal s secs millis))
                 (when success
                   (return t))
-                (if (or (eql err #-windows-target #$ETIMEDOUT #+windows-target #$WAIT_TIMEOUT)
+                (if (or (eql err #-windows-target #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT #+windows-target #$WAIT_TIMEOUT)
                         (>= (setq now (get-internal-real-time)) stop))
                   (return nil)
-                  (unless (eql err #$EINTR)
+                  (unless (eql err #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR)
                     (error "Error waiting for signal ~d: ~a." s (%strerror err))))
                 (unless (zerop duration)
                   (let* ((diff (- stop now)))
@@ -219,7 +219,7 @@ atomically decremented, or until a timeout expires."
     (declare (dynamic-extent p))
     (if (%null-ptr-p p)
       (let* ((err (%get-errno)))
-	(if (eql err (- #$ERANGE))
+	(if (eql err (- #+wasm32-target target::os-erange #-wasm32-target #$ERANGE))
 	  (+ noctets noctets)
 	  err))
       #+windows-target
@@ -365,6 +365,7 @@ environment. If there is no such environment variable, create it."
     (#__putenv ckey)))
 
 #-windows-target                        ; Windows "impersonation" crap ?
+#-wasm32-target
 (defun setuid (uid)
   "Attempt to change the current user ID (both real and effective);
 fails unless the Clozure CL process has super-user privileges or the ID
@@ -372,6 +373,7 @@ given is that of the current user."
   (int-errno-call (#_setuid uid)))
 
 #-windows-target
+#-wasm32-target
 (defun setgid (uid)
   "Attempt to change the current group ID (both real and effective);
 fails unless the Clozure CL process has super-user privileges or the ID
@@ -502,12 +504,12 @@ given is that of a group to which the current user belongs."
 (defun %file-kind (mode &optional fd)
   (declare (ignorable fd))
   (when mode
-    (let* ((kind (logand mode #$S_IFMT)))
-      (cond ((eql kind #$S_IFDIR) :directory)
-	    ((eql kind #$S_IFREG) :file)
+    (let* ((kind (logand mode #+wasm32-target target::os-s-ifmt #-wasm32-target #$S_IFMT)))
+      (cond ((eql kind #+wasm32-target target::os-s-ifdir #-wasm32-target #$S_IFDIR) :directory)
+	    ((eql kind #+wasm32-target target::os-s-ifreg #-wasm32-target #$S_IFREG) :file)
             #-windows-target
-	    ((eql kind #$S_IFLNK) :link)
-	    ((eql kind #$S_IFIFO) 
+	    ((eql kind #+wasm32-target target::os-s-iflnk #-wasm32-target #$S_IFLNK) :link)
+	    ((eql kind #+wasm32-target target::os-s-ififo #-wasm32-target #$S_IFIFO) 
 	     #-windows-target :pipe
              ;; Windows doesn't seem to be able to distinguish between
              ;; sockets and pipes.  Since this function is currently
@@ -522,8 +524,8 @@ given is that of a group to which the current user belongs."
 				    :socket
 				    :pipe)))
             #-windows-target
-	    ((eql kind #$S_IFSOCK) :socket)
-	    ((eql kind #$S_IFCHR) :character-special)
+	    ((eql kind #+wasm32-target target::os-s-ifsock #-wasm32-target #$S_IFSOCK) :socket)
+	    ((eql kind #+wasm32-target target::os-s-ifchr #-wasm32-target #$S_IFCHR) :character-special)
 	    (t :special)))))
 
 (defun %unix-file-kind (native-namestring &optional check-for-link)
@@ -545,6 +547,7 @@ given is that of a group to which the current user belongs."
     "unknown"))
 
 #-windows-target
+#-wasm32-target
 (defun copy-file-attributes (source-path dest-path)
   "Copy the mode, owner, group and modification time of source-path to dest-path.
    Returns T if succeeded, NIL if some of the attributes couldn't be copied due to
@@ -631,9 +634,11 @@ given is that of a group to which the current user belongs."
 
 #-windows-target
 (progn
+#-wasm32-target
 (defun fd-get-flags (fd)
   (int-errno-call (#_fcntl fd #$F_GETFL)))
 
+#-wasm32-target
 (defun fd-set-flags (fd new)
   (int-errno-call (#_fcntl fd #$F_SETFL :int new)))
 
@@ -692,7 +697,7 @@ given is that of a group to which the current user belongs."
     (setq namestring (current-directory-name)))
   #+windows-target (%windows-realpath namestring)
   #-windows-target
-  (%stack-block ((resultbuf #$PATH_MAX))
+  (%stack-block ((resultbuf #+wasm32-target target::os-path-max #-wasm32-target #$PATH_MAX))
     (with-filename-cstrs ((name namestring))
       (let* ((result (ff-call
                       (%kernel-import target::kernel-import-lisp-realpath)
@@ -702,7 +707,7 @@ given is that of a group to which the current user belongs."
         (declare (dynamic-extent result))
         (if (%null-ptr-p result)
 	  (let ((errno (%get-errno)))
-	    (unless (= errno (- #$ENOENT))
+	    (unless (= errno (- #+wasm32-target target::os-enoent #-wasm32-target #$ENOENT))
 	      (signal-file-error errno namestring)))
           (get-foreign-namestring result))))))
 
@@ -762,6 +767,7 @@ given is that of a group to which the current user belongs."
 ); windows signed nonsense.
 
 #-windows-target
+#-wasm32-target
 (defun %%rusage (usage &optional (who #$RUSAGE_SELF))
   (int-errno-call (#_getrusage who usage)))
 
@@ -774,6 +780,7 @@ given is that of a group to which the current user belongs."
       (+ date unix-to-universal-time))))
 
 #-windows-target
+#-wasm32-target
 (defun %file-author (namestring)
   (let* ((uid (nth-value 5 (%stat namestring))))
     (if uid
@@ -823,6 +830,7 @@ given is that of a group to which the current user belongs."
              
 
 #-windows-target
+#-wasm32-target
 (defun get-uid-from-name (name)
   (with-cstrs ((name name))
     (let* ((pwent (#_getpwnam name)))
@@ -912,9 +920,11 @@ given is that of a group to which the current user belongs."
 
 
 #-windows-target
+#-wasm32-target
 (defun tcgetpgrp (fd)
   (#_tcgetpgrp fd))
 
+#-wasm32-target
 (defun getpid ()
   "Return the ID of the Clozure CL OS process."
   #-windows-target
@@ -922,11 +932,13 @@ given is that of a group to which the current user belongs."
   #+windows-target (#_GetCurrentProcessId))
 
 
+#-wasm32-target
 (defun getuid ()
   "Return the (real) user ID of the current user."
   #+windows-target 0
   #-windows-target (int-errno-call (#_getuid)))
 
+#-wasm32-target
 (defun get-user-home-dir (userid)
   "Look up and return the defined home directory of the user identified
 by uid, as a native namestring. This value comes from the OS user database, not from the $HOME
@@ -977,6 +989,7 @@ Returns NIL if there is no user with the ID uid."
   (with-filename-cstrs ((n name))
     (int-errno-call (#+windows-target #__wunlink #-windows-target #_unlink n))))
 
+#-wasm32-target
 (defun os-command (string)
   "Invoke the Posix function system(), which invokes the user's default
 system shell (such as sh or tcsh) as a new process, and has that shell
@@ -1023,6 +1036,7 @@ of the shell itself."
         q))))
 )
         
+#-wasm32-target
 (defun %probe-shared-library (shlib)
   #-(or windows-target android-target freebsd-target)
   (with-cstrs ((name (shlib.pathname shlib)))
@@ -1038,6 +1052,7 @@ of the shell itself."
 
 
 ;;; Kind of has something to do with files, and doesn't work in level-0.
+#-wasm32-target
 (defun close-shared-library (lib &key (completely t))
   "If completely is T, set the reference count of library to 0. Otherwise,
 decrements it by 1. In either case, if the reference count becomes 0,
@@ -1102,6 +1117,7 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
 (defmacro with-string-vector ((var strings &optional encoding) &body body)
   `(call-with-string-vector #'(lambda (,var) ,@body) ,strings ,encoding))
 
+#-wasm32-target
 (defloadvar *max-os-open-files* #-(or windows-target android-target) (#_getdtablesize) #+windows-target 32 #+android-target (#_sysconf #$_SC_OPEN_MAX))
 
 (defun pipe ()
@@ -1111,8 +1127,8 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
                             :address filedes :int))
            (errno (if (eql status 0) 0 (%get-errno))))
       (unless (zerop status)
-        (when (or (eql errno (- #$EMFILE))
-                  (eql errno (- #$ENFILE)))
+        (when (or (eql errno (- #+wasm32-target target::io-error-process-file-limit #-wasm32-target #$EMFILE))
+                  (eql errno (- #+wasm32-target target::io-error-system-file-limit #-wasm32-target #$ENFILE)))
           (gc)
           (drain-termination-queue)
           (setq status (ff-call (%kernel-import target::kernel-import-lisp-pipe)
@@ -1124,11 +1140,13 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
 
 #-windows-target
 (progn
-  (defun %execvp (argv)
+  #-wasm32-target
+(defun %execvp (argv)
     (#_execvp (%get-ptr argv) argv)
     (#_exit #-android-target #$EX_OSERR #+android-target 71))
 
-  (defun exec-with-io-redirection (new-in new-out new-err argv)
+  #-wasm32-target
+(defun exec-with-io-redirection (new-in new-out new-err argv)
     (#_setpgid 0 0)
     (if new-in (#_dup2 new-in 0))
     (if new-out (#_dup2 new-out 1))
@@ -1184,9 +1202,9 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
       (null
        (let* ((null-device #+windows-target "nul" #-windows-target "/dev/null")
               (fd (fd-open null-device (case direction
-                                         (:input #$O_RDONLY)
-                                         (:output #$O_WRONLY)
-                                         (t #$O_RDWR)))))
+                                         (:input #+wasm32-target target::os-o-rdonly #-wasm32-target #$O_RDONLY)
+                                         (:output #+wasm32-target target::os-o-wronly #-wasm32-target #$O_WRONLY)
+                                         (t #+wasm32-target target::os-o-rdwr #-wasm32-target #$O_RDWR)))))
          (if (< fd 0)
            (signal-file-error fd null-device))
          (values fd nil (cons fd close-in-parent) (cons fd close-on-error))))
@@ -1261,7 +1279,7 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
                       (write-string line out)
                       (write-line line out))))
                 (close out))
-              (fd-lseek fd 0 #$SEEK_SET)
+              (fd-lseek fd 0 #+wasm32-target target::io-seek-set #-wasm32-target #$SEEK_SET)
               (values fd nil (cons fd close-in-parent) (cons fd close-on-error)))))
          (:output
           (multiple-value-bind (read-pipe write-pipe) (pipe)
@@ -1303,7 +1321,8 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
   (defmacro wifstopped (status)
     `(eql #x7f (ldb (byte 7 0) (the fixnum ,status))))
 
-  (defun monitor-external-process (p)
+  #-wasm32-target
+(defun monitor-external-process (p)
     (let* ((in-fds (external-process-watched-fds p))
            (out-streams (external-process-watched-streams p))
            (token (external-process-token p))
@@ -1400,7 +1419,8 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
                          (remove-external-process p)
                          (setq terminated t)))))))))))
       
-  (defun run-external-process (proc in-fd out-fd error-fd argv &optional env)
+  #-wasm32-target
+(defun run-external-process (proc in-fd out-fd error-fd argv &optional env)
     (let* ((signaled nil))
       (unwind-protect
            (let ((child-pid (#_fork)))
@@ -1539,7 +1559,8 @@ itself, by setting the status and exit-code fields.")
         (and (not (wifstopped ,statname)) (not (wifexited ,statname))))))
 
 
-  (defun check-pid (pid &optional (flags (logior  #$WNOHANG #$WUNTRACED)))
+  #-wasm32-target
+(defun check-pid (pid &optional (flags (logior  #$WNOHANG #$WUNTRACED)))
     (declare (fixnum pid))
     (rlet ((status :signed))
       (let* ((retval (ff-call-ignoring-eintr (#_waitpid pid status flags))))
@@ -1564,7 +1585,8 @@ itself, by setting the status and exit-code fields.")
                          (when (zerop (car (external-process-token proc)))
                            t))))))
   
-  (defun signal-external-process (proc signal &key (error-if-exited t))
+  #-wasm32-target
+(defun signal-external-process (proc signal &key (error-if-exited t))
     "Send the specified signal to the specified external process.  (Typically,
 it would only be useful to call this function if the EXTERNAL-PROCESS was
 created with :WAIT NIL.) Return T if successful; NIL if the process wasn't
@@ -1604,9 +1626,9 @@ space, and prefixed with PREFIX."
       (null
        (let* ((null-device "nul")
               (fd (fd-open null-device (case direction
-                                         (:input #$O_RDONLY)
-                                         (:output #$O_WRONLY)
-                                         (t #$O_RDWR)))))
+                                         (:input #+wasm32-target target::os-o-rdonly #-wasm32-target #$O_RDONLY)
+                                         (:output #+wasm32-target target::os-o-wronly #-wasm32-target #$O_WRONLY)
+                                         (t #+wasm32-target target::os-o-rdwr #-wasm32-target #$O_RDWR)))))
          (if (< fd 0)
            (signal-file-error fd null-device))
          (values fd nil (cons fd close-in-parent) (cons fd close-on-error))))
@@ -1654,7 +1676,7 @@ space, and prefixed with PREFIX."
        (ecase direction
          (:input
           (let* ((tempname (temp-file-name "lisp-temp"))
-                 (fd (fd-open tempname #$O_RDWR)))
+                 (fd (fd-open tempname #+wasm32-target target::os-o-rdwr #-wasm32-target #$O_RDWR)))
             (if (< fd 0)
               (%errno-disp fd))
             (let* ((out (make-fd-stream (fd-dup fd)
@@ -1671,7 +1693,7 @@ space, and prefixed with PREFIX."
                     (write-line line out))
                   ))
               (close out))
-            (fd-lseek fd 0 #$SEEK_SET)
+            (fd-lseek fd 0 #+wasm32-target target::io-seek-set #-wasm32-target #$SEEK_SET)
             (values fd nil (cons fd close-in-parent) (cons fd close-on-error))))
          (:output
           (multiple-value-bind (read-pipe write-pipe) (pipe)
@@ -2167,6 +2189,7 @@ not, why not; and what its result code was if it completed."
 
 (defloadvar *cpu-count* nil)
 
+#-wasm32-target
 (defun cpu-count ()
   (or *cpu-count*
       (setq *cpu-count*
@@ -2227,6 +2250,7 @@ not, why not; and what its result code was if it completed."
 (defun yield ()
   (process-allow-schedule))
 
+#-wasm32-target
 (defun get-page-size ()
   #-windows-target
   (#_sysconf #$_SC_PAGESIZE)
@@ -2278,6 +2302,7 @@ not, why not; and what its result code was if it completed."
       (pref info #>SYSTEM_INFO.dwAllocationGranularity)))
 
 #-windows-target
+#-wasm32-target
 (defun %memory-map-fd (fd len bits-per-element)
   (let* ((nbytes (+ *host-page-size*
                     (logandc2 (+ len
@@ -2411,7 +2436,7 @@ not, why not; and what its result code was if it completed."
       (error "Invalid element-type: ~s" element-type))
     (let* ((bits-per-element (integer-length (- (numeric-ctype-high upgraded-ctype)
                                                 (numeric-ctype-low upgraded-ctype))))
-           (fd (fd-open (defaulted-native-namestring pathname) #$O_RDONLY)))
+           (fd (fd-open (defaulted-native-namestring pathname) #+wasm32-target target::os-o-rdonly #-wasm32-target #$O_RDONLY)))
       (if (< fd 0)
         (signal-file-error fd pathname)
         (let* ((len (fd-size fd)))
@@ -2460,6 +2485,7 @@ not, why not; and what its result code was if it completed."
 
 
 #-windows-target
+#-wasm32-target
 (defun %unmap-file (data-address size-in-octets)
   (let* ((base-address (%inc-ptr data-address (- *host-page-size*)))
          (fd (pref base-address :int)))
@@ -2501,16 +2527,19 @@ not, why not; and what its result code was if it completed."
 
 #-windows-target
 (progn
+#-wasm32-target
 (defun lock-mapped-vector (v)
   (multiple-value-bind (address nbytes)
       (mapped-vector-data-address-and-size v)
     (eql 0 (#_mlock address nbytes))))
 
+#-wasm32-target
 (defun unlock-mapped-vector (v)
   (multiple-value-bind (address nbytes)
       (mapped-vector-data-address-and-size v)
     (eql 0 (#_munlock address nbytes))))
 
+#-wasm32-target
 (defun bitmap-for-mapped-range (address nbytes)
   (let* ((npages (ceiling nbytes *host-page-size*)))
     (%stack-block ((vec npages))
@@ -2520,6 +2549,7 @@ not, why not; and what its result code was if it completed."
             (setf (sbit bits i)
                   (logand 1 (%get-unsigned-byte vec i)))))))))
 
+#-wasm32-target
 (defun percentage-of-resident-pages (address nbytes)
   (let* ((npages (ceiling nbytes *host-page-size*)))
     (%stack-block ((vec npages))

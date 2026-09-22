@@ -216,8 +216,8 @@
               (%kernel-import target::kernel-import-lisp-open)
               :address p :int flags :mode_t create-mode :int)))
     (declare (fixnum fd))
-    (when (or (= fd (- #$EMFILE))
-              (= fd (- #$ENFILE)))
+    (when (or (= fd (- #+wasm32-target target::io-error-process-file-limit #-wasm32-target #$EMFILE))
+              (= fd (- #+wasm32-target target::io-error-system-file-limit #-wasm32-target #$ENFILE)))
       (gc)
       (drain-termination-queue)
       (setq fd (int-errno-ffcall
@@ -258,7 +258,7 @@
                     :int)) 
 
 (defun fd-tell (fd)
-  (fd-lseek fd 0 #$SEEK_CUR))
+  (fd-lseek fd 0 #+wasm32-target target::io-seek-cur #-wasm32-target #$SEEK_CUR))
 
 ;;; Kernels prior to 2.4 don't seem to have a "stat" variant
 ;;; that handles 64-bit file offsets.

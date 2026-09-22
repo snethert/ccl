@@ -675,6 +675,7 @@ return a fixnum representation of that address, else return NIL."
 
 (setup-lookup-calls)
 
+#-wasm32-target
 (defun open-shared-library-internal (name)
   (with-cstrs ((cname name))
     (let* ((handle (ff-call *dlopen-entry*
@@ -694,6 +695,7 @@ return a fixnum representation of that address, else return NIL."
 ;;;
 ;;; When restarting from a saved image
 ;;;
+#-wasm32-target
 (defun reopen-user-libraries ()
   (dolist (lib *shared-libraries*)
     (setf (shlib.handle lib) nil
@@ -752,6 +754,7 @@ return a fixnum representation of that address, else return NIL."
                  
                      
                                                            
+#-wasm32-target
 (defun init-shared-libraries ()
   (do* ((count (ff-call *dyld-image-count* :unsigned-fullword))
         (i 1 (1+ i)))

@@ -3390,6 +3390,7 @@
     (:inferred . nil)
     (:unicode . :unicode)))
 
+#-wasm32-target
 (defun optimal-buffer-size (fd element-type)
   #+windows-target (declare (ignore fd))
   (flet ((scale-buffer-size (octets)
@@ -5438,9 +5439,9 @@
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
-  (if (logtest #$O_NONBLOCK (the fixnum (fd-get-flags fd)))
+  (if (logtest #+wasm32-target target::os-o-nonblock #-wasm32-target #$O_NONBLOCK (the fixnum (fd-get-flags fd)))
     (process-input-wait fd)
-    (- #$ETIMEDOUT)))
+    (- #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT)))
     
 (defun process-input-wait (fd &optional timeout)
   "Wait until input is available on a given file-descriptor."
@@ -5460,7 +5461,7 @@
           ;; to see if it's been exceeded.  If so, return NIL;
           ;; otherwise, adjust the remaining timeout.
           ;; If there was no timeout, continue to wait forever.
-          (unless (eql error (- #$EINTR))
+          (unless (eql error (- #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR))
             (return (values nil nil error)))
           (when timeout
             (gettimeofday now)
@@ -5473,9 +5474,9 @@
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
-  (if (logtest #$O_NONBLOCK (the fixnum (fd-get-flags fd)))
+  (if (logtest #+wasm32-target target::os-o-nonblock #-wasm32-target #$O_NONBLOCK (the fixnum (fd-get-flags fd)))
     (process-output-wait fd)
-    (- #$ETIMEDOUT)))
+    (- #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT)))
 
 (defun process-output-wait (fd &optional timeout)
   "Wait until output is possible on a given file descriptor."
@@ -5491,7 +5492,7 @@
             (return (values t nil nil)))
           (when (eql error 0)
             (return (values nil t nil)))
-          (unless (eql error (- #$EINTR))
+          (unless (eql error (- #+wasm32-target target::io-error-interrupted #-wasm32-target #$EINTR))
             (return (values nil nil error)))
           ;; If it returned and a timeout was specified, check
           ;; to see if it's been exceeded.  If so, return NIL;
@@ -5512,6 +5513,7 @@
 	(setf (pref tv :timeval.tv_sec) seconds
 	      (pref tv :timeval.tv_usec) us)))))
 
+#-wasm32-target
 (defun fd-input-available-p (fd &optional milliseconds)
   "Returns true or false depending on whether input is available.
    In some cases on windows, it may return a count of the number of unread bytes.
@@ -5554,6 +5556,7 @@
       (values (> res 0) res))))
 
 
+#-wasm32-target
 (defun fd-ready-for-output-p (fd &optional milliseconds)
   #+windows-target
   (case (%unix-fd-kind fd)

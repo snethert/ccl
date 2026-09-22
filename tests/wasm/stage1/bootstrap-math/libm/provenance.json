@@ -1,0 +1,420 @@
+{
+  "origin": "Emscripten 3.1.12 SDK bundled musl; source files unchanged; native algorithms, no host Math imports",
+  "files": [
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/pow.c",
+      "path": "pow.c",
+      "sha256": "b06f0a08d74fcff8cced7afa2c0e47e301e3e8a19c0de5becdec28cd7b014027"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/powf.c",
+      "path": "powf.c",
+      "sha256": "74069b3a380cf954361e0243b38de2094ae680e2ecfb3e50af61ab576f13babf"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sin.c",
+      "path": "sin.c",
+      "sha256": "24e53a9d85f196f66919cc19247be5480bb607ef38844b1a24bc47c4fe4974ef"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sinf.c",
+      "path": "sinf.c",
+      "sha256": "2583af55446f07da3225186c368a7aae5a0a0a0edab268967f4122b92e222b87"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/cos.c",
+      "path": "cos.c",
+      "sha256": "3a74e054057d636fa494bdd76a53a40db5cee618264f6ab31cb0538ba63c6bda"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/cosf.c",
+      "path": "cosf.c",
+      "sha256": "33cf828e8e733da2b72c723b9ff20057b9a4f10df72a3923dadcb626c23d222c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/acos.c",
+      "path": "acos.c",
+      "sha256": "cc6f9017e7e2e0ef01516fa12c68aa63865e6415c90dc039dfce9abffae09a4c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/acosf.c",
+      "path": "acosf.c",
+      "sha256": "b20b3dcb58ce7cc55963945f8cb83efbf064b29d2da3011f2cec5d08459f2aa7"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/asin.c",
+      "path": "asin.c",
+      "sha256": "9302dd0b2f302f7b7decce82e737ed250bae1bcc65c19eaf3d7ec19010892e63"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/asinf.c",
+      "path": "asinf.c",
+      "sha256": "6bc9b2392b81efa4c6a80c8602a2c0898d3b5c77444f6d3266ac71c18df222c5"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/cosh.c",
+      "path": "cosh.c",
+      "sha256": "5e5ed87e1a80e68734f4c87a4907a55f50a54df58261698aa94d5cb3276a3d43"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/coshf.c",
+      "path": "coshf.c",
+      "sha256": "c834656b0af1d4055167badf60afb062b4d71385a7d5a44769d1039bb9417b7c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log.c",
+      "path": "log.c",
+      "sha256": "a0694d8587a0d145d0f8ae87cbffba014d7988bc2ebcbfad94cea73b394c9ecc"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/logf.c",
+      "path": "logf.c",
+      "sha256": "23275ffd35f333d0242eb8bb962d3fa35496c312c4bca4e46fc9eff6e5bd372e"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/tan.c",
+      "path": "tan.c",
+      "sha256": "422d411bac962a1077ae394d14e54313012a6faa3476c20b2a66d3fb3f7a923f"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/tanf.c",
+      "path": "tanf.c",
+      "sha256": "38b39aaf03d33341e606b67b3743ee5fa436b7e8338af155994d4b794b366003"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atan.c",
+      "path": "atan.c",
+      "sha256": "1cffb67a65456ae0bc5f07a94df04a4f18ebc1ac0bffe3219250c4e0555ee01d"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atanf.c",
+      "path": "atanf.c",
+      "sha256": "e0533d7b72aabce311a758a1f94fd15e5d4067be73b716cb1f425df5bc9039d6"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atan2.c",
+      "path": "atan2.c",
+      "sha256": "a5f94b09b10b4e72bb15d94ae403c9dfd27d7ad881ecd729000004429acfca63"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/atan2f.c",
+      "path": "atan2f.c",
+      "sha256": "31a61a0a4c7b00db625b708525f24673a83df868a3e363042c9cc9dcf0aaeec8"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/exp.c",
+      "path": "exp.c",
+      "sha256": "7db56f21ca9b8915d36dd5099b707aafeb6a736eae798e19b76b074764e75f34"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/expf.c",
+      "path": "expf.c",
+      "sha256": "225123b9b3a47a083c06f2580c6b73d5cadae5cec545f9e928f7041ff837b4b4"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sinh.c",
+      "path": "sinh.c",
+      "sha256": "ab082814c4b1bbad8ea7dcfde1e36167cd72be5ef0e8b3ef3def0e052dd74261"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sinhf.c",
+      "path": "sinhf.c",
+      "sha256": "2c52f2c26163f8b7a0048465343510a5856d9c8cc954931722e121040fe81024"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/tanh.c",
+      "path": "tanh.c",
+      "sha256": "7e290e86729cba6ccc8eb1f7db2452736daf1a2a8ce01b210db5787fee5cb762"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/tanhf.c",
+      "path": "tanhf.c",
+      "sha256": "4787b2f6be28bb2ae9721d510b12d2b9aebf96a594f26f25a3dc267f029800df"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sqrt.c",
+      "path": "sqrt.c",
+      "sha256": "f6c0afcf727688d834b8ba892e7a5903a914682e62c3ad330842c5702b24f622"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sqrtf.c",
+      "path": "sqrtf.c",
+      "sha256": "a8c94bce0768d80a14c74cb27a64427ebdd7c58b26fff617381f7d1dd67f5121"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/scalbn.c",
+      "path": "scalbn.c",
+      "sha256": "a2e766283ed30c2b30c71e01dbdabef58faf92cc9aa84a01c1ce1069b6625696"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/scalbnf.c",
+      "path": "scalbnf.c",
+      "sha256": "3fb36f1cf8d9c118bfe85b462e6e0c034543835e5ffee4661f5ab8de997813e5"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/fabs.c",
+      "path": "fabs.c",
+      "sha256": "f6387612e1f879cac47fa71a808b584c76d78c23df4e44274ed9c7b1ddf24eff"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/fabsf.c",
+      "path": "fabsf.c",
+      "sha256": "0d49f81e5f9abff1d0a72d16bb0fc5f55cb950623627abac0402ee4c900a1734"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/floor.c",
+      "path": "floor.c",
+      "sha256": "16b15cf815d4ab954a52038bd8a80cb3ca080d7c38c2bfe792e79f70a025968d"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/floorf.c",
+      "path": "floorf.c",
+      "sha256": "86066c5fef654b3aa1eb742e11a92f9efcbd0f3dd7abdd9e3c2ac1e7002e6690"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/copysign.c",
+      "path": "copysign.c",
+      "sha256": "4ebd1f5161d32e379b0545d423cd2065c6ead6bd9334810901d971ebcd3822c0"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/copysignf.c",
+      "path": "copysignf.c",
+      "sha256": "8fc8d5938575438c73320038d5b6612f33e7b130f72e3f39db1e68d994276b93"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/expm1.c",
+      "path": "expm1.c",
+      "sha256": "c4764166cea03420f2dfc1840a6a7615934192d851b96d5d2dcc321cc1e39460"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/expm1f.c",
+      "path": "expm1f.c",
+      "sha256": "d939ee9586584db7c673652b2054b15805d601a38ee71c6c409ac50909d86ccc"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__sin.c",
+      "path": "__sin.c",
+      "sha256": "f3a37ef9bcfb8a2f9c809d8c7f1aa2c17c8c3319ad7fb2fe7c0a6284ea8859d2"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__sindf.c",
+      "path": "__sindf.c",
+      "sha256": "de7026bcd159b7d06a8cbcc162df722014f3b1a3cc4183116b6b7829eef1d118"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__cos.c",
+      "path": "__cos.c",
+      "sha256": "3f0f774aab60a18d7ef935ffdf121bcda17cbadabff14096c614da22e31a42c1"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__cosdf.c",
+      "path": "__cosdf.c",
+      "sha256": "0ba872cc7e26b93bb9784d19fee84b263e1fa3543a76ec3c0893aea47453a2a7"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__tan.c",
+      "path": "__tan.c",
+      "sha256": "e18b65b69fced8dbb2d3ed1a3dc6daea0e9f857f2762f274380bd89a6f89d2c4"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__tandf.c",
+      "path": "__tandf.c",
+      "sha256": "60455f3cc0ac743f3eaf0017a3a4f0adbab37c0ee30d29397852d22904c40444"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__rem_pio2.c",
+      "path": "__rem_pio2.c",
+      "sha256": "938329e0939cd83ee2185a52154b41242f618d4a6df1b08395f344da33d4f1e6"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__rem_pio2f.c",
+      "path": "__rem_pio2f.c",
+      "sha256": "b73a0219ba4a34e39ed904b5008126ff1b12dfa1a4a380941363c8db5088d756"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__rem_pio2_large.c",
+      "path": "__rem_pio2_large.c",
+      "sha256": "b97f19fb5951c83a0c10506fab35646caefde13bd03100ad2af55ef00af0b9fb"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__expo2.c",
+      "path": "__expo2.c",
+      "sha256": "29cc9dd6d656cd0fbf921a8a1aeee81b430558d880194832a8d44d82c8d37d94"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__expo2f.c",
+      "path": "__expo2f.c",
+      "sha256": "329525397cc2169cad5ab60d2f75886a2ea97f9b27dbe708e9773ea77f20fa4f"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_divzero.c",
+      "path": "__math_divzero.c",
+      "sha256": "84aa910bdc5e7ccfed42098c37c44e278aa942d46e5a51d5ee8273336c79e719"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_divzerof.c",
+      "path": "__math_divzerof.c",
+      "sha256": "194c95f6cd238ffa14e78087b9acffca3a064f2fe46320d67b090bb7a559b1ca"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_invalid.c",
+      "path": "__math_invalid.c",
+      "sha256": "b56440ed59fa1e1aaaf6bf8b672c8bb71eaf844457906f7773da1d67d7ef013b"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_invalidf.c",
+      "path": "__math_invalidf.c",
+      "sha256": "d2af8360271109d77dfab3c538eb158e34633454707dea4efa9f2f1e7e2bd0c7"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_oflow.c",
+      "path": "__math_oflow.c",
+      "sha256": "74669de53bc4b250183cfa262a8a03ee8106f33a83e3aca6b217bafc7363b83c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_oflowf.c",
+      "path": "__math_oflowf.c",
+      "sha256": "69414934bb798f5261e2d80f4b878e2bbe4dfa6025adbd06586195ba5554b04a"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_uflow.c",
+      "path": "__math_uflow.c",
+      "sha256": "9a841197bbe9ade9bbd684f8bc65424a97c481d37dabb9fa1790bafe7959034a"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_uflowf.c",
+      "path": "__math_uflowf.c",
+      "sha256": "2371ed08fc95e48833a67122b5ef538ce7fc87f40fc7a4df451d71e1787d1d42"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_xflow.c",
+      "path": "__math_xflow.c",
+      "sha256": "5feafe10347636884a071a5096f912d5ca4a0939844804ca09b88241405648ad"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/__math_xflowf.c",
+      "path": "__math_xflowf.c",
+      "sha256": "38da031cfed0ba90e68a14dfbc57404ebcb827c9ac34648161c7d11cb212c9ba"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/exp_data.c",
+      "path": "exp_data.c",
+      "sha256": "c55dff64e369fe816cd8ce367064989bb119f85783599680d1a329031c660689"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/exp2f_data.c",
+      "path": "exp2f_data.c",
+      "sha256": "3da38c471cc5eb8dc1c2e283c6c00a36b1d353ba5c8ca1e82d95180948e26bd5"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log_data.c",
+      "path": "log_data.c",
+      "sha256": "e96bcd99d88fc57e0f3686299014f4b949a6212603ce237f39e16cedc155617a"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/logf_data.c",
+      "path": "logf_data.c",
+      "sha256": "60b08342fcef877b393a76fc36d92c576d6340ce153459aad03aad3d4716f9b5"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/pow_data.c",
+      "path": "pow_data.c",
+      "sha256": "2052ec913f9b4a2170a98a6fcbcd7694f5dec220036b00c36106a2b4b65a4c55"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/powf_data.c",
+      "path": "powf_data.c",
+      "sha256": "136f491b0f904842b926784134d0adba7a9103d2ce8a226276dd6e9260457398"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sqrt_data.c",
+      "path": "sqrt_data.c",
+      "sha256": "590aaadff964dcfc36ef9e5302423a779cda4f1608e15dbeee8e43e6e5f1c6fe"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/exp2f_data.h",
+      "path": "exp2f_data.h",
+      "sha256": "fb52b690bef63df2e8996f2d2b3fd77f9ea08795863e73afdc882df04460e850"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/powf_data.h",
+      "path": "powf_data.h",
+      "sha256": "5d632276e5f21cdcd47f35c53cf792640ad347aabce1e1bd5774fad5371fc8d8"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log2_data.h",
+      "path": "log2_data.h",
+      "sha256": "b56e1a56f73a8700caa9787cd399fecf7f96038af56c2a590aeb6f0f8662ea8e"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/pow_data.h",
+      "path": "pow_data.h",
+      "sha256": "5014345a7958adcf6ff835b5e96afa99dd5a98c40dfe968442288e002b8e01a3"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/logf_data.h",
+      "path": "logf_data.h",
+      "sha256": "80176d1f045f162e917ca5c2879994ab0ed9e27b479086d752e5793c91135adf"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/sqrt_data.h",
+      "path": "sqrt_data.h",
+      "sha256": "5fa47a8b8c1afbee4dcd10f71d2f6c433a24f9aa5ce7a90924cd1db236cbc03c"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log2f_data.h",
+      "path": "log2f_data.h",
+      "sha256": "cb65ee48f557b19c8a6366a05f16ffba38aa46b00c4c136faf2dea8f53675a9b"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/log_data.h",
+      "path": "log_data.h",
+      "sha256": "a8dced6f0821f30cad040ba326b03e419fbe0a750ed8f3b0d7145992bee4bccc"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/math/exp_data.h",
+      "path": "exp_data.h",
+      "sha256": "df77fca837edd02b260dd09a2914202775909ae67a059218ae38cfab104e6d16"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/src/internal/libm.h",
+      "path": "libm.h",
+      "sha256": "8cb6cc4af4b96b92f5af9d4e20609c8b8456bded8908c3d58f5b8e8f37620f67"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/arch/generic/fp_arch.h",
+      "path": "fp_arch.h",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/include/math.h",
+      "path": "math.h",
+      "sha256": "5559892c51d9625616fde0c4d25609f1e68e0aa3aee090d1842c6f894e63352a"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/include/features.h",
+      "path": "features.h",
+      "sha256": "6d228e77b88b69f70f9157548b6ec673ffc6b998ce6035fbbee0caddb8442903"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/include/endian.h",
+      "path": "endian.h",
+      "sha256": "4414084736937798abcc075d1f8053e116d873c81dda0908013bfca3331771b9"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/arch/emscripten/bits/endian.h",
+      "path": "bits/endian.h",
+      "sha256": "804be6ddc03236f3b1de88c943f1d699f4a7be40a0963256c98029f29cbb28ff"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/arch/emscripten/bits/alltypes.h",
+      "path": "bits/alltypes.h",
+      "sha256": "08dc2bec6a4a0875dca5f61657c1be84a243fb945fb87431cbdbe38457683634"
+    },
+    {
+      "source": "/usr/local/share/dotnet/packs/Microsoft.NET.Runtime.Emscripten.3.1.12.Sdk.osx-x64/7.0.5/tools/emscripten/system/lib/libc/musl/COPYRIGHT",
+      "path": "COPYRIGHT",
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+    }
+  ]
+}

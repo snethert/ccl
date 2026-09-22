@@ -176,7 +176,7 @@ is :UNIX.")
 ;;; Establish a new position for the specified file-stream.
 (defun file-ioblock-seek (file-ioblock newoctetpos)
   (let* ((result (fd-lseek
-		  (file-ioblock-device file-ioblock) newoctetpos #$SEEK_SET)))
+		  (file-ioblock-device file-ioblock) newoctetpos #+wasm32-target target::io-seek-set #-wasm32-target #$SEEK_SET)))
     (if (< result 0)
       (error 'simple-stream-error
 	     :stream (file-ioblock-stream file-ioblock)
@@ -795,7 +795,7 @@ is :UNIX.")
 	     (if (eq kind :directory)
 	       (if (eq direction :probe)
 		 (return-from open nil)
-		 (signal-file-error (- #$EISDIR)  filename))
+		 (signal-file-error (- #+wasm32-target target::os-eisdir #-wasm32-target #$EISDIR)  filename))
 	       (if (setq filename (if-exists if-exists filename "Open ..."))
 		 (progn
 		   (multiple-value-setq (native-truename kind) (probe-file-x filename))
@@ -825,15 +825,15 @@ is :UNIX.")
 		 (setq created t))
 	       (return-from open nil))))
 	(let* ((fd (fd-open native-truename (case direction
-					      ((:probe :input) #$O_RDONLY)
-					      (:output #$O_WRONLY)
-					      (:io #$O_RDWR)))))
+					      ((:probe :input) #+wasm32-target target::os-o-rdonly #-wasm32-target #$O_RDONLY)
+					      (:output #+wasm32-target target::os-o-wronly #-wasm32-target #$O_WRONLY)
+					      (:io #+wasm32-target target::os-o-rdwr #-wasm32-target #$O_RDWR)))))
 	  (when (< fd 0)
-            (if (and (eql fd (- #$ENOENT))
+            (if (and (eql fd (- #+wasm32-target target::os-enoent #-wasm32-target #$ENOENT))
                      (null if-does-not-exist))
               (return-from open nil)
               (signal-file-error fd filename)))
-	  (let* ((pos (fd-lseek fd 0 #$SEEK_CUR)))
+	  (let* ((pos (fd-lseek fd 0 #+wasm32-target target::io-seek-cur #-wasm32-target #$SEEK_CUR)))
 	    (if (not (>= pos 0))
 	      (make-fd-stream fd :direction direction
 			      :element-type element-type

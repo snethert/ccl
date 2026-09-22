@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept and integrate.",
+    "context": "Direct authorization after audit 153; the user also requested all next execution work in the same packet."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-ADMISSION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-admission-r1/packet.json",
+      "sha256": "69b78d9eb8e51e93a520d85c2af15ffed041b3503377f81e0bde048f8a566a3a"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "2a72401191b97749ee1ae24821cabde4cc53c21a",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "1897307fa3ee82d405f0fa970b51010419a3ad2847f84cfa1cd967a5b236c523",
+      "import_commit": "0e0bb4a28456b04b58eb2254535da01415faf910"
+    }
+  ],
+  "observations": [
+    "Move the two arch macros from the backend into wasm32-arch.lisp without changing their forms.",
+    "Declare and assert the cross-width shift domain in the accompanying execution packet.",
+    "Keep the OS routing prototype unintegrated.",
+    "Execute additional closed definitions, the transcendental entries and portable operators together."
+  ],
+  "slot_credit": false
+}

@@ -649,3 +649,10 @@ stopped target-file environments. Alongside this substantive work, move ASSQ
 into idiomatic target Lisp, refuse unsupported literal handler classes at
 compile time, and close the %I<>/%IZEROP and condition/array refusal carry items.
 Do not count this integration as new throughput or completion of LL15.
+
+
+### Audit153 integration and the combined math execution packet
+
+Steve accepted the admission proposal and required the next work in the same packet. The reviewed compiler/architecture/source is integrated, with runtime bytes unchanged. The new bootstrap-math proposal combines shift-domain assertions, recipe expansion, all 26 single/double libm entries and the next portable coercion/word-shift operators. It executes 423 original definitions, 394 with non-NIL return witnesses, and leaves 44 of the prior 82 original closed names with explicit state/representation/dependency dispositions. The seven additional fixture names are not original-definition credit.
+
+The libm numerical envelope is proposed only: observed native differences are one ULP, and checked inexact/underflow modes refuse until their flags are qualified. No timing claim, full-domain proof or scalar fast-path claim follows. Integration of this new work requires independent review and user acceptance. LL15 still owes the executable startup closure, remaining target branches/capabilities, image roots and READY join; the counts do not claim completion.

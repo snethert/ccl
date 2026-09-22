@@ -65,7 +65,7 @@
 
 (defun if-exists (if-exists filename &optional (prompt "Create ..."))
   (case if-exists
-    (:error (signal-file-error (- #$EEXIST) filename))
+    (:error (signal-file-error (- #+wasm32-target target::io-error-file-exists #-wasm32-target #$EEXIST) filename))
     ((:dialog) (overwrite-dialog filename prompt))
     ((nil) nil)
     ((:ignored :overwrite :append :supersede :rename-and-delete :new-version :rename) filename)
@@ -73,7 +73,7 @@
 
 (defun if-does-not-exist (if-does-not-exist filename)
   (case if-does-not-exist 
-    (:error (signal-file-error (- #$ENOENT) filename)) ; (%err-disp $err-no-file filename))
+    (:error (signal-file-error (- #+wasm32-target target::os-enoent #-wasm32-target #$ENOENT) filename)) ; (%err-disp $err-no-file filename))
     (:create filename)
     ((nil) (return-from if-does-not-exist nil))
     (t (report-bad-arg if-does-not-exist '(member :error :create nil)))))
@@ -237,14 +237,14 @@
   (when (directory-pathname-p path)
     (return-from %create-file (probe-file-x path)))
   (let* ((unix-name (defaulted-native-namestring path))
-	 (fd (fd-open unix-name (logior #$O_WRONLY #$O_CREAT
+	 (fd (fd-open unix-name (logior #+wasm32-target target::os-o-wronly #-wasm32-target #$O_WRONLY #+wasm32-target target::os-o-creat #-wasm32-target #$O_CREAT
                                         (if (eq if-exists :overwrite)
-                                          #$O_TRUNC
-                                          #$O_EXCL)))))
+                                          #+wasm32-target target::os-o-trunc #-wasm32-target #$O_TRUNC
+                                          #+wasm32-target target::os-o-excl #-wasm32-target #$O_EXCL)))))
     (when (and (neq if-exists :error)
-               (or (eql fd (- #$EEXIST))
+               (or (eql fd (- #+wasm32-target target::io-error-file-exists #-wasm32-target #$EEXIST))
                    #+windows-target
-                   (and (eql fd (- #$EPERM))
+                   (and (eql fd (- #+wasm32-target target::os-eperm #-wasm32-target #$EPERM))
                         (probe-file path))))
       (when (null if-exists)
         (return-from %create-file nil))

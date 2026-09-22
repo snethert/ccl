@@ -122,6 +122,7 @@
 (defstatic *callback-alloc-lock* (make-lock))
 
 ;;; 
+#-wasm32-target
 (defun %make-executable-page ()
   #-windows-target
   (#_mmap (%null-ptr)
