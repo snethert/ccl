@@ -525,3 +525,15 @@ BT-0 completion is claimed.
   reused explicitly; fresh mode still compiles and runs all four controls.
 
 These observations do not constitute user acceptance of the pending packets.
+
+## Audit 159 acceptance
+
+Steve accepted all seven reviewed packets, including WB-1 explicitly, and the
+final reviewed files are integrated. The preceding O-9 pending disposition is
+superseded by [the stack acceptance](acceptance-bootstrap-stack.json).
+O-10 remains an implementation obligation; no extra mask is authorized.
+Claude's 490 random bignum cases are independent review evidence, not extra
+retained author execution credit. Future bignum recipes should include dense
+seeded operands alongside the existing boundary cases. Method selection and
+image/READY materialization remain separate from the accepted combined-method
+dcode and funcallable storage work.

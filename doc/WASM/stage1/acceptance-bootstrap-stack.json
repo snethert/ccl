@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Accept and integrate all seven",
+    "context": "Explicit reply to audit-159 acceptance question, including the recorded behavioural NO-REM branch (O-9)."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-INTROSPECTION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-introspection-r1/packet.json",
+      "sha256": "53d7630563b013f85bbd3167d0aa34c9a24cf73bd4cb54e88766ef7246db495c"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CONDITION-FRONTIER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-r1/packet.json",
+      "sha256": "c198e93522d689c6bb39b7849bf52da8bc181cff03b30eaff556281fa51d12d6"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LEXPR-SPREAD-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-lexpr-spread-r1/packet.json",
+      "sha256": "67228f536ec25e0c512aef3bc8f87e86d6eff5a8258abdb7185848ad7a40ca75"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CLOS-ACCESSORS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-clos-accessors-r1/packet.json",
+      "sha256": "318359d5ed0def505891d5442222a0c9e01b19f8e125664f84d5053ccd3a3f6d"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-NUMERIC-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-numeric-dispatch-r1/packet.json",
+      "sha256": "94aa346dc006ddaba843f8ae38bf96454925f0553e42c118d50778acadfa0e0a"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LIMB-MULTIPLY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-limb-multiply-r1/packet.json",
+      "sha256": "246912a13cc7c6df8a9b06883204edf97c4683fc492c0df563d2790b88c4bfef"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-LIMB-DIVISION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-limb-division-r1/packet.json",
+      "sha256": "5e158491e5b910de419c1bc8f96d7e929dbc6d8188fcf5d6116cd18480decceb"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8"
+    }
+  ],
+  "observations": [
+    "O-9/WB-1 is explicitly accepted as behavioural: BIGNUM-TRUNCATE returns only zero for a smaller dividend under NO-REM, unlike the other 32-bit ports. Arithmetic does not require this correction. Behavioural branches remain rare and listed separately from representation changes.",
+    "O-10: the existing condition mask is full. Its successor is TYPEP against real class precedence lists, not another mask; eight remaining class refusals stay until that path is qualified.",
+    "O-11: the canonical verifier retains 12 distinct fault artifacts and compares 3,799 contents, checking 12,480 alias edges without repeated content hashing. Historical packets are unchanged.",
+    "Claude independently tested 490 additional random bignum cases, all 24,440 comparisons passing. This review probe is attributed to Claude, not counted as retained author execution.",
+    "Full method selection, generic numeric restart paths, GCD, the condition successor and image/READY integration remain owed."
+  ],
+  "slot_credit": false
+}

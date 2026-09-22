@@ -215,6 +215,7 @@
 
 
 
+#-wasm32-target
 (defun %make-heap-ivector (subtype size-in-bytes size-in-elts)
   (with-macptrs ((ptr (malloc (+ size-in-bytes
                                  #+32-bit-target (+ 4 2 7) ; 4 for header, 2 for delta, 7 for round up
@@ -232,6 +233,7 @@
     (not (null (member v *heap-ivectors* :test #'eq)))))
 
 
+#-wasm32-target
 (defun dispose-heap-ivector (v)
   (if (%heap-ivector-p v)
     (with-macptrs (p)
@@ -5412,23 +5414,27 @@
 	    (return)
 	    (decf avail count)))))))
 
+#-wasm32-target
 (defun fd-zero (fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-zero)
            :address fdset
            :void))
 
+#-wasm32-target
 (defun fd-set (fd fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-set)
            :unsigned-fullword fd
            :address fdset
            :void))
 
+#-wasm32-target
 (defun fd-clr (fd fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-clr)
            :unsigned-fullword fd
            :address fdset
            :void))
 
+#-wasm32-target
 (defun fd-is-set (fd fdset)
   (not (= 0 (the fixnum (ff-call (%kernel-import target::kernel-import-do-fd-is-set)
                                  :unsigned-fullword fd

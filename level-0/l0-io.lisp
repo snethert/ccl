@@ -290,11 +290,13 @@
 
 
 ;;; Not really I/O, but ...
+#-wasm32-target
 (defun malloc (size)
   (ff-call 
    (%kernel-import target::kernel-import-malloc)
    :unsigned-fullword size :address))
 
+#-wasm32-target
 (defun free (ptr)
   (let* ((size (uvsize ptr))
          (flags (if (= size target::xmacptr.element-count)

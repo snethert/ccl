@@ -3349,9 +3349,12 @@
       "id": "STAGE1-BOOTSTRAP-INTROSPECTION-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-introspection-r1/packet.json",
       "sha256": "53d7630563b013f85bbd3167d0aa34c9a24cf73bd4cb54e88766ef7246db495c",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "470 to 484 original definitions executed; 451 non-NIL witnesses; 20 architecture-counterpart definitions separately. Ordinary keyword metadata, slot getters, bounded class/wrapper graph under movement. 17,480 comparisons and 50 metadata refusals. Admission unchanged at 2,043/2,231. Native R6/R6a and seventeen-profile reader proof retained. No shared-source integration or LL15 credit. Remaining numeric/CLOS dependencies, FFI exclusions, conditions, globals, constants and spread kinds remain open."
+      "scope": "470 to 484 original definitions executed; 451 non-NIL witnesses; 20 architecture-counterpart definitions separately. Ordinary keyword metadata, slot getters, bounded class/wrapper graph under movement. 17,480 comparisons and 50 metadata refusals. Admission unchanged at 2,043/2,231. Native R6/R6a and seventeen-profile reader proof retained. No shared-source integration or LL15 credit. Remaining numeric/CLOS dependencies, FFI exclusions, conditions, globals, constants and spread kinds remain open. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-INTROSPECTION-VERIFICATION",
@@ -3363,9 +3366,12 @@
       "id": "STAGE1-BOOTSTRAP-CONDITION-FRONTIER-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-r1/packet.json",
       "sha256": "c198e93522d689c6bb39b7849bf52da8bc181cff03b30eaff556281fa51d12d6",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Pending introspection plus nine condition classes, native defaults and five-slot rooted construction; 486 original definitions, 451 non-NIL, two new error-only originals; 17,660 comparisons and four rejected faults. Sixteen native pointer/FFI definitions excluded with required callers left open. Admission 2,051/2,231; final native R6/R6a and seventeen-profile source proof retained. No shared integration or LL15 credit."
+      "scope": "Pending introspection plus nine condition classes, native defaults and five-slot rooted construction; 486 original definitions, 451 non-NIL, two new error-only originals; 17,660 comparisons and four rejected faults. Sixteen native pointer/FFI definitions excluded with required callers left open. Admission 2,051/2,231; final native R6/R6a and seventeen-profile source proof retained. No shared integration or LL15 credit. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-CONDITION-FRONTIER-VERIFICATION",
@@ -3377,9 +3383,12 @@
       "id": "STAGE1-BOOTSTRAP-LEXPR-SPREAD-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-lexpr-spread-r1/packet.json",
       "sha256": "67228f536ec25e0c512aef3bc8f87e86d6eff5a8258abdb7185848ad7a40ca75",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Bootstrap lexpr spreading through existing APPLY roots, reservation and dispatch; 2,059/2,231 admitted, 486 original executions and 451 non-NIL unchanged. Seven observers pass 100 new comparisons, 17,760 total; thirty directed frame checks and three rejected faults; all eight newly admitted modules assemble. Final R6/R6a bound. Stacks on unreviewed condition and introspection proposals; no shared integration or LL15 credit."
+      "scope": "Bootstrap lexpr spreading through existing APPLY roots, reservation and dispatch; 2,059/2,231 admitted, 486 original executions and 451 non-NIL unchanged. Seven observers pass 100 new comparisons, 17,760 total; thirty directed frame checks and three rejected faults; all eight newly admitted modules assemble. Final R6/R6a bound. Stacks on unreviewed condition and introspection proposals; no shared integration or LL15 credit. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-LEXPR-SPREAD-VERIFICATION",
@@ -3391,9 +3400,12 @@
       "id": "STAGE1-BOOTSTRAP-CLOS-ACCESSORS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-clos-accessors-r1/packet.json",
       "sha256": "318359d5ed0def505891d5442222a0c9e01b19f8e125664f84d5053ccd3a3f6d",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original CLOS accessor execution: 486 to 507 originals, 451 to 472 non-NIL witnesses; 70 new native rows and 280 new target comparisons, 18,040 total. Native slot projections preserve self backpointers; mutation callers collect across cycles, cache updates and dispatch hook calls. Two transport controls reject. Compiler/runtime/source unchanged from the pending lexpr proposal; native qualification reused by exact hash. No integration or slot credit."
+      "scope": "Original CLOS accessor execution: 486 to 507 originals, 451 to 472 non-NIL witnesses; 70 new native rows and 280 new target comparisons, 18,040 total. Native slot projections preserve self backpointers; mutation callers collect across cycles, cache updates and dispatch hook calls. Two transport controls reject. Compiler/runtime/source unchanged from the pending lexpr proposal; native qualification reused by exact hash. No integration or slot credit. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-CLOS-ACCESSORS-VERIFICATION",
@@ -3405,25 +3417,42 @@
       "id": "STAGE1-BOOTSTRAP-NUMERIC-DISPATCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-numeric-dispatch-r1/packet.json",
       "sha256": "94aa346dc006ddaba843f8ae38bf96454925f0553e42c118d50778acadfa0e0a",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original bignum algorithms and before/after method combination: 507 to 531 originals, 472 to 496 non-NIL witnesses; 21,432 comparisons, 4,208 collections during calls, 98 retries, 58 digit checks and 20 structural collector checks. Admission unchanged at 2,059/2,231. Final R6/R6a passes 21,843 tests and restores 164 FASLs. Target Lisp LAP replacements plus checked digit backend; no new runtime service. Full generic dispatch, numeric dependencies and the image/READY join remain unfinished. Unreviewed and unintegrated, no slot credit."
+      "scope": "Original bignum algorithms and before/after method combination: 507 to 531 originals, 472 to 496 non-NIL witnesses; 21,432 comparisons, 4,208 collections during calls, 98 retries, 58 digit checks and 20 structural collector checks. Admission unchanged at 2,059/2,231. Final R6/R6a passes 21,843 tests and restores 164 FASLs. Target Lisp LAP replacements plus checked digit backend; no new runtime service. Full generic dispatch, numeric dependencies and the image/READY join remain unfinished. Unreviewed and unintegrated, no slot credit. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-LIMB-MULTIPLY-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-limb-multiply-r1/packet.json",
       "sha256": "246912a13cc7c6df8a9b06883204edf97c4683fc492c0df563d2790b88c4bfef",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original CCL bignum multiplication and float MINUSP helpers: 531 to 534 executions, 496 to 499 non-NIL witnesses, 21,760 comparisons. Admission 2,060/2,231. Native R6/R6a passes 21,843 tests, 164 FASLs restored; eight native reader feature assignments preserve the whole bignum32 file. Positive fixnum-loop and signed-zero callers receive no original-definition credit. Final counts are bound in summary.json. Unreviewed and unintegrated; remaining numeric dependencies, full GF dispatch and LL15 image work remain unfinished, no slot credit."
+      "scope": "Original CCL bignum multiplication and float MINUSP helpers: 531 to 534 executions, 496 to 499 non-NIL witnesses, 21,760 comparisons. Admission 2,060/2,231. Native R6/R6a passes 21,843 tests, 164 FASLs restored; eight native reader feature assignments preserve the whole bignum32 file. Positive fixnum-loop and signed-zero callers receive no original-definition credit. Final counts are bound in summary.json. Unreviewed and unintegrated; remaining numeric dependencies, full GF dispatch and LL15 image work remain unfinished, no slot credit. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-LIMB-DIVISION-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-limb-division-r1/packet.json",
       "sha256": "5e158491e5b910de419c1bc8f96d7e929dbc6d8188fcf5d6116cd18480decceb",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original CCL bignum long division, quotient-only division and remainder: 534 to 537 executions, 499 to 502 non-NIL witnesses; 22,480 comparisons. Admission remains 2,060/2,231. Target Lisp LAP equivalents, with a Wasm-only fix for the 32-bit source early return leaking a second value when NO-REM is true. Final-source R6/R6a and whole-file native reader proof pass. Mathematical digit-loop callers receive no original-definition credit. Unreviewed, unintegrated and no LL15 credit; larger requested scope still unfinished. Clean committed replay at 2ba65ee2 passes unmodified: 4288 deterministic artifacts, 649 source pins; native qualification reused by final-source hash."
+      "scope": "Original CCL bignum long division, quotient-only division and remainder: 534 to 537 executions, 499 to 502 non-NIL witnesses; 22,480 comparisons. Admission remains 2,060/2,231. Target Lisp LAP equivalents, with a Wasm-only fix for the 32-bit source early return leaking a second value when NO-REM is true. Final-source R6/R6a and whole-file native reader proof pass. Mathematical digit-loop callers receive no original-definition credit. Unreviewed, unintegrated and no LL15 credit; larger requested scope still unfinished. Clean committed replay at 2ba65ee2 passes unmodified: 4288 deterministic artifacts, 649 source pins; native qualification reused by final-source hash. Audit 159: reviewed with no defect. User accepts all seven stacked packets, including behavioural branch WB-1; integrated final reviewed files. Earlier unreviewed/unintegrated descriptions above are historical. No slot credit.",
+      "review_commit": "f540c2732b57cbd88fb71d350f7fa8eb37d86e3d",
+      "review_sha256": "4d5f32859c9ea0595ce7643d437568ff88535d25e85773d3140370fede832fc8",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-stack.json"
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-STACK-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-stack-acceptance/packet.json",
+      "sha256": "92783f3534fb960572c5d9992b33e514e8ba9109b663422f981c3973167d26d8",
+      "review": "ACCEPTED",
+      "slot_credit": false,
+      "scope": "Seven accepted proposals integrated in cumulative stack order, byte-equal to final reviewed files. All runtime services unchanged. 537 original executions, 502 non-NIL witnesses, 2,060/2,231 admitted; no new throughput or LL15 slot credit."
     }
   ],
   "current_runs": [

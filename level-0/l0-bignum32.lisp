@@ -689,9 +689,10 @@
 	       (declare (bignum-index len-a len-b len-res))
 	       (if (and (>= len-a 16)
 			(>= len-b 16)
-			#+(or x8632-target arm-target)
+			#+(or x8632-target arm-target wasm32-target)
 			nil)
-		 (let* ((ubytes (* len-a 4))
+		 #-wasm32-target
+                 (let* ((ubytes (* len-a 4))
 			(vbytes (* len-b 4))
 			(rbytes (* len-res 4)))
 		   (declare (fixnum ubytes vbytes rbytes))
@@ -711,6 +712,7 @@
 			     (mpn-mul rp vp len-b up len-a)
 			     (mpn-mul rp up len-a vp len-b)))))
 		     (%copy-ptr-to-ivector rptr 0 res 0 rbytes)))
+                 #+wasm32-target (error "GMP is unavailable on this target.")
 		 (dotimes (i len-a)
 		   (declare (type bignum-index i))
 		   (%multiply-and-add-harder-loop-2 a b res i len-b)))
@@ -1453,7 +1455,7 @@
            (let ((c (bignum-compare y x)))
              (cond 
               ((eql c 1)  ; >
-               (return-from bignum-truncate (values 0 x1)))
+               (return-from bignum-truncate #+wasm32-target (if no-rem 0 (values 0 x1)) #-wasm32-target (values 0 x1)))
               ((eql c 0)(values 1 0))  ; =  might as well since did compare anyway
               ((< len-y 2)
                (multiple-value-bind (q r)

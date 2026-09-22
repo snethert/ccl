@@ -1314,7 +1314,8 @@
                 (eq (first (ccl::acode-operands (first args))) '%wasm-literal-apply))
          (b-literal-apply (second args))
          (if (third args)
-           (if (eq (third args) t) (b-apply (first args) (second args)) (refuse :b-spread-kind))
+           (if (or (eq (third args) t) (and *bootstrap-front-end* (eql (third args) 0)))
+             (b-apply (first args) (second args) nil 0 (third args)) (refuse :b-spread-kind))
            (b-call (first args) (second args)))))
       (ccl::values
        (let* ((forms (first args)) (n (length forms)))
@@ -1487,11 +1488,11 @@
   (b-wat "(block (result i32) ~a ~a (i32.load (i32.sub ~a (i32.const 1))))"
     (b-wat "(if (i32.ne (i32.and ~a (i32.const ~d)) (i32.const ~d)) (then ~a))" node wasm32::fulltagmask wasm32::fulltag-cons (if whole-list (b-wat "(call $implicit_error_details (i32.const 5) (local.get $top) ~a (global.get $symbol_expected_proper_list)) unreachable" whole-list) (b-type-failure node 'list)))
     (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u ~a) (i64.const 7)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" node) 5) node))
-(defun b-apply (callee argument-list &optional local-self (ephemeral-bytes 0))
+(defun b-apply (callee argument-list &optional local-self (ephemeral-bytes 0) (spread-kind t))
   (when (and *bootstrap-front-end* (not local-self)
              (not (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)))
     (setq *bootstrap-dynamic-call* t))
-  (unless *b-tail-position* (return-from b-apply (b-internal-apply callee argument-list local-self)))
+  (unless *b-tail-position* (return-from b-apply (b-internal-apply callee argument-list local-self spread-kind)))
   (unless (= (length (second argument-list)) 1) (refuse :b-apply-shape))
   (let* ((prefix (first argument-list)) (n (length prefix))
          (evaluated (temporary)) (base (temporary)) (root (temporary))
@@ -1516,7 +1517,10 @@
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 16 (* 4 i)) evaluated code))
       (format s "(i32.store offset=12 (local.get ~a) ~a) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (local.get ~a)) (local.set ~a (i32.const 0))"
         evaluated tail cursor evaluated slow cursor length)
-      ;; One cursor advances on every step, the other on alternate steps.
+      (if (eql spread-kind 0)
+        (write-string (bootstrap-lexpr-count (b-local cursor) length) s)
+        (progn
+      ;; Ordinary list spread: one cursor advances on every step, the other on alternate steps.
       ;; Check against the available stack on every step as well as detecting
       ;; cycles: finite malformed input cannot wrap the count or exhaust JS.
       (format s "(block $list_done (loop $list_check (br_if $list_done (i32.eq (local.get ~a) (i32.const 77825))) (local.set ~a ~a) (local.set ~a (i32.add (local.get ~a) (i32.const 1)))"
@@ -1524,7 +1528,7 @@
       (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.mul (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const ~d)) (i64.const 4))) (i64.extend_i32_u ~a))" length n (b-load wasm32::tcr.vsp_limit)) 2) s)
       (format s "(if (i32.eqz (i32.and (local.get ~a) (i32.const 1))) (then (local.set ~a ~a)))" length slow (b-checked-cdr (b-local slow) (b-wat "(i32.load offset=12 (local.get ~a))" evaluated)))
       (write-string (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 77825)) (i32.eq (local.get ~a) (local.get ~a)))" cursor cursor slow) 5) s)
-      (write-string "(br $list_check)))" s)
+      (write-string "(br $list_check)))" s)))
       (format s "(local.set ~a (i32.add (local.get ~a) (i32.const ~d))) (local.set ~a (local.get $top)) (local.set $wide (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get ~a)) (i64.const 4)) (i64.const 31)) (i64.const -16)))" total length n base total)
       ;; $wide is the output offset (header/self/padding plus aligned args).
       (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.add (i64.add (local.get $wide) (i64.const ~d)) (i64.extend_i32_u (local.get $result_bytes)))) (i64.extend_i32_u ~a))" ephemeral-bytes (b-load wasm32::tcr.vsp_limit)) 2) s)
@@ -1535,8 +1539,10 @@
       (write-string (b-store wasm32::tcr.root_head (b-local base)) s)
       (format s "(i32.store offset=8 (local.get ~a) (i32.load offset=8 (local.get ~a))) (memory.copy ~a ~a (i32.const ~d)) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (i32.const ~d))"
         base evaluated (b-at (b-local base) 16) (b-at (b-local evaluated) 16) (* 4 n) cursor evaluated index n)
+      (if (eql spread-kind 0)
+        (write-string (bootstrap-lexpr-copy cursor length index n base 16) s)
       (format s "(block $spread_done (loop $spread_copy (br_if $spread_done (i32.eq (local.get ~a) (i32.const 77825))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const 16) (i32.mul (local.get ~a) (i32.const 4)))) (i32.load offset=3 (local.get ~a))) (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $spread_copy)))"
-        cursor base index cursor cursor cursor index index)
+        cursor base index cursor cursor cursor index index))
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local base) 16)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top "(local.get $top)") s)
@@ -1555,7 +1561,7 @@
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" evaluated))))
 
-(defun b-internal-apply (callee argument-list local-self)
+(defun b-internal-apply (callee argument-list local-self &optional (spread-kind t))
   (when (and *bootstrap-front-end* (not local-self)
              (not (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)))
     (setq *bootstrap-dynamic-call* t))
@@ -1583,7 +1589,10 @@
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 16 (* 4 i)) evaluated code))
       (format s "(i32.store offset=12 (local.get ~a) ~a) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (local.get ~a)) (local.set ~a (i32.const 0))"
         evaluated tail cursor evaluated slow cursor length)
-      ;; One cursor advances on every step, the other on alternate steps.
+      (if (eql spread-kind 0)
+        (write-string (bootstrap-lexpr-count (b-local cursor) length) s)
+        (progn
+      ;; Ordinary list spread: one cursor advances on every step, the other on alternate steps.
       ;; Check against the available stack on every step as well as detecting
       ;; cycles: finite malformed input cannot wrap the count or exhaust JS.
       (format s "(block $list_done (loop $list_check (br_if $list_done (i32.eq (local.get ~a) (i32.const 77825))) (local.set ~a ~a) (local.set ~a (i32.add (local.get ~a) (i32.const 1)))"
@@ -1591,7 +1600,7 @@
       (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.mul (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const ~d)) (i64.const 4))) (i64.extend_i32_u ~a))" length n (b-load wasm32::tcr.vsp_limit)) 2) s)
       (format s "(if (i32.eqz (i32.and (local.get ~a) (i32.const 1))) (then (local.set ~a ~a)))" length slow (b-checked-cdr (b-local slow) (b-wat "(i32.load offset=12 (local.get ~a))" evaluated)))
       (write-string (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 77825)) (i32.eq (local.get ~a) (local.get ~a)))" cursor cursor slow) 5) s)
-      (write-string "(br $list_check)))" s)
+      (write-string "(br $list_check)))" s)))
 
       (format s "(local.set ~a (i32.add (local.get ~a) (i32.const ~d))) (local.set ~a (local.get $top)) (local.set ~a (i32.add (local.get $top) (local.get $result_bytes)))"
         total length n output context)
@@ -1602,8 +1611,10 @@
       (write-string (b-prepare-context (b-local context) (b-local output) (b-local evaluated) (b-local roots)) s)
       (format s "(i32.store offset=40 (local.get ~a) (i32.load offset=8 (local.get ~a))) (memory.copy ~a ~a (i32.const ~d)) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (i32.const ~d))"
         context evaluated (b-at (b-local context) 48) (b-at (b-local evaluated) 16) (* 4 n) cursor evaluated index n)
+      (if (eql spread-kind 0)
+        (write-string (bootstrap-lexpr-copy cursor length index n context 48) s)
       (format s "(block $spread_done (loop $spread_copy (br_if $spread_done (i32.eq (local.get ~a) (i32.const 77825))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.mul (local.get ~a) (i32.const 4)))) (i32.load offset=3 (local.get ~a))) (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $spread_copy)))"
-        cursor context index cursor cursor cursor index index)
+        cursor context index cursor cursor cursor index index))
       (format s "(i32.store offset=12 (local.get ~a) (local.get ~a)) (i32.store offset=32 (local.get ~a) (local.get ~a)) (call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context root context root context context)
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
@@ -1935,7 +1946,8 @@
 (defun b-local-call (op afunc args spread)
   (let ((self (if (eq op 'b-self) "(i32.load offset=40 (local.get $context))"
                 (b-read-variable (cdr (or (assoc afunc *b-function-vars* :test #'eq) (refuse :b-local-function-identity)))))))
-    (if spread (if (eq spread t) (b-apply nil args self) (refuse :b-spread-kind))
+    (if spread (if (or (eq spread t) (and *bootstrap-front-end* (eql spread 0)))
+                   (b-apply nil args self 0 spread) (refuse :b-spread-kind))
       (b-call nil args self))))
 (defun b-inline-lambda (args)
   (destructuring-bind (vals required rest keys auxiliary body policy) args
@@ -2222,10 +2234,11 @@
 ;;; construction, restarts, the debugger and implicit trap-to-condition mapping
 ;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
 (defun b-condition-mask (type)
+  (when (and (not *bootstrap-front-end*) (member type '(stream-error end-of-file file-error package-error ccl::simple-package-error ccl::stream-is-closed-error ccl::bad-slot-type ccl::inactive-restart ccl::restart-failure))) (refuse :b-condition-type))
   (when (and (member type '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact)) (not *b-float-service*)) (refuse :float-condition-mode))
   (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
                          (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024) (unbound-variable . 2048) (storage-condition . 4096) (ccl::no-applicable-method-exists . 8192) (arithmetic-error . 16384) (division-by-zero . 32768) (floating-point-invalid-operation . 65536) (floating-point-overflow . 131072) (floating-point-underflow . 262144) (floating-point-inexact . 524288)
-                         (control-error . 64) (warning . 128) (simple-warning . 256))))
+                         (control-error . 64) (warning . 128) (simple-warning . 256) (stream-error . 1048576) (end-of-file . 2097152) (file-error . 4194304) (package-error . 8388608) (ccl::simple-package-error . 16777216) (ccl::stream-is-closed-error . 33554432) (ccl::bad-slot-type . 67108864) (ccl::inactive-restart . 134217728) (ccl::restart-failure . 268435456))))
       (refuse :b-condition-type)))
 (defun b-expand-conditions (form) (setq *b-restart-names* (if *b-float-service* '(list cons function simple-vector integer fixnum or number real truncate + - * / < <= = /= >= > float) (if *b-integer-service* '(list cons function simple-vector integer fixnum or number real truncate) '(list cons function simple-vector integer fixnum or))))
   ;; Check the input graph before any native macro sees it. Shared/cyclic reader
@@ -3334,6 +3347,16 @@
   (compile-call-form form name links)))
 (defun b-condition-runtime ()
  (let ((s (prior-float-b-condition-runtime)))
+  (when *bootstrap-front-end*
+    (setq s (with-output-to-string (out)
+              (loop with old = "(i32.gt_u (local.get $n) (i32.const 4))"
+                    for start = 0 then (+ end (length old))
+                    for end = (search old s :start2 start) do
+                (write-string s out :start start :end end)
+                (unless end (return))
+                (write-string "(i32.gt_u (local.get $n) (i32.const 5))" out))))
+    (setq s (numeric-text s "(i32.ne (local.get $n) (i32.const 15))"
+                             "(i32.and (i32.ne (local.get $n) (i32.const 28)) (i32.ne (local.get $n) (i32.const 15)))")))
   (if *b-float-service*
    (numeric-text (numeric-text s "(i32.ne (local.get $n) (i32.const 15))" "(i32.and (i32.ne (local.get $n) (i32.const 15)) (i32.ne (local.get $n) (i32.const 19)))")
     "(i32.eq (local.get $mask) (i32.const 196636))" "(i32.ne (i32.and (local.get $mask) (i32.const 65536)) (i32.const 0))") s)))
@@ -3650,19 +3673,26 @@
   (setq *b-condition-used* t)
   (pushnew "condition_registry" *b-symbols* :test #'equal)
   (b-wat "(block (result i32) ~a)"
-    (b-frame 2
+    (b-frame (max 2 (length values))
       (lambda (root)
         (let ((object (temporary)))
-          (b-wat "(i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a)
-                  (local.set ~a ~a)
-                  (i32.store offset=8 (call $condition_slots (local.get ~a)) (i32.load offset=8 ~a))
-                  (i32.store offset=12 (call $condition_slots (local.get ~a)) (i32.load offset=12 ~a))
-                  (local.get ~a)"
-                 root (first values) root (second values) object
-                 (if *b-allocation-retry*
-                   (b-wat "(call $condition_new (i32.const ~d) (i32.add ~a (i32.const 8)))" mask root)
-                   (b-wat "(call $condition_new (i32.const ~d) (i32.load offset=8 ~a) (i32.load offset=12 ~a))" mask root root))
-                 object root object root object))))))
+          (with-output-to-string (s)
+            ;; NIL means an omitted initarg here. Leave its native default
+            ;; in the instance; every supplied value is rooted before growth.
+            (loop for value in values for offset from 8 by 4
+                  when value do
+              (format s "(i32.store offset=~d ~a ~a)" offset root value))
+            (format s "(local.set ~a ~a)" object
+                    (if *b-allocation-retry*
+                      (b-wat "(call $condition_new (i32.const ~d) (i32.add ~a (i32.const 8)))"
+                             mask root)
+                      (b-wat "(call $condition_new (i32.const ~d) (i32.load offset=8 ~a) (i32.load offset=12 ~a))"
+                             mask root root)))
+            (loop for value in values for offset from 8 by 4
+                  when value do
+              (format s "(i32.store offset=~d (call $condition_slots (local.get ~a)) (i32.load offset=~d ~a))"
+                      offset object offset root))
+            (format s "(local.get ~a)" object)))))))
 
 (defun bootstrap-immediate (form)
   (when (and (ccl::acode-p form)
@@ -3678,7 +3708,16 @@
                                   (ccl::simple-program-error 2108 :format-control :format-arguments)
                                   (type-error 156 :datum :expected-type)
                                   (arithmetic-error 65564 :operation :operands)
-                                  (division-by-zero 196636 :operation :operands))))
+                                  (division-by-zero 196636 :operation :operands)
+                                  (stream-error 4194332 :stream)
+                                  (end-of-file 12582940 :stream)
+                                  (file-error 16777244 :pathname :error-type)
+                                  (package-error 33554460 :package)
+                                  (ccl::simple-package-error 100663356 :format-control :format-arguments :package)
+                                  (ccl::stream-is-closed-error 138412060 :stream)
+                                  (ccl::bad-slot-type 268435612 :datum :expected-type :format-control :slot-definition :instance)
+                                  (ccl::inactive-restart 536871196 :restart-name)
+                                  (ccl::restart-failure 1073742108 :restart))))
            (*b-tail-position* nil) (*b-producer-target* nil))
       (when (and class (not schema)) (refuse :bootstrap-condition-class))
       (when class
@@ -3699,8 +3738,9 @@
                            (or (loop for (k v) on (cdr forms) by #'cddr
                                      for i from 2 by 2
                                      when (eq (bootstrap-immediate k) key) return (nth i values))
-                               (if (member key '(:format-control :datum :expected-type))
-                                 "(i32.const 83)" "(i32.const 77825)")))
+                               (if (> (second schema) 2162716) nil
+                                 (if (member key '(:format-control :datum :expected-type))
+                                 "(i32.const 83)" "(i32.const 77825)"))))
                          (list (car values)
                                (reduce (lambda (value tail)
                                          (b-cons (make-b-raw-code :text value)
@@ -3722,17 +3762,25 @@
   (setq *b-condition-used* t)
   (pushnew "condition_registry" *b-symbols* :test #'equal)
   (let* ((simple (member name '(simple-condition-format-control simple-condition-format-arguments)))
-         (offset (if (member name '(simple-condition-format-control type-error-datum)) 8 12)))
+         (class (case name
+                  (stream-error-stream 'stream-error)
+                  (file-error-pathname 'file-error)
+                  (package-error-package 'package-error)
+                  (t (if simple 'simple-condition 'type-error))))
+         (offset (if (member name '(simple-condition-format-arguments type-error-expected-type)) 12 8)))
     (b-multiple
      (make-b-raw-code :text
        (bootstrap-operands forms
          (lambda (values)
-           (let ((value (temporary)))
-             (b-wat "(local.set ~a (call $condition_field ~a (i32.const ~d) (i32.const ~d) (local.get $top))) ~a (local.get ~a)"
-                    value (car values) (if simple 8 32) offset
+           (let ((value (temporary)) (condition (car values)))
+             (b-wat "(local.set ~a (call $condition_field ~a (i32.const ~d) ~a (local.get $top))) ~a (local.get ~a)"
+                    value condition (b-condition-mask class)
+                    (if (eq name 'package-error-package)
+                      (b-wat "(if (result i32) (i32.and (call $condition_mask ~a) (i32.const ~d)) (then (i32.const 16)) (else (i32.const 8)))"
+                             condition (b-condition-mask 'ccl::simple-package-error))
+                      (b-wat "(i32.const ~d)" offset))
                     (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const 83))" value) 4)
                     value))))))))
-
 
 (defun bootstrap-character (op forms)
   (bootstrap-operands forms
@@ -3856,6 +3904,40 @@
 
 ;;; Funcallable instances retain the ordinary callable prefix. Their final
 ;;; word points to the seven Lisp immediates described by LISPEQU.
+;;; Ordinary functions keep keyword names in their accepted arity metadata.
+(defun bootstrap-function-keyvect (forms)
+  (unless (= (length forms) 1) (refuse :function-keyvect-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((function (temporary)) (pool (temporary)) (arity (temporary))
+            (keys (temporary)) (header (temporary)))
+        (with-output-to-string (s)
+          (format s "(local.set ~a (call $object_base ~a (i32.const 32) (i32.const 1578)))"
+                  function (first values))
+          ;; A funcallable's class wrapper must never become a key vector.
+          (write-string (b-condition (b-wat "(i32.ne (i32.load (local.get ~a)) (i32.const 1578))" function) 4) s)
+          (format s "(local.set ~a (i32.load offset=24 (local.get ~a)))" pool function)
+          (write-string (b-condition (b-wat "(i32.ne (i32.and (local.get ~a) (i32.const 7)) (i32.const 6))" pool) 4) s)
+          (format s "(local.set ~a (i32.sub (local.get ~a) (i32.const 6)))
+                     (call $span (local.get ~a) (i32.const 12))
+                     (local.set ~a (i32.load (local.get ~a)))" pool pool pool header pool)
+          (write-string (b-condition (b-wat "(i32.or (i32.ne (i32.and (local.get ~a) (i32.const 255)) (i32.const 250)) (i32.lt_u (local.get ~a) (i32.const 762)))" header header) 4) s)
+          (write-string (b-condition (b-wat "(i32.ne (i32.load offset=16 (local.get ~a)) (i32.load offset=4 (local.get ~a)))" function pool) 4) s)
+          (format s "(local.set ~a (call $object_base (i32.load offset=16 (local.get ~a)) (i32.const 32) (i32.const 2042)))" arity function)
+          (write-string (b-condition (b-wat "(i32.ne (i32.load offset=4 (local.get ~a)) (i32.const 4))" arity) 4) s)
+          (dolist (offset '(8 12))
+            (write-string (b-condition (b-wat "(i32.or (i32.and (i32.load offset=~d (local.get ~a)) (i32.const 3)) (i32.lt_s (i32.load offset=~d (local.get ~a)) (i32.const 0)))" offset arity offset arity) 4) s))
+          (dolist (offset '(16 20 24))
+            (write-string (b-condition (b-wat "(i32.and (i32.ne (i32.load offset=~d (local.get ~a)) (i32.const 77825)) (i32.ne (i32.load offset=~d (local.get ~a)) (i32.const 77838)))" offset arity offset arity) 4) s))
+          (format s "(local.set ~a (i32.load offset=28 (local.get ~a)))" keys arity)
+          (write-string (b-condition (b-wat "(i32.ne (i32.and (local.get ~a) (i32.const 7)) (i32.const 6))" keys) 4) s)
+          (format s "(call $span (i32.sub (local.get ~a) (i32.const 6)) (i32.const 4))
+                     (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 6))))" keys header keys)
+          (write-string (b-condition (b-wat "(i32.ne (i32.and (local.get ~a) (i32.const 255)) (i32.const 250))" header) 4) s)
+          (format s "(call $span (i32.sub (local.get ~a) (i32.const 6)) (i32.add (i32.const 4) (i32.shl (i32.shr_u (local.get ~a) (i32.const 8)) (i32.const 2))))" keys header)
+          (write-string (b-condition (b-wat "(i32.and (i32.eq (i32.load offset=20 (local.get ~a)) (i32.const 77825)) (i32.ne (local.get ~a) (i32.const 250)))" arity header) 4) s)
+          (format s "(if (result i32) (i32.eq (i32.load offset=20 (local.get ~a)) (i32.const 77825)) (then (i32.const 77825)) (else (local.get ~a)))" arity keys))))))
+
 (defun bootstrap-function-immediate (forms storep)
   (unless (= (length forms) (if storep 3 2))
     (refuse :funcallable-immediate-arity))
@@ -4123,7 +4205,7 @@
                :initial-value (b-scalar (car (second (first args))))))
       (ccl::vector
        (bootstrap-gvector (cons (bootstrap-constant wasm32::subtag-simple-vector) (car args))))
-      (ccl::%make-uvector (or (bootstrap-allocate-float args)
+      (ccl::%make-uvector (or (bootstrap-allocate-bignum args) (bootstrap-allocate-float args)
                                  (bootstrap-make-vector args)))
       (ccl::make-list (bootstrap-make-list args))
       (ccl::nth-value
@@ -4287,7 +4369,16 @@
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((eq name 'ccl::%wasm-function-immediate)
+    (cond ((member name '(ccl::%double-float-sign ccl::%short-float-sign))
+           (bootstrap-float-sign name forms))
+          ((eq name 'ccl::%wasm-current-function)
+           (unless (null forms) (refuse :current-function-arity))
+           (b-multiple (make-b-raw-code :text "(i32.load offset=40 (local.get $context))")))
+          ((member name '(ccl::%wasm-bignum-half-ref ccl::%wasm-bignum-set ccl::%wasm-bignum-length-set ccl::%copy-ivector-to-ivector))
+           (b-multiple (make-b-raw-code :text (bootstrap-bignum-call name forms))))
+          ((eq name 'ccl::%wasm-function-keyvect)
+           (b-multiple (make-b-raw-code :text (bootstrap-function-keyvect forms))))
+          ((eq name 'ccl::%wasm-function-immediate)
            (b-multiple (make-b-raw-code :text (bootstrap-function-immediate forms nil))))
           ((eq name 'ccl::%wasm-set-function-immediate)
            (b-multiple (make-b-raw-code :text (bootstrap-function-immediate forms t))))
@@ -4320,6 +4411,9 @@
              (unless (and op (<= 12 op 43) (= (length forms) 3))
                (refuse :bootstrap-transcend-operation))
              (b-float-call (nth (- op 12) '(%libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32)) (cdr forms))))
+          ((and (eq name 'truncate) (= (length forms) 2)
+                (every (lambda (form) (ccl::acode-form-typep form 'fixnum t)) forms))
+           (b-integer-call '%integer-truncate forms))
           ((eq name 'ldb) (bootstrap-ldb forms))
           ((member name '(logand logior logxor)) (or (bootstrap-word-logical name forms) (bootstrap-logical-call name forms)))
           ((eq name '-) (bootstrap-subtract forms))
@@ -4337,7 +4431,8 @@
                       (b-wat "(i32.load ~a)" location)
                       (b-wat "(i32.store ~a ~a) ~a" location (second values) (second values)))))))))
           ((member name '(type-error-datum type-error-expected-type
-                         simple-condition-format-control simple-condition-format-arguments))
+                         simple-condition-format-control simple-condition-format-arguments
+                         stream-error-stream file-error-pathname package-error-package))
            (bootstrap-condition-reader name forms))
           ((and (member name '(1+ 1-)) (= (length forms) 1))
            (bootstrap-numeric-call (if (eq name '1+) '+ '-)
@@ -4426,7 +4521,7 @@
                      undefined-function unbound-variable storage-condition
                      ccl::no-applicable-method-exists arithmetic-error division-by-zero
                      floating-point-invalid-operation floating-point-overflow
-                     floating-point-underflow floating-point-inexact))
+                     floating-point-underflow floating-point-inexact stream-error end-of-file file-error package-error ccl::simple-package-error ccl::stream-is-closed-error ccl::bad-slot-type ccl::inactive-restart ccl::restart-failure))
         (format s "(if (i32.eq (local.get ~a) ~a) (then (br 1 (i32.const ~d))))"
                 x (b-restart-symbol name) (b-condition-mask name)))
       (write-string "(throw $call_error (i32.const 12)))" s))))
@@ -4635,3 +4730,146 @@
                              (i32.shl (i32.and (i32.shr_s (i32.shr_s ~a (i32.const 2))
                                                        (i32.const ~d)) (i32.const ~d)) (i32.const 2))"
                             x x (min position 31) (1- (ash 1 size))))))))))))))
+
+
+;;; A lexpr points at the count word of a retained root frame. Validate that
+;;; frame before reading the count; an arbitrary fixnum is not a stack pointer.
+(defun bootstrap-lexpr-count (pointer length)
+  (let ((frame (temporary)) (limit (temporary)) (count (temporary)))
+    (with-output-to-string (s)
+      (format s "(local.set ~a ~a) (local.set ~a (local.get $top))"
+        frame (b-load wasm32::tcr.root_head) limit)
+      (write-string "(block $lexpr_found (loop $lexpr_search" s)
+      (write-string
+        (b-condition
+          (b-wat "(i32.or (i32.or (i32.eqz (local.get ~a)) (i32.and (local.get ~a) (i32.const 3))) (i32.or (i32.lt_u (local.get ~a) ~a) (i64.gt_u (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const 12)) (i64.extend_i32_u (local.get ~a)))))"
+            frame frame frame (b-load wasm32::tcr.vsp_base) frame limit) 5) s)
+      (format s "(local.set ~a (i32.load offset=4 (local.get ~a)))" count frame)
+      (write-string
+        (b-condition
+          (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get ~a)) (i64.add (i64.const 8) (i64.mul (i64.extend_i32_u (local.get ~a)) (i64.const 4)))) (i64.extend_i32_u (local.get ~a)))"
+            frame count limit) 5) s)
+      (format s "(br_if $lexpr_found (i32.eq ~a (i32.add (local.get ~a) (i32.const 8)))) (local.set ~a (local.get ~a)) (local.set ~a (i32.load (local.get ~a))) (br $lexpr_search)))"
+        pointer frame limit frame frame frame)
+      (format s "(local.set ~a (i32.load ~a))" length pointer)
+      (write-string
+        (b-condition
+          (b-wat "(i32.or (i32.or (i32.and (local.get ~a) (i32.const 3)) (i32.lt_s (local.get ~a) (i32.const 0))) (i32.ne (i32.add (i32.shr_u (local.get ~a) (i32.const 2)) (i32.const 1)) (local.get ~a)))"
+            length length length count) 5) s)
+      (format s "(local.set ~a (i32.shr_u (local.get ~a) (i32.const 2)))" length length))))
+
+(defun bootstrap-lexpr-copy (cursor length index prefix destination offset)
+  ;; Source arguments run backwards after the tagged count. No call can move
+  ;; them between this load and publication in the ordinary APPLY root frame.
+  (b-wat "(block $lexpr_done (loop $lexpr_copy (br_if $lexpr_done (i32.ge_u (local.get ~a) (i32.add (local.get ~a) (i32.const ~d)))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const ~d) (i32.mul (local.get ~a) (i32.const 4)))) (i32.load (i32.add (local.get ~a) (i32.mul (i32.sub (i32.add (local.get ~a) (i32.const ~d)) (local.get ~a)) (i32.const 4))))) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $lexpr_copy)))"
+    index length prefix destination offset index cursor length prefix index index index))
+
+(in-package :wasm32-compiler)
+
+;;; Raw digit access is the target equivalent of the native bignum LAP entries.
+;;; No allocation or callback follows validation and precedes a digit store.
+(defun bootstrap-bignum-base (object)
+  (let ((base (temporary)) (count (temporary)))
+    (b-wat "(block (result i32) ~a
+      (local.set ~a (i32.sub ~a (i32.const 6)))
+      (call $span (local.get ~a) (i32.const 4))
+      (local.set ~a (i32.shr_u (i32.load (local.get ~a)) (i32.const 8))) ~a ~a
+      (call $span (local.get ~a) (i32.and (i32.add (i32.shl (local.get ~a) (i32.const 2)) (i32.const 11)) (i32.const -8)))
+      (local.get ~a))"
+      (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))" object) 4)
+      base object base count base
+      (b-condition (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base) 4)
+      (b-condition (b-wat "(i32.eqz (local.get ~a))" count) 4)
+      base count base)))
+
+(defun bootstrap-bignum-index (base index)
+  (b-condition
+   (b-wat "(i32.or (i32.and ~a (i32.const 3))
+             (i32.ge_u (i32.shr_u ~a (i32.const 2))
+                       (i32.shr_u (i32.load ~a) (i32.const 8))))" index index base) 4))
+
+(defun bootstrap-bignum-call (name forms)
+  (let ((arity (case name (ccl::%wasm-bignum-half-ref 3) (ccl::%wasm-bignum-set 4)
+                         (ccl::%wasm-bignum-length-set 2) (t 5))))
+    (unless (= (length forms) arity) (refuse :bignum-primitive-arity)))
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((base (temporary)))
+        (with-output-to-string (s)
+          (format s "(local.set ~a ~a)" base (bootstrap-bignum-base (first values)))
+          (case name
+            ((ccl::%wasm-bignum-half-ref ccl::%wasm-bignum-set)
+             (destructuring-bind (object index high &optional low) values
+               (write-string (bootstrap-bignum-index (b-local base) index) s)
+               (if low
+                 (progn
+                   (dolist (part (list high low))
+                     (write-string (b-condition (b-wat "(i32.and ~a (i32.const 3))" part) 5) s))
+                   (format s "(i32.store (i32.add (local.get ~a) (i32.add (i32.const 4) ~a))
+                     (i32.or (i32.shl ~a (i32.const 14)) (i32.and (i32.shr_u ~a (i32.const 2)) (i32.const 65535)))) ~a"
+                     base index high low object))
+                 (format s "(i32.shl (i32.load16_u (i32.add (local.get ~a)
+                   (i32.add ~a (if (result i32) (i32.eq ~a (i32.const 77825)) (then (i32.const 4)) (else (i32.const 6)))))) (i32.const 2))"
+                   base index high))))
+            (ccl::%wasm-bignum-length-set
+             (let ((count (second values)) (old (temporary)) (end (temporary)) (cursor (temporary)))
+               (format s "(local.set ~a (i32.shr_u (i32.load (local.get ~a)) (i32.const 8)))" old base)
+               (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.or (i32.eqz ~a) (i32.gt_u (i32.shr_u ~a (i32.const 2)) (local.get ~a))))" count count count old) 4) s)
+               ;; Shrinking a header leaves whole aligned objects, never a gap
+               ;; that the collector could mistake for an unrecognized header.
+               (format s "(local.set ~a (i32.add (local.get ~a) (i32.and (i32.add (i32.shl (local.get ~a) (i32.const 2)) (i32.const 11)) (i32.const -8))))
+                 (local.set ~a (i32.add (local.get ~a) (i32.and (i32.add ~a (i32.const 11)) (i32.const -8))))
+                 (block $padding_done (loop $padding
+                   (br_if $padding_done (i32.ge_u (local.get ~a) (local.get ~a)))
+                   (i32.store (local.get ~a) (i32.const 250))
+                   (i32.store offset=4 (local.get ~a) (i32.const 0))
+                   (local.set ~a (i32.add (local.get ~a) (i32.const 8))) (br $padding)))
+                 (if (i32.eqz (i32.and ~a (i32.const 4)))
+                   (then (i32.store (i32.add (local.get ~a) (i32.add ~a (i32.const 4))) (i32.const 0))))
+                 (i32.store (local.get ~a) (i32.or (i32.shl ~a (i32.const 6)) (i32.const 7))) ~a"
+                 end base old cursor base count cursor end cursor cursor cursor cursor count base count base count (first values))))
+            (ccl::%copy-ivector-to-ivector
+             (destructuring-bind (source start destination to count) values
+               (declare (ignore source))
+               (let ((dest (temporary)))
+                 (format s "(local.set ~a ~a)" dest (bootstrap-bignum-base destination))
+                 (dolist (x (list start to count))
+                   (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))" x x) 4) s))
+                 (loop for object in (list (b-local base) (b-local dest))
+                       for offset in (list start to) do
+                   (write-string (b-condition
+                     (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u ~a) (i64.extend_i32_u ~a))
+                        (i64.shl (i64.extend_i32_u (i32.shr_u (i32.load ~a) (i32.const 8))) (i64.const 4)))" offset count object) 4) s))
+                 (format s "(memory.copy (i32.add (local.get ~a) (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2))))
+                   (i32.add (local.get ~a) (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2))))
+                   (i32.shr_u ~a (i32.const 2))) ~a" dest to base start count destination))))))))))
+
+(defun bootstrap-allocate-bignum (forms)
+  (when (and (= (length forms) 2) (eql (ccl::acode-fixnum-form-p (second forms)) 7))
+    (bootstrap-operands (list (first forms))
+      (lambda (values)
+        (let ((count (first values)))
+          (b-wat "~a (i32.add ~a (i32.const 6))"
+            (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.or (i32.eqz ~a) (i32.gt_u ~a (i32.const 67108860))))" count count count) 6)
+            (bootstrap-heap-block
+              (b-wat "(i32.and (i32.add ~a (i32.const 11)) (i32.const -8))" count)
+              (lambda (base bytes)
+                (b-wat "(memory.fill ~a (i32.const 0) ~a) (i32.store ~a (i32.or (i32.shl ~a (i32.const 6)) (i32.const 7)))"
+                  base bytes base count)))))))))
+
+(in-package :wasm32-compiler)
+
+(defun bootstrap-float-sign (name forms)
+  (unless (= (length forms) 1) (refuse :float-sign-arity))
+  (let ((doublep (eq name 'ccl::%double-float-sign)))
+    (b-multiple
+     (make-b-raw-code :text
+       (bootstrap-operands forms
+         (lambda (values)
+           (let ((object (first values)))
+             (b-wat "~a ~a"
+               (b-condition (b-wat "(i32.ne (call $real_operand ~a) (i32.const ~d))"
+                                  object (if doublep 64 32)) 4)
+               (bootstrap-boolean
+                (b-wat "(i32.shr_u (i32.load offset=~d (i32.sub ~a (i32.const 6))) (i32.const 31))"
+                       (if doublep 12 4) object))))))))))

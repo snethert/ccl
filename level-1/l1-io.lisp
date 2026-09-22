@@ -1633,6 +1633,7 @@ printed using \"#:\" syntax.  NIL means no prefix is printed.")
 
 
 
+#-wasm32-target
 (defun write-a-macptr (macptr stream)
   (let* ((null (%null-ptr-p macptr)))
     (print-unreadable-object (macptr stream)

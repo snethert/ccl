@@ -456,3 +456,20 @@ the qualified condition replay; fresh execution mode was not rerun. Three
 artifact-selection tests pass. Original packets and fixtures are unchanged.
 These observations grant no acceptance or integration; Stage 1 remains
 **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Audit 159 acceptance and stack integration
+
+Imported Claude's audit `f540c273` verbatim. Steve explicitly answered
+“Accept and integrate all seven”, including behavioural branch WB-1. Integrated
+12 changed files from the final reviewed proposal, in cumulative stack order;
+all runtime sources are unchanged. O-9 is recorded as behavioural, O-10 names
+real class-precedence-list `TYPEP` as the successor, and O-11's canonical
+verification preserves all distinct mutations.
+
+Final integrated-source R6/R6a passes **21,843 native tests**, with **164 FASLs
+restored**. Production imports reproduce **22,480 comparisons** and **20
+structural collector checks**. Throughput remains **537 originals / 502
+non-NIL witnesses / 2,060 admitted of 2,231**. The seven packets are accepted
+and integrated; there is no new LL15 credit. Stage 1 remains **21 accepted,
+12 missing, zero unreviewed of 33**. GCD, generic numeric restarts, method
+selection, the condition successor and the image/READY join remain unfinished.

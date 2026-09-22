@@ -8,7 +8,7 @@ no acceptance or slot credit.
 
 | ID | Definition | Proposal | Disposition |
 | --- | --- | --- | --- |
-| WB-1 | `bignum-truncate` in `level-0/l0-bignum32.lisp` | `2ba65ee2`, [division proposal](../../../tests/wasm/stage1/bootstrap-limb-division/README.md) | Awaiting acceptance; classify explicitly as behavioural |
+| WB-1 | `bignum-truncate` in `level-0/l0-bignum32.lisp` | `2ba65ee2`, [division proposal](../../../tests/wasm/stage1/bootstrap-limb-division/README.md) | Accepted by Steve with audit 159; [acceptance](acceptance-bootstrap-stack.json) explicitly records the behavioural difference |
 
 ## WB-1: quotient-only early return
 

@@ -1005,6 +1005,8 @@ terminate the list"
 
 
 (defun lfun-keyvect (lfun)
+  #+wasm32-target (%wasm-function-keyvect lfun)
+  #-wasm32-target
   (let ((bits (lfun-bits lfun)))
     (declare (fixnum bits))
     (and (logbitp $lfbits-keys-bit bits)
@@ -1216,6 +1218,7 @@ are rounded up to a multiple of 64Kbytes."
 ;;; of a foreign function that accepts a pointer as an argument and does
 ;;; whatever's needed to dispose of it.  That function can be called from
 ;;; the GC, so it shouldn't call back into lisp.
+#-wasm32-target
 (defun register-xmacptr-dispose-function (address)
   (ff-call (%kernel-import target::kernel-import-register-xmacptr-dispose-function)
            :address address

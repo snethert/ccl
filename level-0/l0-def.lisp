@@ -252,9 +252,11 @@
       ;; Not found in env, look in function cell.
   (%global-macro-function form))
 
+#-wasm32-target
 (defun %fixnum-ref-macptr (fixnum &optional (offset 0))
   (%int-to-ptr (%fixnum-ref-natural fixnum offset)))
 
+#-wasm32-target
 (defun %fixnum-set-macptr (fixnum offset &optional (newval offset newval-p))
   (%fixnum-set-natural fixnum (if newval-p offset 0) (%ptr-to-int newval))
   newval)

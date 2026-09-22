@@ -879,6 +879,7 @@ vector
 (defsetf %get-cstring %set-cstring)
 
 ;;; Deprecated, but used by UFFI.
+#-wasm32-target
 (defun %put-cstring (ptr str &optional (offset 0))
   (setf (%get-cstring (%inc-ptr ptr offset)) str)
   ;; 0 is the traditional, not-very-useful return value ...
@@ -1108,6 +1109,7 @@ vector
 				  (arg2 (prog1 arg1 (setq arg1 0))))
   (%%set-unsigned-longlong ptr arg1 arg2))
 
+#-wasm32-target
 (defun %composite-pointer-ref (size pointer offset)
   (declare (ignorable size))
   (%inc-ptr pointer offset))

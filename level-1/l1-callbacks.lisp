@@ -145,6 +145,7 @@
   (setq *available-bytes-for-callbacks* #-windows-target (get-page-size) #+windows-target (ash 1 16)
         *current-callback-page* (%make-executable-page)))
 
+#-wasm32-target
 (defun %allocate-callback-pointer (n)
   (with-lock-grabbed (*callback-alloc-lock*)
     (when (< *available-bytes-for-callbacks* n)

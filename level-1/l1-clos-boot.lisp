@@ -42,6 +42,11 @@
 
 (declaim (inline instance-slots %non-standard-instance-slots))
 (defun %non-standard-instance-slots (instance typecode)
+  #+wasm32-target
+  (if (eql typecode target::subtag-function)
+    (gf.slots instance)
+    (error "Don't know how to find slots of ~s" instance))
+  #-wasm32-target
   (cond ((eql typecode target::subtag-macptr) (foreign-slots-vector instance))
         ((or (typep instance 'standard-generic-function)
              (typep instance 'funcallable-standard-object))

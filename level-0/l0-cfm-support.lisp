@@ -795,6 +795,7 @@ return a fixnum representation of that address, else return NIL."
 
 
 
+#-wasm32-target
 (defun foreign-symbol-address (name &optional (map *rtld-use*))
   "Try to resolve the address of the foreign symbol name. If successful,
 return that address encapsulated in a MACPTR, else returns NIL."

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-bootstrap-stack.json",
+  "acceptance_sha256": "fb5923c2830e1c40a131787bbb91d9e0475dc75ce16513369eead993d74b7d28",
+  "previous_integration": "integration-bootstrap-funcallable.json",
+  "previous_integration_sha256": "c0fcca094da559b49da943acb9b69dde08fd5794684e59cd73c8dd4a53891ec0",
+  "files": [
+    {
+      "after": "b3d97239fd0010ab6b61c680a2a7d516beaa9e2fbfc72aa8c3f08c39092a3531",
+      "before": "6b3c6b947c0b6a1de6f644bfe072f4ee41c75225a174a2f6385f9a82396b48e2",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "b3d97239fd0010ab6b61c680a2a7d516beaa9e2fbfc72aa8c3f08c39092a3531"
+    },
+    {
+      "after": "8955d23c501282b30e0f103f4a55e57c929ab8e3e22133d5b53eaf085b50044c",
+      "before": "00a854e40c761e53492393c16439a463e02546fd58dcd7c0c55dbc41c47abcf4",
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "reviewed": "8955d23c501282b30e0f103f4a55e57c929ab8e3e22133d5b53eaf085b50044c"
+    },
+    {
+      "after": "cb642d879e2ebb78f6fb1a4e355047f3b7f2c540045f1953cba97396be9e2349",
+      "before": "db0a11b5663fa03c3fad5e3ad56b2aacd475aaf72486caeb0e813dcb234028a1",
+      "file": "level-0/l0-def.lisp",
+      "reviewed": "cb642d879e2ebb78f6fb1a4e355047f3b7f2c540045f1953cba97396be9e2349"
+    },
+    {
+      "after": "9685fc680682a7f542bb6c74144c0ca0348b00fa297315537c19c488089f3b3e",
+      "before": "22ea0bced8822d2481b81dc91339325204955e219f2df43aa34614c1f611a991",
+      "file": "level-0/l0-cfm-support.lisp",
+      "reviewed": "9685fc680682a7f542bb6c74144c0ca0348b00fa297315537c19c488089f3b3e"
+    },
+    {
+      "after": "10bdbac8fb6aabd286abe88f29718e5146b572ebde6f50e2ff5b75fa490e01a7",
+      "before": "86b4d532983e021e6bf3c7997b6e7200b4c4fc6fed6a1f733db3080dfb899185",
+      "file": "level-0/l0-io.lisp",
+      "reviewed": "10bdbac8fb6aabd286abe88f29718e5146b572ebde6f50e2ff5b75fa490e01a7"
+    },
+    {
+      "after": "c13fab904b32d1e25614b952e2e96f65476d0a85608781b603fc595ac6286385",
+      "before": "ea308d5f1a6670a617db36e94e3dae851d79c4cdfb6e53925647dcf3a57c297b",
+      "file": "level-1/l1-callbacks.lisp",
+      "reviewed": "c13fab904b32d1e25614b952e2e96f65476d0a85608781b603fc595ac6286385"
+    },
+    {
+      "after": "43547f7df5cc9f30d660faf755f396846e0e11780d03a19a23119df27a747c35",
+      "before": "1f7d2486605fdc54b70d25906d2b74529a24af67a785d4d47283cea721e33c9b",
+      "file": "level-1/l1-streams.lisp",
+      "reviewed": "43547f7df5cc9f30d660faf755f396846e0e11780d03a19a23119df27a747c35"
+    },
+    {
+      "after": "ba8c494161657f7cfeb632422734f5ed7a0aa6b796652ffaa4abbc40727372d5",
+      "before": "a342f7910b8b94a4c3c2184746f1864a5819286ab9b2a31ce08f646fa6ee6ba1",
+      "file": "level-1/l1-utils.lisp",
+      "reviewed": "ba8c494161657f7cfeb632422734f5ed7a0aa6b796652ffaa4abbc40727372d5"
+    },
+    {
+      "after": "fcc3f3de4e92e76aa3fbf67d913228cf432d0d9345d5df82a11a64bbd601014a",
+      "before": "7c374b8effd203d2cb42eb96b4c253ad3ce071da52ed18b744cf99ff18494b5f",
+      "file": "level-1/l1-aprims.lisp",
+      "reviewed": "fcc3f3de4e92e76aa3fbf67d913228cf432d0d9345d5df82a11a64bbd601014a"
+    },
+    {
+      "after": "a581d1c79f5f24ea0785abb74645d1165533ddc565a440b5e0ea9c05623bf53d",
+      "before": "e38e48a7665eddad99f881f468acdabf78ccb42b322caf5089b079e2d7b9807d",
+      "file": "level-1/l1-clos-boot.lisp",
+      "reviewed": "a581d1c79f5f24ea0785abb74645d1165533ddc565a440b5e0ea9c05623bf53d"
+    },
+    {
+      "after": "921183847179bffb98936a0d7df1d3146379014c8e82f9331432793c9767bd0f",
+      "before": "67b9093837bde7bc6c9dcc381d1c9c831cf1814202f7caa73cf0333878e47856",
+      "file": "level-1/l1-io.lisp",
+      "reviewed": "921183847179bffb98936a0d7df1d3146379014c8e82f9331432793c9767bd0f"
+    },
+    {
+      "after": "759dd2b6b51ac7bb6dc99a706a0b59f1398e6aace583329db8dd66f639dedddc",
+      "before": "811d95f79114e68a528151071d95951cd00a361a177760e74747af1c51a401e5",
+      "file": "level-0/l0-bignum32.lisp",
+      "reviewed": "759dd2b6b51ac7bb6dc99a706a0b59f1398e6aace583329db8dd66f639dedddc"
+    }
+  ],
+  "qualification": {
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-stack-acceptance/packet.json",
+    "packet_sha256": "92783f3534fb960572c5d9992b33e514e8ba9109b663422f981c3973167d26d8",
+    "production_record": "8cb8f87612c1cb292d4291fd382d0913c740ff5717bcc6dbcdbdbb06f8c7ad16",
+    "native_record": "34e6b92a1dfdee050447026a72d70b600425530808c386fa979bd035cd55e5bb",
+    "native_tests": 21843,
+    "identical_fasls": 140,
+    "restored_fasls": 164,
+    "comparisons": 22480,
+    "structural_collector_checks": 20
+  },
+  "observations": [
+    "O-9/WB-1 is explicitly accepted as behavioural: BIGNUM-TRUNCATE returns only zero for a smaller dividend under NO-REM, unlike the other 32-bit ports. Arithmetic does not require this correction. Behavioural branches remain rare and listed separately from representation changes.",
+    "O-10: the existing condition mask is full. Its successor is TYPEP against real class precedence lists, not another mask; eight remaining class refusals stay until that path is qualified.",
+    "O-11: the canonical verifier retains 12 distinct fault artifacts and compares 3,799 contents, checking 12,480 alias edges without repeated content hashing. Historical packets are unchanged.",
+    "Claude independently tested 490 additional random bignum cases, all 24,440 comparisons passing. This review probe is attributed to Claude, not counted as retained author execution.",
+    "Full method selection, generic numeric restart paths, GCD, the condition successor and image/READY integration remain owed."
+  ],
+  "scope": "Seven accepted proposals integrated in cumulative stack order, byte-equal to final reviewed files. All runtime services unchanged. 537 original executions, 502 non-NIL witnesses, 2,060/2,231 admitted; no new throughput or LL15 slot credit."
+}
