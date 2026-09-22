@@ -3703,3 +3703,8 @@ Retain 17,064 generated comparisons, the six new entries' 176 two-ULP comparison
 ## 2026-09-22 — portable hyperbolic artifact retention
 
 The clean verifier for `dd70c054` refused a symlink archive entry before executing. Retain R2 with archive dereferencing and the same 3,076 deterministic artifact hashes. Preserve the failed R1 record and log. This changes packaging only; final native and generated execution inputs stay byte-identical.
+
+
+## 2026-09-22 — bind clean hyperbolic R2 replay
+
+The documented verifier passes unmodified from clean committed checkout `34842a31`: 3,076 artifact hashes match at 435 source pins. Bind the verification and checkout record; preserve the superseded archive failure. No source or runtime change, no additional execution or slot credit.

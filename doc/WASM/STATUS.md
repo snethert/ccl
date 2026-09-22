@@ -271,3 +271,6 @@ The generated run passes **17,064** comparisons, including **176** new hyperboli
 
 
 Hyperbolic retention R2 corrects a packaging failure caught in the clean-checkout verifier: symlinked fault-control inputs are stored as ordinary file bytes. All **3,076** deterministic artifact hashes are unchanged; R1 remains retained as superseded. No compiler, runtime or source behavior changed.
+
+
+Hyperbolic R2 at `34842a31` passes its documented verifier unmodified from a clean committed detached checkout: **3,076 deterministic artifacts identical at 435 pins**. Whole-file recount, all generated and raw comparisons, three fault controls and the 17-profile reader proof reproduce. Native evidence is reused by exact final compiler/arch/source hashes. No additional execution or slot credit.
