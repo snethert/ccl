@@ -1,20 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5c22835ac527181b1500991490c49720f19eb1a84131bf77053c7963ec0c8a94",
-  "commit": "9965dbc010cc81ee0d93ce960e508d481b9a8620",
-  "immutable_evidence_files": 266815,
+  "catalog_sha256": "d8add3549a0b715f8ae088a1c29737bee2daf186ab684e6dad60b7c6ab375a54",
+  "commit": "73542657426c46aae9389c459cffdd68bd5e669d",
+  "immutable_evidence_files": 266818,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-clos-accessors-r1",
-    "files": 26,
-    "bytes": 2443272
+    "directory": "2026-09-22-stage1-bootstrap-clos-accessors-verification",
+    "files": 3,
+    "bytes": 482925
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
   "scope": "CLOS execution recipes, unreviewed; 2,059 admitted, 507 original executions and 472 non-NIL. Stage 1 remains 21 accepted and 12 missing.",
-  "source_index_sha256": "0a3c4417def5e6c7762350c3f8784f4e07da5204dc997d11bddd0e7fa488d175",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-clos-accessors.json",
-  "version": 1
+  "source_index_sha256": "c6808571d68f50085056690b0ffbfb4954386d0a4bccb682ca40b83c3b07b302",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-clos-accessors-verification.json",
+  "version": 1,
+  "verification": {
+    "status": "PASS",
+    "method": "Unmodified documented verifier from clean committed checkout",
+    "checkout": "bc43011e7c1d543c908e93995d2d310a01197406",
+    "verification": "0dd659418235e7053b15a38571031f9854cf2b93f21ed903d847e46ce9ee138f"
+  }
 }

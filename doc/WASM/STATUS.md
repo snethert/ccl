@@ -379,8 +379,10 @@ Clean committed replay at `fc9613d5` passes unmodified: 3,844 deterministic arti
 Original native-matched execution rises **486 → 507**, non-NIL witnesses
 **451 → 472**; admission stays **2,059/2,231**. Twenty-one unchanged CLOS
 functions pass 280 new comparisons, **18,040 total**, including method removal,
-class cache invalidation and dispatch-hook closures across collection. Forty
-collector checks and two transport controls pass. Compiler/runtime/native
+class cache invalidation and dispatch-hook closures across collection. Twenty
+structural collector checks and two transport controls pass. Compiler/runtime/native
 qualification is reused by exact source hash. [Recipes and replay](../../tests/wasm/stage1/bootstrap-clos-accessors/README.md).
 Only 69 changed artifacts are retained; 3,174 reuse their predecessor hashes.
 Unreviewed execution evidence; no integration or slot credit. Ledger unchanged.
+
+Clean committed replay at `bc43011e` passes unmodified: 3,243 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated. The immutable R1 README/development note says 40 structural collector checks; this is a transcription error: the retained report has 20.

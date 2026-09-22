@@ -3394,6 +3394,12 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Original CLOS accessor execution: 486 to 507 originals, 451 to 472 non-NIL witnesses; 70 new native rows and 280 new target comparisons, 18,040 total. Native slot projections preserve self backpointers; mutation callers collect across cycles, cache updates and dispatch hook calls. Two transport controls reject. Compiler/runtime/source unchanged from the pending lexpr proposal; native qualification reused by exact hash. No integration or slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CLOS-ACCESSORS-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-clos-accessors-verification/verification.json",
+      "sha256": "0dd659418235e7053b15a38571031f9854cf2b93f21ed903d847e46ce9ee138f",
+      "scope": "Unmodified clean committed replay at bc43011e7c1d543c908e93995d2d310a01197406: 3243 deterministic artifacts identical; 507 original definitions, 472 non-NIL, 18,040 comparisons, 20 structural collector checks and two rejected transport faults. The immutable R1 README/development note overstates the structural collector checks as 40; the actual retained report has 20. No acceptance or integration."
     }
   ],
   "current_runs": [

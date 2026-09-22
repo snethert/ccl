@@ -3809,3 +3809,5 @@ slot-cache invalidation, key metadata and dispatch hooks run through unchanged
 whole-file CCL bodies. The transport preserves self backpointers and snapshots
 inputs before native mutation. Two transport controls reject. No compiler,
 runtime or CCL source changes; native R6/R6a reused by source hash. No slot credit.
+
+Clean committed replay at `bc43011e` passes unmodified: 3,243 deterministic artifacts identical. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated. The immutable R1 README/development note says 40 structural collector checks; this is a transcription error: the retained report has 20.
