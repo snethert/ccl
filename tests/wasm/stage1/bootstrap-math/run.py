@@ -66,6 +66,7 @@ def run(out):
     subprocess.run(['/usr/local/bin/node',HERE/'math-check.mjs',out,out/'math-raw.json'],check=True)
     subprocess.run(['/usr/local/bin/node',HERE.parent/'float-core/execute.mjs',out/'float.wasm',out/'detector.wasm',EVIDENCE/'2026-09-19-stage1-float-core-r2/execution/cases.json',out/'raw-regression.json'],check=True)
     subprocess.run([sys.executable,HERE/'faults.py',out],check=True)
+    subprocess.run([sys.executable,HERE/'trap-control.py',out],check=True)
     from domains import check
     check(out)
     summarize(out)

@@ -36,7 +36,7 @@ for(const base of [131072,1048576,2147483648]){
    assert.equal(call(op,...args),0);assert.equal(get(result+8),0);assert.equal(get(result+4),0);
    const actual=w===32?view.getFloat32(out+4,true):view.getFloat64(out+8,true);
    const expected0=Math[name](x,y),expected=w===32?Math.fround(expected0):expected0;
-   const delta=ulps(actual,expected,w);assert(delta<=4,`${name}/${w} ${x},${y}: ${actual} vs ${expected} (${delta} ULP)`);
+   const delta=ulps(actual,expected,w);assert(delta<=2,`${name}/${w} ${x},${y}: ${actual} vs ${expected} (${delta} ULP)`);
    comparisons++;identical+=delta===0;maxUlps=Math.max(maxUlps,delta);
    assert.equal(get(result),out+6);assert.equal(get(result+12),3);assert.equal(get(result+16),out+(w===32?8:16));assert.equal(get(result+20),w);assert.equal(get(result+24),0);assert.equal(get(result+28),0);
    assert.deepEqual(bytes.slice(base,end),before);assert(bytes.slice(out+(w===32?8:16),limit).every(x=>x===0xa5));
@@ -50,10 +50,23 @@ for(const base of [131072,1048576,2147483648]){
   const args=reset(w,.5,.25);assert.equal(call(op,...args,31,0,w===32?8:16),0,'unchecked mask and exact fit');assert.equal(get(result+4),0);directed.push({name,w,label:'unchecked-exact-fit'});
   const wrong=reset(w===32?64:32,.5,.25),before=bytes.slice(base,result+64);assert.equal(call(op,...wrong),2);assert.deepEqual(bytes.slice(base,result+64),before);directed.push({name,w,label:'wrong-width'});
  }
+ // Literal mathematical identities are exact, not subject to the ULP allowance.
+ for(const [name,x,y,want] of [
+  ['pow',2,3,8],['pow',2,-2,.25],['pow',-2,3,-8],['pow',2,0,1],
+  ['sin',0,0,0],['sin',-0,0,-0],['cos',0,0,1],['acos',1,0,0],
+  ['asin',-0,0,-0],['cosh',0,0,1],['log',1,0,0],['tan',-0,0,-0],
+  ['atan',-0,0,-0],['atan2',-0,1,-0],['exp',0,0,1],
+  ['sinh',-0,0,-0],['tanh',-0,0,-0]])for(const w of [64,32]){
+  const op=12+2*names.indexOf(name)+(w===32),args=reset(w,x,y);
+  assert.equal(call(op,...args),0);assert.equal(get(result+4),0);assert.equal(get(result+8),0);
+  const actual=w===32?view.getFloat32(out+4,true):view.getFloat64(out+8,true);
+  assert(Object.is(actual,want),`exact ${name}/${w}`);
+  directed.push({name,w,label:'exact-identity',inputBits:[String(bits(x,w)),String(bits(y,w))],resultBits:String(bits(actual,w))});
+ }
  for(const [op,x,y,flag] of [[18,2,0,1],[24,0,0,2],[12,0,-1,2],[32,1000,0,4],[33,1000,0,4]]){
   const w=op%2?32:64,args=reset(w,x,y);assert.equal(call(op,...args),0);assert.equal(get(result+4),flag);assert.equal(get(result+8),flag);assert.equal(get(result),77825);assert.equal(get(result+16),out);assert(bytes.slice(out,limit).every(x=>x===0xa5));directed.push({op,label:'enabled-condition',flag});
  }
  runs.push({base,comparisons,identical,maxUlps,directed,stackTop:api.__stack_pointer.value});
 }
-fs.writeFileSync(output,JSON.stringify({status:'PASS',runs,scope:'Finite sampled numerical comparison against independent host Math, four ULP maximum, exact signed zero. No full-domain error-bound or inexact/underflow-flag claim.'},null,2)+'\n');
+fs.writeFileSync(output,JSON.stringify({status:'PASS',runs,scope:'Finite sampled numerical comparison against independent host Math, two ULP maximum, exact signed zero. No full-domain error-bound or inexact/underflow-flag claim.'},null,2)+'\n');
 console.log('PASS: raw libm comparisons',runs.reduce((n,r)=>n+r.comparisons,0));

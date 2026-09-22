@@ -5,7 +5,7 @@ import backend,run as r
 spec=importlib.util.spec_from_file_location('base_packet',r.HERE.parent/'bootstrap-library/packet.py')
 base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
 sha,read,files=base.sha,base.read,base.files
-ID='STAGE1-BOOTSTRAP-MATH-R1'
+ID='STAGE1-BOOTSTRAP-MATH-R2'
 
 def pins():
  x=base.pins()
@@ -18,6 +18,8 @@ def pins():
 
 def dependencies():
  x=base.dependencies()
+ for name in ('packet.json','execution/summary.json','native/run.json'):
+  rel='2026-09-21-stage1-bootstrap-math-r1/'+name;x[rel]=sha(r.EVIDENCE/rel)
  for p in files(backend.PACKET):x[str(p.relative_to(r.EVIDENCE))]=sha(p)
  for directory,names in [
   ('2026-09-19-stage1-float-core-r2',['packet.json','execution/cases.json']),
@@ -44,7 +46,7 @@ def source_check(out):
  for name in ('check.mjs','install.mjs'):assert (out/name).read_bytes()==(r.HERE/name).read_bytes(),name
 
 def copy_native(src,dest):
- omitted={}
+ omitted=read(src/'omitted-images.json') if (src/'omitted-images.json').exists() else {}
  for f in files(src):
   rel=f.relative_to(src)
   if f.name in ('baseline.image','baseline-fasls.tar.gz','registered.image'):

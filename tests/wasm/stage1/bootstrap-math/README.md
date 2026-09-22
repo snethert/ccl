@@ -20,7 +20,7 @@ Pinned, unmodified musl algorithms from the installed Emscripten 3.1.12 SDK are 
 
 The new entries admit finite, correctly typed single/double inputs with nearest rounding. Checked inexact or underflow trap modes refuse before publication; those flags are **not qualified**. Known invalid, division-by-zero and overflow outcomes use the existing condition path. Unchecked mode validates the enable word and masks its effects, as the accepted arithmetic service does. Original operations 0–11 are unchanged and replay all 59,083 accepted raw cases at three placements.
 
-The finite libm comparisons use a maximum four-ULP envelope and exact signed zeros. The 504 generated primitive comparisons contain 68 one-ULP differences; every difference is retained. This envelope is a proposed numerical scope for independent review, **not** a new accepted compatibility rule, bit-identical native credit, or a full-domain accuracy proof. The native oracle calls CCL's actual float primitives; it does not use CL EXPT's complex-number branch as the oracle for real POW. A separate raw harness compares seeded inputs against independent host Math, tests refusals and exact allocation fits, and complement-poisons the publication storage. It is test code only.
+The finite libm comparisons use a maximum two-ULP envelope and exact signed zeros. The 504 generated primitive comparisons contain 68 one-ULP differences; every difference is retained. Steve adopted pinned musl and this two-ULP comparison limit on 21 September 2026; see `doc/WASM/acceptance.md`. Signed zeros, exact results and domain conditions remain exact. The limit is not bit-identical native credit or a full-domain accuracy proof. The native oracle calls CCL's actual float primitives; it does not use CL EXPT's complex-number branch as the oracle for real POW. A separate raw harness compares seeded inputs against independent host Math, tests refusals and exact allocation fits, and complement-poisons the publication storage. It is test code only.
 
 The service retains the existing owner boundary and JS capability call. It makes no new timing claim or claim that these entries use the accepted scalar fast path. Static libm data moves the private stack, so the build places it below the existing input region and the owner checks the exported stack pointer at construction. The raw module's imports remain exactly memory and the four accepted arithmetic detector functions.
 
@@ -40,8 +40,14 @@ From the project root, with the sibling evidence repository available:
 
 ```sh
 python3 tests/wasm/stage1/bootstrap-math/packet.py verify \
-  --packet ../ccl-evidence/2026-09-21-stage1-bootstrap-math-r1 \
+  --packet ../ccl-evidence/2026-09-21-stage1-bootstrap-math-r2 \
   --output /tmp/bootstrap-math-replay
 ```
 
 The verifier re-derives the proposal from the integrated tree, recompiles generated/native cases and both runtime binaries, reruns comparisons, controls and the reader matrix, and compares deterministic outputs. Native R6/R6a is reused only when the final proposal files equal its retained source hashes. `native.py` can rebuild it explicitly. Development failures are retained as original logs with diagnoses; no passing output is substituted for a failure.
+
+## Audit 154 repair
+
+R2 sets the logical FP trap word to native CCL's default (7) for **every** generated case. R1 incorrectly enabled it only for two case-name prefixes; its condition comparisons are superseded. CORE-LOG-CONDITION has neither prefix and compares zero, negative and ordinary inputs with native before and after movement at both placements. Restoring R1's name test fails this case. The original failure is retained by the control. The compiler, CCL source proposal and runtime are unchanged, so native R6/R6a is reused by their exact hashes.
+
+The 44 remaining recipes in `progress.json` describe only the original cohort from audit 153. The current closed frontier has 77 names without recipes, including newly closed names; 44 is not the full remaining frontier or the LL15 remainder. The immediate-bignum uint32 proof refusal from audit 154 remains a compiler carry item.

@@ -59,6 +59,14 @@
     {
       "attempt": "r18",
       "diagnosis": "Final full execution passes: 423 original definitions, all 26 math entries, destination contents and target identity, condition paths, raw regression and four emitted-code faults."
+    },
+    {
+      "attempt": "audit154-r2",
+      "diagnosis": "R1 selected default FP traps by case name. R2 enables them for every case, retains a name-independent condition witness and the failing old harness control. Musl comparison limit tightened to the user-adopted two ULP."
+    },
+    {
+      "attempt": "audit154-control-label",
+      "diagnosis": "Tightening the envelope renamed the diagnostic from retained to adopted; the fault was rejected but its old expected diagnostic substring caused the harness to fail. Updated the expected substring."
     }
   ],
   "retained": [
@@ -90,7 +98,9 @@
     "ccl-math-r16/execution.log",
     "ccl-math-r17.log",
     "ccl-math-r17/execution.log",
-    "ccl-float-destination-probe.lisp"
+    "ccl-float-destination-probe.lisp",
+    "ccl-math-r2-audit154.log",
+    "ccl-math-r2-audit154/faults/math-operation/run.log"
   ],
   "scope": "Original logs retained; fixture-only failed attempts were not integrated. Additional syntax-only edit attempts r3/r4 produced no qualification. The final proposal equals the successfully qualified native backend; a transient IR-name experiment was discarded."
 }

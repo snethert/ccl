@@ -3647,3 +3647,8 @@ Continue in the same combined packet as requested: 382 → 423 original definiti
 Propose 26 destructive transcendental entries using pinned musl inside the existing float module, with native primitive oracles and collecting generated callers. Keep 68 one-ULP differences among 504 comparisons separate from exact matches. The four-ULP sampled envelope and checked inexact/underflow refusals are proposed scope, not accepted compatibility. Retain original development failures and unchanged arithmetic regression. New source stays isolated pending independent review; no slot credit. See bootstrap-math/README.md for commands, scope and outstanding recipe work.
 
 Clean committed-checkout verification for `cef139cf`: 1476 math files identical at 355 pins; documented integration command reproduces 1,152 reviewed files. Evidence `46ac290f0a62d57c2e9320b469f91debf87f29f0` binds both. No source, compiler or runtime change in this verification record.
+
+
+## 2026-09-21 — audit154 math trap repair and adopted libm limit
+
+Import audit154 verbatim. Fix its case-name-dependent FP mask by running every generated row at CCL's default mask 7. Add CORE-LOG-CONDITION, whose name does not select the former special mode, and retain a control that restores the bug and fails. Tighten both native and independent sampled libm comparisons to the user-adopted two ULP, with exact identity and signed-zero checks. Record the decision in acceptance.md without asserting a global mathematical error bound. Compiler, source and runtime bytes remain the reviewed proposal; reuse native qualification by their hashes. No new original-definition execution or LL15 credit. Correct the status distinction between the old cohort's 44 recipes and the current closed frontier's 77 names.

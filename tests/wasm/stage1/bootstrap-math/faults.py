@@ -15,7 +15,7 @@ def check(out):
  sine=(out/'compiled'/f'{sin}.wat').read_text()
  controls=[('shift-direction','core_natural_left','CORE-NATURAL-LEFT',changed,'CORE-NATURAL-LEFT'),
   ('coercion-width','core_coerce_double','CORE-COERCE-DOUBLE',(out/'compiled/core_coerce_double.wat').read_text().replace('(call $float_slow (i32.const 11)','(call $float_slow (i32.const 10)'), 'CORE-COERCE-DOUBLE'),
-  ('math-operation',sin,'CORE-LIBM-SIN64',sine.replace('(call $float_slow (i32.const 14)','(call $float_slow (i32.const 16)'),'exceeds retained'),
+  ('math-operation',sin,'CORE-LIBM-SIN64',sine.replace('(call $float_slow (i32.const 14)','(call $float_slow (i32.const 16)'),'exceeds adopted'),
   ('float-result-offset',sin,'CORE-LIBM-SIN64',sine.replace('(i64.store offset=8','(i64.store offset=4'),'AssertionError')]
  reports=[];root=out/'faults';root.mkdir()
  for label,module,focus,text,reason in controls:

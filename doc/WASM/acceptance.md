@@ -275,6 +275,8 @@ Reported: MOD/REM/division/hash code was rewritten around compiler defects; LENG
 
 Required regression. Stage 1 for the required numeric subset, then Stages 2 and 4 for breadth: fixnum bounds, large and negative shifts, integer length, quotient/remainder and bignum carry/borrow compared with an independent oracle; mixed fixnum/float operations and compiler-policy variations; dispatch inspected for fallback recursion. A depth or fuel guard is not a semantic fix; the separately approved FP condition policy is preserved.
 
+Stage 1 libm decision (Steve, 21 September 2026: “Adopt musl and two ULP”): use the pinned musl implementation for the port’s transcendental primitives. Finite native comparisons may differ by at most two ULP; signed zeros, exact results and domain conditions remain exact. This is an acceptance limit for tested inputs, not a mathematical full-domain error bound or permission to mask floating-point conditions. Unsupported trap modes remain explicit refusals until qualified. The implementation, source hashes and license are retained with its qualification packet.
+
 First acceptance: Stage 1. Extensions: Stages 2, 4. Regression: all later stages in scope. Outline sections: 02, 05. Status: contract specified; execution and acceptance tracked in STATUS.md.
 
 ### A.4  Dynamic state and execution

@@ -30,6 +30,6 @@ def check(out):
     assert len({r['definition'] for r in libm})==26
     save('transcendental-comparisons.json',dict(status='PASS',entries=26,comparisons=len(libm),bit_identical=sum(r['ulps']==0 for r in libm),
          maximum_ulp=max(r['ulps'] for r in libm),differences=[r for r in libm if r['ulps']],
-         scope='These are separate finite nearest-rounding libm comparisons, not bit-identical native execution credit or a full-domain accuracy proof. The retained envelope is four ULP; signed zeros must match exactly.'))
+         scope='These are separate finite nearest-rounding libm comparisons, not bit-identical native execution credit or a full-domain accuracy proof. The adopted comparison envelope is two ULP; signed zeros must match exactly.'))
     return dict(shift_comparisons=len(shifts),shift_differences=sum(r['native']!=r['target'] for r in shifts),
                 transcendental_comparisons=len(libm),transcendental_differences=sum(r['ulps']!=0 for r in libm))

@@ -3175,16 +3175,29 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r1/packet.json",
       "sha256": "5bf5d0e3931743fd77f92ead80dfbf9b0b77dc260d4aa20e50d3b97cd36186ca",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "review_disposition": "REVIEWED_FINDING_NOT_ACCEPTED",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "423 originals execute (+41), 394 non-NIL witnesses (+39); 1993/2231 admitted in the lower-bound 57-file target inventory, 44 files read completely. 38 of 82 prior original closed names gain recipes; 44 have explicit remaining dispositions; seven fixture/primitive names excluded. Portable coercions, word shifts, proven uint32 logical arithmetic and ARRAY-ELEMENT-TYPE target branch. 26 libm entries on the existing float service; 504 finite native comparisons, 68 one-ULP differences counted separately, proposed four-ULP envelope only. Checked inexact/underflow trap modes refuse. 12480 independent raw libm comparisons, unchanged 59083-case raw arithmetic regression at three placements, 756 width-specific shift comparisons, four emitted-code controls. Native final proposal: 21843 tests, 144 identical/164 restored FASLs; 34 new reader comparisons. New compiler/source/runtime proposal isolated for review, no slot credit or full-domain numerical/ready-image claim."
+      "scope": "423 originals execute (+41), 394 non-NIL witnesses (+39); 1993/2231 admitted in the lower-bound 57-file target inventory, 44 files read completely. 38 of 82 prior original closed names gain recipes; 44 have explicit remaining dispositions; seven fixture/primitive names excluded. Portable coercions, word shifts, proven uint32 logical arithmetic and ARRAY-ELEMENT-TYPE target branch. 26 libm entries on the existing float service; 504 finite native comparisons, 68 one-ULP differences counted separately, proposed four-ULP envelope only. Checked inexact/underflow trap modes refuse. 12480 independent raw libm comparisons, unchanged 59083-case raw arithmetic regression at three placements, 756 width-specific shift comparisons, four emitted-code controls. Native final proposal: 21843 tests, 144 identical/164 restored FASLs; 34 new reader comparisons. New compiler/source/runtime proposal isolated for review, no slot credit or full-domain numerical/ready-image claim. Audit154: integration verified; harness selected FP traps by case name. R1 condition claims superseded by R2. Original packet retained unchanged and replays at its original commit.",
+      "review_commit": "12f738e39f91b79c937e9b18749d5b53bfad79dd",
+      "review_sha256": "392e6f1062f8fdc6759fd0e012fa6ddf005e554d7296fda2eda4239136efe4c9",
+      "superseded_by": "STAGE1-BOOTSTRAP-MATH-R2"
     },
     {
       "id": "STAGE1-BOOTSTRAP-MATH-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-verification.json",
       "sha256": "13dce1de21a0bfd3e1435da547b11544693eddb5e9feba5a6ed0ed5d601b74f1",
       "scope": "Unmodified verifier from clean detached commit cef139cfa2b04a8f6921a1d1b286ae148e8f1956: 1476 deterministic files at 355 pins. Native/generated execution, raw regression, direct checks, controls and reader matrix replay. Documented admission integration replay also passes with 1152 byte-identical files. No new slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-MATH-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-r2/packet.json",
+      "sha256": "1ea1c54e5739674eb6e505a67a905c3b2b90c880e6eceaf37d715b8cb64bdbbf",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Audit154 repair: every generated case uses native default FP mask 7; unprefixed log-condition witness and rejected old-harness control. Steve adopted pinned musl and two-ULP comparisons with exact signed zeros, identities and conditions. 423 originals, 394 non-NIL; 15636 target comparisons, 504 native libm comparisons with 68 one-ULP differences; 12480 independent raw comparisons (maximum two ULP), 102 literal exact-identity checks, four emitted-code faults plus one harness control. Compiler/source/runtime unchanged from R1; native R6/R6a reused by exact hash. Current closed frontier has 77 names without inputs, not just the prior cohort remainder of 44. No slot credit; implementation still awaits review/acceptance."
     }
   ],
   "current_runs": [

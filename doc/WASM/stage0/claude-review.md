@@ -3054,3 +3054,61 @@ Closed: 152-F1 (scope); the refusal histogram; GLOBAL-SETQ; the seventeen crashe
 No defect. The verifier passes; everything Claude ran agrees with native inside the target's fixnum width, and the two disagreements outside it are the oracle's. The source proposal is now within scope and sound. Recommended: accept and integrate the compiler proposal, the arch changes (with the two arch macros moved into `wasm32-arch.lisp`), and the re-cut source proposal (38 exclusions, 61 constant branches, 31 constants) under the R6 allowance, with R6/R6a on the final files. The inputs packet's thirteen branches (audit 151) are a subset of the 61 and come with it. The OS-layer prototype stays out of the tree, as the README says.
 
 Suggested next packet, same size or larger, execution first: O-2; recipes and closure for the 89; the transcendental float entries, which are 22 of the 55 remaining active calls and sit on the float service the port already has; then `BOOTSTRAP-CONDITION-CLASS` (15), `HEAP-CONSTANT` (9), `%GET-KERNEL-GLOBAL` (8) and `B-SPREAD-KIND` (8) from the refusal list. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-fourth Claude audit — acceptance and integration at cef139cf, STAGE1-BOOTSTRAP-MATH-R1 at cef139cf and d4b190a3 — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-154`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Two Codex commits followed audit 153; the first both integrates the admission packet and adds the math packet. Reviewer disposition only. Audit 153 is imported verbatim at 0e0bb4a2: this file there hashes 18973070…, the value `acceptance-bootstrap-admission.json` binds for 2a724011. The acceptance record quotes the user as "accept and integrate.", which Claude did not witness.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 382 → 423 (+41). With a non-NIL return witness: 355 → 394 (+39). Claude's recount from the replayed native rows agrees (423 executed, 19 NIL-only, none lost). Callee-closed 457 → 486; closed without a recipe 89 → 77, every one of the 82 originals with a disposition in `progress.json`. Real worklist 1,983 → 1,993 of 2,231. Native rows 3,334 → 3,906; target comparisons 13,336 → 15,624, of which 504 are the transcendental comparisons counted apart (below), 756 the declared shift rows, 84 protocol rows and four signed zeros.
+
+New executions include ARRAY-ELEMENT-TYPE, FLOAT, CHAR-UPCASE, CHAR-DOWNCASE, LOWER-CASE-P, WHITESPACEP, the `%CHAR-CODE-` case functions on a real 1,024-entry table prefix, the pathname string matchers, GET-MACRO-CHARACTER, SPARSE-VECTOR-REF, LDB32 and ROTATE-HASH-CODE.
+
+### Integration cef139cf
+
+Twelve CCL source files equal the reviewed proposal bytes in packet 69b78d9e…. The backend and arch file are the reviewed bytes with the one rearrangement audit 153 asked for: the two `defarchmacro` forms leave the backend's tail and join `wasm32-arch.lisp`, which gains a `defpackage`/`in-package` for WASM32-COMPILER at its end so the forms read in the same package (the backend's own `defpackage` is identical, so no redefinition). The 35 unchanged runtime files hash as recorded. `bootstrap-admission-acceptance/run.py target`, unmodified, from the detached worktree: PASS in 101 seconds, 1,152 reviewed files identical; the retained native run has 21,843 tests, 146 FASLs identical and all 164 restored. No defect.
+
+### Evidence and replay, math packet
+
+Packet 5bf5d0e3… (2,540 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog af089259… at 257,809 files; committed index byte-equal to the snapshot; evidence commit 46ac290f; store clean. The verifier passes unmodified from the detached worktree in 149 seconds.
+
+### What the packet changes
+
+Compiler: `%SINGLE-FLOAT` and `%DOUBLE-FLOAT` through the float service; NATURAL-SHIFT-LEFT and -RIGHT on an unboxed target word with the result boxed unsigned; a 32-bit path for LOGAND, LOGIOR and LOGXOR when the front end proves both operands `(unsigned-byte 32)`, which is what lets the byte-order readers return the whole unsigned range; MINUS1 (declared unexecuted); `%WASM-FLOAT-STORE`, which copies a boxed result's payload into the destination float after both operands are rooted; and `%WASM-FLOAT-TRANSCEND`, a numbered entry into the float service. Read in full; the unboxing accepts a non-negative fixnum, a one-digit bignum in [2^29, 2^31) or a two-digit bignum below 2^32 with a zero high digit, and refuses everything else with a checked error; the natural shifts return 0 past 32 bits.
+
+Runtime (proposal, not integrated): pinned, unmodified musl algorithms from the Emscripten 3.1.12 SDK (pow, sin, cos, tan, asin, acos, atan, atan2, exp, log, sinh, cosh, tanh, single and double) compiled into the existing private-memory `float.c`, with a 60-line `transcend.c` shim that stages the operands as the arithmetic service does, refuses NaN and infinite inputs and the inexact and underflow trap modes, classifies the result (invalid, division by zero for log 0 and pow 0 negative, overflow) and boxes it. Provenance and licence are in `libm/provenance.json` and `libm/COPYRIGHT`. No host `Math` function is called. This is the right shape: deterministic across browser and Node, and below CCL's Lisp definitions.
+
+CCL source: `l1-numbers.lisp` keeps its 26 `%double-float-…!` and `%single-float-…!` primitives under `#-wasm32-target` and gains 26 `#+wasm32-target` bodies at the end of the file, each two lines through the two new entries; `l0-array.lisp` gains a `#+wasm32-target` arm in ARRAY-ELEMENT-TYPE for the non-simple-vector case, with the 32-bit element-type table, found because the old arm vanished under the target's features (the same class as SYMBOLP in audit 143, found by Codex this time). Native R6/R6a PASS, 21,843 tests, 144 FASLs identical, all 164 restored, the compositional reader proof at every substitution.
+
+Shift domain (O-2, closed): `shift-domains.json` retains 756 rows with the native 61-bit and target 30-bit answers both asserted, 212 differing, the two audit-153 examples among them, and names LDB32 and ROTATE-HASH-CODE as admitted definitions whose arguments can be negative and whose results therefore depend on the width. That is the declaration asked for.
+
+### F1 — the harness enables floating-point traps by case name
+
+`check.mjs` line 122: `if (activeCase.startsWith('CORE-LIBM-') || activeCase.startsWith('CORE-TRANSCEND-')) put(tcr+200, 7)`. The trap-enable word the float service reads is set to CCL's default (invalid, division by zero, overflow) only for cases whose names begin with those two prefixes; every other case runs with all traps disabled, while the native oracle runs with CCL's default. Demonstrated: a probe named CORE-X-ERR that takes `(%double-float-log! 0.0d0 r)` under HANDLER-CASE returns −∞ on the target where native signals DIVISION-BY-ZERO; the same probe renamed CORE-TRANSCEND-X-ERR matches native on all three rows (log 0, log −1, exp 1000). The compiler and the runtime are right; the harness compares two machines in different modes and the README's "known invalid, division-by-zero and overflow outcomes use the existing condition path" is true only for the named cases. Every original definition that reaches a float trap in the corpus (there are 423 executed, and FLOAT and the destructive primitives are among them) has been compared with traps off. Remedy: set the word to CCL's default for every case, drop the name test, re-run, and re-retain; a mode other than the default should be a per-case input, as the globals are. R-4 applies (a claim that does not hold as stated), but no dedicated packet is needed: at the head of the next one.
+
+### Probes (scratch copy of the math fixture, files restored, worktree clean)
+
+Match native at both placements: log 0, log −1 and exp 1000 under HANDLER-CASE, once the trap word is set (F1); `(ash x -1)` on `(unsigned-byte 32)` values at 2^32−1, 2^31, 65535, 0 and 2^29−1; LOGIOR of a u32 with a fixnum; LOGAND of two u32 variables.
+
+Two observations, neither a defect:
+
+O-3. `(let* ((r (%double-float 0)) (v (%double-float-sin! 1.0d0 r))) (values v r))` gives `v` = sin 1 on both, and `r` = sin 1 on the target but 0.0d0 on native. The native compiler keeps a local declared double-float unboxed and passes a fresh box to the primitive, so the destructive store is not visible through the variable; the target mutates the object. Codex's own witness goes through `(car cell)`, where native shows the mutation too, and its README already says EQ on native floats is not an identity oracle. Record beside O-1 as a native representation effect; no bootstrap definition is known to read the destination through a declared local after the call.
+
+C-12. `(logand x #xFFFF0000)` and `(logxor x #xFFFFFFFF)` with `x` declared `(unsigned-byte 32)` stop with checked error 32: the 32-bit logical path requires both operands proven `(unsigned-byte 32)` and the proof does not cover an immediate bignum constant, so the call falls to the fixnum-only path, which refuses the constant. A refusal, not wrong code; masks of that form occur in CCL's hashing and bignum code, so the proof should accept an immediate integer in range.
+
+### The transcendental envelope — a decision for the user
+
+Native CCL on macOS gets these functions from Apple's libm; the port gets them from musl. Both are accurate to about one unit in the last place but they are different algorithms, so bit-identical results are not on offer without shipping the same code on both sides, and the native side cannot change. Codex's 504 comparisons show 436 bit-identical and 68 one-ULP differences (acos, asin, atan, cosh, sinh, tanh), none larger; it retains every difference, counts these comparisons apart from native-compatible execution, and proposes a four-ULP envelope with exact signed zeros and exact special cases, saying plainly that the envelope is for review and not a rule.
+
+Claude's recommendation: adopt musl as the port's libm and record the envelope in `acceptance.md` as a contract, at two ULP, not four: each implementation is within one ULP of the true value, so two bounds their distance, the observed maximum is one, and a wider envelope would hide a regression. Special values (zeros with sign, exact results such as exp 0, log 1, the domain conditions) remain exact. The 26 `l1-numbers` branches and the runtime change follow the decision; the rest of the packet does not depend on it.
+
+### Carry items
+
+Closed: O-2; the four operators asked for; recipes for the 82. Open: this audit's F1; C-12; O-3 recorded; the envelope decision; MINUS1 witness; the 77 closed definitions without recipes; the 33 remaining active foreign calls.
+
+### Disposition
+
+Integration cef139cf: verified, no defect. Math packet: the execution work, the compiler additions, the ARRAY-ELEMENT-TYPE branch and the shift declaration are sound and recommended for acceptance. F1 must be repaired and the packet re-retained before its condition claims are accepted; the transcendental entries, their 26 source branches and the libm runtime wait on the user's envelope decision. With those two settled, Claude recommends integration of the whole, with R6/R6a on the final files and the forty owner checks against the new `float.wasm` build.
+
+Suggested next packet, same size or larger, execution first: F1 and re-retention at its head; C-12; MINUS1; recipes for the 77; then the remaining active foreign calls that are file-namespace operations (`getcwd`, `chdir`, `mkdir`, `unlink`, `isatty`), which belong with the file-provider protocol the constants already declare. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.

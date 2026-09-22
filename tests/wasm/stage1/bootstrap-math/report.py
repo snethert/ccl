@@ -83,6 +83,7 @@ def report(out):
         pending_recipe_dispositions=[dict(name=r['name'],disposition='executed' if r['name'] in executed else pending_reason(r['name'])) for r in originals],
         newly_executed_from_closed=sum(r['name'] in executed for r in originals),
         still_without_inputs=[r for r in originals if r['name'] not in executed],
+        current_closed_without_inputs=[dict(name=r['name'],package=r['package']) for r in candidates if r['static'] and not r['inputs']],
         fixture_or_primitive_names_excluded=[r['name'] for r in pending if r not in originals],
         reader_files_complete_before=44,reader_files_complete_after=sum(x=='T' for x in __import__('re').findall(r'\("[^"]+" \d+ (T|NIL)\)',(out/'compiled/worklist.sexp').read_text())),
         reader_failures_remaining=[r for r in read('compiled/worklist-throughput.json')['read_errors'] if 'compound-function-name' not in r['message']]))

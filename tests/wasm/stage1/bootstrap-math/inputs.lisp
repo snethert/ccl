@@ -66,7 +66,7 @@
                                     (list '(compile-file) nil nil nil nil nil nil nil nil nil nil nil nil))
                                   nil nil nil nil nil nil))))) t))
       ((equal s "CORE-TRANSCEND-DESTINATION") (values '((0.0d0) (0.5d0) (-2.0d0)) t))
-      ((equal s "CORE-TRANSCEND-CONDITION") (values '((0.0d0) (-1.0d0) (1.0d0)) t))
+      ((member s '("CORE-TRANSCEND-CONDITION" "CORE-LOG-CONDITION") :test #'equal) (values '((0.0d0) (-1.0d0) (1.0d0)) t))
       ((equal s "%KERNEL-GLOBAL-OFFSET-FORM")
        (values '((0) (16) ((quote foo)) (foo)) t))
       ((equal s "VECTOR-INDEX->INDEX") (values '((14) (16) (30) (100)) t))

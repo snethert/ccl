@@ -119,7 +119,7 @@ if(isMainThread){
   for(const expected of native.filter(x=>!process.env.CCL_LIBRARY_CASE||x.definition===process.env.CCL_LIBRARY_CASE)){ fs.writeSync(2,expected.definition+' '+JSON.stringify(expected.args)+'\n');
     activeCase=expected.definition;
     bytes(tcr,256).fill(0);bytes(config,96).fill(0);
-    if((activeCase.startsWith('CORE-LIBM-')||activeCase.startsWith('CORE-TRANSCEND-')))put(tcr+200,7);
+    put(tcr+200,7); // Native CCL default, independent of the case name.
     for(const [offset,value] of [[48,base],[52,base+size],[56,base],[68,131072],[72,196608],
        [128,root],[80,700000],[76,700000],[84,780000],[88,900000],[92,900000],[96,1000000],[120,132352],[124,132512],[104,650000]])put(tcr+offset,value);
     put(config,tcr);put(config+16,other);put(config+20,other+size);
@@ -166,7 +166,11 @@ if(isMainThread){
       if(expected.definition.startsWith('CORE-LIBM-')){
         assert.equal(values.length,1);assert.equal(expectedValues.length,1);
         const ulps=distance(values[0],expectedValues[0]);
-        assert.ok(ulps<=4,expected.definition+' exceeds retained 4-ULP comparison envelope: '+ulps);
+        const operation=expected.definition.slice(10,-2);
+        const isZero=a=>{const v=floatBits(a);return (v.bits&((1n<<BigInt(v.width-1))-1n))===0n;};
+        if((['COS','COSH','EXP'].includes(operation)&&isZero(expected.args[0]))||
+           (operation==='EXPT'&&isZero(expected.args[1])))assert.equal(ulps,0,'exact libm identity');
+        assert.ok(ulps<=2,expected.definition+' exceeds adopted 2-ULP comparison envelope: '+ulps);
         libmRows.push({definition:expected.definition,args:expected.args,native:expectedValues,target:values,ulps,moved:move});
         assert.deepEqual(after,expected.after);
       }else {
