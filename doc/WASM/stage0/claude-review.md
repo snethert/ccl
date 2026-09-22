@@ -2990,3 +2990,67 @@ Closed: 151-F1 (index bytes); the foreign-reference table; `linux-files` kept. O
 No defect in the execution work; the verifier passes; the counts are honestly split. The source proposal is not ready to integrate as it stands (F1): 39 constants and 73 branches are sound or decidable, 19 constants and 35 branches belong to subsystems the target does not have. R-4 applies to scope, so this is a finding and not a carry item, but it needs no dedicated packet: re-cut the table and the proposal at the head of the next one. Recommended: accept the execution evidence; integrate no source from this packet yet. The inputs packet's thirteen branches (audit 151) are all in the sound set and remain integrable.
 
 Suggested next packet, same size or larger, admission and execution together: the cheap operators in the refusal histogram and the seventeen compiler crashes, with inputs for whatever closes; GLOBAL-SETQ; the re-cut foreign table with the excluded definitions conditionalized in CCL's source. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
+
+## Hundred-and-fifty-third Claude audit — acceptance at cf721c0a, STAGE1-BOOTSTRAP-ADMISSION-R1 at 93603a17 and f3dbfa4a — 21 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-153`; this commit changes only this file, and the STATUS rows and history entry are owed at merge. Author: Codex. Three Codex commits followed audit 152. Reviewer disposition only. Audit 152 is imported verbatim at a08a0a72: this file there hashes fc81f164…, the value `acceptance-bootstrap-host-execution.json` binds for 9518d154. That record accepts the host packet's execution evidence only and integrates no source, which is what audit 152 advised; it quotes the user as "Go ahead and accept", which Claude did not witness.
+
+### Throughput (R-1)
+
+Original CCL definitions executed and matched against native: 349 → 382 (+33). With a non-NIL return witness: 323 → 355 (+32). Claude's recount from the replayed native rows agrees (382 executed, 18 NIL-only, 8 error-only, none lost). Callee-closed definitions 375 → 457; closed without a recipe 89. Native rows 2,972 → 3,334; target comparisons 11,888 → 13,336, of which 84 are protocol rows and four the declared signed-zero differences.
+
+Real worklist: 57 files, 44 read to the end, 2,231 parsed, 1,983 admitted (from 2,145 and 1,685). This is the admission packet audit 152 asked for and it delivers it: the first-refusal histogram from that audit is gone from the top of the list. What remains at the top is `FUNCTION-IMMEDIATE-LAYOUT` (36, a named refusal for NTH-IMMEDIATE reflection, correct: native code and immediates are not in the D1 function object), `NATIVE-FFI-EXCLUDED` (21; the seventeen compiler crashes were calls into a missing FFI expansion hook and are now refusals), `%CONSMACPTR%` 17, `%NEW-PTR` 12, `IMMEDIATE-GET-XXX` 12, `BOOTSTRAP-CONDITION-CLASS` 15, `HEAP-CONSTANT` 9, `%GET-KERNEL-GLOBAL` 8, `B-SPREAD-KIND` 8, `%CURRENT-TCR` 6. The foreign-memory names belong with the FFI exclusion; the rest is the next list.
+
+The new executions are CCL's own `+`, `-`, `*`, `/`, the six comparisons, LOGAND, LOGIOR, LOGXOR, MAX, MIN and LSH from `l1-numbers.lisp`, through their real `&LEXPR` bodies, plus VECTOR, GETF, SETPROP, PLISTP, PL-SEARCH, `%SCHARCODE`, `%MISC-REF`/`%MISC-SET`, the byte-order readers and the array predicates.
+
+### Evidence and replay
+
+Packet 69b78d9e… (2,008 entries): NOT_REVIEWED, slot_credit false, every hash matches, nothing unlisted or missing, every file cataloged with the same hash; catalog fb3f1ce1… at 255,265 files; committed index byte-equal to the snapshot (f6c32fbd…); evidence commit fda758cc; store clean. The verifier passes unmodified from the detached worktree in 130 seconds.
+
+### The compiler proposal
+
+Read in full (`operators.lisp`, `operator-cases.lisp`, `target-macros.lisp`, the edits in `backend.py`). It is the largest compiler change since the core packet and it is built the right way: the binding emitter learns `&AUX` and `&LEXPR` where CCL's front end presents them; `%LEXPR-COUNT` and `%LEXPR-REF` need no lowering because CCL defines them as `%LISP-WORD-REF` on the frame, and the frame is laid out as the native one (count at word 0, arguments reversed) so CCL's macros read it unchanged; a lexpr function returns its primary value only, as native does; a captured lexpr variable is refused. Allocation (`%MAKE-UVECTOR`, MAKE-LIST, VECTOR, LIST*) goes through one heap-block helper that checks base alignment, the limit against memory size and the sum against the limit before writing, and reloads its roots after a retry collection. UVREF on anything but a simple vector, string or byte vector reaches the node-access check (fulltag 2) and refuses, so no raw word is ever read as an object. Typed integer-vector reads of 32-bit width box out of range values as one- or two-digit bignums; stores require a fixnum in the field's range. GLOBAL-SETQ writes the symbol's value cell after the symbol check, which is the cell the collector already traces. The FFI expansion hook refuses instead of crashing. NTH-IMMEDIATE and its setter are arch macros that refuse, with cases. The self-call rule (a top-level numeric definition's own recursive call takes the numeric lowering) is what lets `-` and LOGXOR run without looping, and is limited to functions with no parent and no spread arguments.
+
+Style: `target-macros.lisp` is appended to the generated backend; the two `defarchmacro` forms belong in `wasm32-arch.lisp` beside the others at integration. The arch file gains the 32-bit array-type mapper copied from `x8632-arch.lisp` with the names substituted, which is the right source for it.
+
+### Probes (scratch copy of the admission fixture, files restored, worktree clean)
+
+All executed (rows confirmed) and match native at both placements, 13,448 target comparisons in the final run:
+
+| Probe | Inputs | Result |
+|---|---|---|
+| LIST* with push effects and a collection in each of three operands | 1, a cons | equal, effect order 1 2 3, tail shared |
+| an `&LEXPR` function that collects between every `%LEXPR-REF` and returns count and arguments as one list | 0, 1, 5 and 7 arguments, the last with a cons, a string, NIL and a 2^60 bignum | equal |
+| `(setf (aref v i) x)` then read, `(signed-byte 8)` | −128, 127, 0, −1 | equal |
+| same, `(unsigned-byte 16)` | 65535, 256, 0 | equal |
+| `(signed-byte 32)` read before and after a collection | −2^31, 2^31−1, −2^29−1, 2^29 | equal, the first three boxed |
+| MAKE-LIST with a collection in the initial-element operand and after | 0, 1, 5, 33 elements | equal |
+| `%IASR` and `%ILSL` on negative fixnums | −1, −8 by 0 and 1; −1 by 29 | equal |
+
+Two forms differ, and both are the oracle's word width, not the port:
+
+| Form | Native (61-bit fixnums) | Target (30-bit fixnums) |
+|---|---|---|
+| `(%ilsr 1 -4)` | 1152921504606846974 | 536870910 |
+| `(%ilsl 28 7)` | 1879048192 | −268435456 |
+| `(%ilsl 3 -536870912)` | −4294967296 | 0 |
+
+A 32-bit CCL gives the target's answers. `%ILSR` of a negative and `%ILSL` past bit 29 are representation-defined, and Codex's inputs (0, 1, 7, 1023 by at most 15) stay inside the agreeing domain without saying so. O-2: declare the domain the way the signed-zero rows are declared (a table of inputs with the native and target answers both asserted), and check whether any admitted definition shifts a value that can be negative or wide; `LSH` and the bignum digit code are the places to look.
+
+A probe of Claude's that called NREVERSE was skipped silently because NREVERSE is not closed; rewritten without it, it ran. Same fixture behaviour as before, recorded for the same reason.
+
+### The source proposal, re-cut
+
+The scope error of audit 152 is repaired as asked. `foreign-sites.json` still lists all 409 sites and now has the missing disposition: 124 sites are excluded with their enclosing definition, 169 sit under existing platform conditionals, 61 use one of 31 protocol constants (from 108 and 58), 55 active calls remain, no active constant or type read. `foreign-boundaries.json` names the 38 excluded definitions (30 in `linux-files`, the three shared-library openers in `l0-cfm-support`, the fd readiness and buffer-size functions in `l1-streams`, `*ticks-per-second*`, `%make-executable-page`) and gives the six boundary decisions in words; `fcntl`, `poll`, `fpathconf` and `sysconf` are excluded with their eight constants, which is the decision Claude would have made. The mechanism is unchanged: `#-wasm32-target` before each excluded definition, the token substitution at the constant sites that remain, native R6/R6a PASS with 21,843 tests, 146 FASLs identical and all 164 restored, the compositional reader proof at every substitution. Conditionalizing a DEFUN removes its source note rather than moving it, and the comparator was extended to allow exactly that (an empty debug-info slot whose properties were all location records) with three controls that reject a code byte, a non-location bit and a callee identity. That is within the R6 source-location allowance as adopted. Both module lists keep `linux-files`.
+
+What is still active: 22 libm entries (the port's float service does not yet cover transcendental functions), 24 file and process-namespace calls (`getcwd`, `chdir`, `mkdir`, `unlink`, `_exit`, `isatty`…), `memmove`/`memset`, `nanosleep`/`sched_yield`, `getenv`/`setenv`/`utimes`. Every one is named with a disposition; none is stubbed.
+
+### Carry items
+
+Closed: 152-F1 (scope); the refusal histogram; GLOBAL-SETQ; the seventeen crashes; the `#-wasm32-target` idiom. Open: O-2 (shift domain); `target-macros.lisp` into the arch file at integration; the OS-layer routing beyond nine records; the 89 closed definitions without recipes; the active foreign calls above.
+
+### Disposition
+
+No defect. The verifier passes; everything Claude ran agrees with native inside the target's fixnum width, and the two disagreements outside it are the oracle's. The source proposal is now within scope and sound. Recommended: accept and integrate the compiler proposal, the arch changes (with the two arch macros moved into `wasm32-arch.lisp`), and the re-cut source proposal (38 exclusions, 61 constant branches, 31 constants) under the R6 allowance, with R6/R6a on the final files. The inputs packet's thirteen branches (audit 151) are a subset of the 61 and come with it. The OS-layer prototype stays out of the tree, as the README says.
+
+Suggested next packet, same size or larger, execution first: O-2; recipes and closure for the 89; the transcendental float entries, which are 22 of the 55 remaining active calls and sit on the float service the port already has; then `BOOTSTRAP-CONDITION-CLASS` (15), `HEAP-CONSTANT` (9), `%GET-KERNEL-GLOBAL` (8) and `B-SPREAD-KIND` (8) from the refusal list. Ledger: 21 accepted, 12 missing of 33, zero unreviewed.
