@@ -442,3 +442,17 @@ kernel-global and metadata work, and the image/READY join remain unfinished.
 Stage 1 remains **21 accepted, 12 missing, zero unreviewed of 33**.
 
 Clean committed division replay at `2ba65ee2` passes unmodified: **4288 deterministic artifacts, 649 pins**. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.
+
+### 2026-09-22: Review observations O-9 through O-11
+
+No throughput change: **537 executed, 502 non-NIL witnesses, 2,060/2,231
+admitted**. [WB-1](stage1/behavioural-branches.md) records the quotient-only
+branch as behavioural and requiring explicit acceptance. The condition plan
+uses real class precedence lists and `TYPEP` after the exhausted mask.
+The canonical verifier checks **3,799 artifact contents**, retaining all **12
+distinct fault artifacts**, and checks **12,480 alias edges** without repeated
+content hashing. Its [check record](stage1/condition-artifact-check.json) reuses
+the qualified condition replay; fresh execution mode was not rerun. Three
+artifact-selection tests pass. Original packets and fixtures are unchanged.
+These observations grant no acceptance or integration; Stage 1 remains
+**21 accepted, 12 missing, zero unreviewed of 33**.

@@ -1,0 +1,12 @@
+{
+  "alias_edges_checked": 12480,
+  "canonical_artifacts": 3799,
+  "control_artifacts": 12,
+  "deterministic_manifest_sha256": "321af520e32ec0435153eb45004636795e087d45c21ef12bda0c754ac8598e72",
+  "execution": "reused qualified replay",
+  "new_execution_credit": 0,
+  "packet_sha256": "c198e93522d689c6bb39b7849bf52da8bc181cff03b30eaff556281fa51d12d6",
+  "repeated_content_hashes": 0,
+  "status": "PASS",
+  "verifier_sha256": "614e1e0f2a0b233424785c674eb82bd7ff7830610d573c7f755b76e5b93d7a8a"
+}

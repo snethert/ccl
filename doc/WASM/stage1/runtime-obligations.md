@@ -504,3 +504,24 @@ owed. Execution-first follow-on work is the 175 admitted numeric definitions
 without execution, roughly 90 CLOS accessors, FFI definition exclusions, then
 condition classes, kernel globals, heap constants and spread kinds. No LL15 or
 BT-0 completion is claimed.
+
+## Review observations O-9 to O-11 — pending proposals
+
+- **O-9:** The division proposal's `NO-REM` branch is behavioural. Its acceptance
+  and integration records must name [WB-1](behavioural-branches.md), including
+  the intentional difference from x8632/ARM. Reader preservation remains true;
+  the branch is not necessary for the quotient's arithmetic correctness.
+- **O-10:** The 28-row condition registry has exhausted its positive-fixnum
+  handler-mask representation through bit 28. Do not allocate another mask or
+  treat bit 29 as a usable positive-fixnum extension. The successor is Lisp
+  `TYPEP` against real condition classes and their class precedence lists, built
+  on the CLOS class/wrapper work. The eight remaining class refusals remain
+  refusals until that path is implemented and qualified.
+- **O-11:** The old condition packet remains immutable. Its 12,492 control
+  paths comprise 12,480 base-corpus aliases and 12 distinct mutation artifacts.
+  [The canonical verifier](../tools/verify-condition-frontier.py) compares 3,799
+  artifact contents, retains all twelve mutation artifacts, and checks alias
+  edges without hashing their contents again. Existing qualified replay may be
+  reused explicitly; fresh mode still compiles and runs all four controls.
+
+These observations do not constitute user acceptance of the pending packets.

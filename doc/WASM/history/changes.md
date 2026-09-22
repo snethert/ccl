@@ -3860,3 +3860,18 @@ packet's clean committed replay passes 4,270 artifacts and 630 pins. All work
 remains isolated for independent review, with no new LL15 credit.
 
 Clean committed division replay at `2ba65ee2` passes unmodified: **4288 deterministic artifacts, 649 pins**. Native qualification is reused by exact final-source hash. The proposal remains unreviewed and unintegrated.
+
+### 2026-09-22 — Address supplied observations O-9 through O-11
+
+Register the `BIGNUM-TRUNCATE` NO-REM branch as behavioural correction WB-1,
+separate from native reader preservation and pending explicit acceptance.
+Name real class/CPL-based `TYPEP` as the successor to the exhausted handler
+mask; do not allocate a second mask. Add a canonical successor verifier without
+editing retained fixtures. Of 12,492 control paths, 12 are distinct mutation
+artifacts and 12,480 are identical aliases. Preserve the former and check the
+latter as symlink edges, leaving 3,799 content comparisons.
+
+Three selection tests and the canonical check against the already-qualified
+replay pass. No native build or target execution was repeated, no execution
+credit is added, and no proposal disposition changes. Throughput remains
+537 / 502 / 2,060 of 2,231; Stage 1 remains 21 accepted of 33.

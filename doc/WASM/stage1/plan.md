@@ -668,3 +668,27 @@ Recipe cohort update: 21 of the prior 64 names and newly closed NEED-USE-EQL now
 
 
 Audit156 F1 is addressed by the [file-environment packet](../../../tests/wasm/stage1/bootstrap-file-environments/README.md). Use 1,895/2,231 for the comparable admission cohort, not the previous standalone upper bounds. Report macro-generated and newly reached definitions separately (852/893 additional lower). Numeric files now expand NUMBER-CASE and buffer macros in their real environments; missing target arch macros and primitive callees are explicit. Execution reaches 460 originals with 429 non-NIL witnesses. Next numeric implementation should close those actual target macros/callees, rather than count calls to missing macro names. The file-provider boundary and executable startup/image/READY joins remain open. Closure and recipes are reviewed, not yet accepted; the new recount/execution packet awaits review.
+
+### Condition matching after the fixed registry (O-10)
+
+Replace the exhausted handler mask with `TYPEP` on real condition classes and
+class precedence lists. Build on the class/wrapper layout and execute CCL's own
+class-based predicate path. This is the next condition-matching architecture;
+a second mask, a wider mask or another fixed class-bit registry is not the plan.
+
+The implementation must join constructed conditions to their real class and
+wrapper, trace that identity and the CPL under movement, and make handler search
+use the class relation. Qualify inherited and multiple-inheritance handlers,
+declining handlers, movement during signalling, and a newly defined condition
+class without assigning a bit. Preserve the accepted restart/cleanup behaviour
+and slot semantics. Until that works, keep the eight unsupported classes as
+explicit refusals; the plan itself earns no execution or admission credit.
+
+The division proposal's behavioural `NO-REM` change is listed as
+[WB-1](behavioural-branches.md) for explicit treatment at acceptance. Use the
+[canonical condition verifier](../tools/verify-condition-frontier.py) for new
+replays; leave the original retained source and records unchanged. For example:
+
+```sh
+python3 doc/WASM/tools/verify-condition-frontier.py --output /tmp/ccl-condition-canonical-replay --report /tmp/ccl-condition-canonical-verification.json
+```
