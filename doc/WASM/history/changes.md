@@ -3659,3 +3659,8 @@ Math R2 clean-checkout replay: 1481 files identical at 356 pins; retained as evi
 ## 2026-09-21 — accept and integrate audit155 math R2
 
 On Steve's “accept, integrate and proceed”, install the exact reviewed compiler, native-preserving source branches, floating service and musl sources. Retain the licence and all nested headers; the first production build caught an omitted header directory, repaired before qualification. Final-file native R6/R6a passes 21,843 tests with 144 identical and 164 restored FASLs. Target execution and rebuilt float binary equal the reviewed packet, and 40 collector owner checks pass. New compiler work continues isolated; no LL15 credit.
+
+
+### 2026-09-21 — Closure execution and immediate unsigned masks
+
+Following Steve's “accept, integrate and proceed”, math R2 is integrated in `75c7d5c7`. The next isolated packet raises executed originals from 423 to 436 and non-NIL witnesses from 394 to 407. It extends the existing uint32 proof to literal integers in range, executes MINUS1 from source, and adds thirteen original double-float primitive definitions using exact identities. Native destructive calls now copy double-float arguments, so destination mutation cannot corrupt the input oracle. Original development failures are retained. Native qualification passes on the final proposal; seven faults and the bad trap-mode control are rejected. Review and acceptance of this new compiler proposal remain pending.

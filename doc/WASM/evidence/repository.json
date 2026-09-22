@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "db75da8d00c04800aff0d0e19da6f497a894b35187e2f9fd94dabaf13b176776",
-  "commit": "4abfc1fcdfd8d605f7698445a0b4f521570bd78f",
-  "immutable_evidence_files": 260498,
+  "catalog_sha256": "3b3562476a9f1b50a8a58e7b298a212cb90c4efca220e463536235f823ba8704",
+  "commit": "907397d6540b0b5ecc9dfb5f1d4f1b7e61b4737d",
+  "immutable_evidence_files": 262862,
   "last_scoped_addition": {
-    "directory": "2026-09-21-stage1-bootstrap-math-integrated",
-    "files": 137,
-    "bytes": 33698267
+    "directory": "2026-09-21-stage1-bootstrap-closure-r1",
+    "files": 2364,
+    "bytes": 130922802
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 50657,
   "remote": null,
-  "scope": "Math R2 accepted and integrated after audit155. LL15 remains open; 21 accepted, 12 missing of 33.",
-  "source_index_sha256": "65dc051c1a0328223ee4ef3b090aebc22b82bd9f35e0001fd90728d5b100bc63",
-  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-math-integrated.json",
+  "scope": "Reviewed math R2 integrated; next closure proposal retained for independent review. LL15 open; Stage1 21 accepted,12 missing of33.",
+  "source_index_sha256": "0ff4573c30e84ddef42a2953704541c6d707fd3049d97120610b3c0aee1aa5b6",
+  "source_index_snapshot": "catalog/source-index-2026-09-21-bootstrap-closure-r1.json",
   "verification": {
     "status": "PASS",
-    "method": "Final installed files rebuilt in pristine native U1 and target fixture; reviewed byte identities and production float binary asserted; 40 collector owner checks.",
+    "method": "Changed compiler executed against native with movement, two compiled omission controls and five emitted-code faults; final compiler R6/R6a.",
     "native": "78e0161e91f2c7546c778bdea97ddb9679326b3ba2e2c2415833142fb67ddc85",
-    "target": "b0e424821ab3ce89652a874544d9bfd23ca961a440e088b304b5ae3d0598e35a"
+    "target": "648fd8375ddaccdde3f9fcedf1830f23ebd73ef357329de2a5e6165ef007c795"
   },
   "version": 1
 }

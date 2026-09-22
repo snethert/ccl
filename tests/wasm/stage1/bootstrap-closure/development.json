@@ -1,0 +1,24 @@
+{
+  "attempts": [
+    {
+      "attempt": "r1",
+      "diagnosis": "Recompiling native float definitions lacked their file-local stack-float macro. Native references now call the actual functions in the pinned image."
+    },
+    {
+      "attempt": "r2",
+      "diagnosis": "Passing initial run, but double-float arguments were shared with the input recipe and native mutation changed the before snapshot. R3 copies boxed doubles with native %COPY-FLOAT and requires before/after destinations to differ."
+    },
+    {
+      "attempt": "r3",
+      "diagnosis": "A broad editing replacement accidentally added the float-copy branch to the serializer as well as the copier, where SEEN was unbound. Removed that branch from the serializer; kept it only in the identity-preserving copier."
+    }
+  ],
+  "retained": [
+    "ccl-closure-r1.log",
+    "ccl-closure-r1/compiled/compile.log",
+    "ccl-closure-r2.log",
+    "ccl-closure-r2/compiled/native.json",
+    "ccl-closure-r3.log",
+    "ccl-closure-r3/compiled/compile.log"
+  ]
+}

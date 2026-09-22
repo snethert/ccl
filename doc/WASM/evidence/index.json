@@ -3212,6 +3212,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-math-integrated/packet.json",
       "sha256": "656ee78282bdd8c817b9b00b82c35d778625e05d764df712cf8b9d077da5d557",
       "scope": "Steve accepted audit155. Exact reviewed compiler/source/libm installed, with production build helper reproducing reviewed Wasm and licence included. Final-file native R6/R6a 21843 tests, 144 identical/164 restored FASLs; target execution identical and 40 owner checks. No slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-CLOSURE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-r1/packet.json",
+      "sha256": "79acf40b256834d410256a5faf11b3fa3e47211f8d61a041eac2f53595c61847",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit."
     }
   ],
   "current_runs": [
