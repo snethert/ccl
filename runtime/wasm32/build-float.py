@@ -4,7 +4,7 @@ import subprocess
 HERE=Path(__file__).resolve().parent
 
 def sources(out):
-    for name in ('float.c','float-service.mjs'):
+    for name in ('float.c','transcend.c','float-service.mjs'):
         data=(HERE/name).read_bytes()
         (out/name).write_bytes(data)
 

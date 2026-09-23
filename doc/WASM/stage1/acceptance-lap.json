@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept",
+    "context": "Acceptance of Codex second review c47b0a47, which recommends acceptance and integration of Claude LAP proposal 27f5bc02."
+  },
+  "author": "Claude",
+  "proposal_commit": "27f5bc022610cb55ef9b6e788292b09e83ba0f5c",
+  "review": {
+    "reviewer": "Codex",
+    "commit": "c47b0a47c657199546c6096072ce0a465ec049b7",
+    "path": "doc/WASM/stage1/review-claude-lap-r2.md",
+    "sha256": "0fcd7acd39bf6c4ddc703545dd349bf4d116e164929d46b8442f5d6d996d19b9",
+    "record": "tests/wasm/stage1/lap-review/record-r2.json",
+    "record_sha256": "8d53269c5fe96348c16cafdec9d4e1a8c874f1cd466a5750fdee8116ba22766c"
+  },
+  "scope": "56 target LAP definitions; reviewed logical fallback and single transcendental switch. Declared unexecuted entries remain uncredited. No new LL15 or other slot credit.",
+  "slot_credit": false
+}

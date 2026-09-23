@@ -5,7 +5,7 @@
  */
 #define DECLARE(name) extern double name(double); extern float name##f(float);
 DECLARE(sin) DECLARE(cos) DECLARE(acos) DECLARE(asin) DECLARE(cosh)
-DECLARE(asinh) DECLARE(acosh) DECLARE(atanh)
+DECLARE(asinh) DECLARE(acosh) DECLARE(atanh) DECLARE(sqrt)
 DECLARE(log) DECLARE(tan) DECLARE(atan) DECLARE(exp) DECLARE(sinh) DECLARE(tanh)
 extern double pow(double,double),atan2(double,double);
 extern float powf(float,float),atan2f(float,float);
@@ -23,7 +23,7 @@ static U transcend(U op,U av,U bv,U in,U end,U out,U limit,U result,U mask,U saf
  UNARY(6,log) UNARY(7,tan) UNARY(8,atan)
  case 9:r=width==32?atan2f((float)x,(float)y):atan2(x,y);break;
  UNARY(10,exp) UNARY(11,sinh) UNARY(12,tanh)
- UNARY(13,asinh) UNARY(14,acosh) UNARY(15,atanh)
+ UNARY(13,asinh) UNARY(14,acosh) UNARY(15,atanh) UNARY(16,sqrt)
  default:return 5;
  }
 #undef UNARY

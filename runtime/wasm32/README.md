@@ -174,7 +174,8 @@ The checked finite-input profile uses nearest rounding; inexact and underflow
 trap modes remain explicit refusals. Native comparisons use the adopted two-ULP
 limit, with exact identities, signed zeros and domain conditions exact. This
 is not a full-domain accuracy bound or a new performance claim. `transcend.c`
-is retained separately for provenance; its reviewed text is already in float.c.
+contains the authoritative switch and is included by `float.c`;
+`build-float.py` copies both source files into the build directory.
 
 Audit-158 integration adds the six single/double inverse-hyperbolic operations to
 the existing float module. The eight unmodified musl source files are bound by

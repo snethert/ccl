@@ -3506,6 +3506,14 @@
       "review": "ACCEPTED",
       "slot_credit": false,
       "scope": "Complete reviewed standard GF dispatch integrated byte for byte over accepted GCD/cached dispatch. Eight files changed. 550 original executions / 515 non-NIL witnesses; 2050 of 2231 original definitions admit. Seven newly admitted; the original COMPUTE-DCODE is target-replaced and loses admission credit. Standard native-projected class/method graph; uncached. Cross-dumped image/READY and real-CPL conditions remain open. No LL15 slot credit."
+    },
+    {
+      "id": "STAGE1-LAP-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-lap-acceptance/packet.json",
+      "sha256": "3dfb78daebe33e9b1af41b0dd76b6b3551a0ed534ba7e518931f674016854eee",
+      "scope": "User accepted Claude LAP proposal 27f5bc02 after Codex review c47b0a47. Seven functional files integrated byte-exact; 56 target definitions admit, 28 native LAP entries execute directly, with 13 contract probes and five original bignum callers. Reviewed 25772 comparisons plus 504 logical probes reused by exact hash. Final R6/R6a passes 21843 tests, restores 164 FASLs; all 17 existing readers see identical L1-CLOS forms. Unexecuted entries remain uncredited; no LL15 credit.",
+      "review_disposition": "ACCEPTED",
+      "acceptance": "doc/WASM/stage1/acceptance-lap.json"
     }
   ],
   "current_runs": [

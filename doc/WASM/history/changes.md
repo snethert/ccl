@@ -1,3 +1,24 @@
+## 2026-09-22 — accept and integrate Claude's corrected LAP work
+
+Steve's “accept” authorizes proposal `27f5bc02` after Codex review `c47b0a47`.
+Seven functional files enter byte-exact, including the NIL-pointer and rounding
+corrections, CCL logical-operation fallback and one transcendental switch.
+The integrated CLASS-OF, FALSE, EQUAL and ILOGCOUNT remain authoritative.
+The three documentation corrections are applied.
+
+Final native R6/R6a passes **21,843 tests**, restores **164 FASLs**, and retains
+identical code/non-location data for source-location changes. All **17 existing
+target readers** see identical complete L1-CLOS form lists. The float rebuild
+equals the reviewed binary. Reuse the exact reviewed **25,772 comparisons**,
+**504 additional logical comparisons** and **88 collector/owner checks**;
+integration does not repeat those executions or infer further credit.
+
+The accepted scope has 56 target LAP definitions, with 28 entries compared
+directly to native LAP, thirteen contract probes and five original bignum
+callers. Declared unexecuted entries, runtime/thread LAP and the real image/READY
+join remain open. Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+[Acceptance](../stage1/acceptance-lap.json), [integration](../stage1/integration-lap.json).
+
 ## 2026-09-21 — bootstrap admission, 33 new executions, and foreign exclusions
 
 On Steve's “proceed with ALL of the requests”, carry audit152's accepted

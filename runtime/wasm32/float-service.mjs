@@ -25,7 +25,7 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
  let busy=false;
  return (op,root,safe)=>{
   op>>>=0;root>>>=0;safe>>>=0;
-  if(busy||op>43||safe>1||root%8||root<get(tcr+68)||root+24>get(tcr+72)||
+  if(busy||op>45||safe>1||root%8||root<get(tcr+68)||root+24>get(tcr+72)||
      get(tcr+128)!==root||get(root+4)!==4||get(root+16)!==77825||get(root+20)!==77825)fail(41);
   const mask=get(tcr+200);if(mask>31)fail(41);
   busy=true;

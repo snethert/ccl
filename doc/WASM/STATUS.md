@@ -604,3 +604,19 @@ Standard dispatch is uncached and uses the qualified native-projected graph.
 Cross-dumped classes and %ALL-GFS%, wrapper invalidation/caching, closure
 metadata, real-CPL conditions and the image/READY join remain separate work.
 Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### Accepted LAP integration — 22 September 2026
+
+Steve accepted reviewed proposal `27f5bc02` after Codex review `c47b0a47`.
+Seven functional files are integrated byte-exact; 56 target LAP definitions
+admit, with 28 directly compared native LAP entries, thirteen contract probes
+and five original bignum callers. The reviewed 25,772 comparisons and 504
+additional logical-operation comparisons are reused by exact hash. Final
+native R6/R6a passes 21,843 tests and restores 164 FASLs; all 17 existing
+target readers see identical L1-CLOS forms. The production float build equals
+the reviewed binary. No new LL15 or original-definition execution credit is
+inferred by this integration.
+
+[Acceptance](stage1/acceptance-lap.json), [integration](stage1/integration-lap.json).
+Declared unexecuted entries and runtime/thread/image/READY obligations remain
+open; Stage 1 stays 21 accepted, 12 missing, zero unreviewed of 33.

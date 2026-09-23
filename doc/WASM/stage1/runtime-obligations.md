@@ -594,3 +594,14 @@ The integration qualifies the final shared files and recounts admission.
 Cross-dumped classes and `%ALL-GFS%`, wrapper invalidation and caching, real-CPL
 condition matching, and closure metadata remain separate obligations. The
 accepted GCD/cached-dispatch stack is already integrated at `a61947f8`.
+
+- **Accepted LAP integration (27f5bc02; Codex review c47b0a47).** Keep the
+  integrated CLASS-OF, FALSE, EQUAL and ILOGCOUNT implementations; the LAP
+  duplicates are withdrawn. Generic logical operations use CCL's LOGAND-2,
+  LOGIOR-2 and LOGXOR-2 with rooted operands. Whole-file allocation retry is
+  still opt-in and was explicitly enabled for the full-heap review probes.
+  `transcend.c` is the single switch included by `float.c`, with sqrt ops 44/45.
+  Slot-id closures, displaced-array access, the three hashes without an oracle,
+  FAST-MOD-3, SET-%SHORT-FLOAT-EXP and %FUNCTION-REGISTER-USAGE remain unexecuted
+  and uncredited. Runtime/thread LAP and installation in the real image/READY
+  path remain required. See [the integration record](integration-lap.json).

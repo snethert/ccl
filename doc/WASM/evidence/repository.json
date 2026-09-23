@@ -1,28 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "a18a12437ecef5be3e6f8e13c972328323df9ad8ff385604336873c119048868",
-  "commit": "b94ed62c2a079e7b35698a5a598d9b005c5b8fc0",
-  "immutable_evidence_files": 268036,
+  "catalog_sha256": "63d3671b32454e1a43db113154f4ddbd8a5db9c121b60dd69b8413349f00d1d9",
+  "commit": "75e52b839de9e485ca2be36236652c51faa4fcce",
+  "immutable_evidence_files": 268211,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-generic-acceptance",
-    "files": 72,
-    "bytes": 131349151
+    "directory": "2026-09-22-stage1-lap-acceptance",
+    "files": 174,
+    "bytes": 38676283
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 74550,
   "remote": null,
-  "scope": "Complete reviewed standard GF dispatch integrated byte for byte over accepted GCD/cached dispatch. Eight files changed. 550 original executions / 515 non-NIL witnesses; 2050 of 2231 original definitions admit. Seven newly admitted; the original COMPUTE-DCODE is target-replaced and loses admission credit. Standard native-projected class/method graph; uncached. Cross-dumped image/READY and real-CPL conditions remain open. No LL15 slot credit.",
-  "source_index_sha256": "d505919626c738de56de7b2c85b2b702c092539481f4784670eabee08c683a95",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-generic-acceptance.json",
+  "scope": "User accepted Claude LAP proposal 27f5bc02 after Codex review c47b0a47. Seven functional files integrated byte-exact; 56 target definitions admit, 28 native LAP entries execute directly, with 13 contract probes and five original bignum callers. Reviewed 25772 comparisons plus 504 logical probes reused by exact hash. Final R6/R6a passes 21843 tests, restores 164 FASLs; all 17 existing readers see identical L1-CLOS forms. Unexecuted entries remain uncredited; no LL15 credit.",
+  "source_index_sha256": "a5e3ea1d7faeb6d0128e239432839c9707fef2d55b292290ca8598cf21263105",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-lap-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final integrated native R6/R6a; rebuilt production collector binary; production-import target execution, owner/node/population checks and fresh whole-file recount. Original COMPUTE-DCODE is explicitly target-replaced, not credited.",
-    "packet_sha256": "623a3c26779c8cf841748e17b8bff247fec9e8a4597313ceb6184c84cb706b49",
-    "comparisons": 24144,
-    "admitted": 2050,
-    "denominator": 2231
+    "method": "Exact reviewed-byte integration; final native R6/R6a and 17-target reader equality; reviewed execution reused by artifact and source hashes; float rebuilt identical.",
+    "packet_sha256": "3dfb78daebe33e9b1af41b0dd76b6b3551a0ed534ba7e518931f674016854eee",
+    "comparisons_reused": 25772,
+    "additional_comparisons_reused": 504
   }
 }

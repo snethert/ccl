@@ -396,7 +396,11 @@
                                    map
                                    table
                                    (dpb 1 $lfbits-numreq
-				     (ash -1 $lfbits-noname-bit))))
+				     (ash -1 $lfbits-noname-bit)))
+              #+wasm32-target
+              (if small
+                (%make-small-map-slot-id-lookup map table)
+                (%make-large-map-slot-id-lookup map table)))
 	     (class (%wrapper-class wrapper))
 	     (get-f
               #+ppc-target
@@ -435,7 +439,11 @@
                                    #'%maybe-std-slot-value-using-class
                                    #'%slot-id-ref-missing
                                    (dpb 2 $lfbits-numreq
-                                        (ash -1 $lfbits-noname-bit))))
+                                        (ash -1 $lfbits-noname-bit)))
+              #+wasm32-target
+              (if small
+                (%make-small-slot-id-value map table class)
+                (%make-large-slot-id-value map table class)))
 	     (set-f
               #+ppc-target
               (gvector :function
@@ -474,7 +482,11 @@
                #'%maybe-std-setf-slot-value-using-class
                #'%slot-id-set-missing
                (dpb 3 $lfbits-numreq
-                    (ash -1 $lfbits-noname-bit)))))
+                    (ash -1 $lfbits-noname-bit)))
+              #+wasm32-target
+              (if small
+                (%make-small-set-slot-id-value map table class)
+                (%make-large-set-slot-id-value map table class))))
 	(setf (%wrapper-slot-id->slotd wrapper) lookup-f
 	      (%wrapper-slot-id-value wrapper) get-f
 	      (%wrapper-set-slot-id-value wrapper) set-f

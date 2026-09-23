@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-lap.json",
+  "acceptance_sha256": "5743bbe3a7a9057f4ad73882d56965703c784c3ae9bccaeda8d15b2e0a04cd5a",
+  "previous_integration": "integration-bootstrap-generic.json",
+  "previous_integration_sha256": "42e01c5a5c67e3ff61541abc00df9cc13d93e66c5847495919b8d88cdd0c835f",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "7b234ddd1f3435def9b193bf7aba18a442b09b1259567c40adaad7f20feaa279",
+      "after": "e5651b09848d0febb6615512083d2beccb2ecee4729ac36bd574974e642f2fef",
+      "reviewed": "e5651b09848d0febb6615512083d2beccb2ecee4729ac36bd574974e642f2fef"
+    },
+    {
+      "file": "level-0/WASM32/w32-lap.lisp",
+      "before": null,
+      "after": "581f01f5e0dc5d679c7b1641d77ed7c8e900e790f32f94977f75b59c2194fbee",
+      "reviewed": "581f01f5e0dc5d679c7b1641d77ed7c8e900e790f32f94977f75b59c2194fbee"
+    },
+    {
+      "file": "level-1/l1-clos.lisp",
+      "before": "31902bf5a7e6a1b7a37cab0f3f04c36b9bdf1a5d619ed53e75e5d4cbcf548830",
+      "after": "290ad4564a77af780deb371376a4e1ff1d19d016ff858adb128fdd5b85b6f558",
+      "reviewed": "290ad4564a77af780deb371376a4e1ff1d19d016ff858adb128fdd5b85b6f558"
+    },
+    {
+      "file": "runtime/wasm32/build-float.py",
+      "before": "a7c405aeb28d182bceb8f71fe3a4a33d1fe27f7426d712f7cebb036d35591c6f",
+      "after": "9f72e9a4bc19a259de3c68d9108f34350b65daa7b6c3dbf0d5905ba47cc7ffef",
+      "reviewed": "9f72e9a4bc19a259de3c68d9108f34350b65daa7b6c3dbf0d5905ba47cc7ffef"
+    },
+    {
+      "file": "runtime/wasm32/float-service.mjs",
+      "before": "870ac20c798c9385cf5d4deaeb7ca917a20c5fcfd95f255f3993fb748fb08a1d",
+      "after": "b3897d726b889bd26a95b6b6850b475d8fa9f34d489a1fbb06a1475599bb050c",
+      "reviewed": "b3897d726b889bd26a95b6b6850b475d8fa9f34d489a1fbb06a1475599bb050c"
+    },
+    {
+      "file": "runtime/wasm32/float.c",
+      "before": "09566997c0e506073b3934519c189e40a43d889f78a219db45e3e9d988233800",
+      "after": "22eed0f892d5ecc6bf28157c67e274f54a47198cdb4b141fd5042a00e0907c9d",
+      "reviewed": "22eed0f892d5ecc6bf28157c67e274f54a47198cdb4b141fd5042a00e0907c9d"
+    },
+    {
+      "file": "runtime/wasm32/transcend.c",
+      "before": "448832a536e950a04a326e6e01be0387e65fe7742ec9e334ff2f9025364babf3",
+      "after": "4fe687045efae1024b22c395f517316c68d5301dfd95c92ae6d094aec7fbfbf2",
+      "reviewed": "4fe687045efae1024b22c395f517316c68d5301dfd95c92ae6d094aec7fbfbf2"
+    }
+  ],
+  "qualification": {
+    "native_tests": 21843,
+    "identical_fasls": 138,
+    "restored_fasls": 164,
+    "native_record_sha256": "6922d41a633371ee22dc62afeacbdfecab573df5108d270cdc45d5be8e91fd7f",
+    "reader_profiles": 17,
+    "reader_record_sha256": "324ad164dc8ec37d295010be2b75964f95e0a1cbe891672b927683d178b36c99",
+    "review_comparisons": 25772,
+    "additional_review_comparisons": 504,
+    "owner_checks": 40,
+    "node_checks": 20,
+    "population_checks": 28,
+    "execution_reused_by_exact_hash": true,
+    "float_binary": "dc0db90ec8bf24abc6991ad6e40b6d3b66ff96669cf2c58ddadff39a398db404",
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-lap-acceptance/packet.json",
+    "packet_sha256": "3dfb78daebe33e9b1af41b0dd76b6b3551a0ed534ba7e518931f674016854eee"
+  },
+  "observations": [
+    "The integrated CLASS-OF, FALSE, EQUAL and ILOGCOUNT ownership is preserved.",
+    "Allocation retry remains opt-in for library compilation; the review pressure run enables it explicitly.",
+    "Slot-id closures, displaced-array access, three hashes, FAST-MOD-3, SET-%SHORT-FLOAT-EXP and %FUNCTION-REGISTER-USAGE remain without execution credit.",
+    "The runtime uses one transcendental switch; its consolidation is binary-identical.",
+    "Runtime/thread LAP and actual image/READY installation remain open."
+  ],
+  "slot_credit": false
+}

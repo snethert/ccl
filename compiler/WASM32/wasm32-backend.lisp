@@ -3385,8 +3385,8 @@
      (if (result i32) (i32.eq (local.get $kind) (i32.const 37)) (then (i32.const 1114140)) (else
      (if (result i32) (i32.eq (local.get $kind) (i32.const 38)) (then (i32.const 2162716)) (else (i32.const 156))))))))))") s)))
 (defun b-float-call (name forms)
- (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double %libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32))
-        (op (position name names)) (operation (nth op '(+ - * / < <= = /= >= > float float expt expt sin sin cos cos acos acos asin asin cosh cosh log log tan tan atan atan atan atan exp exp sinh sinh tanh tanh))) (unary (and (>= op 10) (not (member op '(12 13 30 31))))))
+ (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double %libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32 %libm-sqrt64 %libm-sqrt32))
+        (op (position name names)) (operation (nth op '(+ - * / < <= = /= >= > float float expt expt sin sin cos cos acos acos asin asin cosh cosh log log tan tan atan atan atan atan exp exp sinh sinh tanh tanh asinh asinh acosh acosh atanh atanh sqrt sqrt))) (unary (and (>= op 10) (not (member op '(12 13 30 31))))))
   (unless (= (length forms) 2) (refuse :float-arity))
   (b-frame 4 (lambda (root)
    (let ((a (b-wat "(i32.load offset=8 ~a)" root)) (b (b-wat "(i32.load offset=12 ~a)" root)) (status (temporary)))
@@ -4192,6 +4192,102 @@
 
 ;;; The result argument of the native destructive float primitives is rooted
 ;;; across calculation. Copy only after both operands have been evaluated.
+;;; Raw words of a float object.  Word 0 of a single float is its value;
+;;; a double float has its low word at 0 and its high word at 1.  Reads box
+;;; the word as an (UNSIGNED-BYTE 32); stores unbox one.  The object and
+;;; the index are checked before any access, and nothing allocates between
+;;; the check and the access.
+(defun bootstrap-float-word (name forms)
+  (let ((storep (eq name 'ccl::%wasm-set-float-word)))
+    (unless (= (length forms) (if storep 3 2)) (refuse :bootstrap-float-word-arity))
+    (bootstrap-operands forms
+      (lambda (values)
+        (destructuring-bind (object index &optional word) values
+          (let ((kind (temporary)) (address (temporary)))
+            (b-wat "(block (result i32)
+                     (local.set ~a (call $real_operand ~a)) ~a ~a
+                     (local.set ~a (i32.add (i32.sub ~a (i32.const 6))
+                                    (i32.add (if (result i32) (i32.eq (local.get ~a) (i32.const 32))
+                                               (then (i32.const 4)) (else (i32.const 8)))
+                                             ~a)))
+                     ~a)"
+                   kind object
+                   (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 32)) (i32.ne (local.get ~a) (i32.const 64)))" kind kind) 4)
+                   (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.ge_u ~a (if (result i32) (i32.eq (local.get ~a) (i32.const 32)) (then (i32.const 4)) (else (i32.const 8)))))" index index kind) 4)
+                   address object kind index
+                   (if storep
+                     (let ((value (temporary)))
+                       (b-wat "(local.set ~a ~a) (i32.store (local.get ~a) (local.get ~a)) ~a"
+                              value (bootstrap-unbox-word word) address value word))
+                     (bootstrap-box-word (b-wat "(i32.load (local.get ~a))" address) nil)))))))))
+
+;;; Signed fixnum division.  The divisor has been checked against zero and
+;;; -1 by the Lisp caller; the quotient of two 30-bit values always fits.
+(defun bootstrap-fixnum-division (name forms)
+  (unless (= (length forms) 2) (refuse :bootstrap-fixnum-division-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (destructuring-bind (dividend divisor) values
+        (let ((a (temporary)) (b (temporary)))
+          (b-wat "(block (result i32) ~a ~a
+                   (local.set ~a (i32.shr_s ~a (i32.const 2)))
+                   (local.set ~a (i32.shr_s ~a (i32.const 2))) ~a ~a
+                   (i32.shl (~a (local.get ~a) (local.get ~a)) (i32.const 2)))"
+                 (b-condition (b-wat "(i32.and ~a (i32.const 3))" dividend) 5)
+                 (b-condition (b-wat "(i32.and ~a (i32.const 3))" divisor) 5)
+                 a dividend b divisor
+                 (b-condition (b-wat "(i32.eqz (local.get ~a))" b) 5)
+                 (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const -1))" b) 5)
+                 (if (eq name 'ccl::%wasm-fixnum-quotient) "i32.div_s" "i32.rem_s")
+                 a b))))))
+
+;;; A float converted to a fixnum: MODE 0 truncates, MODE 1 rounds to
+;;; nearest even.  The exponent is checked before the conversion so that no
+;;; Wasm trap is reachable: a magnitude below 2^30 rounds to at most 2^30,
+;;; inside the conversion's range, while NaN and infinity fail the check.
+;;; The converted value is then checked against the fixnum range.
+(defun bootstrap-float-to-fixnum (forms)
+  (let ((mode (ccl::acode-fixnum-form-p (second forms))))
+    (unless (and (= (length forms) 2) (member mode '(0 1))) (refuse :bootstrap-float-to-fixnum-mode))
+    (bootstrap-operands (list (first forms))
+      (lambda (values)
+        (let ((object (first values)) (kind (temporary)) (base (temporary)) (result (temporary)))
+          (b-wat "(block (result i32)
+                   (local.set ~a (call $real_operand ~a)) ~a
+                   (local.set ~a (i32.sub ~a (i32.const 6)))
+                   ~a
+                   (local.set ~a (if (result i32) (i32.eq (local.get ~a) (i32.const 32))
+                     (then (i32.trunc_f32_s ~a))
+                     (else (i32.trunc_f64_s ~a))))
+                   ~a
+                   (i32.shl (local.get ~a) (i32.const 2)))"
+                 kind object
+                 (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 32)) (i32.ne (local.get ~a) (i32.const 64)))" kind kind) 4)
+                 base object
+                 (b-condition (b-wat "(if (result i32) (i32.eq (local.get ~a) (i32.const 32))
+                                        (then (i32.ge_u (i32.and (i32.load offset=4 (local.get ~a)) (i32.const 2139095040)) (i32.const ~d)))
+                                        (else (i32.ge_u (i32.and (i32.load offset=12 (local.get ~a)) (i32.const 2146435072)) (i32.const ~d))))"
+                                     kind base (ash (+ 127 30) 23) base (ash (+ 1023 30) 20)) 5)
+                 result kind
+                 (let ((single (b-wat "(f32.load offset=4 (local.get ~a))" base))
+                       (double (b-wat "(f64.load offset=8 (local.get ~a))" base)))
+                   (if (eql mode 1) (b-wat "(f32.nearest ~a)" single) single))
+                 (let ((double (b-wat "(f64.load offset=8 (local.get ~a))" base)))
+                   (if (eql mode 1) (b-wat "(f64.nearest ~a)" double) double))
+                 (b-condition (b-wat "(i32.or (i32.gt_s (local.get ~a) (i32.const 536870911)) (i32.lt_s (local.get ~a) (i32.const -536870912)))" result result) 5)
+                 result))))))
+
+;;; The tag bits of a non-fixnum object, as a fixnum: what the native
+;;; STRIP-TAG-TO-FIXNUM computes with AND and a shift.
+(defun bootstrap-strip-tag (forms)
+  (unless (= (length forms) 1) (refuse :bootstrap-strip-tag-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((object (first values)))
+        (b-wat "(if (result i32) (i32.and ~a (i32.const 3))
+                  (then (i32.shr_u (i32.and ~a (i32.const -8)) (i32.const 1)))
+                  (else ~a))" object object object)))))
+
 (defun bootstrap-float-store (forms)
   (unless (= (length forms) 2) (refuse :bootstrap-float-store-arity))
   (bootstrap-operands forms
@@ -4469,6 +4565,14 @@
            (b-multiple (make-b-raw-code :text (bootstrap-function-immediate forms t))))
           ((eq name 'ccl::%wasm-make-funcallable-instance)
            (b-multiple (make-b-raw-code :text (bootstrap-make-funcallable forms))))
+          ((member name '(ccl::%wasm-float-word ccl::%wasm-set-float-word))
+           (b-multiple (make-b-raw-code :text (bootstrap-float-word name forms))))
+          ((member name '(ccl::%wasm-fixnum-quotient ccl::%wasm-fixnum-remainder))
+           (b-multiple (make-b-raw-code :text (bootstrap-fixnum-division name forms))))
+          ((eq name 'ccl::%wasm-float-to-fixnum)
+           (b-multiple (make-b-raw-code :text (bootstrap-float-to-fixnum forms))))
+          ((eq name 'ccl::%wasm-strip-tag)
+           (b-multiple (make-b-raw-code :text (bootstrap-strip-tag forms))))
           ((member name '(ccl::%copy-double-float ccl::%copy-short-float
                           ccl::%int-to-dfloat ccl::%int-to-sfloat!))
            (unless (= (length forms) 2) (refuse :bootstrap-float-store-arity))
@@ -4493,9 +4597,9 @@
            (b-multiple (make-b-raw-code :text (bootstrap-float-store forms))))
           ((eq name 'ccl::%wasm-float-transcend)
            (let ((op (ccl::acode-fixnum-form-p (car forms))))
-             (unless (and op (<= 12 op 43) (= (length forms) 3))
+             (unless (and op (<= 12 op 45) (= (length forms) 3))
                (refuse :bootstrap-transcend-operation))
-             (b-float-call (nth (- op 12) '(%libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32)) (cdr forms))))
+             (b-float-call (nth (- op 12) '(%libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32 %libm-sqrt64 %libm-sqrt32)) (cdr forms))))
           ((and (eq name 'truncate) (= (length forms) 2)
                 (every (lambda (form) (ccl::acode-form-typep form 'fixnum t)) forms))
            (b-integer-call '%integer-truncate forms))
@@ -4744,20 +4848,37 @@
                              (call $implicit_error_details (i32.const 5) (local.get $top) ~a ~a) unreachable)) ~a"
                           test object (second values) object)))))))))))
 
+;;; Fixnum operands combine in one word each.  When any operand is not a
+;;; fixnum at run time, the rooted operands go two at a time to CCL's own
+;;; LOGAND-2, LOGIOR-2 or LOGXOR-2, whose bignum cases are the integrated
+;;; Lisp definitions.  The operands are evaluated once, into the root frame,
+;;; and reloaded from it after each call.
 (defun bootstrap-logical-call (name forms)
-  (b-multiple
-   (make-b-raw-code :text
-     (bootstrap-operands forms
-       (lambda (values)
-         (with-output-to-string (s)
-           (dolist (value values)
-             (write-string
-              (b-wat "(if (i32.and ~a (i32.const 3)) (then
-                        (if (i32.eq ~a (i32.const 28)) (then (throw $call_error (i32.const 32)))) ~a))"
-                     value (bootstrap-typecode value) (b-type-failure value 'integer)) s))
-           (write-string
-            (reduce (lambda (a b) (b-wat "(i32.~a ~a ~a)" (ecase name (logand "and") (logior "or") (logxor "xor")) a b))
-                    values :initial-value (if (eq name 'logand) "(i32.const -4)" "(i32.const 0)")) s)))))))
+  (let ((entry (ecase name (logand 'ccl::logand-2) (logior 'ccl::logior-2) (logxor 'ccl::logxor-2)))
+        (initial (if (eq name 'logand) "(i32.const -4)" "(i32.const 0)")))
+    (b-multiple
+     (make-b-raw-code :text
+       (bootstrap-operands forms
+         (lambda (values)
+           (let ((fast (reduce (lambda (a b) (b-wat "(i32.~a ~a ~a)" (ecase name (logand "and") (logior "or") (logxor "xor")) a b))
+                               values :initial-value initial)))
+             (if (null values)
+               fast
+               (let ((slow (let ((*b-tail-position* nil) (*b-producer-target* nil))
+                             (reduce (lambda (a b)
+                                       (bootstrap-primary
+                                        (b-call (ccl::make-acode (ccl::%nx1-operator ccl::immediate) entry)
+                                                (list (list (make-b-raw-code :text a) (make-b-raw-code :text b)) nil))))
+                                     values))))
+                 (b-wat "(if (result i32) (i32.eqz ~a) (then ~a) (else ~a ~a))"
+                        (reduce (lambda (a b) (b-wat "(i32.or ~a ~a)" a b))
+                                (mapcar (lambda (v) (b-wat "(i32.and ~a (i32.const 3))" v)) values))
+                        fast
+                        (with-output-to-string (s)
+                          (dolist (value values)
+                            (write-string (b-wat "(if (i32.and ~a (i32.const 3)) (then (if (i32.ne ~a (i32.const 28)) (then ~a))))"
+                                                 value (bootstrap-typecode value) (b-type-failure value 'integer)) s)))
+                        slow))))))))))
 
 (defun bootstrap-subtract (forms)
   (when forms
