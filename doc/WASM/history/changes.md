@@ -1,3 +1,20 @@
+## 2026-09-23 — target class-cell allocation and publication
+
+After accepting audit 163, implement SETF GETHASH through the accepted EQ leaf
+and compile CCL's own class-cell allocation path. Four new protocol callers
+insert, reuse and rebuild cells under collection; all 612 cells are rebuilt in
+generated Lisp before condition construction. Move SIGNAL into l1-readloop's
+Wasm branch. The class objects remain projected; no cross-dump/READY claim.
+
+The clean run passes 25,984 comparisons and
+19,514 collections; all inherited cases remain. Native
+R6/R6a passes 21,843 tests and restores 164 FASLs. The 40 collector checks pass.
+Reuse unchanged runtime binaries by pinned source and binary identities.
+Retain the fixture failures involving the reserved graph slot, native type
+cache, read-only projection and reader package. This is an unreviewed proposal;
+no shared source changes beyond the preceding accepted integration. Original
+headline remains 550/515; Stage 1 remains 21/12/0 of 33.
+
 ## 2026-09-23 — audit 163 and native condition-system integration
 
 Import Claude audit 163 verbatim from 988b5ab3. Steve explicitly answered

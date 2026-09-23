@@ -1,27 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "bfc9c839a6145f5baf351cfca7647c2cfcde0b56a6d5d544d72af4d2760024b7",
-  "commit": "531a6355dfbf8c429aeffb468cb2263b88ab8cf2",
-  "immutable_evidence_files": 268556,
+  "catalog_sha256": "1c8c4f7677f239f413f1330802efd4baee196a93c48b77e3a000b8e543d9e1d4",
+  "commit": "7f1c8309bd74e7db1b129d294f09ce194320d8e0",
+  "immutable_evidence_files": 268725,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-condition-system-acceptance",
-    "files": 6,
-    "bytes": 508314
+    "directory": "2026-09-23-stage1-class-table-r1",
+    "files": 169,
+    "bytes": 105324728
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Default-off native condition construction, generic readers, class-cell lookup and SIGNAL/ERROR designators. No image/READY or implicit-registry retirement claim.",
-  "source_index_sha256": "f81fd97ab3287107def87834574a79949ad8733b98428a527c57139b46fec318",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-condition-system-acceptance.json",
+  "scope": "Default-off SETF GETHASH through the accepted EQ store leaf, native FIND-CLASS-CELL target allocation, reconstruction of all 612 class cells, collection and subsequent condition construction. SIGNAL moved into a wasm32 branch in l1-readloop. Class objects remain native-projected; class finalization/type-cache registration, implicit registry and image/READY remain open. Four new callers/cases, 16 new comparisons; original headline unchanged 550/515. No slot credit.",
+  "source_index_sha256": "0e4e134a12aa02d486b13d5484b73453e05b117e9bd66b2ee64e73e76445afda",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-class-table-r1.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
-    "report": "2026-09-23-stage1-condition-system-acceptance/integration-check.json",
-    "report_sha256": "7a1afb22aa1413ed7b607f9d11c82cfbacf796014b1c66a36df555b97c6343aa",
-    "new_execution": false
+    "method": "Clean-source execution and final-source R6/R6a; unchanged runtime binaries reused by source and binary digest; retention identity validation of the completed run.",
+    "report": "2026-09-23-stage1-class-table-r1-verification.json",
+    "report_sha256": "8372c4a50c53a54ea34ff1f6589c78bdd9a6a3a2313e8f7950c564fe83e08e43",
+    "deterministic_files": 7131,
+    "source_pins": 2909,
+    "execution_rebuilt_during_retention_verification": false
   }
 }

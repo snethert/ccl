@@ -3563,6 +3563,14 @@
       "review_disposition": "ACCEPTED",
       "scope": "Source identity and qualification reuse for audit-163 integration. No new execution.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CLASS-TABLE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-table-r1/packet.json",
+      "sha256": "790f0506420bad9a4d6fde9bea4164a73b84e00a8133d97ad617db6ea1c62004",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Default-off SETF GETHASH through the accepted EQ store leaf, native FIND-CLASS-CELL target allocation, reconstruction of all 612 class cells, collection and subsequent condition construction. SIGNAL moved into a wasm32 branch in l1-readloop. Class objects remain native-projected; class finalization/type-cache registration, implicit registry and image/READY remain open. Four new callers/cases, 16 new comparisons; original headline unchanged 550/515. No slot credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

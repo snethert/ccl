@@ -695,3 +695,24 @@ execution or admission claim. The 550/515 headline and Stage 1 21/12/0 remain.
 O-19–O-24 are in runtime obligations; class-table writes, implicit registry
 retirement and cross-dumped image/READY remain open.
 [Integration](stage1/integration-condition-system.json).
+
+### Target class-cell publication proposal — 23 September 2026
+
+SETF GETHASH now reaches the accepted EQ store leaf in the default-off proposal.
+CCL FIND-CLASS-CELL allocates absent cells; all 612 table cells can be replaced
+with fresh target allocations, moved, resolved and used for native condition
+construction. SIGNAL is placed in a Wasm branch in l1-readloop.lisp.
+
+Four new callers/cases add 16 comparisons. The complete run passes
+**25,984 comparisons / 19,514 collections**,
+with **40 owner checks** and native R6/R6a **21,843 tests / 164 restored FASLs**.
+Unchanged runtime binaries are reused by source and binary identity. Retention
+validates the completed clean run and does not claim a second execution.
+
+Class objects remain projected; raw cell publication does not replace native
+type-cache updates or class finalization. Implicit registry removal and the
+cross-dumped image/READY join remain open. No new original-definition credit:
+**550/515**, no admission recount, Stage 1 **21 accepted / 12 missing / 0
+unreviewed of 33**. The proposal awaits review.
+
+[Implementation and replay](../../tests/wasm/stage1/bootstrap-class-table/README.md).
