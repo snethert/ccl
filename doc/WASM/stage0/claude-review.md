@@ -3768,3 +3768,54 @@ My four audit-166 isolating forms, resubmitted unchanged (so without the packet'
 ### Disposition
 
 R2 does what audit 166 asked: the delta workflow inherits (O-33), class-mode probes with explicit signals execute (O-34, cause confirmed by isolation), and the P5 lifecycle is enforced by the tools rather than by discipline. No defect found. Recommended for acceptance as tooling with no slot credit; O-37 is a one-line hardening for the next revision, O-39 a sentence in the contract, BT-18 remains owed. The parallelism detour should now close: reviewer Tier 1 is measured at 144 s, probe compile at 4–9 s, and the next packet should move the ledger.
+
+## Hundred-and-sixty-eighth Claude audit — STAGE1-CLASS-IMAGE-R1 (cold D1 class images and persistent class roots) at ce865269 — 23 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-168`, cut at ce865269 while Codex works in the main checkout; this commit changes only this file, and the STATUS row and history entry are owed at merge. Audit 167 is imported verbatim at 9f65dabb and accepted at 764eee4c; its O-37 has a separate repair, fa684f81, reviewed below.
+
+**Review tier (BT-13): Tier 2.** The packet adds a new runtime module (`heap-image.mjs`, a D1 heap-image writer and loader) and a harness join, so its execution identity is new and the packet's own replay (`packet.py verify`) is the review. It changes no compiler, CCL or shared runtime source. Run the P5 way: shared cache (session `838efc49…` already present, no compiler process), one output root `/private/tmp/ccl-work/claude/a168/` deleted at the end of this audit; 294 GB free before the run.
+
+### Throughput (R-1)
+
+| | P4 R2 (167) | class image |
+|---|---|---|
+| Executed originals, matching native | 550 | **550** |
+| Non-NIL witness | 515 | 515 |
+| Accepted / missing / unreviewed, of 33 | 21 / 12 / 0 | 21 / 12 / 0 |
+| Target comparisons | 26,048 | 26,048 baseline + 90 producer + 180 cold + 4 persistent-root |
+
+No original-definition or slot credit is claimed and none is due. What moves is the runtime: for the first time, class metadata built by generated Lisp is saved as target bytes and restored into fresh Workers that run no builder and no projector.
+
+### Evidence (Tier 0)
+
+`2026-09-23-stage1-class-image-r1`: 25 recorded files, 52,069,068 bytes, all present with matching hashes and nothing extra; packet `7f35cb90…` `NOT_REVIEWED`, `slot_credit: false`; catalog `2b6b0973…` at evidence commit 15ef6123; index byte-equal to its snapshot; all 37 source pins equal the blobs at ce865269; provenance binds session `838efc49…`, parent class-growth-r1 and `source_base` 764eee4c. BT-18 respected: no compiler session is copied; the 46 images are 19.9 MB compressed.
+
+### What it is
+
+`heap-image.mjs` walks the allocation stream with the collector's D1 object inventory (headers with fulltag 2 or 7 delimit objects; everything else is a cons; raw payloads of bignums, floats, strings and typed vectors are never scanned as pointers), replaces every pointer slot with a marker `0xfffffff9` and records a relocation naming either a heap object boundary or an object boundary in one of four pinned import arenas (canonical, symbols, names, constants) whose bytes — minus declared root slots — are digest-bound. Root bindings come from an owner allowlist and must each occur exactly once. The loader validates record, payload and code digests, extent, overlap, binding authority and completeness, import identity, every relocation against an actual object boundary of the right tag, and the absence of any leftover pointer, all on a private copy, re-checks the imports at install, then publishes; `READY` is reachable only from `INSTALLED` through an initializer that returns `true` synchronously. EQ hash vectors with pointer keys get the service's `MOVED` bit (`hash.c:14`, `1<<29`), so the next access rehashes.
+
+The marker choice matters: `0xfffffff9` is pointer-shaped (fulltag 1) and not header-shaped, so a relocation the record omits is caught by the "unrelocated pointer" pass, which the earlier zero marker could not do. The retained baseline ran with that earlier, never-imported helper present; Codex retains its exact bytes (`baseline-unused-heap-image.mjs`) rather than relabelling, and a fresh replay runs the baseline before the helper exists at all.
+
+### What I ran, and what it cost
+
+| step | wall | result |
+|---|---|---|
+| `packet.py verify` — baseline full corpus, four workers | 241 s (execution 214 s, warm build) | PASS, 26,048 fresh comparisons |
+| writer (45 cases, low placement) → 46 images | 120 s | PASS, 90 comparisons; **46 images byte-equal to the retained ones** (10,321,480 heap bytes, 1,117,915 relocations) |
+| reader (45 cases, fresh Workers at 8 MiB and 2 GiB, heap poisoned first) | 103 s | PASS, 180 comparisons; every row equals the producer row and the native row |
+| boot (`CORE-CONDITION-OWN-TABLE` → save → fresh Worker → 612 × FIND-CLASS, MAKE-CONDITION, SLOT-VALUE) | 17 s | PASS, 4 comparisons; `[true, 612, 43, 41]` at both placements, state `READY`, 216,888 bytes / 8,606 objects |
+| `controls.mjs` (24 refusals before any write, snapshot isolation, one-shot READY, three failed initializers, TOCTOU) | 0.5 s | PASS, 31 checks |
+| image census over the 46 retained images (my script over the packet's `inventory`) | seconds | 46 hash vectors, all keyed by pinned symbols; 4,124 function objects; zero heap-keyed tables (O-41) |
+
+`packet.py verify` completed in 516 s and its own assertions held: the replayed `summary.json` equals the retained one, the images inventory equals `images.json`, and `writer.json`, `reader.json`, `boot.json` and `controls.json` are hash-equal to the packet's. The 616 collections are the reader's and boot's per-Worker counts summed. This is a full reproduction of the author's execution from the shared cache with no compiler process.
+
+### Findings
+
+- **O-41 (coverage).** Every hash vector in the 46 images is the class table, and every key is a pinned symbol whose address is the same at both placements. Relocation therefore never moves a hash key, and the `MOVED` rehash the loader requests is exercised only on keys that did not move. The mechanism is right for heap-keyed EQ tables — the collector's own rehash is generic — but it is untested here, and the next image (eql-specializers, `*combined-methods*`, `%all-gfs%`) will carry heap-keyed tables. One directed case: an EQ table keyed by a heap cons, saved and restored at the high placement, looked up after load.
+- **O-42 (loader boundary).** The loader validates that each relocation names an object boundary of the declared tag; it cannot validate that the *right* object is named — two relocations with their values exchanged admit and install. That is inherent to a trusted-owner image and the README says so ("trusted-owner identity checking, not authentication"). Recorded so nobody reads the 24 refusals as tamper-resistance.
+- **O-43 (inventory).** `inventory()` hard-codes the recognised subtags (twenty header kinds plus conses) and refuses anything else with `object kind`. That is the right failure mode, but it means an image containing a kind the corpus has not produced yet — `basic-stream` 50, `lock` 66, `package` 98, `value-cell` 138, `xfunction` 146, `macptr` 31 — refuses at admission rather than at write. The writer should refuse first; today it does, because it uses the same inventory, so this is a note that the list is the contract and must grow with the worklist.
+- **O-37 (from 167) — partially addressed by fa684f81.** `driver-manifest.json`'s hash now enters the execution environment, so a manifest edit changes the identity and the identity tier refuses through the retained report. A focused or full run over a manifest that omits a driver still passes with nothing inherited, as at 167; the visible difference is that the omission is now recorded. Acceptable under the tooling's threat model; closed as an observation.
+
+### Disposition
+
+No defect. The image path is what the plan asked for as the next runtime step — the class table as a real image root — and it is bounded honestly: class-image READY, not LL15 READY; projected native metadata written ahead of time, not a target-built class graph; no xfasloader, no finalization, default-off mode untouched. Recommended for acceptance as a runtime proposal; `heap-image.mjs` may be integrated as the reviewed bytes. Before the next image packet: O-41's heap-keyed table case, and the O-43 kind list grown with whatever that packet's heap contains. Reviewer cost under the new regime: one 516 s replay and about forty minutes of reading; no probes were needed because the packet's own controls and replay cover its claims.
