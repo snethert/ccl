@@ -919,7 +919,7 @@
       "assertions": [
         {
           "id": "S1-LL15-c:acode-coverage",
-          "description": "For the hash-bound target-read startup worklist, retain the full acode operator census including operand/flag forms and nested functions. Every emitted operator occurrence has a qualified Wasm pass-2 lowering or an already-authorized target primitive path; textual handler-name presence is insufficient. Newly allocating and nonlocal forms have native-derived execution, moving-root and unwind/restoration witnesses. Publish covered/required counts and all unsupported forms on compiler commits. Pass only when coverage is complete, with no unknown occurrence counted as covered."
+          "description": "For the hash-bound projected-image READY worklist, retain the emitted acode operator census, including operand/flag forms and nested functions. Qualify each operator used by the executed READY dependency closure, with moving-root and unwind/restoration witnesses for allocating and nonlocal forms. Report emitted coverage and unsupported forms without counting unknowns as covered. Broader source-inventory admission need not reach 100 percent; the selected READY closure must have no unresolved operator dependency. Report native-matched original executions separately from named target replacements, capped at 25; execution evidence, not textual handler presence, establishes coverage."
         }
       ],
       "status": "NOT_RUN",
@@ -933,7 +933,7 @@
         "module",
         "installed-binary"
       ],
-      "origin": "bootstrap-throughput.md BT-0; explicit user authorization 2026-09-21"
+      "origin": "bootstrap-throughput.md BT-0; ready-decision.json, Steve adoption 2026-09-23"
     },
     {
       "id": "S1-LL15-d",
@@ -949,7 +949,7 @@
       "assertions": [
         {
           "id": "S1-LL15-d:source-coverage",
-          "description": "Every function of the hash-bound target-read startup worklist compiles from its original CCL definition through CCL macro expansion, with no consumer-source rewriting or symbol substitution. Target differences belong in CCL target branches/accessors and qualified primitives. Retain source/function identities, generated modules, dependency binding and the admission outcome for every function; missing bodies and unresolved dependencies remain explicit and cannot count as compiled. Publish compiled/required and separately executed/native-matched counts. Pass only when all required definitions compile and assemble and the production dependency closure is installable; counts alone do not discharge LL15-a execution."
+          "description": "For the hash-bound projected-image READY worklist, retain original source/function identities, generated modules, dependency bindings and every admission outcome. Measure executed native-matched original definitions, with and without non-NIL witnesses, separately from compilation and from named target replacements (maximum 25). There is no 100-percent admission requirement for the broader source inventory. No consumer-source rewriting or silent replacement is permitted. Every selected READY dependency must be installed and exercised; refused, unresolved, excluded and target-replaced definitions remain explicit. Preserve the 550-original/515-non-NIL execution baseline or explain and review each regression. Counts do not discharge LL15-a initialization and READY execution."
         }
       ],
       "status": "NOT_RUN",
@@ -963,7 +963,7 @@
         "module",
         "installed-binary"
       ],
-      "origin": "bootstrap-throughput.md BT-0; explicit user authorization 2026-09-21"
+      "origin": "bootstrap-throughput.md BT-0; ready-decision.json, Steve adoption 2026-09-23"
     }
   ],
   "adoption": {

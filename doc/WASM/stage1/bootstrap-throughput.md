@@ -258,3 +258,13 @@ run until explicit `finish` (or `--retain-to` on the final command); a report
 alone is not durable retention. This preserves BT-19's in-place workflow.
 The old evidence store is not trimmed until its archive-dependent verifiers
 can regenerate or retrieve elided inputs. The under-10-GB target remains owed.
+
+## READY selection adopted — 23 September
+
+[Steve's READY decision](ready-decision.json) supersedes BT-0's universal
+admission terminal condition for LL15-c/d. Count executed originals, preserve
+the execution baseline, and enumerate at most 25 target replacements. Retain
+refusals and unknowns explicitly; the selected READY dependency closure must
+still execute. Projected-image, class-mode, single-Worker, scheduler-disabled,
+uncached READY is the next runtime packet. Further service work must name its
+actual READY dependency. The pending class-image proposal remains under review.

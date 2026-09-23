@@ -4281,3 +4281,12 @@ headline. Admission is not recounted. Stage 1 stays **21 accepted, 12 missing,
 zero unreviewed of 33**.
 
 [Integration record](../stage1/integration-condition-cpl.json).
+
+### 2026-09-23 — Steve adopts the projected-image READY profile
+
+“While Claude reviews, I accept its recommendations:” adopts all six READY
+recommendations. Recorded the projected image, class conditions, one Worker
+without scheduler, uncached dispatch and READY-first sequencing. Changed only
+the two coverage criteria from universal admission to executed-original
+coverage with named replacements capped at 25. No accepted record is changed,
+no runtime proposal is self-accepted, and no slot credit is claimed.

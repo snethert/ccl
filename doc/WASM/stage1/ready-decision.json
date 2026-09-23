@@ -1,0 +1,33 @@
+{
+  "id": "STAGE1-READY-DECISION-R1",
+  "date": "2026-09-23",
+  "authorization": {
+    "speaker": "Steve",
+    "quote": "While Claude reviews, I accept its recommendations:"
+  },
+  "decisions": {
+    "image": "READY starts from an identity-preserving projection of the pinned native image. Building CLOS from source on the target is Stage 2 work.",
+    "coverage": "Measure executed original definitions; enumerate target replacements separately, capped at 25. No 100-percent admission requirement. The selected READY dependency closure must still be complete and installed; missing dependencies cannot be hidden by coverage totals.",
+    "conditions": "Class mode is mandatory for the READY profile. The legacy condition-mask path is excluded from Stage 1 READY acceptance; historical evidence remains valid in its original scope.",
+    "concurrency": "One Lisp Worker, scheduler disabled. Multi-worker scheduling remains a later profile. POSIX and terminate-when-unreachable remain excluded.",
+    "dispatch": "Uncached standard GF dispatch is admitted at READY without a timing claim. Dispatch caching follows READY.",
+    "sequencing": "The next runtime packet is the projected-image READY join (LL15-a), measuring LL15-c/d in the same packet. No further separate service packet unless READY demonstrably needs it. LL03, LL22 and LL24 controls may execute independently."
+  },
+  "implementation_choices": {
+    "replacement_cap": 25,
+    "coverage_floor": "Retain the currently qualified 550 executed originals (515 with non-NIL witnesses) as a non-regression baseline. This is an author-selected validation floor, not an additional quotation from Steve. READY-selected initialization and callable dependencies require their own actual execution and binding evidence.",
+    "projection_limits": "Name the selected classes, methods, globals, closures and modules; preserve identity and reject an unresolved required link. Native caches and native addresses are not transferable state.",
+    "pending_review": "class-image at ce865269 remains unreviewed. This decision does not accept or integrate that implementation."
+  },
+  "slot_credit": false,
+  "criteria_amendment": {
+    "changed": [
+      "S1-LL15-c",
+      "S1-LL15-d"
+    ],
+    "other_criteria_unchanged": 31,
+    "before_sha256": "a63a4d6170a813ae8182f183691b4fca91bb0d74bb83c5b8d856e159c4516d22",
+    "after_sha256": "e4f3337a48f273bacd705051b797c9df9ce391ca4fb3c0b7929bf2e7249e2aff",
+    "accepted_records_changed": 0
+  }
+}

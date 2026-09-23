@@ -765,3 +765,20 @@ graph or rerun that builder. Review this runtime boundary before integration.
 It does not remove the default-off condition mode or establish the complete
 cold initializer worklist. The next image work is the xfasloader's real class
 construction metadata and joining this owner to the process-wide READY contract.
+
+### READY profile decision — 23 September
+
+Steve adopted all six recommendations with “While Claude reviews, I accept its
+recommendations:”. [Decision](ready-decision.json): start from the projected
+native image; use executed-original coverage and at most 25 named replacements
+without requiring 100% broad admission; require class conditions; select one
+Worker with scheduling disabled; admit uncached GF dispatch; make the next
+runtime packet the READY join, with LL15-c/d in it. Target-side CLOS construction
+and dispatch caching are not prerequisites. LL03/LL22/LL24 may run independently.
+Only LL15-c/d criterion descriptions change; the other 31 and existing accepted
+records are untouched. This policy does not accept the pending class-image code.
+
+The author uses the qualified 550 originals / 515 non-NIL witnesses as a
+non-regression floor, separately from actual READY execution. This numerical
+floor is an implementation choice, not an invented quotation from Steve.
+Unknown dependencies and unnamed replacements cannot count as closed.
