@@ -1,29 +1,30 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2be2076fb9f955f122f7cfa6040381598d69173e22f421cfebaeacc71045f72e",
-  "commit": "0b932578e582fb91440e7142a38e2bf5547a8ad9",
-  "immutable_evidence_files": 268383,
+  "catalog_sha256": "11d501f260eeae299675f4dd26d88f176172d9724c40722beda64315c7481a11",
+  "commit": "f776f84bcff14cb13d647c47bd0c7a8d5b66830a",
+  "immutable_evidence_files": 268550,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-condition-cpl-acceptance",
-    "files": 6,
-    "bytes": 11387
+    "directory": "2026-09-23-stage1-condition-system-r1",
+    "files": 167,
+    "bytes": 103300257
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
-  "prior_indexed_references_verified": 74550,
+  "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Accepted condition-CPL backend integrated byte for byte with mode off by default. All 32 native-qualified proposal files and 417 source inputs match retained hashes; 25868 target comparisons and 21843 native tests reused, no new execution. O-19 through O-21 recorded; condition construction/readers, real class table and image/READY remain open. No slot credit.",
-  "source_index_sha256": "d5c7724e4fd4b884b28a4d57a3914dcb699ee2f0bf58c9453add69660c3e58a8",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-condition-cpl-acceptance.json",
+  "scope": "Default-off class-table condition construction, readers and signal designators. Native FIND-CLASS over 612 finalized projected class cells; native constructor/initialization methods, typed readers, APPLY and indirect SIGNAL, CERROR initargs, and class-cell replacement across movement. Ten protocol callers, 25 new cases/100 comparisons; all 6467 prior cases retained, 25968 comparisons, 19486 collections, 40 collector owner checks. Final-source native R6/R6a 21843 tests. Original-definition headline remains 550/515, no admission recount or LL15 credit. Implicit-failure allocation registry and cross-dumped image/READY remain open. Unreviewed proposal; shared source unchanged.",
+  "source_index_sha256": "2944a22129c77d8f4b02e7da06c38b18f476f5436a3bad5800108e9e61963604",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-condition-system-r1.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final source identity against reviewed native proposal and pinned compiler/Lisp/runtime inputs; existing execution and R6/R6a reused.",
-    "packet_sha256": "efa60a69abe472277922e4c4fc2f1387c09e30f7f866f0b2e9fd13b343a014d7",
-    "integration_report": "2026-09-22-stage1-condition-cpl-acceptance/integration-check.json",
-    "integration_report_sha256": "bd825fff6889fd5d1df56c282d6d60b65e4baeb37233c6c4a9613c4cae2b2e01",
-    "source_files": 417,
-    "qualified_proposal_files": 32
+    "method": "Final clean-source execution and native R6/R6a, followed by artifact and input identity validation of that completed run; no second execution claimed.",
+    "packet_sha256": "eded372522040c2d9e18e26e11965e0cc147af244bc191a6deaaf08bf194652b",
+    "report": "2026-09-23-stage1-condition-system-r1-verification.json",
+    "report_sha256": "61ebd90dd782927128eaf22ed4d0c731eb3f00902e92605136e83cca8ffa13b4",
+    "deterministic_files": 7115,
+    "source_pins": 2893,
+    "execution_rebuilt_during_retention_verification": false
   }
 }

@@ -1,3 +1,23 @@
+## 2026-09-23 — native condition construction through class cells
+
+On Steve's “Get something big done”, develop the successor to the accepted
+CPL matcher: native class-table lookup, constructor and initialization methods,
+slot readers, signal designators, spread and indirect calls, and CERROR symbol
+initargs. Retain the native method bodies and finalized class graph rather than
+an eleven-name owner catalog. No new C or JavaScript runtime service is added.
+
+All 6,467 inherited input rows remain; 25 new rows bring the complete run to
+25,968 comparisons and 19,486 collections. Final-source native R6/R6a passes
+21,843 tests; 40 collector owner checks pass. Retain the debugging failures,
+including missing initialization dependencies, metadata projection, fixture
+workspace overlap and the result writer's string-size limit. The final writer
+records graph digests only after full identity/field comparisons.
+
+This proposal is unreviewed and default-off. The 550 / 515 original-definition
+headline is unchanged; constructor helpers gain no separate credit. Implicit
+condition allocation, uninitialized CPLs and the port's cross-dumped image/READY
+join remain outside the completed scope. No shared source or ledger slot changes.
+
 ## 2026-09-22 — accept and integrate Claude's corrected LAP work
 
 Steve's “accept” authorizes proposal `27f5bc02` after Codex review `c47b0a47`.

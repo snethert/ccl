@@ -3539,6 +3539,14 @@
       "review_disposition": "ACCEPTED",
       "acceptance": "doc/WASM/stage1/acceptance-condition-cpl.json",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CONDITION-SYSTEM-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-condition-system-r1/packet.json",
+      "sha256": "eded372522040c2d9e18e26e11965e0cc147af244bc191a6deaaf08bf194652b",
+      "scope": "Default-off class-table condition construction, readers and signal designators. Native FIND-CLASS over 612 finalized projected class cells; native constructor/initialization methods, typed readers, APPLY and indirect SIGNAL, CERROR initargs, and class-cell replacement across movement. Ten protocol callers, 25 new cases/100 comparisons; all 6467 prior cases retained, 25968 comparisons, 19486 collections, 40 collector owner checks. Final-source native R6/R6a 21843 tests. Original-definition headline remains 550/515, no admission recount or LL15 credit. Implicit-failure allocation registry and cross-dumped image/READY remain open. Unreviewed proposal; shared source unchanged.",
+      "review_disposition": "NOT_REVIEWED",
+      "slot_credit": false
     }
   ],
   "current_runs": [

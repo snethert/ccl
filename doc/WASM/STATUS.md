@@ -658,3 +658,28 @@ headline. Admission is not recounted. Stage 1 stays **21 accepted, 12 missing,
 zero unreviewed of 33**.
 
 [Integration record](stage1/integration-condition-cpl.json).
+
+### Native condition construction proposal — 23 September 2026
+
+The default-off class path now uses FIND-CLASS over **612 projected native
+class cells**, with CCL's MAKE-CONDITION, CONDITION-ARG, MAKE-INSTANCE,
+initialization and slot access. String, symbol and object signalling, APPLY,
+indirect SIGNAL, CERROR initargs and typed readers execute through Lisp and
+real generic functions. A class-cell replacement remains visible after movement.
+
+Ten protocol callers add **25 native cases / 100 comparisons**. The entire
+inherited corpus remains present: **25,968 comparisons**, **19,486 collections**
+and **40 collector owner checks** pass. Final-source native R6/R6a passes
+**21,843 tests** and restores all 164 FASLs. The complete graph comparison runs
+before recording compact graph digests; expected graphs remain retained.
+The completed clean-source run is checked against the retained artifacts;
+retention verification does not claim an additional execution replay.
+
+The original-definition headline remains **550 executed / 515 non-NIL**;
+there is no admission recount or slot credit. Compiler-generated implicit
+conditions still use the allocation registry. Finalized CPLs are required;
+the port's cross-dumped class table and READY join remain open. Shared source
+is unchanged pending review. Stage 1 stays **21 accepted, 12 missing,
+zero unreviewed of 33**.
+
+[Implementation, scope and replay](../../tests/wasm/stage1/bootstrap-condition-system/README.md).
