@@ -61,13 +61,52 @@ saved native compiler image is tooling, not the target image.
 ## Coverage and boundary
 
 `coverage.json` separates the inherited 550 original executions from this
-packet's startup, and reports the retained emitted-acode census. A count of
-emitted operators is not a claim that every branch executed. The pending
-qualification still needs a complete named replacement census against the
-25-name cap, and a justified join from the selected image dependencies to the
-35 native startup callbacks. Closure metadata outside this selected graph also
-remains open. Those are recorded as incomplete, not silently waived by the
-policy change. No LL15-a/c/d slot credit or broad CCL READY claim is made.
+packet's startup. Audit 169 O-44 is repaired by `closure.json`: the roots are
+the three startup entries, every function in the selected image and the
+funcallable trampoline. It follows named calls, class-mode binding precedence,
+projected GF bindings, nested code and the three installed hash leaves. The
+operator counts come from these modules' compiler records, not the corpus.
+
+The conservative walk reaches **682 modules / 116 operator kinds / 33,308
+occurrences**, with **111 missing edges naming 72 distinct callees**, and
+**40 modules with indirect calls**. This is an incomplete closure census, not
+an assertion that all those branches execute at startup. Missing paths include
+class finalization, error reporting and native locking; a retained standalone
+fallback even names `WITH-ONE-NEGATED-BIGNUM-BUFFER` as a callee. Successful
+cold boots do not discharge those paths. The report retains every edge and
+installed-module digest, and refuses missing compiler records. Controls remove
+a required binding and unused corpus code to check those distinctions.
+
+`replacements.json` names all 100 target-file definitions reached by this walk:
+55 have direct native LAP antecedents, 16 have a native DEFUN antecedent,
+six are explicitly named replacement routes, and 23 still need attribution
+as helpers or macro-generated/native primitive entries. The search is a
+source-site census across U1, not an active-reader proof. The 25-name cap has
+**no PASS claim** until that attribution and the source branches are complete.
+Renaming an entry does not exempt it.
+
+`callbacks.json` joins all 35 immutable native registrations, including their
+source identity, named effects and prior obligations, to imported symbols in
+the selected code graph. None has a direct consumer in the current walk.
+Because missing and indirect calls remain, none is silently discharged on that
+absence alone. Historical callback selections are unchanged. This keeps the
+next implementation work explicit without recreating excluded native services.
+No LL15-a/c/d slot credit or broad CCL READY claim is made.
+
+The metadata is read from the retained compiler session's actual module
+objects. The three new forms are lowered a second time in that same process
+solely to recover their records after the probe driver's destructive list
+consumption; their WAT must equal the installed WAT. The corpus is not rebuilt.
+Paths for these submitted forms are normalized to the repository source name.
+
+O-47 is repaired by binding the native GF-population and scheduling globals
+around each oracle entry. Fixture state carries from initialization to checking,
+but the real process globals are restored by PROGV; all three restorations are
+asserted and logged. O-46 is repaired by a fresh 31-check admission run recording
+both imported module hashes and its driver hash. Historical controls are not
+rewritten. O-45 remains the distinction between a harness check and the owner's
+actual contract: the owner publishes READY on return, FAILED on throw and
+refuses a second bootstrap.
 
 Development failures were a direct GF reference absent from the ordinary
 function-only dependency list (use its real symbol cell), an incorrect lexical

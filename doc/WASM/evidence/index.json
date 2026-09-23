@@ -2267,7 +2267,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-repeated-keywords-r1/packet.json",
       "review_commit": "4b9aed8b99bb2b8c74e64f3f6ff890ca21020219",
       "review_disposition": "ACCEPTED_AUXILIARY",
-      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. Accepted by the user and integrated after Claude’s eighty-seventh audit. Native CCL compatibility, not a portable-language guarantee. No inventory credit.",
+      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. Accepted by the user and integrated after Claude\u2019s eighty-seventh audit. Native CCL compatibility, not a portable-language guarantee. No inventory credit.",
       "sha256": "aff1aab7f143583320ff058d8f1dacd509c2aa92e67e88913d4ccb0166e09c1c"
     },
     {
@@ -2290,7 +2290,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-19-stage1-control-followup-r1/packet.json",
       "review_commit": "ccc6370f67fe7a6a6caf5e65726d0c648db24c4f",
       "review_disposition": "ACCEPTED_AUXILIARY",
-      "scope": "Audit 88 follow-up: compatible TCR v2 names persistent reserve/depth fields without moving any field; shared reserve policy explicit. Four native ordinary-service decline cases, 16 comparisons and fatal diagnostics, six controls. Fresh replay: 45 deterministic files identical. Accepted compiler/runtime unchanged, exact R6/R6a reused. No slot credit. Accepted by the user after Claude’s eighty-ninth audit; no implementation change.",
+      "scope": "Audit 88 follow-up: compatible TCR v2 names persistent reserve/depth fields without moving any field; shared reserve policy explicit. Four native ordinary-service decline cases, 16 comparisons and fatal diagnostics, six controls. Fresh replay: 45 deterministic files identical. Accepted compiler/runtime unchanged, exact R6/R6a reused. No slot credit. Accepted by the user after Claude\u2019s eighty-ninth audit; no implementation change.",
       "sha256": "595f1a2ce00c3f2d127acba5642a8d619a2e097c7f861fad2ecc8f9b50eefb45"
     },
     {
@@ -2529,7 +2529,7 @@
       "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Accepted and integrated runtime correction: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Accepted on the user’s “accept and integrate”; exact reviewed bytes integrated. No slot credit.",
+      "scope": "Accepted and integrated runtime correction: shared synchronous SHA-256 and byte helpers replace every Node crypto/Buffer dependency; factory signatures, capability identities and digest results preserved. 358 shared checks, 391 Node differential inputs including 512 MiB+9, 96 replayed Wasm binaries cross-checked against Node crypto and browser Web Crypto; thirteen rejected faults. Chromium 145 module Workers at 1 MiB and 2 GiB reproduce Node/retained installer results; eager/cold numeric outputs unchanged. Audit 117: no defect. The same-Worker mixed-placement refusal is localized to Chromium 145.0.7632.6 Maglev; the same scenario passes without Maglev, in Node 25.6.1, and in Chrome 153.0.8010.36. Historical README claim about diagnostic text fixing it is withdrawn as unsupported by retained logs. This is not complete browser engine qualification. Accepted on the user\u2019s \u201caccept and integrate\u201d; exact reviewed bytes integrated. No slot credit.",
       "verification_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-portable-digests-r1-verification.json",
       "verification_sha256": "b1f0165232110fd75cfd010d488dc3f6afde6fe477e396322cbc08006162b869",
       "review_commit": "fa8ccc0ea8d8e62938c273c3f835b480134a98b6",
@@ -2701,7 +2701,7 @@
       "review_disposition": "REVIEWED_DEFECT_FOUND",
       "currency": "WITHDRAWN",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "RESET-DB-FILES now clears all seven cached handles per interface directory through an owner-admitted pinned D1 DLL service and unchanged generated calling forms. The untouched native callback supplies six cases; 96 placement/order/calling scenarios, 30 preserving refusals and four compiled faults pass. Complete DLL validation precedes mutation; all four publication words are poisoned and observed. Reuses compiler R6/R6a by hash. Auxiliary proposal, not integrated or joined; production FTD materialization and moving structures remain open, no LL15 credit. Fresh replay: 30 deterministic files at 213 pins. Audit 130 F1: membership and exact-count checks were not isolated by the harness. The sibling startup-db-review retains their escapes and directed refusals, plus descriptor distinctness. Service unchanged, awaiting follow-up review. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline §05; retain the no-live-handle bootstrap obligation.",
+      "scope": "RESET-DB-FILES now clears all seven cached handles per interface directory through an owner-admitted pinned D1 DLL service and unchanged generated calling forms. The untouched native callback supplies six cases; 96 placement/order/calling scenarios, 30 preserving refusals and four compiled faults pass. Complete DLL validation precedes mutation; all four publication words are poisoned and observed. Reuses compiler R6/R6a by hash. Auxiliary proposal, not integrated or joined; production FTD materialization and moving structures remain open, no LL15 credit. Fresh replay: 30 deterministic files at 213 pins. Audit 130 F1: membership and exact-count checks were not isolated by the harness. The sibling startup-db-review retains their escapes and directed refusals, plus descriptor distinctness. Service unchanged, awaiting follow-up review. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline \u00a705; retain the no-live-handle bootstrap obligation.",
       "review_commit": "3cfbfe1ee6ad1a1f7d43cd83591cbab887da30b8",
       "review_sha256": "912d010b2721d1ca66485c095c6eb09780820079fb65b6085e2a2536f6b02b57"
     },
@@ -2713,7 +2713,7 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "WITHDRAWN",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh replay: 14 deterministic files at 218 pins. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline §05; retain the no-live-handle bootstrap obligation."
+      "scope": "Audit-130 F1: consistent forged and shortened DLLs isolate membership and exact-visit admission. A third case isolates shared descriptor refusal. Six directed refusals preserve the arena, outside object, publication and full TCR. All three remove-one-check mutants escape R1 and reject here; four prior faults reject. Positive record byte-identical, compiler and service unchanged. Auxiliary, not integrated, no LL15 credit. Fresh replay: 14 deterministic files at 218 pins. WITHDRAWN from implementation on the user's 2026-09-20 direction to remove database work and finish LL15. Evidence and historical review retained; no integration or slot credit. Interface database loading is excluded by outline \u00a705; retain the no-live-handle bootstrap obligation."
     },
     {
       "id": "STAGE1-STARTUP-COUNTERS-R1",
@@ -3218,7 +3218,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-21-stage1-bootstrap-closure-r1/packet.json",
       "sha256": "79acf40b256834d410256a5faf11b3fa3e47211f8d61a041eac2f53595c61847",
       "review_disposition": "ACCEPTED",
-      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount. Accepted and integrated as the inherited reviewed proof in audit-158’s cumulative compiler on Steve’s authorization; see acceptance-bootstrap-funcallable.json.",
+      "scope": "Isolated compiler and execution proposal over accepted math R2. Immediate uint32 constants use existing word logic; source-emitted MINUS1 and thirteen original double-float primitive definitions execute. 436 originals, 407 non-NIL witnesses, 15888 target comparisons, 14540 exact native comparisons; 64 closed names without inputs. Seven faults and prior bad trap harness rejected. Final-backend native R6/R6a 21843 tests, 144 identical/164 restored FASLs. Runtime and CCL sources unchanged. No slot credit. Audit156 finds no packet defect; acceptance remains pending. Its admission figures are historical upper bounds, superseded by the file-environment recount. Accepted and integrated as the inherited reviewed proof in audit-158\u2019s cumulative compiler on Steve\u2019s authorization; see acceptance-bootstrap-funcallable.json.",
       "review": {
         "commit": "5fe0ce3c9a73373e60e486be3c3514efb9514048",
         "path": "doc/WASM/stage0/claude-review.md",
@@ -3319,7 +3319,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-funcallable-r1/packet.json",
       "sha256": "a76586c238c38bcd5c151a3997738471571a303c5007f000bc8f904a2b3ed96d",
       "review_disposition": "ACCEPTED",
-      "scope": "Accepted D1 funcallable storage and integrated after audit 158 on Steve’s direct authorization. Final compiler/source/runtime match reviewed bytes; 470 original executions, 439 non-NIL witnesses, 2043/2231 admissions. Production replay matches all 17156 comparisons and 40 owner checks; single-float representation difference observed explicitly. O-6 keyword metadata location decided; ordinary accessors and method dispatch remain unimplemented. Installer floating-owner profile widening recorded. No slot credit.",
+      "scope": "Accepted D1 funcallable storage and integrated after audit 158 on Steve\u2019s direct authorization. Final compiler/source/runtime match reviewed bytes; 470 original executions, 439 non-NIL witnesses, 2043/2231 admissions. Production replay matches all 17156 comparisons and 40 owner checks; single-float representation difference observed explicitly. O-6 keyword metadata location decided; ordinary accessors and method dispatch remain unimplemented. Installer floating-owner profile widening recorded. No slot credit.",
       "review_commit": "a87f4576d184dc34e7f7b3a2daa65103efc8db4c",
       "review_sha256": "6952d2a070ecc4c85374465dd1f05eeed6df92156bb5d34ac71495bcb5b3a4d6",
       "acceptance": "doc/WASM/stage1/acceptance-bootstrap-funcallable.json",
@@ -3637,7 +3637,7 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-image-r1/packet.json",
       "sha256": "7f35cb9039c1fdf2fa4fab843677bca139b7b679156778bdd9af4169f7de02c2",
       "review_disposition": "ACCEPTED",
-      "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged. Accepted by Steve after audit 168; integrated runtime bytes equal the reviewed prepared module. O-41–O-43 carried; no additional execution or slot credit.",
+      "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged. Accepted by Steve after audit 168; integrated runtime bytes equal the reviewed prepared module. O-41\u2013O-43 carried; no additional execution or slot credit.",
       "slot_credit": false,
       "review": {
         "reviewer": "Claude",
@@ -3649,12 +3649,14 @@
       "acceptance": "doc/WASM/stage1/acceptance-class-image.json"
     },
     {
-      "id": "STAGE1-READY-JOIN-DEVELOPMENT",
+      "id": "STAGE1-READY-JOIN-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-development/packet.json",
       "sha256": "52464d92790ce4ff968d1237bc87878544f2c0c8838886bb092a8ba028eacf18",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "slot_credit": false,
-      "scope": "Working READY packet, not submitted for LL15 acceptance. Projected image joins the integrated process owner: 612 class cells, all 33 projected GFs in %ALL-GFS%, class conditions, scheduling disabled, four fresh cold boots, ten collections, three failed-owner controls. Original headline remains 550/515 by inherited evidence. Replacement census and native callback membership remain incomplete; work continues in this READY unit."
+      "scope": "Working READY packet, not submitted for LL15 acceptance. Projected image joins the integrated process owner: 612 class cells, all 33 projected GFs in %ALL-GFS%, class conditions, scheduling disabled, four fresh cold boots, ten collections, three failed-owner controls. Original headline remains 550/515 by inherited evidence. Replacement census and native callback membership remain incomplete; work continues in this READY unit. Audit 169 at a6416d67: no defect, no LL15 credit. The development packet id is R1; DEVELOPMENT was an index label, now corrected. R3 continues the same READY unit.",
+      "review_commit": "a6416d679e729bccace8f48280d9608812d89799",
+      "review_sha256": "695cb0eff83332e5e75048f5a712cefd14aba9d6c87614bb1c2868c644aecb19"
     },
     {
       "id": "STAGE1-CLASS-IMAGE-ACCEPTANCE",
@@ -3668,9 +3670,19 @@
       "id": "STAGE1-READY-JOIN-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r2/packet.json",
       "sha256": "30aa8be85bbfb66326e33ef02314a5549b4ad0d389646ca2202d891f912e6397",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "scope": "Working READY join on the accepted integrated image loader: four cold boots, 612 classes, 33 selected GFs, 10 collections, three READY fault controls; directed heap-key relocation at both placements with omitted-MOVED controls. Membership and replacement census incomplete. No new original-definition or slot credit. Audit 169 at a6416d67: no defect, no LL15 credit. The development packet id is R1; DEVELOPMENT was an index label, now corrected. R3 continues the same READY unit.",
+      "slot_credit": false,
+      "review_commit": "a6416d679e729bccace8f48280d9608812d89799",
+      "review_sha256": "695cb0eff83332e5e75048f5a712cefd14aba9d6c87614bb1c2868c644aecb19"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r3/packet.json",
+      "sha256": "4f25c8b50b95cb474b009714009a9a4316069331f3636004711cb5aa7a110eba",
       "review_disposition": "NOT_REVIEWED",
-      "scope": "Working READY join on the accepted integrated image loader: four cold boots, 612 classes, 33 selected GFs, 10 collections, three READY fault controls; directed heap-key relocation at both placements with omitted-MOVED controls. Membership and replacement census incomplete. No new original-definition or slot credit.",
-      "slot_credit": false
+      "slot_credit": false,
+      "scope": "Selected READY dependency census: 682 modules, 116 acode kinds, 33308 occurrences; 111 missing edges naming 72 callees and 40 indirect-call modules remain explicit. Names 100 target definitions and all 35 callback dispositions without claiming cap/closure completion. Native startup oracle globals restored; 31 loader controls bind imported hashes. Four cold boots pass. No original-definition or LL15 credit."
     }
   ],
   "current_runs": [
@@ -3898,7 +3910,7 @@
       "execution_status": "FAIL",
       "id": "INTEGRATED-RUNTIME-r9",
       "inventory_sha256": "1b88c8f28b4dde26a7ea27a08937148219621a2b248e796ea25abd40a863bdcd",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged.",
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged.",
       "path": "evidence/runs/2026-09-11-integrated-r9.zip",
       "results_member": "results.json",
       "review_disposition": "NOT_REVIEWED",
@@ -5112,7 +5124,7 @@
       "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/packet.json",
       "packet_sha256": "337b6ea193ad02f696786e2c526e5a62a853a8c04acce63db1f1fc3e4df5e4fa",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
+      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures\u2019 retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
       "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
       "timestamp": "2026-09-15T18:28:00.857489+00:00"
@@ -5138,7 +5150,7 @@
       "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/packet.json",
       "packet_sha256": "53a2837b97373b93baec0d0443c3109dcab5ac324cf2174e853996218cf8b7db",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites\u2019 physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
       "sha256": "917f51e7954cb2975a189c783b19266114dbb712968e8bb180be5faf6fdac37d",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
       "timestamp": "2026-09-15T19:00:12.627155+00:00"

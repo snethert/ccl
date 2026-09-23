@@ -796,3 +796,31 @@ both placements, with a decisive omitted-MOVED control. O-42 trusted-owner
 identity and O-43 inventory scope remain explicit. The READY work still needs
 its replacement census and startup-worklist closure before slot acceptance.
 [Acceptance](stage1/acceptance-class-image.json).
+
+
+### Audit 169 — READY R2 reviewed
+
+Audit `a6416d67` is imported verbatim at `9b7b93e9`. Claude reproduced the
+READY join and its image byte-for-byte, and the omitted-initializer control
+refused. No defect; O-41 is closed. No slot credit. This turn continues the
+same READY unit with the selected dependency/operator census, named target
+replacements and the 35-callback disposition join. O-44 through O-47 and the
+development-packet label correction are carried with that work.
+
+
+### READY dependency census after audit 169
+
+The same READY unit now records the selected static/image-callable walk rather
+than using the corpus acode total: 682 modules, 116 kinds, 33,308 occurrences.
+It exposes 111 missing edges naming 72 callees and 40 indirect-call modules.
+Four cold boots still pass, but these paths prevent LL15 closure. All 35 native
+callbacks have an immutable disposition overlay; absence from this incomplete
+walk is not used to discharge any. The target census names 100 entries, with
+native antecedents and six explicit renamed routes; the cap remains unclaimed.
+No original credit: 550/515, ledger 21/12/0.
+
+Audit 169 O-47 is fixed by native dynamic bindings with three asserted process
+state restorations. O-46 has 31 fresh admission checks binding the imported
+loader/SHA modules and driver. O-45 remains the owner's real one-shot contract.
+The development index id now agrees with the retained R1 packet. Compiler,
+CCL sources and production runtime are unchanged.

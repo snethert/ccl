@@ -8,6 +8,13 @@ sys.path.insert(0,str(HERE.parent/'bootstrap-validation'))
 import common as c
 
 def prepare(out):
+    metadata=out/'probe-output/ready-modules.json'
+    if metadata.exists():
+        rows=c.read(metadata)
+        for row in rows:
+            if row['source'].endswith('/submitted/probes.lisp'):
+                row['source']='tests/wasm/stage1/ready/startup.lisp'
+        c.save(metadata,rows)
     spec=importlib.util.spec_from_file_location('class_image',HERE.parent/'class-image/prepare.py')
     parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(parent)
     parent.prepare(out)
