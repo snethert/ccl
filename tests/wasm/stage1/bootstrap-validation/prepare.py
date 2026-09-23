@@ -21,7 +21,8 @@ def driver_inputs(out):
     unexpected={str(p.relative_to(out/'driver')) for p in c.files(out/'driver')
                 if p.suffix=='.py' and 'development' not in p.relative_to(out/'driver').parts}-set(drivers)
     if unexpected:raise ValueError('undeclared driver source: '+str(sorted(unexpected)))
-    return {'driver/'+name:digest for name,digest in drivers.items()}
+    return {'driver-manifest.json':c.sha(out/'driver-manifest.json'),
+            **{'driver/'+name:digest for name,digest in drivers.items()}}
 
 
 def prepare(out):

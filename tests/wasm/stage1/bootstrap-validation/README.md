@@ -189,6 +189,14 @@ Python drivers refuse; additional development logs cannot invalidate results.
 A tool-source change still requires a new full run. Old R1 reports are not
 relabelled as executions of this revision.
 
+Audit 167 O-37: the execution identity also binds the manifest file itself.
+Removing a declaration therefore invalidates prior row keys and report
+identity, even for a non-Python input that the source-file sweep cannot find.
+`manifest_checks.py` checks that case alongside O-33's incidental-log case.
+This repair has focused tooling checks only; the retained R2 execution remains
+evidence for its original source revision. The next substantive runtime packet
+will supply the full execution for the changed tool identity.
+
 The `finish` bundle is explicitly not the old `restore` format. Existing
 catalogued packets remain intact pending a rebuild-aware store migration;
 BT-18's under-10-GB target is not claimed here. Old verifiers require their
