@@ -4290,3 +4290,15 @@ without scheduler, uncached dispatch and READY-first sequencing. Changed only
 the two coverage criteria from universal admission to executed-original
 coverage with named replacements capped at 25. No accepted record is changed,
 no runtime proposal is self-accepted, and no slot credit is claimed.
+
+### 2026-09-23 — Working projected-image process READY join
+
+Three CCL-style Lisp startup entries compile through the retained whole-file
+environment. The cold loader and the integrated process owner now join in fresh
+Workers: 612 class cells, all 33 GFs in this projected graph, class-based error
+handling, disabled scheduling/termination, and process READY published last.
+Four cold boots / ten collections pass; missing image, omitted entry and early
+READY leave FAILED. The initial GF list missed three invalidation GFs; the
+census found and added them before final retention. No shared runtime/compiler
+source change, new C/JS service, execution credit or slot credit. The READY
+packet remains in progress for its replacement census and worklist closure.

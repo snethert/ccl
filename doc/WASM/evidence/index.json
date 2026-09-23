@@ -3639,6 +3639,14 @@
       "review_disposition": "NOT_REVIEWED",
       "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-READY-JOIN-DEVELOPMENT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-development/packet.json",
+      "sha256": "52464d92790ce4ff968d1237bc87878544f2c0c8838886bb092a8ba028eacf18",
+      "review_disposition": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Working READY packet, not submitted for LL15 acceptance. Projected image joins the integrated process owner: 612 class cells, all 33 projected GFs in %ALL-GFS%, class conditions, scheduling disabled, four fresh cold boots, ten collections, three failed-owner controls. Original headline remains 550/515 by inherited evidence. Replacement census and native callback membership remain incomplete; work continues in this READY unit."
     }
   ],
   "current_runs": [

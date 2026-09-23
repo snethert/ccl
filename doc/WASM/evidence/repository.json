@@ -1,29 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2b6b097314c20e98312beb080aa0b8dc045279de9c27da735ae3c7304b0747d1",
-  "commit": "15ef6123bc97e94be8a793e9a35f17a08ae2eb9f",
-  "immutable_evidence_files": 269146,
+  "catalog_sha256": "ffbff6039479c0ac766fdb9d501cfb58ab9258afba4d11650805a445c655a418",
+  "commit": "2f750a453ae21bb8cdba549ea92c25b13697f38f",
+  "immutable_evidence_files": 269174,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-class-image-r1",
+    "directory": "2026-09-23-stage1-ready-join-development",
     "files": 26,
-    "bytes": 52069068
+    "bytes": 1579889
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged.",
-  "source_index_sha256": "333288a1314470143454b99d98561087855f84b259f08ea919e63d36a53f4a16",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-class-image-r1.json",
+  "scope": "READY development under the six adopted decisions. Process-owner cold boots over 612 classes and 33 projected GFs pass. This is an in-progress READY packet; replacement census and startup-worklist closure remain open, no LL15 slot claim.",
+  "source_index_sha256": "7ef187da491a55c70c167c846b8bcc6c5347f1024cac5194905f34b6809c4d98",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-development.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "One baseline full run; final image producer, fresh Worker consumers and initialized-root loads; direct admission/lifecycle controls. Retention validates identities without executing.",
-    "report": "2026-09-23-stage1-class-image-r1-verification.json",
-    "report_sha256": "760c3eaeb1d768f0a3f1637184112bd8b325db6d9ea656debd443ab414314a86",
+    "report": "2026-09-23-stage1-ready-development-verification.json",
+    "report_sha256": "5456703b4ecd14374f821ed1673b5f2945d7852b57dffcc7dc4d244d272b8202",
     "execution_rebuilt_during_retention_verification": false,
-    "source_pins": 37,
-    "comparisons": 26232
+    "comparisons": 5
   }
 }

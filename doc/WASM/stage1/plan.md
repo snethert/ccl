@@ -782,3 +782,13 @@ The author uses the qualified 550 originals / 515 non-NIL witnesses as a
 non-regression floor, separately from actual READY execution. This numerical
 floor is an implementation choice, not an invented quotation from Steve.
 Unknown dependencies and unnamed replacements cannot count as closed.
+
+The [working READY join](../../../tests/wasm/stage1/ready/README.md) now uses the
+integrated process owner around cold loading and generated startup. All 612
+class cells and 33 projected GFs are live; class dispatch works with the legacy
+registry poisoned, and scheduler/termination state is disabled. Four cold boots
+and three failing-owner controls pass. This is retained development for the
+same upcoming READY packet, not another service acceptance request. Complete
+the named replacement census and justified 35-callback disposition join before
+submitting LL15-a/c/d. Native CLOS construction and caching remain deferred by
+Steve's decision, not rediscovered blockers.
