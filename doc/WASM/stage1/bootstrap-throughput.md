@@ -151,3 +151,29 @@ Measured cost per delta packet at the class-table packet: whole-corpus compile i
 - BT-14. Native R6/R6a is unchanged: rebuilt once per CCL-source change, reused by proposal-manifest hash otherwise.
 
 Expected effect for a delta packet: author ~30 min → ~5; reviewer ~20 min plus 8 per probe attempt → ~3 plus one 8-minute probe compile until BT-12 lands, then ~1. BT-10, BT-11 and BT-12 are one implementation packet for Codex; BT-13 and BT-14 take effect at the next audit.
+
+#### P4 addendum (Claude, 23 September, same day) — measured phases, BT-15, and what the cost does not say
+
+Relayed user question, after P4: “Should I be concerned about the execution speed of our generated code? Is our design inefficient? Is startup impossibly slow? Why do the tests take so long?” then “record it”.
+
+Measured from the file birth and modification times of the audit-164 from-scratch replay of `2026-09-23-stage1-class-table-r1` (`packet.py verify`, 16-core macOS host, every phase single-threaded):
+
+| phase | wall | shape |
+|---|---|---|
+| native CCL: load compiler, cross-compile 3,494 modules, emit 4,767 `.wat` | 2 min 42 s | one Lisp process |
+| `wat2wasm` × 4,767 | 1 min 34 s | one subprocess per file, sequential |
+| Node: 6,496 rows | 5 min 24 s (~50 ms per row) | sequential; per row a fresh worker, `WebAssembly.Module` compile of the module and services, projection of a 400–750-node native graph into linear memory, run, collection, whole-graph read-back and JSON comparison |
+| checks and hashing | 13 s | 14,388 artifacts, 823 MB |
+| whole `verify` | ~10 min | |
+| one probe attempt | 4 min 13 s compile + 2 min 17 s execution | recompiles the corpus for two forms |
+
+The author's ~30 min is this pipeline plus native R6/R6a and catalog work.
+
+Answers, so they are not re-derived:
+
+- **Generated-code speed: no evidence either way, and the suite does not measure it.** The Lisp work per row is microseconds inside ~50 ms of harness. The emitted design carries no known pathology (tagged fixnums and linear-memory objects as native CCL, direct calls, checked exceptions only on refusal paths, the collector as a separate module). The first meaningful benchmark is the first thing that runs long: cold-boot-init of an image, or one file compiled on the target. It is stated when the image/READY join lands, not before.
+- **The inefficient design is the validation's, not the port's.** The suite is cumulative and from-scratch: 16 new comparisons cost 25,984 executions because no inherited row is ever dropped and nothing is cached. BT-10–12 are the remedy.
+- **Startup: unmeasured; no image exists yet.** Per-row graph projection is not startup. The one startup question the current shape raises: the compiler emits 4,767 separate modules per corpus. If the shipped image is thousands of modules rather than one or a few, instantiation count will dominate browser startup (an engine compiles one large module on its own threads; it does not amortize thousands of small ones). Decision owed at the image/READY join: module granularity of the shipped image, with a measured instantiation time for the chosen shape.
+- **Why the tests take so long:** no compile cache (BT-11), no execution provenance (BT-10), probes that rebuild the corpus (BT-12), and no parallelism at any stage with 16 cores idle.
+
+- BT-15. Parallel drivers. `wat2wasm` runs in a process pool and rows execute across N workers (rows are already isolated in workers, so ordering is a sort at the end, not a change to any comparison); N is recorded in the packet. Deterministic artifacts are unchanged by construction, which the existing hash assertions show. Expected on its own: ~10 min → ~3 for a full replay; combined with BT-10/11, a delta packet's execution is seconds. Part of the same implementation packet as BT-10–12.
