@@ -767,7 +767,7 @@ with class-image roots. Historical archive migration remains deferred.
 ### Class-image cold load — 23 September
 
 [STAGE1-CLASS-IMAGE-R1](../../tests/wasm/stage1/class-image/README.md) is complete
-and awaits Claude's review. The D1 writer emits explicit pointer relocations
+and was accepted by Steve after audit 168. The D1 writer emits explicit pointer relocations
 and root bindings; the portable loader validates a private snapshot before
 publishing. Generated Lisp builds 612 new class cells, publishes their table,
 and the resulting 216,888-byte / 8,606-object image is restored in fresh Workers.
@@ -781,3 +781,18 @@ Compiler/CCL/shared-runtime sources are unchanged. No original-definition or
 slot credit is claimed: 550 executed / 515 non-NIL; ledger 21/12/0 of 33.
 Class metadata remains the accepted native projection. Process-wide LL15 READY,
 the full xfasloader writer and class finalization are not claimed by this owner.
+
+
+### Audit 168 — class-image runtime accepted and integrated
+
+Steve authorized “I accept if you agree”; Codex agrees with the reviewed scope.
+Audit 5833ae07 is imported verbatim at 9c5faf1f. The integrated loader equals
+the exact prepared module Claude replayed. Its 31 admission checks pass against
+the production import; the completed corpus is reused, not rerun. No LL15 or
+original-definition credit: 550/515 and ledger 21/12/0 of 33 remain unchanged.
+
+O-41 has a directed heap-key relocation case in the ongoing READY unit, at
+both placements, with a decisive omitted-MOVED control. O-42 trusted-owner
+identity and O-43 inventory scope remain explicit. The READY work still needs
+its replacement census and startup-worklist closure before slot acceptance.
+[Acceptance](stage1/acceptance-class-image.json).

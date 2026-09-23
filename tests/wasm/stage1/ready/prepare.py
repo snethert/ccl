@@ -1,4 +1,4 @@
-"""Prepare the written READY driver; compiler and pending image sources stay fixed."""
+"""Prepare the written READY driver with the accepted production image loader."""
 from pathlib import Path
 import importlib.util
 import shutil
@@ -11,6 +11,10 @@ def prepare(out):
     spec=importlib.util.spec_from_file_location('class_image',HERE.parent/'class-image/prepare.py')
     parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(parent)
     parent.prepare(out)
+    # Integration must reproduce the reviewed prepared bytes exactly.
+    integrated=c.ROOT/'runtime/wasm32/heap-image.mjs'
+    assert integrated.read_bytes()==(out/'runtime/heap-image.mjs').read_bytes()
+    shutil.copyfile(integrated,out/'runtime/heap-image.mjs')
     shutil.copyfile(HERE/'worker.mjs',out/'ready-worker.mjs')
     shutil.copyfile(HERE/'process.mjs',out/'process.mjs')
     shutil.copyfile(c.ROOT/'runtime/wasm32/initialization-owner.mjs',out/'runtime/initialization-owner.mjs')

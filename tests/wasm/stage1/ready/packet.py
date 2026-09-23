@@ -13,7 +13,7 @@ def pack(root,dest,names):
 
 def retain(out,packet):
     summarize(out);packet.mkdir()
-    for name in ('summary.json','writer.json','reader.json','coverage.json','times.json'):
+    for name in ('summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json'):
         if (out/name).exists():shutil.copyfile(out/name,packet/name)
     compiled=out/'compiled'
     for name in ('ready-compile.json','probe-completion.json','class-image-code.json','class-image-code.sha256'):
@@ -34,9 +34,9 @@ def retain(out,packet):
     c.save(packet/'pins.json',pins)
     shutil.copytree(HERE,packet/'source',ignore=shutil.ignore_patterns('__pycache__'))
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
-       pending_image='ce865269',decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=False,shared_source_changes=False,
+       accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=False,shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R1',files=c.inventory(packet),
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R2',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)

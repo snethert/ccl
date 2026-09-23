@@ -3636,9 +3636,17 @@
       "id": "STAGE1-CLASS-IMAGE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-image-r1/packet.json",
       "sha256": "7f35cb9039c1fdf2fa4fab843677bca139b7b679156778bdd9af4169f7de02c2",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged.",
-      "slot_credit": false
+      "review_disposition": "ACCEPTED",
+      "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged. Accepted by Steve after audit 168; integrated runtime bytes equal the reviewed prepared module. O-41–O-43 carried; no additional execution or slot credit.",
+      "slot_credit": false,
+      "review": {
+        "reviewer": "Claude",
+        "commit": "5833ae072a1e9d7103c2a954ba054404c691eb19",
+        "import_commit": "9c5faf1f5b3ee1bbcd76b39d07f369d0b7c739cc",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "fc789768158c8041b1b9221573595a9d51dfb8f6e7ebd4e2c192ec6d5ce4e9e8"
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-class-image.json"
     },
     {
       "id": "STAGE1-READY-JOIN-DEVELOPMENT",
@@ -3647,6 +3655,22 @@
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Working READY packet, not submitted for LL15 acceptance. Projected image joins the integrated process owner: 612 class cells, all 33 projected GFs in %ALL-GFS%, class conditions, scheduling disabled, four fresh cold boots, ten collections, three failed-owner controls. Original headline remains 550/515 by inherited evidence. Replacement census and native callback membership remain incomplete; work continues in this READY unit."
+    },
+    {
+      "id": "STAGE1-CLASS-IMAGE-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-image-acceptance/packet.json",
+      "sha256": "5499b2e85e4588724d701ffb5fb8201aabec85739e22729ab78087ef801e5355",
+      "review_disposition": "ACCEPTED",
+      "scope": "Steve acceptance and exact reviewed runtime-byte integration; identity reuse plus 31 production-import controls. No LL15 credit.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r2/packet.json",
+      "sha256": "30aa8be85bbfb66326e33ef02314a5549b4ad0d389646ca2202d891f912e6397",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Working READY join on the accepted integrated image loader: four cold boots, 612 classes, 33 selected GFs, 10 collections, three READY fault controls; directed heap-key relocation at both placements with omitted-MOVED controls. Membership and replacement census incomplete. No new original-definition or slot credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

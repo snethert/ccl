@@ -1,3 +1,13 @@
+## 2026-09-23 — accept audit 168 and integrate the class-image loader
+
+Steve authorized “I accept if you agree”; Codex agrees with Claude's scope and
+nonblocking observations. Imported the audit verbatim at 9c5faf1f and installed
+the exact reviewed prepared module. Integration reuses the completed corpus
+and runs the 31 admission checks against production imports. No compiler/native
+rebuild or execution credit is claimed. The ongoing READY unit adds the O-41
+heap-key relocation case with a decisive missing-rehash control. O-42/O-43
+remain explicit boundaries; the LL15 membership/census work remains open.
+
 ## 2026-09-23 — complete a cold class-image runtime unit
 
 On Steve's request for a large completed work unit, implemented the D1 heap

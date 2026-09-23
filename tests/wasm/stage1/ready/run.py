@@ -24,6 +24,8 @@ def run(out):
     probe(out/'base',HERE/'startup.lisp',HERE/'inputs.lisp',out/'compiled',c.DEFAULT_CACHE,'class',4)
     execution_prepare(out/'compiled');local('prepare').prepare(out/'compiled')
     times['compile']=time.monotonic()-start
+    times['heap_keys']=c.command([c.NODE,HERE/'heap-keys.mjs',out/'compiled/hash.wasm',out/'heap-keys.json'],
+                                out/'heap-keys.log',timeout=60)
     for mode,name in [('write','writer'),('read','reader')]:
         times[name]=c.command([c.NODE,HERE/'run.mjs',out/'compiled',mode,out/'images',out/(name+'.json')],
                              out/(name+'.log'),timeout=600)
@@ -43,7 +45,11 @@ def summarize(out):
     assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready']
     assert all(r['state']==3 for r in reader['refusals'])
     assert reference['values'][:4]==[612,33,43,41]
+    keys=c.read(out/'heap-keys.json')
+    assert keys['status']=='PASS' and len(keys['records'])==2
+    assert all(r['omitted_moved_lookup_misses']>0 for r in keys['records'])
     report=dict(status='PASS',producer_comparisons=1,cold_boots=4,
+        heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=33,controls=len(reader['refusals']),
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
         original_definition_credit=0,slot_credit=False,

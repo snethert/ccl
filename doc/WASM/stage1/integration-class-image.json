@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "mode": "IDENTITY_AND_REVIEW_REUSE",
+  "runtime_sha256": "279d9ebc69bd5ce134eb09f2675b2fcdd899fa63faefd95168ea84abacad67b4",
+  "review": "5833ae072a1e9d7103c2a954ba054404c691eb19",
+  "reused_summary": {
+    "baseline_comparisons": 26048,
+    "bytes": 10321480,
+    "class_cells": 612,
+    "code_digest": "334664851af0fd06cca8033271d8d7d988a7f3d21edef55201837c929d62ae2b",
+    "cold_comparisons": 180,
+    "collections": 616,
+    "controls": 31,
+    "images": 46,
+    "limitation": "Class-image readiness only. Projected class metadata, not a whole CCL cold build or LL15 READY.",
+    "new_original_credit": 0,
+    "non_nil_witnesses": 515,
+    "original_definitions": 550,
+    "persistent_root_comparisons": 4,
+    "placements": [
+      8388608,
+      2146500608
+    ],
+    "producer_comparisons": 90,
+    "ready_image_bytes": 216888,
+    "ready_image_objects": 8606,
+    "relocations": 1117915,
+    "status": "PASS"
+  },
+  "new_execution": false,
+  "slot_credit": false
+}

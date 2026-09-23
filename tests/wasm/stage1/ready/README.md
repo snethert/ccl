@@ -11,9 +11,9 @@ selected class/condition image; it does not claim the full LL15 slot.
 Steve's [six adopted decisions](../../../../doc/WASM/stage1/ready-decision.json)
 select a projected native image, class conditions, one Worker without a
 scheduler, uncached dispatch and executed-original coverage with a named
-replacement cap. The pending class-image proposal is a dependency, unchanged
-and still under Claude's review. Nothing under shared compiler, runtime or
-CCL source is edited here.
+replacement cap. The class-image loader was accepted by Steve after audit 168 and is now
+imported from the shared runtime. Its bytes equal the reviewed prepared module.
+No compiler or CCL source changes are needed for this join.
 
 `startup.lisp` is compiled whole through CCL's file compiler. It publishes the
 class globals using the reviewed initializer, builds `%ALL-GFS%` in the native
@@ -41,7 +41,7 @@ absent. No new C/JS runtime service or readiness state machine is introduced.
 Four cold boots cover both placements and collection before startup; startup
 itself also collects. Missing image, omitted entry and premature READY fail,
 leaving the process owner FAILED. The image admission controls remain in the
-pending class-image packet; they are not relabelled as newly run here.
+accepted class-image packet; they are not relabelled as newly run here.
 
 ## Reproduce
 
@@ -76,3 +76,14 @@ the compiler package. The graph census also caught the three additional GFs
 before the final run. Original failure logs are retained. R6/R6a is reused by
 unchanged shared-source identity; no native rebuild is necessary for these
 fixture-only entries.
+
+
+Audit 168 O-41 is exercised by `heap-keys.mjs` in this same READY unit. It
+writes a table containing cons keys, shared key/value identity, a self-reference,
+a tombstone and a live cache entry; poisons the source heap; loads at both
+placements; and calls the accepted hash leaf. The first lookup must rehash,
+later lookups must not, and updates and deletion must work. Clearing MOVED and
+invalidating the cache makes both live keys miss at both placements. This is
+new runtime-boundary evidence, not new original-definition execution credit.
+O-42 remains the trusted-owner identity boundary; O-43 keeps the admitted kind
+inventory explicit. The test does not claim EQL/EQUAL wrapper installation.

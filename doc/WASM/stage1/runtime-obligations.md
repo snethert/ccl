@@ -673,3 +673,21 @@ P4 implementation at 16584ba0 is under separate review. Audit 165 accepts its
 key/reset design corrections, not the later implementation. The tooling is
 unchanged while Claude reviews it. Cross-dumped class roots, READY and removal
 of legacy mode remain runtime work.
+
+
+### Audit 168 — accepted D1 class-image loader
+
+The production `heap-image.mjs` equals the reviewed prepared module. The
+class metadata remains the selected native projection authorized for READY.
+
+- O-41: the READY unit now carries the heap-key relocation test: moved cons
+  keys and values, table self-reference, tombstone, cache, old-heap poisoning,
+  and real hash-leaf rehash at both placements. An omitted-MOVED control
+  misses both live keys. This new test awaits review with the READY unit.
+- O-42: boundary/tag checking does not prove that a relocation targets the
+  intended object. The owner and digest-bound image remain trusted.
+- O-43: recognized kinds are the admitted image contract. Extend it only for
+  selected worklist objects that actually require additional representations.
+
+This acceptance does not grant LL15 credit. Replacement census and selected
+startup dependency closure remain required in the working READY packet.

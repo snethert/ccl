@@ -1,26 +1,26 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ffbff6039479c0ac766fdb9d501cfb58ab9258afba4d11650805a445c655a418",
-  "commit": "2f750a453ae21bb8cdba549ea92c25b13697f38f",
-  "immutable_evidence_files": 269174,
+  "catalog_sha256": "4bd82aa9e29aa1a319a1f605c862ceb456dac739815713ee01e0328446524fad",
+  "commit": "c78c26a345fb827ef4705e63c51441bb8c460bed",
+  "immutable_evidence_files": 269210,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-ready-join-development",
-    "files": 26,
-    "bytes": 1579889
+    "directory": "2026-09-23-stage1-ready-join-r2",
+    "files": 36,
+    "bytes": 2097395
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY development under the six adopted decisions. Process-owner cold boots over 612 classes and 33 projected GFs pass. This is an in-progress READY packet; replacement census and startup-worklist closure remain open, no LL15 slot claim.",
-  "source_index_sha256": "7ef187da491a55c70c167c846b8bcc6c5347f1024cac5194905f34b6809c4d98",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-development.json",
+  "scope": "Audit 168 class-image acceptance/integration, plus READY cold-boot and heap-key relocation evidence. No LL15 credit.",
+  "source_index_sha256": "ebbd0263ad3b95d25f119a418c42d61bc1e776e103f577d43d3b371666552d7a",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-class-image-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-23-stage1-ready-development-verification.json",
-    "report_sha256": "5456703b4ecd14374f821ed1673b5f2945d7852b57dffcc7dc4d244d272b8202",
+    "report": "2026-09-23-class-image-integration-verification.json",
+    "report_sha256": "515a8e1d7fbc604562c7d6f570ff6f69eebf22ef324b5429eed6f45d631404e8",
     "execution_rebuilt_during_retention_verification": false,
     "comparisons": 5
   }
