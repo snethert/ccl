@@ -1,3 +1,26 @@
+## 2026-09-23 — P4 validation tooling
+
+Steve explicitly requested implementation of P4, including the corrected
+identity keys. Adopted P4 and implemented written build, native-oracle,
+execution, probe and retention entry points. Whole-file compiler sessions and
+WABT outputs use separate checked atomic caches outside the source tree.
+A batch loads the retained review image and compiles only its supplied file;
+every definition needs an explicit execution entry. This image is tooling,
+not the port's bootstrap heap.
+
+A clean four-worker run agrees with all 26,048 retained sequential comparisons.
+Focused runs in opposite orders agree: 276 fresh, 128 sampled and 25,644 inherited
+comparisons. The 32-row sample uses seed 0x42545034. Separate stateful cases cover
+growing tables, collecting conditions and mutable globals. The warm build uses
+zero compiler/oracle/WABT subprocesses. The example batch compiles four definitions
+and executes 40 comparisons. Identity checks claim zero new execution. Original
+development failures are retained, including native checkpoint and probe-driver
+failures; the pending compiler/runtime proposal is unchanged.
+
+No new LL15 or original-definition credit: 550 executed / 515 non-NIL witnesses,
+and 21 accepted / 12 missing / zero unreviewed of 33 remain unchanged.
+Cross-dumped classes, READY and production module granularity remain runtime work.
+
 ## 2026-09-23 — growing class tables and class-based implicit failures
 
 After the accepted class-table integration, implement bounded table growth,

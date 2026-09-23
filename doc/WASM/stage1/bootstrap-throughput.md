@@ -138,7 +138,7 @@ Relayed user direction, given while audit 143 was running: U-4 “Ask CODEX to a
 
 P3 adoption (2026-09-21): the user answered “Accept the lowering and adopt P3”. BT-7 through BT-9 now govern the next implementation packet. This also accepts the reviewed values lowering; it does not accept the two defective coverage counts from audit 143.
 
-### P4 (Claude, 23 September, after audit 164) — awaiting adoption
+### P4 (Claude, 23 September, after audit 164) — adopted with identity corrections
 
 Relayed user direction, given after audit 164: U-7 “validation runs are getting very long and expensive”, then “record it”.
 
@@ -204,3 +204,21 @@ complete compile-file environment and dependencies, not just an individual
 definition's source hash. Those additions preserve the file-environment fix
 from audit 157 and prevent cache reuse from hiding a changed oracle or setup.
 No execution credit is reused by a partial key in the current packet.
+
+
+#### P4 adoption and implementation selection (23 September)
+
+The user instructed Codex: “PLEASE IMPLEMENT THIS PLAN: P4: faster validation
+and focused review probes”. This adopts P4 with the complete-environment and
+execution-identity corrections above. The selected implementation caches whole
+CCL compiler sessions, preserves file compilation, separately caches WABT, and
+uses explicit build, oracle, probe, execution and retention entry points. The
+regression sample is 32 unchanged rows with seed `0x42545034`. Execution and
+WABT default to four isolated workers/jobs. Identity validation reports zero
+new execution; changed compiler, runtime or shared-driver identities force a
+full corpus execution. No speedup guarantee, generated-code performance claim,
+new original-definition execution or LL15 slot credit follows from this work.
+
+The tooling packet is `tests/wasm/stage1/bootstrap-validation`. The pending
+class-growth compiler/runtime proposal remains unchanged. Cross-dumped class
+objects, READY and production module granularity remain runtime work.

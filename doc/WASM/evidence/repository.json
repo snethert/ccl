@@ -1,29 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e15e6d143caf0a8aa7f6ace7222fe5496a56df1c02c1e51242e1b63e64a2a779",
-  "commit": "3270c8b9564805e606fb756f37d64fbb51a67568",
-  "immutable_evidence_files": 268904,
+  "catalog_sha256": "4e58f1587c98774248dbe869ff27efcae1019c9ea9b6332edfa2d56d39a3194b",
+  "commit": "46cfee3fd6d556b39f2cc3b64dc585837635daee",
+  "immutable_evidence_files": 268948,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-class-growth-r1",
-    "files": 173,
-    "bytes": 117954323
+    "directory": "2026-09-23-stage1-bootstrap-validation-r1",
+    "files": 42,
+    "bytes": 598302313
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Default-off target-owned EQ class tables, doubling growth through 16384 entries, REMHASH and CLRHASH; cells rebuilt on the moving heap. Implicit failures construct conditions through MAKE-CONDITION and the live class table; class modules emit no registry and failure witnesses poison legacy registry rows. Class objects remain native-projected. Undefined FUNCALL retains the inherited base-class boundary; SYMBOL-VALUE kernel restart defaults remain unsupported. Cross-dumped image, READY, debugger/re-entry and removal of legacy mode remain open. No original-definition gain or slot credit.",
-  "source_index_sha256": "4808568c30904d53bfbf9acf60a08dcf9b0c53d8af98fce9e99ae428e5266cdc",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-class-growth-r1.json",
+  "scope": "P4 validation tooling: whole-file compiler session and WABT caches; explicit phase completion, batched probes, exact execution provenance and isolated four-worker execution. Full 26048 comparisons equal retained sequential results; focused 276 fresh, 128 sampled, 25644 inherited. Warm build starts no compiler/oracle/WABT subprocesses. Restored review image compiles only four new probe definitions and executes 40 comparisons. No compiler/runtime change or LL15 credit.",
+  "source_index_sha256": "ee8297644e69c2aa5a955ee4559b479f7cf503eab97037a975e56c52d341cc0b",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-bootstrap-validation-r1.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Clean-source execution and final-source R6/R6a; unchanged runtime binaries reused by source and binary digest; retention identity validation of the completed run.",
-    "report": "2026-09-23-stage1-class-growth-r1-verification.json",
-    "report_sha256": "99f487d8a2f01d0ca5ac18e2777fd977d9ed62f211986e3d755868b1f9bb8593",
-    "deterministic_files": 8011,
-    "source_pins": 2927,
-    "execution_rebuilt_during_retention_verification": false
+    "method": "Full parallel author execution; exact sequential and focused comparisons; empty-cache restore and probe execution. Final retention does not execute.",
+    "report": "2026-09-23-stage1-bootstrap-validation-r1-verification.json",
+    "report_sha256": "e8854162a4beab0cd5ad9182b0bc29a30a437727c66ee43cb93aa6d5297a903f",
+    "execution_rebuilt_during_retention_verification": false,
+    "source_pins": 22,
+    "comparisons": 26048
   }
 }
