@@ -1,29 +1,31 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4e58f1587c98774248dbe869ff27efcae1019c9ea9b6332edfa2d56d39a3194b",
-  "commit": "46cfee3fd6d556b39f2cc3b64dc585837635daee",
-  "immutable_evidence_files": 268948,
+  "catalog_sha256": "026b7428f2d28c1fa741fa1a9de907c5db649fc1e630ea25d43f002a2a6a82aa",
+  "commit": "02113f53f466d4996e93844bea4b9e4d8bed429e",
+  "immutable_evidence_files": 268956,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-bootstrap-validation-r1",
-    "files": 42,
-    "bytes": 598302313
+    "directory": "2026-09-23-stage1-class-growth-acceptance",
+    "files": 6,
+    "bytes": 11512
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "P4 validation tooling: whole-file compiler session and WABT caches; explicit phase completion, batched probes, exact execution provenance and isolated four-worker execution. Full 26048 comparisons equal retained sequential results; focused 276 fresh, 128 sampled, 25644 inherited. Warm build starts no compiler/oracle/WABT subprocesses. Restored review image compiles only four new probe definitions and executes 40 comparisons. No compiler/runtime change or LL15 credit.",
-  "source_index_sha256": "ee8297644e69c2aa5a955ee4559b479f7cf503eab97037a975e56c52d341cc0b",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-bootstrap-validation-r1.json",
+  "scope": "Reviewed class growth accepted and integrated byte-exactly, default-off. O-28/O-29 boundaries disclosed. P4 tooling unchanged and under separate review. No new execution or LL15 credit.",
+  "source_index_sha256": "3c99a9b2af41f2ab686dd7df700e8d623858c3ff76a7f85108d402b7bb426718",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-class-growth-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Full parallel author execution; exact sequential and focused comparisons; empty-cache restore and probe execution. Final retention does not execute.",
-    "report": "2026-09-23-stage1-bootstrap-validation-r1-verification.json",
-    "report_sha256": "e8854162a4beab0cd5ad9182b0bc29a30a437727c66ee43cb93aa6d5297a903f",
-    "execution_rebuilt_during_retention_verification": false,
-    "source_pins": 22,
-    "comparisons": 26048
+    "method": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "report": "2026-09-23-stage1-class-growth-acceptance-verification.json",
+    "report_sha256": "d39999cb13e7071584fe2267a3d10d6f6ac0ab984c8c3b46fc2ca24e3204ceda",
+    "source_pins": 417,
+    "qualified_source_files": 33,
+    "comparisons_reused": 26048,
+    "native_tests_reused": 21843,
+    "new_execution": false
   }
 }

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept",
+    "context": "Direct acceptance of the prepared audit-165 class-growth integration; P4 remains under separate review."
+  },
+  "author": "Codex",
+  "proposal_commit": "78b187ba5b544698b03b3944105f94f00242ea36",
+  "review": {
+    "reviewer": "Claude",
+    "commit": "e113a663f81687f570b1090e39e37b5df88c5352",
+    "import_commit": "be9b558679a090d73060b2d1d3fa076545824785",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "0df26d1774a8e8c6943daaa006a80904b4a9d3137b9355e3ad362fdd2f82a251"
+  },
+  "packet": {
+    "id": "STAGE1-CLASS-GROWTH-R1",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/packet.json",
+    "sha256": "509d916f2255a6707c3779744240f7a025b6a4499ca45e69c4e52100659d05a1"
+  },
+  "scope": "Default-off bounded class-table growth, REMHASH, CLRHASH, target table/cell allocation and class-based implicit failures without the class-mode registry. Native-projected class objects; no cross-dump, READY or legacy-mode removal claim.",
+  "observations": [
+    "O-27: Legacy byte identity is supported by inspection; no fresh cross-packet binary comparison is claimed.",
+    "O-28: Arithmetic payloads are not qualified as native-equal; TRUNCATE by zero records TRUNCATE where native records /. Operands were not compared by that probe.",
+    "O-29: Wrong argument count constructs PROGRAM-ERROR rather than native TOO-FEW-ARGUMENTS/TOO-MANY-ARGUMENTS; missing catch constructs CONTROL-ERROR rather than CANT-THROW-ERROR. Specific subclass witnesses remain owed.",
+    "O-30: The original verifier rejects unexpected Finder metadata; exact-file-set diagnostics remain a carry item.",
+    "Class objects remain native-projected; cross-dumped roots, READY and legacy-mode removal remain open.",
+    "O-24 closed at the declared scope: growth through 16384 entries, REMHASH, CLRHASH and target-allocated tables and cells. Updates and deletion remain available at the ceiling.",
+    "O-25: Author retention validated the clean run with --reuse-output; Claude audit 165 replayed from scratch. This integration reuses both records and claims no new execution.",
+    "Finalized initialized CPLs remain required. BREAK-ON-SIGNALS, debugger integration and the error re-entry contract remain open."
+  ],
+  "slot_credit": false
+}

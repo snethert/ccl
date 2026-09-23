@@ -649,11 +649,11 @@ Actual image roots and the READY join remain required. See
 - O-26: Native oracle cases must isolate named cells and must not compare obsolete backing-vector identities after growth.
 - Classes remain projected native objects. Actual cross-dumped class roots and READY installation remain owed.
 
-### Audit 165: reviewed class growth, acceptance pending
+### Audit 165: accepted class growth, integrated default-off
 
-The [integration candidate](class-growth-integration-candidate.json) binds the
-reviewed two-file change and reuses its qualified native build and Claude's
-from-scratch replay. Class mode remains default-off. O-24 is closed within the
+Steve accepted with “accept”. The [integration record](integration-class-growth.json)
+binds the reviewed two-file change and reuses its qualified native build and
+Claude's from-scratch replay. Class mode remains default-off. O-24 is closed within the
 16,384-entry ceiling by growth, REMHASH, CLRHASH and target table/cell allocation.
 
 - O-27: Legacy emission is unchanged by inspection; no new binary-identity

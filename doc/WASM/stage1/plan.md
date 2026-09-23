@@ -744,3 +744,14 @@ Steve accepted the native class-table proposal default-off. Three source
 files equal the reviewed proposal. Continue with growth, REMHASH, real image class
 roots and retirement of the implicit allocation registry. See
 [integration](integration-class-table.json) and its explicit obligations.
+
+### Audit 165 integration — 23 September
+
+Steve's “accept” accepts the prepared class-growth integration. The reviewed
+backend and w32-prims are integrated byte-exactly with class mode default-off.
+[Identity record](integration-class-growth.json) reuses native qualification and
+Claude's from-scratch replay; it claims no new execution. O-27–O-30 remain
+recorded in the runtime obligations. P4 tooling at 16584ba0 remains unchanged
+under Claude's separate review. Next runtime work is the cross-dumped class
+table as a real image root, READY and retirement of legacy mode; production
+module granularity remains a separate decision at that join.

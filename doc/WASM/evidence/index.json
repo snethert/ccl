@@ -3592,9 +3592,17 @@
       "id": "STAGE1-CLASS-GROWTH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/packet.json",
       "sha256": "509d916f2255a6707c3779744240f7a025b6a4499ca45e69c4e52100659d05a1",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Default-off target-owned EQ class tables, doubling growth through 16384 entries, REMHASH and CLRHASH; cells rebuilt on the moving heap. Implicit failures construct conditions through MAKE-CONDITION and the live class table; class modules emit no registry and failure witnesses poison legacy registry rows. Class objects remain native-projected. Undefined FUNCALL retains the inherited base-class boundary; SYMBOL-VALUE kernel restart defaults remain unsupported. Cross-dumped image, READY, debugger/re-entry and removal of legacy mode remain open. No original-definition gain or slot credit.",
-      "slot_credit": false
+      "review_disposition": "ACCEPTED",
+      "scope": "Default-off target-owned EQ class tables, doubling growth through 16384 entries, REMHASH and CLRHASH; cells rebuilt on the moving heap. Implicit failures construct conditions through MAKE-CONDITION and the live class table; class modules emit no registry and failure witnesses poison legacy registry rows. Class objects remain native-projected. Undefined FUNCALL retains the inherited base-class boundary; SYMBOL-VALUE kernel restart defaults remain unsupported. Cross-dumped image, READY, debugger/re-entry and removal of legacy mode remain open. No original-definition gain or slot credit. Accepted by Steve after audit 165 and integrated byte-exactly, default-off. O-27 legacy identity is by inspection; O-28/O-29 arithmetic payload and condition-subclass differences are disclosed. No new execution or slot credit.",
+      "slot_credit": false,
+      "review": {
+        "reviewer": "Claude",
+        "commit": "e113a663f81687f570b1090e39e37b5df88c5352",
+        "import_commit": "be9b558679a090d73060b2d1d3fa076545824785",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "0df26d1774a8e8c6943daaa006a80904b4a9d3137b9355e3ad362fdd2f82a251"
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-class-growth.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-VALIDATION-R1",
@@ -3602,6 +3610,14 @@
       "sha256": "24413725c8abfc6f30351923d219bf61e37078af2f6f34e28d6b74f36961770e",
       "review_disposition": "NOT_REVIEWED",
       "scope": "P4 validation tooling: whole-file compiler session and WABT caches; explicit phase completion, batched probes, exact execution provenance and isolated four-worker execution. Full 26048 comparisons equal retained sequential results; focused 276 fresh, 128 sampled, 25644 inherited. Warm build starts no compiler/oracle/WABT subprocesses. Restored review image compiles only four new probe definitions and executes 40 comparisons. No compiler/runtime change or LL15 credit.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CLASS-GROWTH-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-acceptance/packet.json",
+      "sha256": "f5899fc21fd1fffc800c57a6c8527e7056936d75ed5c147bab60cee27d2b51b6",
+      "review_disposition": "ACCEPTED",
+      "scope": "Source identity and final-source qualification reuse for audit-165 default-off integration. Two changed files equal reviewed bytes; 33 qualified files and 417 source inputs checked. No new execution; P4 remains under separate review.",
       "slot_credit": false
     }
   ],

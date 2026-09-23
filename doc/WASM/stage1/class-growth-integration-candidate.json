@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "READY_AWAITING_USER_ACCEPTANCE",
+  "status": "ACCEPTED_AND_INTEGRATED",
   "operation": "PREPARE_REVIEWED_INTEGRATION",
   "default_enabled": false,
   "review": {
@@ -48,5 +48,7 @@
     "status": "UNDER_SEPARATE_REVIEW",
     "changed": false
   },
-  "slot_credit": false
+  "slot_credit": false,
+  "acceptance": "acceptance-class-growth.json",
+  "integration": "integration-class-growth.json"
 }

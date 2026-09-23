@@ -3379,6 +3379,7 @@
  (let ((*b-float-service* t) (*b-float-safety* safety) (*b-integer-service* t) (*b-callable-metadata* t) (*b-allocation-retry* t))
   (compile-call-form form name links)))
 (defun b-condition-runtime ()
+ (when *b-cpl-conditions* (return-from b-condition-runtime (b-handler-runtime)))
  (let ((s (concatenate 'string (prior-float-b-condition-runtime)
               (if *b-cpl-conditions* (bootstrap-condition-class-runtime) ""))))
   (when *bootstrap-front-end*
@@ -3395,6 +3396,7 @@
    (numeric-text (numeric-text s "(i32.ne (local.get $n) (i32.const 15))" "(i32.and (i32.ne (local.get $n) (i32.const 15)) (i32.ne (local.get $n) (i32.const 19)))")
     "(i32.eq (local.get $mask) (i32.const 196636))" "(i32.ne (i32.and (local.get $mask) (i32.const 65536)) (i32.const 0))") s)))
 (defun b-implicit-runtime ()
+ (when *b-cpl-conditions* (return-from b-implicit-runtime (bootstrap-class-implicit-runtime)))
  (let ((s (prior-float-b-implicit-runtime)))
   (if *b-float-service*
    (numeric-text s "(else (i32.const 156))"
@@ -3710,6 +3712,7 @@
 ;;; dispatcher owns handler masking and transfers. Keep the new arguments in
 ;;; the caller's roots until the constructor has finished allocating.
 (defun bootstrap-condition (mask values)
+  (when *b-cpl-conditions* (return-from bootstrap-condition (bootstrap-class-condition mask values)))
   (setq *b-condition-used* t)
   (pushnew "condition_registry" *b-symbols* :test #'equal)
   (b-wat "(block (result i32) ~a)"
@@ -4351,7 +4354,7 @@
                :initial-value (b-scalar (car (second (first args))))))
       (ccl::vector
        (bootstrap-gvector (cons (bootstrap-constant wasm32::subtag-simple-vector) (car args))))
-      (ccl::%make-uvector (or (bootstrap-allocate-bignum args) (bootstrap-allocate-float args)
+      (ccl::%make-uvector (or (bootstrap-allocate-eq-vector args) (bootstrap-allocate-bignum args) (bootstrap-allocate-float args)
                                  (bootstrap-make-vector args)))
       (ccl::make-list (bootstrap-make-list args))
       (ccl::nth-value
@@ -4515,7 +4518,18 @@
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((and *b-cpl-conditions* (eq name 'ccl::puthash))
+    (cond ((and *b-cpl-conditions* (eq name 'clrhash))
+           (b-call (bootstrap-constant 'ccl::%wasm-class-clrhash) (list forms nil)))
+          ((and *b-cpl-conditions* (eq name 'remhash))
+           (b-call (bootstrap-constant 'ccl::%wasm-class-remhash) (list forms nil)))
+          ((and *b-cpl-conditions* (eq name 'ccl::%wasm-eq-hash-key-p))
+           (b-multiple (make-b-raw-code :text
+             (bootstrap-operands forms
+               (lambda (values)
+                 (bootstrap-boolean
+                   (b-wat "(i32.and (i32.ne ~a (i32.const 243)) (i32.ne ~a (i32.const 251)))"
+                          (car values) (car values))))))))
+          ((and *b-cpl-conditions* (eq name 'ccl::puthash))
            (b-call (bootstrap-constant 'ccl::%wasm-class-puthash) (list forms nil)))
           ((and *b-cpl-conditions* (eq name 'gethash))
            (b-call (bootstrap-constant 'ccl::%wasm-class-gethash) (list forms nil)))
@@ -4934,6 +4948,14 @@
                 (format s "(i32.store offset=8 ~a (i32.load (local.get $results)))" root)))))))))
 
 (defun bootstrap-error-call (forms)
+  (when (and *b-cpl-conditions* (= (length forms) 2)
+             (eql (ccl::acode-fixnum-form-p (first forms)) ccl::$xfunbnd))
+    (return-from bootstrap-error-call
+      (b-multiple (make-b-raw-code :text
+        (bootstrap-operands (cdr forms)
+          (lambda (values)
+            (b-wat "(call $implicit_error_details (i32.const 14) (local.get $top) ~a (i32.const 77825)) unreachable"
+                   (car values))))))))
   (when (and (= (length forms) 1)
              (eql (ccl::acode-fixnum-form-p (first forms)) ccl::$xtminps))
     (return-from bootstrap-error-call
@@ -5276,3 +5298,132 @@
                 (list (make-b-raw-code :text type))))))))
 
 (defun bootstrap-condition-class-runtime () "")
+
+(in-package :wasm32-compiler)
+
+;;; An EQ backing vector must be valid before the next safepoint. Initialize
+;;; the accepted strong-owner prefix and buckets inside one heap block.
+(defun bootstrap-allocate-eq-vector (forms)
+  (when (and *b-cpl-conditions*
+             (eql (ccl::acode-fixnum-form-p (second forms)) wasm32::subtag-hash-vector))
+    (unless (= (length forms) 2) (refuse :eq-vector-initial-element))
+    (bootstrap-operands forms
+      (lambda (values)
+        (let ((count (first values)) (n (temporary)) (capacity (temporary)) (i (temporary)))
+          (with-output-to-string (s)
+            (write-string (b-condition
+              (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.or (i32.lt_s ~a (i32.const 88)) (i32.gt_u ~a (i32.const 131128))))" count count count) 6) s)
+            (format s "(local.set ~a (i32.shr_u ~a (i32.const 2)))
+                       (local.set ~a (i32.shr_u (i32.sub (local.get ~a) (i32.const 14)) (i32.const 1)))"
+                    n count capacity n)
+            (write-string (b-condition
+              (b-wat "(i32.or (i32.and (local.get ~a) (i32.const 1))
+                        (i32.and (local.get ~a) (i32.sub (local.get ~a) (i32.const 1))))"
+                     n capacity capacity) 6) s)
+            (write-string
+              (b-wat "(i32.add ~a (i32.const 6))"
+                (bootstrap-heap-block
+                  (b-wat "(i32.add (i32.shl (local.get ~a) (i32.const 2)) (i32.const 8))" n)
+                  (lambda (base bytes)
+                    (with-output-to-string (out)
+                      (format out "(memory.fill ~a (i32.const 0) ~a)
+                                   (i32.store ~a (i32.or (i32.shl (local.get ~a) (i32.const 8)) (i32.const 74)))"
+                              base bytes base n)
+                      (loop for word in '(77825 1073741824 0 77825 77825 0 77825 0 0 -4 243 77825)
+                            for offset from 4 by 4 do
+                              (format out "(i32.store offset=~d ~a (i32.const ~d))" offset base word))
+                      (format out "(i32.store offset=52 ~a (i32.shl (local.get ~a) (i32.const 2)))
+                                   (local.set ~a (i32.const 0))
+                                   (block $eq_done (loop $eq_fill
+                                     (br_if $eq_done (i32.ge_u (local.get ~a) (local.get ~a)))
+                                     (i32.store (i32.add ~a (i32.add (i32.const 60) (i32.shl (local.get ~a) (i32.const 3)))) (i32.const 243))
+                                     (i32.store (i32.add ~a (i32.add (i32.const 64) (i32.shl (local.get ~a) (i32.const 3)))) (i32.const 77825))
+                                     (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $eq_fill)))"
+                              base capacity i i capacity base i base i i i))))) s)))))))
+
+(in-package :wasm32-compiler)
+
+;;; Preserve the checked boundary and interrupted-frame restoration. In class
+;;; mode the constructor is ordinary Lisp, with operands in the root frame.
+(defun bootstrap-class-implicit-runtime ()
+
+  (pushnew "expected_function" *b-symbols* :test #'equal)
+  (let ((*temporary-count* 0) (*b-exception-count* 0)
+        (*b-tail-position* nil) (*b-producer-target* nil))
+    (let* ((symbol (b-special-symbol 'ccl::%handlers%))
+           (constructor (bootstrap-predicate-call 'ccl::%wasm-implicit-condition
+                          (list (make-b-raw-code :text "(i32.shl (local.get $kind) (i32.const 2))")
+                                (make-b-raw-code :text "(i32.load offset=8 (local.get $frame))")
+                                (make-b-raw-code :text "(i32.load offset=12 (local.get $frame))"))))
+           (signal (b-signal (make-b-raw-code :text "(i32.load offset=24 (local.get $frame))") nil))
+           (debugger (b-debugger "(i32.load offset=24 (local.get $frame))")))
+      (with-output-to-string (s)
+        (write-string "(func $implicit_error (param $kind i32) (param $top i32) (call $implicit_error_details (local.get $kind) (local.get $top) (i32.const 77825) (i32.const 77825)))
+ (func $implicit_error_details (param $kind i32) (param $top i32) (param $datum i32) (param $expected i32)
+          (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32)
+          (local $frame i32) (local $results i32) (local $count i32) (local $value i32)
+          (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32)
+          (local $dispatch_self i32) (local $dispatch_slot i32) (local $dynamic_results i32)
+          (local $result_descriptor i32) (local $result_scope i32) (local $condition i32) (local $heap i32)" s)
+        (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
+        (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
+        ;; With no handlers there is no Lisp continuation to invoke. Preserve
+        ;; the structured fatal code rather than pretending a debugger exists.
+        (format s "(if (i32.and (i32.ne (i32.load offset=192 (global.get $tcr)) (i32.const 1)) (i32.eq (call $special_read ~a) (i32.const 77825))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))))" symbol)
+        (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
+          (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
+        (write-string "(local.set $frame (local.get $top)) (local.set $capacity (i32.const 4)) (local.set $result_bytes (i32.const 16)) (local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)
+        (write-string (b-reserve 32) s)
+        (write-string "(block $implicit_failed (result exnref) (try_table (catch_all_ref $implicit_failed)" s)
+        (write-string (b-initialize-roots "(local.get $frame)" 6) s)
+        (write-string "(local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get $top)) (local.set $result_scope (local.get $frame))" s)
+        (write-string (b-reserve 48) s)
+        (write-string (b-result-descriptor "(local.get $result_descriptor)" "(local.get $frame)") s)
+        (write-string "(i32.store offset=8 (local.get $frame) (local.get $datum)) (i32.store offset=12 (local.get $frame) (local.get $expected))" s)
+        (format s "(local.set $condition ~a) (i32.store (local.get $results) (local.get $condition)) (i32.store offset=24 (local.get $frame) (local.get $condition))" constructor)
+        (write-string signal s) (write-string debugger s)
+        (write-string "(throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))) unreachable) (local.set $exception)" s)
+        (dolist (row (list (cons wasm32::tcr.vsp "$incoming") (cons wasm32::tcr.mv_base "$output") (cons wasm32::tcr.mv_owner_top "$owner") (cons wasm32::tcr.root_head "$root") (cons wasm32::tcr.mv_count "$old_count")))
+          (write-string (b-store (car row) (b-local (cdr row))) s))
+        (write-string "(call $rv_release (local.get $frame)) (throw_ref (local.get $exception)))
+          (func $resolve_lisp (param $node i32) (param $top i32) (result i32 i32) (local $code i32)
+            (block $bad (result i32) (try_table (catch $call_error $bad) (return (call $resolve (local.get $node)))) unreachable)
+            (local.set $code)
+            (if (i32.ne (local.get $code) (i32.const 4)) (then (throw $call_error (local.get $code))))
+            (call $implicit_error_details (call $designator_error_kind (local.get $node)) (local.get $top) (local.get $node) (i32.load offset=2 (global.get $symbol_expected_function))) unreachable)
+          (func $function_value_lisp (param $node i32) (param $top i32) (result i32) (local $code i32)
+            (block $bad (result i32) (try_table (catch $call_error $bad) (return (call $function_value (local.get $node)))) unreachable)
+            (local.set $code)
+            (if (i32.ne (local.get $code) (i32.const 4)) (then (throw $call_error (local.get $code))))
+            (call $implicit_error_details (i32.const 14) (local.get $top) (local.get $node) (i32.const 77825)) unreachable)
+          (func $designator_error_kind (param $node i32) (result i32)
+            (if (i32.eq (local.get $node) (i32.const 77838)) (then (return (i32.const 14))))
+            (if (i32.eq (i32.and (local.get $node) (i32.const 7)) (i32.const 6)) (then
+              (if (i64.le_u (i64.add (i64.extend_i32_u (local.get $node)) (i64.const 26)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then
+                (if (i32.eq (i32.load (i32.sub (local.get $node) (i32.const 6))) (i32.const 1850)) (then (return (i32.const 14))))))))
+            (i32.const 4))" s)))))
+
+(defun bootstrap-class-condition (mask values)
+  (let* ((schema (find mask '((simple-condition 36 :format-control :format-arguments)
+                                  (simple-error 124 :format-control :format-arguments)
+                                  (ccl::simple-program-error 2108 :format-control :format-arguments)
+                                  (type-error 156 :datum :expected-type)
+                                  (ccl::no-applicable-method-exists 32796 :gf :args) (program-error 2076)
+                                  (arithmetic-error 65564 :operation :operands)
+                                  (division-by-zero 196636 :operation :operands)
+                                  (stream-error 4194332 :stream)
+                                  (end-of-file 12582940 :stream)
+                                  (file-error 16777244 :pathname :error-type)
+                                  (package-error 33554460 :package)
+                                  (ccl::simple-package-error 100663356 :format-control :format-arguments :package)
+                                  (ccl::stream-is-closed-error 138412060 :stream)
+                                  (ccl::bad-slot-type 268435612 :datum :expected-type :format-control :slot-definition :instance)
+                                  (ccl::inactive-restart 536871196 :restart-name)
+                                  (ccl::restart-failure 1073742108 :restart)) :key #'second)))
+    (unless schema (refuse :bootstrap-condition-class))
+    (bootstrap-predicate-call 'make-condition
+      (cons (make-b-raw-code :text (bootstrap-symbol (car schema)))
+            (loop for keyword in (cddr schema) for value in values
+                  when value append
+                    (list (make-b-raw-code :text (bootstrap-symbol keyword))
+                          (make-b-raw-code :text value)))))))

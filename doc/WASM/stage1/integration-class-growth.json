@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-class-growth.json",
+  "acceptance_sha256": "53639b85372790dd406315fc275ebb9076b94a95a75ee9ebc99ae947ebadd7ca",
+  "previous_integration": "integration-class-table.json",
+  "previous_integration_sha256": "1a9fae7dfaea131f4fbb903f66b357081a9cc1147ef2203831fe8eba54c9b8ad",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "13e984cad8c00f88e4d66eeee556c36a73d2c44010189ef442043f3c5225efaf",
+      "after": "569d6647eb1bd033006176c37afce89aa8fff2688e0e223007b44803c7b99bd5",
+      "reviewed": "569d6647eb1bd033006176c37afce89aa8fff2688e0e223007b44803c7b99bd5"
+    },
+    {
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "before": "022a2c5a98820efcd372a778d35002400139b9ba75aa2f14ca42620401a086e0",
+      "after": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b",
+      "reviewed": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b"
+    }
+  ],
+  "default_enabled": false,
+  "qualification": {
+    "mode": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "record": "2026-09-23-stage1-class-growth-acceptance/integration-check.json",
+    "sha256": "d39999cb13e7071584fe2267a3d10d6f6ac0ab984c8c3b46fc2ca24e3204ceda",
+    "native_run": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/native/run.json",
+    "native_run_sha256": "3ae2f5f1168c5864b9ab642aa0b824bbf75a29d94c8b16a45334a9a1d85bfad0",
+    "summary_sha256": "e836fee80d4d42497f423e811b701b304be207b7fd1859ac817dc676db27fb0b",
+    "source_files_checked": 417,
+    "qualified_proposal_files": 33,
+    "comparisons_reused": 26048,
+    "native_tests_reused": 21843,
+    "new_execution": false
+  },
+  "observations": [
+    "O-27: Legacy byte identity is supported by inspection; no fresh cross-packet binary comparison is claimed.",
+    "O-28: Arithmetic payloads are not qualified as native-equal; TRUNCATE by zero records TRUNCATE where native records /. Operands were not compared by that probe.",
+    "O-29: Wrong argument count constructs PROGRAM-ERROR rather than native TOO-FEW-ARGUMENTS/TOO-MANY-ARGUMENTS; missing catch constructs CONTROL-ERROR rather than CANT-THROW-ERROR. Specific subclass witnesses remain owed.",
+    "O-30: The original verifier rejects unexpected Finder metadata; exact-file-set diagnostics remain a carry item.",
+    "Class objects remain native-projected; cross-dumped roots, READY and legacy-mode removal remain open.",
+    "O-24 closed at the declared scope: growth through 16384 entries, REMHASH, CLRHASH and target-allocated tables and cells. Updates and deletion remain available at the ceiling.",
+    "O-25: Author retention validated the clean run with --reuse-output; Claude audit 165 replayed from scratch. This integration reuses both records and claims no new execution.",
+    "Finalized initialized CPLs remain required. BREAK-ON-SIGNALS, debugger integration and the error re-entry contract remain open."
+  ],
+  "slot_credit": false
+}

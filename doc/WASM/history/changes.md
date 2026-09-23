@@ -1,3 +1,24 @@
+## 2026-09-23 — accept and integrate class growth default-off
+
+Steve explicitly accepted the audit-165 integration candidate with “accept”.
+Integrated only the reviewed backend and w32-prims, byte-equal to the retained
+proposal. The identity check passes on the integrated tree: 33 qualified files,
+417 unchanged-or-qualified source inputs, default mode still off. It reuses
+26,048 comparisons and final-source R6/R6a with 21,843 tests, without claiming
+a new execution. Claude's audit-165 replay is bound by commit and review hash.
+
+The acceptance carries O-27's inspection-only legacy identity claim and
+O-28/O-29's arithmetic payload and condition-subclass differences. The Finder
+metadata diagnostic remains an O-30 verifier carry item. P4 implementation at
+16584ba0 is unchanged and still under separate review. The original growth
+verifier replays from 78b187ba; the new integration identity check runs at head.
+
+No new LL15 credit: 550 executed originals, 515 non-NIL witnesses, and
+21 accepted / 12 missing / zero unreviewed of 33 remain unchanged.
+
+[Acceptance](../stage1/acceptance-class-growth.json) and
+[integration](../stage1/integration-class-growth.json).
+
 ## 2026-09-23 — audit 165 and prepared class-growth integration
 
 Imported e113a663 verbatim as be9b5586 and the P4 correction 7f3b2382 as
