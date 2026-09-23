@@ -698,3 +698,16 @@ it again; `--output` performs a fresh run. For example:
 ```sh
 python3 doc/WASM/tools/verify-condition-frontier.py --output /tmp/ccl-condition-canonical-replay --report /tmp/ccl-condition-canonical-verification.json
 ```
+
+
+## Audit 161 integration
+
+Steve accepted the reviewed standard GF-dispatch packet with “accept and
+integrate”. The [acceptance](acceptance-bootstrap-generic.json) carries O-14–O-18,
+and the integration uses the reviewed files byte for byte. Standard method
+selection, combinations and lifecycle now execute in the shared tree. The
+native-projected class graph is still a fixture: install the real cross-dumped
+class table and `%ALL-GFS%` before claiming the image/READY join. Class-wrapper
+invalidation precedes dispatch caching; closure metadata and the O-10 real-CPL
+condition successor remain explicit work. The separate LAP merge must retain
+this EQUAL and backend ILOGCOUNT, dropping the overlapping LAP definition.

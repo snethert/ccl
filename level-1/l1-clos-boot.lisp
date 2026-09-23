@@ -621,6 +621,8 @@
 
 
 (defun %inner-method-function (method)
+  #+wasm32-target (%method-function method)
+  #-wasm32-target
   (closure-function
    (find-unencapsulated-definition
     (%method-function method))))
@@ -1094,6 +1096,7 @@ Generic-function's   : ~s~%" method (or (generic-function-name gf) gf) (flatten-
     (let* ((dcode (funcall f gf)))
       (when dcode (return dcode)))))
 
+#-wasm32-target
 (defun compute-dcode (gf &optional dt)
   (setq gf (require-type gf 'standard-generic-function))
   (unless dt (setq dt (%gf-dispatch-table gf)))
@@ -2035,7 +2038,7 @@ to replace that class with ~s" name old-class new-class)
             *t-class*
             *t-class*))
 
-  #+x8632-target
+  #+(or x8632-target wasm32-target)
   (defparameter *ivector-vector-classes*
     (vector (find-class 'short-float-vector)
             (find-class 'unsigned-long-vector)
@@ -2289,6 +2292,10 @@ to replace that class with ~s" name old-class new-class)
         ;; Make one loop through the vector, initializing fixnum & list
         ;; cells.  Set all immediates to *immediate-class*, then
         ;; special-case characters later.
+        #+wasm32-target
+        (setf (%svref v target::tag-fixnum) *fixnum-class*
+              (%svref v target::tag-list) #'%wasm-class-of-list
+              (%svref v target::tag-imm) *immediate-class*)
         #+ppc32-target
         (do* ((slice 0 (+ 8 slice)))
              ((= slice 256))
@@ -2424,7 +2431,7 @@ to replace that class with ~s" name old-class new-class)
               #'%class-of-instance)
         (setf (%svref v #+ppc-target target::subtag-symbol
                       #+arm-target target::subtag-symbol
-		      #+x8632-target target::subtag-symbol
+		      #+(or x8632-target wasm32-target) target::subtag-symbol
 		      #+x8664-target target::tag-symbol)
               #-ppc64-target
               #'(lambda (s) (if (eq (symbol-package s) *keyword-package*)
@@ -2441,7 +2448,7 @@ to replace that class with ~s" name old-class new-class)
         (setf (%svref v
                       #+ppc-target target::subtag-function
                       #+arm-target target::subtag-function
-                      #+x8632-target target::subtag-function
+                      #+(or x8632-target wasm32-target) target::subtag-function
                       #+x8664-target target::tag-function) 
               class-of-function-function)
         (setf (%svref v target::subtag-vectorH)
@@ -2462,7 +2469,10 @@ to replace that class with ~s" name old-class new-class)
                               (ash (the fixnum (logand subtype #x7f)) (- ppc64::nlowtagbits))
 			      #+x8632-target
 			      (ash (the fixnum (- subtype x8632::min-cl-ivector-subtag))
-				   (- x8632::ntagbits)))
+				   (- x8632::ntagbits))
+                              #+wasm32-target
+                              (ash (the fixnum (- subtype target::min-cl-ivector-subtag))
+                                   (- target::ntagbits)))
                       #+x8664-target
                       (let* ((class (logand x8664::fulltagmask subtype))
                              (idx (ash subtype (- x8664::ntagbits))))

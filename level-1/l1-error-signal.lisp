@@ -134,6 +134,13 @@
   (%error condition args (%get-frame-ptr)))
 
 (defun cerror (cont-string condition &rest args)
+  #+wasm32-target
+  (restart-case
+      (error (if (stringp condition)
+               (make-condition 'simple-error :format-control condition :format-arguments args)
+               condition))
+    (continue () :report (lambda (stream) (apply #'format stream cont-string args)) nil))
+  #-wasm32-target
   (let* ((fp (%get-frame-ptr)))
     (restart-case (%error condition (if (condition-p condition) nil args) fp)
       (continue ()

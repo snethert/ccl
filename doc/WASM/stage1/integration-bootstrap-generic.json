@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-bootstrap-generic.json",
+  "acceptance_sha256": "4b0716536f79b4593ffe4fbe519517c9d7f56925eb9ebdbe49e6a44ebfd3b002",
+  "previous_integration": "integration-bootstrap-dispatch.json",
+  "previous_integration_sha256": "0afe961f56c92dc323aa2c8c3a8a09fd5ae316ffb609eb9ceac1bb4d35497b17",
+  "files": [
+    {
+      "after": "7b234ddd1f3435def9b193bf7aba18a442b09b1259567c40adaad7f20feaa279",
+      "before": "39c363a7a7ac60caa30a3f24de4228397e0180e93ca483b8f21293c602713b93",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "7b234ddd1f3435def9b193bf7aba18a442b09b1259567c40adaad7f20feaa279"
+    },
+    {
+      "after": "389270a7b6b4168a5bf2de8bcac00186bccef53f6ca57c16b166ab92ae15af15",
+      "before": "7f2285152929e8b9bb20d9ed02fdc8b03dffcd39c5b755ebd31211e10b8370b3",
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "reviewed": "389270a7b6b4168a5bf2de8bcac00186bccef53f6ca57c16b166ab92ae15af15"
+    },
+    {
+      "after": "817eb95e9a28b33651acbaa5540dbf72d961b60ba9b851f6fec3331ca3fffeec",
+      "before": "abead1b86b81b50fe16497b1221cb654c71443f78fe8172b60e794733eae116a",
+      "file": "level-1/l1-error-signal.lisp",
+      "reviewed": "817eb95e9a28b33651acbaa5540dbf72d961b60ba9b851f6fec3331ca3fffeec"
+    },
+    {
+      "after": "561be9e6267c26f098a02123b3b02f4b0182e4650cca654ace03a26820770730",
+      "before": "a581d1c79f5f24ea0785abb74645d1165533ddc565a440b5e0ea9c05623bf53d",
+      "file": "level-1/l1-clos-boot.lisp",
+      "reviewed": "561be9e6267c26f098a02123b3b02f4b0182e4650cca654ace03a26820770730"
+    },
+    {
+      "after": "8bcee99d44ab514b5b9d7b2a7fa24aebee3d32d96bad0a5484aa02910302bd84",
+      "before": "7ea588bfa1332c6eb4aadc9425f1c3f7dc1e6dd2d0ac6ec0ac335cd4ae7a52ac",
+      "file": "level-1/l1-dcode.lisp",
+      "reviewed": "8bcee99d44ab514b5b9d7b2a7fa24aebee3d32d96bad0a5484aa02910302bd84"
+    },
+    {
+      "after": "31902bf5a7e6a1b7a37cab0f3f04c36b9bdf1a5d619ed53e75e5d4cbcf548830",
+      "before": "3654b5368dfc438b3b0df7f8b57fc1bc97bcd770a891471ff7483e93afb9d9fc",
+      "file": "level-1/l1-clos.lisp",
+      "reviewed": "31902bf5a7e6a1b7a37cab0f3f04c36b9bdf1a5d619ed53e75e5d4cbcf548830"
+    },
+    {
+      "after": "69f32dc8566b824f4ec8dffb2a283feff16170d73cf4b43d7cf92d890c15ec7d",
+      "before": "5c8faa845d585f78f8c995ff507542013127f66f573fc8fa5922430b19c0f566",
+      "file": "runtime/wasm32/collector.c",
+      "reviewed": "69f32dc8566b824f4ec8dffb2a283feff16170d73cf4b43d7cf92d890c15ec7d"
+    },
+    {
+      "after": "b9e7e163ed65b56e730006e98c709bd33997cd636f976cc09ea23aa052486707",
+      "before": "3e28180e4385feeb36d796163853857ed541c22e94a25bc2e695875f16eaa568",
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "reviewed": "b9e7e163ed65b56e730006e98c709bd33997cd636f976cc09ea23aa052486707"
+    }
+  ],
+  "qualification": {
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-generic-acceptance/packet.json",
+    "packet_sha256": "623a3c26779c8cf841748e17b8bff247fec9e8a4597313ceb6184c84cb706b49",
+    "production_record": "9ccf425563709da223d3ff082884b1de51a1539f574cfca11a02705a9fc97d51",
+    "native_record": "6922d41a633371ee22dc62afeacbdfecab573df5108d270cdc45d5be8e91fd7f",
+    "recount_record": "5e901ad00aad38f234f106b24ba0673f95855195f4b32ad316d6d6afa1a5d9bb",
+    "collector_binary": "79a46cffb71c9ddd4a52a66dffeec3cc437edc5ef898f528611e873b91af8081",
+    "native_tests": 21843,
+    "identical_fasls": 138,
+    "restored_fasls": 164,
+    "comparisons": 24144,
+    "owner_checks": 40,
+    "node_checks": 20,
+    "population_checks": 28,
+    "admitted": 2050,
+    "denominator": 2231
+  },
+  "observations": [
+    "O-14: CERROR symbol designators lose initargs and condition objects with extra arguments do not signal native's too-many-arguments error. None of the fifteen compiled callers reaches those forms; no compatibility credit is claimed for them.",
+    "O-15: INNER-METHOD-FUNCTION is identity for tested image methods. Closure/encapsulation metadata is undeclared and unqualified.",
+    "O-16: COMPUTE-METHOD-LIST retains the sub-dispatch flag, producing longer next-method chains than native. The extra methods are unreachable and tested behavior agrees; no cost equivalence is claimed.",
+    "O-17: retain the reviewed Lisp EQUAL and backend ILOGCOUNT at the future LAP merge; omit its duplicate ILOGCOUNT and do not add EQUAL. No LAP merge is performed here.",
+    "O-18: list dimensions in one-argument MAKE-ARRAY refuse with checked code 6; the admitted integer dimension constructs a simple vector.",
+    "The native stale-last-method oracle, logical function-bit observation and deferred bad-key formatting remain declared differences. Dispatch is uncached; custom combinations, cross-dumped class/global installation, closure metadata, real-CPL conditions and LL15 READY remain unqualified."
+  ],
+  "scope": "Complete reviewed standard GF dispatch integrated byte for byte over accepted GCD/cached dispatch. Eight files changed. 550 original executions / 515 non-NIL witnesses; 2050 of 2231 original definitions admit. Seven newly admitted; the original COMPUTE-DCODE is target-replaced and loses admission credit. Standard native-projected class/method graph; uncached. Cross-dumped image/READY and real-CPL conditions remain open. No LL15 slot credit."
+}

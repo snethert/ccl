@@ -3487,8 +3487,9 @@
         "import_commit": "7e6c204b2173f4261d857bd86ab44f98343b4b89"
       },
       "slot_credit": false,
-      "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit. Audit 161: reviewed with no defect; recommendation only, awaiting Steve's acceptance. O-14 through O-18 are carried in runtime-obligations.md. The earlier unreviewed description is historical. GCD and cached dispatch are already integrated at a61947f8. Full GF dispatch remains unintegrated and gains no slot credit.",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED"
+      "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit. Audit 161: reviewed with no defect; recommendation only, awaiting Steve's acceptance. O-14 through O-18 are carried in runtime-obligations.md. The earlier unreviewed description is historical. GCD and cached dispatch are already integrated at a61947f8. Full GF dispatch remains unintegrated and gains no slot credit. Steve subsequently said \"accept and integrate\". The complete reviewed unit is accepted and integrated with O-14 through O-18; earlier pending/unintegrated language is historical. Integration recount is 2050/2231 with original COMPUTE-DCODE recorded TARGET-REPLACED; no new execution or slot credit.",
+      "review_disposition": "ACCEPTED",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-generic.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-DISPATCH-ACCEPTANCE",
@@ -3497,6 +3498,14 @@
       "review": "ACCEPTED",
       "slot_credit": false,
       "scope": "Reviewed GCD and cached EQ/EQL dispatch integrated byte for byte. Three files changed; runtime unchanged. 549 executions / 514 non-NIL, 2044 of 2231 admitted. No LL15 slot credit. Full standard GF proposal remains unreviewed."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-GENERIC-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-generic-acceptance/packet.json",
+      "sha256": "623a3c26779c8cf841748e17b8bff247fec9e8a4597313ceb6184c84cb706b49",
+      "review": "ACCEPTED",
+      "slot_credit": false,
+      "scope": "Complete reviewed standard GF dispatch integrated byte for byte over accepted GCD/cached dispatch. Eight files changed. 550 original executions / 515 non-NIL witnesses; 2050 of 2231 original definitions admit. Seven newly admitted; the original COMPUTE-DCODE is target-replaced and loses admission credit. Standard native-projected class/method graph; uncached. Cross-dumped image/READY and real-CPL conditions remain open. No LL15 slot credit."
     }
   ],
   "current_runs": [

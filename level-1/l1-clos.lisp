@@ -1689,6 +1689,10 @@ governs whether DEFCLASS makes that distinction or not.")
 	 (dt (if gf-p (make-gf-dispatch-table)))
 	 (slots (allocate-typed-vector :slot-vector (1+ len) (%slot-unbound-marker)))
 	 (fn
+          #+wasm32-target
+           (%wasm-make-funcallable-instance #'funcallable-trampoline
+             (vector nil wrapper slots dt #'false 0
+               (logior (ash 1 $lfbits-gfn-bit) (ash 1 $lfbits-aok-bit))))
           #+ppc-target
            (gvector :function
                     *unset-fin-code*

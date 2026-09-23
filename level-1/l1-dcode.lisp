@@ -59,6 +59,7 @@
         (set-gf-arg-info gf :lambda-list lambda-list
                          :argument-precedence-order argument-precedence-order)
         (set-gf-arg-info gf :lambda-list lambda-list)))
+    #+wasm32-target (compute-dcode gf)
     gf))
 
 (defun gf-arg-info-valid-p (gf)
@@ -425,7 +426,10 @@
 							  *standard-generic-function-class*))))
 		 (dt (make-gf-dispatch-table))
 		 (slots (allocate-typed-vector :slot-vector (1+ len) (%slot-unbound-marker)))
-		 (fn #+(or ppc-target arm-target)
+		 (fn #+wasm32-target
+                     (%wasm-make-funcallable-instance #'funcallable-trampoline
+                       (vector nil wrapper slots dt #'false 0 (ash 1 $lfbits-gfn-bit)))
+                   #+(or ppc-target arm-target)
                      (#+arm-target
                       %fix-fn-entrypoint
                       #-arm-target
@@ -509,6 +513,7 @@
 (defun %set-gf-dcode (gf dcode)
   (let ((gf (require-type gf 'funcallable-standard-object))
         (dcode (require-type dcode 'function)))
+    #-wasm32-target
     (replace-function-code gf (or (cdr (assq dcode dcode-proto-alist))
                                   #'funcallable-trampoline))
     (setf (gf.dcode gf) dcode)))
@@ -985,17 +990,24 @@
 
 
 (defun odd-keys-error (varg l) 
-  (let ((gf (combined-method-gf (%svref varg 2))))
+  (let ((gf #+wasm32-target
+             (if (> (uvsize varg) 3) (%svref varg 3)
+               (combined-method-gf (%svref varg 2)))
+             #-wasm32-target (combined-method-gf (%svref varg 2))))
     (signal-program-error "Odd number of keyword args to ~s~%keyargs: ~s" gf l)))
 
 
 (defun bad-key-error (key varg l)
   (let* ((keys (%svref varg 1))
-         (gf (combined-method-gf (%svref varg 2)))
+         (gf #+wasm32-target
+             (if (> (uvsize varg) 3) (%svref varg 3)
+               (combined-method-gf (%svref varg 2)))
+             #-wasm32-target (combined-method-gf (%svref varg 2)))
          (*print-array* t)
          (*print-readably* t)
-         (readable-keys (format nil "~s" keys)))
-    (signal-program-error "Bad keyword ~s to ~s.~%keyargs: ~s~%allowable keys are ~a." key gf l readable-keys)))
+         (readable-keys #+wasm32-target keys #-wasm32-target (format nil "~s" keys)))
+    (signal-program-error #+wasm32-target "Bad keyword ~s to ~s.~%keyargs: ~s~%allowable keys are ~s."
+                          #-wasm32-target "Bad keyword ~s to ~s.~%keyargs: ~s~%allowable keys are ~a." key gf l readable-keys)))
 
 ; vector arg is (vector key-index keyvect combined-method) ; the next combined method
 
@@ -1237,6 +1249,9 @@
   (error "~s is an invalid method.~%~?" method format-string format-args))
 
 (defun %method-combination-error (format-string &rest args)
+  #+wasm32-target
+  (error (make-condition 'simple-error :format-control format-string :format-arguments args))
+  #-wasm32-target
   (apply #'error format-string args))
 
 

@@ -134,6 +134,11 @@ EXPORT U collect(U config) {
     if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
     scan=n;size=4+(W)n*4;
    }
+   else if(tag==90){
+    /* Stage 1 populations retain members strongly; the native GC link is zero. */
+    if(n!=3||(W)p+16>s->used||LOAD(p+4)!=0||(LOAD(p+8)!=0&&LOAD(p+8)!=4))return reject(s,BAD_OBJECT);
+    scan=3;size=16;
+   }
    else if(node_subtag(tag)||(tag==130&&n>=1)){if(tag==42&&n!=6&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;

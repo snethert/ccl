@@ -3997,3 +3997,29 @@ and cached dispatch, recorded their observations, and repaired the canonical
 condition verifier. Both verifier modes passed, including a clean committed
 checkout check. The fix is implemented and tested; audit 161 did not review it.
 Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Accept and integrate standard generic-function dispatch
+
+Steve said “accept and integrate” after audit 161. All eight changed files are
+byte-equal to the reviewed packet: the backend, target Lisp primitives, four
+CCL source files, collector and pinned-image owner. O-14–O-18 remain explicit
+in the acceptance and runtime obligations; no LAP branch is merged.
+
+**550 originals execute / 515 have non-NIL witnesses**, with **24,144 comparisons**
+through production imports. The collector rebuild equals the reviewed binary;
+**40 owner, 20 node and 28 population checks** pass. Final-source R6/R6a passes
+**21,843 tests**, with **164 FASLs restored**. No new execution credit is inferred
+from integration.
+
+The fresh whole-file recount gives **2,050 / 2,231 admitted**, up six. Seven
+original definitions now admit. The original COMPUTE-DCODE is excluded by the
+Wasm reader and replaced by target Lisp, so it loses its prior admission credit.
+The measuring report now labels it TARGET-REPLACED, keeps it in the denominator
+and gives no original-definition credit to the replacement. The initial report
+failure is retained; no executable source was changed to resolve it.
+
+[Integration record](../stage1/integration-bootstrap-generic.json).
+Standard dispatch is uncached and uses the qualified native-projected graph.
+Cross-dumped classes and %ALL-GFS%, wrapper invalidation/caching, closure
+metadata, real-CPL conditions and the image/READY join remain separate work.
+Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.

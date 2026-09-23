@@ -188,3 +188,12 @@ existing floating-owner profile as well as the legacy profile, using the same
 trusted bundle and digest checks. This permits constructor allocation retry;
 it does not implement method dispatch. See
 [the storage decision and remaining obligations](../../doc/WASM/stage1/function-storage.md).
+
+
+The accepted [standard GF dispatch integration](../../doc/WASM/stage1/integration-bootstrap-generic.json)
+adds native three-field populations to the moving collector and pinned-image
+owner. Members are retained strongly under the Stage 1 policy; the GC-link
+word must be zero and the population type must be 0 or 1. Four-field termination
+populations remain refused. Standard method selection runs in compiled CCL
+Lisp; it recomputes applicability per call. Cross-dumped class/global
+installation, custom combinations and the full image/READY join remain separate.

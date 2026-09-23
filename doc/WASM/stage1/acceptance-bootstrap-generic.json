@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "accept and integrate",
+    "context": "Explicit acceptance after audit 161, of the complete standard GF-dispatch unit over the already accepted GCD and cached-dispatch stack."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-GENERIC-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-generic-dispatch-r1/packet.json",
+      "sha256": "a87ec35da049b83766890a495051cde6462ba70819b97abbfa998cfacdb77470"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "67264dea407bf49cc92176a8da8d94c89469203c",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "363421d2b21c3f3310f485ed77d561a4fb33570b50a03756bba43a82e1fcf12b",
+      "import_commit": "7e6c204b2173f4261d857bd86ab44f98343b4b89"
+    }
+  ],
+  "observations": [
+    "O-14: CERROR symbol designators lose initargs and condition objects with extra arguments do not signal native's too-many-arguments error. None of the fifteen compiled callers reaches those forms; no compatibility credit is claimed for them.",
+    "O-15: INNER-METHOD-FUNCTION is identity for tested image methods. Closure/encapsulation metadata is undeclared and unqualified.",
+    "O-16: COMPUTE-METHOD-LIST retains the sub-dispatch flag, producing longer next-method chains than native. The extra methods are unreachable and tested behavior agrees; no cost equivalence is claimed.",
+    "O-17: retain the reviewed Lisp EQUAL and backend ILOGCOUNT at the future LAP merge; omit its duplicate ILOGCOUNT and do not add EQUAL. No LAP merge is performed here.",
+    "O-18: list dimensions in one-argument MAKE-ARRAY refuse with checked code 6; the admitted integer dimension constructs a simple vector.",
+    "The native stale-last-method oracle, logical function-bit observation and deferred bad-key formatting remain declared differences. Dispatch is uncached; custom combinations, cross-dumped class/global installation, closure metadata, real-CPL conditions and LL15 READY remain unqualified."
+  ],
+  "slot_credit": false
+}
