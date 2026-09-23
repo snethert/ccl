@@ -605,3 +605,27 @@ accepted GCD/cached-dispatch stack is already integrated at `a61947f8`.
   FAST-MOD-3, SET-%SHORT-FLOAT-EXP and %FUNCTION-REGISTER-USAGE remain unexecuted
   and uncredited. Runtime/thread LAP and installation in the real image/READY
   path remain required. See [the integration record](integration-lap.json).
+
+## Audit 162 — accepted default-off condition CPL matching
+
+Steve said “Accept and integrate default-off”. Only the reviewed backend
+changes; no runtime or CCL source change. `*b-cpl-conditions*` defaults to NIL.
+
+- **O-19, class initialization:** the six callers execute through an explicit
+  fixture list. They are not dependency-closed: CLASS-TYPEP reaches
+  %INITED-CLASS-CPL, with UPDATE-CLASS and COMPUTE-CPL still open. Require
+  initialized CPLs; a NIL CPL can reach checked code 2.
+- **O-20, class identity:** compile-time admission knows host classes, while
+  the fixture catalog holds eleven names. Missing runtime names refuse with
+  checked code 12, rather than falling through to another handler. Replace
+  this cons-cell catalog with actual class-cell structures from the real
+  cross-dumped class table. It is not the final image class registry.
+- **O-21, condition-system scope:** construction and readers retain their
+  prior schemas and the 28-row mask registry. SIGNAL still refuses string
+  and symbol designators. The accepted change covers O-10's matching component
+  only; do not claim that the condition-system migration is complete.
+
+The successor should compile CCL's class lookup, MAKE-CONDITION/MAKE-INSTANCE
+and slot initialization machinery, using the same class identities throughout.
+Actual image roots and the READY join remain required. See
+[the integration record](integration-condition-cpl.json).

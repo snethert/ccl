@@ -1,29 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d3c979af7d9160f56ded80a70e0790c3d3c5f9d1b3e352744757adc191bc96c5",
-  "commit": "c4ed7c2c00589bed5192f239cb5ac3f3570c34b6",
-  "immutable_evidence_files": 268376,
+  "catalog_sha256": "2be2076fb9f955f122f7cfa6040381598d69173e22f421cfebaeacc71045f72e",
+  "commit": "0b932578e582fb91440e7142a38e2bf5547a8ad9",
+  "immutable_evidence_files": 268383,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-condition-cpl-r1",
-    "files": 163,
-    "bytes": 52996867
+    "directory": "2026-09-22-stage1-condition-cpl-acceptance",
+    "files": 6,
+    "bytes": 11387
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 74550,
   "remote": null,
-  "scope": "Unreviewed default-off class/CPL handler and condition TYPEP path through unchanged whole-file CCL CLASS-TYPEP. Six callers, 24 native cases, 96 new comparisons; 25868 total comparisons and 2948 prior binaries unchanged. 32 catalog checks and four rejected faults. Final native R6/R6a passes 21843 tests. Fresh detached-checkout replay matches. Constructors/readers retain prior schemas; arbitrary class construction and real image installation remain open. No new original-definition or slot credit.",
-  "source_index_sha256": "3456e38ee5e03d0e3ab48eb18f1a9269d8980ab1f2935a09a57c3158f9888d9f",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-condition-cpl.json",
+  "scope": "Accepted condition-CPL backend integrated byte for byte with mode off by default. All 32 native-qualified proposal files and 417 source inputs match retained hashes; 25868 target comparisons and 21843 native tests reused, no new execution. O-19 through O-21 recorded; condition construction/readers, real class table and image/READY remain open. No slot credit.",
+  "source_index_sha256": "d5c7724e4fd4b884b28a4d57a3914dcb699ee2f0bf58c9453add69660c3e58a8",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-condition-cpl-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Fresh detached-checkout replay, final-source native qualification, scoped payload hashes.",
-    "packet_sha256": "7320a64ec43a86f0c1388dfa1308e4b58d1008373a965b151619abc60ecc279c",
-    "replay_report": "catalog/verification-2026-09-22-condition-cpl.json",
-    "replay_sha256": "d0e12811d68fc8d4e1d2043bfcb9309b4c02cca8f33c12915037a14671b58bb4",
-    "deterministic_files": 2942,
-    "source_pins": 2876
+    "method": "Final source identity against reviewed native proposal and pinned compiler/Lisp/runtime inputs; existing execution and R6/R6a reused.",
+    "packet_sha256": "efa60a69abe472277922e4c4fc2f1387c09e30f7f866f0b2e9fd13b343a014d7",
+    "integration_report": "2026-09-22-stage1-condition-cpl-acceptance/integration-check.json",
+    "integration_report_sha256": "bd825fff6889fd5d1df56c282d6d60b65e4baeb37233c6c4a9613c4cae2b2e01",
+    "source_files": 417,
+    "qualified_proposal_files": 32
   }
 }

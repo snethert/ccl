@@ -637,3 +637,24 @@ admission is not recounted and no LL15 credit is added.
 This is a proposal, not an integration. Constructors and slot readers retain
 their prior schemas; generalized condition construction and installation in
 the cross-dumped image remain open.
+
+### 2026-09-22 — Audit 162 and default-off condition CPL integration
+
+Imported Claude audit `a5be153a` verbatim as `756af696`. LAP integration is
+verified and the condition-CPL proposal has no defect. Steve explicitly
+accepted it with “Accept and integrate default-off”. Only the reviewed backend
+is integrated; its hash equals the retained proposal. Runtime and CCL source
+files are unchanged. The mode remains off by default.
+
+The integration identity check binds all 32 native-qualified proposal files
+and 417 source inputs. It reuses 25,868 target comparisons and 21,843 native
+tests; it claims no new execution. O-19 through O-21 remain explicit: initialized
+CPLs, the temporary owner catalog versus real image class cells, and construction,
+readers and signal designators still using the prior limited paths. The matching
+component is accepted; the full condition-system migration remains unfinished.
+
+**550 original definitions / 515 non-NIL witnesses** remain the execution
+headline. Admission is not recounted. Stage 1 stays **21 accepted, 12 missing,
+zero unreviewed of 33**.
+
+[Integration record](stage1/integration-condition-cpl.json).

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Accept and integrate default-off",
+    "context": "Direct answer to acceptance question for audit 162 condition-CPL proposal."
+  },
+  "author": "Codex",
+  "proposal_commit": "acf71bd73de46258a168c1eb7c2cc800d0dc1067",
+  "review": {
+    "reviewer": "Claude",
+    "commit": "a5be153a35a9a98cfe0a80ed097823260305738d",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "9f2b2032a1120e2a54d7f27f637b3201947ea8797742901bd4404395cc1ed11b",
+    "import_commit": "756af696632ef58c5fa42a8290d892e574319b4c"
+  },
+  "packet": {
+    "id": "STAGE1-CONDITION-CPL-R1",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-condition-cpl-r1/packet.json",
+    "sha256": "7320a64ec43a86f0c1388dfa1308e4b58d1008373a965b151619abc60ecc279c"
+  },
+  "scope": "Default-off class/CPL condition matching and constant condition TYPEP/REQUIRE-TYPE through CCL CLASS-TYPEP. Whole condition construction, readers, class-table installation and image/READY remain open.",
+  "observations": [
+    "O-19: The six explicit fixture callers are not dependency-closed. CLASS-TYPEP reaches %INITED-CLASS-CPL; UPDATE-CLASS and COMPUTE-CPL remain open. Require initialized CPLs; a NIL CPL can refuse with checked code 2.",
+    "O-20: Host-known condition classes exceed the eleven-name owner catalog. Missing runtime names refuse with checked code 12. Replace the fixture cons-cell catalog with actual native class-cell structures from the cross-dumped class table; do not keep a second class registry.",
+    "O-21: CPL matching is opt-in. Condition construction, readers and the 28-row mask registry retain their prior schemas; SIGNAL string and symbol designators remain refused. This acceptance covers only O-10 matching, not the complete condition system."
+  ],
+  "slot_credit": false
+}

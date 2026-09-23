@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-condition-cpl.json",
+  "acceptance_sha256": "3c15737f0b4e949fe160b3397c2c8e933dd832d3a32586b4007bc49f5f1d5d19",
+  "previous_integration": "integration-lap.json",
+  "previous_integration_sha256": "dfdd05c61f76f6eb94e79d0d852f56d0732a7394a26eca64db4f5a206c255fbc",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "e5651b09848d0febb6615512083d2beccb2ecee4729ac36bd574974e642f2fef",
+      "after": "5983f0862c2307aa6c9ce48bc0389136aeb3bdd1efa1b7046da34fdd556a1fab",
+      "reviewed": "5983f0862c2307aa6c9ce48bc0389136aeb3bdd1efa1b7046da34fdd556a1fab"
+    }
+  ],
+  "default_enabled": false,
+  "qualification": {
+    "mode": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "record": "2026-09-22-stage1-condition-cpl-acceptance/integration-check.json",
+    "sha256": "bd825fff6889fd5d1df56c282d6d60b65e4baeb37233c6c4a9613c4cae2b2e01",
+    "native_run": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-condition-cpl-r1/native/run.json",
+    "native_run_sha256": "6922d41a633371ee22dc62afeacbdfecab573df5108d270cdc45d5be8e91fd7f",
+    "summary_sha256": "9be69e3b5018f97fd126390098642e483871bdeb2d25a68c252782c1799f6fea",
+    "source_files_checked": 417,
+    "qualified_proposal_files": 32,
+    "comparisons_reused": 25868,
+    "native_tests_reused": 21843,
+    "new_execution": false
+  },
+  "observations": [
+    "O-19: The six explicit fixture callers are not dependency-closed. CLASS-TYPEP reaches %INITED-CLASS-CPL; UPDATE-CLASS and COMPUTE-CPL remain open. Require initialized CPLs; a NIL CPL can refuse with checked code 2.",
+    "O-20: Host-known condition classes exceed the eleven-name owner catalog. Missing runtime names refuse with checked code 12. Replace the fixture cons-cell catalog with actual native class-cell structures from the cross-dumped class table; do not keep a second class registry.",
+    "O-21: CPL matching is opt-in. Condition construction, readers and the 28-row mask registry retain their prior schemas; SIGNAL string and symbol designators remain refused. This acceptance covers only O-10 matching, not the complete condition system."
+  ],
+  "slot_credit": false
+}

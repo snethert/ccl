@@ -3519,8 +3519,26 @@
       "id": "STAGE1-CONDITION-CPL-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-condition-cpl-r1/packet.json",
       "sha256": "7320a64ec43a86f0c1388dfa1308e4b58d1008373a965b151619abc60ecc279c",
-      "scope": "Unreviewed default-off class/CPL handler and condition TYPEP path through unchanged whole-file CCL CLASS-TYPEP. Six callers, 24 native cases, 96 new comparisons; 25868 total comparisons and 2948 prior binaries unchanged. 32 catalog checks and four rejected faults. Final native R6/R6a passes 21843 tests. Fresh detached-checkout replay matches. Constructors/readers retain prior schemas; arbitrary class construction and real image installation remain open. No new original-definition or slot credit.",
-      "review_disposition": "NOT_REVIEWED"
+      "scope": "Audit 162 found no defect; Steve accepted default-off integration. Reviewed backend integrated byte-exact, runtime and CCL sources unchanged. Six explicit protocol callers, 24 native cases, 96 CPL comparisons; 25868 total comparisons, 2948 legacy binaries unchanged, 32 catalog checks and four faults. Native 21843 tests reused by final-source identity. O-19 initialized-CPL precondition, O-20 fixture catalog versus real class table, and O-21 construction/readers/designators remain open. Matching component only; no new original execution, admission recount or LL15 slot credit.",
+      "review_disposition": "ACCEPTED",
+      "review": {
+        "reviewer": "Claude",
+        "commit": "a5be153a35a9a98cfe0a80ed097823260305738d",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "9f2b2032a1120e2a54d7f27f637b3201947ea8797742901bd4404395cc1ed11b",
+        "import_commit": "756af696632ef58c5fa42a8290d892e574319b4c"
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-condition-cpl.json",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CONDITION-CPL-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-condition-cpl-acceptance/packet.json",
+      "sha256": "efa60a69abe472277922e4c4fc2f1387c09e30f7f866f0b2e9fd13b343a014d7",
+      "scope": "Accepted condition-CPL backend integrated byte for byte with mode off by default. All 32 native-qualified proposal files and 417 source inputs match retained hashes; 25868 target comparisons and 21843 native tests reused, no new execution. O-19 through O-21 recorded; condition construction/readers, real class table and image/READY remain open. No slot credit.",
+      "review_disposition": "ACCEPTED",
+      "acceptance": "doc/WASM/stage1/acceptance-condition-cpl.json",
+      "slot_credit": false
     }
   ],
   "current_runs": [

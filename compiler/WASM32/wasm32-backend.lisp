@@ -344,6 +344,7 @@
 ;;; First B call unit: required arguments, ordered evaluation and complete
 (defstruct b-raw-code text)
 (defvar *b-condition-used* nil)
+(defvar *b-cpl-conditions* nil)
 (defvar *b-restart-used* nil)
 (defvar *b-restart-names* nil)
 (defvar *b-producer-target* nil)
@@ -2393,7 +2394,11 @@
                (raw-condition (make-b-raw-code :text condition))
                (raw-cluster (make-b-raw-code :text cluster)))
           (with-output-to-string (s)
-            (write-string (b-wat "(i32.store offset=8 ~a ~a) (drop (call $condition_mask ~a))" root (b-scalar form) condition) s)
+            (write-string (b-wat "(i32.store offset=8 ~a ~a) ~a" root (b-scalar form)
+              (if *b-cpl-conditions*
+                (b-condition (b-wat "(i32.eqz ~a)"
+                  (bootstrap-condition-typep condition (bootstrap-symbol 'condition))) 5)
+                (b-wat "(drop (call $condition_mask ~a))" condition))) s)
             (write-string
               (b-special-extent
                 (lambda ()
@@ -2405,12 +2410,16 @@
                     (format s "(i32.store (call $special_location ~a) (i32.load (call $handler_cons (call $special_read ~a))))" symbol symbol)
                     (format s "(i32.store offset=16 ~a ~a) (block $signal_next (loop $signal_handlers (br_if $signal_next (i32.eq ~a (i32.const 77825)))" root cluster handlers)
                     (write-string
-                      (b-wat "(if (i32.and (call $condition_mask ~a) ~a) (then"
+                      (b-wat "(if ~a (then"
+                      (if *b-cpl-conditions*
+                        (bootstrap-condition-typep condition
+                          (b-wat "(i32.load offset=4 (call $handler_cons ~a))" handlers))
+                        (b-wat "(i32.and (call $condition_mask ~a) ~a)"
                         condition
                         (if *bootstrap-front-end*
                           (bootstrap-handler-mask
                            (b-wat "(i32.load offset=4 (call $handler_cons ~a))" handlers))
-                          (b-wat "(i32.shr_u (i32.load offset=4 (call $handler_cons ~a)) (i32.const 2))" handlers))) s)
+                          (b-wat "(i32.shr_u (i32.load offset=4 (call $handler_cons ~a)) (i32.const 2))" handlers))))) s)
                     (format s "(i32.store offset=20 ~a (call $handler_second ~a))" root handlers)
                     (format s "(if (i32.eq ~a (i32.const 77825)) (then ~a))" handler (b-throw raw-cluster raw-condition))
                     (format s "(if (i32.eqz (i32.and ~a (i32.const 3))) (then ~a))" handler
@@ -3362,7 +3371,8 @@
  (let ((*b-float-service* t) (*b-float-safety* safety) (*b-integer-service* t) (*b-callable-metadata* t) (*b-allocation-retry* t))
   (compile-call-form form name links)))
 (defun b-condition-runtime ()
- (let ((s (prior-float-b-condition-runtime)))
+ (let ((s (concatenate 'string (prior-float-b-condition-runtime)
+              (if *b-cpl-conditions* (bootstrap-condition-class-runtime) ""))))
   (when *bootstrap-front-end*
     (setq s (with-output-to-string (out)
               (loop with old = "(i32.gt_u (local.get $n) (i32.const 4))"
@@ -3527,7 +3537,9 @@
           (unless (and (consp clause) (listp clause))
             (refuse :b-handler-clause))
           (unless (and (eq expander case) (eq (car clause) :no-error))
-            (b-condition-mask (car clause)))))
+            (if *b-cpl-conditions*
+                (bootstrap-condition-class (car clause))
+                (b-condition-mask (car clause))))))
       (if (eq expander bits)
           (progn
             (unless (= (length form) 2) (refuse :function-bits-arity))
@@ -4756,7 +4768,7 @@
   (or (null x) (eq x t) (and (integerp x) (<= -536870912 x 536870911))))
 
 (defun bootstrap-type-supported-p (type)
-  (cond ((symbolp type) (or (member type '(nil t bit signed-byte unsigned-byte))
+  (cond ((symbolp type) (or (and *b-cpl-conditions* (bootstrap-condition-class-p type)) (member type '(nil t bit signed-byte unsigned-byte))
                             (assoc type *bootstrap-type-predicates*)))
         ((consp type)
          (case (car type)
@@ -4778,7 +4790,9 @@
   (flet ((predicate (name)
            (bootstrap-true-p
             (bootstrap-predicate-call name (list (make-b-raw-code :text value))))))
-    (cond ((null type) "(i32.const 0)")
+    (cond ((and *b-cpl-conditions* (bootstrap-condition-class-p type))
+           (bootstrap-condition-typep value (bootstrap-symbol type)))
+          ((null type) "(i32.const 0)")
           ((eq type t) "(i32.const 1)")
           ((eq type 'bit) (bootstrap-type-test value '(integer 0 1)))
           ((eq type 'signed-byte) (bootstrap-type-test value 'integer))
@@ -5215,3 +5229,47 @@
           (b-condition (b-wat "(i32.or (i32.ne (i32.and (local.get ~a) (i32.const 7)) (i32.const 6)) (i32.ne (i32.load8_u (i32.sub (local.get ~a) (i32.const 6))) (i32.const 250)))" keys keys) 4)
           keys keys keys
           (bootstrap-metadata-keyvect (list (make-b-raw-code :text value))))))))
+
+(in-package :wasm32-compiler)
+
+;;; The owner supplies native class cells, not ancestry bits. The vector and
+;;; cells are image roots; their class objects and CPLs may move. Resolve a
+;;; cell afresh at each test, then call CCL's ordinary class predicate.
+(defun bootstrap-condition-class-p (type)
+  (and (symbolp type) (find-class type nil) (subtypep type 'condition)))
+
+(defun bootstrap-condition-class (type)
+  (unless (bootstrap-condition-class-p type)
+    (refuse :b-condition-type))
+  type)
+
+(defun bootstrap-condition-typep (object type)
+  (setq *b-condition-used* t)
+  (pushnew "condition_class_cells" *b-symbols* :test #'equal)
+  (bootstrap-true-p
+    (bootstrap-predicate-call 'ccl::class-typep
+      (list (make-b-raw-code :text object)
+            (make-b-raw-code :text
+              (b-wat "(call $condition_class ~a)" type))))))
+
+(defun bootstrap-condition-class-runtime ()
+  "(func $condition_class (param $name i32) (result i32)
+    (local $p i32) (local $n i32) (local $i i32) (local $cell i32) (local $class i32)
+    (if (i32.ne (i32.and (global.get $symbol_condition_class_cells) (i32.const 7)) (i32.const 6))
+      (then (throw $call_error (i32.const 12))))
+    (local.set $p (i32.sub (global.get $symbol_condition_class_cells) (i32.const 6)))
+    (call $span (local.get $p) (i32.const 4))
+    (if (i32.ne (i32.and (i32.load (local.get $p)) (i32.const 255)) (i32.const 250))
+      (then (throw $call_error (i32.const 12))))
+    (local.set $n (i32.shr_u (i32.load (local.get $p)) (i32.const 8)))
+    (call $span (local.get $p) (i32.mul (i32.add (local.get $n) (i32.const 1)) (i32.const 4)))
+    (block $missing (loop $cells
+      (br_if $missing (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $cell (call $handler_cons
+        (i32.load (i32.add (local.get $p) (i32.add (i32.const 4) (i32.mul (local.get $i) (i32.const 4)))))))
+      (if (i32.eq (i32.load offset=4 (local.get $cell)) (local.get $name))
+        (then (local.set $class (i32.load (local.get $cell)))
+          (drop (call $object_base (local.get $class) (i32.const 16) (i32.const 882)))
+          (return (local.get $class))))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $cells)))
+    (throw $call_error (i32.const 12)))")

@@ -719,3 +719,14 @@ installation. Its custom condition instances are native-projected; general
 MAKE-CONDITION and generic slot readers must join this path before retiring
 the old construction/readers' schemas. Do not treat its 96 protocol
 comparisons as completion of the full condition system or the image/READY join.
+
+## Audit 162 integration
+
+The reviewed CPL matching component is accepted and integrated default-off.
+See [the record](integration-condition-cpl.json) and O-19–O-21 in
+[runtime obligations](runtime-obligations.md). No throughput or slot count
+changes. The next condition work must unify actual class-cell lookup,
+MAKE-CONDITION/MAKE-INSTANCE, slot initialization/readers and SIGNAL designators.
+CCL class cells are structures: the fixture cons-cell catalog is temporary,
+not an image representation to preserve. Class finalization and real image
+installation remain open.
