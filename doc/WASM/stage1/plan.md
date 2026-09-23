@@ -755,3 +755,13 @@ recorded in the runtime obligations. P4 tooling at 16584ba0 remains unchanged
 under Claude's separate review. Next runtime work is the cross-dumped class
 table as a real image root, READY and retirement of legacy mode; production
 module granularity remains a separate decision at that join.
+
+### Class-image cold-load unit — 23 September
+
+The [completed proposal](../../../tests/wasm/stage1/class-image/README.md)
+adds a portable D1 image writer/loader and saves the class table after generated
+Lisp builds and publishes all 612 cells. Fresh consumers do not reconstruct the
+graph or rerun that builder. Review this runtime boundary before integration.
+It does not remove the default-off condition mode or establish the complete
+cold initializer worklist. The next image work is the xfasloader's real class
+construction metadata and joining this owner to the process-wide READY contract.

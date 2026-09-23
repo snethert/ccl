@@ -1,3 +1,21 @@
+## 2026-09-23 — complete a cold class-image runtime unit
+
+On Steve's request for a large completed work unit, implemented the D1 heap
+image writer/loader and its generated class-root startup join. The accepted
+class table builder runs in Wasm; its 612 cells and published global survive
+saving, loading into fresh Workers at both placements, and repeated collection.
+Consumers resolve every class and construct conditions without running the
+builder or the graph projector. The initialized image has 8,606 target objects.
+
+The final image corpus passes 180 cold-load and four persistent-root comparisons,
+with 616 collections and 31 controls. The unchanged compiler/runtime corpus
+passes 26,048 comparisons. No saved compiler session is duplicated. The new
+runtime module is a review proposal; production source is unchanged. The owner
+publishes class-image READY, not process-wide LL15 READY. Native projection,
+the full cold worklist and xfasloader remain explicit boundaries.
+
+[Implementation and reproduction](../../../tests/wasm/stage1/class-image/README.md).
+
 ## 2026-09-23 — accept reviewed validation tooling; resume class-image work
 
 Steve authorized acceptance: “Fine. Accept and proceed to a large work unit you complete absolutely.”

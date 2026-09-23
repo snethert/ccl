@@ -761,3 +761,21 @@ are closed; O-37 has the separately committed manifest-binding repair.
 [Acceptance](stage1/acceptance-bootstrap-validation.json) records the speaker,
 review and scope. No new CCL execution or ledger credit; runtime work resumes
 with class-image roots. Historical archive migration remains deferred.
+
+### Class-image cold load — 23 September
+
+[STAGE1-CLASS-IMAGE-R1](../../tests/wasm/stage1/class-image/README.md) is complete
+and awaits Claude's review. The D1 writer emits explicit pointer relocations
+and root bindings; the portable loader validates a private snapshot before
+publishing. Generated Lisp builds 612 new class cells, publishes their table,
+and the resulting 216,888-byte / 8,606-object image is restored in fresh Workers.
+All cells resolve, conditions construct with inherited defaults, and collection
+preserves the global root without rerunning the class builder or graph projector.
+
+Validation: 26,048 baseline comparisons; 90 producer, 180 cold-load and four
+persistent-root comparisons; 616 consumer collections; 31 directed checks.
+The complete class case corpus runs at both placements and movement settings.
+Compiler/CCL/shared-runtime sources are unchanged. No original-definition or
+slot credit is claimed: 550 executed / 515 non-NIL; ledger 21/12/0 of 33.
+Class metadata remains the accepted native projection. Process-wide LL15 READY,
+the full xfasloader writer and class finalization are not claimed by this owner.

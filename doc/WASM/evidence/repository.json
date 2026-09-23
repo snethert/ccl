@@ -1,29 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2e1572d66aebab3db4a75afb277dbcbd71f7e5a0a33b46a04dbdc2c13d835ddf",
-  "commit": "8d7090330759af3e0706db88b2547b323cee8c87",
-  "immutable_evidence_files": 269118,
+  "catalog_sha256": "2b6b097314c20e98312beb080aa0b8dc045279de9c27da735ae3c7304b0747d1",
+  "commit": "15ef6123bc97e94be8a793e9a35f17a08ae2eb9f",
+  "immutable_evidence_files": 269146,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-bootstrap-validation-r2",
-    "files": 160,
-    "bytes": 658640787
+    "directory": "2026-09-23-stage1-class-image-r1",
+    "files": 26,
+    "bytes": 52069068
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "P4 R2 audit-166 repairs: declared driver manifest excludes development files; batched probes recover retained uninterned SETF identities. Full 26048 comparisons equal the sequential corpus; focused parallel/reversed sequential agree. Independent warm build against restored report inherits 25920 and samples 128, with zero fresh comparisons. Default/class probe batches pass 40/16 comparisons; old driver fails checked 2 on the corrected class graph. P5 managed outputs, active leases, retention-before-deletion and bounded shared cache. Historical archive migration deferred. No compiler/runtime change or LL15 credit.",
-  "source_index_sha256": "2e8cef5635f71dc895bb2fec825e609f8e918ea7b6dda9dfac8f0351581846f3",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-bootstrap-validation-r2.json",
+  "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged.",
+  "source_index_sha256": "333288a1314470143454b99d98561087855f84b259f08ea919e63d36a53f4a16",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-class-image-r1.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Full author execution; exact sequential/focused comparison; restored evidence reuse; probe identity and lifecycle regression checks. Final retention does not execute.",
-    "report": "2026-09-23-stage1-bootstrap-validation-r2-verification.json",
-    "report_sha256": "af491d9cab4b6887f7cd1463bf6d2b8c7d4011f6ed0b8f67b60c1bba5718f96e",
+    "method": "One baseline full run; final image producer, fresh Worker consumers and initialized-root loads; direct admission/lifecycle controls. Retention validates identities without executing.",
+    "report": "2026-09-23-stage1-class-image-r1-verification.json",
+    "report_sha256": "760c3eaeb1d768f0a3f1637184112bd8b325db6d9ea656debd443ab414314a86",
     "execution_rebuilt_during_retention_verification": false,
-    "source_pins": 27,
-    "comparisons": 26048
+    "source_pins": 37,
+    "comparisons": 26232
   }
 }

@@ -3631,6 +3631,14 @@
       "slot_credit": false,
       "review_commit": "02746bad29be3929b5599bc220bce366dbf6ccca",
       "review_sha256": "dabb15399997475f01c8dd58aed91c79b7b431ce434093ab7d090040cf7d71cb"
+    },
+    {
+      "id": "STAGE1-CLASS-IMAGE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-image-r1/packet.json",
+      "sha256": "7f35cb9039c1fdf2fa4fab843677bca139b7b679156778bdd9af4169f7de02c2",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Cold D1 class images: 45 cases, 180 cold comparisons, 4 persistent-root comparisons, 616 collections and 31 admission/lifecycle checks. Generated Lisp builds and publishes 612 cells; a 216888-byte image restores 8606 objects in fresh Workers without graph projection or class-table rebuilding. Native class metadata remains projected. Class-image readiness only; no LL15 READY or slot credit. Baseline 26048 comparisons pass, original headline unchanged at 550/515. New portable runtime loader awaits review; shared compiler/CCL/runtime files unchanged.",
+      "slot_credit": false
     }
   ],
   "current_runs": [
