@@ -138,11 +138,12 @@
 
 ;;; Keep the file compiler's lexical macro environment while selecting the
 ;;; runtime helpers it emits; macro expander functions are not runtime APIs.
-(dolist (entry '(("ccl:lib;sequences.lisp" make-string)
+(dolist (entry '(("ccl:level-0;l0-int.lisp" ccl::%integer-to-string ccl::%pr-integer ccl::print-bignum-2)
+                 ("ccl:lib;sequences.lisp" make-string)
                  ("ccl:lib;level-2.lisp" ccl::prepare-to-destructure)
                  ("ccl:level-1;l1-utils.lisp" ccl::check-keywords adjoin caddr cdddr fdefinition symbol-function)
                  ("ccl:level-1;l1-aprims.lisp" funcall apply ccl::%badarg)
-                 ("ccl:lib;lists.lisp" cadddr)))
+                 ("ccl:lib;lists.lisp" cadddr ldiff mapc ccl::map1)))
   (let ((previous *core-modules*) (*b-cpl-conditions* t) (*b-allocation-retry* t))
     (core-compile-file (car entry))
     (setq *core-modules*

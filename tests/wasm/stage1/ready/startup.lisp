@@ -100,12 +100,61 @@
           (handler-case (funcall function 2 :initial-element 7)
             (type-error () :bad-character)))))
 
+;;; This is the top-level radix-table initializer in l0-int.lisp. The input
+;;; driver checks its body against that source form before compiling probes.
+(defun ready-integer-print-tables (image)
+  (declare (ignore image))
+  (do* ((b (make-array 37 :initial-element nil))
+        (f (make-array 37 :initial-element nil))
+        (base 2 (1+ base)))
+       ((= base 37) (setq ccl::*base-power* b ccl::*fixnum-power--1* f))
+    (do ((power-1 -1 (1+ power-1))
+         (new-divisor base (* new-divisor base))
+         (divisor 1 new-divisor))
+        ((not (ccl::fixnump new-divisor))
+         (setf (aref b base) divisor)
+         (setf (aref f base) power-1))))
+  t)
+
+(defun ready-integer-strings (image)
+  (declare (ignore image))
+  (let ((results nil))
+    (dolist (integer '(0 1 -1 536870911 536870912 -536870912 -536870913
+                      1152921504606846976 -1152921504606846976
+                      #x51ad9826be1f03647905acfe123456789abcdef
+                      #x-51ad9826be1f03647905acfe123456789abcdef))
+      (dolist (radix '(2 8 10 16 36))
+        (let ((string (ccl::%integer-to-string integer radix)))
+          (core-collect)
+          (push string results))))
+    (nreverse results)))
+
+(defun ready-list-callees (image)
+  (declare (ignore image))
+  (let* ((tail (list 'c 'd))
+         (list (list* 'a 'b tail))
+         (dotted (cons 'a (cons 'b 'end)))
+         (sum 0)
+         (visited nil))
+    (let ((prefix (funcall (symbol-function 'ldiff) list tail))
+          (dotted-copy (funcall (symbol-function 'ldiff) dotted 'not-a-tail))
+          (numbers (list 1 2 3 4)))
+      (core-collect)
+      (let ((answer (funcall (symbol-function 'mapc) (lambda (x y)
+                           (incf sum (+ x y))
+                           (push x visited)
+                           (core-collect))
+                         numbers '(10 20 30))))
+        (list prefix dotted-copy (eq answer numbers) sum
+              (nreverse visited) (eq (cddr list) tail))))))
+
 ;;; The selected image already contains initialized classes and method bodies.
 ;;; Reset host-lifetime state, publish its roots, and select uncached dispatch.
 (defun ready-initialize (image)
   (unless (eq (ready-image-status image) t)
     (error "The READY image is not finalized."))
   (core-condition-prepare image)
+  (ready-integer-print-tables image)
   (let ((gfs (cons (symbol-function 'ccl::eql-specializer-object) (svref image 8))))
     (dolist (entry (first (svref image 12)))
       (pushnew (car entry) gfs :test #'eq))

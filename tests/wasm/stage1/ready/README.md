@@ -1,102 +1,92 @@
-# Projected-image READY join — R5
+# Projected-image READY join — R6
 
 Original-definition credit remains **550 / 515 non-NIL**, with no LL15 slot
-claim. R5 fixes a real MAKE-STRING recursion in the READY dependency graph,
-moves public table binding into the boot-owner proposal, and tests generated
-admission through READY-START. Shared compiler, CCL and runtime files remain
-unchanged pending review of this proposal.
+claim. This revision executes CCL's native bignum printer and list helpers
+through cold READY, and builds the printer's radix tables on the target.
+It carries the unintegrated R5 compiler/owner proposal without changing its
+compiler, runtime or CCL source bytes.
 
-## MAKE-STRING and the printer dependency
+## Native printer and startup state
 
-Auditing the resource-string path exposed an executable defect. CCL's
-`lib/sequences.lisp` MAKE-STRING validates arguments and then calls itself in
-a form its native compiler expands into allocation. The Wasm backend emitted
-that re-entry as recursion. Even `(make-string 30)` never returned. The retained
-diagnostic isolates the hang from FIXNUMP and %FIXNUM-TRUNCATE, which return.
+R5's fixnum resource strings hid a file-environment gap: the standalone
+`%PR-INTEGER` module called `WITH-ONE-NEGATED-BIGNUM-BUFFER` as a function.
+`numeric-files.lisp` now compiles all of `l0-int.lisp` through CCL's file
+compiler and selects `%INTEGER-TO-STRING`, `%PR-INTEGER` and `PRINT-BIGNUM-2`
+in class mode. The macro expands normally. The selected module names, source
+files and binary hashes are asserted in `startup-support.json`.
 
-`compiler.py` proposes one lowering at that SELF-CALL site, using the existing
-checked string allocator. It recognizes the constant keyword/element-type
-shape of CCL's own calls. Ordinary calls still enter the unchanged Lisp body
-and run its argument checks. No C/JS service or replacement Lisp implementation
-is added. `numeric-files.lisp` compiles the complete sequences file environment
-and selects MAKE-STRING in class mode, together with its unchanged %BADARG
-callee from l1-aprims. Without this second step its type error
-would use the poisoned legacy condition registry; that failure is retained too.
+`READY-INITIALIZE` runs the native top-level radix-table initializer after
+image admission. The native reader compares the submitted body with the
+original DO* in `l0-int.lisp`, allowing only its six lexical variable symbols
+to differ by package. The body allocates and publishes `*BASE-POWER*` and
+`*FIXNUM-POWER--1*` using the target's 30-bit fixnums. The oracle runs the same
+body with its 61-bit fixnums; the tables deliberately differ, while formatted
+strings must match exactly. This is a level-0 top-level effect, not one of the
+35 registered startup callbacks.
 
-Cold startup exercises indirect calls at lengths 0, 1, 30 and 33, character
-fills, operand order with collections, and a caught invalid-character error.
-CCL's unchanged resource-string fallback returns `Error #0`, `Error #987654`
-and `Error #-37`, matching native. The new compiler runs the full existing
-corpus: 26,048 fresh comparisons / 19,824 collections pass. R6/R6a on the
-complete proposal passes 21,843 tests, 164 restored FASLs and 17 target profiles. The pristine native baseline is
-reused by identity, while the registered native build and tests are fresh.
+Every boot starts with both radix globals cleared. The native comparison covers
+11 signed integers in bases 2, 8, 10, 16 and 36: zero, target fixnum boundaries,
+±2^60 and dense larger bignums. Each of the 55 results survives a collection.
+Replacing the initializer's function cell with a non-initializing entry must
+refuse. The harness cannot satisfy this check using projected host tables.
 
-This does **not** implement stream locks or remove their static edges.
-%INTEGER-TO-STRING calls %PR-INTEGER with RETURN-IT true, avoiding its stream
-write on this path. The conservative graph still includes the printer's other
-branches, interactive error reporting and unresolved lock primitives.
+## Native list dependencies
 
-## Boot ownership and admission
+The complete `lib/lists.lisp` environment supplies unchanged `LDIFF`, `MAPC`
+and `MAP1`. The caller reaches their public function cells indirectly, checks
+LDIFF's identity stop and dotted-tail copying, then calls MAPC with unequal
+length lists. Its closure accumulates results and collects on each callback;
+the result must preserve the first list's identity and stop at the shorter
+list. The dependency census includes both explicitly exercised public cells.
 
-The proposed `process.mjs` uses the accepted InitializationOwner. Its `start`
-entry requires an installed image and a named entry, resolves all four public
-GETHASH/PUTHASH/REMHASH/CLRHASH bindings before writing any cell, and invokes
-the generated initializer. The binding module uses no Node API. These are
-trusted, digest-bound owner inputs, not a sandbox for arbitrary entry names.
-Seven small owner checks cover successful installation and each distinct
-refusal, including a bad fourth binding leaving all public cells unchanged.
+The writer and all four cold readers execute both support callers, giving ten
+native comparisons containing 275 string results and fifteen MAPC callbacks.
+The four cold boots complete 282 collections; all 16 refusal controls pass.
+Native PROGV restores all five affected oracle globals after each of the eleven
+submitted entries, including the new radix tables.
 
-Eight cold controls corrupt class shape, CPL presence/head, own wrapper,
-wrapper class/hash, method combination or method function, then invoke
-READY-START directly. They bypass the harness's status call. Each must fail
-with a checked refusal, leave five startup roots untouched, and leave the
-process FAILED. The source-level guard-omission control recompiles only the
-submitted file and must fail the startup-root preservation assertion.
-The earlier isolated status/refusal checks remain as native comparisons.
+## Carried READY contract
 
-The selected projected image has **612 classes and 33 generic functions**.
-Class conditions, strong populations, one Worker, disabled scheduler and
-termination, and uncached standard dispatch are unchanged. Four cold boots / 46 collections cover both placements, with and without
-movement. All 15 refusal controls pass; deleting the generated admission guard
-is rejected by the startup-root preservation assertion. They resolve every class,
-exercise moving heap-keyed tables, construct/read a condition and catch an
-error. The owner publishes READY after return and FAILED on a throw; the
-published-last memory check remains a separate harness assertion.
+The R5 proposal fixes MAKE-STRING's native allocation self-call using the
+existing checked allocator. The boot owner installs all four public EQ table
+bindings before invoking generated admission. Eight corrupted class/method
+images enter READY-START directly; refusal preserves seven startup roots,
+including the radix globals. Deleting the generated admission guard must fail
+root preservation. The seven owner checks, 31 loader checks, moving heap-key
+control and poisoned legacy condition registry remain in force.
 
-## Census and remaining work
+The image contains 612 classes and 33 generic functions. READY uses class
+conditions, strong populations, one Worker, disabled scheduler/finalization,
+and uncached dispatch. The owner publishes READY after return and FAILED on
+throw. R6 adds no new C or JS implementation of Lisp library functions.
 
-`replacements.json` enumerates **all 548 reached modules** (509 named),
-including all 172 without source attribution and anonymous code. It searches the complete upstream
-source for antecedents, including compiler/optimizers.lisp compiler macros
-and x8632 LAP.
-A name match is explicitly **not** a proof of unchanged source. Missing
-attribution is reported; the 25-name replacement cap remains undecided until
-method/helper/branch attribution is complete. Controls prevent missing source
-metadata from shrinking the inventory.
+## What remains
 
-The conservative closure has 109 operators / 24,238 occurrences, 83 missing
-edges and 36 indirect-call modules. No edge is pruned because a boot or an
-admission test passed. All 35 native startup callbacks remain undischarged: their current
-symbol/effect join cannot prove absence from an incomplete walk. LL15-a/c/d
-still require that closure, full replacement attribution and callback effects.
+The conservative walk includes **646 modules, 113 operators and 30,682
+occurrences**, with 86 missing edges naming 61 callees and 38 indirect-call
+modules. It closes the spurious macro call, LDIFF and MAPC. Proper macro
+expansion and the additional library paths expose ABS and four float helpers;
+they remain explicit, as do printer stream-lock branches. RETURN-IT is true
+for these formatting calls; this packet does not implement stream support.
 
-## Reproduce
+The replacement census includes all 602 named modules and all 175 modules
+without source attribution. A candidate upstream name is not form equality;
+the replacement cap is not claimed. All 35 registered startup callbacks remain
+undischarged against this incomplete closure. LL15-a/c/d remain open.
 
-From this revision beside the evidence store, choose the target replay, the
-separate native rebuild, or retained-packet verification. These are not three
-required passes:
+## Reproduce and qualification reuse
 
 ```sh
 python3 tests/wasm/stage1/ready/run.py /private/tmp/ccl-work/claude/ready/replay
-python3 tests/wasm/stage1/ready/native.py /private/tmp/ccl-work/claude/ready/native
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r5 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r6 /private/tmp/ccl-work/claude/ready/verify
 ```
 
-The compiler session key binds the proposed backend and the complete class
-compilation driver. A warm session avoids rebuilding the corpus, but a full
-execution remains required for this compiler/driver change. The verifier reuses
-the retained native qualification only after equality of every proposed source
-file; `native.py` is the separate command to rebuild that qualification. The eight submitted
-functions compile through CCL's file compiler. The saved native compiler image
-is validation tooling, not the target heap. Retention deletes disposable
-outputs; historical packets replay from their own source revisions.
+Choose either command; they are not two required passes. The changed whole-file
+driver passes 26,048 fresh corpus comparisons (zero inherited), plus the
+writer, cold readers and controls. All 33 proposed compiler/CCL source files equal R5, so its 21,843-test
+R6/R6a qualification is reused by complete source identity. `native-reuse.json`
+binds that packet and its native reports; no native rebuild is claimed.
+
+Caches are disposable. The saved native compiler image is review tooling,
+not the target heap. Retention keeps the clean author execution and removes
+its disposable output. Historical packets replay from their own revisions.

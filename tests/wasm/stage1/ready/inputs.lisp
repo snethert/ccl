@@ -55,10 +55,10 @@
 ;;; real GF population or scheduler state. PROGV restores even on an error.
 (defun ready-isolate-native-entries ()
   (let* ((names '(ccl::%all-gfs% ccl::*enable-automatic-termination*
-                  ccl::*%periodic-tasks%*))
+                  ccl::*%periodic-tasks%* ccl::*base-power* ccl::*fixnum-power--1*))
          (original (mapcar #'symbol-value names))
          (state (copy-list original)))
-    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -69,7 +69,33 @@
                   (assert (every #'eq original (mapcar #'symbol-value names)))
                   (format t "READY-NATIVE-STATE-RESTORED ~s~%" name))))))))
 
+(defun ready-check-print-initializer ()
+  (let ((original nil) (proposed nil))
+    (let ((*package* (find-package :ccl)))
+      (with-open-file (stream "ccl:level-0;l0-int.lisp")
+        (loop for form = (read stream nil :eof) until (eq form :eof)
+              when (and (consp form) (eq (car form) 'do*))
+                do (setq original form) (return))))
+    (with-open-file (stream (ccl:getenv "PROBE_SOURCE"))
+      (loop for form = (read stream nil :eof) until (eq form :eof)
+            when (and (consp form) (eq (car form) 'defun)
+                      (eq (cadr form) 'ready-integer-print-tables))
+              do (setq proposed (fifth form))))
+    ;; Local variable symbols differ only by the containing source package.
+    (labels ((normalize (form)
+               (cond ((consp form) (cons (normalize (car form)) (normalize (cdr form))))
+                     ((and (symbolp form)
+                           (member (symbol-name form)
+                                   '("B" "F" "BASE" "POWER-1" "NEW-DIVISOR" "DIVISOR")
+                                   :test #'string=))
+                      (symbol-name form))
+                     (t form))))
+      (assert (and original proposed
+                   (equal (normalize original) (normalize proposed)))))
+    (format t "READY-PRINT-INITIALIZER-SOURCE-EQUAL~%")))
+
 (defun validation-probe-cases ()
+  (ready-check-print-initializer)
   (let ((*core-modules* nil) (*core-records* nil) (*core-files* nil))
     (core-compile-file (ccl:getenv "PROBE_SOURCE"))
     (ready-write-module-metadata *core-modules*))
@@ -78,5 +104,5 @@
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract)
+    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees)
           collect (list name (list (list image))))))

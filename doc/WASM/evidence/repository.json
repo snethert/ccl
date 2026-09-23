@@ -1,31 +1,32 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "416606831cfb267044a5f0f053b437bbb20980b6b14e44aaba2d82c7d4916fff",
-  "commit": "651ace6f0bdc8c6773920f908c77f97e95389c51",
-  "immutable_evidence_files": 269344,
+  "catalog_sha256": "a57bb00c72a30ab05699eff5b266bd432076123771a6a215fcf569054717e366",
+  "commit": "1178803dbd968edb4d72107c55012fae0fb3fc5c",
+  "immutable_evidence_files": 269400,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-ready-join-r5",
-    "files": 53,
-    "bytes": 21344316
+    "directory": "2026-09-23-stage1-ready-join-r6",
+    "files": 54,
+    "bytes": 18653998
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY R5 MAKE-STRING allocation and class-mode error path, boot-owner binding and direct generated admission; full compiler/driver corpus and fresh native R6/R6a. No integration or LL15 credit.",
-  "source_index_sha256": "982d3ec72d6bcb35e27a192385381ca311b6dd9f764dbecf9fe9a650a1f0aa89",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r5.json",
+  "scope": "READY R6 native bignum printer and list bodies, target radix initialization; full driver execution, exact R5 native qualification reuse. No integration or LL15 credit.",
+  "source_index_sha256": "de28761b55f394aff540b5384e41d4d340ad8162618e2498006a9c93d239eb74",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r6.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-23-ready-join-r5-verification.json",
-    "report_sha256": "eaad9d25142e7c8fbe16ff3925ed81b7e8781d3b727dd510496fabd23a70693f",
+    "report": "2026-09-23-ready-join-r6-verification.json",
+    "report_sha256": "7e50be8d52553b6db69931a4ad4b3a3dc4f8a7e79173cd3b4c5b7540a9ac7d14",
     "execution_rebuilt_during_retention_verification": false,
     "full_execution_replayed": false,
     "complete_author_target_execution": true,
     "full_corpus_comparisons": 26048,
     "cold_boots": 4,
-    "native_tests": 21843
+    "native_tests": 21843,
+    "native_rebuilt": false
   }
 }

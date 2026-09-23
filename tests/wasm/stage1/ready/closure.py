@@ -53,7 +53,9 @@ def census(probe):
     leafs = {owner('CCL', '%WASM-EQ-TABLE-' + op): op for op in ('GET', 'SET', 'REMOVE')}
     trampoline = owner('CCL', 'FUNCALLABLE-TRAMPOLINE')
     roots = [(r['name'], 'startup:' + r['definition']) for r in rows
-             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START')]
+             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES')]
+    roots += [(bindings[owner('COMMON-LISP', name)], 'exercised-function-cell:' + name)
+              for name in ('LDIFF', 'MAPC')]
     roots += [(bindings[source], 'ready-binding:' + owner_name(source))
               for source in aliases]
     edges, missing, primitives = [], [], set()

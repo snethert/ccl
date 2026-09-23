@@ -881,3 +881,32 @@ still prevent LL15 closure.
 All four final cold boots pass with 46 collections; all 15 refusal controls
 pass. Deleting the generated admission guard fails startup-root preservation.
 The complete author run is retained; retention itself claims no new execution.
+
+
+### READY R6 — native bignum formatting and list callees
+
+Original-definition credit remains 550/515; no LL15 slot claim. The same READY
+unit now compiles l0-int in its whole-file macro environment and selects native
+%INTEGER-TO-STRING, %PR-INTEGER and PRINT-BIGNUM-2 in class mode. This removes
+the false function call to WITH-ONE-NEGATED-BIGNUM-BUFFER. READY runs the native
+top-level radix initializer on the target: 30-bit tables are built locally,
+not copied from the 61-bit oracle. Its body is reader-compared with upstream.
+
+Native LDIFF, MAPC and MAP1 come from the complete lists file environment. Cold
+boot compares 55 signed integer/radix pairs with collections, then indirect
+LDIFF and MAPC calls with a collecting closure, dotted tail, shortest-list
+termination and identity checks. Both globals start cleared; omitting their
+initializer refuses with checked 5. Four cold boots pass with 282 collections,
+16 refusal controls, and seven preserved roots on corrupted-image admission.
+
+The walk closes those three missing names but expands to 646 modules / 113
+operators / 30,682 occurrences. It exposes ABS and four float helpers on
+additional branches: 86 missing edges / 61 names and 38 indirect modules remain.
+Printer stream locks, full replacement attribution and all 35 registered
+callback dispositions still prevent LL15 closure. This top-level initializer
+is distinct from that callback registry.
+
+All 33 proposed compiler/CCL files are byte-identical to R5; its native
+21,843-test qualification is reused by exact identity. The changed whole-file
+driver passes 26,048 fresh corpus comparisons (zero inherited). No shared-source integration,
+new C/JS library implementation or replay claim during retention.

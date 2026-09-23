@@ -164,7 +164,7 @@ import {sha256} from './runtime/sha256.mjs';
     }
     assert.equal(x&7,1);return [decode(get(x+3)),decode(get(x-1))];
   }
-  const growthChecks=[];let collections=0;const originalRootCount=gen.extraRoots.length;const initialSymbolFields=[...gen.ownerWords.values()].flatMap(p=>[6,10,14,18].map(d=>[p+d,get(p+d)]));
+  const supportChecks=[];const growthChecks=[];let collections=0;const originalRootCount=gen.extraRoots.length;const initialSymbolFields=[...gen.ownerWords.values()].flatMap(p=>[6,10,14,18].map(d=>[p+d,get(p+d)]));
   // Restore every mutable memory region, including pinned objects, before
   // each case and movement variant. Instances and code tables stay installed.
   const resetRegions=[[0,196608],[680000,1000000],[1048576,1174096],
@@ -241,8 +241,15 @@ import {sha256} from './runtime/sha256.mjs';
       if(workerData.fault==='no-entry')throw Error('READY_ENTRY_REQUIRED');
       const statusRow=native.find(r=>r.definition==='READY-IMAGE-STATUS');
       const refusalRow=native.find(r=>r.definition==='READY-IMAGE-REFUSALS');
+      // Radix tables are startup state, never imported from the 64-bit oracle.
+      for(const name of ['*BASE-POWER*','*FIXNUM-POWER--1*']){
+        const symbol=ownerNames.find(x=>x.package==='CCL'&&x.name===name);
+        assert(symbol,'missing radix global '+name);
+        put(gen.ownerWords.get(symbol.id)+2,NIL);
+      }
       const rootsBefore=['%ALL-GFS%','%FIND-CLASSES%','*CLASS-TABLE*',
-                         '*ENABLE-AUTOMATIC-TERMINATION*','*%PERIODIC-TASKS%*'].map(name=>{
+                         '*ENABLE-AUTOMATIC-TERMINATION*','*%PERIODIC-TASKS%*',
+                         '*BASE-POWER*','*FIXNUM-POWER--1*'].map(name=>{
         const slot=gen.ownerWords.get(ownerNames.find(x=>x.package==='CCL'&&x.name===name).id)+2;
         return [slot,get(slot)];
       });
@@ -278,6 +285,11 @@ import {sha256} from './runtime/sha256.mjs';
       // Admission may allocate; the caller's registered root is authoritative.
       actualArgs[0]=get(root+8);
       const bootInvoke=(name,args)=>{
+        if(workerData.fault==='omit-radix-initializer'){
+          const cell=name=>gen.ownerWords.get(ownerNames.find(x=>
+            x.package==='WASM32-COMPILER'&&x.name===name).id)+6;
+          put(cell('READY-INTEGER-PRINT-TABLES'),get(cell('READY-IMAGE-STATUS')));
+        }
         if(workerData.fault?.startsWith('native-table-')){
           const publicName=workerData.fault.slice('native-table-'.length).toUpperCase();
           const [slot,fn]=nativeTableBindings.get(publicName);put(slot,fn);
@@ -287,6 +299,13 @@ import {sha256} from './runtime/sha256.mjs';
 
       const priorIntegerCalls=integerCalls,priorFloatCalls=floatCalls;const rawValues=owner.start({image:loadedImage,entry:expected.name,args:actualArgs,
         owners:ownerNames,get,put,bindings:JSON.parse(fs.readFileSync(dir+'/ready-bindings.json')),invoke:bootInvoke});if(expected.definition==='CORE-TRANSCEND-DESTINATION')assert.equal(rawValues[0],rawValues[1],'target destination identity');const values=rawValues.map(decode);if(['MAX-2','MIN-2','/=-2','>=-2','<=-2'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number'&&Number.isInteger(x)&&Math.abs(x)<536870912)){assert.equal(floatCalls,priorFloatCalls,'fixnum comparison left Wasm');fastChecks++;}if(['1+','1-','CORE-INTEGER-DIVIDE'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number')&&expected.values.every(x=>typeof x==='number'&&x>=-536870912&&x<=536870911)){assert.equal(integerCalls,priorIntegerCalls,'fixnum arithmetic left Wasm');assert.equal(floatCalls,priorFloatCalls,'fixnum arithmetic left Wasm');fastChecks++;}
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES']){
+        const witness=native.find(row=>row.definition===name);
+        assert(witness,'missing READY support oracle '+name);
+        const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
+        assert.deepEqual(values,witness.values,name+' native result');
+        supportChecks.push({name,values});
+      }
       const after=args.map((_,i)=>expected.after[i]?.graph ? decodeGraph(get(root+8+4*i),expected.after[i].graph,graphIO) : decode(get(root+8+4*i)));
       let expectedValues=expected.values;
       if(expected.definition==='CORE-SIGNED-ZERO-LITERAL'&&expected.args[0].double[0]===0x80000000){
@@ -407,12 +426,12 @@ import {sha256} from './runtime/sha256.mjs';
     assert.equal(owner.process(0,()=>{throw Error('bootstrap ran twice');}),false);
   }
   if(!workerData.controls){
-    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,base,rows,comparisons:rows.length,collections,internalCollections,growthChecks});
+    parentPort.postMessage({supportChecks,profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,base,rows,comparisons:rows.length,collections,internalCollections,growthChecks});
   }else if(process.env.CCL_DISPATCH_METADATA){
     const keywordMetadata=checkKeywordMetadata({gen,memory,tcr,root,get,put,encode});
-    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,growthChecks,base,comparisons:rows.length,keywordMetadata});
+    parentPort.postMessage({supportChecks,profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,growthChecks,base,comparisons:rows.length,keywordMetadata});
   }else if(process.env.CCL_LIBRARY_CASE){
-    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,focused:true,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
+    parentPort.postMessage({supportChecks,profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,focused:true,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
   }else{
   const layout=JSON.parse(fs.readFileSync(dir+'/compiled/target-layout.json'));const layoutValues=gen.invoke(layout.name,[]).map(decode);assert.deepEqual(layoutValues,layout.target,'target node size');assert.notDeepEqual(layoutValues,layout.native,'host node size leaked');
   const refusals=[];
@@ -492,5 +511,5 @@ import {sha256} from './runtime/sha256.mjs';
   const bignums=checkBignums({gen,memory,tcr,root,collect,encode,get,put});
   const keywordMetadata=checkKeywordMetadata({gen,memory,tcr,root,get,put,encode});
   const installation=checkInstaller({dir,gen,memory,tcr,get,put,owner:serviceOwner});
-  parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,bignums,keywordMetadata,installation,funcallable,signedZero,libmRows,shiftRows,refusals,layout:{...layout,values:layoutValues},retryCollections,integerCalls,floatCalls,fastChecks,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
+  parentPort.postMessage({supportChecks,profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,bignums,keywordMetadata,installation,funcallable,signedZero,libmRows,shiftRows,refusals,layout:{...layout,values:layoutValues},retryCollections,integerCalls,floatCalls,fastChecks,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
 }

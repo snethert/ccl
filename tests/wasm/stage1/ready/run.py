@@ -33,6 +33,23 @@ def admission_controls(out):
 def measurements(out):
     closure=local('closure').census(out/'compiled')
     c.save(out/'closure.json',closure)
+    expected={'%INTEGER-TO-STRING':'ccl:level-0;l0-int.lisp',
+              '%PR-INTEGER':'ccl:level-0;l0-int.lisp',
+              'PRINT-BIGNUM-2':'ccl:level-0;l0-int.lisp',
+              'LDIFF':'ccl:lib;lists.lisp','MAPC':'ccl:lib;lists.lisp',
+              'MAP1':'ccl:lib;lists.lisp'}
+    selected={}
+    for name,source in expected.items():
+        rows=[row for row in closure['modules'] if row['name'] and row['name'].split('::')[-1]==name]
+        assert len(rows)==1 and rows[0]['source']==source, ('whole-file support binding',name,rows)
+        selected[name]=rows[0]
+    assert not any('WITH-ONE-NEGATED-BIGNUM-BUFFER' in edge['callee'] for edge in closure['edges'])
+    assert 'READY-PRINT-INITIALIZER-SOURCE-EQUAL' in (out/'compiled/probe.log').read_text()
+    c.save(out/'startup-support.json',dict(status='PASS',whole_file_bindings=selected,
+        integer_radix_pairs_per_boot=55,list_callbacks_per_boot=3,
+        radix_initializer_source='level-0/l0-int.lisp',native_word_bits=61,target_word_bits=30,
+        radix_globals_cleared_before_boot=True,initializer_omission_refused=True,
+        return_it=True,stream_support_claim=False))
     c.save(out/'callbacks.json',local('dispositions').dispositions(closure))
     c.save(out/'replacements.json',local('replacements').census(closure))
     c.save(out/'replacement-controls.json',local('replacements').controls(closure))
@@ -72,21 +89,22 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==8
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==11
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
         assert result['processReady']==2 and result['classMode'] and not result['scheduler']
         row=result['rows'][0]
         assert {k:v for k,v in row.items() if k!='moved'}=={k:v for k,v in reference.items() if k!='moved'}
-    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash','image-class-shape','image-class-cpl','image-class-wrapper','image-wrapper-class','image-obsolete-wrapper','image-cpl-head','image-method-combination','image-method-function']
+    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','omit-radix-initializer','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash','image-class-shape','image-class-cpl','image-class-wrapper','image-wrapper-class','image-obsolete-wrapper','image-cpl-head','image-method-combination','image-method-function']
     assert all(r['state']==3 for r in reader['refusals'])
-    assert all(r['directEntry'] and r['rootsPreserved']==5 for r in reader['refusals'] if r['rejected'].startswith('image-'))
+    assert all(r['directEntry'] and r['rootsPreserved']==7 for r in reader['refusals'] if r['rejected'].startswith('image-'))
     assert reference['values'][:4]==[612,33,43,41]
     for result in writer['results']+reader['results']:
+        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES']
         assert len(result['profileChecks'])==1
         check=result['profileChecks'][0]
-        assert check['admitted'] and check['rootsPreserved']==5
+        assert check['admitted'] and check['rootsPreserved']==7
         values=check['refusals'][0]; count=0
         while values:
             value,values=values
@@ -108,7 +126,7 @@ def summarize(out):
         full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=33,controls=len(reader['refusals']),
-        image_admission_controls=31,profile_refusals=8,public_table_bindings=4,native_state_restorations=8,
+        image_admission_controls=31,support_comparisons=10,profile_refusals=8,public_table_bindings=4,native_state_restorations=11,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
         original_definition_credit=0,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')
