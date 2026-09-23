@@ -3469,6 +3469,14 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Original CCL EQ/EQL cached method dispatch: 549 original executions, 514 non-NIL witnesses, 23,916 comparisons (608 new). List/lexpr calls, funcallable GF trampoline, rebinding and heap-key identity under movement. ASSEQL reuses accepted EQL. Final-source R6/R6a passes. Owner supplies cached method functions; class applicability, specificity ordering, ADD-METHOD and cache construction/invalidation remain owed. Admission not recounted. Unreviewed, unintegrated, stacked on the GCD proposal; no LL15 credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-GENERIC-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-generic-dispatch-r1/packet.json",
+      "sha256": "a87ec35da049b83766890a495051cde6462ba70819b97abbfa998cfacdb77470",
+      "review": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit."
     }
   ],
   "current_runs": [

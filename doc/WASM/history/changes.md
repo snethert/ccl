@@ -3921,3 +3921,28 @@ The owner supplies the cache: class applicability, specificity ordering,
 ADD-METHOD, cache construction/invalidation and LL15's READY join remain owed.
 No shared source changed; this stacks on the unintegrated GCD proposal.
 Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Bootstrap standard generic-function dispatch
+
+One unreviewed proposal completes the standard dispatch path required by the
+pinned native bootstrap census: **581 initialized GFs / 1,514 methods**, all
+STANDARD. Original CCL applicability, specificity/APO ordering, combinations,
+CALL-NEXT-METHOD, keyword checking and method lifecycle run through real method
+entries. The target creates GFs, replaces/removes methods, signals missing-method
+conditions, resumes through CONTINUE, and preserves cleanup/multiple values
+across movement. Dispatch is uncached; no timing claim is made.
+
+The full corpus passes **24,144 comparisons**, including **212 new dispatch
+comparisons**. Direct original executions rise **549 → 550**, with **515 non-NIL
+witnesses**; transitive dispatch functions are not added to that headline.
+Final-source R6/R6a passes **21,843 tests / 164 restored FASLs**. The collector
+passes 40 owner checks, 20 node-structure checks and 28 population checks;
+68 metadata checks and eight omission controls pass. Admission is not recounted.
+
+The class/method image is an identity-preserving projection of native objects.
+Custom method combinations and full cross-dumped CLOS/image construction are
+not claimed. Native stale-last-method behavior, logical function-bit observation
+and deferred bad-key diagnostic formatting are disclosed in the fixture README.
+No shared source is changed. This includes the earlier GCD/cached-dispatch stack;
+review and integration are pending. Real-CPL condition dispatch and LL15's READY
+join remain owed. Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
