@@ -556,3 +556,25 @@ numeric dispatch onward are cataloged evidence, not separate acceptance units.
 [Integration record](stage1/integration-bootstrap-dispatch.json).
 Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**. Generic GCD/ABS,
 real-CPL conditions and the image/READY join remain open.
+
+### 2026-09-22 — Claude audit 161: standard GF dispatch reviewed
+
+Imported `67264dea` as `7e6c204b`, preserving audit 160 and both review sections
+verbatim. Claude finds no defect in `761f1cc1` and recommends acceptance.
+The packet remains **reviewed, awaiting user acceptance, unintegrated**.
+Its **550 original executions / 515 non-NIL witnesses / 24,144 comparisons**
+are unchanged; admission was not recounted. Claude reproduced all 5,906
+artifacts, 700 pins and the 581-GF / 1,514-method census. No tests are rerun for
+this documentation-only binding and no additional execution credit is claimed.
+
+O-14–O-18 are carried into runtime obligations: CERROR's unexecuted narrowed
+argument forms, undeclared closure-method metadata, unpruned next-method chains,
+EQUAL/ILOGCOUNT ownership at the future LAP merge, and list-dimension MAKE-ARRAY
+refusal. The immutable fixture and packet are untouched.
+
+The audit was cut at `761f1cc1`. Its audit-160 merge/F1 notes are historical:
+audit 160 already landed as `be72f1c3`; `a61947f8` accepted and integrated GCD
+and cached dispatch, recorded their observations, and repaired the canonical
+condition verifier. Both verifier modes passed, including a clean committed
+checkout check. The fix is implemented and tested; audit 161 did not review it.
+Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.

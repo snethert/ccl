@@ -1,28 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "89f7e3cae38608a26fd101c5b49a7f03d50554173def8c3945de358b8875b20a",
-  "commit": "3da829df941f1f45e41f1a5fc94d0f543a7e5446",
-  "immutable_evidence_files": 267963,
+  "catalog_sha256": "bb48d22a4c6cc0037246216881bd6e86c8bb44602c11602d11963a7548732a25",
+  "commit": "cbea3adbe571bf6f01ada8114d6d4aa807a31f7f",
+  "immutable_evidence_files": 267964,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-bootstrap-dispatch-acceptance",
-    "files": 71,
-    "bytes": 47593556
+    "directory": "catalog",
+    "files": 1,
+    "bytes": 492379
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 74550,
   "remote": null,
-  "scope": "Reviewed GCD and cached EQ/EQL dispatch integrated byte for byte. Three files changed; runtime unchanged. 549 executions / 514 non-NIL, 2044 of 2231 admitted. No LL15 slot credit. Full standard GF proposal remains unreviewed.",
-  "source_index_sha256": "7d2dfe1d9db5bc5495f7a121f0e88c61e8e8cd06708d46e285de780becb4a870",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-bootstrap-dispatch-acceptance.json",
+  "scope": "Audit 161 review binding only: standard GF dispatch reviewed with no defect, not accepted or integrated. Existing evidence and execution credit unchanged.",
+  "source_index_sha256": "83c3f12a316d6253d4da721c0db08e7a82623ee6e61f2a261e79a672f3a8fc88",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-audit161.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final integrated native R6/R6a, production-import execution, whole-file recount. Canonical condition verifier tested in fresh and qualified-replay modes from historical Git sources; wrong revision refused.",
-    "packet_sha256": "ebf5786ff61b35bb1efae974d71c0f03eef8b2d235a00447c6950cc6d498bd5b",
-    "comparisons": 23916,
-    "admitted": 2044,
-    "denominator": 2231
+    "method": "Review section imported verbatim; review blob and unchanged packet bound by hash. Prior executable qualification reused; no native build or replay repeated.",
+    "review_commit": "67264dea407bf49cc92176a8da8d94c89469203c",
+    "review_sha256": "363421d2b21c3f3310f485ed77d561a4fb33570b50a03756bba43a82e1fcf12b",
+    "packet_sha256": "a87ec35da049b83766890a495051cde6462ba70819b97abbfa998cfacdb77470"
   }
 }

@@ -564,3 +564,33 @@ remains separate and unreviewed. Integration grants no LL15 completion credit.
 Generic GCD/ABS, real-CPL condition matching and image/READY construction remain
 open. Full standard method selection is implemented in the separate proposal
 awaiting review, not claimed by this cached-dispatch integration.
+
+## Audit 161 — standard GF proposal, pending acceptance
+
+The review recommends the entire `761f1cc1` proposal for acceptance, with these
+limits carried into its eventual acceptance and integration records. The
+review is not user acceptance. Do not change the pinned fixture to annotate it.
+
+- **O-14, CERROR:** the symbol-designator branch drops initargs, and a condition
+  object with extra arguments does not raise native's too-many-arguments error.
+  The fifteen compiled callers use a condition object or string without reaching
+  these narrowed cases. Those argument forms have no compatibility claim.
+- **O-15, method metadata:** `%INNER-METHOD-FUNCTION` is identity. The image
+  methods exercised here have the required metadata. Closure method functions
+  need a declared metadata/encapsulation contract before being qualified.
+- **O-16, method-list pruning:** the target leaves `COMPUTE-METHOD-LIST`'s
+  sub-dispatch argument true; native combined-method construction passes NIL.
+  The resulting longer chains contain unreachable methods after a method that
+  cannot call next. Tested values and traces agree; no equivalent cost is claimed.
+- **O-17, LAP merge:** keep the proposal's correct Lisp EQUAL and backend
+  `%ILOGCOUNT` lowering. When merging `wasm2-claude-lap`, drop its duplicate
+  `%ILOGCOUNT` and do not add a second EQUAL. This records merge ownership;
+  it does not authorize or perform that separate merge.
+- **O-18, MAKE-ARRAY:** the one-argument lowering builds a simple vector for an
+  integer dimension. A list dimension refuses with checked code 6; general
+  multidimensional array construction is not implemented by this arm.
+
+Before integration, qualify the final shared files and recount admission.
+Cross-dumped classes and `%ALL-GFS%`, wrapper invalidation and caching, real-CPL
+condition matching, and closure metadata remain separate obligations. The
+accepted GCD/cached-dispatch stack is already integrated at `a61947f8`.

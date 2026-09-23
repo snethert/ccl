@@ -3480,9 +3480,15 @@
       "id": "STAGE1-BOOTSTRAP-GENERIC-DISPATCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-generic-dispatch-r1/packet.json",
       "sha256": "a87ec35da049b83766890a495051cde6462ba70819b97abbfa998cfacdb77470",
-      "review": "NOT_REVIEWED",
+      "review": {
+        "commit": "67264dea407bf49cc92176a8da8d94c89469203c",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "363421d2b21c3f3310f485ed77d561a4fb33570b50a03756bba43a82e1fcf12b",
+        "import_commit": "7e6c204b2173f4261d857bd86ab44f98343b4b89"
+      },
       "slot_credit": false,
-      "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit."
+      "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit. Audit 161: reviewed with no defect; recommendation only, awaiting Steve's acceptance. O-14 through O-18 are carried in runtime-obligations.md. The earlier unreviewed description is historical. GCD and cached dispatch are already integrated at a61947f8. Full GF dispatch remains unintegrated and gains no slot credit.",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED"
     },
     {
       "id": "STAGE1-BOOTSTRAP-DISPATCH-ACCEPTANCE",
