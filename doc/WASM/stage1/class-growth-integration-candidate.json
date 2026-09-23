@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "status": "READY_AWAITING_USER_ACCEPTANCE",
+  "operation": "PREPARE_REVIEWED_INTEGRATION",
+  "default_enabled": false,
+  "review": {
+    "commit": "e113a663f81687f570b1090e39e37b5df88c5352",
+    "import_commit": "be9b558679a090d73060b2d1d3fa076545824785",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "0df26d1774a8e8c6943daaa006a80904b4a9d3137b9355e3ad362fdd2f82a251"
+  },
+  "packet": {
+    "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/packet.json",
+    "sha256": "509d916f2255a6707c3779744240f7a025b6a4499ca45e69c4e52100659d05a1"
+  },
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "13e984cad8c00f88e4d66eeee556c36a73d2c44010189ef442043f3c5225efaf",
+      "reviewed": "569d6647eb1bd033006176c37afce89aa8fff2688e0e223007b44803c7b99bd5",
+      "proposed": "569d6647eb1bd033006176c37afce89aa8fff2688e0e223007b44803c7b99bd5",
+      "reviewed_source": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/native/proposal/files/compiler/WASM32/wasm32-backend.lisp"
+    },
+    {
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "before": "022a2c5a98820efcd372a778d35002400139b9ba75aa2f14ca42620401a086e0",
+      "reviewed": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b",
+      "proposed": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b",
+      "reviewed_source": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/native/proposal/files/level-0/WASM32/w32-prims.lisp"
+    }
+  ],
+  "qualified_proposal_files": 33,
+  "qualification": {
+    "native_tests_reused": 21843,
+    "comparisons_reused": 26048,
+    "reviewer_replay": "Audit 165: from scratch, summary byte-equal",
+    "new_execution": false
+  },
+  "boundaries": [
+    "O-27: Legacy byte identity is supported by inspection; no fresh cross-packet binary comparison is claimed.",
+    "O-28: Arithmetic payloads are not qualified as native-equal; TRUNCATE by zero records TRUNCATE where native records /. Operands were not compared by that probe.",
+    "O-29: Wrong argument count constructs PROGRAM-ERROR rather than native TOO-FEW-ARGUMENTS/TOO-MANY-ARGUMENTS; missing catch constructs CONTROL-ERROR rather than CANT-THROW-ERROR. Specific subclass witnesses remain owed.",
+    "O-30: The original verifier rejects unexpected Finder metadata; exact-file-set diagnostics remain a carry item.",
+    "Class objects remain native-projected; cross-dumped roots, READY and legacy-mode removal remain open."
+  ],
+  "tooling_review": {
+    "commit": "16584ba0",
+    "status": "UNDER_SEPARATE_REVIEW",
+    "changed": false
+  },
+  "slot_credit": false
+}

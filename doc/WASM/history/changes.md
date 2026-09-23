@@ -1,3 +1,21 @@
+## 2026-09-23 — audit 165 and prepared class-growth integration
+
+Imported e113a663 verbatim as be9b5586 and the P4 correction 7f3b2382 as
+a5c68368, retaining both Claude's correction and Steve's later P4 adoption.
+Audit 165 finds no defect in the growth packet or its preceding integration.
+It does not review the later parallel-validation implementation at 16584ba0;
+Claude is reviewing that separately, and its code remains frozen.
+
+Prepared the exact reviewed backend and w32-prims changes, checked against the
+retained packet and all 33 files in the native-qualified proposal. No shared
+source was changed and no execution was rerun. The candidate awaits Steve's
+acceptance and stays default-off. Recorded the arithmetic operation and
+condition-subclass boundaries (O-28/O-29), the inspection-only legacy identity
+claim (O-27), and the verifier metadata diagnostic carry item (O-30).
+
+550 executed originals / 515 non-NIL witnesses and the Stage 1 ledger are
+unchanged. [Candidate](../stage1/class-growth-integration-candidate.json).
+
 ## 2026-09-23 — P4 validation tooling
 
 Steve explicitly requested implementation of P4, including the corrected

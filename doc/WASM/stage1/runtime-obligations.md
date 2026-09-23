@@ -648,3 +648,28 @@ Actual image roots and the READY join remain required. See
 - O-25: Author retention used --reuse-output; Claude audit 164 rebuilt from scratch. Integration reuses both without claiming new execution.
 - O-26: Native oracle cases must isolate named cells and must not compare obsolete backing-vector identities after growth.
 - Classes remain projected native objects. Actual cross-dumped class roots and READY installation remain owed.
+
+### Audit 165: reviewed class growth, acceptance pending
+
+The [integration candidate](class-growth-integration-candidate.json) binds the
+reviewed two-file change and reuses its qualified native build and Claude's
+from-scratch replay. Class mode remains default-off. O-24 is closed within the
+16,384-entry ceiling by growth, REMHASH, CLRHASH and target table/cell allocation.
+
+- O-27: Legacy emission is unchanged by inspection; no new binary-identity
+  comparison is claimed. Restore that comparison with stable compilation inputs.
+- O-28: Arithmetic payloads are not qualified as native-equal. TRUNCATE by zero
+  records operation TRUNCATE where native records `/`; the probe stopped before
+  comparing operands. Carry this alongside the existing FUNCALL payload boundary.
+- O-29: Wrong argument counts construct PROGRAM-ERROR, rather than native
+  TOO-FEW-ARGUMENTS/TOO-MANY-ARGUMENTS. Throws without a catch construct
+  CONTROL-ERROR, rather than CANT-THROW-ERROR. Retain explicit subclass witnesses
+  with the native class pre-initialization required by the graph oracle.
+- O-30: The original packet verifier rejects `.DS_Store` through its exact-set
+  assertion. Give unexpected files a named diagnostic in the next verifier
+  revision; do not edit the retained packet or suppress unlisted executable files.
+
+P4 implementation at 16584ba0 is under separate review. Audit 165 accepts its
+key/reset design corrections, not the later implementation. The tooling is
+unchanged while Claude reviews it. Cross-dumped class roots, READY and removal
+of legacy mode remain runtime work.
