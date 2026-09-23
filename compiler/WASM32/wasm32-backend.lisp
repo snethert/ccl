@@ -3699,14 +3699,14 @@
              (eq (ccl::acode-operator-name (ccl::acode-operator form)) 'ccl::immediate))
     (values (first (ccl::acode-operands form)) t)))
 
-(defun bootstrap-signal (forms fatal)
+(defun bootstrap-signal (forms fatal &optional construct-only)
   (unless forms (refuse :bootstrap-signal-arity))
   (multiple-value-bind (designator constant) (bootstrap-immediate (car forms))
     (let* ((class (and constant (symbolp designator) designator))
            (schema (assoc class '((simple-condition 36 :format-control :format-arguments)
                                   (simple-error 124 :format-control :format-arguments)
                                   (ccl::simple-program-error 2108 :format-control :format-arguments)
-                                  (type-error 156 :datum :expected-type)
+                                  (type-error 156 :datum :expected-type) (program-error 2076)
                                   (arithmetic-error 65564 :operation :operands)
                                   (division-by-zero 196636 :operation :operands)
                                   (stream-error 4194332 :stream)
@@ -3755,7 +3755,9 @@
                                 (bootstrap-condition (if fatal 124 36) arguments)
                                 (if (cdr forms) (b-condition "(i32.const 1)" 4) "")
                                 (car values)))))
-                (write-string (b-signal (make-b-raw-code :text condition) fatal) s)))))))))
+                (write-string (if construct-only
+                                  (b-multiple (make-b-raw-code :text condition))
+                                  (b-signal (make-b-raw-code :text condition) fatal)) s)))))))))
 
 (defun bootstrap-condition-reader (name forms)
   (unless (= (length forms) 1) (refuse :bootstrap-condition-reader-arity))
@@ -3857,20 +3859,26 @@
 (defun bootstrap-uvector-access (op forms)
   (bootstrap-operands forms
     (lambda (values)
-      (let* ((object (first values)) (index (second values))
-             (value (third values)) (tag (temporary))
+      (let* ((object (first values)) (value (third values))
+             (tag (temporary))
              (raw (mapcar (lambda (x) (make-b-raw-code :text x)) values)))
-        (b-wat "(local.set ~a ~a)
-                 (if (result i32) (i32.eq (local.get ~a) (i32.const 764))
-                   (then ~a)
-                   (else (if (result i32) (i32.eq (local.get ~a) (i32.const 796))
-                     (then ~a) (else ~a))))"
-               tag (bootstrap-typecode object) tag
-               (bootstrap-string-access (if value 'ccl::%set-sbchar 'ccl::%sbchar) raw)
-               tag
-               (bootstrap-typed-access (if value 'ccl::%typed-uvset 'ccl::%typed-uvref)
-                 (cons (bootstrap-constant :unsigned-8-bit-vector) raw))
-               (bootstrap-node-access (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw))))))
+        (flet ((typed (kind)
+                 (bootstrap-typed-access
+                   (if value 'ccl::%typed-uvset 'ccl::%typed-uvref)
+                   (cons (bootstrap-constant kind) raw))))
+          (b-wat "(local.set ~a ~a)
+                   (if (result i32) (i32.eq (local.get ~a) (i32.const 764))
+                     (then ~a)
+                     (else (if (result i32) (i32.eq (local.get ~a) (i32.const 796))
+                       (then ~a)
+                       (else (if (result i32) (i32.eq (local.get ~a) (i32.const 28))
+                         (then ~a) (else ~a))))))"
+                 tag (bootstrap-typecode object) tag
+                 (bootstrap-string-access (if value 'ccl::%set-sbchar 'ccl::%sbchar) raw)
+                 tag (typed :unsigned-8-bit-vector)
+                 tag (typed :bignum)
+                 (bootstrap-node-access
+                   (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw)))))))
 
 (defun bootstrap-heap-block (bytes emit)
   (let ((size (temporary)) (base (temporary)))
@@ -4073,6 +4081,7 @@
                               (:unsigned-16-bit-vector 2 nil 215 0 65535)
                               (:signed-16-bit-vector 2 t 223 -32768 32767)
                               (:unsigned-32-bit-vector 4 nil 167 0 536870911)
+                              (:bignum 4 nil 7 0 536870911)
                               (:signed-32-bit-vector 4 t 175 -536870912 536870911)
                               (:fixnum-vector 4 t 183 -536870912 536870911)))))
     (case kind
@@ -4369,7 +4378,41 @@
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((member name '(ccl::%double-float-sign ccl::%short-float-sign))
+    (cond ((and (eq name 'assoc) (= (length forms) 2))
+           (b-call (bootstrap-constant 'ccl::asseql) (list forms nil)))
+          ((eq name 'ccl::signal-program-error)
+           (multiple-value-bind (control constant) (bootstrap-immediate (car forms))
+             (when (and constant (stringp control))
+               (let ((*b-tail-position* nil) (*b-producer-target* nil))
+                 (b-wat "(drop ~a)"
+                   (bootstrap-operands forms
+                     (lambda (values)
+                       (let ((arguments
+                               (reduce (lambda (value tail)
+                                         (b-cons (make-b-raw-code :text value)
+                                                 (make-b-raw-code :text tail)))
+                                       (cdr values) :from-end t
+                                       :initial-value "(i32.const 77825)")))
+                         (b-signal (make-b-raw-code :text
+                                     (bootstrap-condition 2108
+                                       (list (car values) arguments))) t)))))))))
+          ((eq name 'make-condition)
+           (multiple-value-bind (class constant) (bootstrap-immediate (car forms))
+             (when (and constant (symbolp class))
+               (unless class (refuse :bootstrap-condition-class))
+               (bootstrap-signal forms nil t))))
+          ((eq name 'ccl::condition-arg)
+           (when (= (length forms) 3)
+             (multiple-value-bind (class constant) (bootstrap-immediate (first forms))
+               (multiple-value-bind (default defaultp) (bootstrap-immediate (third forms))
+                 (when (and constant (symbolp class) defaultp
+                            (member default '(simple-error simple-condition simple-warning)))
+                   (unless class (refuse :bootstrap-condition-class))
+                   (let ((args (second forms)))
+                     (when (and (ccl::acode-p args)
+                                (eq (ccl::acode-operator-name (ccl::acode-operator args)) 'ccl::list))
+                       (bootstrap-signal (cons (first forms) (first (ccl::acode-operands args))) nil t))))))))
+          ((member name '(ccl::%double-float-sign ccl::%short-float-sign))
            (bootstrap-float-sign name forms))
           ((eq name 'ccl::%wasm-current-function)
            (unless (null forms) (refuse :current-function-arity))
@@ -4542,7 +4585,7 @@
     (simple-base-string . ccl::simple-base-string-p)
     (simple-vector . simple-vector-p) (simple-bit-vector . simple-bit-vector-p)
     (vector . vectorp) (array . arrayp) (sequence . ccl::sequencep)
-    (function . functionp) (package . packagep)
+    (function . functionp) (package . packagep) (restart . ccl::restartp)
     (ccl::istruct . ccl::istructp) (structure-object . ccl::structurep)))
 
 (defun bootstrap-constant (value)
@@ -4686,6 +4729,10 @@
                 (format s "(i32.store offset=8 ~a (i32.load (local.get $results)))" root)))))))))
 
 (defun bootstrap-error-call (forms)
+  (when (and (= (length forms) 1)
+             (eql (ccl::acode-fixnum-form-p (first forms)) ccl::$xtminps))
+    (return-from bootstrap-error-call
+      (b-call (bootstrap-constant 'ccl::%wasm-too-many-arguments) '(nil nil))))
   ;; An improper list is outside this packet's proper-sequence domain.
   (when (and (= (length forms) 2)
              (ccl::acode-p (first forms))

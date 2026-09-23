@@ -487,8 +487,9 @@ Admission is **2,044 / 2,231**, down sixteen: unsupported constant condition
 classes now refuse explicitly instead of compiling unresolved MAKE-CONDITION
 calls. Final-source R6/R6a passes 21,843 native tests and restores all 164 FASLs.
 The retained verifier passes. Generic GCD/ABS, method selection, the real-CPL
-condition successor and image/READY remain unfinished. No shared source changes
-in this proposal; Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+condition successor and image/READY remain unfinished. The proposal changes
+CCL source files in its isolated unit; none was integrated by that commit.
+Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
 
 ### 2026-09-22 — Cached method dispatch
 
@@ -527,3 +528,31 @@ and deferred bad-key diagnostic formatting are disclosed in the fixture README.
 No shared source is changed. This includes the earlier GCD/cached-dispatch stack;
 review and integration are pending. Real-CPL condition dispatch and LL15's READY
 join remain owed. Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Audit 160 acceptance and integration
+
+Imported Claude's audit `9658f05a` verbatim as `be72f1c3`. It verifies the prior
+seven-packet integration and finds no defect in GCD or cached method dispatch.
+Steve then said “I accept the reviewed packages”. Both are now accepted and
+integrated together: three changed files equal the final reviewed proposal.
+Runtime files are unchanged. The full standard-GF proposal `761f1cc1` remains
+unreviewed and unintegrated; audit 160 did not cover it.
+
+Production execution reproduces **23,916 comparisons**, **549 originals** and
+**514 non-NIL witnesses**. Final-source R6/R6a passes **21,843 tests**, with all
+**164 FASLs restored**. A fresh whole-file recount confirms **2,044 / 2,231**
+admitted and **47 / 57** complete files. Integration adds no throughput credit.
+
+Audit-160 F1 is fixed: the canonical condition verifier gets pins, derivation
+and fresh execution from Git revision `7212d982`, never current shared files.
+Fresh mode also restores the omitted module-digest manifest step. Both modes
+pass: **3,799 canonical contents, 12,480 alias edges, twelve distinct
+mutation artifacts**. The original failure and wrong-revision refusal are
+retained. O-12's bignum-store narrowing and O-13's frame-pointer host adaptation
+are recorded in the acceptance and runtime obligations. The earlier GCD history
+now distinguishes isolated source changes from integration. Replay records from
+numeric dispatch onward are cataloged evidence, not separate acceptance units.
+
+[Integration record](stage1/integration-bootstrap-dispatch.json).
+Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**. Generic GCD/ABS,
+real-CPL conditions and the image/READY join remain open.

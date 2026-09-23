@@ -17,6 +17,8 @@
 (in-package "CCL")
 
 (defun %kernel-restart (error-type &rest args)
+  #+wasm32-target (%wasm-kernel-restart error-type args)
+  #-wasm32-target
   (%kernel-restart-internal error-type args (%get-frame-ptr)))
 
 (defun %kernel-restart-internal (error-type args frame-ptr)

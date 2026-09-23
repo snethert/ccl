@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNITS",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "I accept the reviewed packages",
+    "context": "Explicit acceptance after audit 160; GCD and cached method dispatch only. The full GF packet 761f1cc1 is not covered."
+  },
+  "packets": [
+    {
+      "id": "STAGE1-BOOTSTRAP-GCD-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-gcd-r1/packet.json",
+      "sha256": "97094d38525d65beafde3910092319c5c26be72ecd588b349b839a8dcc6f9958"
+    },
+    {
+      "id": "STAGE1-METHOD-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-method-dispatch-r1/packet.json",
+      "sha256": "809510ed83a38201db88d50b6ea6441477e0be67f88eacb224fd1a683c906017"
+    }
+  ],
+  "reviews": [
+    {
+      "commit": "9658f05a3ca719ea285029c517325268f5b7c229",
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "b20bceb589c372fb4e744ca41194c64b64c4b3628224c6ab35e00cc3cc6e95dd"
+    }
+  ],
+  "observations": [
+    "O-12: generic bignum UVSET is limited to nonnegative target fixnum digits; native admits every unsigned 32-bit digit. Wider values refuse with code 5; half-digit stores remain the supported wide path.",
+    "O-13: the KERNEL-RESTART source arm is a host adaptation. Hooks receive NIL for the unavailable native frame pointer; the numeric wrong-type fallback is bounded, and other kernel codes signal SIMPLE-ERROR. The historical proposal modified isolated CCL source but did not integrate it.",
+    "Audit-160 F1: canonical condition replay must use its pinned source revision rather than current integrated files. The repair is separately verified; no old execution credit changes.",
+    "The full standard-GF proposal remains unreviewed. Generic GCD/ABS, condition CPL matching and image/READY are still owed."
+  ],
+  "slot_credit": false
+}

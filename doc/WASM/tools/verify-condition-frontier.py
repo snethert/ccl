@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Replay the condition packet without hashing each control's corpus aliases."""
 import argparse
+from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
-FIXTURE = ROOT / 'tests/wasm/stage1/bootstrap-condition-frontier'
+SOURCE_REVISION = '7212d982200c017930a0e7d9fcc9f02b9fa74374'
+FIXTURE_PATH = Path('tests/wasm/stage1/bootstrap-condition-frontier')
 DEFAULT_PACKET = ROOT.parent / 'ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-r1'
 PREFIX = 'numeric/condition-faults/'
 
@@ -26,6 +29,32 @@ def canonical_records(records):
     return kept, aliases
 
 
+def write_module_digests(environment):
+    """Retain the original file compiler's manifest without hashing aliases."""
+    modules = {str(p.relative_to(environment)): hashlib.sha256(p.read_bytes()).hexdigest()
+               for p in sorted((environment / 'files').rglob('*.wat'))}
+    (environment / 'module-digests.json').write_text(
+        json.dumps(modules, indent=2, sort_keys=True) + '\n')
+
+
+@contextmanager
+def source_snapshot(root, revision):
+    """Use committed sources for pins, derivation and both replay modes."""
+    commit = subprocess.check_output(
+        ['git', '-C', str(root), 'rev-parse', '--verify', revision + '^{commit}'],
+        text=True).strip()
+    with tempfile.TemporaryDirectory(prefix='ccl-condition-source-') as directory:
+        parent = Path(directory)
+        source = parent / 'ccl'
+        source.mkdir()
+        (parent / 'ccl-evidence').symlink_to(root.parent / 'ccl-evidence', target_is_directory=True)
+        with tempfile.TemporaryFile() as archive:
+            subprocess.run(['git', '-C', str(root), 'archive', commit], stdout=archive, check=True)
+            archive.seek(0)
+            subprocess.run(['tar', '-xf', '-', '-C', str(source)], stdin=archive, check=True)
+        yield source, commit
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--packet', type=Path, default=DEFAULT_PACKET)
@@ -33,9 +62,17 @@ def main():
     mode.add_argument('--output', type=Path, help='Fresh compile, execution and controls')
     mode.add_argument('--replay', type=Path, help='Check an already qualified replay, without rerunning it')
     parser.add_argument('--report', type=Path, required=True)
+    parser.add_argument('--source-revision', default=SOURCE_REVISION,
+                        help='Committed source revision; all packet pins must still match')
     args = parser.parse_args()
-    sys.path.insert(0, str(FIXTURE))
-    spec = importlib.util.spec_from_file_location('condition_packet', FIXTURE / 'packet.py')
+    with source_snapshot(ROOT, args.source_revision) as (source, commit):
+        verify(args, source, commit)
+
+
+def verify(args, source, commit):
+    fixture = source / FIXTURE_PATH
+    sys.path.insert(0, str(fixture))
+    spec = importlib.util.spec_from_file_location('condition_packet', fixture / 'packet.py')
     original = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(original)
     sha, read = original.sha, original.read
@@ -55,8 +92,9 @@ def main():
         output = args.output.resolve()
         output.mkdir()
         for script, directory in [('run.py', 'environment'), ('numeric.py', 'numeric'), ('faults.py', 'numeric')]:
-            subprocess.run([sys.executable, FIXTURE / script, output / directory], check=True)
+            subprocess.run([sys.executable, fixture / script, output / directory], cwd=source, check=True)
         original.reports(output / 'environment', output / 'numeric')
+        write_module_digests(output / 'environment')
     else:
         output = args.replay.resolve()
         reference = ROOT.parent / 'ccl-evidence/2026-09-22-stage1-bootstrap-condition-frontier-verification/verification.json'
@@ -75,7 +113,7 @@ def main():
                   control_artifacts=sum(name.startswith(PREFIX) for name in expected),
                   alias_edges_checked=len(aliases), repeated_content_hashes=0,
                   execution='fresh' if args.output else 'reused qualified replay',
-                  new_execution_credit=0, packet_sha256=sha(packet / 'packet.json'),
+                  new_execution_credit=0, source_revision=commit, packet_sha256=sha(packet / 'packet.json'),
                   deterministic_manifest_sha256=sha(packet / 'deterministic.json'),
                   verifier_sha256=sha(Path(__file__)))
     args.report.write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')

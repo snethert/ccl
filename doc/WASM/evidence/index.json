@@ -3458,17 +3458,23 @@
       "id": "STAGE1-BOOTSTRAP-GCD-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-gcd-r1/packet.json",
       "sha256": "97094d38525d65beafde3910092319c5c26be72ecd588b349b839a8dcc6f9958",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit."
+      "scope": "Original CCL bignum GCD and numeric type-error restarts: 547 executions, 512 non-NIL witnesses, 23,308 comparisons. Admission 2,044/2,231: sixteen constant condition-class calls now refuse rather than remain unresolved. Final-source R6/R6a passes. Generic GCD, method selection, real condition CPL checks and image/READY remain owed. Unreviewed, unintegrated and no LL15 credit. Audit 160 found no defect; Steve accepted both reviewed packets. Integrated together byte for byte, with O-12 and O-13 recorded. Earlier unreviewed/unintegrated descriptions are historical; no slot credit.",
+      "review_commit": "9658f05a3ca719ea285029c517325268f5b7c229",
+      "review_sha256": "b20bceb589c372fb4e744ca41194c64b64c4b3628224c6ab35e00cc3cc6e95dd",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-dispatch.json"
     },
     {
       "id": "STAGE1-METHOD-DISPATCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-method-dispatch-r1/packet.json",
       "sha256": "809510ed83a38201db88d50b6ea6441477e0be67f88eacb224fd1a683c906017",
-      "review": "NOT_REVIEWED",
+      "review": "ACCEPTED",
       "slot_credit": false,
-      "scope": "Original CCL EQ/EQL cached method dispatch: 549 original executions, 514 non-NIL witnesses, 23,916 comparisons (608 new). List/lexpr calls, funcallable GF trampoline, rebinding and heap-key identity under movement. ASSEQL reuses accepted EQL. Final-source R6/R6a passes. Owner supplies cached method functions; class applicability, specificity ordering, ADD-METHOD and cache construction/invalidation remain owed. Admission not recounted. Unreviewed, unintegrated, stacked on the GCD proposal; no LL15 credit."
+      "scope": "Original CCL EQ/EQL cached method dispatch: 549 original executions, 514 non-NIL witnesses, 23,916 comparisons (608 new). List/lexpr calls, funcallable GF trampoline, rebinding and heap-key identity under movement. ASSEQL reuses accepted EQL. Final-source R6/R6a passes. Owner supplies cached method functions; class applicability, specificity ordering, ADD-METHOD and cache construction/invalidation remain owed. Admission not recounted. Unreviewed, unintegrated, stacked on the GCD proposal; no LL15 credit. Audit 160 found no defect; Steve accepted both reviewed packets. Integrated together byte for byte, with O-12 and O-13 recorded. Earlier unreviewed/unintegrated descriptions are historical; no slot credit.",
+      "review_commit": "9658f05a3ca719ea285029c517325268f5b7c229",
+      "review_sha256": "b20bceb589c372fb4e744ca41194c64b64c4b3628224c6ab35e00cc3cc6e95dd",
+      "acceptance": "doc/WASM/stage1/acceptance-bootstrap-dispatch.json"
     },
     {
       "id": "STAGE1-BOOTSTRAP-GENERIC-DISPATCH-R1",
@@ -3477,6 +3483,14 @@
       "review": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "Bootstrap standard GF dispatch: 550 original executions, 515 non-NIL witnesses, 24,144 comparisons, including 212 dispatch comparisons. Native census: 581 initialized GFs, 1,514 methods, all STANDARD. Original CCL applicability, ordering, combinations, keyword/next-method protocols and ADD/REMOVE-METHOD; target-side GF construction and empty-method handling. Uncached; no performance claim. 40 owner checks, 28 population checks, 68 metadata checks, 8 rejected controls; final-source R6/R6a passes. Custom combinations, cross-dumped class/image construction, real-CPL condition dispatch and LL15 READY are not qualified. Unreviewed and unintegrated; no slot credit."
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-DISPATCH-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-dispatch-acceptance/packet.json",
+      "sha256": "ebf5786ff61b35bb1efae974d71c0f03eef8b2d235a00447c6950cc6d498bd5b",
+      "review": "ACCEPTED",
+      "slot_credit": false,
+      "scope": "Reviewed GCD and cached EQ/EQL dispatch integrated byte for byte. Three files changed; runtime unchanged. 549 executions / 514 non-NIL, 2044 of 2231 admitted. No LL15 slot credit. Full standard GF proposal remains unreviewed."
     }
   ],
   "current_runs": [

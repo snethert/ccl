@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-bootstrap-dispatch.json",
+  "acceptance_sha256": "30eb5eb0a2fab004e7e4eaad76382353914ac3030cd071557fbf53420ff3f22d",
+  "previous_integration": "integration-bootstrap-stack.json",
+  "previous_integration_sha256": "b3f44911367d302c70f6a75520077747a1a4576b62d908e6160e0b1c5e3c5d86",
+  "files": [
+    {
+      "after": "39c363a7a7ac60caa30a3f24de4228397e0180e93ca483b8f21293c602713b93",
+      "before": "b3d97239fd0010ab6b61c680a2a7d516beaa9e2fbfc72aa8c3f08c39092a3531",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "39c363a7a7ac60caa30a3f24de4228397e0180e93ca483b8f21293c602713b93"
+    },
+    {
+      "after": "7f2285152929e8b9bb20d9ed02fdc8b03dffcd39c5b755ebd31211e10b8370b3",
+      "before": "8955d23c501282b30e0f103f4a55e57c929ab8e3e22133d5b53eaf085b50044c",
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "reviewed": "7f2285152929e8b9bb20d9ed02fdc8b03dffcd39c5b755ebd31211e10b8370b3"
+    },
+    {
+      "after": "abead1b86b81b50fe16497b1221cb654c71443f78fe8172b60e794733eae116a",
+      "before": "e162029c73fbb50ce52f440b603a2918cecbe6e8666abcb3451a4028810b750c",
+      "file": "level-1/l1-error-signal.lisp",
+      "reviewed": "abead1b86b81b50fe16497b1221cb654c71443f78fe8172b60e794733eae116a"
+    }
+  ],
+  "qualification": {
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-bootstrap-dispatch-acceptance/packet.json",
+    "packet_sha256": "ebf5786ff61b35bb1efae974d71c0f03eef8b2d235a00447c6950cc6d498bd5b",
+    "production_record": "97df4b2b95d5eca88d5470da209ddfd661d93d4069ae5d0af6ce1e850e4898e1",
+    "native_record": "34e6b92a1dfdee050447026a72d70b600425530808c386fa979bd035cd55e5bb",
+    "recount_record": "e1ea86bb6bd3591566fb97fdacf70e574b42404dc2647b21f9793475a708cdab",
+    "native_tests": 21843,
+    "identical_fasls": 140,
+    "restored_fasls": 164,
+    "comparisons": 23916,
+    "admitted": 2044,
+    "denominator": 2231
+  },
+  "observations": [
+    "O-12: generic bignum UVSET is limited to nonnegative target fixnum digits; native admits every unsigned 32-bit digit. Wider values refuse with code 5; half-digit stores remain the supported wide path.",
+    "O-13: the KERNEL-RESTART source arm is a host adaptation. Hooks receive NIL for the unavailable native frame pointer; the numeric wrong-type fallback is bounded, and other kernel codes signal SIMPLE-ERROR. The historical proposal modified isolated CCL source but did not integrate it.",
+    "Audit-160 F1: canonical condition replay must use its pinned source revision rather than current integrated files. The repair is separately verified; no old execution credit changes.",
+    "The full standard-GF proposal remains unreviewed. Generic GCD/ABS, condition CPL matching and image/READY are still owed."
+  ],
+  "scope": "Reviewed GCD and cached EQ/EQL dispatch integrated byte for byte. Three files changed; runtime unchanged. 549 executions / 514 non-NIL, 2044 of 2231 admitted. No LL15 slot credit. Full standard GF proposal remains unreviewed."
+}

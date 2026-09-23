@@ -537,3 +537,30 @@ retained author execution credit. Future bignum recipes should include dense
 seeded operands alongside the existing boundary cases. Method selection and
 image/READY materialization remain separate from the accepted combined-method
 dcode and funcallable storage work.
+
+## Audit 160 acceptance and retained limitations
+
+Steve accepted the reviewed GCD and cached EQ/EQL method-dispatch packets with
+“I accept the reviewed packages”. The full standard-GF proposal `761f1cc1`
+remains separate and unreviewed. Integration grants no LL15 completion credit.
+
+- **O-12, bignum stores:** generic UVSET admits only nonnegative target fixnum
+  digits (0 through 2^29−1). Native's unsigned-32 contract also admits bignum
+  digit values through 2^32−1. Those wider values refuse with checked code 5;
+  the existing half-digit routines remain the supported wide-digit path.
+- **O-13, host restart branch:** `%KERNEL-RESTART` calls target Lisp because no
+  native frame pointer exists. Registered hooks run first and receive NIL for
+  that argument. Only `$XWRONGTYPE` with two arguments has the built-in numeric
+  USE-VALUE fallback, including revalidation. Other kernel codes signal
+  SIMPLE-ERROR. This host adaptation is not the WB-1 NO-REM behavioural change.
+- **F1, historical replay:** the canonical condition verifier uses its pinned
+  Git source revision for pin validation, derivation and execution. Neither
+  mode modifies current files. The historical packet and its execution credit
+  remain unchanged.
+- Verification records from numeric dispatch onward are retained and cataloged
+  beside their packets, with their hashes in the evidence catalog. They are not
+  separate auxiliary acceptance units. Their replay grants no new slot credit.
+
+Generic GCD/ABS, real-CPL condition matching and image/READY construction remain
+open. Full standard method selection is implemented in the separate proposal
+awaiting review, not claimed by this cached-dispatch integration.

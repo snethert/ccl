@@ -687,7 +687,13 @@ explicit refusals; the plan itself earns no execution or admission credit.
 The division proposal's behavioural `NO-REM` change is listed as
 [WB-1](behavioural-branches.md) for explicit treatment at acceptance. Use the
 [canonical condition verifier](../tools/verify-condition-frontier.py) for new
-replays; leave the original retained source and records unchanged. For example:
+replays; leave the original retained source and records unchanged. It reads
+source revision `7212d982200c017930a0e7d9fcc9f02b9fa74374` from Git into a
+temporary directory, checks all packet pins there, and uses that source for
+both regeneration and fresh execution. It does not depend on current runtime
+or compiler bytes. `--source-revision` may select another commit only if all
+retained pins match. `--replay` checks an existing qualified run without executing
+it again; `--output` performs a fresh run. For example:
 
 ```sh
 python3 doc/WASM/tools/verify-condition-frontier.py --output /tmp/ccl-condition-canonical-replay --report /tmp/ccl-condition-canonical-verification.json
