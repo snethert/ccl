@@ -38,13 +38,24 @@ def census(probe):
         found = [s['id'] for s in owners.values() if s['package'] == package and s['name'] == name]
         assert len(found) == 1, (package, name)
         return found[0]
+    # The public function cells use the same reviewed EQ wrappers as direct
+    # class-mode calls. This is an installed binding, not edge pruning.
+    aliases = {}
+    for package, name, target in read(probe / 'ready-bindings.json'):
+        source, destination = owner(package, name), owner('CCL', target)
+        assert destination in bindings, ('missing READY binding', target)
+        aliases[source] = destination
+        bindings[source] = bindings[destination]
     rows = read(probe / 'probe-output/probe-native.json')
     startup = next(r for r in rows if r['definition'] == 'READY-START')
     graph = startup['args'][0]['graph']
     generic_bindings = {n['binding'] for n in graph['nodes'] if n.get('binding')}
     leafs = {owner('CCL', '%WASM-EQ-TABLE-' + op): op for op in ('GET', 'SET', 'REMOVE')}
     trampoline = owner('CCL', 'FUNCALLABLE-TRAMPOLINE')
-    roots = [(r['name'], 'startup:' + r['definition']) for r in rows]
+    roots = [(r['name'], 'startup:' + r['definition']) for r in rows
+             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START')]
+    roots += [(bindings[source], 'ready-binding:' + owner_name(source))
+              for source in aliases]
     edges, missing, primitives = [], [], set()
     def follow(who, callee):
         if callee in leafs:
@@ -56,7 +67,7 @@ def census(probe):
             kind = 'projected-generic'
         else:
             target = bindings.get(callee)
-            kind = 'function-cell'
+            kind = 'ready-binding' if callee in aliases else 'function-cell'
         edge = dict(caller=who, owner=callee, callee=owner_name(callee), kind=kind, module=target)
         edges.append(edge)
         if target is None:
@@ -105,7 +116,7 @@ def census(probe):
                 acode=dict(definitions=len(reached), operators=len(counts),
                            occurrences=sum(counts.values()), by_operator=dict(sorted(counts.items()))),
                 inputs={n:digest(probe/n) for n in ('compiled/modules.json', 'compiled/symbols.json',
-                        'probe-output/ready-modules.json', 'probe-output/probe-native.json')},
+                        'probe-output/ready-modules.json', 'probe-output/probe-native.json', 'ready-bindings.json')},
                 complete=not missing and not indirect,
                 scope='Static dependencies plus every projected function and generic trampoline; '
                       'indirect calls are listed, not assumed closed by successful sample execution.')

@@ -23,10 +23,12 @@ def prepare(out):
     assert integrated.read_bytes()==(out/'runtime/heap-image.mjs').read_bytes()
     shutil.copyfile(integrated,out/'runtime/heap-image.mjs')
     shutil.copyfile(HERE/'worker.mjs',out/'ready-worker.mjs')
+    shutil.copyfile(HERE/'bindings.mjs',out/'ready-bindings.mjs')
+    shutil.copyfile(HERE/'bindings.json',out/'ready-bindings.json')
     shutil.copyfile(HERE/'process.mjs',out/'process.mjs')
     shutil.copyfile(c.ROOT/'runtime/wasm32/initialization-owner.mjs',out/'runtime/initialization-owner.mjs')
     code=c.read(out/'class-image-code.json')
-    for name in ('runtime/initialization-owner.mjs','process.mjs','ready-worker.mjs'):
+    for name in ('runtime/initialization-owner.mjs','process.mjs','ready-worker.mjs','ready-bindings.mjs','ready-bindings.json'):
         code[name]=c.sha(out/name)
     (out/'class-image-code.json').write_bytes(c.canonical(code))
     (out/'class-image-code.sha256').write_text(c.sha(out/'class-image-code.json')+'\n')

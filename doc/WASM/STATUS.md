@@ -4,7 +4,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
-| Projected-image process READY | WORK IN PROGRESS | [Written startup and driver](../../tests/wasm/stage1/ready/README.md): four fresh cold boots at both placements, 612 class cells, all 33 projected GFs in the strong `%ALL-GFS%` root, class dispatch, disabled scheduler/termination, ten collections. Missing image/entry and early READY leave FAILED. Pending image code unchanged. Replacement census and native callback membership remain in this same READY unit; no slot credit or acceptance request yet. |
+| Projected-image process READY | WORK IN PROGRESS | [READY R4](../../tests/wasm/stage1/ready/README.md): four public hash function cells use the reviewed EQ wrappers; generated admission checks finalized class/CPL/wrapper/method state before startup roots. Four cold boots, 38 collections, eight profile refusals and four old-binding controls pass. Static graph: 546 modules, 59 missing callees, 35 indirect-call modules. Closure/callback/replacement work remains in this unit; no slot credit. |
 | READY profile | ADOPTED by Steve | [Six decisions](stage1/ready-decision.json): projected image, executed-original coverage with 25 named replacements maximum, class conditions, one Worker with scheduling disabled, uncached GF dispatch, READY join next. LL15-c/d amended; other 31 criteria and accepted records unchanged. No implementation acceptance or slot credit. |
 | Claude audit 165 / class-growth integration | ACCEPTED AND INTEGRATED, default-off | Steve accepted with “accept”. [Integration record](stage1/integration-class-growth.json): two files equal reviewed bytes; all 33 native-qualified files and 417 source inputs checked. Reuses 26,048 comparisons and 21,843 native tests; no new execution. O-27 legacy identity is by inspection; O-28/O-29 payload and subclass boundaries disclosed; O-30 is carried. P4 implementation remains unchanged under separate review. |
 | P4 R2 / P5 workspace management | IMPLEMENTED; review pending, no slot credit | [Validation tooling](../../tests/wasm/stage1/bootstrap-validation/README.md): audit 166 imported verbatim at efc2270e. Declared driver inputs replace the development-file sweep; probe batches recover real uninterned SETF owners. Full 26,048 comparisons agree; default/class probe batches pass 40/16 comparisons. Managed outputs, active leases, two cached sessions and 2 GiB WABT bound; retention deletes validated run inputs. Historical evidence migration remains open. |
@@ -824,3 +824,24 @@ state restorations. O-46 has 31 fresh admission checks binding the imported
 loader/SHA modules and driver. O-45 remains the owner's real one-shot contract.
 The development index id now agrees with the retained R1 packet. Compiler,
 CCL sources and production runtime are unchanged.
+
+
+### READY public table bindings and image admission (R4)
+
+Original-definition evidence remains 550/515. Public GETHASH, PUTHASH, REMHASH
+and CLRHASH cells now name the reviewed Lisp EQ wrappers, matching direct
+class-mode calls. Cold generated code exercises twenty moving cons keys,
+growth, lookup/defaults, removal and clearing. Restoring any old native binding
+refuses with checked 2 and leaves FAILED. This removes native hash-lock paths;
+the conservative graph falls from 682 to 546 modules and from 72 to 59 missing
+callee names. Thirty-five indirect-call modules remain explicit.
+
+Generated image admission checks initialized class CPLs, wrappers, standard
+method combinations and callable method functions before publishing startup
+roots. Eight directed mutations refuse, restore the image and preserve five
+startup roots. All four cold boots match native, with 38 collections; the 31
+loader controls and both heap-key placements pass. The first final summary
+caught an omitted Worker result field after execution passed. It was repaired
+and all target execution rerun, reusing only hash-identical compilation. The
+retained execution-reuse record distinguishes that from another compiler run.
+No shared compiler/runtime/CCL change, new C/JS table service or LL15 credit.

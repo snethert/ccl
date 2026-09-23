@@ -58,7 +58,7 @@
                   ccl::*%periodic-tasks%*))
          (original (mapcar #'symbol-value names))
          (state (copy-list original)))
-    (dolist (name '(ready-initialize ready-check ready-start))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -78,5 +78,5 @@
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (loop for name in '(ready-initialize ready-check ready-start)
+    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings)
           collect (list name (list (list image))))))

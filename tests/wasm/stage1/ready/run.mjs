@@ -21,10 +21,10 @@ const results=[];
 for(const base of mode==='write'?[8388608]:[8388608,2146500608])
  for(const move of mode==='write'?[false]:[false,true])results.push(await run(base,move));
 const refusals=[];
-if(mode==='read')for(const fault of ['no-image','no-entry','early-ready']){
+if(mode==='read')for(const fault of ['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash']){
  const result=await run(8388608,false,fault);
  assert.equal(result.rejected,fault);assert.equal(result.state,3);
- assert.match(result.reason,fault==='no-image'?/ENOENT/:fault==='no-entry'?/READY_ENTRY_REQUIRED/:/published last/);
+ assert.match(result.reason,fault==='no-image'?/ENOENT/:fault==='no-entry'?/READY_ENTRY_REQUIRED/:fault==='early-ready'?/published last/:/checked [0-9]+$/);
  refusals.push(result);
 }
 fs.writeFileSync(output,JSON.stringify({status:'PASS',mode,codeDigest,results,refusals,

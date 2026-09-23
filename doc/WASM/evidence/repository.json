@@ -1,28 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "29cf356e81c8c6956003f2241bbe98453e6b43d97ed8d26970c21ea865e8958e",
-  "commit": "95f9621a5fb3e6cd8d0b98692e0881da0bdb11e9",
-  "immutable_evidence_files": 269248,
+  "catalog_sha256": "ce1175588c65358c58544afc28d7e5db7452527298cb84e3794ebc21f6d1f35e",
+  "commit": "4955ba6fa25a752c921677626cdd67ef278d0037",
+  "immutable_evidence_files": 269289,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-ready-join-r3",
-    "files": 38,
-    "bytes": 4282195
+    "directory": "2026-09-23-stage1-ready-join-r4",
+    "files": 41,
+    "bytes": 4476405
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Audit 169 import and READY R3 dependency/callback/replacement census, oracle isolation and digest-bound loader controls; no LL15 credit.",
-  "source_index_sha256": "f9feab951a3050791279a391aac1500691ebf4b051e46c354d2d92980d503f21",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r3.json",
+  "scope": "READY R4 public EQ function-cell bindings and generated class-image admission; full target execution after reporting repair. No LL15 credit.",
+  "source_index_sha256": "ec29f190fbcf26c6f2c9ba0b40575e30338e456501e34ceb8f0c0f28b43c4e8b",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r4.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-23-ready-join-r3-verification.json",
-    "report_sha256": "49803ac5587cb07aef83a5723b313f3103c277f5a1dd9ed0c06e1631d93ebdea",
+    "report": "2026-09-23-ready-join-r4-verification.json",
+    "report_sha256": "3607de6bedbd42365278441915dea43b09a675297ed533d491f80368b1af33df",
     "execution_rebuilt_during_retention_verification": false,
-    "full_execution_replayed": true,
+    "full_execution_replayed": false,
+    "complete_author_target_execution": true,
     "comparisons": 5
   }
 }

@@ -1,3 +1,4 @@
+import {bindReadyTables} from './ready-bindings.mjs';
 import {processOwner} from './process.mjs';
 import {imageArguments} from './image-input.mjs';
 import {checkBootClasses} from './class-boot.mjs';
@@ -15,7 +16,7 @@ import {integerService} from './runtime/integer-service.mjs';
 import {floatService} from './runtime/float-service.mjs';
 import {sha256} from './runtime/sha256.mjs';
   const {base,dir}=workerData,NIL=77825,T=77838,tcr=1024,root=131064;
-  const imageLoads=[];let loadedImage,saveReady;
+  const imageLoads=[],profileChecks=[];let nativeTableBindings;let loadedImage,saveReady;
   const config=12582912,size=1048576,other=10485760;
   const memory=new WebAssembly.Memory({initial:Math.max(320,Math.ceil((base+size)/65536)),maximum:32769,shared:true});
   const view=new DataView(memory.buffer),get=p=>view.getUint32(p,true),put=(p,n)=>view.setUint32(p,n,true);
@@ -184,6 +185,12 @@ import {sha256} from './runtime/sha256.mjs';
     put(config,tcr);put(config+16,other);put(config+20,other+size);
     put(config+68,262144);put(config+72,4600000);put(config+80,20971520);
     initialConditionClasses.forEach(([p,v])=>put(p,v));initialSymbolFields.forEach(([p,v])=>put(p,v));gen.extraRoots.length=originalRootCount;gen.reset(movingPools[base],conditionCallers.has(expected.definition)||expected.definition.startsWith('CORE-CPL-'));nodeNext=4194304;nodeDescriptions.clear();rawDescriptions.clear();flaggedSymbols.clear();services();
+    const tableBindings=JSON.parse(fs.readFileSync(dir+'/ready-bindings.json'));
+    nativeTableBindings=new Map(tableBindings.map(([pkg,name])=>{
+      const slot=gen.ownerWords.get(ownerNames.find(x=>x.package===pkg&&x.name===name).id)+6;
+      return [name,[slot,get(slot)]];
+    }));
+    bindReadyTables({owners:ownerNames,gen,get,put,bindings:tableBindings});
     gen.classCells.clear();
     put(config+76,gen.extraRoots.length);
     gen.extraRoots.forEach((slot,i)=>put(4600000+4*i,slot));
@@ -233,6 +240,26 @@ import {sha256} from './runtime/sha256.mjs';
       // The legacy mask registry is not an accepted fallback at READY.
       initialRegistry.forEach((_,i)=>put(gen.symbols.condition_registry-2+4*i,NIL));
       if(workerData.fault==='no-entry')throw Error('READY_ENTRY_REQUIRED');
+      const statusRow=native.find(r=>r.definition==='READY-IMAGE-STATUS');
+      const refusalRow=native.find(r=>r.definition==='READY-IMAGE-REFUSALS');
+      const rootsBefore=['%ALL-GFS%','%FIND-CLASSES%','*CLASS-TABLE*',
+                         '*ENABLE-AUTOMATIC-TERMINATION*','*%PERIODIC-TASKS%*'].map(name=>{
+        const slot=gen.ownerWords.get(ownerNames.find(x=>x.package==='CCL'&&x.name===name).id)+2;
+        return [slot,get(slot)];
+      });
+      assert.deepEqual(gen.invoke(statusRow.name,[get(root+8)]).map(decode),[true],
+                       'READY image admission');
+      const refusals=gen.invoke(refusalRow.name,[get(root+8)]).map(decode);
+      assert.deepEqual(refusals,refusalRow.values,'READY admission refusals');
+      for(const [slot,value] of rootsBefore)assert.equal(get(slot),value,'admission published a root');
+      profileChecks.push({moved:move,admitted:true,refusals,rootsPreserved:rootsBefore.length});
+      // Admission may allocate; the caller's registered root is authoritative.
+      actualArgs[0]=get(root+8);
+      if(workerData.fault?.startsWith('native-table-')){
+        const name=workerData.fault.slice('native-table-'.length).toUpperCase();
+        const [slot,fn]=nativeTableBindings.get(name);put(slot,fn);
+      }
+
       const priorIntegerCalls=integerCalls,priorFloatCalls=floatCalls;const rawValues=gen.invoke(expected.name,actualArgs);if(expected.definition==='CORE-TRANSCEND-DESTINATION')assert.equal(rawValues[0],rawValues[1],'target destination identity');const values=rawValues.map(decode);if(['MAX-2','MIN-2','/=-2','>=-2','<=-2'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number'&&Number.isInteger(x)&&Math.abs(x)<536870912)){assert.equal(floatCalls,priorFloatCalls,'fixnum comparison left Wasm');fastChecks++;}if(['1+','1-','CORE-INTEGER-DIVIDE'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number')&&expected.values.every(x=>typeof x==='number'&&x>=-536870912&&x<=536870911)){assert.equal(integerCalls,priorIntegerCalls,'fixnum arithmetic left Wasm');assert.equal(floatCalls,priorFloatCalls,'fixnum arithmetic left Wasm');fastChecks++;}
       const after=args.map((_,i)=>expected.after[i]?.graph ? decodeGraph(get(root+8+4*i),expected.after[i].graph,graphIO) : decode(get(root+8+4*i)));
       let expectedValues=expected.values;
@@ -351,12 +378,12 @@ import {sha256} from './runtime/sha256.mjs';
     assert.equal(owner.process(0,()=>{throw Error('bootstrap ran twice');}),false);
   }
   if(!workerData.controls){
-    parentPort.postMessage({processReady:get(1174208),classMode:true,scheduler:false,imageLoads,base,rows,comparisons:rows.length,collections,internalCollections,growthChecks});
+    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,base,rows,comparisons:rows.length,collections,internalCollections,growthChecks});
   }else if(process.env.CCL_DISPATCH_METADATA){
     const keywordMetadata=checkKeywordMetadata({gen,memory,tcr,root,get,put,encode});
-    parentPort.postMessage({processReady:get(1174208),classMode:true,scheduler:false,imageLoads,growthChecks,base,comparisons:rows.length,keywordMetadata});
+    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,growthChecks,base,comparisons:rows.length,keywordMetadata});
   }else if(process.env.CCL_LIBRARY_CASE){
-    parentPort.postMessage({processReady:get(1174208),classMode:true,scheduler:false,imageLoads,focused:true,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
+    parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,focused:true,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
   }else{
   const layout=JSON.parse(fs.readFileSync(dir+'/compiled/target-layout.json'));const layoutValues=gen.invoke(layout.name,[]).map(decode);assert.deepEqual(layoutValues,layout.target,'target node size');assert.notDeepEqual(layoutValues,layout.native,'host node size leaked');
   const refusals=[];
@@ -436,5 +463,5 @@ import {sha256} from './runtime/sha256.mjs';
   const bignums=checkBignums({gen,memory,tcr,root,collect,encode,get,put});
   const keywordMetadata=checkKeywordMetadata({gen,memory,tcr,root,get,put,encode});
   const installation=checkInstaller({dir,gen,memory,tcr,get,put,owner:serviceOwner});
-  parentPort.postMessage({processReady:get(1174208),classMode:true,scheduler:false,imageLoads,bignums,keywordMetadata,installation,funcallable,signedZero,libmRows,shiftRows,refusals,layout:{...layout,values:layoutValues},retryCollections,integerCalls,floatCalls,fastChecks,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
+  parentPort.postMessage({profileChecks,processReady:get(1174208),classMode:true,scheduler:false,imageLoads,bignums,keywordMetadata,installation,funcallable,signedZero,libmRows,shiftRows,refusals,layout:{...layout,values:layoutValues},retryCollections,integerCalls,floatCalls,fastChecks,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
 }

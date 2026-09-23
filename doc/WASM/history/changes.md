@@ -4340,3 +4340,24 @@ state restorations. O-46 has 31 fresh admission checks binding the imported
 loader/SHA modules and driver. O-45 remains the owner's real one-shot contract.
 The development index id now agrees with the retained R1 packet. Compiler,
 CCL sources and production runtime are unchanged.
+
+
+### READY public table bindings and image admission (R4)
+
+Original-definition evidence remains 550/515. Public GETHASH, PUTHASH, REMHASH
+and CLRHASH cells now name the reviewed Lisp EQ wrappers, matching direct
+class-mode calls. Cold generated code exercises twenty moving cons keys,
+growth, lookup/defaults, removal and clearing. Restoring any old native binding
+refuses with checked 2 and leaves FAILED. This removes native hash-lock paths;
+the conservative graph falls from 682 to 546 modules and from 72 to 59 missing
+callee names. Thirty-five indirect-call modules remain explicit.
+
+Generated image admission checks initialized class CPLs, wrappers, standard
+method combinations and callable method functions before publishing startup
+roots. Eight directed mutations refuse, restore the image and preserve five
+startup roots. All four cold boots match native, with 38 collections; the 31
+loader controls and both heap-key placements pass. The first final summary
+caught an omitted Worker result field after execution passed. It was repaired
+and all target execution rerun, reusing only hash-identical compilation. The
+retained execution-reuse record distinguishes that from another compiler run.
+No shared compiler/runtime/CCL change, new C/JS table service or LL15 credit.

@@ -65,23 +65,35 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==3
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==6
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
         assert result['processReady']==2 and result['classMode'] and not result['scheduler']
         row=result['rows'][0]
         assert {k:v for k,v in row.items() if k!='moved'}=={k:v for k,v in reference.items() if k!='moved'}
-    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready']
+    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash']
     assert all(r['state']==3 for r in reader['refusals'])
     assert reference['values'][:4]==[612,33,43,41]
+    for result in writer['results']+reader['results']:
+        assert len(result['profileChecks'])==1
+        check=result['profileChecks'][0]
+        assert check['admitted'] and check['rootsPreserved']==5
+        values=check['refusals'][0]; count=0
+        while values:
+            value,values=values
+            if count<8:assert isinstance(value,dict) and 'symbol' in value
+            else:assert value is True
+            count+=1
+        assert count==9
+
     keys=c.read(out/'heap-keys.json')
     assert keys['status']=='PASS' and len(keys['records'])==2
     assert all(r['omitted_moved_lookup_misses']>0 for r in keys['records'])
     report=dict(status='PASS',producer_comparisons=1,cold_boots=4,
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=33,controls=len(reader['refusals']),
-        image_admission_controls=31,native_state_restorations=3,
+        image_admission_controls=31,profile_refusals=8,public_table_bindings=4,native_state_restorations=6,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
         original_definition_credit=0,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')

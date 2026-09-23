@@ -1,0 +1,22 @@
+[
+  [
+    "COMMON-LISP",
+    "GETHASH",
+    "%WASM-CLASS-GETHASH"
+  ],
+  [
+    "CCL",
+    "PUTHASH",
+    "%WASM-CLASS-PUTHASH"
+  ],
+  [
+    "COMMON-LISP",
+    "REMHASH",
+    "%WASM-CLASS-REMHASH"
+  ],
+  [
+    "COMMON-LISP",
+    "CLRHASH",
+    "%WASM-CLASS-CLRHASH"
+  ]
+]
