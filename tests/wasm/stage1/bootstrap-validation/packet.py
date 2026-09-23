@@ -4,6 +4,7 @@ import argparse
 import shutil
 import tarfile
 import common as c
+import storage
 from execute import identity,bound_report
 
 
@@ -23,6 +24,11 @@ def checked(packet):
 
 def retain(base,qualification,probe,controls,warm,cache,out,development):
     base,qualification,probe,controls,warm,cache,out=map(Path,(base,qualification,probe,controls,warm,cache,out))
+    disposable=[base,qualification,probe,controls,warm]
+    for path in disposable:
+        storage.workspace(path)
+        if path.resolve()==out.resolve() or path.resolve() in out.resolve().parents:
+            raise ValueError('packet must be outside disposable input trees')
     assert c.read(qualification/'qualification.json')['status']=='PASS'
     assert c.read(controls/'controls.json')['status']=='PASS'
     assert c.read(controls/'probe-controls.json')['status']=='PASS'
@@ -61,8 +67,12 @@ def retain(base,qualification,probe,controls,warm,cache,out,development):
         compiler_session_key=key,compiler_image=c.sha(entry/'compiled/compiler.image'),
         author_execution=c.sha(original/'execution-report.json'),execution_rebuilt_during_retention=False,
         admission_credit=0,original_definition_execution_credit=0,slot_credit=False))
-    c.save(out/'packet.json',dict(id='STAGE1-BOOTSTRAP-VALIDATION-R1',review_disposition='NOT_REVIEWED',
+    c.save(out/'packet.json',dict(id='STAGE1-BOOTSTRAP-VALIDATION-R2',review_disposition='NOT_REVIEWED',
         slot_credit=False,files=c.inventory(out),tool_sources=c.inventory(c.HERE)))
+    checked(out)
+    # Delete only after the complete destination has passed identity validation.
+    for path in sorted(set(disposable),key=lambda p:len(p.parts),reverse=True):
+        if path.exists():shutil.rmtree(path)
     return dict(status='PASS',packet=str(out),execution_rebuilt=False)
 
 
@@ -98,5 +108,11 @@ if __name__=='__main__':
     q.add_argument('--development',type=Path)
     q=sub.add_parser('restore');q.add_argument('packet',type=Path);q.add_argument('output',type=Path);q.add_argument('--cache',type=Path,default=c.DEFAULT_CACHE)
     a=p.parse_args()
-    if a.command=='restore':print(restore(a.packet,a.output,a.cache))
-    else:print(retain(a.base,a.qualification,a.probe,a.controls,a.warm,a.cache,a.output,a.development))
+    paths=[a.output] if a.command=='restore' else [a.base,a.qualification,a.probe,a.controls,a.warm]
+    for path in paths:storage.workspace(path)
+    storage.gc(a.cache)
+    try:
+        with storage.lease(paths,a.cache):
+            if a.command=='restore':print(restore(a.packet,a.output,a.cache))
+            else:print(retain(a.base,a.qualification,a.probe,a.controls,a.warm,a.cache,a.output,a.development))
+    finally:storage.gc(a.cache)

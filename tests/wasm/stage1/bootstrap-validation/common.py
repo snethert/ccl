@@ -104,6 +104,7 @@ def cache_read(cache, kind, key):
     if actual_names != set(manifest['files']):
         raise ValueError('cache inventory: '+str(path))
     verify_files(path, manifest['files'])
+    os.utime(path, None)
     return path
 
 

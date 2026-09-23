@@ -5,6 +5,7 @@ import copy
 import shutil
 import tempfile
 import common as c
+import storage
 from build import environment
 from execute import row_key,sample,SEED,bound_report
 
@@ -54,4 +55,8 @@ def controls(base,cache,out):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('base',type=Path);p.add_argument('cache',type=Path);p.add_argument('output',type=Path)
-    a=p.parse_args();print(controls(a.base,a.cache,a.output))
+    a=p.parse_args()
+    storage.gc(a.cache)
+    try:
+        with storage.lease([a.base,a.output],a.cache):print(controls(a.base,a.cache,a.output))
+    finally:storage.gc(a.cache)

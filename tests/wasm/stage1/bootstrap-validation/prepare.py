@@ -13,6 +13,17 @@ SERVICES=('collector.wasm','integer.wasm','float.wasm','hash.wasm',
 HELPERS=('graph.mjs','gf-check.mjs','installer-check.mjs','metadata-check.mjs','bignum-check.mjs')
 
 
+def driver_inputs(out):
+    declared=c.read(out/'driver-manifest.json')
+    drivers={name:digest for name,digest in declared.items()
+             if name!='development.json' and 'development' not in Path(name).parts}
+    c.verify_files(out/'driver',drivers)
+    unexpected={str(p.relative_to(out/'driver')) for p in c.files(out/'driver')
+                if p.suffix=='.py' and 'development' not in p.relative_to(out/'driver').parts}-set(drivers)
+    if unexpected:raise ValueError('undeclared driver source: '+str(sorted(unexpected)))
+    return {'driver/'+name:digest for name,digest in drivers.items()}
+
+
 def prepare(out):
     out=Path(out)
     for name in HARNESS:shutil.copyfile(c.HERE/name,out/name)
@@ -61,7 +72,8 @@ def prepare(out):
     c.save(out/'case-ids.json',ids)
     manifest={str(p.relative_to(out)):c.sha(p) for p in c.files(out/'runtime')}
     for name in HARNESS+SERVICES+HELPERS:manifest[name]=c.sha(out/name)
-    for p in c.files(out/'driver'):manifest[str(p.relative_to(out))]=c.sha(p)
+    # Use the declared session inputs, never incidental logs or review files.
+    manifest.update(driver_inputs(out))
     for p in c.files(out/'owner-check'): 
         if p.suffix=='.mjs':manifest[str(p.relative_to(out))]=c.sha(p)
     for name in ('istruct-check.mjs','population-check.mjs'):manifest[name]=c.sha(out/name)

@@ -4,6 +4,7 @@ import argparse
 import shutil
 import subprocess
 import common as c
+import storage
 from probe import probe
 from prepare import prepare
 
@@ -22,6 +23,13 @@ def controls(base,cache,out):
             if expected not in (target/'probe.log').read_text():raise
         else:raise AssertionError('probe refusal did not fire: '+name)
         rows.append(dict(name=name,status='REFUSED',log=c.sha(target/'probe.log')))
+        # Keep the failure and its submitted inputs, not another corpus copy.
+        saved=out/(name+'-evidence');saved.mkdir()
+        shutil.copyfile(target/'probe.log',saved/'probe.log')
+        shutil.copytree(target/'submitted',saved/'submitted')
+        c.save(saved/'reproduction.json',dict(base=c.sha(Path(base)/'build-invocation.json'),
+               source=c.sha(source),inputs=c.sha(inputs),expected=expected))
+        shutil.rmtree(target)
     capacity=out/'capacity'
     shutil.copytree(base,capacity,ignore=shutil.ignore_patterns('compiler.image'))
     modules=c.read(capacity/'compiled/modules.json')
@@ -30,6 +38,8 @@ def controls(base,cache,out):
     try:prepare(capacity)
     except ValueError as error:assert 'installation capacity' in str(error)
     else:raise AssertionError('capacity admitted')
+    shutil.copyfile(capacity/'compiled/modules.json',out/'capacity-modules.json')
+    shutil.rmtree(capacity)
     rows.append(dict(name='capacity',status='REFUSED',installation_started=False))
     result=dict(status='PASS',rows=rows)
     c.save(out/'probe-controls.json',result);return result
@@ -37,4 +47,8 @@ def controls(base,cache,out):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('base',type=Path);p.add_argument('cache',type=Path);p.add_argument('output',type=Path)
-    a=p.parse_args();print(controls(a.base,a.cache,a.output))
+    a=p.parse_args()
+    storage.gc(a.cache)
+    try:
+        with storage.lease([a.base,a.output],a.cache):print(controls(a.base,a.cache,a.output))
+    finally:storage.gc(a.cache)

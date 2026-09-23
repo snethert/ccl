@@ -24,7 +24,7 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
     pinned=c.read(entry/'cache-manifest.json')['files']
     c.verify_files(base,{n:h for n,h in pinned.items()
                         if n.startswith(('compiled/','driver/'))})
-    out.mkdir();shutil.copytree(base,out,dirs_exist_ok=True,ignore=shutil.ignore_patterns("compiler.image"))
+    out.mkdir()
     generated=out/'probe-output';generated.mkdir()
     submitted=out/'submitted';submitted.mkdir()
     for original,name in ((source,'probes.lisp'),(inputs,'inputs.lisp'),(c.HERE/'probe.lisp','driver.lisp')):
@@ -37,9 +37,20 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
     owners=c.read(base/'compiled/symbols.json')
     (generated/'owners.lisp').write_text('('+''.join('('+quote(x['name'])+' '+quote(x['package'])+' '+quote(x['id'])+')' for x in owners)+')\n')
     modules=c.read(base/'compiled/modules.json')
+    # Printed names do not identify CCL's uninterned SETF function symbols.
+    # Bind each retained wire to the actual symbol in the saved module record.
+    uninterned={row['id'] for row in owners if row['package'] is None}
+    bindings=[]
+    for module in modules:
+        imports=[(wire,owner) for wire,owner in module['symbols'] if owner in uninterned]
+        function=module['function'] if module['function'] in uninterned else None
+        if imports or function:
+            bindings.append('('+quote(module['name'])+' '+quote(function)+' ('+
+                            ''.join('('+quote(wire)+' '+quote(owner)+')' for wire,owner in imports)+'))')
+    (generated/'bindings.lisp').write_text('('+''.join(bindings)+')\n')
     (generated/'base.lisp').write_text('('+str(len(modules))+' '+str(len(c.read(base/'compiled/pools.json')['roots']))+' ('+
         ' '.join(quote(m['function']) for m in modules if m['function'])+'))\n')
-    with tempfile.TemporaryDirectory(prefix='ccl-p4-probe-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='u1-', dir=out) as tmp:
         work=Path(tmp);src=work/'ccl';src.mkdir()
         for name in ('source.tar','bootstrap.tar.gz'):
             with tarfile.open(c.STORE/'macos-u1-inputs'/name) as archive:
@@ -55,6 +66,9 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
             seconds=c.command([src/'dx86cl64','-I',entry/'compiled/compiler.image','--no-init','--batch',
                                '--load',driver],out/'probe.log',env,cwd=src,timeout=120)
     if 'VALIDATION-PROBES-PASS' not in (out/'probe.log').read_text():raise ValueError('incomplete probe')
+    # Refused probe compiles need only their inputs/log, not a corpus copy.
+    shutil.copytree(base,out,dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('compiler.image','probe.log'))
     modules=c.read(base/'compiled/modules.json');new=c.read(generated/'probe-modules.json')
     if {m['name'] for m in modules}&{m['name'] for m in new}:raise ValueError('probe module collision')
     old_symbols=c.read(base/'compiled/symbols.json');symbols=c.read(generated/'symbols.json')

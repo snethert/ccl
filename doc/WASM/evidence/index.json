@@ -3608,9 +3608,11 @@
       "id": "STAGE1-BOOTSTRAP-VALIDATION-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-bootstrap-validation-r1/packet.json",
       "sha256": "24413725c8abfc6f30351923d219bf61e37078af2f6f34e28d6b74f36961770e",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "P4 validation tooling: whole-file compiler session and WABT caches; explicit phase completion, batched probes, exact execution provenance and isolated four-worker execution. Full 26048 comparisons equal retained sequential results; focused 276 fresh, 128 sampled, 25644 inherited. Warm build starts no compiler/oracle/WABT subprocesses. Restored review image compiles only four new probe definitions and executes 40 comparisons. No compiler/runtime change or LL15 credit.",
-      "slot_credit": false
+      "review_disposition": "REVIEWED_WITH_FINDINGS",
+      "scope": "P4 validation tooling: whole-file compiler session and WABT caches; explicit phase completion, batched probes, exact execution provenance and isolated four-worker execution. Full 26048 comparisons equal retained sequential results; focused 276 fresh, 128 sampled, 25644 inherited. Warm build starts no compiler/oracle/WABT subprocesses. Restored review image compiles only four new probe definitions and executes 40 comparisons. No compiler/runtime change or LL15 credit. Audit 166: O-33 incidental development files invalidate delta reuse; O-34 uninterned SETF owner recreation breaks class probes. Not accepted; superseded by R2. Original packet and execution remain bound unchanged.",
+      "slot_credit": false,
+      "review_commit": "daf8f0e75964c812f85752fafdc60dc9dedf38bd",
+      "review_sha256": "f79a05643718f2a9fa5edea331371259af19adfdb5e91cc3ce9dd7c361f81827"
     },
     {
       "id": "STAGE1-CLASS-GROWTH-ACCEPTANCE",
@@ -3618,6 +3620,14 @@
       "sha256": "f5899fc21fd1fffc800c57a6c8527e7056936d75ed5c147bab60cee27d2b51b6",
       "review_disposition": "ACCEPTED",
       "scope": "Source identity and final-source qualification reuse for audit-165 default-off integration. Two changed files equal reviewed bytes; 33 qualified files and 417 source inputs checked. No new execution; P4 remains under separate review.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-BOOTSTRAP-VALIDATION-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-bootstrap-validation-r2/packet.json",
+      "sha256": "9c50dba1515b4947c421e6642cfa0c851e3d5c07bd43bc0e8533ab26d0560a49",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "P4 R2 audit-166 repairs: declared driver manifest excludes development files; batched probes recover retained uninterned SETF identities. Full 26048 comparisons equal the sequential corpus; focused parallel/reversed sequential agree. Independent warm build against restored report inherits 25920 and samples 128, with zero fresh comparisons. Default/class probe batches pass 40/16 comparisons; old driver fails checked 2 on the corrected class graph. P5 managed outputs, active leases, retention-before-deletion and bounded shared cache. Historical archive migration deferred. No compiler/runtime change or LL15 credit.",
       "slot_credit": false
     }
   ],

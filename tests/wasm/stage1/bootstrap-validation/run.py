@@ -4,16 +4,42 @@ import argparse
 from pathlib import Path
 import json
 import common as c
+import storage
 
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--cache',type=Path,default=c.DEFAULT_CACHE)
     commands=parser.add_subparsers(dest='command',required=True)
+    commands.add_parser('gc')
+    p=commands.add_parser('finish');p.add_argument('output',type=Path);p.add_argument('destination',type=Path)
     p=commands.add_parser('build');p.add_argument('output',type=Path);p.add_argument('--cold',action='store_true');p.add_argument('--jobs',type=int,default=4)
-    p=commands.add_parser('probe');p.add_argument('base',type=Path);p.add_argument('source',type=Path);p.add_argument('inputs',type=Path);p.add_argument('output',type=Path);p.add_argument('--mode',choices=['class','default'],default='default');p.add_argument('--jobs',type=int,default=4);p.add_argument('--workers',type=int,default=4)
-    p=commands.add_parser('verify');p.add_argument('output',type=Path);p.add_argument('--tier',choices=['identity','focused','full'],required=True);p.add_argument('--parent',type=Path);p.add_argument('--workers',type=int,default=4);p.add_argument('--indices',type=Path);p.add_argument('--reverse',action='store_true')
+    p=commands.add_parser('probe');p.add_argument('base',type=Path);p.add_argument('source',type=Path);p.add_argument('inputs',type=Path);p.add_argument('output',type=Path);p.add_argument('--mode',choices=['class','default'],default='default');p.add_argument('--jobs',type=int,default=4);p.add_argument('--workers',type=int,default=4);p.add_argument('--retain-to',type=Path)
+    p=commands.add_parser('verify');p.add_argument('output',type=Path);p.add_argument('--tier',choices=['identity','focused','full'],required=True);p.add_argument('--parent',type=Path);p.add_argument('--workers',type=int,default=4);p.add_argument('--indices',type=Path);p.add_argument('--reverse',action='store_true');p.add_argument('--retain-to',type=Path)
     args=parser.parse_args()
+    if args.command=='gc':
+        print(json.dumps(storage.gc(args.cache),sort_keys=True));return
+    for field in ('workers','jobs'):
+        if hasattr(args,field) and not 1<=getattr(args,field)<=16:parser.error(field+' must be between 1 and 16')
+    paths=[args.output]
+    if args.command=='probe':paths.append(args.base)
+    for path in paths:storage.workspace(path)
+    # GC is cheap and never hashes/rebuilds evidence. Active leases are skipped.
+    storage.gc(args.cache)
+    try:
+        with storage.lease(paths,args.cache):
+            if args.command=='finish':
+                result=storage.finish(args.output,args.destination)
+            else:
+                result=dispatch(args)
+                if getattr(args,'retain_to',None):
+                    result['retention']=storage.finish(args.output,args.retain_to)
+        print(json.dumps(result,sort_keys=True))
+    finally:
+        storage.gc(args.cache)
+
+
+def dispatch(args):
     # The fixed proposal also binds its disposable-U1 installer. A different
     # installer requires a newly qualified parent, never a cache hit.
     unit='tests/wasm/stage1/registration/unit.py'
@@ -21,8 +47,6 @@ def main():
     dependencies=c.read(c.PARENT/'dependencies.json')
     inputs=(c.KERNEL,c.IMAGE,c.STORE/'macos-u1-inputs/source.tar',c.STORE/'macos-u1-inputs/bootstrap.tar.gz')
     c.verify_files(c.STORE,{str(p.relative_to(c.STORE)):dependencies[str(p.relative_to(c.STORE))] for p in inputs})
-    for field in ('workers','jobs'):
-        if hasattr(args,field) and not 1<=getattr(args,field)<=16:parser.error(field+' must be between 1 and 16')
     if args.command=='build':
         from build import build
         result=build(args.output.resolve(),args.cache.resolve(),args.jobs,args.cold)
@@ -39,7 +63,7 @@ def main():
         from execute import execute
         indices=c.read(args.indices) if args.indices else None
         result=execute(args.output,args.workers,args.tier,args.parent,indices,args.reverse)
-    print(json.dumps(result,sort_keys=True))
+    return result
 
 
 if __name__=='__main__':main()

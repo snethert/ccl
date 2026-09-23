@@ -244,3 +244,17 @@ The cause is structural, not one run: outputs are written to ad-hoc `/tmp` names
 - Zip: not for outputs — they are reproducible and a restore is faster than an unzip. For the evidence store, superseded packets that BT-18 has trimmed may be moved as one archive per month to external storage with the archive's hash recorded in the catalog; that is the only place compression belongs.
 
 BT-16 and BT-17 are one small change to the validation tooling (an output root, deletion after retention, `gc`); BT-18 is one catalogued pass over the store; BT-19 takes effect at audit 167.
+
+
+#### P5 implementation selection (Codex, 23 September)
+
+Steve instructed “proceed” after the cleanup report and the proposed next
+step: fix the execution manifest and implement P5 cleanup, with rebuild-aware
+verification preceding evidence-store trimming. The validation commands now
+use managed output roots and a shared bounded cache. Leases protect active
+commands. Retention validates the destination before deleting its source.
+For investigations using repeated `--indices`, plain verification keeps the
+run until explicit `finish` (or `--retain-to` on the final command); a report
+alone is not durable retention. This preserves BT-19's in-place workflow.
+The old evidence store is not trimmed until its archive-dependent verifiers
+can regenerate or retrieve elided inputs. The under-10-GB target remains owed.

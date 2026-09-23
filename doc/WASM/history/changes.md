@@ -1,3 +1,36 @@
+## 2026-09-23 — audit 166 fixes and bounded validation workspaces
+
+Imported Claude's P5 directive a7711fdb as 28dad07a and audit 166 daf8f0e7
+verbatim as efc2270e. Steve's “proceed” authorizes this tooling work. P5's
+implementation selection and the deferred archive migration are recorded in
+[the throughput directive](../stage1/bootstrap-throughput.md).
+
+R2 repairs O-33 by deriving execution inputs from the driver manifest rather
+than incidental development logs. O-34 was an identity error: MAKE-SYMBOL
+recreated uninterned SETF names instead of binding their saved module symbols.
+The real owner identities now survive appending probes. A class input also
+supplies the NHASH classification missing from its small generic-image recipe.
+Four class probes pass; restoring the old driver still fails checked 2 with
+the corrected recipe. No compiler or runtime byte changed.
+
+The new clean full run agrees on all 26,048 retained comparisons. Focused
+parallel/reversed sequential results agree (276 fresh, 128 sampled, 25,644
+inherited); default/class probe batches pass 40/16 comparisons. An independent
+warm build against the restored report, with an extra development log, passes
+128 sampled / 25,920 inherited / zero fresh comparisons in 41 seconds. A warm build
+starts no compiler, oracle or WABT process. Original failures, submitted
+inputs and reproduction scripts are retained. Claude's independent R1 run is
+bound as reviewer-reported evidence, not relabelled as execution of R2.
+
+Managed workspaces now have cross-process leases, 24-hour collection, atomic
+retention before deletion and a bounded shared cache (two sessions, WABT
+2 GiB). Thirteen storage checks and the cache/provenance controls pass.
+Historical packets remain intact: their archive-dependent restoration must
+be migrated before trimming. No claim of an under-10-GB evidence store.
+
+No new LL15 credit: 550 executed / 515 non-NIL originals and 21 accepted /
+12 missing / zero unreviewed of 33 are unchanged. R2 awaits independent review.
+
 ## 2026-09-23 — accept and integrate class growth default-off
 
 Steve explicitly accepted the audit-165 integration candidate with “accept”.

@@ -1,31 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "026b7428f2d28c1fa741fa1a9de907c5db649fc1e630ea25d43f002a2a6a82aa",
-  "commit": "02113f53f466d4996e93844bea4b9e4d8bed429e",
-  "immutable_evidence_files": 268956,
+  "catalog_sha256": "2e1572d66aebab3db4a75afb277dbcbd71f7e5a0a33b46a04dbdc2c13d835ddf",
+  "commit": "8d7090330759af3e0706db88b2547b323cee8c87",
+  "immutable_evidence_files": 269118,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-class-growth-acceptance",
-    "files": 6,
-    "bytes": 11512
+    "directory": "2026-09-23-stage1-bootstrap-validation-r2",
+    "files": 160,
+    "bytes": 658640787
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Reviewed class growth accepted and integrated byte-exactly, default-off. O-28/O-29 boundaries disclosed. P4 tooling unchanged and under separate review. No new execution or LL15 credit.",
-  "source_index_sha256": "3c99a9b2af41f2ab686dd7df700e8d623858c3ff76a7f85108d402b7bb426718",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-class-growth-acceptance.json",
+  "scope": "P4 R2 audit-166 repairs: declared driver manifest excludes development files; batched probes recover retained uninterned SETF identities. Full 26048 comparisons equal the sequential corpus; focused parallel/reversed sequential agree. Independent warm build against restored report inherits 25920 and samples 128, with zero fresh comparisons. Default/class probe batches pass 40/16 comparisons; old driver fails checked 2 on the corrected class graph. P5 managed outputs, active leases, retention-before-deletion and bounded shared cache. Historical archive migration deferred. No compiler/runtime change or LL15 credit.",
+  "source_index_sha256": "2e8cef5635f71dc895bb2fec825e609f8e918ea7b6dda9dfac8f0351581846f3",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-bootstrap-validation-r2.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
-    "report": "2026-09-23-stage1-class-growth-acceptance-verification.json",
-    "report_sha256": "d39999cb13e7071584fe2267a3d10d6f6ac0ab984c8c3b46fc2ca24e3204ceda",
-    "source_pins": 417,
-    "qualified_source_files": 33,
-    "comparisons_reused": 26048,
-    "native_tests_reused": 21843,
-    "new_execution": false
+    "method": "Full author execution; exact sequential/focused comparison; restored evidence reuse; probe identity and lifecycle regression checks. Final retention does not execute.",
+    "report": "2026-09-23-stage1-bootstrap-validation-r2-verification.json",
+    "report_sha256": "af491d9cab4b6887f7cd1463bf6d2b8c7d4011f6ed0b8f67b60c1bba5718f96e",
+    "execution_rebuilt_during_retention_verification": false,
+    "source_pins": 27,
+    "comparisons": 26048
   }
 }

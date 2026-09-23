@@ -5,6 +5,7 @@ import copy
 import shutil
 import tarfile
 import common as c
+import storage
 from execute import execute, bound_report, sample
 
 
@@ -82,4 +83,8 @@ def qualify(base,out,workers=4):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('base',type=Path);p.add_argument('output',type=Path)
-    a=p.parse_args();print(qualify(a.base,a.output))
+    a=p.parse_args()
+    storage.gc()
+    try:
+        with storage.lease([a.base,a.output]):print(qualify(a.base,a.output))
+    finally:storage.gc()

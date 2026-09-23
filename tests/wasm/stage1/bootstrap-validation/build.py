@@ -45,7 +45,7 @@ def prepare(parent, stage):
 def cold_session(stage):
     prepare(c.PARENT,stage)
     output=stage/'compiled'
-    with tempfile.TemporaryDirectory(prefix='ccl-p4-u1-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='u1-', dir=stage) as tmp:
         work=Path(tmp);source=work/'ccl';source.mkdir()
         for name in ('source.tar','bootstrap.tar.gz'):
             with tarfile.open(c.STORE/'macos-u1-inputs'/name) as archive:

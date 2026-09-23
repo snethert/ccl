@@ -1,5 +1,32 @@
 (in-package :wasm32-compiler)
 
+(let ((modules (make-hash-table :test #'equal)))
+  (dolist (module (append *core-modules* *condition-cpl-modules*
+                         (mapcar #'second *core-candidates*)))
+    (dolist (entry (cons module (getf module :children)))
+      (setf (gethash (getf entry :name) modules) entry)))
+  (labels ((bind-owner (symbol id)
+             (when id
+               (unless (symbolp symbol) (error "Invalid retained owner: ~s" id))
+               (let ((by-symbol (assoc symbol *pool-symbol-owners*))
+                     (by-id (rassoc id *pool-symbol-owners* :test #'equal)))
+                 (when (or (and by-symbol (not (equal (cdr by-symbol) id)))
+                           (and by-id (not (eq (car by-id) symbol))))
+                   (error "Conflicting retained symbol identity: ~s" id))
+                 (unless by-id (push (cons symbol id) *pool-symbol-owners*))))))
+    (with-open-file (stream (concatenate 'string (ccl:getenv "PROBE_OUTPUT") "bindings.lisp"))
+      (dolist (binding (read stream))
+        (destructuring-bind (name function imports) binding
+          (let ((module (or (gethash name modules)
+                            (error "Missing retained module: ~s" name))))
+            (when (getf module :source-name)
+              (bind-owner (ccl::maybe-setf-function-name (getf module :source-name)) function))
+            (dolist (import imports)
+              (destructuring-bind (wire owner) import
+                (let ((entry (find wire (getf module :symbols) :key #'second :test #'equal)))
+                  (unless entry (error "Missing retained import: ~s ~s" name wire))
+                  (bind-owner (first entry) owner))))))))))
+
 (with-open-file (stream (concatenate 'string (ccl:getenv "PROBE_OUTPUT") "owners.lisp"))
   (loop for (name package id) in (read stream) for i from 0 do
     (let ((old (rassoc id *pool-symbol-owners* :test #'equal)))
@@ -8,9 +35,13 @@
                      (equal package (and (symbol-package (car old))
                                          (package-name (symbol-package (car old)))))))
         (progn
-          (assert (= i (length *pool-symbol-owners*)))
           (push (cons (if package (intern name package) (make-symbol name)) id)
                 *pool-symbol-owners*))))))
+
+;; FRONTEND-OWNER assigns the next numeric id from this list's length. Keep
+;; the original ordering as well as EQ identity before appending anything.
+(setq *pool-symbol-owners*
+      (sort *pool-symbol-owners* #'> :key (lambda (entry) (parse-integer (cdr entry) :start 1))))
 
 (defvar *validation-base-count*)
 (defvar *validation-base-root-count*)
