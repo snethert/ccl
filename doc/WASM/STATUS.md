@@ -753,3 +753,11 @@ review. Original headline remains **550/515**; no admission recount or slot
 credit, Stage 1 **21 accepted / 12 missing / 0 unreviewed of 33**.
 
 [Implementation and replay](../../tests/wasm/stage1/bootstrap-class-growth/README.md).
+
+### Audit 167 tooling acceptance — 23 September
+
+Steve accepted R2 after Claude's independent replay. Both audit-166 defects
+are closed; O-37 has the separately committed manifest-binding repair.
+[Acceptance](stage1/acceptance-bootstrap-validation.json) records the speaker,
+review and scope. No new CCL execution or ledger credit; runtime work resumes
+with class-image roots. Historical archive migration remains deferred.

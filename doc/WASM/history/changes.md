@@ -1,3 +1,12 @@
+## 2026-09-23 — accept reviewed validation tooling; resume class-image work
+
+Steve authorized acceptance: “Fine. Accept and proceed to a large work unit you complete absolutely.”
+Audit 167 is imported verbatim as 9f65dabb. The reviewed R2 tooling is accepted
+without compiler/runtime changes or slot credit. O-37 is repaired at fa684f81;
+its focused checks remain distinct from the R2 full run. O-39 requires the
+fixture's explicit class mapping. O-40 historical archive migration is deferred.
+See [acceptance](../stage1/acceptance-bootstrap-validation.json).
+
 ## 2026-09-23 — audit 166 fixes and bounded validation workspaces
 
 Imported Claude's P5 directive a7711fdb as 28dad07a and audit 166 daf8f0e7

@@ -1,0 +1,14 @@
+{
+  "decision": "ACCEPTED",
+  "id": "STAGE1-BOOTSTRAP-VALIDATION-R2",
+  "authorization": {
+    "speaker": "Steve",
+    "quote": "Fine. Accept and proceed to a large work unit you complete absolutely."
+  },
+  "review_commit": "02746bad29be3929b5599bc220bce366dbf6ccca",
+  "review_import": "9f65dabb",
+  "repair_commit": "fa684f81",
+  "slot_credit": false,
+  "new_execution": false,
+  "scope": "Validation tooling only; no compiler or runtime change. Use measured focused/probe workflows; no further tooling expansion in this work unit."
+}
