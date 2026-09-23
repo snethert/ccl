@@ -177,3 +177,30 @@ Answers, so they are not re-derived:
 - **Why the tests take so long:** no compile cache (BT-11), no execution provenance (BT-10), probes that rebuild the corpus (BT-12), and no parallelism at any stage with 16 cores idle.
 
 - BT-15. Parallel drivers. `wat2wasm` runs in a process pool and rows execute across N workers (rows are already isolated in workers, so ordering is a sort at the end, not a change to any comparison); N is recorded in the packet. Deterministic artifacts are unchanged by construction, which the existing hash assertions show. Expected on its own: ~10 min → ~3 for a full replay; combined with BT-10/11, a delta packet's execution is seconds. Part of the same implementation packet as BT-10–12.
+
+#### Codex review of P4 (23 September)
+
+Read from `a0b2fb05` and `bbafc488` at the user's request before continuing
+testing; imported verbatim, without changing their awaiting-adoption status.
+The active class-growth packet changes the compiler and drivers and therefore
+warrants a full run even under the proposed tiers. It uses four WABT assembly
+workers and retains the actual compiled compiler and generated drivers for
+review. This does not yet implement the compile cache or focused probe runner.
+
+One correction to the measured-phase explanation: the retained class-table
+`check.mjs` creates two Workers sequentially, one per placement. Each installs
+the generated modules once, then loops over the corpus. Case resets reconstruct
+services and state; graph projection, collection and read-back recur. Rows are
+not currently separate Workers. Parallel row partitions need an explicit reset
+contract and comparison against the sequential result; sorting alone does not
+establish isolation. The reported wall times remain observations, and the
+proposed speedups remain estimates.
+
+For BT-10, execution identity must include the row's inputs, expected results,
+globals, pools and class graph, mode/FP word, placement and movement settings,
+engine identity, and all harness dependencies (including graph codecs), as well
+as modules and services. BT-11 likewise needs the target architecture and the
+complete compile-file environment and dependencies, not just an individual
+definition's source hash. Those additions preserve the file-environment fix
+from audit 157 and prevent cache reuse from hiding a changed oracle or setup.
+No execution credit is reused by a partial key in the current packet.

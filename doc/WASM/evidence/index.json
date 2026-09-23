@@ -3587,6 +3587,14 @@
       "review_disposition": "ACCEPTED",
       "scope": "Source identity and qualification reuse for audit-164 integration. No new execution.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CLASS-GROWTH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-growth-r1/packet.json",
+      "sha256": "509d916f2255a6707c3779744240f7a025b6a4499ca45e69c4e52100659d05a1",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Default-off target-owned EQ class tables, doubling growth through 16384 entries, REMHASH and CLRHASH; cells rebuilt on the moving heap. Implicit failures construct conditions through MAKE-CONDITION and the live class table; class modules emit no registry and failure witnesses poison legacy registry rows. Class objects remain native-projected. Undefined FUNCALL retains the inherited base-class boundary; SYMBOL-VALUE kernel restart defaults remain unsupported. Cross-dumped image, READY, debugger/re-entry and removal of legacy mode remain open. No original-definition gain or slot credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

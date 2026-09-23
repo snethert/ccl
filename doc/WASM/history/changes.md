@@ -1,3 +1,20 @@
+## 2026-09-23 — growing class tables and class-based implicit failures
+
+After the accepted class-table integration, implement bounded table growth,
+REMHASH, CLRHASH and a target constructor. Build the table and all 612 cells
+on the moving heap. Replace the registry allocator in class mode with ordinary
+Lisp MAKE-CONDITION; exercise implicit type, integer/float arithmetic and cell
+errors with the legacy registry unavailable. Class objects remain projected.
+
+The clean run passes 26,048 comparisons and
+19,854 collections, with 30 directed
+owner checks and 40 collector checks. R6/R6a passes 21,843 native tests and
+restores 164 FASLs. Retention validates this completed run without claiming
+another execution. Development failures and the inherited undefined-call
+subclass difference are retained and disclosed. No shared source change in
+this proposal, no original-definition gain (550/515), no admission recount,
+and no slot credit. Stage 1 remains 21 accepted / 12 missing / 0 unreviewed.
+
 ## 2026-09-23 — audit 164 and native class-table integration
 
 Import Claude audit 164 verbatim from e919cb6f. Steve explicitly answered

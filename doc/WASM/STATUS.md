@@ -728,3 +728,26 @@ execution or admission claim. The 550/515 headline and Stage 1 21/12/0 remain.
 O-19 and O-21–O-26 are in runtime obligations; class-table growth, REMHASH, implicit registry
 retirement and cross-dumped image/READY remain open.
 [Integration](stage1/integration-class-table.json).
+
+### Growing class tables and implicit conditions proposal — 23 September 2026
+
+The default-off proposal allocates its class table and all 612 cells on the
+moving heap, doubles capacity through 16,384, and supplies REMHASH and CLRHASH.
+Class-mode implicit failures use MAKE-CONDITION and the live class table; the
+emitted modules have no condition registry, allocator or mask reader. The new
+implicit-error cases run with legacy registry rows replaced by NIL.
+
+**26,048 comparisons / 19,854 collections**,
+**30 directed owner checks / 40 collector checks**;
+native R6/R6a **21,843 tests / 164 restored FASLs**. Unchanged runtime binaries
+are reused by source and binary identity. Retention validates the completed
+clean run and explicitly records no additional execution.
+
+Class objects are still projected. Growth stops at the accepted leaf's 16,384
+limit. Undefined FUNCALL retains the earlier base-class boundary; exact native
+subclass/argument payload is not claimed. The cross-dumped image/READY,
+debugger/re-entry and removal of legacy mode remain open. The proposal awaits
+review. Original headline remains **550/515**; no admission recount or slot
+credit, Stage 1 **21 accepted / 12 missing / 0 unreviewed of 33**.
+
+[Implementation and replay](../../tests/wasm/stage1/bootstrap-class-growth/README.md).
