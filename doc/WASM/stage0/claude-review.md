@@ -3700,3 +3700,71 @@ The audit-165 forms resubmitted as a class-mode batch — `CORE-CPL-GROW-TOMBSTO
 ### Disposition
 
 The tooling does what P4 asked in structure and in its identity discipline: the session and WABT caches reproduce the author's modules bit-for-bit, the four-worker execution reproduces every retained result, identity validation refuses each mutant, and the probe runner compiles only the submitted forms in a few seconds. It is not yet usable for its main purpose, because the provenance key sweeps in non-input files and so the delta workflow reruns everything (O-33), and class-mode probes with large allocations refuse (O-34). Recommended: fix O-33 and O-34 in a revision before acceptance; O-35 optional. Once O-33 is fixed, BT-13's Tier 1 for the reviewer is `restore` + `verify --tier focused` from the retained report, which this audit measured at under five minutes end to end.
+
+## Hundred-and-sixty-seventh Claude audit — STAGE1-BOOTSTRAP-VALIDATION-R2 (audit-166 fixes and P5 workspaces) at adb1bea1 — 23 September 2026
+
+Reviewer: Claude Fable 5.1, worktree `~/Source/ccl-claude`, branch `claude-audit-167`, cut at adb1bea1 while Codex works in the main checkout; this commit changes only this file, and the STATUS row and history entry are owed at merge. Audits 165 (be9b5586) and 166 (efc2270e), the P4 correction (a5c68368) and P5 (28dad07a) are imported; each imported section is byte-equal to my original (`e113a663`, `daf8f0e7`, `7f3b2382`, `a7711fdb`), and the index's R1 row is bound to `daf8f0e7` with the review file's hash `f79a0564…`, which I reproduce.
+
+**Review tier (BT-13): Tier 2 on the tooling, run entirely the P5 way.** The packet changes no compiler or runtime byte; it repairs O-33 and O-34 and implements BT-16, BT-17 and BT-19. Every command below is the packet's own at adb1bea1 with `PYTHONDONTWRITEBYTECODE=1`, from the shared cache `~/Library/Caches/ccl-wasm-validation` (session `838efc49…` was already present — restore executed nothing and copied 4.2 GB), with one output root `/private/tmp/ccl-work/claude/a167/` that peaked at 11 GB and was deleted at the end of this audit. The audit records hashes and counts, not tree paths. `df` before the runs: 294 GB free.
+
+### Throughput (R-1)
+
+| | P4 tooling R1 (166) | R2 |
+|---|---|---|
+| Executed originals, matching native | 550 | **550** |
+| Non-NIL witness | 515 | 515 |
+| Accepted / missing / unreviewed, of 33 | 21 / 12 / 0 | 21 / 12 / 0 |
+| Target comparisons | 26,048 | 26,048 (same corpus) |
+
+No credit moves and none is claimed. The measure is again reviewer and author minutes.
+
+### Evidence (Tier 0)
+
+`2026-09-23-stage1-bootstrap-validation-r2`: 159 recorded files, 658,640,787 bytes, all present with matching hashes and nothing extra; packet `9c50dba1…` `NOT_REVIEWED`, `slot_credit: false`; catalog `2e1572d6…` at evidence commit 8d709033; index byte-equal to its snapshot; the 27 `tool_sources` equal the blobs at adb1bea1. 540 MB of the packet is `session.tar.gz` (O-40). The retention is identity-only ("final retention does not execute"); the author's full four-worker run, the sequential/reversed comparisons, the delta run with an extra development log, the old-driver control and nine failed class-probe attempts are retained separately, with their submitted inputs and logs and without corpus copies.
+
+### What I ran, and what it cost
+
+| step | wall | result |
+|---|---|---|
+| `packet.py restore` (session already cached) | 49 s | PASS; identity validated, zero execution |
+| `run.py build` (warm) | 27 s | PASS; zero compiler, oracle or WABT subprocesses |
+| `verify --tier focused --parent <restored report>` | 68 s (execution 40 s) | PASS — **0 fresh, 128 sampled, 25,920 inherited** |
+| same, after adding `driver/development/claude-a167.log` | 68 s | PASS — identical counts; environment key unchanged |
+| mutant: one byte appended to `driver/execute.lisp` (declared) | 14 s | refused before execution, `artifact identity: driver/execute.lisp` |
+| mutant: undeclared `driver/injected.py` | 3 s | `--tier identity` PASS (O-38); `manifest_checks.py` refuses it at `prepare` |
+| mutant: `execute.lisp` dropped from `driver-manifest.json` and changed | 3 s / 64 s | `--tier identity` refused through the retained report; `--tier focused --indices [0,1,2,3]` **PASS with 16 fresh, 0 inherited** (O-37) |
+| class-mode probe, audit-165 forms (`GROW-TOMBSTONES`, `OWN-SIZES`, `ARG-COUNT`, `THROW-TAG`) | 87 s (compile 8.7 s, execution 32 s) | **PASS, 16 comparisons** — `OWN-SIZES`, which refused at 166, passes |
+| class-mode probe, the packet's `examples/class-probes.lisp` | 82 s (compile 4.4 s, execution 32 s) | PASS, 16 comparisons; assembly keys equal the retained `class-probe.json` |
+| class-mode probe, my four audit-166 isolating forms, no recipe patch | 63 s + three `--indices` runs | see below |
+| `manifest_checks.py`, `storage_checks.py` | 0 s, 1 s | PASS; 13 storage checks |
+| `run.py gc` | 0 s | nothing expired; reports `/private/tmp/ccl-work/codex/p4-cleanup` as unmanaged (no marker) |
+
+Reviewer Tier 1 for a packet on this corpus is therefore restore + warm build + focused verify = **144 s**, against 12 minutes at audit 165 and 225 s (all fresh) at audit 166. That is BT-13's Tier 1 delivered.
+
+### O-33 and O-34, verified
+
+**O-33 closed.** `prepare.driver_inputs` takes the execution inputs from `driver-manifest.json` and excludes `development/` and `development.json`; my focused run against the restored report inherited 25,920 of 26,048 comparisons with an extra development log present, and a changed declared driver refuses before any execution. The retained delta run (`delta.json`: 0 fresh, 128 sampled, 25,920 inherited, 41 s, `changed_non_input: driver/development/audit-166-extra.log`) is reproduced.
+
+**O-34 closed, and its cause is what Codex says.** The four audit-165 forms including `OWN-SIZES` pass through the R2 runner; Codex's control that patches the R1 `probe.lisp` (`5cfdf1b7…`) into the R2 runner still refuses with checked 2 (`alias-control.json`), which I reproduced. I then isolated which of the driver's two changes is decisive, using the packet's own `examples/class-probes.lisp` against the same restored session:
+
+| driver variant | compile | execution |
+|---|---|---|
+| R2 without the `*pool-symbol-owners*` sort | refused by the runner: `symbol identities changed` | — |
+| R1 plus the sort (no SETF binding) | PASS | `probe_1: checked 2` |
+| R2 without the SETF-binding block (sort kept) | PASS | `probe_1: checked 2` |
+| R2 as shipped | PASS | 16 comparisons PASS |
+
+So the ordering change is necessary only to satisfy the runner's own identity check, and the refusal is removed by binding each retained uninterned `(SETF …)` owner to the symbol saved in its module record instead of a fresh `MAKE-SYMBOL`. My audit-166 hypothesis ("an explicit signal under `handler-case`") was the symptom — the explicit-signal path is what reaches those owners — not the cause. Withdrawn in favour of Codex's.
+
+My four audit-166 isolating forms, resubmitted unchanged (so without the packet's istruct classification), now sort into three things none of which is a runner defect: `PLAIN-ERROR` with `core-condition-prepare` **passes** (4 comparisons); `PLAIN-ERROR-NOCOLLECT`, which skips `core-condition-prepare`, refuses with checked 2 — the rule from audit 164 stands, prepare first; `REQUIRE-TYPE` on the fixture's istruct refuses with **checked 4** while the same form passes with `examples/class-inputs.lisp`'s classification (O-39); and `REFUSE-16385` mismatches because the native stand-in `ccl::%wasm-make-class-table` in `driver/cpl-inputs.lisp:128` is a plain `make-hash-table` with no ceiling (native `:made`, target `:refused` from `w32-prims.lisp:576`) — the audit-165 rule that a target-only value needs its `#-wasm32-target` expectation, which the packet's `validation-class-capacity` follows.
+
+### Findings
+
+- **O-37 (observation, provenance).** `driver-manifest.json` is the source of truth for the driver inputs and is not itself bound: it is neither in `execution-environment.json`'s file manifest nor recomputed from the parent's `review-artifacts.json`. Dropping a declared driver from it and changing that driver yields a focused run that passes (16 fresh, nothing inherited) whose environment simply omits the file. The consequence is bounded — the row keys change so nothing is inherited, and the identity tier refuses through the retained report — but the run is a PASS over an undeclared driver. Fix: put `driver-manifest.json`'s hash into the execution environment, or derive the declared set from the parent's `review-artifacts.json` plus `c.HERE/driver`, which `build.prepare` already has. Not required for acceptance.
+- **O-38 (observation).** `verify --tier identity` does not call `prepare`, so an undeclared `driver/*.py` is not refused at that tier. Nothing executes at that tier and the retained report's file set is what is checked, so this is a note, not a gap.
+- **O-39 (fixture, disclosed).** In class mode a `type-error` whose datum is an istruct the fixture image has not classified refuses with checked 4 instead of signalling; `examples/class-inputs.lisp` classifies the NHASH slot for that reason and the README says it is recipe setup. Reviewers writing class-mode probes over `cpl-image` should copy that line. The checked-4 path deserves a sentence in the runtime's condition contract when the real bootstrap image is in play, since there every istruct will be classified and the refusal should be unreachable.
+- **O-40 (P5).** BT-16, BT-17 and BT-19 are implemented and their checks pass here; Codex's own outputs were deleted after retention (`retention-cleanup.json`, `all_absent: true`; its work root is 4 KB). BT-18 is not: the packet retains the 540 MB session, and the evidence store is 27 GB against the under-10 GB target. The retention is justified — `compiler.image` is not byte-reproducible: the two cached sessions `89134a62…` (R1 builder) and `838efc49…` (R2 builder) have identical `modules.json`, `symbols.json` and `pools.json` but different image bytes (`975b4474…` vs `a33e6c96…`), so a cold rebuild cannot restore the image identity a probe binds to. The migration Codex defers ("archive-dependent verifiers must be able to regenerate or retrieve elided inputs") is the right shape; it stays owed. Small leftovers outside the managed root: 48 `/private/tmp/ccl-p4-*` logs and scripts and an unmanaged `/private/tmp/ccl-work/codex/p4-cleanup`, which `gc` correctly skips. Each probe batch copies the base tree minus the image (820 MB per batch); three batches plus base and restored trees made the 11 GB peak, all under the 24-hour policy.
+
+### Disposition
+
+R2 does what audit 166 asked: the delta workflow inherits (O-33), class-mode probes with explicit signals execute (O-34, cause confirmed by isolation), and the P5 lifecycle is enforced by the tools rather than by discipline. No defect found. Recommended for acceptance as tooling with no slot credit; O-37 is a one-line hardening for the next revision, O-39 a sentence in the contract, BT-18 remains owed. The parallelism detour should now close: reviewer Tier 1 is measured at 144 s, probe compile at 4–9 s, and the next packet should move the ledger.
