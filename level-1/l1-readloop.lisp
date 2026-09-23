@@ -176,6 +176,12 @@
   (setq *quitting* t))
 
 
+#+wasm32-target
+(defun signal (condition &rest args)
+  (declare (dynamic-extent args))
+  (apply #'%wasm-signal condition args))
+
+#-wasm32-target
 (defun signal (condition &rest args)
   "Invokes the signal facility on a condition formed from DATUM and
    ARGUMENTS. If the condition is not handled, NIL is returned. If

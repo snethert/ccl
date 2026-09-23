@@ -1,3 +1,15 @@
+## 2026-09-23 — audit 164 and native class-table integration
+
+Import Claude audit 164 verbatim from e919cb6f. Steve explicitly answered
+“Accept and integrate default-off”. Integrate the three reviewed files byte-exact;
+reuse the final-source 21,843-test native qualification and Claude’s independent
+25,984-comparison replay. The identity check claims no new execution.
+
+Carry O-19 and O-21 through O-26, including the distinction between author reuse-output
+validation and Claude’s fresh replay. SIGNAL placement is integrated from the reviewed proposal. REMHASH, growth, implicit registry
+retirement and the actual image/READY join remain open. Stage 1 remains 21/12/0
+of 33, with 550 original executions / 515 non-NIL witnesses.
+
 ## 2026-09-23 — target class-cell allocation and publication
 
 After accepting audit 163, implement SETF GETHASH through the accepted EQ leaf

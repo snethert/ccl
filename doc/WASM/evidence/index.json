@@ -3568,8 +3568,24 @@
       "id": "STAGE1-CLASS-TABLE-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-table-r1/packet.json",
       "sha256": "790f0506420bad9a4d6fde9bea4164a73b84e00a8133d97ad617db6ea1c62004",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Default-off SETF GETHASH through the accepted EQ store leaf, native FIND-CLASS-CELL target allocation, reconstruction of all 612 class cells, collection and subsequent condition construction. SIGNAL moved into a wasm32 branch in l1-readloop. Class objects remain native-projected; class finalization/type-cache registration, implicit registry and image/READY remain open. Four new callers/cases, 16 new comparisons; original headline unchanged 550/515. No slot credit.",
+      "review_disposition": "ACCEPTED",
+      "scope": "Default-off class-table publication, target allocation of 612 class cells, and SIGNAL source placement. Classes remain projected; no cross-dump/READY or registry-retirement claim. Accepted by Steve after audit 164, integrated byte-exact. O-19 and O-21 through O-26 carried in runtime obligations; no new execution credit.",
+      "slot_credit": false,
+      "review": {
+        "reviewer": "Claude",
+        "commit": "e919cb6f259ccb9c12ca52647875d788c398f4b7",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "31fe1449b407082a5159afe9be905c068427b8277d848da2b84ca6bc77fc8e75",
+        "import_commit": "a11aa77b29dcfdab9b872eea5f4042856e07c592"
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-class-table.json"
+    },
+    {
+      "id": "STAGE1-CLASS-TABLE-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-table-acceptance/packet.json",
+      "sha256": "9d69cdb8d9a7263d1d7fa933f5a310b030f31fd999725e80b193885994f87ad7",
+      "review_disposition": "ACCEPTED",
+      "scope": "Source identity and qualification reuse for audit-164 integration. No new execution.",
       "slot_credit": false
     }
   ],

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-class-table.json",
+  "acceptance_sha256": "c4a5f4be2cab4a197bd45c1d3c965da522655af3cfe942f7671e3e742dd778e6",
+  "previous_integration": "integration-condition-system.json",
+  "previous_integration_sha256": "5d1982de5eb81314bbcab1183c73ee7a29e1518709fd09d7ae325499f69653b5",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "e60333fd1a90224430235899916c96414f1db74bab5200b57809100935b75f61",
+      "after": "13e984cad8c00f88e4d66eeee556c36a73d2c44010189ef442043f3c5225efaf",
+      "reviewed": "13e984cad8c00f88e4d66eeee556c36a73d2c44010189ef442043f3c5225efaf"
+    },
+    {
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "before": "1742b391be3144002200a08099061212c167f41821a6039fb47c62f52352b464",
+      "after": "022a2c5a98820efcd372a778d35002400139b9ba75aa2f14ca42620401a086e0",
+      "reviewed": "022a2c5a98820efcd372a778d35002400139b9ba75aa2f14ca42620401a086e0"
+    },
+    {
+      "file": "level-1/l1-readloop.lisp",
+      "before": "84c7269352818805f7510c5ef7b6ca3f5979dc220388c0421e6c4b16529d9263",
+      "after": "29592ad95f7f5937403901ff475931b09e1ee245b8fb19a8a0dbf4b96850bbad",
+      "reviewed": "29592ad95f7f5937403901ff475931b09e1ee245b8fb19a8a0dbf4b96850bbad"
+    }
+  ],
+  "default_enabled": false,
+  "qualification": {
+    "mode": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "record": "2026-09-23-stage1-class-table-acceptance/integration-check.json",
+    "sha256": "514b6bb9b1d7dfdf15434ae18bedf1d1f532289b86dc00457b32f009742eec62",
+    "native_run": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-table-r1/native/run.json",
+    "native_run_sha256": "3ae2f5f1168c5864b9ab642aa0b824bbf75a29d94c8b16a45334a9a1d85bfad0",
+    "summary_sha256": "209f2c33b60be2fbcd50a38c425c2b1618e9c492eda75cda0eaba247d9afa65f",
+    "source_files_checked": 417,
+    "qualified_proposal_files": 33,
+    "comparisons_reused": 25984,
+    "native_tests_reused": 21843,
+    "new_execution": false
+  },
+  "observations": [
+    "O-19: Finalized initialized CPLs remain required; class finalization is not qualified.",
+    "O-21: Implicit condition allocation still uses the old registry; *BREAK-ON-SIGNALS* and %ERROR re-entry remain open.",
+    "O-23 closed: SIGNAL is now a wasm32-target branch in l1-readloop.lisp.",
+    "O-24 partially closed: SETF GETHASH creates and publishes cells. REMHASH and growth remain owed; the 2048-slot projection holds 612 cells with room for 1436 further distinct names.",
+    "O-25: Author retention used --reuse-output; Claude audit 164 rebuilt from scratch. Integration reuses both without claiming new execution.",
+    "O-26: Native oracle cases must isolate named cells and must not compare obsolete backing-vector identities after growth.",
+    "Classes remain projected native objects. Actual cross-dumped class roots and READY installation remain owed."
+  ],
+  "slot_credit": false
+}

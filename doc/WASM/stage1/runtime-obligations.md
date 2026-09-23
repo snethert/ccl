@@ -638,3 +638,13 @@ Actual image roots and the READY join remain required. See
 - O-22: Author retention used --reuse-output (execution_rebuilt: false). Claude audit 163 performed the independent from-scratch replay (execution_rebuilt: true). Integration reuses both and claims no new execution.
 - O-23: SIGNAL currently resides in w32-prims.lisp. Move it to a #+wasm32-target branch in l1-readloop.lisp in the next proposal; this integration preserves reviewed bytes.
 - O-24: Only strong-EQ GETHASH is admitted. SETF GETHASH and class-table writes remain the next implementation work.
+
+## Audit 164 — accepted default-off native condition system
+
+- O-19: Finalized initialized CPLs remain required; class finalization is not qualified.
+- O-21: Implicit condition allocation still uses the old registry; *BREAK-ON-SIGNALS* and %ERROR re-entry remain open.
+- O-23 closed: SIGNAL is now a wasm32-target branch in l1-readloop.lisp.
+- O-24 partially closed: SETF GETHASH creates and publishes cells. REMHASH and growth remain owed; the 2048-slot projection holds 612 cells with room for 1436 further distinct names.
+- O-25: Author retention used --reuse-output; Claude audit 164 rebuilt from scratch. Integration reuses both without claiming new execution.
+- O-26: Native oracle cases must isolate named cells and must not compare obsolete backing-vector identities after growth.
+- Classes remain projected native objects. Actual cross-dumped class roots and READY installation remain owed.

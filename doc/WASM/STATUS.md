@@ -716,3 +716,15 @@ cross-dumped image/READY join remain open. No new original-definition credit:
 unreviewed of 33**. The proposal awaits review.
 
 [Implementation and replay](../../tests/wasm/stage1/bootstrap-class-table/README.md).
+
+### Audit 164 — accepted and integrated, default-off
+
+Claude’s audit e919cb6f is imported verbatim. Steve accepted the reviewed
+class-table proposal; three shared source files match it byte for byte.
+The identity check reuses native R6/R6a (21,843 tests) and the independently
+replayed 25,984 comparisons / 19,514 collections / 40 owner checks. No new
+execution or admission claim. The 550/515 headline and Stage 1 21/12/0 remain.
+
+O-19 and O-21–O-26 are in runtime obligations; class-table growth, REMHASH, implicit registry
+retirement and cross-dumped image/READY remain open.
+[Integration](stage1/integration-class-table.json).

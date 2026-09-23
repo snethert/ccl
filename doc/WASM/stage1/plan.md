@@ -737,3 +737,10 @@ Steve accepted the native condition-system proposal default-off. Four source
 files equal the reviewed proposal. Continue with SETF GETHASH, real image class
 roots and retirement of the implicit allocation registry. See
 [integration](integration-condition-system.json) and its explicit obligations.
+
+## Audit 164 integration
+
+Steve accepted the native class-table proposal default-off. Three source
+files equal the reviewed proposal. Continue with growth, REMHASH, real image class
+roots and retirement of the implicit allocation registry. See
+[integration](integration-class-table.json) and its explicit obligations.

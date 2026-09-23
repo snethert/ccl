@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "Accept and integrate default-off",
+    "context": "Direct answer to audit 164 acceptance question."
+  },
+  "author": "Codex",
+  "proposal_commit": "a7d33401c2939ace3da38f5fc95a81344e7b7ac9",
+  "review": {
+    "reviewer": "Claude",
+    "commit": "e919cb6f259ccb9c12ca52647875d788c398f4b7",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "31fe1449b407082a5159afe9be905c068427b8277d848da2b84ca6bc77fc8e75",
+    "import_commit": "a11aa77b29dcfdab9b872eea5f4042856e07c592"
+  },
+  "packet": {
+    "id": "STAGE1-CLASS-TABLE-R1",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-class-table-r1/packet.json",
+    "sha256": "790f0506420bad9a4d6fde9bea4164a73b84e00a8133d97ad617db6ea1c62004"
+  },
+  "scope": "Default-off class-table publication, target allocation of 612 class cells, and SIGNAL source placement. Classes remain projected; no cross-dump/READY or registry-retirement claim.",
+  "observations": [
+    "O-19: Finalized initialized CPLs remain required; class finalization is not qualified.",
+    "O-21: Implicit condition allocation still uses the old registry; *BREAK-ON-SIGNALS* and %ERROR re-entry remain open.",
+    "O-23 closed: SIGNAL is now a wasm32-target branch in l1-readloop.lisp.",
+    "O-24 partially closed: SETF GETHASH creates and publishes cells. REMHASH and growth remain owed; the 2048-slot projection holds 612 cells with room for 1436 further distinct names.",
+    "O-25: Author retention used --reuse-output; Claude audit 164 rebuilt from scratch. Integration reuses both without claiming new execution.",
+    "O-26: Native oracle cases must isolate named cells and must not compare obsolete backing-vector identities after growth.",
+    "Classes remain projected native objects. Actual cross-dumped class roots and READY installation remain owed."
+  ],
+  "slot_credit": false
+}
