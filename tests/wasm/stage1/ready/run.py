@@ -35,6 +35,7 @@ def measurements(out):
     c.save(out/'closure.json',closure)
     c.save(out/'callbacks.json',local('dispositions').dispositions(closure))
     c.save(out/'replacements.json',local('replacements').census(closure))
+    c.save(out/'replacement-controls.json',local('replacements').controls(closure))
     # Import normally for mock-patching the read boundary in directed controls.
     import closure as closure_module
     c.save(out/'census-controls.json',closure_module.controls(out/'compiled'))
@@ -42,18 +43,24 @@ def measurements(out):
 
 def run(out):
     out.mkdir(exist_ok=True);times={}
+    local('compiler').install()
     start=time.monotonic();build(out/'base',c.DEFAULT_CACHE);times['build']=time.monotonic()-start
     start=time.monotonic()
     probe(out/'base',HERE/'startup.lisp',HERE/'inputs.lisp',out/'compiled',c.DEFAULT_CACHE,'class',4)
     execution_prepare(out/'compiled');local('prepare').prepare(out/'compiled')
     times['compile']=time.monotonic()-start
+    from execute import execute
+    times['full_corpus']=execute(out/'base',4,'full')
     c.save(out/'closure.json',local('closure').census(out/'compiled'))
     times['heap_keys']=c.command([c.NODE,HERE/'heap-keys.mjs',out/'compiled/hash.wasm',out/'heap-keys.json'],
                                 out/'heap-keys.log',timeout=60)
     times['admission_controls']=admission_controls(out)
+    times['owner_controls']=c.command([c.NODE,HERE/'owner-controls.mjs',out/'compiled',out/'owner-controls.json'],out/'owner-controls.log',timeout=60)
     for mode,name in [('write','writer'),('read','reader')]:
         times[name]=c.command([c.NODE,HERE/'run.mjs',out/'compiled',mode,out/'images',out/(name+'.json')],
                              out/(name+'.log'),timeout=600)
+    start=time.monotonic();local('guard_control').check(out,local('prepare').prepare)
+    times['guard_control']=time.monotonic()-start
     measurements(out)
     c.save(out/'times.json',times)
     return summarize(out)
@@ -65,15 +72,16 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==6
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==8
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
         assert result['processReady']==2 and result['classMode'] and not result['scheduler']
         row=result['rows'][0]
         assert {k:v for k,v in row.items() if k!='moved'}=={k:v for k,v in reference.items() if k!='moved'}
-    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash']
+    assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash','image-class-shape','image-class-cpl','image-class-wrapper','image-wrapper-class','image-obsolete-wrapper','image-cpl-head','image-method-combination','image-method-function']
     assert all(r['state']==3 for r in reader['refusals'])
+    assert all(r['directEntry'] and r['rootsPreserved']==5 for r in reader['refusals'] if r['rejected'].startswith('image-'))
     assert reference['values'][:4]==[612,33,43,41]
     for result in writer['results']+reader['results']:
         assert len(result['profileChecks'])==1
@@ -90,10 +98,17 @@ def summarize(out):
     keys=c.read(out/'heap-keys.json')
     assert keys['status']=='PASS' and len(keys['records'])==2
     assert all(r['omitted_moved_lookup_misses']>0 for r in keys['records'])
-    report=dict(status='PASS',producer_comparisons=1,cold_boots=4,
+    assert c.read(out/'owner-controls.json')['status']=='PASS'
+    guard=c.read(out/'guard-control.json')
+    assert guard['status']=='PASS' and guard['rejectedBy']=='startup root preservation'
+    from execute import bound_report
+    full,_=bound_report(out/'base/execution-report.json')
+    assert full['tier']=='full' and full['inherited_comparisons']==0
+    report=dict(status='PASS',generated_admission_omission_rejected=True,producer_comparisons=1,cold_boots=4,
+        full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=33,controls=len(reader['refusals']),
-        image_admission_controls=31,profile_refusals=8,public_table_bindings=4,native_state_restorations=6,
+        image_admission_controls=31,profile_refusals=8,public_table_bindings=4,native_state_restorations=8,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
         original_definition_credit=0,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')

@@ -42,7 +42,7 @@
         (format stream "[~s,~d]" (symbol-name op) count))
       (write-string "]}" stream))
     (write-char #\] stream))
-  ;; The probe driver consumes its module list. Recompile just this three-entry
+  ;; The probe driver consumes its module list. Recompile just this submitted
   ;; file in the same environment and require byte equality with its installed
   ;; modules; no retained corpus definition is compiled again.
   (dolist (module probes)
@@ -51,14 +51,14 @@
                             :direction :output :if-exists :error)
       (write-string (getf module :wat) stream))))
 
-;;; The three oracle entries share fixture state, not the native process's
+;;; The oracle entries share fixture state, not the native process's
 ;;; real GF population or scheduler state. PROGV restores even on an error.
 (defun ready-isolate-native-entries ()
   (let* ((names '(ccl::%all-gfs% ccl::*enable-automatic-termination*
                   ccl::*%periodic-tasks%*))
          (original (mapcar #'symbol-value names))
          (state (copy-list original)))
-    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -78,5 +78,5 @@
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings)
+    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract)
           collect (list name (list (list image))))))

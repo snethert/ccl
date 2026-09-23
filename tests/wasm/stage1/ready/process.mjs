@@ -1,3 +1,4 @@
+import {bindReadyTables} from './ready-bindings.mjs';
 import {InitializationOwner} from './runtime/initialization-owner.mjs';
 import {sha256} from './runtime/sha256.mjs';
 
@@ -17,6 +18,16 @@ export function processOwner(memory,gen,base,size){
  for(const [offset,value] of Object.entries(fields))words[offset/4]=value;
  const layout={version:1,workers:[0],regions,writes:[{region:'tcr-0',owner:0,offset:0,words}],
   modules:[],tableCapacity:4096,reservedSlots:[0]};
- return new InitializationOwner({memory,layout,layoutDigest:sha256(JSON.stringify(layout)),
+ const owner=new InitializationOwner({memory,layout,layoutDigest:sha256(JSON.stringify(layout)),
   modules:[],table:gen.env.table,tail_table:gen.env.tail_table});
+ return {
+  process:owner.process.bind(owner),
+  start({image,entry,args,owners,get,put,bindings,invoke}) {
+   if(image.state!=='INSTALLED')throw Error('READY_IMAGE_NOT_INSTALLED');
+   if(!entry)throw Error('READY_ENTRY_REQUIRED');
+   bindReadyTables({owners,gen,get,put,bindings});
+   // The generated initializer performs admission before publishing roots.
+   return invoke(entry,args);
+  }
+ };
 }

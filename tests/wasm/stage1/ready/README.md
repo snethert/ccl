@@ -1,90 +1,102 @@
-# Projected-image READY join — R4
+# Projected-image READY join — R5
 
-Original CCL execution remains **550 / 515 non-NIL**. R4 implements the READY
-public hash-table bindings and generated class-image admission. This remains
-one working READY unit, with no LL15 slot claim or new original-definition
-credit. Compiler, CCL and shared runtime sources are unchanged.
+Original-definition credit remains **550 / 515 non-NIL**, with no LL15 slot
+claim. R5 fixes a real MAKE-STRING recursion in the READY dependency graph,
+moves public table binding into the boot-owner proposal, and tests generated
+admission through READY-START. Shared compiler, CCL and runtime files remain
+unchanged pending review of this proposal.
 
-## Startup and public bindings
+## MAKE-STRING and the printer dependency
 
-The selected image contains **612 classes and 33 generic functions**, not all
-581 GFs in the native census. The adopted profile uses class conditions, strong
-populations, one Worker, no scheduler or automatic termination, and uncached
-standard method dispatch. The accepted image loader installs the saved heap;
-a fresh consumer cannot call the graph projector.
+Auditing the resource-string path exposed an executable defect. CCL's
+`lib/sequences.lisp` MAKE-STRING validates arguments and then calls itself in
+a form its native compiler expands into allocation. The Wasm backend emitted
+that re-entry as recursion. Even `(make-string 30)` never returned. The retained
+diagnostic isolates the hang from FIXNUMP and %FIXNUM-TRUNCATE, which return.
 
-`startup.lisp` compiles whole through CCL's file compiler. Before publishing
-class globals or `%ALL-GFS%`, `ready-image-status` reads the native class and
-method fields: standard-instance classes, nonempty CPL headed by the class,
-matching non-obsolete own wrapper, standard method combination and callable
-method function. These are checks on the selected, digest-bound image, not a
-general malformed-object validator. They do not establish closure of every
-class-finalization branch. The native oracle and Wasm agree on eight directed
-mutations; each is restored with UNWIND-PROTECT, admission succeeds afterward,
-and five startup root cells remain unchanged. The refusal caller is excluded
-from the READY operator census.
+`compiler.py` proposes one lowering at that SELF-CALL site, using the existing
+checked string allocator. It recognizes the constant keyword/element-type
+shape of CCL's own calls. Ordinary calls still enter the unchanged Lisp body
+and run its argument checks. No C/JS service or replacement Lisp implementation
+is added. `numeric-files.lisp` compiles the complete sequences file environment
+and selects MAKE-STRING in class mode, together with its unchanged %BADARG
+callee from l1-aprims. Without this second step its type error
+would use the poisoned legacy condition registry; that failure is retained too.
 
-`bindings.json` names four public function-cell routes: GETHASH, PUTHASH,
-REMHASH and CLRHASH use the **existing reviewed Lisp EQ wrappers**. Direct
-class-mode calls already used these wrappers. Calls through function cells
-previously reached the native locking implementation. Binding resolves all
-four installed function objects before writing any cell; the mapping and
-binding code are part of the code digest. This is the strong-EQ READY profile;
-the wrappers still refuse other table tests and retain their read-only checks,
-growth and capacity contract. No new C/JS table service is introduced.
+Cold startup exercises indirect calls at lengths 0, 1, 30 and 33, character
+fills, operand order with collections, and a caught invalid-character error.
+CCL's unchanged resource-string fallback returns `Error #0`, `Error #987654`
+and `Error #-37`, matching native. The new compiler runs the full existing
+corpus: 26,048 fresh comparisons / 19,824 collections pass. R6/R6a on the
+complete proposal passes 21,843 tests, 164 restored FASLs and 17 target profiles. The pristine native baseline is
+reused by identity, while the registered native build and tests are fresh.
 
-The cold startup now exercises those public cells on twenty cons keys, across
-capacity doublings and collections, with lookup, missing/default results,
-REMHASH and CLRHASH. Values and multiple-value counts match native. Four
-controls restore the native binding one at a time: all stop with checked 2
-and leave the process FAILED, rather than reaching READY or trapping.
+This does **not** implement stream locks or remove their static edges.
+%INTEGER-TO-STRING calls %PR-INTEGER with RETURN-IT true, avoiding its stream
+write on this path. The conservative graph still includes the printer's other
+branches, interactive error reporting and unresolved lock primitives.
 
-Startup resolves every class cell, checks all selected GFs in the strong
-population, constructs a condition with inherited default initargs and slot
-readers, and catches a class-based error. Its native answer remains
-`(612 33 43 41 :CAUGHT)`. The legacy condition registry is poisoned. Four cold
-boots cover both memory placements, with and without movement before startup.
-The process owner publishes READY only after the callback returns, publishes
-FAILED on a throw, and refuses a second bootstrap. Missing image, missing entry
-and premature READY also fail. The published-last memory assertion remains a
-harness check, distinct from that owner contract.
+## Boot ownership and admission
+
+The proposed `process.mjs` uses the accepted InitializationOwner. Its `start`
+entry requires an installed image and a named entry, resolves all four public
+GETHASH/PUTHASH/REMHASH/CLRHASH bindings before writing any cell, and invokes
+the generated initializer. The binding module uses no Node API. These are
+trusted, digest-bound owner inputs, not a sandbox for arbitrary entry names.
+Seven small owner checks cover successful installation and each distinct
+refusal, including a bad fourth binding leaving all public cells unchanged.
+
+Eight cold controls corrupt class shape, CPL presence/head, own wrapper,
+wrapper class/hash, method combination or method function, then invoke
+READY-START directly. They bypass the harness's status call. Each must fail
+with a checked refusal, leave five startup roots untouched, and leave the
+process FAILED. The source-level guard-omission control recompiles only the
+submitted file and must fail the startup-root preservation assertion.
+The earlier isolated status/refusal checks remain as native comparisons.
+
+The selected projected image has **612 classes and 33 generic functions**.
+Class conditions, strong populations, one Worker, disabled scheduler and
+termination, and uncached standard dispatch are unchanged. Four cold boots / 46 collections cover both placements, with and without
+movement. All 15 refusal controls pass; deleting the generated admission guard
+is rejected by the startup-root preservation assertion. They resolve every class,
+exercise moving heap-keyed tables, construct/read a condition and catch an
+error. The owner publishes READY after return and FAILED on a throw; the
+published-last memory check remains a separate harness assertion.
+
+## Census and remaining work
+
+`replacements.json` enumerates **all 548 reached modules** (509 named),
+including all 172 without source attribution and anonymous code. It searches the complete upstream
+source for antecedents, including compiler/optimizers.lisp compiler macros
+and x8632 LAP.
+A name match is explicitly **not** a proof of unchanged source. Missing
+attribution is reported; the 25-name replacement cap remains undecided until
+method/helper/branch attribution is complete. Controls prevent missing source
+metadata from shrinking the inventory.
+
+The conservative closure has 109 operators / 24,238 occurrences, 83 missing
+edges and 36 indirect-call modules. No edge is pruned because a boot or an
+admission test passed. All 35 native startup callbacks remain undischarged: their current
+symbol/effect join cannot prove absence from an incomplete walk. LL15-a/c/d
+still require that closure, full replacement attribution and callback effects.
 
 ## Reproduce
 
-From this source revision beside the evidence store and retained P4 cache:
+From this revision beside the evidence store, choose the target replay, the
+separate native rebuild, or retained-packet verification. These are not three
+required passes:
 
 ```sh
 python3 tests/wasm/stage1/ready/run.py /private/tmp/ccl-work/claude/ready/replay
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r4 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/native.py /private/tmp/ccl-work/claude/ready/native
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r5 /private/tmp/ccl-work/claude/ready/verify
 ```
 
-The warm compiler session is hash-verified. Only six new functions are
-compiled; the unchanged corpus is not rebuilt. The native process's GF and
-scheduler globals are restored after all six oracle entries. The saved native
-compiler image is tooling, never the target bootstrap heap. The written worker
-checks values, mutations and thread/binding restoration. The accepted loader's
-31 controls run with imported module hashes recorded. The heap-key image check
-still exercises MOVED, first-lookup rehash, cache invalidation and tombstones at
-both placements. Historical packets replay from their own source revisions.
-
-## Remaining READY work
-
-The public bindings remove 136 modules of native hash machinery from the
-conservative graph. The new census reaches **546 modules, 109 operator kinds,
-24,127 occurrences**, with **83 missing edges naming 59 callees** and **35
-indirect-call modules**. Roots are the startup entries, projected callables and
-four public bindings. No path is pruned merely because the image admission or
-a cold boot passed. Class finalization, reporting, some slot protocols and
-indirect calls still need closure or an explicit, justified profile exclusion.
-
-`replacements.json` retains 61 target definitions: 26 direct LAP antecedents,
-10 Lisp antecedents, seven renamed routes and 18 entries awaiting complete
-attribution. Source branches and backend substitutions still need their final
-join; the 25-name cap is not claimed yet. `callbacks.json` retains all 35 native
-registrations and their outstanding dispositions. The inherited 550/515
-execution baseline is distinguished from this cold image's execution.
-
-Development evidence includes the rejected MAPCAR dependency in the initial
-admission caller; it was replaced by an ordinary LOOP in this new fixture code.
-No native definitions were rewritten. R6/R6a is reused by unchanged shared-source
-identity. The next work remains in this READY unit.
+The compiler session key binds the proposed backend and the complete class
+compilation driver. A warm session avoids rebuilding the corpus, but a full
+execution remains required for this compiler/driver change. The verifier reuses
+the retained native qualification only after equality of every proposed source
+file; `native.py` is the separate command to rebuild that qualification. The eight submitted
+functions compile through CCL's file compiler. The saved native compiler image
+is validation tooling, not the target heap. Retention deletes disposable
+outputs; historical packets replay from their own source revisions.

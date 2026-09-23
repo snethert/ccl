@@ -845,3 +845,39 @@ caught an omitted Worker result field after execution passed. It was repaired
 and all target execution rerun, reusing only hash-identical compilation. The
 retained execution-reuse record distinguishes that from another compiler run.
 No shared compiler/runtime/CCL change, new C/JS table service or LL15 credit.
+
+
+### Audit 170 — READY R3/R4 reviewed
+
+Audit `3319f19b` imported verbatim at `15445217`. No defect; no LL15 credit.
+The surviving admission-guard mutant identifies a harness interception: direct
+READY entry must own that check. Replacement enumeration must include every
+reached name, and printer lock edges and all 35 callback obligations remain
+open. R5 continues this same READY unit.
+
+
+### READY R5 — native string allocation and owner admission
+
+Original-definition credit remains 550/515; no LL15 slot claim. The new
+resource-string witness exposed MAKE-STRING's self-call compiling as infinite
+recursion. The isolated backend now lowers only that re-entry to its existing
+checked allocator, after CCL's unchanged argument checks. Whole-file class-mode
+compilation selects MAKE-STRING and its native %BADARG callee. Indirect size,
+fill, evaluation-order/collection and caught type-error witnesses run during
+cold READY; the unchanged %RSC-STRING fallback matches three native strings.
+The final full corpus passes 26,048 fresh comparisons. R6/R6a passes 21,843
+tests, 164 restored FASLs and 17 target profiles, with exact identity over all
+33 proposal sources. Compiler/runtime/CCL shared files remain unchanged.
+
+The boot-owner proposal installs all four public table bindings before entry,
+with seven directed owner checks. Eight mutated images enter READY-START
+directly, bypassing harness preflight. The replacement census enumerates all
+548 reached modules (509 named), including all 172 lacking source attribution;
+compiler macros and x8632 LAP are candidate antecedents, not form-equality
+proofs. The closure retains 83 missing edges and 36 indirect modules, including
+printer lock branches. Replacement attribution and all 35 callback dispositions
+still prevent LL15 closure.
+
+All four final cold boots pass with 46 collections; all 15 refusal controls
+pass. Deleting the generated admission guard fails startup-root preservation.
+The complete author run is retained; retention itself claims no new execution.

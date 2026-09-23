@@ -10,7 +10,7 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const codeDigest=fs.readFileSync(dir+'/class-image-code.sha256','utf8').trim();
 const manifest=fs.readFileSync(dir+'/class-image-code.json');assert.equal(hash(manifest),codeDigest);
 for(const [name,digest]of Object.entries(JSON.parse(manifest)))assert.equal(hash(fs.readFileSync(dir+'/'+name)),digest,name);
-function run(base,move,fault){return new Promise((resolve,reject)=>{
+function run(base,move,fault){console.log(JSON.stringify({phase:'boot',base,move,fault:fault??null}));return new Promise((resolve,reject)=>{
  const worker=new Worker(new URL('file://'+dir+'/ready-worker.mjs'),{workerData:{dir,base,indices,
   controls:false,imageMode:mode,imageDir:fault==='no-image'?imageDir+'/absent':imageDir,codeDigest,move,fault}});
  worker.once('message',resolve);worker.once('error',reject);
@@ -21,7 +21,7 @@ const results=[];
 for(const base of mode==='write'?[8388608]:[8388608,2146500608])
  for(const move of mode==='write'?[false]:[false,true])results.push(await run(base,move));
 const refusals=[];
-if(mode==='read')for(const fault of ['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash']){
+if(mode==='read')for(const fault of ['no-image','no-entry','early-ready','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash','image-class-shape','image-class-cpl','image-class-wrapper','image-wrapper-class','image-obsolete-wrapper','image-cpl-head','image-method-combination','image-method-function']){
  const result=await run(8388608,false,fault);
  assert.equal(result.rejected,fault);assert.equal(result.state,3);
  assert.match(result.reason,fault==='no-image'?/ENOENT/:fault==='no-entry'?/READY_ENTRY_REQUIRED/:fault==='early-ready'?/published last/:/checked [0-9]+$/);

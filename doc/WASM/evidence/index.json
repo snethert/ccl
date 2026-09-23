@@ -3680,17 +3680,29 @@
       "id": "STAGE1-READY-JOIN-R3",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r3/packet.json",
       "sha256": "4f25c8b50b95cb474b009714009a9a4316069331f3636004711cb5aa7a110eba",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "slot_credit": false,
-      "scope": "Selected READY dependency census: 682 modules, 116 acode kinds, 33308 occurrences; 111 missing edges naming 72 callees and 40 indirect-call modules remain explicit. Names 100 target definitions and all 35 callback dispositions without claiming cap/closure completion. Native startup oracle globals restored; 31 loader controls bind imported hashes. Four cold boots pass. No original-definition or LL15 credit."
+      "scope": "Selected READY dependency census: 682 modules, 116 acode kinds, 33308 occurrences; 111 missing edges naming 72 callees and 40 indirect-call modules remain explicit. Names 100 target definitions and all 35 callback dispositions without claiming cap/closure completion. Native startup oracle globals restored; 31 loader controls bind imported hashes. Four cold boots pass. No original-definition or LL15 credit. Audit 170: no defect, no slot credit. O-48–O-51 remain obligations for the continuing READY unit.",
+      "review_commit": "3319f19bda2f1fb7c47a54761e73e11cc3fb4a58",
+      "review_sha256": "af4a3161a8c803a737ba594ea7a43ec6ce395af48391ecbbc2f926268661a1b1"
     },
     {
       "id": "STAGE1-READY-JOIN-R4",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r4/packet.json",
       "sha256": "22f405532ba7828582301904744d106c278fc98f9c4fcfcbb8866a271a69cfe9",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "slot_credit": false,
+      "scope": "READY R4: four public table function-cell bindings use reviewed Lisp EQ wrappers; generated class/CPL/wrapper/method admission before startup root publication. Four cold boots, 38 collections, eight restored profile mutations, four rejected old-binding controls, 31 loader checks. Dependency graph 546 modules / 109 acode kinds / 24127 occurrences, 59 unresolved callee names and 35 indirect modules; callback/replacement closure still open. Original execution 550/515 unchanged. Audit 170: no defect, no slot credit. O-48–O-51 remain obligations for the continuing READY unit.",
+      "review_commit": "3319f19bda2f1fb7c47a54761e73e11cc3fb4a58",
+      "review_sha256": "af4a3161a8c803a737ba594ea7a43ec6ce395af48391ecbbc2f926268661a1b1"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R5",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r5/packet.json",
+      "sha256": "3b7b09c4aa91bcfac5412f4294963af322e4a017d8b068e06b4e5af99557b2a2",
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
-      "scope": "READY R4: four public table function-cell bindings use reviewed Lisp EQ wrappers; generated class/CPL/wrapper/method admission before startup root publication. Four cold boots, 38 collections, eight restored profile mutations, four rejected old-binding controls, 31 loader checks. Dependency graph 546 modules / 109 acode kinds / 24127 occurrences, 59 unresolved callee names and 35 indirect modules; callback/replacement closure still open. Original execution 550/515 unchanged."
+      "scope": "READY R5 isolated MAKE-STRING self-call allocation fix and whole-file class-mode MAKE-STRING/%BADARG; owner installs public table bindings. 26048 fresh corpus comparisons, four cold boots / 46 collections, 15 refusals, seven owner checks, 31 loader controls and rejected initializer-guard omission. R6/R6a 21843 tests, 164 restored FASLs, 17 profiles. Full census enumerates 548 modules including 172 unattributed; 83 missing edges, 36 indirect modules, replacement attribution and 35 callbacks remain open. No shared-source integration or new original-definition/LL15 credit."
     }
   ],
   "current_runs": [

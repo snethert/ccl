@@ -1,4 +1,3 @@
-import {bindReadyTables} from './ready-bindings.mjs';
 import {processOwner} from './process.mjs';
 import {imageArguments} from './image-input.mjs';
 import {checkBootClasses} from './class-boot.mjs';
@@ -190,7 +189,6 @@ import {sha256} from './runtime/sha256.mjs';
       const slot=gen.ownerWords.get(ownerNames.find(x=>x.package===pkg&&x.name===name).id)+6;
       return [name,[slot,get(slot)]];
     }));
-    bindReadyTables({owners:ownerNames,gen,get,put,bindings:tableBindings});
     gen.classCells.clear();
     put(config+76,gen.extraRoots.length);
     gen.extraRoots.forEach((slot,i)=>put(4600000+4*i,slot));
@@ -210,6 +208,7 @@ import {sha256} from './runtime/sha256.mjs';
       return loaded.args;
     }
     const owner=processOwner(memory,gen,base,size);
+    let admissionRoots;
     try { owner.process(0,()=>{
     resetCase();
     const args=initializeArguments();
@@ -247,20 +246,47 @@ import {sha256} from './runtime/sha256.mjs';
         const slot=gen.ownerWords.get(ownerNames.find(x=>x.package==='CCL'&&x.name===name).id)+2;
         return [slot,get(slot)];
       });
-      assert.deepEqual(gen.invoke(statusRow.name,[get(root+8)]).map(decode),[true],
-                       'READY image admission');
-      const refusals=gen.invoke(refusalRow.name,[get(root+8)]).map(decode);
-      assert.deepEqual(refusals,refusalRow.values,'READY admission refusals');
-      for(const [slot,value] of rootsBefore)assert.equal(get(slot),value,'admission published a root');
-      profileChecks.push({moved:move,admitted:true,refusals,rootsPreserved:rootsBefore.length});
+      const admissionFault=workerData.fault?.startsWith('image-');
+      if(admissionFault){
+        // Feed the mutated heap directly to READY-START. No status/preflight
+        // call gets to intercept it. These offsets are the admitted D1 layout.
+        admissionRoots=rootsBefore;
+        const image=get(root+8),entries=get(image-2+11*4),entry=get(entries+3),
+              cls=get(entry-1),slots=get(cls+6),wrapper=get(slots-2+5*4),
+              gf=get(get(image-2+8*4)+3),side=get(gf+22),gfSlots=get(side+6),
+              method=get(get(gfSlots-2+4*4)+3);
+        const slot={
+          'image-class-shape':entry-1,
+          'image-class-cpl':slots-2+4*4,
+          'image-cpl-head':get(slots-2+4*4)+3,
+          'image-method-combination':gfSlots-2+2*4,
+          'image-method-function':get(method+6)-2+3*4,
+          'image-class-wrapper':slots-2+5*4,
+          'image-wrapper-class':wrapper-2+2*4,
+          'image-obsolete-wrapper':wrapper-2+4,
+        }[workerData.fault];
+        assert.notEqual(slot,undefined,'direct image fault');
+        put(slot,workerData.fault==='image-obsolete-wrapper'?0:NIL);
+      }else{
+        assert.deepEqual(gen.invoke(statusRow.name,[get(root+8)]).map(decode),[true],
+                         'READY image admission');
+        const refusals=gen.invoke(refusalRow.name,[get(root+8)]).map(decode);
+        assert.deepEqual(refusals,refusalRow.values,'READY admission refusals');
+        for(const [slot,value] of rootsBefore)assert.equal(get(slot),value,'admission published a root');
+        profileChecks.push({moved:move,admitted:true,refusals,rootsPreserved:rootsBefore.length});
+      }
       // Admission may allocate; the caller's registered root is authoritative.
       actualArgs[0]=get(root+8);
-      if(workerData.fault?.startsWith('native-table-')){
-        const name=workerData.fault.slice('native-table-'.length).toUpperCase();
-        const [slot,fn]=nativeTableBindings.get(name);put(slot,fn);
-      }
+      const bootInvoke=(name,args)=>{
+        if(workerData.fault?.startsWith('native-table-')){
+          const publicName=workerData.fault.slice('native-table-'.length).toUpperCase();
+          const [slot,fn]=nativeTableBindings.get(publicName);put(slot,fn);
+        }
+        return gen.invoke(name,args);
+      };
 
-      const priorIntegerCalls=integerCalls,priorFloatCalls=floatCalls;const rawValues=gen.invoke(expected.name,actualArgs);if(expected.definition==='CORE-TRANSCEND-DESTINATION')assert.equal(rawValues[0],rawValues[1],'target destination identity');const values=rawValues.map(decode);if(['MAX-2','MIN-2','/=-2','>=-2','<=-2'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number'&&Number.isInteger(x)&&Math.abs(x)<536870912)){assert.equal(floatCalls,priorFloatCalls,'fixnum comparison left Wasm');fastChecks++;}if(['1+','1-','CORE-INTEGER-DIVIDE'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number')&&expected.values.every(x=>typeof x==='number'&&x>=-536870912&&x<=536870911)){assert.equal(integerCalls,priorIntegerCalls,'fixnum arithmetic left Wasm');assert.equal(floatCalls,priorFloatCalls,'fixnum arithmetic left Wasm');fastChecks++;}
+      const priorIntegerCalls=integerCalls,priorFloatCalls=floatCalls;const rawValues=owner.start({image:loadedImage,entry:expected.name,args:actualArgs,
+        owners:ownerNames,get,put,bindings:JSON.parse(fs.readFileSync(dir+'/ready-bindings.json')),invoke:bootInvoke});if(expected.definition==='CORE-TRANSCEND-DESTINATION')assert.equal(rawValues[0],rawValues[1],'target destination identity');const values=rawValues.map(decode);if(['MAX-2','MIN-2','/=-2','>=-2','<=-2'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number'&&Number.isInteger(x)&&Math.abs(x)<536870912)){assert.equal(floatCalls,priorFloatCalls,'fixnum comparison left Wasm');fastChecks++;}if(['1+','1-','CORE-INTEGER-DIVIDE'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number')&&expected.values.every(x=>typeof x==='number'&&x>=-536870912&&x<=536870911)){assert.equal(integerCalls,priorIntegerCalls,'fixnum arithmetic left Wasm');assert.equal(floatCalls,priorFloatCalls,'fixnum arithmetic left Wasm');fastChecks++;}
       const after=args.map((_,i)=>expected.after[i]?.graph ? decodeGraph(get(root+8+4*i),expected.after[i].graph,graphIO) : decode(get(root+8+4*i)));
       let expectedValues=expected.values;
       if(expected.definition==='CORE-SIGNED-ZERO-LITERAL'&&expected.args[0].double[0]===0x80000000){
@@ -371,7 +397,10 @@ import {sha256} from './runtime/sha256.mjs';
     }); } catch(error) {
       assert.equal(get(1174208),3,'failed bootstrap cannot publish READY');
       if(!workerData.fault)throw error;
-      parentPort.postMessage({rejected:workerData.fault,reason:error.message,state:get(1174208)});
+      if(admissionRoots)for(const [slot,value] of admissionRoots)
+        assert.equal(get(slot),value,'failed generated admission published a root');
+      parentPort.postMessage({rejected:workerData.fault,reason:error.message,state:get(1174208),
+        ...(admissionRoots?{directEntry:true,rootsPreserved:admissionRoots.length}:{})});
       process.exit(0);
     }
     assert.equal(get(1174208),2,'process READY');

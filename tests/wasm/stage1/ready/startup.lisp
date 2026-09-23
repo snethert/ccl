@@ -75,6 +75,31 @@
             (funcall (symbol-function 'gethash) (cadr keys) table :empty)
           (values sum removed value found empty present))))))
 
+;;; Resource fallback returns a string; it does not print to a stream. Exercise
+;;; the unchanged CCL path with no resource entries, including a negative code.
+(defun ready-resource-strings (image)
+  (declare (ignore image))
+  (let ((ccl::*error-format-strings* nil))
+    (values (ccl::%rsc-string 0)
+            (ccl::%rsc-string 987654)
+            (ccl::%rsc-string -37))))
+
+(defun ready-string-contract (image)
+  (declare (ignore image))
+  (let ((function (symbol-function 'make-string))
+        (trace nil))
+    (list (funcall function 0 :initial-element #\x)
+          (funcall function 1 :initial-element #\x)
+          (funcall function 30 :initial-element #\x)
+          (funcall function 33 :initial-element #\x)
+          (funcall function
+                   (progn (push :size trace) (core-collect) 3)
+                   :element-type (progn (push :type trace) 'base-char)
+                   :initial-element (progn (push :fill trace) (core-collect) #\z))
+          (nreverse trace)
+          (handler-case (funcall function 2 :initial-element 7)
+            (type-error () :bad-character)))))
+
 ;;; The selected image already contains initialized classes and method bodies.
 ;;; Reset host-lifetime state, publish its roots, and select uncached dispatch.
 (defun ready-initialize (image)
@@ -110,6 +135,16 @@
       (unless (and (= sum 190) removed (eq value :absent) (not found)
                    (eq empty :empty) (not present))
         (error "The READY public table bindings failed.")))
+    (unless (equal (ready-string-contract image)
+                   '("" "x" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "zzz"
+                     (:size :type :fill) :bad-character))
+      (error "READY string allocation contract failed."))
+    (multiple-value-bind (zero positive negative) (ready-resource-strings image)
+      (unless (and (equal zero "Error #0")
+                   (equal positive "Error #987654")
+                   (equal negative "Error #-37"))
+        (error "READY resource-string fallback failed.")))
     (core-collect)
     (let ((condition (make-condition 'cpl-derived)))
       (values count
