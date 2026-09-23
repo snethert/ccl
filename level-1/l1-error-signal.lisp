@@ -131,14 +131,14 @@
 (defun error (condition &rest args)
   "Invoke the signal facility on a condition formed from DATUM and ARGUMENTS.
   If the condition is not handled, the debugger is invoked."
-  (%error condition args (%get-frame-ptr)))
+  #+wasm32-target (apply #'%wasm-error condition args)
+  #-wasm32-target (%error condition args (%get-frame-ptr)))
 
 (defun cerror (cont-string condition &rest args)
   #+wasm32-target
   (restart-case
-      (error (if (stringp condition)
-               (make-condition 'simple-error :format-control condition :format-arguments args)
-               condition))
+      (error (condition-arg condition (if (condition-p condition) nil args)
+                            'simple-error))
     (continue () :report (lambda (stream) (apply #'format stream cont-string args)) nil))
   #-wasm32-target
   (let* ((fp (%get-frame-ptr)))

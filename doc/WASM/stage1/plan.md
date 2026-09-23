@@ -730,3 +730,10 @@ MAKE-CONDITION/MAKE-INSTANCE, slot initialization/readers and SIGNAL designators
 CCL class cells are structures: the fixture cons-cell catalog is temporary,
 not an image representation to preserve. Class finalization and real image
 installation remain open.
+
+## Audit 163 integration
+
+Steve accepted the native condition-system proposal default-off. Four source
+files equal the reviewed proposal. Continue with SETF GETHASH, real image class
+roots and retirement of the implicit allocation registry. See
+[integration](integration-condition-system.json) and its explicit obligations.

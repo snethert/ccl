@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-condition-system.json",
+  "acceptance_sha256": "7fbb625bc9c59b18911cd79ad73ba25dc15e00f65ad6a3c02825b21089ec2c73",
+  "previous_integration": "integration-condition-cpl.json",
+  "previous_integration_sha256": "5d953b88ca8f3990f0f0367e8d30396f730da0568ed6b53f5944e17973c96e24",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "5983f0862c2307aa6c9ce48bc0389136aeb3bdd1efa1b7046da34fdd556a1fab",
+      "after": "e60333fd1a90224430235899916c96414f1db74bab5200b57809100935b75f61",
+      "reviewed": "e60333fd1a90224430235899916c96414f1db74bab5200b57809100935b75f61"
+    },
+    {
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "before": "389270a7b6b4168a5bf2de8bcac00186bccef53f6ca57c16b166ab92ae15af15",
+      "after": "1742b391be3144002200a08099061212c167f41821a6039fb47c62f52352b464",
+      "reviewed": "1742b391be3144002200a08099061212c167f41821a6039fb47c62f52352b464"
+    },
+    {
+      "file": "level-0/l0-def.lisp",
+      "before": "cb642d879e2ebb78f6fb1a4e355047f3b7f2c540045f1953cba97396be9e2349",
+      "after": "f4edf56f707622844a44dbd86a9b452b7883c49db1098744c202c017c8a032b7",
+      "reviewed": "f4edf56f707622844a44dbd86a9b452b7883c49db1098744c202c017c8a032b7"
+    },
+    {
+      "file": "level-1/l1-error-signal.lisp",
+      "before": "817eb95e9a28b33651acbaa5540dbf72d961b60ba9b851f6fec3331ca3fffeec",
+      "after": "0616348d24e71b911d79e46d80976d071da1c46ef3080188cfcdb3f280014049",
+      "reviewed": "0616348d24e71b911d79e46d80976d071da1c46ef3080188cfcdb3f280014049"
+    }
+  ],
+  "default_enabled": false,
+  "qualification": {
+    "mode": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "record": "2026-09-23-stage1-condition-system-acceptance/integration-check.json",
+    "sha256": "7a1afb22aa1413ed7b607f9d11c82cfbacf796014b1c66a36df555b97c6343aa",
+    "native_run": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-condition-system-r1/native/run.json",
+    "native_run_sha256": "6922d41a633371ee22dc62afeacbdfecab573df5108d270cdc45d5be8e91fd7f",
+    "summary_sha256": "a3245a3860328d9dc280560807c62f4f57be343b23cf983770b23ffab83b4679",
+    "source_files_checked": 417,
+    "qualified_proposal_files": 32,
+    "comparisons_reused": 25968,
+    "native_tests_reused": 21843,
+    "new_execution": false
+  },
+  "observations": [
+    "O-19: Finalized initialized CPLs remain required; UPDATE-CLASS/COMPUTE-CPL is not qualified.",
+    "O-20: The eleven-name catalog is retired in favor of FIND-CLASS over 612 projected native class cells. Actual cross-dumped class roots and READY installation remain owed.",
+    "O-21: Explicit construction, readers and signal designators use class identities. Implicit allocation still uses the old registry; *BREAK-ON-SIGNALS* and %ERROR re-entry remain open.",
+    "O-22: Author retention used --reuse-output (execution_rebuilt: false). Claude audit 163 performed the independent from-scratch replay (execution_rebuilt: true). Integration reuses both and claims no new execution.",
+    "O-23: SIGNAL currently resides in w32-prims.lisp. Move it to a #+wasm32-target branch in l1-readloop.lisp in the next proposal; this integration preserves reviewed bytes.",
+    "O-24: Only strong-EQ GETHASH is admitted. SETF GETHASH and class-table writes remain the next implementation work."
+  ],
+  "slot_credit": false
+}

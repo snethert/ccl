@@ -1315,6 +1315,14 @@
          (return-from b-multiple (if (eq (first (ccl::acode-operands (first args))) '%wasm-svref) (b-svref (first (second args))) (if (member (first (ccl::acode-operands (first args))) '(%wasm-condition-datum %wasm-condition-expected %wasm-cell-name)) (b-condition-field (first (ccl::acode-operands (first args))) (first (second args))) (b-restart-call (first (ccl::acode-operands (first args))) (first (second args)))))))
        (when (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
                   (member (first (ccl::acode-operands (first args))) '(signal error)))
+         (when (and *bootstrap-front-end* *b-cpl-conditions*)
+           (return-from b-multiple
+             (let ((callee (bootstrap-constant
+                       (if (eq (first (ccl::acode-operands (first args))) 'error)
+                         'ccl::%wasm-error 'ccl::%wasm-signal))))
+               (if (third args)
+                 (b-apply callee (second args) nil 0 (third args))
+                 (b-call callee (second args))))))
          (when *bootstrap-front-end*
            (unless (and (null (third args)) (null (second (second args))))
              (refuse :bootstrap-signal-spread))
@@ -4507,7 +4515,20 @@
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((and (eq name 'ccl::%function) (= (length forms) 1))
+    (cond ((and *b-cpl-conditions* (eq name 'gethash))
+           (b-call (bootstrap-constant 'ccl::%wasm-class-gethash) (list forms nil)))
+          ((and *b-cpl-conditions* (eq name 'coerce) (= (length forms) 2)
+                (eq (bootstrap-immediate (second forms)) 'list))
+           (b-call (bootstrap-constant 'ccl::coerce-to-list)
+                   (list (list (first forms)) nil)))
+          ((member name '(ccl::%wasm-signal-condition ccl::%wasm-error-condition))
+           (unless (= (length forms) 1) (refuse :condition-signal-arity))
+           (b-signal (first forms) (eq name 'ccl::%wasm-error-condition)))
+          ((and *b-cpl-conditions* (eq name 'subtypep) (= (length forms) 2)
+                (eq (bootstrap-immediate (second forms)) 'condition))
+           (b-call (bootstrap-constant 'ccl::%wasm-condition-subtypep)
+                   (list (list (first forms)) nil)))
+          ((and (eq name 'ccl::%function) (= (length forms) 1))
            (b-multiple (make-b-raw-code :text
              (bootstrap-operands forms (lambda (values)
                (b-wat "(call $function_value_lisp ~a (local.get $top))" (first values)))))))
@@ -4546,12 +4567,12 @@
                          (b-signal (make-b-raw-code :text
                                      (bootstrap-condition 2108
                                        (list (car values) arguments))) t)))))))))
-          ((eq name 'make-condition)
+          ((and (not *b-cpl-conditions*) (eq name 'make-condition))
            (multiple-value-bind (class constant) (bootstrap-immediate (car forms))
              (when (and constant (symbolp class))
                (unless class (refuse :bootstrap-condition-class))
                (bootstrap-signal forms nil t))))
-          ((eq name 'ccl::condition-arg)
+          ((and (not *b-cpl-conditions*) (eq name 'ccl::condition-arg))
            (when (= (length forms) 3)
              (multiple-value-bind (class constant) (bootstrap-immediate (first forms))
                (multiple-value-bind (default defaultp) (bootstrap-immediate (third forms))
@@ -4631,9 +4652,9 @@
                     (if (eq name 'ccl::%symptr-value)
                       (b-wat "(i32.load ~a)" location)
                       (b-wat "(i32.store ~a ~a) ~a" location (second values) (second values)))))))))
-          ((member name '(type-error-datum type-error-expected-type
+          ((and (not *b-cpl-conditions*) (member name '(type-error-datum type-error-expected-type
                          simple-condition-format-control simple-condition-format-arguments
-                         stream-error-stream file-error-pathname package-error-package))
+                         stream-error-stream file-error-pathname package-error-package)))
            (bootstrap-condition-reader name forms))
           ((and (member name '(1+ 1-)) (= (length forms) 1))
            (bootstrap-numeric-call (if (eq name '1+) '+ '-)
@@ -4768,7 +4789,7 @@
   (or (null x) (eq x t) (and (integerp x) (<= -536870912 x 536870911))))
 
 (defun bootstrap-type-supported-p (type)
-  (cond ((symbolp type) (or (and *b-cpl-conditions* (bootstrap-condition-class-p type)) (member type '(nil t bit signed-byte unsigned-byte))
+  (cond ((symbolp type) (or (and *b-cpl-conditions* (symbolp type) (not (member type '(nil t bit signed-byte unsigned-byte))) (not (assoc type *bootstrap-type-predicates*)) (find-class type nil)) (member type '(nil t bit signed-byte unsigned-byte))
                             (assoc type *bootstrap-type-predicates*)))
         ((consp type)
          (case (car type)
@@ -4790,7 +4811,7 @@
   (flet ((predicate (name)
            (bootstrap-true-p
             (bootstrap-predicate-call name (list (make-b-raw-code :text value))))))
-    (cond ((and *b-cpl-conditions* (bootstrap-condition-class-p type))
+    (cond ((and *b-cpl-conditions* (symbolp type) (not (member type '(nil t bit signed-byte unsigned-byte))) (not (assoc type *bootstrap-type-predicates*)) (find-class type nil))
            (bootstrap-condition-typep value (bootstrap-symbol type)))
           ((null type) "(i32.const 0)")
           ((eq type t) "(i32.const 1)")
@@ -5245,31 +5266,11 @@
 
 (defun bootstrap-condition-typep (object type)
   (setq *b-condition-used* t)
-  (pushnew "condition_class_cells" *b-symbols* :test #'equal)
   (bootstrap-true-p
     (bootstrap-predicate-call 'ccl::class-typep
       (list (make-b-raw-code :text object)
             (make-b-raw-code :text
-              (b-wat "(call $condition_class ~a)" type))))))
+              (bootstrap-predicate-call 'find-class
+                (list (make-b-raw-code :text type))))))))
 
-(defun bootstrap-condition-class-runtime ()
-  "(func $condition_class (param $name i32) (result i32)
-    (local $p i32) (local $n i32) (local $i i32) (local $cell i32) (local $class i32)
-    (if (i32.ne (i32.and (global.get $symbol_condition_class_cells) (i32.const 7)) (i32.const 6))
-      (then (throw $call_error (i32.const 12))))
-    (local.set $p (i32.sub (global.get $symbol_condition_class_cells) (i32.const 6)))
-    (call $span (local.get $p) (i32.const 4))
-    (if (i32.ne (i32.and (i32.load (local.get $p)) (i32.const 255)) (i32.const 250))
-      (then (throw $call_error (i32.const 12))))
-    (local.set $n (i32.shr_u (i32.load (local.get $p)) (i32.const 8)))
-    (call $span (local.get $p) (i32.mul (i32.add (local.get $n) (i32.const 1)) (i32.const 4)))
-    (block $missing (loop $cells
-      (br_if $missing (i32.ge_u (local.get $i) (local.get $n)))
-      (local.set $cell (call $handler_cons
-        (i32.load (i32.add (local.get $p) (i32.add (i32.const 4) (i32.mul (local.get $i) (i32.const 4)))))))
-      (if (i32.eq (i32.load offset=4 (local.get $cell)) (local.get $name))
-        (then (local.set $class (i32.load (local.get $cell)))
-          (drop (call $object_base (local.get $class) (i32.const 16) (i32.const 882)))
-          (return (local.get $class))))
-      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $cells)))
-    (throw $call_error (i32.const 12)))")
+(defun bootstrap-condition-class-runtime () "")

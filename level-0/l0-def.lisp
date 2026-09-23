@@ -43,6 +43,9 @@
 
 
 (defun function-name (fun)
+  #+wasm32-target
+  (when (typep fun 'standard-generic-function)
+    (return-from function-name (%gf-name fun)))
   (or (and (functionp fun) (lfun-name fun))
       (if (compiled-function-p (setq fun (closure-function fun)))
         (lfun-name fun))))

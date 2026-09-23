@@ -1,30 +1,27 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "11d501f260eeae299675f4dd26d88f176172d9724c40722beda64315c7481a11",
-  "commit": "f776f84bcff14cb13d647c47bd0c7a8d5b66830a",
-  "immutable_evidence_files": 268550,
+  "catalog_sha256": "bfc9c839a6145f5baf351cfca7647c2cfcde0b56a6d5d544d72af4d2760024b7",
+  "commit": "531a6355dfbf8c429aeffb468cb2263b88ab8cf2",
+  "immutable_evidence_files": 268556,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-condition-system-r1",
-    "files": 167,
-    "bytes": 103300257
+    "directory": "2026-09-23-stage1-condition-system-acceptance",
+    "files": 6,
+    "bytes": 508314
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Default-off class-table condition construction, readers and signal designators. Native FIND-CLASS over 612 finalized projected class cells; native constructor/initialization methods, typed readers, APPLY and indirect SIGNAL, CERROR initargs, and class-cell replacement across movement. Ten protocol callers, 25 new cases/100 comparisons; all 6467 prior cases retained, 25968 comparisons, 19486 collections, 40 collector owner checks. Final-source native R6/R6a 21843 tests. Original-definition headline remains 550/515, no admission recount or LL15 credit. Implicit-failure allocation registry and cross-dumped image/READY remain open. Unreviewed proposal; shared source unchanged.",
-  "source_index_sha256": "2944a22129c77d8f4b02e7da06c38b18f476f5436a3bad5800108e9e61963604",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-condition-system-r1.json",
+  "scope": "Default-off native condition construction, generic readers, class-cell lookup and SIGNAL/ERROR designators. No image/READY or implicit-registry retirement claim.",
+  "source_index_sha256": "f81fd97ab3287107def87834574a79949ad8733b98428a527c57139b46fec318",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-condition-system-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Final clean-source execution and native R6/R6a, followed by artifact and input identity validation of that completed run; no second execution claimed.",
-    "packet_sha256": "eded372522040c2d9e18e26e11965e0cc147af244bc191a6deaaf08bf194652b",
-    "report": "2026-09-23-stage1-condition-system-r1-verification.json",
-    "report_sha256": "61ebd90dd782927128eaf22ed4d0c731eb3f00902e92605136e83cca8ffa13b4",
-    "deterministic_files": 7115,
-    "source_pins": 2893,
-    "execution_rebuilt_during_retention_verification": false
+    "method": "SOURCE_IDENTITY_AND_QUALIFICATION_REUSE",
+    "report": "2026-09-23-stage1-condition-system-acceptance/integration-check.json",
+    "report_sha256": "7a1afb22aa1413ed7b607f9d11c82cfbacf796014b1c66a36df555b97c6343aa",
+    "new_execution": false
   }
 }

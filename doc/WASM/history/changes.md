@@ -1,3 +1,16 @@
+## 2026-09-23 — audit 163 and native condition-system integration
+
+Import Claude audit 163 verbatim from 988b5ab3. Steve explicitly answered
+“Accept and integrate default-off”. Integrate the four reviewed files byte-exact;
+reuse the final-source 21,843-test native qualification and Claude’s independent
+25,968-comparison replay. The identity check claims no new execution.
+
+Carry O-19 through O-24, including the distinction between author reuse-output
+validation and Claude’s fresh replay. SIGNAL placement stays a next-proposal
+change to preserve reviewed bytes. Class-table writes, implicit registry
+retirement and the actual image/READY join remain open. Stage 1 remains 21/12/0
+of 33, with 550 original executions / 515 non-NIL witnesses.
+
 ## 2026-09-23 — native condition construction through class cells
 
 On Steve's “Get something big done”, develop the successor to the accepted

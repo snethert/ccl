@@ -683,3 +683,15 @@ is unchanged pending review. Stage 1 stays **21 accepted, 12 missing,
 zero unreviewed of 33**.
 
 [Implementation, scope and replay](../../tests/wasm/stage1/bootstrap-condition-system/README.md).
+
+### Audit 163 — accepted and integrated, default-off
+
+Claude’s audit 988b5ab3 is imported verbatim. Steve accepted the reviewed
+condition-system proposal; four shared source files match it byte for byte.
+The identity check reuses native R6/R6a (21,843 tests) and the independently
+replayed 25,968 comparisons / 19,486 collections / 40 owner checks. No new
+execution or admission claim. The 550/515 headline and Stage 1 21/12/0 remain.
+
+O-19–O-24 are in runtime obligations; class-table writes, implicit registry
+retirement and cross-dumped image/READY remain open.
+[Integration](stage1/integration-condition-system.json).

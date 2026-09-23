@@ -3544,8 +3544,24 @@
       "id": "STAGE1-CONDITION-SYSTEM-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-condition-system-r1/packet.json",
       "sha256": "eded372522040c2d9e18e26e11965e0cc147af244bc191a6deaaf08bf194652b",
-      "scope": "Default-off class-table condition construction, readers and signal designators. Native FIND-CLASS over 612 finalized projected class cells; native constructor/initialization methods, typed readers, APPLY and indirect SIGNAL, CERROR initargs, and class-cell replacement across movement. Ten protocol callers, 25 new cases/100 comparisons; all 6467 prior cases retained, 25968 comparisons, 19486 collections, 40 collector owner checks. Final-source native R6/R6a 21843 tests. Original-definition headline remains 550/515, no admission recount or LL15 credit. Implicit-failure allocation registry and cross-dumped image/READY remain open. Unreviewed proposal; shared source unchanged.",
-      "review_disposition": "NOT_REVIEWED",
+      "scope": "Default-off native condition construction, generic readers, class-cell lookup and SIGNAL/ERROR designators. No image/READY or implicit-registry retirement claim. Accepted by Steve after audit 163, integrated byte-exact. O-19 through O-24 carried in runtime obligations; no new execution credit.",
+      "review_disposition": "ACCEPTED",
+      "slot_credit": false,
+      "review": {
+        "reviewer": "Claude",
+        "commit": "988b5ab3d8744b109dd7be3891b282a7eab88554",
+        "path": "doc/WASM/stage0/claude-review.md",
+        "sha256": "844a96f41dabdd9bfc9eca43de4d4bd2c5ba949253f2e75c223367e4d4acf474",
+        "import_commit": "f5d846c1275e45bf34b48ee1c27946a82a70314b"
+      },
+      "acceptance": "doc/WASM/stage1/acceptance-condition-system.json"
+    },
+    {
+      "id": "STAGE1-CONDITION-SYSTEM-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-condition-system-acceptance/packet.json",
+      "sha256": "cca3f1f765c70a8b4a796ff845db1872d49608828e2b4223a057c83959380d1d",
+      "review_disposition": "ACCEPTED",
+      "scope": "Source identity and qualification reuse for audit-163 integration. No new execution.",
       "slot_credit": false
     }
   ],
