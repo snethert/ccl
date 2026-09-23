@@ -1,0 +1,145 @@
+{
+  "status": "OBSERVATIONS",
+  "rows": [
+    {
+      "base": 262144,
+      "comparisons": 9,
+      "findings": [
+        {
+          "definition": "%SYMPTR->SYMBOL",
+          "raw": 77870,
+          "expected": 77825,
+          "returned": [
+            77870
+          ]
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 536870911.4,
+          "returned": [
+            2147483644
+          ]
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 536870911.5,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.49,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.5,
+          "error": "AssertionError [ERR_ASSERTION]: core_1258 restored TCR 64\n\n132560 !== 132096\n",
+          "underlyingTrap": "RuntimeError: float unrepresentable in integer range",
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.75,
+          "error": "AssertionError [ERR_ASSERTION]: core_1258 restored TCR 64\n\n132560 !== 132096\n",
+          "underlyingTrap": "RuntimeError: float unrepresentable in integer range",
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483648,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": -2147483648,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        }
+      ]
+    },
+    {
+      "base": 2147483648,
+      "comparisons": 9,
+      "findings": [
+        {
+          "definition": "%SYMPTR->SYMBOL",
+          "raw": 77870,
+          "expected": 77825,
+          "returned": [
+            77870
+          ]
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 536870911.4,
+          "returned": [
+            2147483644
+          ]
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 536870911.5,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.49,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.5,
+          "error": "AssertionError [ERR_ASSERTION]: core_1258 restored TCR 64\n\n132560 !== 132096\n",
+          "underlyingTrap": "RuntimeError: float unrepresentable in integer range",
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483647.75,
+          "error": "AssertionError [ERR_ASSERTION]: core_1258 restored TCR 64\n\n132560 !== 132096\n",
+          "underlyingTrap": "RuntimeError: float unrepresentable in integer range",
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": 2147483648,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        },
+        {
+          "definition": "%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM",
+          "value": -2147483648,
+          "error": "Error: core_1258: checked 5",
+          "underlyingTrap": null,
+          "trap": false
+        }
+      ]
+    }
+  ]
+}
