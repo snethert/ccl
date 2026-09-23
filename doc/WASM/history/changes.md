@@ -4044,3 +4044,18 @@ Standard dispatch is uncached and uses the qualified native-projected graph.
 Cross-dumped classes and %ALL-GFS%, wrapper invalidation/caching, closure
 metadata, real-CPL conditions and the image/READY join remain separate work.
 Stage 1 stays **21 accepted, 12 missing, zero unreviewed of 33**.
+
+### 2026-09-22 — Implement opt-in class/CPL condition matching
+
+On Steve's “proceed”, implemented the matching component of O-10. Generated
+handlers and condition TYPEP tests call unchanged CCL `CLASS-TYPEP`, compiled
+in its whole-file environment. The owner supplies rooted class cells; class
+objects and CPLs move. Four new classes require no ancestry bits.
+
+The six callers pass 96 new comparisons; the inherited corpus brings the run
+to 25,868. All 2,948 previous binaries remain identical in default mode.
+Catalog boundary checks and four omissions are retained with final-source
+native qualification. Three development fixture failures are retained and
+explained in the [README](../../../tests/wasm/stage1/bootstrap-condition-cpl/README.md).
+No shared source changes, new original-definition headline or slot credit.
+General condition construction/readers and the image/READY join remain open.

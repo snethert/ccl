@@ -620,3 +620,20 @@ inferred by this integration.
 [Acceptance](stage1/acceptance-lap.json), [integration](stage1/integration-lap.json).
 Declared unexecuted entries and runtime/thread/image/READY obligations remain
 open; Stage 1 stays 21 accepted, 12 missing, zero unreviewed of 33.
+
+### Condition CPL proposal — 22 September 2026
+
+The default-off handler path now calls CCL's unchanged `CLASS-TYPEP` over real
+class precedence lists. Six callers compare 24 native cases in 96 executions,
+including four new condition classes without assigned bits, multiple
+inheritance, declining/re-signalling handlers, restart transfers and movement.
+The complete run passes 25,868 comparisons; 2,948 legacy binaries are unchanged.
+Catalog admission has 32 checks and four rejected faults. Final native
+R6/R6a passes 21,843 tests. A clean detached-checkout replay reproduces all
+2,942 deterministic artifacts at 2,876 source pins. Original-definition credit remains 550 / 515;
+admission is not recounted and no LL15 credit is added.
+
+[Fixture and replay](../../tests/wasm/stage1/bootstrap-condition-cpl/README.md).
+This is a proposal, not an integration. Constructors and slot readers retain
+their prior schemas; generalized condition construction and installation in
+the cross-dumped image remain open.

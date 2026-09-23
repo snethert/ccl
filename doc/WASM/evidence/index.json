@@ -3514,6 +3514,13 @@
       "scope": "User accepted Claude LAP proposal 27f5bc02 after Codex review c47b0a47. Seven functional files integrated byte-exact; 56 target definitions admit, 28 native LAP entries execute directly, with 13 contract probes and five original bignum callers. Reviewed 25772 comparisons plus 504 logical probes reused by exact hash. Final R6/R6a passes 21843 tests, restores 164 FASLs; all 17 existing readers see identical L1-CLOS forms. Unexecuted entries remain uncredited; no LL15 credit.",
       "review_disposition": "ACCEPTED",
       "acceptance": "doc/WASM/stage1/acceptance-lap.json"
+    },
+    {
+      "id": "STAGE1-CONDITION-CPL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-22-stage1-condition-cpl-r1/packet.json",
+      "sha256": "7320a64ec43a86f0c1388dfa1308e4b58d1008373a965b151619abc60ecc279c",
+      "scope": "Unreviewed default-off class/CPL handler and condition TYPEP path through unchanged whole-file CCL CLASS-TYPEP. Six callers, 24 native cases, 96 new comparisons; 25868 total comparisons and 2948 prior binaries unchanged. 32 catalog checks and four rejected faults. Final native R6/R6a passes 21843 tests. Fresh detached-checkout replay matches. Constructors/readers retain prior schemas; arbitrary class construction and real image installation remain open. No new original-definition or slot credit.",
+      "review_disposition": "NOT_REVIEWED"
     }
   ],
   "current_runs": [

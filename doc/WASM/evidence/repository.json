@@ -1,27 +1,29 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "63d3671b32454e1a43db113154f4ddbd8a5db9c121b60dd69b8413349f00d1d9",
-  "commit": "75e52b839de9e485ca2be36236652c51faa4fcce",
-  "immutable_evidence_files": 268211,
+  "catalog_sha256": "d3c979af7d9160f56ded80a70e0790c3d3c5f9d1b3e352744757adc191bc96c5",
+  "commit": "c4ed7c2c00589bed5192f239cb5ac3f3570c34b6",
+  "immutable_evidence_files": 268376,
   "last_scoped_addition": {
-    "directory": "2026-09-22-stage1-lap-acceptance",
-    "files": 174,
-    "bytes": 38676283
+    "directory": "2026-09-22-stage1-condition-cpl-r1",
+    "files": 163,
+    "bytes": 52996867
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 74550,
   "remote": null,
-  "scope": "User accepted Claude LAP proposal 27f5bc02 after Codex review c47b0a47. Seven functional files integrated byte-exact; 56 target definitions admit, 28 native LAP entries execute directly, with 13 contract probes and five original bignum callers. Reviewed 25772 comparisons plus 504 logical probes reused by exact hash. Final R6/R6a passes 21843 tests, restores 164 FASLs; all 17 existing readers see identical L1-CLOS forms. Unexecuted entries remain uncredited; no LL15 credit.",
-  "source_index_sha256": "a5e3ea1d7faeb6d0128e239432839c9707fef2d55b292290ca8598cf21263105",
-  "source_index_snapshot": "catalog/source-index-2026-09-22-lap-acceptance.json",
+  "scope": "Unreviewed default-off class/CPL handler and condition TYPEP path through unchanged whole-file CCL CLASS-TYPEP. Six callers, 24 native cases, 96 new comparisons; 25868 total comparisons and 2948 prior binaries unchanged. 32 catalog checks and four rejected faults. Final native R6/R6a passes 21843 tests. Fresh detached-checkout replay matches. Constructors/readers retain prior schemas; arbitrary class construction and real image installation remain open. No new original-definition or slot credit.",
+  "source_index_sha256": "3456e38ee5e03d0e3ab48eb18f1a9269d8980ab1f2935a09a57c3158f9888d9f",
+  "source_index_snapshot": "catalog/source-index-2026-09-22-condition-cpl.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "method": "Exact reviewed-byte integration; final native R6/R6a and 17-target reader equality; reviewed execution reused by artifact and source hashes; float rebuilt identical.",
-    "packet_sha256": "3dfb78daebe33e9b1af41b0dd76b6b3551a0ed534ba7e518931f674016854eee",
-    "comparisons_reused": 25772,
-    "additional_comparisons_reused": 504
+    "method": "Fresh detached-checkout replay, final-source native qualification, scoped payload hashes.",
+    "packet_sha256": "7320a64ec43a86f0c1388dfa1308e4b58d1008373a965b151619abc60ecc279c",
+    "replay_report": "catalog/verification-2026-09-22-condition-cpl.json",
+    "replay_sha256": "d0e12811d68fc8d4e1d2043bfcb9309b4c02cca8f33c12915037a14671b58bb4",
+    "deterministic_files": 2942,
+    "source_pins": 2876
   }
 }

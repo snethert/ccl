@@ -711,3 +711,11 @@ class table and `%ALL-GFS%` before claiming the image/READY join. Class-wrapper
 invalidation precedes dispatch caching; closure metadata and the O-10 real-CPL
 condition successor remain explicit work. The separate LAP merge must retain
 this EQUAL and backend ILOGCOUNT, dropping the overlapping LAP definition.
+
+The [condition CPL proposal](../../../tests/wasm/stage1/bootstrap-condition-cpl/README.md)
+implements the O-10 matching component using unchanged `CLASS-TYPEP` and
+initialized real CPLs. It remains default-off pending review and class-cell
+installation. Its custom condition instances are native-projected; general
+MAKE-CONDITION and generic slot readers must join this path before retiring
+the old construction/readers' schemas. Do not treat its 96 protocol
+comparisons as completion of the full condition system or the image/READY join.
