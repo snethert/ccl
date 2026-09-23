@@ -1,0 +1,69 @@
+{
+  "additional_comparisons": 504,
+  "additional_native_rows": {
+    "CORE-RETRY-REVIEW-LOGICAL": 40,
+    "CORE-REVIEW-LOGICAL": 40,
+    "CORE-REVIEW-LOGICAL-EFFECTS": 40,
+    "CORE-REVIEW-LOGICAL-ERROR": 6
+  },
+  "additional_retry_mode": {
+    "allocation_retry_collections": 250,
+    "artifacts": {
+      "compiled/native.json": "3cc063d730ae35ce35ce091d99bf11f0d1db1bb4eacdac024e9b770ae68f3b04",
+      "compiled/proposal/unit.json": "cb7d5650aa927cf495238642aa77b2d5b20d953af2a66c621ea8940cf5a11906",
+      "compiled/source/compile.lisp": "afbd50e9aea215460813709c4b21b27c3bd010e66adeda44c0b1bf7febd70f51",
+      "execution.json": "ba636f47b0a0321005fc5f1827d63e5aaf99fc2bbcab5e3666fc9ba3587f8ba6",
+      "float.wasm": "dc0db90ec8bf24abc6991ad6e40b6d3b66ff96669cf2c58ddadff39a398db404",
+      "istruct-checks.json": "cb13c0299b93c999d385000d3b3615cb4e3bce4292d38ab9defe76862cc6b1cf",
+      "owner-check/results.json": "9e015cdf183cafe18f488980d9500f6bd7c0959793b0f33f2990979c76c04637",
+      "population-checks.json": "f3548e8927b872b1852dbe0f538f94ca74d488a9a048d65ff2ed1aab62d1e531"
+    },
+    "checked_refusals": 146,
+    "checks": {
+      "istruct-checks.json": 20,
+      "owner-check/results.json": 40,
+      "population-checks.json": 28
+    },
+    "comparisons": 26276,
+    "internal_collections": 7826
+  },
+  "baseline": {
+    "allocation_retry_collections": 98,
+    "artifacts": {
+      "compiled/native.json": "d49a8d5af60f1252624704e54a936f9b461c1d4b12304b7b227ed6bc14fbfbba",
+      "compiled/proposal/unit.json": "cb7d5650aa927cf495238642aa77b2d5b20d953af2a66c621ea8940cf5a11906",
+      "compiled/source/compile.lisp": "ebcae119f4c7796aa6dec1bfa04cfe30431e28056045dabdfde711ee4769cbc0",
+      "execution.json": "4513d6304e0add93cb228974e0dec598162aef39a8032f25f15aec3bd45c18cf",
+      "float.wasm": "dc0db90ec8bf24abc6991ad6e40b6d3b66ff96669cf2c58ddadff39a398db404",
+      "istruct-checks.json": "cb13c0299b93c999d385000d3b3615cb4e3bce4292d38ab9defe76862cc6b1cf",
+      "owner-check/results.json": "9e015cdf183cafe18f488980d9500f6bd7c0959793b0f33f2990979c76c04637",
+      "population-checks.json": "f3548e8927b872b1852dbe0f538f94ca74d488a9a048d65ff2ed1aab62d1e531"
+    },
+    "checked_refusals": 146,
+    "checks": {
+      "istruct-checks.json": 20,
+      "owner-check/results.json": 40,
+      "population-checks.json": 28
+    },
+    "comparisons": 25772,
+    "internal_collections": 6234
+  },
+  "initial_probe": {
+    "log_sha256": "0814e9fea403ada2c0cd877e7417381c5cab32e24acc46b495cca3d37ccc824b",
+    "result": "Expected checked-6 allocation refusal: whole-file allocation retry was disabled."
+  },
+  "ordinary_mode_focused": {
+    "comparisons": 344,
+    "internal_collections": 1440,
+    "sha256": "09df0476e3b237084b26e5f01211b849cb723597537ae1e460df365111e787a3"
+  },
+  "probe_sha256": "a8a20d904fd1cf42acdc884ceb9f2323ac5fc50f9b0db2d127f7c946081898bc",
+  "reviewed_commit": "27f5bc022610cb55ef9b6e788292b09e83ba0f5c",
+  "scope": "Review only; no integration or ledger credit. Final R6/R6a remains an integration obligation.",
+  "seed": 2705922,
+  "single_switch_binary": {
+    "after": "dc0db90ec8bf24abc6991ad6e40b6d3b66ff96669cf2c58ddadff39a398db404",
+    "before": "dc0db90ec8bf24abc6991ad6e40b6d3b66ff96669cf2c58ddadff39a398db404"
+  },
+  "verdict": "No new defect found"
+}
