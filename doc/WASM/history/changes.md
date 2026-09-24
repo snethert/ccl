@@ -4519,3 +4519,12 @@ new run. The closure has 742 modules, 113 operators, 36,025 occurrences,
 62 missing edges and 50 indirect modules. Generic ABS/count-limited DELETE,
 printer locks, full replacement attribution and 35 callback dispositions
 remain open. Original-definition credit remains 550/515 and LL15 stays open.
+
+
+## 2026-09-24 — audit 173 acceptance and compiler integration
+
+Audit `9dc0d054` imported verbatim at `0f5100d0`. Steve authorized “if you agree, accept and integrate”; Codex agrees with the review. The four reviewed lowerings enter the shared backend byte-identical to READY R9: MAKE-STRING allocation, literal T/NIL type tests, class-mode slot-unbound signaling and packed bits. No other compiler, runtime or CCL source file changes.
+
+Fresh R6/R6a on the integrated files passes 21,843 tests, restores 164 FASLs and preserves the existing-target comparisons. The qualification envelope binds all 33 source identities and the native result hash (O-63). Target qualification reuses the reviewed 26,048 comparisons and four cold boots; no fresh target execution is claimed. The identity command works at integration HEAD; full R9 replay remains at f48be155 because its patch anchors and pins precede integration.
+
+O-61 retains the independent raw low-bit-first and padding observations; a replacement harness must preserve them. O-62 explicitly accepts the bit-vector-kind transition from refusal to admission in this compiler profile. Historical parent evidence is unchanged. O-57 is closed; O-58 remains the disclosed NIL-frame fallback. Class conditions remain default-off. Original execution stays 550/515; ledger 21 accepted, 12 missing, zero unreviewed; no LL15 slot credit or broader READY acceptance.

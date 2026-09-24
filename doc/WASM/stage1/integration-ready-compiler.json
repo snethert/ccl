@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-ready-compiler.json",
+  "acceptance_sha256": "70000596837a6e2bf8f7afa529b6cdcee8d7adf6c7a9eaea1b4677e0cb5a0dba",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "569d6647eb1bd033006176c37afce89aa8fff2688e0e223007b44803c7b99bd5",
+      "after": "0965018e116b3b7e8e9765cda2cc4399e07e4197e7f9bad3e14372d3287a78d6",
+      "reviewed": "0965018e116b3b7e8e9765cda2cc4399e07e4197e7f9bad3e14372d3287a78d6"
+    }
+  ],
+  "class_conditions_default_enabled": false,
+  "qualification": {
+    "mode": "FRESH_NATIVE_AND_REVIEWED_TARGET_IDENTITY",
+    "record": "2026-09-24-stage1-ready-compiler-acceptance/qualification.json",
+    "sha256": "d4c65e86bead3fb686d67de3b4d9150de80766f12f806ed11f7bcde229b7fabc",
+    "identity_record": "2026-09-24-stage1-ready-compiler-acceptance/identity.json",
+    "identity_sha256": "0f8214b1263bd85489f6fc74ab468076e7a5f5ff19414de927dc8e886501d683",
+    "native_tests": 21843,
+    "native_rebuilt": true,
+    "restored_fasls": 164,
+    "comparisons_reused": 26048,
+    "cold_boots_reused": 4,
+    "target_execution_rebuilt": false
+  },
+  "observations": [
+    "O-57 closed: the reviewed macro screen covers all 6362 modules.",
+    "O-58 carried: the slot-unbound fallback receives NIL as frame; the unreachable %error path is not qualified.",
+    "O-61: raw low-bit-first tail and zero-padding observations remain mandatory qualification. Preserve these independent byte checks when replacing the READY harness.",
+    "O-62: explicitly accept :bit-vector-kind as admitted in the new compiler profile; historical parent refusal evidence is not rewritten.",
+    "O-63: integration native qualification binds the full proposal source identity and native-run hash in qualification.json; native-run.json alone is not an identity proof."
+  ],
+  "slot_credit": false
+}

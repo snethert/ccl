@@ -1,32 +1,33 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "3a07a817b0fa3cb9d08a4297bb51d378b344521c536451cd8fae3a000f886096",
-  "commit": "2d104432d4ebb7aac683e83f510d774fef8d2f39",
-  "immutable_evidence_files": 269587,
+  "catalog_sha256": "391e2a792cfb0411667350f3e025f3ec56088b12d197a3a6c84fb8b41c2897ca",
+  "commit": "dbc283d21bae0df7c3fb3ba9b1889a68666dc9d3",
+  "immutable_evidence_files": 269600,
   "last_scoped_addition": {
-    "directory": "2026-09-24-stage1-ready-join-r9",
-    "files": 62,
-    "bytes": 47684229
+    "directory": "2026-09-24-stage1-ready-compiler-acceptance",
+    "files": 12,
+    "bytes": 19265633
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY R9: packed-bit allocation/access executes native whole-file MAKE-CPL-BITS and SIMPLE-VECTOR-DELETE. 26048 fresh corpus comparisons; four cold boots / 714 collections, 20 boot refusals, 40 support comparisons and 31 loader checks; raw bit bounds/length refusals and tail/padding checks. All 6362 modules screened for macro callees, same 33 superseded candidates. Closure 742 modules / 62 missing edges / 50 indirect modules. Fresh R6/R6a 21843 tests. No shared integration or LL15/original-definition credit.",
-  "source_index_sha256": "ea21cefcebd189bb086a35ba9f768c3754d5ef5e9de753d941d25bd7bca7dd76",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r9.json",
+  "scope": "Audit 173 acceptance and byte-identical integration of four READY compiler lowerings. Fresh native R6/R6a: 21843 tests, 164 restored FASLs. Exact source identity reuses R9 target execution: 26048 comparisons and four cold boots. O-61 raw layout check preserved, O-62 bit-vector admission accepted, O-63 source-bound native record. No LL15 credit; class conditions remain default-off.",
+  "source_index_sha256": "3aaa0428b1943196aa26eb9667d53b4f81b29a32082b2663644b2c0e39eb0bc4",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-compiler-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-24-ready-join-r9-verification.json",
-    "report_sha256": "9596eff6df7d1a500b8ba3c7b9d94007265e090f024b307ddf93d6d10278ffac",
+    "report": "2026-09-24-stage1-ready-compiler-acceptance/qualification.json",
+    "report_sha256": "d4c65e86bead3fb686d67de3b4d9150de80766f12f806ed11f7bcde229b7fabc",
+    "native_rebuilt": true,
+    "native_tests": 21843,
     "execution_rebuilt_during_retention_verification": false,
     "full_execution_replayed": false,
-    "complete_author_target_execution": true,
-    "full_corpus_comparisons": 26048,
-    "cold_boots": 4,
-    "native_tests": 21843,
-    "native_rebuilt": true
+    "target_comparisons_reused": 26048,
+    "cold_boots_reused": 4,
+    "identity_report": "2026-09-24-stage1-ready-compiler-acceptance/identity.json",
+    "identity_report_sha256": "0f8214b1263bd85489f6fc74ab468076e7a5f5ff19414de927dc8e886501d683"
   }
 }

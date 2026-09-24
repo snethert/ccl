@@ -1269,8 +1269,10 @@
        (or (and *bootstrap-front-end*
                 (null (ccl::afunc-parent *pool-current*))
                 (null (second args)) (null (second (first args)))
-                (bootstrap-numeric-call (ccl::afunc-name *pool-current*)
-                                        (first (first args))))
+                (if (eq (ccl::afunc-name *pool-current*) 'make-string)
+                  (bootstrap-make-string (first (first args)))
+                  (bootstrap-numeric-call (ccl::afunc-name *pool-current*)
+                                          (first (first args)))))
            (progn
              (when *bootstrap-front-end* (setq *bootstrap-self-call* t))
              (b-local-call 'b-self nil (first args) (second args)))))
@@ -3643,7 +3645,16 @@
              (progn
                (format s "(local.set ~a (i32.load ~a))" answer address)
                (when (eq op 'ccl::%slot-ref)
-                 (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s))
+                 (if *b-cpl-conditions*
+                   (format s "(if (i32.eq (local.get ~a) (i32.const ~d)) (then (local.set ~a ~a)))"
+                           answer wasm32::subtag-slot-unbound answer
+                           (let ((*b-tail-position* nil) (*b-producer-target* nil))
+                             (bootstrap-primary
+                              (b-call (bootstrap-constant 'ccl::%slot-unbound-trap)
+                                      (list (list (make-b-raw-code :text object)
+                                                  (make-b-raw-code :text index)
+                                                  (bootstrap-constant nil)) nil)))))
+                   (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s)))
                (format s "(local.get ~a)" answer)))))))))
 
 (defun bootstrap-gvector (forms)
@@ -3921,8 +3932,10 @@
                  (bootstrap-string-access (if value 'ccl::%set-sbchar 'ccl::%sbchar) raw)
                  tag (typed :unsigned-8-bit-vector)
                  tag (typed :bignum)
-                 (bootstrap-node-access
-                   (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw)))))))
+                 (b-wat "(if (result i32) (i32.eq (local.get ~a) (i32.const 1020)) (then ~a) (else ~a))"
+                        tag (bootstrap-bit-access raw)
+                        (bootstrap-node-access
+                         (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw))))))))
 
 (defun bootstrap-heap-block (bytes emit)
   (let ((size (temporary)) (base (temporary)))
@@ -4028,12 +4041,93 @@
                       (i32.store (i32.add ~a (i32.const 60)) (i32.add ~a (i32.const 6)))"
                      base immediates base function base base base))))))))
 
+;;; Packed bits use the native x8632 low-bit-first representation. Validate
+;;; every operand before storing; a byte access does not touch tail padding.
+(defun bootstrap-bit-access (forms)
+  (bootstrap-operands forms
+    (lambda (values)
+      (destructuring-bind (object index &optional value) values
+        (let ((base (temporary)) (header (temporary))
+              (address (temporary)) (mask (temporary)))
+          (with-output-to-string (s)
+            (write-string (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))" object) 4) s)
+            (format s "(local.set ~a (i32.sub ~a (i32.const 6)))
+                       (call $span (local.get ~a) (i32.const 4))
+                       (local.set ~a (i32.load (local.get ~a)))" base object base header base)
+            (write-string (b-condition (b-wat "(i32.ne (i32.and (local.get ~a) (i32.const 255)) (i32.const 255))" header) 4) s)
+            (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.ge_u (i32.shr_u ~a (i32.const 2)) (i32.shr_u (local.get ~a) (i32.const 8))))" index index header) 4) s)
+            (format s "(call $span (local.get ~a) (i32.add (i32.const 4) (i32.shr_u (i32.add (i32.shr_u (local.get ~a) (i32.const 8)) (i32.const 7)) (i32.const 3))))
+                       (local.set ~a (i32.add (local.get ~a) (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 5)))))
+                       (local.set ~a (i32.shl (i32.const 1) (i32.and (i32.shr_u ~a (i32.const 2)) (i32.const 7))))"
+                    base header address base index mask index)
+            (if value
+              (progn
+                (write-string (b-wat "(if ~a (then ~a))"
+                  (b-wat "(i32.and (i32.ne ~a (i32.const 0)) (i32.ne ~a (i32.const 4)))" value value)
+                  (b-type-failure value 'bit)) s)
+                (format s "(i32.store8 (local.get ~a)
+                             (i32.or (i32.and (i32.load8_u (local.get ~a)) (i32.xor (local.get ~a) (i32.const -1)))
+                                     (if (result i32) ~a (then (local.get ~a)) (else (i32.const 0))))) ~a"
+                        address address mask value mask value))
+              (format s "(i32.shl (i32.ne (i32.and (i32.load8_u (local.get ~a)) (local.get ~a)) (i32.const 0)) (i32.const 2))"
+                      address mask))))))))
+
+(defun bootstrap-bit-vector (values)
+  (destructuring-bind (count tag &optional initial) values
+    (declare (ignore tag))
+    (let ((n (temporary)) (payload (temporary)))
+      (with-output-to-string (s)
+        (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.gt_u ~a (i32.const 67108860)))" count count) 6) s)
+        (when initial
+          (write-string (b-wat "(if ~a (then ~a))"
+                  (b-wat "(i32.and (i32.ne ~a (i32.const 0)) (i32.ne ~a (i32.const 4)))" initial initial)
+                  (b-type-failure initial 'bit)) s))
+        (format s "(local.set ~a (i32.shr_u ~a (i32.const 2)))
+                   (local.set ~a (i32.shr_u (i32.add (local.get ~a) (i32.const 7)) (i32.const 3)))"
+                n count payload n)
+        (write-string
+         (b-wat "(i32.add ~a (i32.const 6))"
+           (bootstrap-heap-block
+            (b-wat "(i32.and (i32.add (local.get ~a) (i32.const 11)) (i32.const -8))" payload)
+            (lambda (base bytes)
+              (b-wat "(memory.fill ~a (i32.const 0) ~a)
+                       (i32.store ~a (i32.or (i32.shl (local.get ~a) (i32.const 8)) (i32.const 255)))
+                       (memory.fill (i32.add ~a (i32.const 4)) ~a (local.get ~a))
+                       (if (i32.and (local.get ~a) (i32.const 7))
+                         (then (i32.store8 (i32.add ~a (i32.add (i32.const 3) (local.get ~a)))
+                                 (i32.and ~a (i32.sub (i32.shl (i32.const 1) (i32.and (local.get ~a) (i32.const 7))) (i32.const 1))))))"
+                     base bytes base n base
+                     (if initial (b-wat "(i32.sub (i32.const 0) (i32.shr_u ~a (i32.const 2)))" initial) "(i32.const 0)") payload
+                     n base payload
+                     (if initial (b-wat "(i32.sub (i32.const 0) (i32.shr_u ~a (i32.const 2)))" initial) "(i32.const 0)") n)))) s)))))
+
+(defun bootstrap-make-bit-array (forms)
+  (when (and forms (evenp (length (cdr forms))))
+    (let ((initial nil) (seen nil) (bitp nil))
+      (loop for (key value) on (cdr forms) by #'cddr do
+        (multiple-value-bind (name constant) (bootstrap-immediate key)
+          (unless (and constant (member name '(:element-type :initial-element))
+                       (not (member name seen)))
+            (return-from bootstrap-make-bit-array nil))
+          (push name seen)
+          (if (eq name :initial-element)
+            (setq initial value)
+            (multiple-value-bind (type constant) (bootstrap-immediate value)
+              (unless (and constant (eq type 'bit))
+                (return-from bootstrap-make-bit-array nil))
+              (setq bitp t)))))
+      (when bitp
+        (b-multiple (make-b-raw-code :text
+          (bootstrap-make-vector
+           (append (list (first forms) (bootstrap-constant wasm32::subtag-bit-vector))
+                   (when initial (list initial))))))))))
+
 (defun bootstrap-make-vector (forms)
   (bootstrap-operands forms
     (lambda (values)
       (destructuring-bind (count tag &optional initial) values
         (let ((i (temporary)) (n (temporary)) (kind (temporary)))
-          (with-output-to-string (s)
+          (b-wat "(if (result i32) (i32.eq ~a (i32.const 1020)) (then ~a) (else ~a))" tag (bootstrap-bit-vector values) (with-output-to-string (s)
             (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.gt_u ~a (i32.const 67108860)))" count count) 6) s)
             (format s "(local.set ~a (i32.shr_u ~a (i32.const 2))) (local.set ~a ~a)" n count kind tag)
             (write-string (b-condition (b-wat "(i32.and (i32.ne ~a (i32.const 424)) (i32.and (i32.ne ~a (i32.const 1000)) (i32.and (i32.ne ~a (i32.const 764)) (i32.ne ~a (i32.const 796)))))" tag tag tag tag) 4) s)
@@ -4060,7 +4154,7 @@
                          base i
                          (b-wat "(if (result i32) (i32.or (i32.eq (local.get ~a) (i32.const 1000)) (i32.eq (local.get ~a) (i32.const 424))) (then ~a) (else ~a))"
                                 kind kind (or initial "(i32.const 77825)")
-                                (if initial (b-wat "(i32.shr_u ~a (i32.const 8))" initial) "(i32.const 0)")) i i)))) s)))))))
+                                (if initial (b-wat "(i32.shr_u ~a (i32.const 8))" initial) "(i32.const 0)")) i i)))) s))))))))
 
 (defun bootstrap-make-list (forms)
   (bootstrap-operands forms
@@ -4129,6 +4223,7 @@
                               (:signed-32-bit-vector 4 t 175 -536870912 536870911)
                               (:fixnum-vector 4 t 183 -536870912 536870911)))))
     (case kind
+      (:bit-vector (return-from bootstrap-typed-access (bootstrap-bit-access (cdr args))))
       (:simple-vector
        (return-from bootstrap-typed-access
          (bootstrap-node-access (if (eq op 'ccl::%typed-uvset) 'ccl::svset 'ccl::svref) (cdr args))))
@@ -4513,6 +4608,29 @@
         ccl::%ilogand2 ccl::%ilogior2 ccl::%ilogxor2 ccl::%ilognot)
        (bootstrap-fixnum-operator op args)))))
 
+(defun bootstrap-make-string (forms)
+  ;; CCL's MAKE-STRING calls itself with a known character element type.
+  ;; As in its compiler macro, only constant keyword shapes open-code here.
+  ;; Other calls use the unchanged Lisp argument checks first.
+  (when (and forms (evenp (length (cdr forms))))
+    (let ((initial nil) (seen nil))
+      (loop for (key value) on (cdr forms) by #'cddr do
+        (multiple-value-bind (name constant) (bootstrap-immediate key)
+          (unless (and constant (member name '(:element-type :initial-element))
+                       (not (member name seen)))
+            (return-from bootstrap-make-string nil))
+          (push name seen)
+          (if (eq name :initial-element)
+            (setq initial value)
+            (multiple-value-bind (type constant) (bootstrap-immediate value)
+              (unless (and constant (member type '(character base-char standard-char)))
+                (return-from bootstrap-make-string nil))))))
+      (b-multiple
+       (make-b-raw-code :text
+         (bootstrap-make-vector
+          (append (list (first forms) (bootstrap-constant wasm32::subtag-simple-base-string))
+                  (when initial (list initial)))))))))
+
 (defun bootstrap-numeric-call (name forms)
   (let ((entry (assoc name '((+ . %float-add) (- . %float-sub) (* . %float-mul)
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
@@ -4551,6 +4669,11 @@
           ((member name '(ccl::lfun-bits ccl::inner-lfun-bits ccl::lfun-bits-known-function))
            (when (member (length forms) '(1 2))
              (b-multiple (make-b-raw-code :text (if (cdr forms) (bootstrap-set-function-bits forms) (bootstrap-function-bits forms))))))
+          ((and (eq name 'make-array) (bootstrap-make-bit-array forms)))
+          ((and (eq name 'sbit) (= (length forms) 2))
+           (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
+          ((and (eq name 'ccl::%sbitset) (= (length forms) 3))
+           (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
           ((and (eq name 'make-array)
                       (or (= (length forms) 1)
                           (and (= (length forms) 3)
@@ -4880,13 +5003,21 @@
              (b-wat "(if (result i32) ~a (then ~a) (else (i32.const 0)))"
                     (predicate 'integerp) test))))))
 
+(defun bootstrap-type-literal (form)
+  ;; TYPEP's T and NIL type specifiers have dedicated NX1 operators.
+  (when (ccl::acode-p form)
+    (case (ccl::acode-operator-name (ccl::acode-operator form))
+      ((nil) (values nil t))
+      ((t) (values t t))
+      (otherwise (bootstrap-immediate form)))))
+
 (defun bootstrap-type-call (name forms)
   (when (and (member (length forms) '(2 3))
              (or (= (length forms) 2)
                  (and (eq name 'typep)
-                      (multiple-value-bind (env constant) (bootstrap-immediate (third forms))
+                      (multiple-value-bind (env constant) (bootstrap-type-literal (third forms))
                         (and constant (null env))))))
-    (multiple-value-bind (type constant) (bootstrap-immediate (second forms))
+    (multiple-value-bind (type constant) (bootstrap-type-literal (second forms))
       (when (and constant (bootstrap-type-supported-p type))
         (b-multiple
          (make-b-raw-code :text

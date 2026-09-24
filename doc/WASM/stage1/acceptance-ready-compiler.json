@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_UNIT",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "if you agree, accept and integrate",
+    "context": "Audit 173; Codex agrees with the review and accepts the four compiler lowerings together."
+  },
+  "author": "Codex",
+  "proposal_commit": "f48be155b0b8508054e7b32390da54d6c0d84e8f",
+  "review": {
+    "reviewer": "Claude",
+    "commit": "9dc0d054a0da81e782c958c0469b2b8689526505",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "2824d1e1644971f4ffe02c59cb00704b89930a96ff307fe1d11ad1e2edbd4f1a",
+    "import_commit": "0f5100d021743ac8593894d4188dc480d14f6ff0"
+  },
+  "packet": {
+    "id": "STAGE1-READY-JOIN-R9",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r9/packet.json",
+    "sha256": "8d7b8ff2399bb4f188a56198c25dcb3998410bfb8757e9c71e9576dfe0d7b463"
+  },
+  "scope": "Accept and integrate the four reviewed compiler lowerings only. READY R9 remains the qualification fixture, not an accepted LL15 implementation.",
+  "lowerings": [
+    "MAKE-STRING self-call allocation",
+    "TYPEP/REQUIRE-TYPE literal T and NIL recognition",
+    "Class-mode %SLOT-REF through %SLOT-UNBOUND-TRAP",
+    "Packed bit-vector allocation and access"
+  ],
+  "observations": [
+    "O-57 closed: the reviewed macro screen covers all 6362 modules.",
+    "O-58 carried: the slot-unbound fallback receives NIL as frame; the unreachable %error path is not qualified.",
+    "O-61: raw low-bit-first tail and zero-padding observations remain mandatory qualification. Preserve these independent byte checks when replacing the READY harness.",
+    "O-62: explicitly accept :bit-vector-kind as admitted in the new compiler profile; historical parent refusal evidence is not rewritten.",
+    "O-63: integration native qualification binds the full proposal source identity and native-run hash in qualification.json; native-run.json alone is not an identity proof."
+  ],
+  "class_conditions_default_enabled": false,
+  "original_definitions_executed": 550,
+  "non_nil_witnesses": 515,
+  "slot_credit": false
+}
