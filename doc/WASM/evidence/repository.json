@@ -1,34 +1,33 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "71329fb62824b572c6f19695964d8ba612f9cdc923f1f93c033c6497d7694efd",
-  "commit": "c8ba6877eb2279323662943bf679eeea9ce0985e",
-  "immutable_evidence_files": 269952,
+  "catalog_sha256": "2bf9b80a96eb04a15896b09688e7d815718fbf4de23f6e897f061b9360cb3245",
+  "commit": "43b55862a0b16ebbeea0b0b8ab2b511b547bd2de",
+  "immutable_evidence_files": 270058,
   "last_scoped_addition": {
-    "directory": "2026-09-24-stage1-ready-runtime-acceptance",
-    "files": 109,
-    "bytes": 116120504
+    "bytes": 51400027,
+    "directory": "2026-09-24-stage1-ready-join-r13",
+    "files": 105
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Accept and integrate READY R10–R12 as one seven-file unit on Steve’s “I accept them”; audit 174 imported verbatim. All product files byte-equal to reviewed R12. Fresh native R6/R6a: 21843 tests, 164 restored FASLs; 68 real-reader comparisons across 17 existing target profiles and FUTEX on/off. Collector rebuild byte-identical. Full target 26048 comparisons reused; focused lock classifications pass four cold boots and reject the wrong-class mutant. Three token clauses individually isolated in 20 expression checks. Final integrated preparer reproduces executed input digests and native rows. R9 historical source check retains current raw-byte observation without freezing unrelated witnesses. Original execution 568/531 non-NIL; no new credit or LL15 slot acceptance. Class mode default unchanged; locks and streams remain transient.",
-  "source_index_sha256": "1f2d2ee8afbefeb4860bf353709a9ebf9225b67f9352d603f0308d2d7d1ecbb7",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-runtime-acceptance.json",
-  "version": 1,
+  "scope": "READY R13 public string-output construction: seven additional native originals, proposed 575 executed / 535 non-NIL; three cleanup return values unobserved and uncredited as non-NIL. Whole-file native constructors, qualified CLOSE methods and WITH-OUTPUT-TO-STRING cleanup. One thread-local-value lowering/source branch and native pool-clearing collector behavior. Fresh 26048 corpus comparisons; four cold boots, 1534 collections, 70 support comparisons; 40 collector checks, eight pool checks and two omissions, two arity refusals, five image-GF linker checks and rejected global fallback. Fresh native R6/R6a 21843 tests / 164 restored FASLs and 17 existing-target reader profiles. General element-type SUBTYPEP environment remains an explicit checked-4 boundary; fill-pointer strings and file/OS streams unclaimed. Closure 838 modules / 58 missing / 54 indirect, 235 unattributed; no LL15 credit. Next work: namespace and loader; stop enlarging the projection for its own sake.",
+  "source_index_sha256": "78769030210ce49feb2353744c6fe6d1277bd9fb30c890cca96584d808561d90",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r13.json",
   "verification": {
-    "status": "PASS",
-    "report": "2026-09-24-stage1-ready-runtime-acceptance/verification.json",
-    "report_sha256": "6508d424e820482b4a30948edbb69313650e66f5e066a84ef32da3124504ff68",
-    "native_rebuilt": true,
-    "native_tests": 21843,
-    "native_source_identity": "2026-09-24-stage1-ready-runtime-acceptance/proposal-identity.json",
-    "native_source_identity_sha256": "c967af46cef23c063fe60e2b59e837c6222a208b2b3165ffff35925a19e4b6fc",
-    "target_full_corpus_rebuilt": false,
-    "corpus_comparisons_reused": 26048,
-    "focused_cold_boots": 4,
+    "cold_boots": 4,
+    "corpus_comparisons": 26048,
     "execution_during_retention": false,
-    "author_run": "focused/author-run.json"
-  }
+    "native_rebuilt": true,
+    "native_source_identity": "2026-09-24-stage1-ready-join-r13/native-proposal-identity.json",
+    "native_source_identity_sha256": "b84168b842c775127d85ad5d3be03f276b23d2fde53db0c157a9035a83554848",
+    "native_tests": 21843,
+    "report": "2026-09-24-stage1-ready-join-r13/verification.json",
+    "report_sha256": "b64e9ffa3285445fd298fc6aa73c83f5098887fb34eaaf20aaee9eae40c2793f",
+    "status": "PASS",
+    "target_full_corpus_rebuilt": true
+  },
+  "version": 1
 }

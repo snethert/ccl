@@ -1,159 +1,82 @@
-"""READY numerical closure over the accepted R9 compiler; isolated proposal."""
+"""String constructor proposal over the accepted R12 integrated sources."""
 from pathlib import Path
 import hashlib
+import subprocess
+import shutil
 import build as builder
 import common as c
-
 HERE=Path(__file__).resolve().parent
 BACKEND='compiler/WASM32/wasm32-backend.lisp'
 
 def generate():
     text=(c.ROOT/BACKEND).read_text()
-    assert c.sha(c.ROOT/BACKEND)=='0965018e116b3b7e8e9765cda2cc4399e07e4197e7f9bad3e14372d3287a78d6'
-    anchor='(defun bootstrap-operator (ir)'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,(HERE/'complex-floats.lisp').read_text()+'\n'+anchor)
-    anchor='    (case op\n      ((ccl::%setf-double-float ccl::%setf-short-float)'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,'    (case op\n      ((ccl::%complex-single-float-realpart ccl::%complex-single-float-imagpart\n        ccl::%complex-double-float-realpart ccl::%complex-double-float-imagpart)\n       (bootstrap-complex-part op args))\n      ((ccl::%make-complex-single-float ccl::%make-complex-double-float)\n       (bootstrap-complex-float op args))\n      ((ccl::%setf-double-float ccl::%setf-short-float)')
     anchor="          ((eq name '-) (bootstrap-subtract forms))"
     assert text.count(anchor)==1
-    text=text.replace(anchor,anchor+'\n          ((eq name \'ccl::%wasm-lock-owner-token)\n           (unless (null forms) (refuse :single-worker-lock-token-arity))\n           (b-multiple (make-b-raw-code :text\n             "(block (result i32)\n                (if (i32.or (i32.eqz (global.get $tcr))\n                            (i32.or (i32.and (global.get $tcr) (i32.const 15))\n                                    (i32.ge_u (global.get $tcr) (i32.const 2147483648))))\n                  (then (throw $call_error (i32.const 4))))\n                (global.get $tcr))")))')
-    anchor='(defun bootstrap-gvector (forms)'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,(HERE/'structure-cells.lisp').read_text()+'\n'+anchor)
-    anchor='    (bootstrap-operands\n     (cdr forms)\n     (lambda (values)'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,'''    (bootstrap-operands
-     (if (and (= subtag wasm32::subtag-struct) (cdr forms))
-       (cons (or (bootstrap-structure-cells (second forms)) (second forms))
-             (cddr forms))
-       (cdr forms))
-     (lambda (values)''')
-    anchor="                          (cond ((eq op 'ccl::immediate)"
-    assert text.count(anchor)==1
-    text=text.replace(anchor,"""                          (cond ((and (eq op 'ccl::%gvector)
-                                            (eql (ccl::acode-fixnum-form-p (first (first (first args))))
-                                                 wasm32::subtag-struct)
-                                            (bootstrap-structure-cell-list (second (first (first args)))))
-                                       ;; The ancestry cells are reconstructed at allocation.
-                                       ;; Only the remaining operands belong in the literal pool.
-                                       (mapc #'visit (cddr (first (first args))))
-                                       (visit (second (first args))))
-                                ((eq op 'ccl::immediate)""")
-    anchor='(and (integerp (second type)) (<= 1 (second type) 28))'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,"(and (integerp (second type))\n                          (<= 1 (second type) (if (eq (car type) 'signed-byte) 30 29)))")
-    for old,new in [("`(integer ,(- (ash 1 (1- bits))) (,(ash 1 (1- bits))))",
-                     "`(integer ,(- (ash 1 (1- bits))) ,(1- (ash 1 (1- bits))))"),
-                    ("`(integer 0 (,(ash 1 bits)))", "`(integer 0 ,(1- (ash 1 bits)))")]:
-        assert text.count(old)==1
-        text=text.replace(old,new)
-    # The native stream grower uses the same byte-copy primitive as bignums.
-    # Both admitted shapes have four-byte payload elements; other ivectors
-    # still refuse. Keep digit access bignum-only.
-    text=text.replace('bootstrap-bignum-base', 'bootstrap-word-ivector-base')
-    old='(defun bootstrap-word-ivector-base (object)'
+    return text.replace(anchor,anchor+'\n'+(HERE/'thread-local.lisp').read_text())
+
+def sources():
+    text=(c.ROOT/'level-1/l1-streams.lisp').read_text()
+    old="       (let* ((loc (%tcr-binding-location (%current-tcr) '%string-output-stream-ioblocks%)))"
     assert text.count(old)==1
-    text=text.replace(old,'(defun bootstrap-word-ivector-base (object &optional stringp)')
-    old='(b-condition (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base) 4)'
-    assert text.count(old)==1
-    text=text.replace(old,'''(b-condition
-       (if stringp
-         (b-wat "(i32.and (i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))
-                         (i32.ne (i32.load8_u (local.get ~a)) (i32.const 191)))" base base)
-         (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base)) 4)''')
-    old='(b-condition (b-wat "(i32.eqz (local.get ~a))" count) 4)'
-    assert text.count(old)==1
-    text=text.replace(old,'''(b-condition
-       (b-wat "(i32.and (i32.eq (i32.load8_u (local.get ~a)) (i32.const 7))
-                        (i32.eqz (local.get ~a)))" base count) 4)''')
-    old='(bootstrap-word-ivector-base (first values))'
-    assert text.count(old)==1
-    text=text.replace(old,"(bootstrap-word-ivector-base (first values) (eq name 'ccl::%copy-ivector-to-ivector))")
-    old='(bootstrap-word-ivector-base destination)'
-    assert text.count(old)==1
-    text=text.replace(old,'(bootstrap-word-ivector-base destination t)')
-    return text
+    return {'level-1/l1-streams.lisp':text.replace(old,
+        "       #+wasm32-target (%wasm-thread-local-value '%string-output-stream-ioblocks%)\n       #-wasm32-target\n"+old)}
 
 def install():
     if getattr(builder,'ready_proposal',False):return
     environment,prepare=builder.environment,builder.prepare
-    def identity():
+    # The previous proposal stack is integrated. Read its complete source list,
+    # then use the current product files exactly once, without replaying patches.
+    record=c.read(c.ROOT/'doc/WASM/stage1/acceptance-ready-runtime.json')
+    native=c.STORE/'2026-09-24-stage1-ready-runtime-acceptance'
+    identity=c.read(native/'proposal-identity.json')
+    def source_files():
+        result={name:(c.ROOT/name).read_text() for name in identity}
+        result[BACKEND]=generate();result.update(sources());return result
+    def identity_key():
         return dict(**environment(),ready_compiler=dict(
+            sources={name:hashlib.sha256(text.encode()).hexdigest() for name,text in source_files().items()},
             collector=c.sha(c.ROOT/'runtime/wasm32/collector.c'),
-            clang=c.sha(Path('/usr/local/opt/llvm/bin/clang')),lap=c.sha(c.ROOT/'level-0/WASM32/w32-lap.lisp'),
-            base=c.sha(c.ROOT/BACKEND),proposal=hashlib.sha256(generate().encode()).hexdigest(),
-            derivation=c.sha(Path(__file__)),
-            complex_floats=c.sha(HERE/'complex-floats.lisp'),structure_cells=c.sha(HERE/'structure-cells.lisp'),
-            locks=c.sha(HERE/'locks.lisp'),lock_source=c.sha(HERE/'lock_source.py'),
-            lock_inputs={name:c.sha(c.ROOT/name) for name in ('level-0/l0-aprims.lisp','level-0/l0-misc.lisp','compiler/WASM32/wasm32-arch.lisp')},
-            class_driver=c.sha(HERE/'numeric-files.lisp'),
-            clos_methods=c.sha(HERE/'clos-methods.lisp'),
-            condition_methods=c.sha(HERE/'condition-methods.lisp'),
-            graph=c.sha(HERE/'graph.lisp')))
+            clang=c.sha(Path('/usr/local/opt/llvm/bin/clang')),
+            drivers={name:c.sha(HERE/name) for name in
+                ('compiler.py','thread-local.lisp','numeric-files.lisp','graph.lisp','clos-methods.lisp','condition-methods.lisp')}))
     def proposed(parent,stage):
         prepare(parent,stage)
-        (stage/'driver/numeric-files.lisp').write_bytes((HERE/'numeric-files.lisp').read_bytes())
-        (stage/'driver/graph.lisp').write_bytes((HERE/'graph.lisp').read_bytes())
-        (stage/'driver/ready-clos-methods.lisp').write_bytes((HERE/'clos-methods.lisp').read_bytes())
-        (stage/'driver/condition-methods.lisp').write_bytes((HERE/'condition-methods.lisp').read_bytes())
+        for src,dst in [('numeric-files.lisp','numeric-files.lisp'),('graph.lisp','graph.lisp'),
+                        ('clos-methods.lisp','ready-clos-methods.lisp'),('condition-methods.lisp','condition-methods.lisp')]:
+            shutil.copyfile(HERE/src,stage/'driver'/dst)
+        # Preserve method qualifiers when binding the real native method object.
+        for path in (stage/'driver').glob('*.lisp'):
+            text=path.read_text()
+            if '(destructuring-bind (name classes entry) spec' in text:
+                text=text.replace('(destructuring-bind (name classes entry) spec','(destructuring-bind (name classes entry &optional qualifiers) spec')
+                text=text.replace("(find-method gf nil (mapcar #'find-class classes))","(find-method gf qualifiers (mapcar #'find-class classes))")
+                path.write_text(text)
         controls=stage/'driver/controls.lisp'
         old="(:bit-vector-kind (defun refused (x) (declare (type (simple-array bit (*)) x)) (aref x 0)) :bootstrap-array-kind)"
         text=controls.read_text();assert text.count(old)==1
         controls.write_text(text.replace(old,old.replace(':bootstrap-array-kind)', ':admitted)')))
-        c.save(stage/'driver-manifest.json' ,c.inventory(stage/'driver'))
-        path=stage/'compiled/proposal/files'/BACKEND
-        path.write_text(generate())
-        manifest=stage/'compiled/proposal/unit.json'
-        record=c.read(manifest)
-        row=next(r for r in record['added'] if r['path']==BACKEND)
-        row['sha256']=c.sha(path)
-        lap='level-0/WASM32/w32-lap.lisp'
-        source=(c.ROOT/lap).read_text()
-        source+='''
-;;; Single-float counterpart of the native destructive absolute value.
-(defun %%short-float-abs! (n result)
-  (declare (single-float n result))
-  (%wasm-set-float-word result 0
-                        (logand #x7fffffff
-                                (the (unsigned-byte 32) (%wasm-float-word n 0))))
-  result)
-'''
-        (stage/'compiled/proposal/files'/lap).write_text(source)
-        next(r for r in record['added'] if r['path']==lap)['sha256']=c.sha(stage/'compiled/proposal/files'/lap)
-        from lock_source import sources
-        for name,text in sources(c.ROOT).items():
-            path=stage/'compiled/proposal/files'/name
-            path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
-            rows=record['added']+record['modified']
-            row=next((r for r in rows if r['path']==name),None)
-            if row is None:
-                import subprocess
-                original=subprocess.check_output(['git','show','c994217adc56b3f8a564526cee4695893ac84d86:'+name],cwd=c.ROOT)
-                row=dict(path=name,before=hashlib.sha256(original).hexdigest())
-                record['modified'].append(row)
-            row['after' if 'before' in row else 'sha256']=c.sha(path)
-        c.save(manifest,record)
-        collector=(c.ROOT/'runtime/wasm32/collector.c').read_text()
-        anchor=' case 23:return n==3?12:0xffffffffu;'
-        assert collector.count(anchor)==1
-        collector=collector.replace(anchor,anchor+'\n case 71:return n==3?12:0xffffffffu;\n case 79:return n==5?20:0xffffffffu;')
-        anchor='   else if(node_subtag(tag)'
-        assert collector.count(anchor)==1
-        collector=collector.replace(anchor,'   else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n   else if(tag==50){if(n!=4)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n'+anchor)
-        (stage/'runtime/collector.c').write_text(collector)
+        c.save(stage/'driver-manifest.json',c.inventory(stage/'driver'))
+        root=stage/'compiled/proposal';manifest=dict(source_revision='c994217adc56b3f8a564526cee4695893ac84d86',added=[],modified=[])
+        shutil.rmtree(root/'files');(root/'files').mkdir()
+        for name,text in source_files().items():
+            path=root/'files'/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
+            original=subprocess.run(['git','show',manifest['source_revision']+':'+name],cwd=c.ROOT,capture_output=True)
+            if original.returncode:
+                manifest['added'].append(dict(path=name,sha256=c.sha(path)))
+            else:
+                manifest['modified'].append(dict(path=name,before=hashlib.sha256(original.stdout).hexdigest(),after=c.sha(path)))
+        c.save(root/'unit.json',manifest)
+        shutil.copyfile(c.ROOT/'runtime/wasm32/collector.c',stage/'runtime/collector.c')
         clang=Path('/usr/local/opt/llvm/bin/clang')
         c.command([clang,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-matomics','-mbulk-memory',
           '-Wl,--no-entry','-Wl,--import-memory','-Wl,--max-memory=2147549184','-Wl,--shared-memory',
           '-Wl,--global-base=1048576','-Wl,-z,stack-size=65536','-Wl,--export=collect','-Wl,--export=__stack_pointer',
           stage/'runtime/collector.c','-o',stage/'ready-collector.wasm'],stage/'collector-build.log')
         c.save(stage/'ready-runtime.json',{'collector.wasm':c.sha(stage/'ready-collector.wasm'),'source':c.sha(stage/'runtime/collector.c')})
-    builder.environment,builder.prepare=identity,proposed
+    builder.environment,builder.prepare=identity_key,proposed
     builder.ready_proposal=True
     import execute
     execute.prepare=execution_prepare
-
 
 def execution_prepare(out):
     from prepare import prepare

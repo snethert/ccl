@@ -78,6 +78,23 @@
       (error "Repeated probe definition."))
     names))
 
+(defun validation-image-callee-p (name cases)
+  ;; A projected GF is installed from the actual image graph, not from a
+  ;; standalone module. Admit a direct edge only when an explicit input
+  ;; carries that very GF in its protocol; a host FBOUNDP alone is not enough.
+  (and (symbolp name) (fboundp name)
+       (typep (fdefinition name) 'standard-generic-function)
+       (some (lambda (entry)
+               (some (lambda (input)
+                       (some (lambda (argument)
+                               (and (simple-vector-p argument)
+                                    (> (length argument) 8)
+                                    (gethash argument *generic-graphs*)
+                                    (member (fdefinition name) (svref argument 8))))
+                             input))
+                     (second entry)))
+             cases)))
+
 (defun validation-native-row (name module input environment stream)
   (let* ((arguments (core-copy-input input))
          (bindings (core-copy-input environment))
@@ -159,7 +176,8 @@
               (when module
                 (dolist (callee (getf module :dependencies))
                   (unless (or (member callee base-names)
-                              (find callee modules :key (lambda (m) (getf m :source-name))))
+                              (find callee modules :key (lambda (m) (getf m :source-name)))
+                              (validation-image-callee-p callee cases))
                     (error "Missing probe dependency: ~s" callee))
                   (pushnew callee needed)))))
           until (= count (length needed)))

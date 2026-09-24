@@ -1,96 +1,83 @@
-# Projected-image READY join — R12 (accepted and integrated)
+# Projected-image READY join — R13: public string-output constructors
 
-This unit executes CCL's native string-output path, including the output branch
-of `%PR-INTEGER`. It adds no stream service or replacement stream writer. The
-six new original-definition witnesses are WRITE-STRING, WRITE-CHAR,
-WRITE-SIMPLE-STRING, GET-OUTPUT-STREAM-STRING and the two string-output ioblock
-writers. The generated DEFSTRUCT constructor executes but receives no original
-DEFUN credit. The proposed original-execution total rises from **562 / 525
-non-NIL** to **568 / 531**. Admission is not recounted by this packet.
+This proposal finishes the new-string constructor path before the work moves
+to namespace and loader. It executes seven more original definitions through
+CCL's public `MAKE-STRING-OUTPUT-STREAM`, native `CLOSE` methods and unchanged
+`WITH-OUTPUT-TO-STRING` macro: proposed totals **575 executed / 535 with a
+non-NIL witness**, versus the accepted 568 / 531. Admission is not recounted.
+This is not an LL15 acceptance submission.
 
-## Implementation
+CCL's file compiler compiles `l1-streams.lisp` whole. The constructor, buffer
+growth, recycling, close callbacks and method bodies come from that file.
+The method reader preserves primary, before and after qualifiers; four GFs
+required by close join the existing image (54 total). No C/JS stream service,
+replacement writer or replacement close function is added.
 
-The collector admits the native basic-stream subtag with exactly four traced
-fields. Streams, their buffers, ioblocks, callbacks and locks survive collection.
-Streams are created after image load; this unit does not add them to the image
-loader's recognized kinds or define persistent stream restoration.
+The one Lisp source branch replaces the native raw TCR binding-address lookup
+in `%STRING-STREAM-IOBLOCK-FREELIST` with `%WASM-THREAD-LOCAL-VALUE`. The backend
+uses its existing checked special-location helper, returns NIL when only the
+global value exists, and returns the current dynamic value otherwise. It does
+not allocate or expose an address. The witness checks absence despite a global
+value, nested bindings including NIL, collection and restoration through THROW.
+Wrong arities refuse; a control returning the global fallback must fail.
 
-The file compiler compiles `l1-io.lisp` and `l1-streams.lisp` in their own macro
-environments. The fixture constructs the native four-field stream and uses
-CCL's generated MAKE-STRING-OUTPUT-STREAM-IOBLOCK. This deliberately leaves
-MAKE-STRING-OUTPUT-STREAM's optional thread-local recycling pool and the file,
-terminal and foreign-descriptor interfaces owed. The existing 612-class image
-supplies the stream class; no generic function or class projection is added.
+The native pool is **one data cell, subtag 82** (`library/lispequ.lisp`). Native
+GC empties it (`lisp-kernel/x86-gc.c`); the proposed collector does the same,
+clearing only the destination and never tracing cached contents. Exact count,
+source/root preservation, separately rooted cached objects and both placements
+are checked. Count and clearing omissions are rejected. Pools, like streams,
+remain transient and are not admitted by the image loader. The existing forty
+collector-owner checks run against this build.
 
-The native DEFSTRUCT constructor embeds a list of host class cells in its
-hidden ancestry slot. The target constant-pool exporter correctly refused
-those foreign objects. The isolated compiler now recognizes that slot of a
-structure allocation in class mode and constructs its ancestry list using
-FIND-CLASS-CELL, the operation in the native class cell's MAKE-LOAD-FORM.
-Class-cell identity comes from the target table. The list spine is private to
-the new instance; sharing the host's constant ancestry list is not claimed.
-Other quoted lists, other vector fields and default mode retain their previous
-lowering. This is not general LOAD-TIME-VALUE or MAKE-LOAD-FORM support.
+The stream witness binds the native standard initial pool for its dynamic
+extent. It covers character element types, empty/extracted strings, Unicode,
+recycling, simultaneous streams, a different active pool, repeated close,
+`:abort`, a pool-clearing GC, closed-stream errors, and macro cleanup on normal
+return, THROW and ERROR. At the pool-clearing observation the native oracle
+really calls `CCL:GC`; ordinary `CORE-COLLECT` oracle calls remain no-ops. No
+promise that a cache survives collection is made. The optional pre-existing
+fill-pointer-string form of WITH-OUTPUT-TO-STRING belongs to the unfinished
+adjustable-array path and receives no credit here. File/terminal/OS streams
+and process-wide standard initial bindings are outside this unit.
 
-The constructor also exposed an admission gap in TYPEP/REQUIRE-TYPE: target
-fixnum slots expand to `(SIGNED-BYTE 30)`, beyond the former 28-bit limit.
-The lowering now covers signed widths through 30 and unsigned widths through
-29, using inclusive bounds that are representable target fixnums. Native and
-target witnesses include both bounds, adjacent bignums, non-integers and the
-TYPE-ERROR datum and expected type. Wider types keep their existing fallback.
+Direct calls to an image GF are now admitted by the probe linker only when an
+explicit graph input contains that actual native GF in its protocol. Merely
+being FBOUNDP on the host is insufficient. The graph, installed bindings and
+execution are retained; absent graphs, unmarked vectors, non-GFs and a missing
+protocol member have controls. The explicit execution-list rule is unchanged.
 
-The same byte-copy primitive used by bignums also grows and extracts native
-string buffers. Its checked lowering now accepts simple strings as a second
-four-byte payload shape, including empty strings. Digit operations remain
-bignum-only; other ivector kinds still refuse. The shared byte-offset checks
-run before copying, and overlapping copies use Wasm's memmove semantics.
+R10–R12 are integrated. `compiler.py` starts from those product sources and
+adds only the thread-local intrinsic and stream branch. The pool collector is
+built separately from the unchanged Lisp compilation session and is bound into
+the execution environment. R1–R12 replay from their recorded commits (R12:
+`f8180b52`); no historical packet is rewritten. The raw packed-bit byte check
+remains in the written Worker.
 
-## Execution and controls
-
-The native/target caller checks class-cell names and identities, empty and
-Unicode strings, newline position, substring bounds, buffer growth from zero
-and across capacity, extraction and reuse, and output after movement. It prints
-24 signed fixnum/bignum and radix pairs through `%PR-INTEGER` into the stream.
-An error and a collecting THROW unwind through CCL's output-lock cleanup;
-an extra release verifies that the lock is unowned afterwards.
-
-Collector controls check every stream field through movement, wrong field
-counts, truncated objects and refusal without publication at both placements.
-A compiled count-check omission must fail. Twelve raw copy refusals cover
-operand types, source/destination kinds, negative offsets/counts and each
-buffer limit, with both buffers unchanged. Nonzero byte offsets and overlapping
-Unicode copies match native. The R11 lock controls, R10 complex
-controls, low-bit-first bit-vector byte check and generated READY admission
-control remain in the run. The first constructor failure is retained.
-
-At proposal commit `f8180b52`, shared compiler, runtime and CCL files were
-unchanged. Audit 174 reviewed R10–R12 together with no defect; Steve accepted
-the stack and its seven product files are now integrated. The current identity
-and native qualification commands are in [runtime acceptance](../ready-runtime-acceptance/README.md). Native qualification binds the final proposed
-backend and source files. Full target
-regression executes once; retention does not claim another execution.
-
-The final run passes 26,048 fresh corpus comparisons, four cold boots with
-1,490 collections, 60 support comparisons and 20 boot refusals. Native
-R6/R6a passes 21,843 tests and restores all 164 FASLs, bound to the exact
-35-file proposal. The static walk has 814 modules, 57 missing edges and
-53 indirect modules; it includes the two IOBLOCK writers as explicit callback
-roots. The initial author script stopped only in the final attribution report
-when those roots were missing. The corrected reports reuse that completed
-execution, with the failure and phase provenance retained. Reader and control
-wall times were not saved before the reporting failure and remain unrecorded.
-No class/GF expansion or LL15 slot credit is claimed.
-
-## Reproduce
-
-Run the following historical proposal command at **`f8180b52`**. Its patch
-generator and pins precede integration; it is not a command for the new HEAD.
+Reproduce from the commit containing this packet, beside `ccl-evidence`:
 
 ```sh
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r12 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify \
+  ../ccl-evidence/2026-09-24-stage1-ready-join-r13 \
+  /private/tmp/ccl-work/codex/ready-r13-review/run
 ```
 
-Native qualification can be rebuilt with `native.py` under a managed output
-root. Historical packets replay at their recorded commits. LL15 remains open:
-closure edges, indirect calls, replacement attribution and the 35 startup
-callback dispositions still need completion.
+The verifier runs the full corpus once, writer and four cold boots (both
+placements, moved/unmoved), the existing admission controls, pool controls and
+the thread-local control. Native qualification is reused only by the complete
+proposal-source identity; its fresh author run and the 17-profile reader proof
+are retained. Caches and outputs follow the shared bounded-cache and workspace
+lease policy. No slot credit or timing claim is made.
+
+Next work is `S1-NAMESPACE-a` followed by `S1-LOADER-a`. The READY projection
+will not gain unrelated GFs or metaclass fields to improve its census. Its
+remaining graph edges, replacement attribution and callback dispositions stay
+open until the namespace/loader work can discharge them.
+
+The constructor witness covers CHARACTER, CCL::BASE-CHARACTER and STANDARD-CHAR.
+Other element-type designators reach the general SUBTYPEP environment, which this
+image has not initialized. FIXNUM is retained as an explicit boundary: native
+signals a Lisp error and the target refuses with checked 4. This is not credited
+as a native-compatible error path. Completing that environment belongs to the
+file-loading work, not another projection of native type tables.
+Three cleanup helpers execute, but their discarded return values receive no
+non-NIL-return credit.

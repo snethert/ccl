@@ -22,7 +22,8 @@ def run(out):
     driver=native.driver
     for pair in [('level-1/l1-readloop.lisp','l1-fasls/l1-readloop.dx64fsl'),
                  ('level-0/l0-aprims.lisp','level-0/l0-aprims.dx64fsl'),
-                 ('level-0/l0-misc.lisp','level-0/l0-misc.dx64fsl')]:
+                 ('level-0/l0-misc.lisp','level-0/l0-misc.dx64fsl'),
+                 ('level-1/l1-streams.lisp','l1-fasls/l1-streams.dx64fsl')]:
         if pair not in driver.SOURCE_PAIRS:driver.SOURCE_PAIRS.append(pair)
     driver.EXPECTED=['bin/systems.dx64fsl','bin/compile-ccl.dx64fsl']+[p[1] for p in driver.SOURCE_PAIRS]
     def proposal(source,destination):

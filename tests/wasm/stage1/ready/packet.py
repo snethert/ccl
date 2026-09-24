@@ -42,11 +42,13 @@ def native_identity(out,native):
 def retain(out,packet,native):
     for submitted,source in (('submitted/probes.lisp','startup.lisp'),
                              ('submitted/inputs.lisp','inputs.lisp'),
+                             ('submitted/driver.lisp','../bootstrap-validation/probe.lisp'),
                              ('ready-worker.mjs','worker.mjs')):
         assert (out/'compiled'/submitted).read_bytes()==(HERE/source).read_bytes(), source
     assert (out/'base/driver/numeric-files.lisp').read_bytes()==(HERE/'numeric-files.lisp').read_bytes()
     for installed, source in (('ready-clos-methods.lisp','clos-methods.lisp'),('condition-methods.lisp','condition-methods.lisp'),('graph.lisp','graph.lisp')):
         assert (out/'base/driver'/installed).read_bytes()==(HERE/source).read_bytes()
+    assert (out/'compiled/runtime/collector.c').read_text()==local('pool_runtime').source()
     reuse=native_identity(out,native)
     summarize(out);packet.mkdir()
     c.save(packet/'full-corpus.json',corpus(out))
@@ -55,6 +57,7 @@ def retain(out,packet,native):
         'execution-environment.json','case-ids.json','compiled/native.json',
         'build-completion.json','compile.log','oracle.log','execution.log'])
     c.save(packet/'native-reuse.json',reuse)
+    shutil.copytree(out/'stream-readers',packet/'stream-readers')
     if reuse['native_rebuilt']:
         shutil.copyfile(native/'proposal-identity.json',packet/'native-proposal-identity.json')
         shutil.copyfile(native/'results/run.json',packet/'native-run.json')
@@ -63,13 +66,13 @@ def retain(out,packet,native):
         for name in ('native-proposal-identity.json','native-run.json'):
             shutil.copyfile(native/name,packet/name)
     backend=local('compiler').BACKEND
-    for name in (backend,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp'):
+    for name in (backend,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp','level-1/l1-streams.lisp'):
         target=packet/'proposal'/name;target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(out/'base/compiled/proposal/files'/name,target)
     for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
         dest=packet/'runtime-proposal'/name;dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(out/'compiled'/name,dest)
-    for name in ('stream-controls.json','stream-shapes.json','registry-controls.json','lock-controls.json','lock-shapes.json','complex-controls.json','complex-shapes.json','summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
+    for name in ('pool-controls.json','pool-shapes.json','thread-local-controls.json','stream-controls.json','stream-shapes.json','registry-controls.json','lock-controls.json','lock-shapes.json','complex-controls.json','complex-shapes.json','summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
                  'macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json','execution-reuse.json'):
         if (out/name).exists():shutil.copyfile(out/name,packet/name)
     compiled=out/'compiled'
@@ -92,7 +95,7 @@ def retain(out,packet,native):
     pins.update({str(p.relative_to(c.ROOT)):c.sha(p) for p in (c.ROOT/'runtime/wasm32').glob('*.mjs')})
     for path in (HERE.parent/'startup-resets/selection.json',HERE.parent/'startup-runtime/classification.json',
                  c.ROOT/'doc/WASM/stage1/ready-decision.json',c.ROOT/backend,
-                 c.ROOT/'runtime/wasm32/collector.c',c.ROOT/'level-0/l0-aprims.lisp',c.ROOT/'level-0/l0-misc.lisp',c.ROOT/'level-1/l1-processes.lisp',c.ROOT/'level-1/l1-streams.lisp',c.ROOT/'level-1/l1-io.lisp',c.ROOT/'compiler/WASM32/wasm32-arch.lisp',c.ROOT/'level-0/WASM32/w32-lap.lisp',c.ROOT/'level-0/l0-numbers.lisp',c.ROOT/'lib/sequences.lisp',c.ROOT/'lib/arrays-fry.lisp',
+                 c.ROOT/'runtime/wasm32/collector.c',HERE.parent/'collector-owner/check.mjs',HERE.parent/'ready-runtime-acceptance/readers.py',HERE.parent/'bootstrap-core-acceptance/readers.lisp',c.ROOT/'tests/wasm/native-census/observer.lisp',c.ROOT/'library/lispequ.lisp',c.ROOT/'lisp-kernel/x86-gc.c',c.ROOT/'level-0/l0-aprims.lisp',c.ROOT/'level-0/l0-misc.lisp',c.ROOT/'level-1/l1-processes.lisp',c.ROOT/'level-1/l1-streams.lisp',c.ROOT/'level-1/l1-io.lisp',c.ROOT/'compiler/WASM32/wasm32-arch.lisp',c.ROOT/'level-0/WASM32/w32-lap.lisp',c.ROOT/'level-0/l0-numbers.lisp',c.ROOT/'lib/sequences.lisp',c.ROOT/'lib/arrays-fry.lisp',
                  c.ROOT/'compiler/X86/X8632/x8632-vinsns.lisp',c.ROOT/'level-1/l1-aprims.lisp',
                  c.ROOT/'lib/numbers.lisp',c.ROOT/'level-0/l0-int.lisp',c.ROOT/'level-0/nfasload.lisp',c.ROOT/'lib/lists.lisp',
                  c.ROOT/'level-1/l1-typesys.lisp',c.ROOT/'level-1/l1-clos-boot.lisp'):
@@ -102,7 +105,15 @@ def retain(out,packet,native):
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
        accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=reuse['native_rebuilt'],native_reuse=reuse['packet'],shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R12',files=c.inventory(packet),
+    c.save(packet/'verification.json',dict(status='PASS',tier='full',
+        basis='Final author compilation, corpus, writer/readers and directed controls; not a second replay',
+        execution_rebuilt=True,execution_during_retention=False,
+        full_corpus=corpus(out),summary=summarize(out),
+        native_rebuilt=reuse['native_rebuilt'],reader_profiles=17,
+        source_inputs_match_submitted=True,
+        phase_times='times.json',
+        known_boundary='General stream element-type SUBTYPEP environment is unavailable: FIXNUM refuses with checked 4 instead of the native Lisp error.'))
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R13',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)
@@ -122,13 +133,13 @@ def verify(packet,out):
     assert corpus(out)==c.read(packet/'full-corpus.json')
     assert c.inventory(out/'base/compiled/proposal/files')==c.read(packet/'native-proposal-identity.json')
     assert c.read(packet/'native-run.json')['status']=='PASS'
-    for name in (local('compiler').BACKEND,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp'):
+    for name in (local('compiler').BACKEND,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp','level-1/l1-streams.lisp'):
         assert (out/'base/compiled/proposal/files'/name).read_bytes()==(packet/'proposal'/name).read_bytes(),name
     for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
         assert (out/'compiled'/name).read_bytes()==(packet/'runtime-proposal'/name).read_bytes(),name
     assert result==c.read(packet/'summary.json')
     assert c.read(out/'coverage.json')==c.read(packet/'coverage.json')
-    for name in ('stream-controls.json','stream-shapes.json','registry-controls.json','lock-controls.json','lock-shapes.json','complex-controls.json','complex-shapes.json','macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
+    for name in ('pool-controls.json','pool-shapes.json','thread-local-controls.json','stream-controls.json','stream-shapes.json','registry-controls.json','lock-controls.json','lock-shapes.json','complex-controls.json','complex-shapes.json','macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
         assert c.read(out/name)==c.read(packet/name),name
     return dict(status='PASS',execution_rebuilt=True,native_rebuilt=False,
                 native_reuse='exact complete proposal-source identity',summary=result)

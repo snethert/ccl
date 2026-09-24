@@ -4653,3 +4653,34 @@ original execution is 568/531 non-NIL. Default class mode stays unchanged.
 Locks/streams remain transient, and only complex floats enter image loading.
 READY closure, replacement attribution, public stream construction and startup
 callback obligations remain; the Stage 1 ledger is still 21/12/0 of 33.
+
+
+## 2026-09-24 — READY R13: finish the fresh-string constructor path
+
+On Steve’s “finish the stream constructor stuff, but afterwards we will move
+on to the namespace and loader work”, compiled CCL’s public string-output
+constructors and the actual primary/before/after CLOSE methods. The ordinary
+WITH-OUTPUT-TO-STRING macro now executes without rewriting, including THROW
+and ERROR cleanup. Recycling, simultaneous streams, repeated close, closed
+stream errors, Unicode and collection match native. Seven additional original
+DEFUNs execute: proposed total 575, with 535 non-NIL witnesses. Three cleanup
+helper return values are discarded and receive no non-NIL credit.
+
+The isolated proposal adds one checked thread-local-value intrinsic and one
+wasm32 branch in l1-streams; the collector admits native one-cell pools and
+clears their cached contents, as native GC does. Direct probe calls to a GF
+require its actual identity in an explicit graph input. New count/clearing,
+linker and thread-local controls reject omissions. Fresh full target corpus:
+26,048 comparisons; four cold boots, 1,534 collections, 70 support comparisons;
+40 existing collector-owner checks. Fresh native R6/R6a passes 21,843 tests and
+restores 164 FASLs. The edited definition reads identically under 17 existing
+target profiles, with all surrounding bytes unchanged.
+
+General element-type designators still require the uninitialized SUBTYPEP
+CTYPE environment: FIXNUM is explicitly recorded as checked 4 on the target
+versus a native Lisp error, not a matching error witness. The existing-string
+WITH-OUTPUT-TO-STRING form requires the unfinished adjustable-array path.
+Neither boundary is hidden by a replacement or swallowed error. The proposal
+remains isolated for Claude’s review. Closure is 838 modules / 58 missing
+edges / 54 indirect modules, 235 unattributed rows; no LL15 credit. Namespace
+and loader work follows, without further projection growth for its own sake.

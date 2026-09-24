@@ -22,7 +22,13 @@
           (ccl::compute-class-precedence-list (ccl::class) core-condition-compute-cpl)
           (ccl::compute-default-initargs (ccl::slots-class) core-condition-default-initargs)
           (slot-missing (t t t t) core-condition-slot-missing)
-          (slot-unbound (t t t) core-condition-slot-unbound))))
+          (slot-unbound (t t t) core-condition-slot-unbound)
+          (close (stream) core-condition-stream-close)
+          (close (ccl::basic-stream) core-condition-basic-close (:after))
+          (close (ccl::basic-output-stream) core-condition-output-close (:before))
+          (open-stream-p (ccl::basic-stream) core-condition-stream-open)
+          (ccl::stream-force-output (ccl::string-output-stream) core-condition-string-force)
+          ((setf ccl::stream-ioblock) (t ccl::basic-stream) core-condition-stream-set-block))))
 
 ;;; CCL synthesizes these readers from the native class slot declarations.
 ;;; The image builder joins them to the actual methods and slot definitions.

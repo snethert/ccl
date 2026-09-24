@@ -402,13 +402,17 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS']){
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS','READY-STREAM-CONSTRUCTORS','READY-THREAD-VALUES']){
         const witness=native.find(row=>row.definition===name);
         assert(witness,'missing READY support oracle '+name);
         const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
         assert.deepEqual(values,witness.values,name+' native result');
         const after=decodeGraph(get(root+8),witness.after[0].graph,graphIO);
         assert.deepEqual(after,witness.after[0],name+' native mutation');
+        if(name==='READY-STREAM-CONSTRUCTORS'){
+          const boundary=native.find(row=>row.definition==='READY-STREAM-ELEMENT-TYPE');assert(boundary);
+          assert.throws(()=>gen.invoke(boundary.name,boundary.args.map(encode)),/checked 4$/,'general element-type requires CTYPE environment');
+        }
         if(name==='READY-STRING-OUTPUT'){
           const witness=native.find(row=>row.definition==='READY-IVECTOR-COPY');assert(witness);
           const args=witness.args.map(encode);

@@ -33,10 +33,16 @@ def measure(base,probe,output):
         'STRING-OUTPUT-STREAM-IOBLOCK-WRITE-CHAR':'ccl:level-1;l1-streams.lisp',
         'STRING-OUTPUT-STREAM-IOBLOCK-WRITE-SIMPLE-STRING':'ccl:level-1;l1-streams.lisp',
         'GET-OUTPUT-STREAM-STRING':'ccl:level-1;l1-streams.lisp'}
+    constructor_sources={name:'ccl:level-1;l1-streams.lisp' for name in (
+        'MAKE-STRING-OUTPUT-STREAM','MAKE-SIMPLE-STRING-OUTPUT-STREAM',
+        '%%MAKE-STRING-OUTPUT-STREAM','CREATE-STRING-OUTPUT-STREAM-IOBLOCK',
+        '%CLOSE-STRING-OUTPUT-STREAM','%IOBLOCK-CLOSE','%%IOBLOCK-CLOSE')}
+    stream_sources.update(constructor_sources)
     # The generated DEFSTRUCT constructor is executed, but is not a DEFUN
     # in the original-definition cohort. Keep it outside that headline.
     new_names=numeric_names+list(lock_sources)+list(stream_sources)
     nil_only=['%UNLOCK-RECURSIVE-LOCK-OBJECT','RELEASE-LOCK']
+    return_unobserved=['%CLOSE-STRING-OUTPUT-STREAM','%IOBLOCK-CLOSE','%%IOBLOCK-CLOSE']
     prior=c.STORE/'2026-09-24-stage1-ready-join-r9'
     manifest=c.read(prior/'packet.json')['files']
     assert c.sha(prior/'full-execution.tar.gz')==manifest['full-execution.tar.gz']
@@ -45,7 +51,7 @@ def measure(base,probe,output):
     assert not set(new_names)&{row['definition'] for row in old_rows}
     witnesses={}
     for name in new_names:
-        package='COMMON-LISP' if name in numeric_names+['WRITE-STRING','WRITE-CHAR','GET-OUTPUT-STREAM-STRING'] else 'CCL'
+        package='COMMON-LISP' if name in numeric_names+['WRITE-STRING','WRITE-CHAR','GET-OUTPUT-STREAM-STRING','MAKE-STRING-OUTPUT-STREAM'] else 'CCL'
         matches=[m for m in closure['modules'] if m['name']==package+'::'+name]
         assert len(matches)==1 and matches[0]['source']==stream_sources.get(name,lock_sources.get(name,'ccl:level-0;l0-numbers.lisp')), ('original source attribution', name, matches)
         witnesses[name]=matches[0]
@@ -60,14 +66,14 @@ def measure(base,probe,output):
     result=dict(
       status='MEASURED',
       original_executions=dict(count=parent['original_definition_headline']+len(new_names),
-        non_nil=parent['original_non_nil_headline']+len(new_names)-len(nil_only),fresh_credit=len(new_names),
-        nil_only=nil_only,stream_native_witness_sha256=c.digest(streams),lock_native_witness_sha256=c.digest(locks),
+        non_nil=parent['original_non_nil_headline']+len(new_names)-len(nil_only)-len(return_unobserved),fresh_credit=len(new_names),
+        nil_only=nil_only,return_unobserved=return_unobserved,stream_native_witness_sha256=c.digest(streams),lock_native_witness_sha256=c.digest(locks),
         inherited_count=parent['original_definition_headline'],
         new_names=new_names,whole_file_modules=witnesses,
         prior_execution_archive_sha256=manifest['full-execution.tar.gz'],
         native_witness_sha256=c.digest(witness),
         evidence=str(c.PARENT/'packet.json'),sha256=c.sha(c.PARENT/'packet.json'),
-        scope='550 inherited originals plus four numeric, eight lock and six stream definitions executed by READY support callers. Target lock primitive replacements are excluded from original credit. The earlier originals are not all exercised by this cold image.'),
+        scope='550 inherited originals plus four numeric, eight lock and thirteen stream definitions executed by READY support callers. Target lock primitive replacements are excluded from original credit. The earlier originals are not all exercised by this cold image.'),
       acode=dict(**closure['acode'],source=c.sha(output.parent/'closure.json'),
         scope='READY entry and projected-callable dependency census; includes conservative unresolved/indirect paths listed in closure.json, not the corpus census or a branch-execution count.'),
       closure=dict(modules=len(closure['modules']),missing=closure['missing'],
@@ -85,9 +91,9 @@ def measure(base,probe,output):
                    'Finish native antecedent/branch attribution in replacements.json before asserting the 25 cap.',
                    'Discharge callbacks.json against the completed dependency inventory.',
                    'Qualify the complete selected image interface, including unresolved closure metadata, before LL15 slot credit.']))
-    assert result['original_executions']['count']==568
-    assert result['original_executions']['non_nil']==531
-    assert len(gfs)==startup['values'][1]==50
+    assert result['original_executions']['count']==575
+    assert result['original_executions']['non_nil']==535
+    assert len(gfs)==startup['values'][1]==54
     c.save(output,result)
     return result
 

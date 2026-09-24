@@ -23,16 +23,10 @@ def check(out, ready_prepare):
 
 def finish(out, ready_prepare):
     work=out/'guard-mutant';compiled=work/'compiled';submitted=work/'startup.lisp'
-    # A probe copied after corpus execution carries the proposed collector.
-    # The reused base preparer first checks its original service set. Restore
-    # that one digest-bound input for the handoff, then apply this proposal.
-    expected=c.read(c.PARENT/'deterministic.json')['collector.wasm']
-    proposed=c.read(compiled/'ready-runtime.json')['collector.wasm']
-    assert c.sha(compiled/'collector.wasm') in (expected,proposed)
-    key=c.read(out/'base/build-invocation.json')['key']
-    original=c.DEFAULT_CACHE/'session'/key/'collector.wasm'
-    assert c.sha(original)==expected
-    shutil.copyfile(original,compiled/'collector.wasm')
+    # Corpus execution applies the pool collector. Restore its pinned parent
+    # inputs before the inherited preparer checks and reapplies the proposal.
+    import pool_runtime
+    pool_runtime.reset_parent(compiled)
     execution_prepare(compiled);ready_prepare(compiled)
     c.command([c.NODE,HERE/'run.mjs',compiled,'write',work/'images',work/'writer.json'],
               work/'writer.log',timeout=90)

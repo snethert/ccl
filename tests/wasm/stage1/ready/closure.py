@@ -53,14 +53,14 @@ def census(probe):
     leafs = {owner('CCL', '%WASM-EQ-TABLE-' + op): op for op in ('GET', 'SET', 'REMOVE')}
     trampoline = owner('CCL', 'FUNCALLABLE-TRAMPOLINE')
     roots = [(r['name'], 'startup:' + r['definition']) for r in rows
-             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS', 'READY-INTEGER-MAGNITUDE', 'READY-SYMBOL-LOOKUP', 'READY-CLASS-PROTOCOL', 'READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS')]
+             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS', 'READY-INTEGER-MAGNITUDE', 'READY-SYMBOL-LOOKUP', 'READY-CLASS-PROTOCOL', 'READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS','READY-STREAM-CONSTRUCTORS','READY-THREAD-VALUES')]
     roots += [(bindings[owner('COMMON-LISP', name)], 'exercised-function-cell:' + name)
               for name in ('LDIFF', 'MAPC', 'MAPCAR', 'MAPLIST', 'MAPL', 'MAPCAN', 'MAPCON')]
     # READY-STRING-OUTPUT installs these symbols into the IOBLOCK's two
     # callback slots. Calls through those slots are not static CALL edges.
     roots += [(bindings[owner('CCL', name)], 'exercised-stream-callback:' + name)
               for name in ('STRING-OUTPUT-STREAM-IOBLOCK-WRITE-CHAR',
-                           'STRING-OUTPUT-STREAM-IOBLOCK-WRITE-SIMPLE-STRING')]
+                           'STRING-OUTPUT-STREAM-IOBLOCK-WRITE-SIMPLE-STRING', '%CLOSE-STRING-OUTPUT-STREAM')]
     roots += [(bindings[source], 'ready-binding:' + owner_name(source))
               for source in aliases]
     edges, missing, primitives = [], [], set()

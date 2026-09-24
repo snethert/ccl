@@ -37,16 +37,19 @@
 
 (defun condition-system-method-forms ()
   (let ((*package* (find-package :ccl)) (forms nil))
-    (dolist (file '("ccl:level-1;l1-clos-boot.lisp" "ccl:level-1;l1-clos.lisp"))
+    (dolist (file '("ccl:level-1;l1-clos-boot.lisp" "ccl:level-1;l1-clos.lisp" "ccl:level-1;l1-streams.lisp"))
       (with-open-file (stream file)
         (loop for form = (read stream nil :eof) until (eq form :eof) do
-          (when (and (consp form) (eq (car form) 'defmethod) (listp (third form)))
-            (let* ((specializers
-                     (loop for arg in (third form) until (member arg lambda-list-keywords)
+          (when (and (consp form) (eq (car form) 'defmethod))
+            (let* ((tail (cddr form))
+                   (qualifiers (loop while (and tail (atom (car tail))) collect (pop tail)))
+                   (specializers
+                     (loop for arg in (car tail) until (member arg lambda-list-keywords)
                            collect (if (consp arg) (second arg) t)))
                    (spec (find-if (lambda (spec)
                                    (and (equal (first spec) (second form))
-                                        (equal (second spec) specializers)))
+                                        (equal (second spec) specializers)
+                                        (equal (fourth spec) qualifiers)))
                                  *condition-method-specs*)))
               (when spec
                 (let ((function (ccl::parse-defmethod (second form) (cddr form) nil)))

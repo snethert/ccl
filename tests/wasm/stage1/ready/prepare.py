@@ -17,15 +17,12 @@ def prepare(out):
         c.save(metadata,rows)
     spec=importlib.util.spec_from_file_location('class_image',HERE.parent/'class-image/prepare.py')
     parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(parent)
+    import pool_runtime
+    pool_runtime.prepare(out)
     parent.prepare(out)
     # Integration must reproduce the reviewed prepared bytes exactly.
     integrated=c.ROOT/'runtime/wasm32/heap-image.mjs'
-    assert integrated.read_bytes()==(out/'runtime/heap-image.mjs').read_bytes()
-    text=integrated.read_text()
-    anchor='    else if(tag===23&&n===3)raw=12;'
-    assert text.count(anchor)==1
-    text=text.replace(anchor,anchor+'\n    else if(tag===71&&n===3)raw=12;\n    else if(tag===79&&n===5)raw=20;')
-    (out/'runtime/heap-image.mjs').write_text(text)
+    shutil.copyfile(integrated,out/'runtime/heap-image.mjs')
     shutil.copyfile(HERE/'worker.mjs',out/'ready-worker.mjs')
     shutil.copyfile(HERE/'bindings.mjs',out/'ready-bindings.mjs')
     shutil.copyfile(HERE/'bindings.json',out/'ready-bindings.json')

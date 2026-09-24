@@ -17,6 +17,12 @@ def local(name):
     spec=importlib.util.spec_from_file_location('ready_'+name,HERE/(name+'.py'))
     m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 
+def execution_with_pools(out):
+    local('pool_runtime').reset_parent(out)
+    result=execution_prepare(out)
+    local('pool_runtime').prepare(out)
+    return result
+
 def admission_controls(out):
     compiled=out/'compiled'
     driver=HERE.parent/'class-image/controls.mjs'
@@ -74,8 +80,8 @@ def measurements(out):
         mapping_functions=6,mapping_callbacks_per_boot=22,function_classes_per_boot=4,
         radix_initializer_source='level-0/l0-int.lisp',native_word_bits=61,target_word_bits=30,
         radix_globals_cleared_before_boot=True,initializer_omission_refused=True,
-        return_it=True,stream_support_claim="native basic string output; explicit fixture construction; no file or OS stream",stream_layout_checks=8,stream_count_omissions=1,ivector_copy_refusals_per_boot=12,integer_stream_pairs_per_boot=24,
-        unsupported_native_closure_refused=True,projected_generic_functions=50,
+        return_it=True,stream_support_claim="native public string-output constructor, recycling and CLOSE; fresh-string WITH-OUTPUT-TO-STRING including nonlocal cleanup; no file or OS stream",stream_layout_checks=8,stream_count_omissions=1,ivector_copy_refusals_per_boot=12,integer_stream_pairs_per_boot=24,
+        unsupported_native_closure_refused=True,projected_generic_functions=54,
         integer_magnitudes_per_boot=13,symbol_lookups_per_boot=9,
         ctype_predicates_per_boot=7,type_method_results_per_boot=10,collecting_type_method_calls_per_boot=6,
         istruct_classifications_per_boot=3,
@@ -96,6 +102,9 @@ def run(out):
     probe(out/'base',HERE/'startup.lisp',HERE/'inputs.lisp',out/'compiled',c.DEFAULT_CACHE,'class',4)
     execution_prepare(out/'compiled');local('prepare').prepare(out/'compiled')
     times['compile']=time.monotonic()-start
+    start=time.monotonic();local('stream-readers').run(out/'stream-readers');times['readers']=time.monotonic()-start
+    import execute as executor
+    executor.prepare=execution_with_pools
     from execute import execute
     c.save(out/'closure.json',local('closure').census(out/'compiled'))
     times['heap_keys']=c.command([c.NODE,HERE/'heap-keys.mjs',out/'compiled/hash.wasm',out/'heap-keys.json'],
@@ -115,13 +124,19 @@ def run(out):
         if mode=='write':
             # Reach the new image interface before the unchanged regression corpus.
             times['full_corpus']=execute(out/'base',4,'full')
-    start=time.monotonic();local('guard_control').check(out,local('prepare').prepare)
+    guard=local('guard_control');guard.execution_prepare=execution_with_pools
+    start=time.monotonic();guard.check(out,local('prepare').prepare)
     times['guard_control']=time.monotonic()-start
+    local('pool_controls').check(out)
+    local('thread_local_controls').check(out)
     measurements(out)
     c.save(out/'times.json',times)
     return summarize(out)
 
 def summarize(out):
+    assert c.read(out/'pool-controls.json')['status']=='PASS'
+    assert c.read(out/'thread-local-controls.json')['status']=='PASS'
+    assert c.read(out/'stream-readers/summary.json')['status']=='PASS'
     assert c.read(out/'registry-controls.json')['status']=='PASS'
     assert c.read(out/'lock-shapes.json')['status']=='PASS'
     assert c.read(out/'stream-shapes.json')['status']=='PASS'
@@ -135,7 +150,7 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==21
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==23
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
@@ -145,9 +160,9 @@ def summarize(out):
     assert [r['rejected'] for r in reader['refusals']]==['no-image','no-entry','early-ready','omit-radix-initializer','standalone-type-subtypep','standalone-type-equal','standalone-integer-abs','standalone-symbol-lookup','native-table-gethash','native-table-puthash','native-table-remhash','native-table-clrhash','image-class-shape','image-class-cpl','image-class-wrapper','image-wrapper-class','image-obsolete-wrapper','image-cpl-head','image-method-combination','image-method-function']
     assert all(r['state']==3 for r in reader['refusals'])
     assert all(r['directEntry'] and r['rootsPreserved']==7 for r in reader['refusals'] if r['rejected'].startswith('image-'))
-    assert reference['values'][:4]==[612,50,43,41]
+    assert reference['values'][:4]==[612,54,43,41]
     for result in writer['results']+reader['results']:
-        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS']
+        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS','READY-STREAM-CONSTRUCTORS','READY-THREAD-VALUES']
         assert len(result['profileChecks'])==1
         check=result['profileChecks'][0]
         assert check['admitted'] and check['rootsPreserved']==7
@@ -171,10 +186,10 @@ def summarize(out):
     report=dict(status='PASS',generated_admission_omission_rejected=True,producer_comparisons=1,cold_boots=4,
         full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
-        classes=612,generic_functions=50,controls=len(reader['refusals']),
-        image_admission_controls=31,ivector_copy_refusals_per_boot=12,stream_layout_checks=8,stream_count_omissions=1,lock_layout_checks=8,lock_count_omissions=1,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=60,profile_refusals=8,public_table_bindings=4,native_state_restorations=21,
+        classes=612,generic_functions=54,controls=len(reader['refusals']),
+        image_admission_controls=31,pool_layout_checks=8,pool_omissions=2,collector_owner_checks=40,thread_local_arity_refusals=2,thread_local_global_fallback_refused=True,ivector_copy_refusals_per_boot=12,stream_layout_checks=8,stream_count_omissions=1,lock_layout_checks=8,lock_count_omissions=1,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=70,profile_refusals=8,public_table_bindings=4,native_state_restorations=23,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
-        original_definition_credit=18,slot_credit=False,
+        original_definition_credit=25,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')
     c.save(out/'summary.json',report);return report
 

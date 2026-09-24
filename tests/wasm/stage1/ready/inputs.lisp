@@ -59,7 +59,7 @@
          (original (mapcar #'symbol-value names))
          (native-classes (copy-seq ccl::*class-table*))
          (state (copy-list original)))
-    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors ready-numeric-sequences ready-recursive-locks ready-string-output ready-type-widths))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors ready-numeric-sequences ready-recursive-locks ready-string-output ready-type-widths ready-stream-constructors ready-thread-values))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -164,9 +164,11 @@
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (append (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors ready-numeric-sequences ready-recursive-locks ready-string-output ready-type-widths)
+    (append (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors ready-numeric-sequences ready-recursive-locks ready-string-output ready-type-widths ready-stream-constructors ready-thread-values)
           collect (list name (list (list image))))
-            (list (list 'ready-complex-primitive (list (list 0 nil nil)))
+            (list (list 'ready-stream-element-type (list (list 'fixnum)))
+                  (list 'ready-thread-value (list (list '*ready-local*)))
+                  (list 'ready-complex-primitive (list (list 0 nil nil)))
                   (list 'ready-lock-operation (list (list 0 nil nil)))
                   (list 'ready-ivector-copy (list (list (copy-seq "λ雪abc") 4
                                                          (make-string 5 :initial-element #\.) 0 16)))))))
