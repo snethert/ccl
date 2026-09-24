@@ -1,0 +1,79 @@
+{
+  "acceptance": "acceptance-stream-constructors.json",
+  "acceptance_sha256": "f5143ff826fd0ca688f9a07da30ff09d48171eaa4d32a506fd3ceaa52cb97e82",
+  "files": [
+    {
+      "after": "2ed8b7fc2ab382e6bdec649a835ee0c20d304e9b0671505b2bbcd6d3e8d09747",
+      "before": "a507228ef7f0d2daab8f1ac545c89e55dccd37d8f9af911bcd6dc25709585fab",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "2ed8b7fc2ab382e6bdec649a835ee0c20d304e9b0671505b2bbcd6d3e8d09747"
+    },
+    {
+      "after": "1377ce0d1c55d3b220d0b34c586e3ed3a2a6ddf17daa2a7fa41d09a65c5e0202",
+      "before": "43547f7df5cc9f30d660faf755f396846e0e11780d03a19a23119df27a747c35",
+      "file": "level-1/l1-streams.lisp",
+      "reviewed": "1377ce0d1c55d3b220d0b34c586e3ed3a2a6ddf17daa2a7fa41d09a65c5e0202"
+    },
+    {
+      "after": "baf224e4b801496713cd6b66dd455170c32fb2e2cbc8d8e411f27a4fc73472a6",
+      "before": "cf08cf434eea5097879cc808a52f1794d7d829fcd9f993b8ac5c660df933c380",
+      "file": "runtime/wasm32/collector.c",
+      "reviewed": "baf224e4b801496713cd6b66dd455170c32fb2e2cbc8d8e411f27a4fc73472a6"
+    }
+  ],
+  "qualification": {
+    "cold_boots": 4,
+    "mode": "EXACT_REVIEWED_SOURCE_REUSE",
+    "native_tests": 21843,
+    "new_execution": false,
+    "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r13",
+    "reader_profiles": 17,
+    "records": {
+      "native-reuse.json": "469ad189568c8644e91c4c36fef21d84e04973cc92fc2ae63ca2571155de9fa8",
+      "native-run.json": "42aa3ab2df5b3fe4ada2a1d27e25df7a50b2bc5b474c44b246cbf1edf0809a78",
+      "stream-readers/summary.json": "0636b40a17b8e44fc5e7949a0c92c2c871fed870a27b6045748f2f2a1e2a7bbe",
+      "verification.json": "b64e9ffa3285445fd298fc6aa73c83f5098887fb34eaaf20aaee9eae40c2793f"
+    },
+    "restored_fasls": 164,
+    "source_identity": {
+      "compiler/WASM32/wasm32-arch.lisp": "c0943688e8e098b31829b801c2977bea1c557e42289be686053cabf632a544b7",
+      "compiler/WASM32/wasm32-backend.lisp": "2ed8b7fc2ab382e6bdec649a835ee0c20d304e9b0671505b2bbcd6d3e8d09747",
+      "level-0/WASM32/w32-lap.lisp": "4d5ad82060453597a863ace2695cfee8a839101159b15e42ba50e263233d4a43",
+      "level-0/WASM32/w32-prims.lisp": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b",
+      "level-0/l0-aprims.lisp": "3b3a9d2ee9886c51b0a93fdb0097d55f3d7fd43e528c72a10404a6565c0a839d",
+      "level-0/l0-array.lisp": "c77510e0bb984d2bf11259ad8144ce1beefaf9ffa3cf0359b12ad46de1c70e43",
+      "level-0/l0-bignum32.lisp": "759dd2b6b51ac7bb6dc99a706a0b59f1398e6aace583329db8dd66f639dedddc",
+      "level-0/l0-cfm-support.lisp": "9685fc680682a7f542bb6c74144c0ca0348b00fa297315537c19c488089f3b3e",
+      "level-0/l0-def.lisp": "f4edf56f707622844a44dbd86a9b452b7883c49db1098744c202c017c8a032b7",
+      "level-0/l0-io.lisp": "10bdbac8fb6aabd286abe88f29718e5146b572ebde6f50e2ff5b75fa490e01a7",
+      "level-0/l0-misc.lisp": "666f6bfcc07ca5d3638df30d4da744ca0d49b8c56a46ccce4b7db799e9031d74",
+      "level-0/l0-pred.lisp": "0caf3e38bf356e81fb87266f130dfd658de7ada90b6123310a6c56a5e96e26d4",
+      "level-0/l0-symbol.lisp": "e75054495a424a3dbfe823d35fb9942dbf9ad31cbe72d36c9776f660abb15e1f",
+      "level-0/l0-utils.lisp": "f2595bebbd8aedb11cd5a366642a546baea914344f481a534d70113d276ad536",
+      "level-0/nfasload.lisp": "36a56b65d826b3dd2519896efe4591ecd710badf716d7bde5cd8437495026b3a",
+      "level-1/l1-application.lisp": "ab814012e729c46ca3278ce31e8e87c94cc1109b422ed8a297fe094addf101bf",
+      "level-1/l1-aprims.lisp": "fcc3f3de4e92e76aa3fbf67d913228cf432d0d9345d5df82a11a64bbd601014a",
+      "level-1/l1-boot-2.lisp": "30acc9a852933bbaf4a7fc8415339627d6fc8973ae8b59764b94dc8c4caeea01",
+      "level-1/l1-callbacks.lisp": "c13fab904b32d1e25614b952e2e96f65476d0a85608781b603fc595ac6286385",
+      "level-1/l1-clos-boot.lisp": "561be9e6267c26f098a02123b3b02f4b0182e4650cca654ace03a26820770730",
+      "level-1/l1-clos.lisp": "290ad4564a77af780deb371376a4e1ff1d19d016ff858adb128fdd5b85b6f558",
+      "level-1/l1-dcode.lisp": "8bcee99d44ab514b5b9d7b2a7fa24aebee3d32d96bad0a5484aa02910302bd84",
+      "level-1/l1-error-signal.lisp": "0616348d24e71b911d79e46d80976d071da1c46ef3080188cfcdb3f280014049",
+      "level-1/l1-files.lisp": "71e075085bbb7c3e52c60da6cbae9ea87c4c0caf75ecc0d0631727fa472c3c04",
+      "level-1/l1-io.lisp": "921183847179bffb98936a0d7df1d3146379014c8e82f9331432793c9767bd0f",
+      "level-1/l1-lisp-threads.lisp": "3b3963d7beb89a0b00c8f30ef83105048acbe50e15169ee6c115f4b7732345dc",
+      "level-1/l1-numbers.lisp": "c1c200f559105f45c4d27473e5afa82307b7f379b1e686522dc8df936909f233",
+      "level-1/l1-readloop.lisp": "29592ad95f7f5937403901ff475931b09e1ee245b8fb19a8a0dbf4b96850bbad",
+      "level-1/l1-streams.lisp": "1377ce0d1c55d3b220d0b34c586e3ed3a2a6ddf17daa2a7fa41d09a65c5e0202",
+      "level-1/l1-sysio.lisp": "b60b6a3af9e4c3260a76a28d153fae668129cb66d52e7d2f12beeddf4c12f0a7",
+      "level-1/l1-utils.lisp": "ba8c494161657f7cfeb632422734f5ed7a0aa6b796652ffaa4abbc40727372d5",
+      "level-1/linux-files.lisp": "adb637861aad8c50dd5bed283adb02661f736e6c351b691c1990f842b13e4e21",
+      "lib/compile-ccl.lisp": "074c7c53182e4fe62b7ce24d4856f5bda8c80b05ebec8e4f445e7cb112ede010",
+      "lib/systems.lisp": "5cd03249a56ca6d1d8ccaa245c72b7dd2fadaf028c5ce9a1cce45a80855f3b35",
+      "xdump/xwasm32-fasload.lisp": "3f7fc3fcf4c346e9a56b0f51902ceb14c446b154546f030ce4b928d06f369c94"
+    },
+    "target_comparisons": 26048
+  },
+  "slot_credit": false,
+  "version": 1
+}

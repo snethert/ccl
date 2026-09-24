@@ -4697,3 +4697,19 @@ admission with the still-refused FASL publication path. Q-9’s per-file prefix,
 Q-11’s actual cross-loaded heap proof, callback phases and boot0 timings remain
 unmeasured. R10–R12 integration is already complete. No READY criterion, image
 decision, exclusion, execution count or acceptance record changes in this review.
+
+
+## 2026-09-24 — Accept stream constructors; import NSL-P2 and READY amendment
+
+On Steve’s “accept and proceed”, imported audit 175 verbatim and accepted R13.
+The backend, l1-streams and pool collector are byte-identical to the reviewed
+proposal. Reuse the exact complete-source native qualification (21,843 tests,
+164 restored FASLs, 17 reader profiles) and reviewed target execution (26,048
+comparisons and four boots); identity checking is not a new execution. Accepted
+execution is 575 originals / 535 non-NIL. O-67 and O-68 remain explicit in the
+acceptance; no slot credit. Projection expansion stops here.
+
+Imported e9971552 and c1d21184: the user-authorized Q-A image/sequence amendment
+and NSL-P2, including Codex’s corrections. The inventory, replacement cap and
+other READY decisions are unchanged. Next implementation is the read-only
+namespace; target-loaded file count remains zero.

@@ -4372,6 +4372,8 @@
   (and stream
        (eq (basic-stream.wrapper stream)
            *string-output-stream-class-wrapper*)
+       #+wasm32-target (%wasm-thread-local-value '%string-output-stream-ioblocks%)
+       #-wasm32-target
        (let* ((loc (%tcr-binding-location (%current-tcr) '%string-output-stream-ioblocks%)))
          (and loc (%fixnum-ref loc)))))
 
