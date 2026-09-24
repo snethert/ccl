@@ -3720,17 +3720,29 @@
       "id": "STAGE1-READY-JOIN-R7",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r7/packet.json",
       "sha256": "c37d59c6bbb0eb93d8ebfc77bfd5d9ee3edc5cb820b88c3d391d98a7ec72567c",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "slot_credit": false,
-      "scope": "READY R7: five l1-typesys whole-file bindings remove INVOKE-TYPE-METHOD calls. Native ISTRUCT classifier installed on a copied working class table; ten directed method outcomes and three classifications per boot. 26048 fresh corpus comparisons, four cold boots / 314 collections, 18 refusals, admission-guard control. Screen of 1749 standalone modules yields 33 macro-name candidate edges, none reached. Closure 652 modules / 84 missing edges / 41 indirect modules; no LL15 credit or shared integration. Exact R5 native qualification reuse."
+      "scope": "READY R7: five l1-typesys whole-file bindings remove INVOKE-TYPE-METHOD calls. Native ISTRUCT classifier installed on a copied working class table; ten directed method outcomes and three classifications per boot. 26048 fresh corpus comparisons, four cold boots / 314 collections, 18 refusals, admission-guard control. Screen of 1749 standalone modules yields 33 macro-name candidate edges, none reached. Closure 652 modules / 84 missing edges / 41 indirect modules; no LL15 credit or shared integration. Exact R5 native qualification reuse. Audit 172: no defect, no acceptance or slot credit. O-52 closed; all-module macro screening O-57 and the disclosed NIL-frame boundary O-58 carried into R9.",
+      "review_commit": "8c6271a5e8615d1760941fc1f632ed5c494e041d",
+      "review_sha256": "d574200cea877566d3e910c97d3ae01319d51fa1b3070d564a40c853a1f89440"
     },
     {
       "id": "STAGE1-READY-JOIN-R8",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r8/packet.json",
       "sha256": "b9f1c9105f81949ac1b0520cbecc60e2a5781db9597e49b26e51db35afd7f10c",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "slot_credit": false,
+      "scope": "READY R8: native GCD, integer magnitude, package-symbol lookup, six maps, CType and 50 projected GFs with native MOP/funcallable slot methods and condition payloads. All 33 standalone macro-name candidates superseded. 26048 fresh corpus comparisons; four cold boots / 538 collections, 20 refusals, 35 support comparisons. Closure 738 modules / 66 missing edges / 49 indirect modules. No shared integration or LL15/original-definition credit. Fresh R6/R6a on the final compiler proposal. Audit 172: no defect, no acceptance or slot credit. O-52 closed; all-module macro screening O-57 and the disclosed NIL-frame boundary O-58 carried into R9.",
+      "review_commit": "8c6271a5e8615d1760941fc1f632ed5c494e041d",
+      "review_sha256": "d574200cea877566d3e910c97d3ae01319d51fa1b3070d564a40c853a1f89440"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R9",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r9/packet.json",
+      "sha256": "8d7b8ff2399bb4f188a56198c25dcb3998410bfb8757e9c71e9576dfe0d7b463",
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
-      "scope": "READY R8: native GCD, integer magnitude, package-symbol lookup, six maps, CType and 50 projected GFs with native MOP/funcallable slot methods and condition payloads. All 33 standalone macro-name candidates superseded. 26048 fresh corpus comparisons; four cold boots / 538 collections, 20 refusals, 35 support comparisons. Closure 738 modules / 66 missing edges / 49 indirect modules. No shared integration or LL15/original-definition credit. Fresh R6/R6a on the final compiler proposal."
+      "scope": "READY R9: packed-bit allocation/access executes native whole-file MAKE-CPL-BITS and SIMPLE-VECTOR-DELETE. 26048 fresh corpus comparisons; four cold boots / 714 collections, 20 boot refusals, 40 support comparisons and 31 loader checks; raw bit bounds/length refusals and tail/padding checks. All 6362 modules screened for macro callees, same 33 superseded candidates. Closure 742 modules / 62 missing edges / 50 indirect modules. Fresh R6/R6a 21843 tests. No shared integration or LL15/original-definition credit."
     }
   ],
   "current_runs": [

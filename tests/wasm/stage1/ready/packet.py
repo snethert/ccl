@@ -88,7 +88,8 @@ def retain(out,packet,native):
     pins.update({str(p.relative_to(c.ROOT)):c.sha(p) for p in (c.ROOT/'runtime/wasm32').glob('*.mjs')})
     for path in (HERE.parent/'startup-resets/selection.json',HERE.parent/'startup-runtime/classification.json',
                  c.ROOT/'doc/WASM/stage1/ready-decision.json',c.ROOT/backend,
-                 c.ROOT/'lib/sequences.lisp',c.ROOT/'level-1/l1-aprims.lisp',
+                 c.ROOT/'lib/sequences.lisp',c.ROOT/'lib/arrays-fry.lisp',
+                 c.ROOT/'compiler/X86/X8632/x8632-vinsns.lisp',c.ROOT/'level-1/l1-aprims.lisp',
                  c.ROOT/'lib/numbers.lisp',c.ROOT/'level-0/l0-int.lisp',c.ROOT/'level-0/nfasload.lisp',c.ROOT/'lib/lists.lisp',
                  c.ROOT/'level-1/l1-typesys.lisp',c.ROOT/'level-1/l1-clos-boot.lisp'):
         pins[str(path.relative_to(c.ROOT))]=c.sha(path)
@@ -97,7 +98,7 @@ def retain(out,packet,native):
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
        accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=reuse['native_rebuilt'],native_reuse=reuse['packet'],shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R8',files=c.inventory(packet),
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R9',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)

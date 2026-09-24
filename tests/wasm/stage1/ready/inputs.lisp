@@ -59,7 +59,7 @@
          (original (mapcar #'symbol-value names))
          (native-classes (copy-seq ccl::*class-table*))
          (state (copy-list original)))
-    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -164,5 +164,5 @@
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors)
+    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors ready-bit-vectors)
           collect (list name (list (list image))))))

@@ -4490,3 +4490,32 @@ are no longer compared against an earlier snapshot. All 33 screened
 standalone macro-name edges now have whole-file replacements. The static
 graph still has 66 missing edges and 49 indirect modules; replacement and
 callback obligations remain open. No shared source or ledger credit changes.
+
+
+## 2026-09-24 — audit 172 and packed-bit READY work
+
+Audit `8c6271a5` imported verbatim at `764908f7`. R7/R8 are reviewed with
+no defect, not accepted for integration or LL15 credit. Claude reproduced the
+complete R8 packet and closed O-52. O-57 is addressed in R9 by screening
+every compiled module, with a whole-file injection control. O-58's NIL frame
+on the unreachable `%error` fallback remains open. R8's continuation record
+remains as written; Claude's clean replay is separate evidence.
+
+R9 implements packed bits in the isolated compiler, through the existing
+allocation/collector contract. Native whole-file MAKE-CPL-BITS and
+SIMPLE-VECTOR-DELETE run from the loaded image. Length and byte/word boundaries,
+zero/one initialization, typed and untyped access, collecting operand order,
+native error handlers, tail bits, padding and raw memory extents are observed.
+The initial checked-5 escape is fixed with the existing type-error machinery;
+the failed inputs and the corrected optional-entry allocation assertion are
+retained. No new C/JS service or shared compiler/runtime source change.
+
+The final proposal passes 26,048 fresh corpus comparisons, four cold boots with 714 collections, 20 boot refusals and 31 image-admission controls. Eight support callers compare both results and represented post-state at each boot (40 comparisons including the producer). Five direct bit-vector refusals and four layout observations run per boot. The admission-guard omission control is rejected. Fresh native R6/R6a passes 21,843 tests and restores all 164 FASLs. No post-retention replay is claimed.
+
+The final emitter and submitted/installed drivers are identical to the tested
+ones. Metadata-only projections were regenerated afterward to include the
+layout-check count; no execution or native-build reuse is mislabelled as a
+new run. The closure has 742 modules, 113 operators, 36,025 occurrences,
+62 missing edges and 50 indirect modules. Generic ABS/count-limited DELETE,
+printer locks, full replacement attribution and 35 callback dispositions
+remain open. Original-definition credit remains 550/515 and LL15 stays open.

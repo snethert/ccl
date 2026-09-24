@@ -1,19 +1,67 @@
-# Projected-image READY join — R8
+# Projected-image READY join — R9
 
 Original-definition credit remains **550 / 515 non-NIL**, with no LL15 slot
-claim. This unit expands the cold image's executable interface: native GCD,
-integer magnitude, package-symbol lookup, all six mapping functions, CType
-predicates, and seventeen more generic functions. No shared compiler, runtime
-or CCL file changes. The isolated compiler adds literal T/NIL type recognition
-and native unbound-slot dispatch to R5's MAKE-STRING proposal. Native
-qualification covers the final proposal.
+claim. This continuation adds packed-bit allocation, reads and stores to the
+isolated compiler. It exercises unchanged whole-file `MAKE-CPL-BITS` and
+`SIMPLE-VECTOR-DELETE` from the restored READY image. No shared compiler,
+runtime or CCL source changes; no new C or JavaScript service.
+
+## Packed bits
+
+The layout is CCL's x8632 low-bit-first bit vector, subtag 255. Allocation
+initializes the complete object and keeps unused tail bits and padding zero.
+Typed AREF, SBIT, `%SBITSET` and UVREF/UVSET use one byte-access helper.
+Simple one-dimensional `MAKE-ARRAY` with a constant BIT element type uses
+the existing rooted allocation path. Other MAKE-ARRAY shapes retain their
+ordinary call and dependency obligations.
+
+The native witness covers lengths 0, 1, 7, 8, 9, 31, 32, 33, 63, 64, 65 and
+257, initialized to both zero and one, with collection between stores and
+reads. A collecting operand-order case preserves the vector across all
+three operands. Invalid vectors, indices, bit values and initial elements
+are compared through native error handlers. An initial development run
+returned checked 5 for invalid bits; the final lowering uses the existing
+TYPE-ERROR constructor with datum and expected type BIT. That failure is
+retained.
+
+`MAKE-CPL-BITS` runs on the actual projected class precedence list and checks
+each class's native ordinal. DELETE runs forwards and backwards with a
+collecting comparison callback and observes both result and visit order.
+The count-limited early-exit branch still calls generic ABS and is not
+qualified here. This does not claim FINALIZE-INHERITANCE or class mutation
+is complete.
+
+Admission checks are accounted for as follows:
+
+| Check | Directed witness |
+| --- | --- |
+| Object tag / bit-vector header | NIL, a simple vector, and a string |
+| Fixnum index / index below length | A double, -1, and exactly the length |
+| Header / complete payload span | Raw pointers at memory end and a backed header with an unbacked tail; checked refusal, unchanged object bytes and restored TCR apart from the allocation pointer and value count |
+| Store / initial value is zero or one | Wrong integers and non-integers; native error handlers; vector unchanged |
+| Allocation count is a fixnum in 0..16,777,215 | NIL, -1 and 16,777,216; checked refusal and unchanged existing heap |
+
+Allocation alignment, available extent and retry collection remain the
+shared `bootstrap-heap-block` contract. Object alignment follows from the
+low three tag bits. Positive maximum-size allocation remains subject to the
+owner's heap capacity; no growth policy is added. In this one-MiB-semispaces
+profile, the count ceiling is also implied by allocation capacity: a count
+above 16,777,215 needs more than two MiB before alignment. Removing only that
+ceiling still refuses at the shared allocator. A larger-space profile must
+isolate the header-width ceiling independently.
+
+Audit 172 O-57 is addressed by screening every emitted module, including
+whole-file modules, against the upstream macro-name index. The two controls
+inject a macro-name closure edge and a whole-file macro call. O-58's NIL
+frame on the still-unreached `%error` fallback remains disclosed.
 
 ## Native functions and method bodies
 
 The remaining two standalone macro-name candidates now bind to whole-file
 compilations: `%INTEGER-ABS` uses l0-int's NUMBER-CASE environment, and
 `%GET-HASHED-HTAB-SYMBOL` uses nfasload's HTVEC environment. All 33 candidate
-edges from the 1,749-module screen are superseded by qualified bindings.
+edges found by the earlier standalone screen are superseded by qualified bindings;
+the R9 screen includes whole-file modules too.
 Restoring either old module is a directed refusal control. This remains a
 conservative name screen, not a general lexical macro proof.
 
@@ -99,14 +147,14 @@ Stage 1 scaffolding. Heap-image and owner contracts are durable.
 
 ## Results
 
-The final proposal passes 26,048 fresh corpus comparisons, four cold boots with 538 collections, 20 boot refusals and 31 image-admission controls. Seven support callers compare both results and represented post-state at each boot. The admission-guard omission control is rejected. Fresh native R6/R6a passes 21,843 tests and restores all 164 FASLs. No post-retention replay is claimed.
+The final proposal passes 26,048 fresh corpus comparisons, four cold boots with 714 collections, 20 boot refusals and 31 image-admission controls. Eight support callers compare both results and represented post-state at each boot (40 comparisons including the producer). Five direct bit-vector refusals and four layout observations run per boot. The admission-guard omission control is rejected. Fresh native R6/R6a passes 21,843 tests and restores all 164 FASLs. No post-retention replay is claimed.
 
-The expanded census is 738 modules, 113 operators and 35,126 occurrences. It still has 66 missing edges and 49 indirect modules; these are obligations, not executed coverage.
+The expanded census is 742 modules, 113 operators and 36,025 occurrences. Missing edges fall from 66 to 62; 50 indirect modules remain. These are obligations, not executed coverage. The all-module macro screen covers 6,362 modules and retains the same 33 superseded candidates.
 
 ## Reproduce
 
 ```sh
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r8 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r9 /private/tmp/ccl-work/claude/ready/verify
 ```
 
 The native qualification can be rebuilt independently:

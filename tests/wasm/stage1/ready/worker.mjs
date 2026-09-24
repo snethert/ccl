@@ -402,13 +402,54 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS']){
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS']){
         const witness=native.find(row=>row.definition===name);
         assert(witness,'missing READY support oracle '+name);
         const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
         assert.deepEqual(values,witness.values,name+' native result');
         const after=decodeGraph(get(root+8),witness.after[0].graph,graphIO);
         assert.deepEqual(after,witness.after[0],name+' native mutation');
+        if(name==='READY-BIT-VECTORS'){
+          for(const n of [9,33]){
+            const object=gen.invoke(witness.name,[NIL,0,n*4,4])[0];
+            put(root+4,2);put(root+12,object);
+            for(let moved=0;moved<2;moved++){
+              const p=get(root+12)-6,payload=Math.ceil(n/8),extent=(4+payload+7)&~7;
+              assert.equal(get(p),n*256+255,'bit header');
+              assert.deepEqual([...bytes(p+4,payload)],
+                Array.from({length:payload},(_,i)=>i===payload-1?1:255),'bit tail');
+              assert([...bytes(p+4+payload,extent-4-payload)].every(x=>x===0),'zero bit padding');
+              if(!moved)collect();
+            }
+            put(root+4,1);
+          }
+          const end=memory.buffer.byteLength,tail=end-8;
+          const saved=Uint8Array.from(bytes(tail,8));
+          try{
+            // Header beyond memory, then a valid header with an unbacked tail.
+            for(const [label,object,header] of [
+              ['unbacked header',end+6,null],
+              ['unbacked payload',tail+6,65*256+255]]){
+              if(header!==null){put(tail,header);put(tail+4,0xa5a5a5a5);}
+              const before=Uint8Array.from(bytes(tail,8));
+              const state=Array.from({length:64},(_,i)=>get(tcr+4*i));
+              assert.throws(()=>gen.invoke(witness.name,[object,T,0,4]),/checked 4$/,label);
+              assert.deepEqual(bytes(tail,8),before,label+' preserves bytes');
+              // The optional-argument entry allocates its binding cells; the
+              // allocation pointer and value count are not restored by B.
+              for(let i=0;i<64;i++)if(i!==12&&i!==29)
+                assert.equal(get(tcr+4*i),state[i],label+' TCR '+i);
+            }
+            for(const count of [0xfffffffc,4*16777216,NIL]){
+              const state=Array.from({length:64},(_,i)=>get(tcr+4*i));
+              const start=get(tcr+56),used=get(tcr+48)-start;
+              const heap=Uint8Array.from(bytes(start,used));
+              assert.throws(()=>gen.invoke(witness.name,[NIL,0,count,0]),/checked 6$/,'bit length admission');
+              assert.deepEqual(bytes(start,used),heap,'length refusal preserves existing heap');
+              for(let i=0;i<64;i++)if(i!==12&&i!==29)assert.equal(get(tcr+4*i),state[i],'bit length TCR '+i);
+            }
+          }finally{bytes(tail,8).set(saved);}
+        }
         supportChecks.push({name,values});
       }
 

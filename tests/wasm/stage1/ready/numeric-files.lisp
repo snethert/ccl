@@ -142,7 +142,7 @@
                  ("ccl:level-0;l0-int.lisp" ccl::%integer-abs ccl::%integer-to-string ccl::%pr-integer ccl::print-bignum-2)
                  ("ccl:lib;numbers.lisp" gcd)
                  ("ccl:level-0;nfasload.lisp" ccl::%get-hashed-htab-symbol)
-                 ("ccl:lib;sequences.lisp" make-string)
+                 ("ccl:lib;sequences.lisp" make-string ccl::simple-vector-delete)
                  ("ccl:lib;level-2.lisp" ccl::prepare-to-destructure)
                  ("ccl:level-1;l1-utils.lisp" ccl::check-keywords adjoin caddr cdddr fdefinition symbol-function)
                  ("ccl:level-1;l1-aprims.lisp" funcall apply ccl::%badarg)

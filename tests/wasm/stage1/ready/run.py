@@ -35,7 +35,9 @@ def measurements(out):
     c.save(out/'closure.json',closure)
     c.save(out/'macro-calls.json',local('macro_calls').census(out/'compiled',closure))
     c.save(out/'macro-controls.json',local('macro_calls').controls(out/'compiled',closure))
-    expected={'GCD':'ccl:lib;numbers.lisp',
+    expected={'MAKE-CPL-BITS':'ccl:level-1;l1-clos-boot.lisp',
+              'SIMPLE-VECTOR-DELETE':'ccl:lib;sequences.lisp',
+              'GCD':'ccl:lib;numbers.lisp',
               'MAPCAR':'ccl:lib;lists.lisp','MAPLIST':'ccl:lib;lists.lisp',
               'MAPL':'ccl:lib;lists.lisp','MAPCAN':'ccl:lib;lists.lisp','MAPCON':'ccl:lib;lists.lisp',
               '%INTEGER-ABS':'ccl:level-0;l0-int.lisp',
@@ -59,6 +61,9 @@ def measurements(out):
     assert 'READY-NATIVE-CLOSURE-REFUSED' in (out/'compiled/probe.log').read_text()
     c.save(out/'startup-support.json',dict(status='PASS',whole_file_bindings=selected,
         integer_radix_pairs_per_boot=55,mapc_callbacks_per_boot=3,
+        bit_vector_lengths=[0,1,7,8,9,31,32,33,63,64,65,257],
+        bit_vector_initial_values=[0,1],bit_vector_layout_checks_per_boot=4,bit_vector_bounds_refusals_per_boot=2,bit_vector_length_refusals_per_boot=3,
+        bit_vector_native_error_rows_per_boot=12,delete_directions_per_boot=2,
         mapping_functions=6,mapping_callbacks_per_boot=22,function_classes_per_boot=4,
         radix_initializer_source='level-0/l0-int.lisp',native_word_bits=61,target_word_bits=30,
         radix_globals_cleared_before_boot=True,initializer_omission_refused=True,
@@ -109,7 +114,7 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==16
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==17
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
@@ -121,7 +126,7 @@ def summarize(out):
     assert all(r['directEntry'] and r['rootsPreserved']==7 for r in reader['refusals'] if r['rejected'].startswith('image-'))
     assert reference['values'][:4]==[612,50,43,41]
     for result in writer['results']+reader['results']:
-        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS']
+        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS']
         assert len(result['profileChecks'])==1
         check=result['profileChecks'][0]
         assert check['admitted'] and check['rootsPreserved']==7
@@ -146,7 +151,7 @@ def summarize(out):
         full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=50,controls=len(reader['refusals']),
-        image_admission_controls=31,support_comparisons=35,profile_refusals=8,public_table_bindings=4,native_state_restorations=16,
+        image_admission_controls=31,support_comparisons=40,profile_refusals=8,public_table_bindings=4,native_state_restorations=17,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
         original_definition_credit=0,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')
