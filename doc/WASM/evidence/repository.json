@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "934e23c4eb11aae34df4b7de9e23d347c77239a8352e6652b51e34a63629e2ac",
-  "commit": "7c5405edee830de89ca5df4cb4f042ae2564fd82",
-  "immutable_evidence_files": 270065,
+  "catalog_sha256": "c58db0d648be518e946c4be1e3d488b33728b4106748c320b2344f0008d76c2a",
+  "commit": "d3512db893ecd34da894e5e4760f96dc1938560f",
+  "immutable_evidence_files": 270131,
   "last_scoped_addition": {
-    "bytes": 10130,
-    "directory": "2026-09-24-stream-constructor-acceptance",
-    "files": 6
+    "bytes": 1357203,
+    "directory": "2026-09-24-namespace-provider-r1",
+    "files": 65
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Accept and integrate reviewed R13 exact bytes; no new execution. NSL-P2 and Q-A imported.",
-  "source_index_sha256": "0e5281060fe81dea86b9e09ff37ebc4130c64e67026ea88e1159c3b87720593e",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-stream-constructor-acceptance.json",
+  "scope": "NSL-1 host foundation: immutable read-only namespace manifest, private handles and positions, stat/open/pread/read/seek/close/realpath and directory iteration. 57 native matches, two declared path refusals, 80 controls and six rejected faults. Four reads through unchanged hand-built D5 harness with collection, interrupt/EOF and stale completion checks. Native standard foreign types initialized at 32-bit widths without database access. No compiler/runtime/Lisp product source changes; no generated Lisp bridge, browser/JSPI, target FTD initialization or namespace slot credit. Accepted originals stay 575/535; file counts 0/0/0.",
+  "source_index_sha256": "f951676f4db8d2c99be7e220ff5309289535bccc89bd8eee782226f27a3f89f2",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-provider-r1.json",
   "verification": {
-    "new_execution": false,
-    "report": "2026-09-24-stream-constructor-acceptance/identity.json",
-    "report_sha256": "f793ccf8682fa41dc73387a5cbcc39dfe45e0ff8fcd483ec7192df24e6bb1866",
+    "new_execution": true,
+    "report": "2026-09-24-namespace-provider-r1/verification.json",
+    "report_sha256": "1e13edb25247b33335b089f11d1d9de9b9586e6ba6d5bc9be722ef3300136be6",
     "status": "PASS"
   },
   "version": 1

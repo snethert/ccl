@@ -3816,6 +3816,14 @@
       "review_disposition": "ACCEPTED_AUXILIARY",
       "scope": "Audit 175 / Steve acceptance. Three product files byte-identical to R13, complete native source identity matches. Native and target qualification reused, no new execution, accepted 575/535, no slot credit. Historical integration check replays at its integration commit.",
       "sha256": "8d4557751ccf5015a84c501240b6499d7e898b3e36e35366ca8c7c27469e6f5b"
+    },
+    {
+      "id": "STAGE1-NAMESPACE-PROVIDER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-namespace-provider-r1/packet.json",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "NSL-1 host foundation: immutable read-only namespace manifest, private handles and positions, stat/open/pread/read/seek/close/realpath and directory iteration. 57 native matches, two declared path refusals, 80 controls and six rejected faults. Four reads through unchanged hand-built D5 harness with collection, interrupt/EOF and stale completion checks. Native standard foreign types initialized at 32-bit widths without database access. No compiler/runtime/Lisp product source changes; no generated Lisp bridge, browser/JSPI, target FTD initialization or namespace slot credit. Accepted originals stay 575/535; file counts 0/0/0.",
+      "sha256": "75ffac356644cb4ad18a22f6310204e739940c55d170f05fa55d51b54cfa3416",
+      "slot_credit": false
     }
   ],
   "current_runs": [

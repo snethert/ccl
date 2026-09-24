@@ -4713,3 +4713,23 @@ Imported e9971552 and c1d21184: the user-authorized Q-A image/sequence amendment
 and NSL-P2, including Codex’s corrections. The inventory, replacement cap and
 other READY decisions are unchanged. Next implementation is the read-only
 namespace; target-loaded file count remains zero.
+
+
+## 2026-09-24 — NSL-1 host namespace implementation
+
+Implemented the isolated read-only byte provider selected by NSL-P2: immutable
+manifest admission, owner-supplied cwd/ccl root, independent nonrecycled file
+handles, positioned/sequential reads, seek/EOF, stat, realpath and directories.
+The implementation never accesses the host filesystem. Native oracle: 57 rows
+match; two path-normalization refusals differ explicitly and receive no credit.
+Eighty state/admission checks and six fault variants pass. Four transport cases
+compose with the existing D5 harness, including moving collection, interrupt,
+EOF and stale completion rejection. This is hand-built transport evidence, not
+a generated-Lisp bridge. The native foreign-type initializer installs 32-bit
+types without opening an interface database; target initialization remains owed.
+
+The documented verifier passed from a fresh managed output in about six seconds
+of execution phases. No shared product changes or new original-function credit;
+accepted originals remain 575/535, Stage 1 remains 21/12/0, file counts 0/0/0.
+Next is the real Lisp file-call bridge, then the first compiler/dumper path.
+All namespace outputs are deleted after retention; bounded shared caches remain.
