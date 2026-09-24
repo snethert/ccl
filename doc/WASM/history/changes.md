@@ -4590,3 +4590,37 @@ are validation bounds only. R10 remains stacked, not implicitly accepted.
 The closure is 797 modules / 55 missing edges / 50 indirect modules. Stream
 completion, attribution and startup callback dispositions remain open. Ledger
 21/12/0 of 33 and no LL15 credit.
+
+
+## 2026-09-24 — READY R12 native string-output path
+
+On Steve's “proceed”, compiled the native string-output writers and generated
+IOBLOCK constructor in their whole-file environments. Six original functions
+raise proposed execution from 562/525 non-NIL to 568/531. WRITE-STRING,
+WRITE-CHAR, WRITE-SIMPLE-STRING, GET-OUTPUT-STREAM-STRING and both IOBLOCK
+writers run after a cold image load, including Unicode, empty buffers, growth,
+reuse, substring errors, 24 integer/radix pairs and collecting nonlocal exits
+through the native recursive-lock cleanup. The existing 612 classes / 50 GFs
+supply the class metadata; the projection has not grown.
+
+The isolated proposal reconstructs DEFSTRUCT ancestry cells through target
+FIND-CLASS-CELL, admits target-width fixnum slot tests, and extends the checked
+byte-copy primitive to simple strings. The collector admits exactly four
+traced basic-stream fields. Class-cell identities are canonical; ancestry
+list spines are private to instances. Public stream construction's recycle
+pool, general streams and stream-image restoration remain outside this unit.
+
+Final execution passes 26,048 fresh corpus comparisons, four boots with 1,490
+collections, 60 support comparisons, 20 boot refusals and 31 image checks.
+Stream shape/count controls and twelve copy refusals per boot preserve state.
+Fresh R6/R6a binds all 35 proposed source files: 21,843 tests, 164 FASLs restored.
+The author script then stopped in reporting: the static census omitted the two
+IOBLOCK callbacks called through slots. Adding their installed function cells
+as explicit roots repairs the census, without changing or repeating execution.
+Original failures and phase provenance are retained; unsaved reader/control
+wall times remain null. Retention claims no execution.
+
+Closure: 814 modules, 57 missing edges, 53 indirect modules. The proposal stays
+isolated for review over the unreviewed R10/R11 stack; no shared compiler or
+runtime integration and no LL15 credit. Replacement attribution and the 35
+startup callback dispositions remain owed. Ledger unchanged at 21/12/0 of 33.

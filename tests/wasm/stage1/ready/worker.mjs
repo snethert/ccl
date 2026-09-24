@@ -402,13 +402,38 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS']){
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS']){
         const witness=native.find(row=>row.definition===name);
         assert(witness,'missing READY support oracle '+name);
         const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
         assert.deepEqual(values,witness.values,name+' native result');
         const after=decodeGraph(get(root+8),witness.after[0].graph,graphIO);
         assert.deepEqual(after,witness.after[0],name+' native mutation');
+        if(name==='READY-STRING-OUTPUT'){
+          const witness=native.find(row=>row.definition==='READY-IVECTOR-COPY');assert(witness);
+          const args=witness.args.map(encode);
+          put(root+4,3);put(root+12,args[0]);put(root+16,args[2]);
+          assert.deepEqual(gen.invoke(witness.name,args).map(decode),witness.values,'ivector byte offsets');
+          assert.deepEqual(args.map(decode),witness.after,'ivector copy mutation');
+          for(const [label,source,from,destination,to,count] of [
+            ['source type',NIL,0,get(root+16),0,0],
+            ['destination type',get(root+12),0,T,0,0],
+            ['source kind',encode({octets:[1,2,3]}),0,get(root+16),0,0],
+            ['destination kind',get(root+12),0,encode({octets:[1,2,3]}),0,0],
+            ['negative source',get(root+12),-4,get(root+16),0,0],
+            ['negative destination',get(root+12),0,get(root+16),-4,0],
+            ['negative count',get(root+12),0,get(root+16),0,-4],
+            ['source offset type',get(root+12),NIL,get(root+16),0,0],
+            ['destination offset type',get(root+12),0,get(root+16),T,0],
+            ['count type',get(root+12),0,get(root+16),0,NIL],
+            ['source extent',get(root+12),64,get(root+16),0,32],
+            ['destination extent',get(root+12),0,get(root+16),64,32]]){
+            const before=[bytes(get(root+12)-6,24).slice(),bytes(get(root+16)-6,24).slice()];
+            assert.throws(()=>gen.invoke(witness.name,[source,from,destination,to,count]),/checked 4$/,'ivector '+label);
+            assert.deepEqual([bytes(get(root+12)-6,24),bytes(get(root+16)-6,24)],before,'ivector refusal preserves '+label);
+          }
+          put(root+4,1);
+        }
         if(name==='READY-RECURSIVE-LOCKS'){
           const entry=native.find(row=>row.definition==='READY-LOCK-OPERATION');assert(entry);
           assert.deepEqual(gen.invoke(entry.name,[0,NIL,NIL]).map(decode),entry.values);

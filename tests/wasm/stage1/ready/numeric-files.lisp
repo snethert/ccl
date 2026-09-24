@@ -138,7 +138,9 @@
 
 ;;; Keep the file compiler's lexical macro environment while selecting the
 ;;; runtime helpers it emits; macro expander functions are not runtime APIs.
-(dolist (entry '(("ccl:level-0;l0-aprims.lisp" ccl::%make-recursive-lock-ptr ccl::make-lock ccl::make-recursive-lock ccl::%make-lock ccl::recursive-lock-ptr ccl::lock-name)
+(dolist (entry '(("ccl:level-1;l1-io.lisp" write-string write-char ccl::write-simple-string)
+                 ("ccl:level-1;l1-streams.lisp" ccl::make-string-output-stream-ioblock ccl::string-output-stream-ioblock-write-char ccl::string-output-stream-ioblock-write-simple-string get-output-stream-string ccl::stream-is-closed ccl::check-ioblock-owner)
+                 ("ccl:level-0;l0-aprims.lisp" ccl::%make-recursive-lock-ptr ccl::make-lock ccl::make-recursive-lock ccl::%make-lock ccl::recursive-lock-ptr ccl::lock-name)
                  ("ccl:level-0;l0-misc.lisp" ccl::%wasm-recursive-lock-state ccl::%lock-recursive-lock-ptr ccl::%unlock-recursive-lock-ptr ccl::%try-recursive-lock-object ccl::%lock-recursive-lock-object ccl::%unlock-recursive-lock-object)
                  ("ccl:level-1;l1-processes.lisp" ccl::grab-lock ccl::release-lock ccl::try-lock ccl::lock-acquisition-status ccl::clear-lock-acquisition-status ccl::recursive-lock-p ccl::lockp)
                  ("ccl:level-1;l1-typesys.lisp" ccl::ctype-p ccl::csubtypep ccl::cell-csubtypep-2 ccl::type= ccl::type-union2 ccl::type-intersection2)
@@ -148,7 +150,7 @@
                  ("ccl:lib;sequences.lisp" make-string ccl::simple-vector-delete)
                  ("ccl:lib;level-2.lisp" ccl::prepare-to-destructure)
                  ("ccl:level-1;l1-utils.lisp" ccl::check-keywords adjoin caddr cdddr fdefinition symbol-function)
-                 ("ccl:level-1;l1-aprims.lisp" funcall apply ccl::%badarg)
+                 ("ccl:level-1;l1-aprims.lisp" funcall apply ccl::%badarg ccl::check-sequence-bounds)
                  ("ccl:lib;lists.lisp" cadddr ldiff mapc mapcar maplist mapl mapcan mapcon ccl::map1)))
   (let ((previous *core-modules*) (*b-cpl-conditions* t) (*b-allocation-retry* t))
     (handler-case (core-compile-file (car entry))

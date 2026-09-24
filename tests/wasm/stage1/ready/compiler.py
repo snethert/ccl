@@ -19,6 +19,61 @@ def generate():
     anchor="          ((eq name '-) (bootstrap-subtract forms))"
     assert text.count(anchor)==1
     text=text.replace(anchor,anchor+'\n          ((eq name \'ccl::%wasm-lock-owner-token)\n           (unless (null forms) (refuse :single-worker-lock-token-arity))\n           (b-multiple (make-b-raw-code :text\n             "(block (result i32)\n                (if (i32.or (i32.eqz (global.get $tcr))\n                            (i32.or (i32.and (global.get $tcr) (i32.const 15))\n                                    (i32.ge_u (global.get $tcr) (i32.const 2147483648))))\n                  (then (throw $call_error (i32.const 4))))\n                (global.get $tcr))")))')
+    anchor='(defun bootstrap-gvector (forms)'
+    assert text.count(anchor)==1
+    text=text.replace(anchor,(HERE/'structure-cells.lisp').read_text()+'\n'+anchor)
+    anchor='    (bootstrap-operands\n     (cdr forms)\n     (lambda (values)'
+    assert text.count(anchor)==1
+    text=text.replace(anchor,'''    (bootstrap-operands
+     (if (and (= subtag wasm32::subtag-struct) (cdr forms))
+       (cons (or (bootstrap-structure-cells (second forms)) (second forms))
+             (cddr forms))
+       (cdr forms))
+     (lambda (values)''')
+    anchor="                          (cond ((eq op 'ccl::immediate)"
+    assert text.count(anchor)==1
+    text=text.replace(anchor,"""                          (cond ((and (eq op 'ccl::%gvector)
+                                            (eql (ccl::acode-fixnum-form-p (first (first (first args))))
+                                                 wasm32::subtag-struct)
+                                            (bootstrap-structure-cell-list (second (first (first args)))))
+                                       ;; The ancestry cells are reconstructed at allocation.
+                                       ;; Only the remaining operands belong in the literal pool.
+                                       (mapc #'visit (cddr (first (first args))))
+                                       (visit (second (first args))))
+                                ((eq op 'ccl::immediate)""")
+    anchor='(and (integerp (second type)) (<= 1 (second type) 28))'
+    assert text.count(anchor)==1
+    text=text.replace(anchor,"(and (integerp (second type))\n                          (<= 1 (second type) (if (eq (car type) 'signed-byte) 30 29)))")
+    for old,new in [("`(integer ,(- (ash 1 (1- bits))) (,(ash 1 (1- bits))))",
+                     "`(integer ,(- (ash 1 (1- bits))) ,(1- (ash 1 (1- bits))))"),
+                    ("`(integer 0 (,(ash 1 bits)))", "`(integer 0 ,(1- (ash 1 bits)))")]:
+        assert text.count(old)==1
+        text=text.replace(old,new)
+    # The native stream grower uses the same byte-copy primitive as bignums.
+    # Both admitted shapes have four-byte payload elements; other ivectors
+    # still refuse. Keep digit access bignum-only.
+    text=text.replace('bootstrap-bignum-base', 'bootstrap-word-ivector-base')
+    old='(defun bootstrap-word-ivector-base (object)'
+    assert text.count(old)==1
+    text=text.replace(old,'(defun bootstrap-word-ivector-base (object &optional stringp)')
+    old='(b-condition (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base) 4)'
+    assert text.count(old)==1
+    text=text.replace(old,'''(b-condition
+       (if stringp
+         (b-wat "(i32.and (i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))
+                         (i32.ne (i32.load8_u (local.get ~a)) (i32.const 191)))" base base)
+         (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base)) 4)''')
+    old='(b-condition (b-wat "(i32.eqz (local.get ~a))" count) 4)'
+    assert text.count(old)==1
+    text=text.replace(old,'''(b-condition
+       (b-wat "(i32.and (i32.eq (i32.load8_u (local.get ~a)) (i32.const 7))
+                        (i32.eqz (local.get ~a)))" base count) 4)''')
+    old='(bootstrap-word-ivector-base (first values))'
+    assert text.count(old)==1
+    text=text.replace(old,"(bootstrap-word-ivector-base (first values) (eq name 'ccl::%copy-ivector-to-ivector))")
+    old='(bootstrap-word-ivector-base destination)'
+    assert text.count(old)==1
+    text=text.replace(old,'(bootstrap-word-ivector-base destination t)')
     return text
 
 def install():
@@ -30,7 +85,7 @@ def install():
             clang=c.sha(Path('/usr/local/opt/llvm/bin/clang')),lap=c.sha(c.ROOT/'level-0/WASM32/w32-lap.lisp'),
             base=c.sha(c.ROOT/BACKEND),proposal=hashlib.sha256(generate().encode()).hexdigest(),
             derivation=c.sha(Path(__file__)),
-            complex_floats=c.sha(HERE/'complex-floats.lisp'),
+            complex_floats=c.sha(HERE/'complex-floats.lisp'),structure_cells=c.sha(HERE/'structure-cells.lisp'),
             locks=c.sha(HERE/'locks.lisp'),lock_source=c.sha(HERE/'lock_source.py'),
             lock_inputs={name:c.sha(c.ROOT/name) for name in ('level-0/l0-aprims.lisp','level-0/l0-misc.lisp','compiler/WASM32/wasm32-arch.lisp')},
             class_driver=c.sha(HERE/'numeric-files.lisp'),
@@ -86,7 +141,7 @@ def install():
         collector=collector.replace(anchor,anchor+'\n case 71:return n==3?12:0xffffffffu;\n case 79:return n==5?20:0xffffffffu;')
         anchor='   else if(node_subtag(tag)'
         assert collector.count(anchor)==1
-        collector=collector.replace(anchor,'   else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n'+anchor)
+        collector=collector.replace(anchor,'   else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n   else if(tag==50){if(n!=4)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n'+anchor)
         (stage/'runtime/collector.c').write_text(collector)
         clang=Path('/usr/local/opt/llvm/bin/clang')
         c.command([clang,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-matomics','-mbulk-memory',

@@ -428,6 +428,10 @@
       (ccl::%copy-gvector-to-gvector old 0 copy 0 length)
       (setq ccl::*class-table* copy
             ccl::*istruct-class* (find-class 'ccl::internal-structure)))
+    (setq ccl::*string-output-stream-class* (find-class 'ccl::string-output-stream))
+    (setf (svref ccl::*class-table* target::subtag-basic-stream)
+          #'(lambda (stream)
+              (ccl::%wrapper-class (ccl::basic-stream.wrapper stream))))
     ;; Native lock classification selects by the lock's kind cell. Resolve
     ;; the already loaded classes rather than importing native closures.
     (setf (svref ccl::*class-table* target::subtag-lock)
@@ -620,3 +624,103 @@
          (error () :refused)))
     (6 (handler-case (progn (ccl:release-lock lock) :released)
          (error () :refused)))))
+
+
+;;; Construct the native stream and ioblock layouts without an OS descriptor
+;;; or the optional thread-local recycle pool. The public writers and extractor
+;;; below are CCL's unchanged definitions, compiled in their file environments.
+(defun ready-string-output (image)
+  (declare (ignore image))
+  (let* ((class (find-class 'ccl::string-output-stream))
+         (stream (ccl::gvector :basic-stream
+                   (ccl::%class.own-wrapper class)
+                   (logior (ash 1 ccl::basic-stream-flag.open-character)
+                           (ash 1 ccl::basic-stream-flag.open-output))
+                   nil nil))
+         (lock (ccl:make-lock "READY string output"))
+         (block (ccl::make-string-output-stream-ioblock
+                  :stream stream :string (make-string 0)
+                  :write-char-function 'ccl::string-output-stream-ioblock-write-char
+                  :write-simple-string-function 'ccl::string-output-stream-ioblock-write-simple-string
+                  :outbuf-lock lock))
+         (answers nil))
+    (setf (ccl::basic-stream.state stream) block)
+    (push (mapcar #'(lambda (cell)
+                      (list (ccl::class-cell-name cell)
+                            (eq cell (ccl::find-class-cell
+                                      (ccl::class-cell-name cell) nil))))
+                  (ccl::%svref block 0)) answers)
+    (push (write-char #\? stream) answers)
+    (dolist (string (list "" "a" (string #\Newline) "after newline" "λ雪"))
+      (push (eq (write-string string stream) string) answers)
+      (core-collect)
+      (push (ccl::ioblock-charpos block) answers))
+    (push (write-char #\! stream) answers)
+    (push (write-string "<slice>" stream :start 1 :end 6) answers)
+    (core-collect)
+    (ccl::write-simple-string "[simple]" stream 1 7)
+    (push (get-output-stream-string stream) answers)
+    (push (get-output-stream-string stream) answers)
+    ;; Grow an empty buffer via WRITE-CHAR, and a nonempty one via WRITE-STRING.
+    (dotimes (i 90) (write-char (code-char (+ 65 (mod i 26))) stream))
+    (core-collect)
+    (push (get-output-stream-string stream) answers)
+    (push (handler-case (write-string "bad bounds" stream :start 99)
+            (error () :bad-bounds)) answers)
+    (let ((source "λ雪abc")
+          (destination (make-string 5 :initial-element #\.)))
+      (ready-ivector-copy source 4 destination 0 16)
+      (write-string destination stream)
+      (push (get-output-stream-string stream) answers)
+      (ready-ivector-copy destination 0 destination 4 16)
+      (push destination answers))
+    ;; The integer printer now takes its output branch through WRITE-STRING.
+    (dolist (radix '(2 10 16 36))
+      (dolist (integer '(0 -37 536870911 -536870912 1267650600228229401496703205377 -1267650600228229401496703205377))
+        (ccl::%pr-integer integer radix stream)
+        (core-collect)
+        (push (get-output-stream-string stream) answers)))
+    (setf (ccl::ioblock-device block) nil)
+    (push (handler-case (write-string "closed" stream)
+            (ccl::stream-is-closed-error () :closed)) answers)
+    (setf (ccl::ioblock-device block) -1)
+    ;; A declining callback unwinds through the real output-lock cleanup.
+    (setf (ccl::ioblock-write-simple-string-function block)
+          #'(lambda (block string start count)
+              (declare (ignore block string start count))
+              (core-collect)
+              (throw 'ready-output :unwound)))
+    (push (catch 'ready-output (write-string "unwind" stream)) answers)
+    (setf (ccl::ioblock-write-simple-string-function block)
+          'ccl::string-output-stream-ioblock-write-simple-string)
+    (push (ccl:try-lock lock) answers)
+    (ccl:release-lock lock)
+    (push (handler-case (ccl:release-lock lock)
+            (ccl::not-lock-owner () :unowned)) answers)
+    (write-string "reused" stream)
+    (push (get-output-stream-string stream) answers)
+    (nreverse answers)))
+
+
+;;; DEFSTRUCT declares target fixnum slots as (SIGNED-BYTE 30). Exercise the
+;;; entire word boundary, including values that must take the bignum path.
+(defun ready-type-widths (image)
+  (declare (ignore image))
+  (let ((answers nil))
+    (dolist (value (list -536870913 -536870912 -1 0 268435455 268435456
+                        536870911 536870912 1073741823 nil t "x" #\x 1.0d0))
+      (push (list (typep value '(signed-byte 30))
+                  (typep value '(unsigned-byte 29))
+                  (typep value '(unsigned-byte 28))
+                  (handler-case (ccl:require-type value '(signed-byte 30))
+                    (type-error (condition)
+                      (list :type-error (funcall (symbol-function 'type-error-datum) condition)
+                            (funcall (symbol-function 'type-error-expected-type) condition)))))
+            answers)
+      (core-collect))
+    (nreverse answers)))
+
+
+;;; Byte offsets, including overlap, are the native ivector copy contract.
+(defun ready-ivector-copy (source from destination to count)
+  (ccl::%copy-ivector-to-ivector source from destination to count))

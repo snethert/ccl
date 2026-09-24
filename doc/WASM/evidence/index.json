@@ -3770,6 +3770,14 @@
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "READY R11 single-Worker recursive locks: eight native originals add execution credit, 562/525 non-NIL including R10. Native public lock APIs and cleanup macros run over target owner/depth primitives; collector traces all six lock fields, heap image still refuses locks. 26048 fresh corpus comparisons, four cold boots / 1306 collections, 50 support comparisons, 20 boot refusals, 31 image checks, eight lock layout checks, one rejected count omission, two no-write registry controls. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 35-file source identity. Clean complete author run retained separately from development failures. Closure 797 modules / 55 missing edges / 50 indirect modules; both recursive-lock edges resolved. Class/GF surface unchanged at 612/50. No inter-Worker synchronization, stream completion, shared-source integration or LL15 slot credit."
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R12",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r12/packet.json",
+      "sha256": "e36a8d881fe2df73cc2ce34829165a7fa13654e3cc05157eda8c053506a21d9c",
+      "review_disposition": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "READY R12 native basic string output: six native originals add execution credit, 568/531 non-NIL including R10/R11. Whole-file native writers and DEFSTRUCT constructor; target class-cell ancestry, fixnum-width tests and checked string byte copy; collector traces four stream fields. 26048 fresh corpus comparisons, four cold boots / 1490 collections, 60 support comparisons, 20 boot refusals, 31 image checks, eight stream layout checks and rejected count omission, twelve copy refusals per boot. Fresh R6/R6a: 21843 tests, 164 restored FASLs, exact 35-file identity. Final execution passed; reporting-only callback census repair disclosed with original failure and phase records. Closure 814 modules / 57 missing edges / 53 indirect modules. Class/GF projection unchanged at 612/50. Public stream constructor, general streams, closure/attribution/callback completion still owed; isolated proposal, no LL15 slot credit."
     }
   ],
   "current_runs": [

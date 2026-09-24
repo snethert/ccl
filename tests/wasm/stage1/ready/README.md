@@ -1,102 +1,92 @@
-# Projected-image READY join — R11
+# Projected-image READY join — R12
 
-Executed originals rise from **554 / 519 non-NIL to 562 / 525**. The eight
-new originals are MAKE-LOCK, %MAKE-LOCK, LOCK-NAME, GRAB-LOCK, TRY-LOCK,
-RELEASE-LOCK and the two object-level acquire/release wrappers. The target
-primitive replacements receive no original-definition credit.
-
-This proposal closes the recursive-lock primitive dependencies reached by
-`WRITE-STRING` in the READY graph. It implements the approved exclusive,
-scheduler-disabled Worker profile. It does not claim a complete stream layer,
-shared-memory mutual exclusion between Workers, persistent lock images or
-LL15 slot credit. The CLOS projection remains 612 classes and 50 GFs.
+This unit executes CCL's native string-output path, including the output branch
+of `%PR-INTEGER`. It adds no stream service or replacement stream writer. The
+six new original-definition witnesses are WRITE-STRING, WRITE-CHAR,
+WRITE-SIMPLE-STRING, GET-OUTPUT-STREAM-STRING and the two string-output ioblock
+writers. The generated DEFSTRUCT constructor executes but receives no original
+DEFUN credit. The proposed original-execution total rises from **562 / 525
+non-NIL** to **568 / 531**. Admission is not recounted by this packet.
 
 ## Implementation
 
-CCL's six-field lock object and public lock functions stay in place. Target
-branches in `l0-aprims.lisp` and `l0-misc.lisp` replace the foreign lock pointer
-with a traced two-element vector: owner token and recursion depth. The token
-comes from the executing module's owner-bound TCR, through one compiler
-primitive; it is not a rebindable Lisp global. This representation needs no
-foreign-resource finalizer or registration in the native system-lock list.
+The collector admits the native basic-stream subtag with exactly four traced
+fields. Streams, their buffers, ioblocks, callbacks and locks survive collection.
+Streams are created after image load; this unit does not add them to the image
+loader's recognized kinds or define persistent stream restoration.
 
-`MAKE-LOCK`, `LOCK-NAME`, `GRAB-LOCK`, `TRY-LOCK`, `RELEASE-LOCK`, the object
-wrappers and acquisition-status functions compile in their original file
-contexts. The ordinary `WITH-LOCK-GRABBED` expansion handles cleanup.
-Acquisition returns T, release returns NIL, and acquisition flags follow the
-native protocol. A different owner makes TRY-LOCK return NIL; blocking acquire
-signals because this profile cannot wait. Invalid state and recursion overflow
-refuse before changing ownership or depth. Release by a non-owner signals
-`NOT-LOCK-OWNER`.
+The file compiler compiles `l1-io.lisp` and `l1-streams.lisp` in their own macro
+environments. The fixture constructs the native four-field stream and uses
+CCL's generated MAKE-STRING-OUTPUT-STREAM-IOBLOCK. This deliberately leaves
+MAKE-STRING-OUTPUT-STREAM's optional thread-local recycling pool and the file,
+terminal and foreign-descriptor interfaces owed. The existing 612-class image
+supplies the stream class; no generic function or class projection is added.
 
-The collector admits exactly six lock fields and traces each one. A held lock
-and its owner/depth vector may move during collection. The heap-image loader
-continues to refuse locks: restoring synchronization state requires a separate
-image reset policy. Locks in this unit are constructed after image loading.
-The READY classifier follows the native lock-kind dispatch and resolves the
-classes already in the image; no native lock pointer or classifier closure is
-projected.
+The native DEFSTRUCT constructor embeds a list of host class cells in its
+hidden ancestry slot. The target constant-pool exporter correctly refused
+those foreign objects. The isolated compiler now recognizes that slot of a
+structure allocation in class mode and constructs its ancestry list using
+FIND-CLASS-CELL, the operation in the native class cell's MAKE-LOAD-FORM.
+Class-cell identity comes from the target table. The list spine is private to
+the new instance; sharing the host's constant ancestry list is not claimed.
+Other quoted lists, other vector fields and default mode retain their previous
+lowering. This is not general LOAD-TIME-VALUE or MAKE-LOAD-FORM support.
+
+The constructor also exposed an admission gap in TYPEP/REQUIRE-TYPE: target
+fixnum slots expand to `(SIGNED-BYTE 30)`, beyond the former 28-bit limit.
+The lowering now covers signed widths through 30 and unsigned widths through
+29, using inclusive bounds that are representable target fixnums. Native and
+target witnesses include both bounds, adjacent bignums, non-integers and the
+TYPE-ERROR datum and expected type. Wider types keep their existing fallback.
+
+The same byte-copy primitive used by bignums also grows and extracts native
+string buffers. Its checked lowering now accepts simple strings as a second
+four-byte payload shape, including empty strings. Digit operations remain
+bignum-only; other ivector kinds still refuse. The shared byte-offset checks
+run before copying, and overlapping copies use Wasm's memmove semantics.
 
 ## Execution and controls
 
-The READY caller compares with native: public acquisition and release, recursive
-try-lock, status flags, two independent locks, collections while held, nested
-THROW cleanup, error cleanup, unowned release and invalid flags. Target-directed
-cases additionally inspect owner/depth transitions and refuse foreign ownership,
-malformed state and overflow with state preserved. The collector checks all six
-fields through movement, wrong counts and truncated storage at both placements.
-A separate compiled omission demonstrates the field-count check is required.
+The native/target caller checks class-cell names and identities, empty and
+Unicode strings, newline position, substring bounds, buffer growth from zero
+and across capacity, extraction and reuse, and output after movement. It prints
+24 signed fixnum/bignum and radix pairs through `%PR-INTEGER` into the stream.
+An error and a collecting THROW unwind through CCL's output-lock cleanup;
+an extra release verifies that the lock is unowned afterwards.
 
-The larger closure exposed the probe registry's 4,096-entry bound. Validation
-now allows 4,352 entries, with matching pre-installation and installer checks.
-The registry still begins at 4,096 and ends below NIL at 77,824; an explicit
-bound prevents overlap. The binding table's independent capacity is unchanged.
-The original overflow refusal is retained.
+Collector controls check every stream field through movement, wrong field
+counts, truncated objects and refusal without publication at both placements.
+A compiled count-check omission must fail. Twelve raw copy refusals cover
+operand types, source/destination kinds, negative offsets/counts and each
+buffer limit, with both buffers unchanged. Nonzero byte offsets and overlapping
+Unicode copies match native. The R11 lock controls, R10 complex
+controls, low-bit-first bit-vector byte check and generated READY admission
+control remain in the run. The first constructor failure is retained.
 
-R10's scalar-complex lowering and checks remain in this stacked proposal, as do
-the low-bit-first raw bit-vector observation, image admission controls, generated
-admission-guard omission and native-state restoration. Shared compiler, runtime
-and CCL sources remain unchanged pending review. Native R6/R6a qualifies the
-complete proposed files; the validation capacity change also runs through the
-full regression corpus.
+Shared compiler, runtime and CCL files in the checkout remain unchanged; the
+isolated proposal carries the changes above. R10 and R11 remain unreviewed
+predecessors in this stack. Native qualification binds the final proposed
+backend and source files. Full target
+regression executes once; retention does not claim another execution.
 
-The first lock witness correctly refused at `LOCK-NAME`: its `REQUIRE-TYPE`
-reached the missing lock classifier. The retained failure and diagnostic calls
-identify that boundary. The corrected initializer installs the classifier into
-its private class-table copy. The scheduler file still stops at `sched_yield`
-after the selected public lock definitions; it is recorded, not counted as a
-complete file or silently ignored.
-
-## Results and retention
-
-The full proposed compiler/runtime passes 26,048 fresh regression comparisons,
-including the collector-owner checks. Four cold boots at both placements,
-with and without movement, pass 50 support comparisons and 1,306 collections.
-Twenty boot refusals, 31 image admission checks, eight lock layout rows and the
-lock-count omission pass. The registry capacity/overlap controls refuse without
-memory writes. R10's sixteen scalar-complex rows and four omissions still pass.
-Fresh R6/R6a passes 21,843 native tests and restores all 164 FASLs, bound to all
-35 final compiler/CCL proposal files.
-
-The READY census is 797 modules, with missing edges reduced from 57 to 55 and
-50 indirect modules remaining. Neither a stream-layer completion nor an LL15
-acceptance follows from that conservative dependency census.
-
-The complete author run is retained separately from development continuations.
-Native qualification is reused only against identical final proposal sources.
-The session key now explicitly includes all three source files read by the
-lock derivation, in addition to the derivation and compiler/driver identities.
-Original failed compiler inputs, the registry refusal and the lock classifier
-failure are retained. No execution is claimed during retention.
+The final run passes 26,048 fresh corpus comparisons, four cold boots with
+1,490 collections, 60 support comparisons and 20 boot refusals. Native
+R6/R6a passes 21,843 tests and restores all 164 FASLs, bound to the exact
+35-file proposal. The static walk has 814 modules, 57 missing edges and
+53 indirect modules; it includes the two IOBLOCK writers as explicit callback
+roots. The initial author script stopped only in the final attribution report
+when those roots were missing. The corrected reports reuse that completed
+execution, with the failure and phase provenance retained. Reader and control
+wall times were not saved before the reporting failure and remain unrecorded.
+No class/GF expansion or LL15 slot credit is claimed.
 
 ## Reproduce
 
 ```sh
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r11 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r12 /private/tmp/ccl-work/claude/ready/verify
 ```
 
-Native qualification can be rebuilt independently with `native.py` under a
-managed `ccl-work` output root. The saved native compiler image is review
-tooling, never the port's heap. Historical packets replay at their recorded
-source revisions. Replacement attribution, startup callback dispositions and
-the remaining unresolved/indirect READY edges are still owed.
+Native qualification can be rebuilt with `native.py` under a managed output
+root. Historical packets replay at their recorded commits. LL15 remains open:
+closure edges, indirect calls, replacement attribution and the 35 startup
+callback dispositions still need completion.

@@ -74,7 +74,7 @@ def measurements(out):
         mapping_functions=6,mapping_callbacks_per_boot=22,function_classes_per_boot=4,
         radix_initializer_source='level-0/l0-int.lisp',native_word_bits=61,target_word_bits=30,
         radix_globals_cleared_before_boot=True,initializer_omission_refused=True,
-        return_it=True,stream_support_claim=False,
+        return_it=True,stream_support_claim="native basic string output; explicit fixture construction; no file or OS stream",stream_layout_checks=8,stream_count_omissions=1,ivector_copy_refusals_per_boot=12,integer_stream_pairs_per_boot=24,
         unsupported_native_closure_refused=True,projected_generic_functions=50,
         integer_magnitudes_per_boot=13,symbol_lookups_per_boot=9,
         ctype_predicates_per_boot=7,type_method_results_per_boot=10,collecting_type_method_calls_per_boot=6,
@@ -106,6 +106,8 @@ def run(out):
     local('complex_controls').check(out)
     times['lock_shapes']=c.command([c.NODE,HERE/'lock-shapes.mjs',out/'compiled',out/'lock-shapes.json'],out/'lock-shapes.log',timeout=60)
     local('lock_controls').check(out)
+    times['stream_shapes']=c.command([c.NODE,HERE/'stream-shapes.mjs',out/'compiled',out/'stream-shapes.json'],out/'stream-shapes.log',timeout=60)
+    local('stream_controls').check(out)
     times['registry_controls']=c.command([c.NODE,HERE/'registry-controls.mjs',out/'compiled',out/'registry-controls.json'],out/'registry-controls.log',timeout=60)
     for mode,name in [('write','writer'),('read','reader')]:
         times[name]=c.command([c.NODE,HERE/'run.mjs',out/'compiled',mode,out/'images',out/(name+'.json')],
@@ -122,6 +124,8 @@ def run(out):
 def summarize(out):
     assert c.read(out/'registry-controls.json')['status']=='PASS'
     assert c.read(out/'lock-shapes.json')['status']=='PASS'
+    assert c.read(out/'stream-shapes.json')['status']=='PASS'
+    assert c.read(out/'stream-controls.json')['status']=='PASS'
     assert c.read(out/'lock-controls.json')['status']=='PASS'
     assert c.read(out/'complex-shapes.json')['status']=='PASS'
     assert len(c.read(out/'complex-controls.json')['rows'])==4
@@ -131,7 +135,7 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==19
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==21
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
@@ -143,7 +147,7 @@ def summarize(out):
     assert all(r['directEntry'] and r['rootsPreserved']==7 for r in reader['refusals'] if r['rejected'].startswith('image-'))
     assert reference['values'][:4]==[612,50,43,41]
     for result in writer['results']+reader['results']:
-        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS']
+        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS','READY-STRING-OUTPUT','READY-TYPE-WIDTHS']
         assert len(result['profileChecks'])==1
         check=result['profileChecks'][0]
         assert check['admitted'] and check['rootsPreserved']==7
@@ -168,9 +172,9 @@ def summarize(out):
         full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=50,controls=len(reader['refusals']),
-        image_admission_controls=31,lock_layout_checks=8,lock_count_omissions=1,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=50,profile_refusals=8,public_table_bindings=4,native_state_restorations=19,
+        image_admission_controls=31,ivector_copy_refusals_per_boot=12,stream_layout_checks=8,stream_count_omissions=1,lock_layout_checks=8,lock_count_omissions=1,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=60,profile_refusals=8,public_table_bindings=4,native_state_restorations=21,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
-        original_definition_credit=12,slot_credit=False,
+        original_definition_credit=18,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')
     c.save(out/'summary.json',report);return report
 
