@@ -1,92 +1,95 @@
-# Projected-image READY join — R6
+# Projected-image READY join — R7
 
 Original-definition credit remains **550 / 515 non-NIL**, with no LL15 slot
-claim. This revision executes CCL's native bignum printer and list helpers
-through cold READY, and builds the printer's radix tables on the target.
-It carries the unintegrated R5 compiler/owner proposal without changing its
-compiler, runtime or CCL source bytes.
+claim. This revision repairs all five standalone INVOKE-TYPE-METHOD callers
+by compiling their complete `l1-typesys.lisp` environment. It carries the
+reviewed R5 MAKE-STRING proposal without integration or compiler changes.
 
-## Native printer and startup state
+## Type-method dispatch and internal structures
 
-R5's fixnum resource strings hid a file-environment gap: the standalone
-`%PR-INTEGER` module called `WITH-ONE-NEGATED-BIGNUM-BUFFER` as a function.
-`numeric-files.lisp` now compiles all of `l0-int.lisp` through CCL's file
-compiler and selects `%INTEGER-TO-STRING`, `%PR-INTEGER` and `PRINT-BIGNUM-2`
-in class mode. The macro expands normally. The selected module names, source
-files and binary hashes are asserted in `startup-support.json`.
+CSUBTYPEP, CELL-CSUBTYPEP-2, TYPE=, TYPE-UNION2 and TYPE-INTERSECTION2 now bind
+to whole-file class-mode modules. INVOKE-TYPE-METHOD expands normally instead
+of becoming a missing function. The new native comparison exercises CSUBTYPEP
+and TYPE=: identity, simple methods, absent complex methods, left-method
+argument order, right-method precedence, multiple values and collections
+inside callbacks. The method tables and callbacks are directed inputs; this
+does not claim full CType-system initialization. Restoring either old
+standalone binding is a retained refusal control.
 
-`READY-INITIALIZE` runs the native top-level radix-table initializer after
-image admission. The native reader compares the submitted body with the
-original DO* in `l0-int.lisp`, allowing only its six lexical variable symbols
-to differ by package. The body allocates and publishes `*BASE-POWER*` and
-`*FIXNUM-POWER--1*` using the target's 30-bit fixnums. The oracle runs the same
-body with its 61-bit fixnums; the tables deliberately differ, while formatted
-strings must match exactly. This is a level-0 top-level effect, not one of the
-35 registered startup callbacks.
+The test exposed READY's old fixture shortcut that classified every internal
+structure as a hash table. READY now installs the native `l1-clos-boot` ISTRUCT
+classifier: use the cell's wrapper, otherwise FIND-CLASS by name, otherwise
+INTERNAL-STRUCTURE. Its lambda is reader-compared with upstream, allowing only
+three lexical symbols' package differences. The working class vector is
+copied with the accepted typed-vector copy primitive, keeping the loaded
+image graph unchanged. The table-binding witness no longer repeats
+CORE-CONDITION-PREPARE after initialization and overwrites the new table.
 
-Every boot starts with both radix globals cleared. The native comparison covers
-11 signed integers in bases 2, 8, 10, 16 and 36: zero, target fixnum boundaries,
-±2^60 and dense larger bignums. Each of the 55 results survives a collection.
-Replacing the initializer's function cell with a non-initializing entry must
-refuse. The harness cannot satisfy this check using projected host tables.
+Only the target needs this startup effect; native CCL already initialized its
+static class table. Every native oracle entry asserts that table is unchanged.
+The caller observes classification with a wrapper, with the wrapper cleared,
+and with an unknown internal-structure name, with collection between states.
 
-## Native list dependencies
+## Standalone macro screen
 
-The complete `lib/lists.lisp` environment supplies unchanged `LDIFF`, `MAPC`
-and `MAP1`. The caller reaches their public function cells indirectly, checks
-LDIFF's identity stop and dotted-tail copying, then calls MAPC with unequal
-length lists. Its closure accumulates results and collects on each callback;
-the result must preserve the first list's identity and stop at the shorter
-list. The dependency census includes both explicitly exercised public cells.
+`macro-calls.json` checks every standalone `scan_*` module's emitted callees
+against all upstream DEFMACRO name sites, and records which bindings READY
+actually selects. This is a conservative name screen: reader conditionals,
+lexical shadowing and same-name native functions need file-environment
+qualification. It does not silently discard matches or count them as working
+functions. A reintroduced INVOKE-TYPE-METHOD graph edge fails the census.
+The screen covers 1,749 standalone modules against 1,182 macro names: 33
+candidate edges in 30 modules. Thirty-one are superseded bindings; the two
+unreached candidates are %INTEGER-ABS → NUMBER-CASE and
+%GET-HASHED-HTAB-SYMBOL → HTVEC. Neither is counted as usable READY code.
+No screened standalone macro-name candidate remains in the selected graph.
 
-The writer and all four cold readers execute both support callers, giving ten
-native comparisons containing 275 string results and fifteen MAPC callbacks.
-The four cold boots complete 282 collections; all 16 refusal controls pass.
-Native PROGV restores all five affected oracle globals after each of the eleven
-submitted entries, including the new radix tables.
+## Carried READY contract and limits
 
-## Carried READY contract
+The native bignum printer, target radix tables, LDIFF/MAPC, generated image
+admission, owner-installed public table bindings, moving heap keys and
+class-based conditions remain covered. Four cold boots use both placements
+and movement variants. Seven startup roots are checked on image refusal.
+The copied radix initializer and ISTRUCT lambda are reader-checked startup
+scaffolding, to be replaced by the real file's top-level initialization.
+The per-name driver lists and READY qualification callers are interim too.
+The heap-image/owner contracts and MAKE-STRING compiler capability are durable.
 
-The R5 proposal fixes MAKE-STRING's native allocation self-call using the
-existing checked allocator. The boot owner installs all four public EQ table
-bindings before invoking generated admission. Eight corrupted class/method
-images enter READY-START directly; refusal preserves seven startup roots,
-including the radix globals. Deleting the generated admission guard must fail
-root preservation. The seven owner checks, 31 loader checks, moving heap-key
-control and poisoned legacy condition registry remain in force.
+The full static dependency closure, upstream body attribution for the
+replacement cap, printer stream-lock paths and all 35 registered callback
+obligations remain open. Successful directed method-table inputs do not
+resolve every indirect call. Corpus hashes bind one run; they are not semantic
+cross-packet comparisons when symbol numbers change.
 
-The image contains 612 classes and 33 generic functions. READY uses class
-conditions, strong populations, one Worker, disabled scheduler/finalization,
-and uncached dispatch. The owner publishes READY after return and FAILED on
-throw. R6 adds no new C or JS implementation of Lisp library functions.
+## Results
 
-## What remains
+The author corpus passed 26,048 fresh comparisons. The writer and four cold
+readers compare 50 type-method outcomes, 30 collecting callbacks and 15
+internal-structure classifications, in addition to the carried READY cases.
+Four cold boots make 314 collections. All 18 refusal controls pass, including
+restoring standalone CSUBTYPEP (checked 2) and TYPE= (checked 4).
 
-The conservative walk includes **646 modules, 113 operators and 30,682
-occurrences**, with 86 missing edges naming 61 callees and 38 indirect-call
-modules. It closes the spurious macro call, LDIFF and MAPC. Proper macro
-expansion and the additional library paths expose ABS and four float helpers;
-they remain explicit, as do printer stream-lock branches. RETURN-IT is true
-for these formatting calls; this packet does not implement stream support.
+The conservative closure now has 652 modules, 113 operators and 31,081
+occurrences, with 84 missing edges naming 60 functions and 41 indirect-call
+modules. These counts still do not qualify LL15 closure.
 
-The replacement census includes all 602 named modules and all 175 modules
-without source attribution. A candidate upstream name is not form equality;
-the replacement cap is not claimed. All 35 registered startup callbacks remain
-undischarged against this incomplete closure. LL15-a/c/d remain open.
+Development records retain the initial checked failures, a probe dependency
+on the unavailable CLASS-NAME generic (the observer now uses CCL's class-name
+slot accessor), the attempted PROGV binding of native static variables, and
+the COPY-SEQ/repeated-prepare failures. COPY-SEQ's unresolved array-type startup
+state is not claimed fixed by selecting the typed-vector copy primitive.
 
-## Reproduce and qualification reuse
+## Reproduce
 
 ```sh
-python3 tests/wasm/stage1/ready/run.py /private/tmp/ccl-work/claude/ready/replay
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r6 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-23-stage1-ready-join-r7 /private/tmp/ccl-work/claude/ready/verify
 ```
 
-Choose either command; they are not two required passes. The changed whole-file
-driver passes 26,048 fresh corpus comparisons (zero inherited), plus the
-writer, cold readers and controls. All 33 proposed compiler/CCL source files equal R5, so its 21,843-test
-R6/R6a qualification is reused by complete source identity. `native-reuse.json`
-binds that packet and its native reports; no native rebuild is claimed.
-
-Caches are disposable. The saved native compiler image is review tooling,
-not the target heap. Retention keeps the clean author execution and removes
-its disposable output. Historical packets replay from their own revisions.
+This runs the full corpus and the READY checks once. The author run executes
+26,048 fresh corpus comparisons; submitted READY probe refinements reuse that
+unchanged bound corpus, not a second claimed execution. Development inputs and
+failures are retained. All 33 proposed compiler/CCL files remain byte-equal to
+R5, so its native R6/R6a qualification is reused by exact identity.
+`native-reuse.json` binds the qualification; no native rebuild is claimed.
+Caches and scratch are disposable. The saved native compiler image is review
+tooling, never the port's heap.

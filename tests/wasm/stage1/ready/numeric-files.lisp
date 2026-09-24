@@ -138,7 +138,8 @@
 
 ;;; Keep the file compiler's lexical macro environment while selecting the
 ;;; runtime helpers it emits; macro expander functions are not runtime APIs.
-(dolist (entry '(("ccl:level-0;l0-int.lisp" ccl::%integer-to-string ccl::%pr-integer ccl::print-bignum-2)
+(dolist (entry '(("ccl:level-1;l1-typesys.lisp" ccl::csubtypep ccl::cell-csubtypep-2 ccl::type= ccl::type-union2 ccl::type-intersection2)
+                 ("ccl:level-0;l0-int.lisp" ccl::%integer-to-string ccl::%pr-integer ccl::print-bignum-2)
                  ("ccl:lib;sequences.lisp" make-string)
                  ("ccl:lib;level-2.lisp" ccl::prepare-to-destructure)
                  ("ccl:level-1;l1-utils.lisp" ccl::check-keywords adjoin caddr cdddr fdefinition symbol-function)

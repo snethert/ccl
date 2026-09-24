@@ -52,7 +52,7 @@ def retain(out,packet,native):
     target=packet/'proposal'/backend;target.parent.mkdir(parents=True)
     shutil.copyfile(out/'base/compiled/proposal/files'/backend,target)
     for name in ('summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
-                 'startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json','execution-reuse.json'):
+                 'macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json','execution-reuse.json'):
         if (out/name).exists():shutil.copyfile(out/name,packet/name)
     compiled=out/'compiled'
     for name in ('ready-compile.json','probe-completion.json','class-image-code.json','class-image-code.sha256'):
@@ -75,14 +75,15 @@ def retain(out,packet,native):
     for path in (HERE.parent/'startup-resets/selection.json',HERE.parent/'startup-runtime/classification.json',
                  c.ROOT/'doc/WASM/stage1/ready-decision.json',c.ROOT/backend,
                  c.ROOT/'lib/sequences.lisp',c.ROOT/'level-1/l1-aprims.lisp',
-                 c.ROOT/'level-0/l0-int.lisp',c.ROOT/'lib/lists.lisp'):
+                 c.ROOT/'level-0/l0-int.lisp',c.ROOT/'lib/lists.lisp',
+                 c.ROOT/'level-1/l1-typesys.lisp',c.ROOT/'level-1/l1-clos-boot.lisp'):
         pins[str(path.relative_to(c.ROOT))]=c.sha(path)
     c.save(packet/'pins.json',pins)
     shutil.copytree(HERE,packet/'source',ignore=shutil.ignore_patterns('__pycache__'))
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
        accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=False,native_reuse=reuse['packet'],shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R6',files=c.inventory(packet),
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R7',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)
@@ -101,7 +102,7 @@ def verify(packet,out):
     assert (out/'base/compiled/proposal/files'/local('compiler').BACKEND).read_bytes()==(packet/'proposal'/local('compiler').BACKEND).read_bytes()
     assert result==c.read(packet/'summary.json')
     assert c.read(out/'coverage.json')==c.read(packet/'coverage.json')
-    for name in ('startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
+    for name in ('macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
         assert c.read(out/name)==c.read(packet/name),name
     return dict(status='PASS',execution_rebuilt=True,native_rebuilt=False,
                 native_reuse='exact complete proposal-source identity',summary=result)

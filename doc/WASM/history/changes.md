@@ -4426,3 +4426,47 @@ All 33 proposed compiler/CCL files are byte-identical to R5; its native
 21,843-test qualification is reused by exact identity. The changed whole-file
 driver passes 26,048 fresh corpus comparisons (zero inherited). No shared-source integration,
 new C/JS library implementation or replay claim during retention.
+
+
+### Audit 171 — READY R5/R6 reviewed
+
+Audit `563cda7f` imported verbatim at `df8ef84c`. No defect and no slot credit.
+O-52 requires checking standalone modules for macro names compiled as calls;
+R7 continues within READY. O-53: raw corpus hashes bind each execution, not
+semantic equality across symbol renumbering. O-54–O-56: the copied, reader-checked
+radix initializer and the per-name driver/READY scaffolding are interim. CCL's
+whole-system startup replaces them in Stage 2. Heap-image/owner contracts and
+the MAKE-STRING compiler capability are durable; no further integration is
+claimed here. Radix clearing is defensive because projection carries no such
+cells; the missing-initializer control, not clearing alone, tests the effect.
+
+
+### READY R7 — type-method environments and internal-structure classification
+
+Original-definition credit stays 550/515; no LL15 slot claim. The five
+INVOKE-TYPE-METHOD callers now bind to complete l1-typesys file-environment
+compilations. A screen of all 1,749 standalone modules against upstream macro
+name sites records 33 candidate edges in 30 modules: 31 superseded bindings,
+two unselected candidates, none reached in READY. It does not confuse a
+name screen with lexical/reader-environment proof.
+
+The new caller exercises unchanged CSUBTYPEP/TYPE= on directed method tables:
+identity, simple and complex dispatch, argument order, right-method precedence,
+defaults, multiple values and collection inside callbacks. Old standalone
+bindings are rejected by the same caller. The test exposed the old fixture's
+blanket hash-table classification for ISTRUCT. READY now installs CCL's native
+classifier lambda, reader-compared with l1-clos-boot: wrapper, class lookup by
+name, then INTERNAL-STRUCTURE. A typed copy keeps the loaded graph unchanged;
+the table-binding witness no longer reinitializes the class table afterward.
+The native static class table is untouched and checked after all twelve oracle
+entries. The copied initializer remains declared Stage 1 scaffolding.
+
+26,048 fresh corpus comparisons pass; four cold boots pass with 314 collections
+and 18 refusal controls. Fifty type-method outcomes and fifteen classification
+observations match native across writer/readers. The unchanged 33-file proposal
+reuses R5's R6/R6a evidence by exact source identity. Probe development failures
+are retained, and only the submitted probe file was rebuilt for those fixes.
+No shared compiler/runtime/CCL source changed; no second corpus or native run
+is claimed. The static walk has 652 modules / 113 operators / 31,081 occurrences,
+84 missing edges / 60 names and 41 indirect modules. Replacement attribution,
+printer locks and 35 callback dispositions remain open.

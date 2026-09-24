@@ -52,7 +52,7 @@
 ;;; Exercise the public function cells, not the compiler's direct-call
 ;;; substitution. Those cells must use the admitted table implementation too.
 (defun ready-table-bindings (image)
-  (core-condition-prepare image)
+  (declare (ignore image))
   (let ((table (ccl::%wasm-make-class-table 4))
         (keys nil)
         (sum 0))
@@ -148,12 +148,87 @@
         (list prefix dotted-copy (eq answer numbers) sum
               (nreverse visited) (eq (cddr list) tail))))))
 
+(defun ready-type-methods (image)
+  (declare (ignore image))
+  (let* ((class1 (make-array 16 :initial-element nil))
+         (class2 (make-array 16 :initial-element nil))
+         (a (ccl::%istruct 'ccl::named-ctype class1 nil 'a))
+         (b (ccl::%istruct 'ccl::named-ctype class1 nil 'b))
+         (c (ccl::%istruct 'ccl::named-ctype class2 nil 'c))
+         (ccl::*empty-type* nil)
+         (ccl::*wild-type* nil)
+         (trace nil)
+         (answers nil))
+    (flet ((simple (x y)
+             (core-collect)
+             (push (list :simple (ccl::named-ctype-name x) (ccl::named-ctype-name y)) trace)
+             (values t t))
+           (left (x y)
+             (core-collect)
+             (push (list :left (ccl::named-ctype-name x) (ccl::named-ctype-name y)) trace)
+             (values nil t))
+           (right (x y)
+             (core-collect)
+             (push (list :right (ccl::named-ctype-name x) (ccl::named-ctype-name y)) trace)
+             (values nil nil)))
+      (setf (ccl::type-class-simple-= class1) #'simple
+            (ccl::type-class-simple-subtypep class1) #'simple)
+      (push (multiple-value-list (ccl::type= a a)) answers)
+      (push (multiple-value-list (ccl::csubtypep a a)) answers)
+      (push (multiple-value-list (ccl::type= a b)) answers)
+      (push (multiple-value-list (ccl::csubtypep a b)) answers)
+      ;; No complex method: the native macro's default is (VALUES NIL T).
+      (push (multiple-value-list (ccl::type= a c)) answers)
+      (push (multiple-value-list (ccl::csubtypep a c)) answers)
+      (setf (ccl::type-class-complex-= class1) #'left
+            (ccl::type-class-complex-subtypep-arg1 class1) #'left)
+      ;; TYPE= reverses arguments for the left method; CSUBTYPEP does not.
+      (push (multiple-value-list (ccl::type= a c)) answers)
+      (push (multiple-value-list (ccl::csubtypep a c)) answers)
+      (setf (ccl::type-class-complex-= class2) #'right
+            (ccl::type-class-complex-subtypep-arg2 class2) #'right)
+      ;; The right complex method has precedence over the left one.
+      (push (multiple-value-list (ccl::type= a c)) answers)
+      (push (multiple-value-list (ccl::csubtypep a c)) answers)
+      (let* ((cell (ccl::%svref a 0))
+             (old (ccl::istruct-cell-info cell))
+             (classes nil))
+        (unwind-protect
+            (progn
+              (ccl::set-istruct-cell-info cell nil)
+              (core-collect)
+              (push (ccl::%class.name (class-of a)) classes)
+              (ccl::set-istruct-cell-info cell
+                (ccl::%class.own-wrapper (find-class 'ccl::named-ctype)))
+              (core-collect)
+              (push (ccl::%class.name (class-of a)) classes)
+              (push (ccl::%class.name (class-of (ccl::%istruct 'ready-unclassified nil))) classes))
+          (ccl::set-istruct-cell-info cell old))
+        (list (nreverse answers) (nreverse trace) (nreverse classes))))))
+
 ;;; The selected image already contains initialized classes and method bodies.
 ;;; Reset host-lifetime state, publish its roots, and select uncached dispatch.
 (defun ready-initialize (image)
   (unless (eq (ready-image-status image) t)
     (error "The READY image is not finalized."))
   (core-condition-prepare image)
+  #+wasm32-target
+  (progn
+    (let* ((old ccl::*class-table*)
+           (length (length old))
+           (copy (make-array length :initial-element nil)))
+      (ccl::%copy-gvector-to-gvector old 0 copy 0 length)
+      (setq ccl::*class-table* copy
+            ccl::*istruct-class* (find-class 'ccl::internal-structure)))
+    ;; Native l1-clos-boot class-table initializer, reader-checked by the driver.
+    (setf (svref ccl::*class-table* target::subtag-istruct)
+          #'(lambda (i)
+              (let* ((cell (ccl::%svref i 0))
+                     (wrapper (ccl::istruct-cell-info cell)))
+                (if wrapper
+                  (ccl::%wrapper-class wrapper)
+                  (or (find-class (ccl::istruct-cell-name cell) nil)
+                      ccl::*istruct-class*))))))
   (ready-integer-print-tables image)
   (let ((gfs (cons (symbol-function 'ccl::eql-specializer-object) (svref image 8))))
     (dolist (entry (first (svref image 12)))

@@ -3700,17 +3700,29 @@
       "id": "STAGE1-READY-JOIN-R5",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r5/packet.json",
       "sha256": "3b7b09c4aa91bcfac5412f4294963af322e4a017d8b068e06b4e5af99557b2a2",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT",
       "slot_credit": false,
-      "scope": "READY R5 isolated MAKE-STRING self-call allocation fix and whole-file class-mode MAKE-STRING/%BADARG; owner installs public table bindings. 26048 fresh corpus comparisons, four cold boots / 46 collections, 15 refusals, seven owner checks, 31 loader controls and rejected initializer-guard omission. R6/R6a 21843 tests, 164 restored FASLs, 17 profiles. Full census enumerates 548 modules including 172 unattributed; 83 missing edges, 36 indirect modules, replacement attribution and 35 callbacks remain open. No shared-source integration or new original-definition/LL15 credit."
+      "scope": "READY R5 isolated MAKE-STRING self-call allocation fix and whole-file class-mode MAKE-STRING/%BADARG; owner installs public table bindings. 26048 fresh corpus comparisons, four cold boots / 46 collections, 15 refusals, seven owner checks, 31 loader controls and rejected initializer-guard omission. R6/R6a 21843 tests, 164 restored FASLs, 17 profiles. Full census enumerates 548 modules including 172 unattributed; 83 missing edges, 36 indirect modules, replacement attribution and 35 callbacks remain open. No shared-source integration or new original-definition/LL15 credit. Audit 171: no defect; no acceptance or LL15 credit. Macro-environment audit, temporary-scaffolding classification and full closure obligations carried into R7.",
+      "review_commit": "563cda7fed28741bd8b0e4471a8e49a026ff3eb6",
+      "review_sha256": "e49be5760bcbfb5d88e09c49d034ae3839ff0fde96358af25a408d29445f239e"
     },
     {
       "id": "STAGE1-READY-JOIN-R6",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r6/packet.json",
       "sha256": "39d6a0b2b75e8b148f9b9c4f6ce16c25a964efea2a0da9d4f3e1509d86c8b0c3",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "slot_credit": false,
+      "scope": "READY R6 native l0-int printer in its whole-file macro environment, target radix-table initialization, native LDIFF/MAPC/MAP1. 55 integer/radix pairs per boot, 282 cold-boot collections, 16 refusals, seven preserved startup roots. Full corpus 26048 fresh comparisons; all 33 proposal sources equal R5 for native qualification reuse. Closure 646 modules, 86 missing edges/61 names, 38 indirect modules. No integration or LL15/original-definition credit. Audit 171: no defect; no acceptance or LL15 credit. Macro-environment audit, temporary-scaffolding classification and full closure obligations carried into R7.",
+      "review_commit": "563cda7fed28741bd8b0e4471a8e49a026ff3eb6",
+      "review_sha256": "e49be5760bcbfb5d88e09c49d034ae3839ff0fde96358af25a408d29445f239e"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R7",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-23-stage1-ready-join-r7/packet.json",
+      "sha256": "c37d59c6bbb0eb93d8ebfc77bfd5d9ee3edc5cb820b88c3d391d98a7ec72567c",
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
-      "scope": "READY R6 native l0-int printer in its whole-file macro environment, target radix-table initialization, native LDIFF/MAPC/MAP1. 55 integer/radix pairs per boot, 282 cold-boot collections, 16 refusals, seven preserved startup roots. Full corpus 26048 fresh comparisons; all 33 proposal sources equal R5 for native qualification reuse. Closure 646 modules, 86 missing edges/61 names, 38 indirect modules. No integration or LL15/original-definition credit."
+      "scope": "READY R7: five l1-typesys whole-file bindings remove INVOKE-TYPE-METHOD calls. Native ISTRUCT classifier installed on a copied working class table; ten directed method outcomes and three classifications per boot. 26048 fresh corpus comparisons, four cold boots / 314 collections, 18 refusals, admission-guard control. Screen of 1749 standalone modules yields 33 macro-name candidate edges, none reached. Closure 652 modules / 84 missing edges / 41 indirect modules; no LL15 credit or shared integration. Exact R5 native qualification reuse."
     }
   ],
   "current_runs": [
