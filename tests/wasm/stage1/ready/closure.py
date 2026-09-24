@@ -53,9 +53,9 @@ def census(probe):
     leafs = {owner('CCL', '%WASM-EQ-TABLE-' + op): op for op in ('GET', 'SET', 'REMOVE')}
     trampoline = owner('CCL', 'FUNCALLABLE-TRAMPOLINE')
     roots = [(r['name'], 'startup:' + r['definition']) for r in rows
-             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS')]
+             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS', 'READY-INTEGER-MAGNITUDE', 'READY-SYMBOL-LOOKUP', 'READY-CLASS-PROTOCOL', 'READY-SLOT-ERRORS')]
     roots += [(bindings[owner('COMMON-LISP', name)], 'exercised-function-cell:' + name)
-              for name in ('LDIFF', 'MAPC')]
+              for name in ('LDIFF', 'MAPC', 'MAPCAR', 'MAPLIST', 'MAPL', 'MAPCAN', 'MAPCON')]
     roots += [(bindings[source], 'ready-binding:' + owner_name(source))
               for source in aliases]
     edges, missing, primitives = [], [], set()
@@ -75,7 +75,21 @@ def census(probe):
         if target is None:
             missing.append(edge)
         return target
+    def value_functions(value):
+        if isinstance(value, dict):
+            if isinstance(value.get('value'), dict) and 'function' in value['value']:
+                yield value['value']['function']
+            else:
+                for child in value.values():
+                    yield from value_functions(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from value_functions(child)
     for i, node in enumerate(graph['nodes']):
+        for callee in value_functions(node):
+            target = follow('image-value:' + str(i), callee)
+            if target:
+                roots.append((target, 'image-value:' + str(i)))
         callee = node.get('function') or (trampoline if 'generic' in node else None)
         if callee:
             target = follow('image:' + str(i), callee)
@@ -152,6 +166,16 @@ def controls(probe):
         assert any(r['callee']=='COMMON-LISP::FIND-CLASS' for r in bad['missing'])
         assert not bad['complete']
         checks.append('uninstalled named callee stays missing')
+    def image_function(rows):
+        row = next(r for r in rows if r['definition']=='READY-START')
+        row['args'][0]['graph']['nodes'].append(
+            {'tag':250, 'fields':[{'value':{'function':find_class}}]})
+        return rows
+    with patch(__name__ + '.read', side_effect=altered('probe-native.json', image_function)):
+        changed = census(probe)
+        assert any(e['caller'].startswith('image-value:') and
+                   e['callee']=='COMMON-LISP::FIND-CLASS' for e in changed['edges'])
+        checks.append('first-class image function enters closure census')
     reached = {r['module'] for r in baseline['modules']}
     unused = next(m['name'] for m in read(probe/'compiled/modules.json') if m['name'] not in reached and not m['function'])
     with patch(__name__ + '.read', side_effect=altered('compiled/modules.json',

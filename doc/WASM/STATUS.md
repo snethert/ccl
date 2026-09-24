@@ -4,7 +4,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
-| Projected-image process READY | WORK IN PROGRESS | [READY R4](../../tests/wasm/stage1/ready/README.md): four public hash function cells use the reviewed EQ wrappers; generated admission checks finalized class/CPL/wrapper/method state before startup roots. Four cold boots, 38 collections, eight profile refusals and four old-binding controls pass. Static graph: 546 modules, 59 missing callees, 35 indirect-call modules. Closure/callback/replacement work remains in this unit; no slot credit. |
+| Projected-image process READY | WORK IN PROGRESS — R8 awaits review | [READY R8](../../tests/wasm/stage1/ready/README.md): native GCD, integer magnitude, package lookup, all six maps, CType and native MOP/slot protocols; 50 projected GFs. 26,048 corpus comparisons, four cold boots / 538 collections, 20 boot refusals; fresh R6/R6a PASS. All 33 screened macro-name candidates superseded. Closure: 738 modules, 66 missing edges, 49 indirect modules. No LL15 or original-definition credit. |
 | READY profile | ADOPTED by Steve | [Six decisions](stage1/ready-decision.json): projected image, executed-original coverage with 25 named replacements maximum, class conditions, one Worker with scheduling disabled, uncached GF dispatch, READY join next. LL15-c/d amended; other 31 criteria and accepted records unchanged. No implementation acceptance or slot credit. |
 | Claude audit 165 / class-growth integration | ACCEPTED AND INTEGRATED, default-off | Steve accepted with “accept”. [Integration record](stage1/integration-class-growth.json): two files equal reviewed bytes; all 33 native-qualified files and 417 source inputs checked. Reuses 26,048 comparisons and 21,843 native tests; no new execution. O-27 legacy identity is by inspection; O-28/O-29 payload and subclass boundaries disclosed; O-30 is carried. P4 implementation remains unchanged under separate review. |
 | P4 R2 / P5 workspace management | IMPLEMENTED; review pending, no slot credit | [Validation tooling](../../tests/wasm/stage1/bootstrap-validation/README.md): audit 166 imported verbatim at efc2270e. Declared driver inputs replace the development-file sweep; probe batches recover real uninterned SETF owners. Full 26,048 comparisons agree; default/class probe batches pass 40/16 comparisons. Managed outputs, active leases, two cached sessions and 2 GiB WABT bound; retention deletes validated run inputs. Historical evidence migration remains open. |
@@ -954,3 +954,19 @@ No shared compiler/runtime/CCL source changed; no second corpus or native run
 is claimed. The static walk has 652 modules / 113 operators / 31,081 occurrences,
 84 missing edges / 60 names and 41 indirect modules. Replacement attribution,
 printer locks and 35 callback dispositions remain open.
+
+
+### READY R8 — native numeric and MOP protocols from the cold image
+
+The final proposal passes 26,048 fresh corpus comparisons, four cold boots with 538 collections, 20 boot refusals and 31 image-admission controls. Seven support callers compare both results and represented post-state at each boot. The admission-guard omission control is rejected. Fresh native R6/R6a passes 21,843 tests and restores all 164 FASLs. No post-retention replay is claimed.
+
+The selected image now contains 50 generic functions (33 before). Native
+methods cover class/GF dependents, readers, CPL/default-initarg computation,
+funcallable slots, missing/unbound slots and USE-VALUE after collection. Two
+compiler fixes make TYPEP T/NIL and native unbound-slot dispatch executable.
+Whole-file bindings also close the remaining two macro-name candidates and
+execute GCD, integer magnitude, package lookup, all maps and CType predicates.
+The census expands from 652 to 738 modules while missing edges fall 84 to 66.
+Generic ABS, full replacement attribution, printer locks and callback
+dispositions remain open. This is one isolated review proposal, with no
+shared-source integration or LL15 credit.

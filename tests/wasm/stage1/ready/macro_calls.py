@@ -53,6 +53,15 @@ def census(probe, closure):
         selected = by_module[row['selected_module']]
         assert selected['source']=='ccl:level-1;l1-typesys.lisp'
         assert all(symbols[i]['name']!='INVOKE-TYPE-METHOD' for i in selected['dependencies'])
+    remaining = {'CCL::%INTEGER-ABS': ('CCL::NUMBER-CASE', 'ccl:level-0;l0-int.lisp'),
+                 'CCL::%GET-HASHED-HTAB-SYMBOL': ('CCL::HTVEC', 'ccl:level-0;nfasload.lisp')}
+    for name, (macro, source) in remaining.items():
+        matches = [r for r in rows if r['caller']==name and r['callee']==macro]
+        assert len(matches)==1 and matches[0]['disposition']=='SUPERSEDED_BINDING', name
+        selected = by_module[matches[0]['selected_module']]
+        assert selected['source']==source
+        assert all(symbols[i]['name']!=macro.split('::')[-1] for i in selected['dependencies'])
+    assert all(r['disposition']=='SUPERSEDED_BINDING' for r in rows)
     return dict(version=1, upstream=U1, standalone_modules=len(standalone),
                 macro_names=len(macros), candidates=rows,
                 candidate_modules=len({r['module'] for r in rows}),

@@ -1,4 +1,4 @@
-"""One READY-required lowering over the integrated compiler; isolated build only."""
+"""READY-required lowerings over the integrated compiler; isolated build only."""
 from pathlib import Path
 import hashlib
 import build as builder
@@ -44,7 +44,37 @@ def generate():
                   (bootstrap-numeric-call (ccl::afunc-name *pool-current*)
                                           (first (first args)))))"""
     assert text.count(old)==1
-    return text.replace(old,new)
+    text=text.replace(old,new)
+    start=text.index('(defun bootstrap-type-call (name forms)')
+    end=text.index(';;; Fixnum operands',start)
+    helper="""(defun bootstrap-type-literal (form)
+  ;; TYPEP's T and NIL type specifiers have dedicated NX1 operators.
+  (when (ccl::acode-p form)
+    (case (ccl::acode-operator-name (ccl::acode-operator form))
+      ((nil) (values nil t))
+      ((t) (values t t))
+      (otherwise (bootstrap-immediate form)))))
+
+"""
+    block=text[start:end]
+    assert block.count('(bootstrap-immediate ')==2
+    text=text[:start]+helper+block.replace('(bootstrap-immediate ', '(bootstrap-type-literal ')+text[end:]
+    old_slot='''               (when (eq op 'ccl::%slot-ref)
+                 (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s))'''
+    new_slot='''               (when (eq op 'ccl::%slot-ref)
+                 (if *b-cpl-conditions*
+                   (format s "(if (i32.eq (local.get ~a) (i32.const ~d)) (then (local.set ~a ~a)))"
+                           answer wasm32::subtag-slot-unbound answer
+                           (let ((*b-tail-position* nil) (*b-producer-target* nil))
+                             (bootstrap-primary
+                              (b-call (bootstrap-constant 'ccl::%slot-unbound-trap)
+                                      (list (list (make-b-raw-code :text object)
+                                                  (make-b-raw-code :text index)
+                                                  (bootstrap-constant nil)) nil)))))
+                   (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s)))'''
+    assert text.count(old_slot)==1
+    return text.replace(old_slot,new_slot)
+
 
 
 
@@ -55,10 +85,16 @@ def install():
         return dict(**environment(),ready_compiler=dict(
             base=c.sha(c.ROOT/BACKEND),proposal=hashlib.sha256(generate().encode()).hexdigest(),
             derivation=c.sha(Path(__file__)),
-            class_driver=c.sha(HERE/'numeric-files.lisp')))
+            class_driver=c.sha(HERE/'numeric-files.lisp'),
+            clos_methods=c.sha(HERE/'clos-methods.lisp'),
+            condition_methods=c.sha(HERE/'condition-methods.lisp'),
+            graph=c.sha(HERE/'graph.lisp')))
     def proposed(parent,stage):
         prepare(parent,stage)
         (stage/'driver/numeric-files.lisp').write_bytes((HERE/'numeric-files.lisp').read_bytes())
+        (stage/'driver/graph.lisp').write_bytes((HERE/'graph.lisp').read_bytes())
+        (stage/'driver/ready-clos-methods.lisp').write_bytes((HERE/'clos-methods.lisp').read_bytes())
+        (stage/'driver/condition-methods.lisp').write_bytes((HERE/'condition-methods.lisp').read_bytes())
         c.save(stage/'driver-manifest.json',c.inventory(stage/'driver'))
         path=stage/'compiled/proposal/files'/BACKEND
         assert path.read_bytes()==(c.ROOT/BACKEND).read_bytes(), 'READY compiler base differs'

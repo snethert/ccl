@@ -39,7 +39,7 @@ def measure(base,probe,output):
                    'Qualify the complete selected image interface, including unresolved closure metadata, before LL15 slot credit.']))
     assert result['original_executions']['count']==550
     assert result['original_executions']['non_nil']==515
-    assert len(gfs)==startup['values'][1]==33
+    assert len(gfs)==startup['values'][1]==50
     c.save(output,result)
     return result
 

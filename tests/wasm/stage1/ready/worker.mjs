@@ -290,8 +290,10 @@ import {sha256} from './runtime/sha256.mjs';
             x.package==='WASM32-COMPILER'&&x.name===name).id)+6;
           put(cell('READY-INTEGER-PRINT-TABLES'),get(cell('READY-IMAGE-STATUS')));
         }
-        if(workerData.fault?.startsWith('standalone-type-')){
-          const name=workerData.fault==='standalone-type-subtypep'?'CSUBTYPEP':'TYPE=';
+        if(workerData.fault?.startsWith('standalone-')){
+          const name={'standalone-type-subtypep':'CSUBTYPEP','standalone-type-equal':'TYPE=',
+            'standalone-integer-abs':'%INTEGER-ABS','standalone-symbol-lookup':'%GET-HASHED-HTAB-SYMBOL'}[workerData.fault];
+          assert(name,'unknown standalone control');
           const owner=ownerNames.find(x=>x.package==='CCL'&&x.name===name);
           const old=gen.mods.find(m=>m.name.startsWith('scan_')&&m.function===owner.id);
           assert(old,'missing original standalone '+name);
@@ -306,13 +308,6 @@ import {sha256} from './runtime/sha256.mjs';
 
       const priorIntegerCalls=integerCalls,priorFloatCalls=floatCalls;const rawValues=owner.start({image:loadedImage,entry:expected.name,args:actualArgs,
         owners:ownerNames,get,put,bindings:JSON.parse(fs.readFileSync(dir+'/ready-bindings.json')),invoke:bootInvoke});if(expected.definition==='CORE-TRANSCEND-DESTINATION')assert.equal(rawValues[0],rawValues[1],'target destination identity');const values=rawValues.map(decode);if(['MAX-2','MIN-2','/=-2','>=-2','<=-2'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number'&&Number.isInteger(x)&&Math.abs(x)<536870912)){assert.equal(floatCalls,priorFloatCalls,'fixnum comparison left Wasm');fastChecks++;}if(['1+','1-','CORE-INTEGER-DIVIDE'].includes(expected.definition)&&expected.args.every(x=>typeof x==='number')&&expected.values.every(x=>typeof x==='number'&&x>=-536870912&&x<=536870911)){assert.equal(integerCalls,priorIntegerCalls,'fixnum arithmetic left Wasm');assert.equal(floatCalls,priorFloatCalls,'fixnum arithmetic left Wasm');fastChecks++;}
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS']){
-        const witness=native.find(row=>row.definition===name);
-        assert(witness,'missing READY support oracle '+name);
-        const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
-        assert.deepEqual(values,witness.values,name+' native result');
-        supportChecks.push({name,values});
-      }
       const after=args.map((_,i)=>expected.after[i]?.graph ? decodeGraph(get(root+8+4*i),expected.after[i].graph,graphIO) : decode(get(root+8+4*i)));
       let expectedValues=expected.values;
       if(expected.definition==='CORE-SIGNED-ZERO-LITERAL'&&expected.args[0].double[0]===0x80000000){
@@ -407,6 +402,16 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS']){
+        const witness=native.find(row=>row.definition===name);
+        assert(witness,'missing READY support oracle '+name);
+        const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
+        assert.deepEqual(values,witness.values,name+' native result');
+        const after=decodeGraph(get(root+8),witness.after[0].graph,graphIO);
+        assert.deepEqual(after,witness.after[0],name+' native mutation');
+        supportChecks.push({name,values});
+      }
+
       loadedImage.initialize(()=>true);
       assert.equal(loadedImage.state,'READY');
       const value=name=>get(gen.ownerWords.get(ownerNames.find(x=>x.package==='CCL'&&x.name===name).id)+2);

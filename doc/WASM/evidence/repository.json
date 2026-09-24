@@ -1,32 +1,32 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "14d47ad34b56f6c48656b65b6df686194f50bc5c12f826a14f77bb4a373f29e5",
-  "commit": "77b9377b230be3a610c7bad1e6892f68c2cef153",
-  "immutable_evidence_files": 269460,
+  "catalog_sha256": "c9c0d46a26a2d84547a3001bfd2929f7b5c8f2edea20c17d2b01f357609278f9",
+  "commit": "39fc2fc8adb6575cbbcc626dd541890485278022",
+  "immutable_evidence_files": 269523,
   "last_scoped_addition": {
-    "directory": "2026-09-23-stage1-ready-join-r7",
-    "files": 58,
-    "bytes": 19136241
+    "directory": "2026-09-23-stage1-ready-join-r8",
+    "files": 63,
+    "bytes": 57796227
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY R7 type-method file environments and native internal-structure classification. Full author corpus, cold boots, controls; exact R5 native qualification reuse. No integration or LL15 credit.",
-  "source_index_sha256": "aebb288b4fc0c13872fa7f0a8115adfdcfa50175cbc52ebf4d472dbfee9af9ad",
-  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r7.json",
+  "scope": "READY R8: native GCD, integer magnitude, package-symbol lookup, six maps, CType and 50 projected GFs with native MOP/funcallable slot methods and condition payloads. All 33 standalone macro-name candidates superseded. 26048 fresh corpus comparisons; four cold boots / 538 collections, 20 refusals, 35 support comparisons. Closure 738 modules / 66 missing edges / 49 indirect modules. No shared integration or LL15/original-definition credit. Fresh R6/R6a on the final compiler proposal.",
+  "source_index_sha256": "60ff40ed189ef5e43cda13dba00bfd8d1e162748de9629647be472f8fbebcee5",
+  "source_index_snapshot": "catalog/source-index-2026-09-23-ready-join-r8.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-23-ready-join-r7-verification.json",
-    "report_sha256": "e6545019ad15b847c96292bd786818e0439b2d0594963763548195f5be4ece08",
+    "report": "2026-09-23-ready-join-r8-verification.json",
+    "report_sha256": "114bf138f1fc7d6588eb4b475b54f5ad4f846dce9e3f506558d71b552aa7600d",
     "execution_rebuilt_during_retention_verification": false,
     "full_execution_replayed": false,
     "complete_author_target_execution": true,
     "full_corpus_comparisons": 26048,
     "cold_boots": 4,
     "native_tests": 21843,
-    "native_rebuilt": false
+    "native_rebuilt": true
   }
 }

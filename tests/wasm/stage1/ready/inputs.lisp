@@ -59,7 +59,7 @@
          (original (mapcar #'symbol-value names))
          (native-classes (copy-seq ccl::*class-table*))
          (state (copy-list original)))
-    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods))
+    (dolist (name '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors))
       (let ((function (gethash name *core-native-functions*)))
         (setf (gethash name *core-native-functions*)
               (lambda (&rest arguments)
@@ -133,10 +133,36 @@
   (let ((*core-modules* nil) (*core-records* nil) (*core-files* nil))
     (core-compile-file (ccl:getenv "PROBE_SOURCE"))
     (ready-write-module-metadata *core-modules*))
+  ;; Bind the projected MOP entries to their real native GF/method identity.
+  (with-open-file (stream (concatenate 'string (ccl:getenv "PROBE_OUTPUT")
+                                      "ready-clos-methods.sexp")
+                          :direction :output :if-exists :error)
+    (let ((*print-pretty* nil))
+      (prin1 (list :methods *condition-method-specs*
+                   :readers *condition-reader-specs*) stream)))
   (ready-isolate-native-entries)
   (let ((image (cpl-image 'cpl-left)))
+    ;; UPDATE-DEPENDENT is intentionally an empty native generic function.
+    ;; Preserve that interface and its NO-APPLICABLE-METHOD behavior.
+    (let ((gf (symbol-function 'ccl::update-dependent)))
+      (assert (null (ccl::%gf-methods gf)))
+      (setf (gethash gf *generic-bindings*) 'ccl::update-dependent)
+      (setf (svref image 8) (append (svref image 8) (list gf))))
+    ;; A closure without an admitted environment must not flatten to a name.
+    (let ((old (svref image 2)) (capture (list :unqualified)))
+      (unwind-protect
+          (progn
+            (setf (svref image 2) (lambda () capture))
+            (let ((refused nil))
+              (handler-case (with-output-to-string (stream) (generic-graph-json image stream))
+                (error (condition)
+                  (assert (search "Unsupported native closure" (princ-to-string condition)))
+                  (setq refused t)))
+              (assert refused)))
+        (setf (svref image 2) old)))
+    (format t "READY-NATIVE-CLOSURE-REFUSED~%")
     (setf (svref (svref image 0) wasm32::subtag-istruct) (find-class 'hash-table))
     ;; The CHECK entry observes startup, without invoking the initializer.
     ;; Native execution follows the explicit entry order below.
-    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods)
+    (loop for name in '(ready-image-status ready-image-refusals ready-initialize ready-check ready-start ready-table-bindings ready-resource-strings ready-string-contract ready-integer-print-tables ready-integer-strings ready-list-callees ready-type-methods ready-integer-magnitude ready-symbol-lookup ready-class-protocol ready-slot-errors)
           collect (list name (list (list image))))))

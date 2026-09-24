@@ -4470,3 +4470,23 @@ No shared compiler/runtime/CCL source changed; no second corpus or native run
 is claimed. The static walk has 652 modules / 113 operators / 31,081 occurrences,
 84 missing edges / 60 names and 41 indirect modules. Replacement attribution,
 printer locks and 35 callback dispositions remain open.
+
+
+## 2026-09-23 — expand READY before the next validation round
+
+Steve asked to do more work before testing. R8 adds whole-file numeric,
+package and mapping paths together with native MOP/funcallable slot methods,
+condition payloads and restart recovery. The projected GF population grows
+33 to 50. The new paths exposed two compiler gaps: literal TYPEP T/NIL
+and %SLOT-REF bypassing CCL’s native unbound-slot trap. Both are fixed in
+the isolated proposal and exercised with collection. Final native R6/R6a
+is rebuilt for those compiler changes.
+
+The final proposal passes 26,048 fresh corpus comparisons, four cold boots with 538 collections, 20 boot refusals and 31 image-admission controls. Seven support callers compare both results and represented post-state at each boot. The admission-guard omission control is rejected. Fresh native R6/R6a passes 21,843 tests and restores all 164 FASLs. No post-retention replay is claimed.
+
+Original failures and exact development inputs are retained. READY and each
+support caller compare their own native post-state; later class-cache writes
+are no longer compared against an earlier snapshot. All 33 screened
+standalone macro-name edges now have whole-file replacements. The static
+graph still has 66 missing edges and 49 indirect modules; replacement and
+callback obligations remain open. No shared source or ledger credit changes.

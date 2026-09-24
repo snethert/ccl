@@ -21,6 +21,13 @@ def corpus(out):
         controls_sha256=c.digest([report['control_results'],report['extra_controls']]))
 
 def native_identity(out,native):
+    if (native/'proposal-identity.json').exists():
+        identity=c.read(native/'proposal-identity.json')
+        assert identity==c.inventory(out/'base/compiled/proposal/files'), 'native proposal identity'
+        assert c.read(native/'results/run.json')['status']=='PASS'
+        return dict(packet=None,native_rebuilt=True,source_identity=identity,
+                    basis='Fresh native qualification of this complete proposal',
+                    run_sha256=c.sha(native/'results/run.json'))
     identity=c.read(native/'native-proposal-identity.json')
     assert identity==c.inventory(out/'base/compiled/proposal/files'), 'native proposal identity'
     assert c.read(native/'native-run.json')['status']=='PASS'
@@ -38,6 +45,8 @@ def retain(out,packet,native):
                              ('ready-worker.mjs','worker.mjs')):
         assert (out/'compiled'/submitted).read_bytes()==(HERE/source).read_bytes(), source
     assert (out/'base/driver/numeric-files.lisp').read_bytes()==(HERE/'numeric-files.lisp').read_bytes()
+    for installed, source in (('ready-clos-methods.lisp','clos-methods.lisp'),('condition-methods.lisp','condition-methods.lisp'),('graph.lisp','graph.lisp')):
+        assert (out/'base/driver'/installed).read_bytes()==(HERE/source).read_bytes()
     reuse=native_identity(out,native)
     summarize(out);packet.mkdir()
     c.save(packet/'full-corpus.json',corpus(out))
@@ -46,8 +55,13 @@ def retain(out,packet,native):
         'execution-environment.json','case-ids.json','compiled/native.json',
         'build-completion.json','compile.log','oracle.log','execution.log'])
     c.save(packet/'native-reuse.json',reuse)
-    for name in ('native-proposal-identity.json','native-run.json'):
-        shutil.copyfile(native/name,packet/name)
+    if reuse['native_rebuilt']:
+        shutil.copyfile(native/'proposal-identity.json',packet/'native-proposal-identity.json')
+        shutil.copyfile(native/'results/run.json',packet/'native-run.json')
+        pack(native/'results',packet/'native-results.tar.gz',c.inventory(native/'results'))
+    else:
+        for name in ('native-proposal-identity.json','native-run.json'):
+            shutil.copyfile(native/name,packet/name)
     backend=local('compiler').BACKEND
     target=packet/'proposal'/backend;target.parent.mkdir(parents=True)
     shutil.copyfile(out/'base/compiled/proposal/files'/backend,target)
@@ -59,7 +73,7 @@ def retain(out,packet,native):
         if (compiled/name).exists():shutil.copyfile(compiled/name,packet/name)
     c.save(packet/'build-identity.json',c.read(out/'base/build-invocation.json'))
     names=['probe-output/probe-modules.json','probe-output/probe-native.json','probe-output/probe-callers.json']
-    names += ['probe-output/ready-modules.json']
+    names += ['probe-output/ready-modules.json','probe-output/ready-clos-methods.sexp']
     names += [str(p.relative_to(compiled)) for p in (compiled/'probe-output').glob('*.census-wat')]
     names += [str(p.relative_to(compiled)) for pattern in ('*.wat','*.wasm') for p in (compiled/'probe-output').glob(pattern)]
     names += ['compiled/symbols.json','compiled/pools.json']
@@ -75,15 +89,15 @@ def retain(out,packet,native):
     for path in (HERE.parent/'startup-resets/selection.json',HERE.parent/'startup-runtime/classification.json',
                  c.ROOT/'doc/WASM/stage1/ready-decision.json',c.ROOT/backend,
                  c.ROOT/'lib/sequences.lisp',c.ROOT/'level-1/l1-aprims.lisp',
-                 c.ROOT/'level-0/l0-int.lisp',c.ROOT/'lib/lists.lisp',
+                 c.ROOT/'lib/numbers.lisp',c.ROOT/'level-0/l0-int.lisp',c.ROOT/'level-0/nfasload.lisp',c.ROOT/'lib/lists.lisp',
                  c.ROOT/'level-1/l1-typesys.lisp',c.ROOT/'level-1/l1-clos-boot.lisp'):
         pins[str(path.relative_to(c.ROOT))]=c.sha(path)
     c.save(packet/'pins.json',pins)
     shutil.copytree(HERE,packet/'source',ignore=shutil.ignore_patterns('__pycache__'))
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
-       accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=False,native_reuse=reuse['packet'],shared_source_changes=False,
+       accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=reuse['native_rebuilt'],native_reuse=reuse['packet'],shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R7',files=c.inventory(packet),
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R8',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)
@@ -92,9 +106,13 @@ def verify(packet,out):
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     c.verify_files(c.ROOT,c.read(packet/'pins.json'))
     reuse=c.read(packet/'native-reuse.json')
-    parent=c.STORE/reuse['packet']
-    assert c.sha(parent/'packet.json')==reuse['packet_sha256']
-    c.verify_files(parent,reuse['files'])
+    if reuse['packet']:
+        parent=c.STORE/reuse['packet']
+        assert c.sha(parent/'packet.json')==reuse['packet_sha256']
+        c.verify_files(parent,reuse['files'])
+    else:
+        assert reuse['native_rebuilt'] and reuse['run_sha256']==c.sha(packet/'native-run.json')
+        assert reuse['source_identity']==c.read(packet/'native-proposal-identity.json')
     result=run(out)
     assert corpus(out)==c.read(packet/'full-corpus.json')
     assert c.inventory(out/'base/compiled/proposal/files')==c.read(packet/'native-proposal-identity.json')

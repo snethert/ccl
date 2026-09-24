@@ -146,7 +146,158 @@
                            (core-collect))
                          numbers '(10 20 30))))
         (list prefix dotted-copy (eq answer numbers) sum
-              (nreverse visited) (eq (cddr list) tail))))))
+              (nreverse visited) (eq (cddr list) tail)
+              (mapcar (lambda (x y) (core-collect) (+ x y)) numbers '(10 20 30))
+              (maplist (lambda (tail) (core-collect) (length tail)) numbers)
+              (eq numbers (mapl (lambda (tail) (core-collect) (car tail)) numbers))
+              (mapcan (lambda (n) (core-collect) (list n (- n))) numbers)
+              (mapcon (lambda (tail) (core-collect) (list (length tail))) numbers))))))
+
+(defun ready-class-protocol (image)
+  (declare (ignore image))
+  (let* ((class (find-class 'cpl-derived))
+         (gf (symbol-function 'make-instance))
+         (answers nil)
+         (original-class-dependents (ccl::%class.dependents class))
+         (original-gf-dependents (ccl::sgf.dependents gf)))
+    ;; Invoke projected generic functions through their installed cells.
+    ;; The oracle uses the real native metaobjects, so restore their lists.
+    (unwind-protect
+        (progn
+          (setf (ccl::%class.dependents class) nil
+                (ccl::sgf.dependents gf) nil)
+          (dolist (object (list class gf))
+            (funcall (symbol-function 'ccl::add-dependent) object :first)
+            (funcall (symbol-function 'ccl::add-dependent) object :second)
+            (funcall (symbol-function 'ccl::add-dependent) object :first)
+            (core-collect)
+            (let ((seen nil))
+              (funcall (symbol-function 'ccl::map-dependents) object
+                (lambda (dependent) (core-collect) (push dependent seen)))
+              (push (nreverse seen) answers))
+            (funcall (symbol-function 'ccl::remove-dependent) object :second)
+            (core-collect)
+            (let ((seen nil))
+              (funcall (symbol-function 'ccl::map-dependents) object
+                (lambda (dependent) (push dependent seen)))
+              (push (nreverse seen) answers)))
+          (push (funcall (symbol-function 'class-name) class) answers)
+          (push (eq (funcall (symbol-function 'ccl::class-own-wrapper) class) (ccl::%class.own-wrapper class)) answers)
+          (push (mapcar (symbol-function 'class-name) (funcall (symbol-function 'ccl::class-direct-superclasses) class)) answers)
+          (push (not (null (ccl::memq class (funcall (symbol-function 'ccl::class-direct-subclasses) (find-class 'cpl-diamond))))) answers)
+          (push (mapcar (lambda (slot) (list (funcall (symbol-function 'ccl:slot-definition-name) slot)
+                                            (funcall (symbol-function 'ccl::slot-definition-allocation) slot)))
+                        (funcall (symbol-function 'ccl:class-slots) class)) answers)
+          (push (funcall (symbol-function 'ccl::generic-function-name) gf) answers)
+          ;; TYPEP must recognize both NX1 truth constants and still evaluate
+          ;; its operand exactly once, including a collection.
+          (let ((count 0))
+            (push (list (typep (progn (incf count) (core-collect) gf) t)
+                        (typep (progn (incf count) (core-collect) gf) nil)
+                        count) answers))
+          (let ((name (slot-value gf 'ccl::name)))
+            (unwind-protect
+                (progn
+                  (setf (slot-value gf 'ccl::name) :ready-temporary)
+                  (core-collect)
+                  (push (list (slot-boundp gf 'ccl::name)
+                              (funcall (symbol-function 'ccl::generic-function-name) gf))
+                        answers))
+              (setf (slot-value gf 'ccl::name) name)))
+          (push (equal (funcall (symbol-function 'ccl::generic-function-methods) gf) (ccl::%gf-methods gf)) answers)
+          (push (funcall (symbol-function 'ccl::generic-function-lambda-list) gf) answers)
+          (push (mapcar (symbol-function 'class-name) (funcall (symbol-function 'ccl::compute-class-precedence-list) class)) answers)
+          (push (mapcar (lambda (entry) (list (car entry) (funcall (third entry))))
+                        (funcall (symbol-function 'ccl::compute-default-initargs) class)) answers)
+          (let* ((count 19)
+                 (closure (lambda () (incf count))))
+            (core-collect)
+            (push (list (funcall (symbol-function 'class-name) (class-of #'identity))
+                        (funcall (symbol-function 'class-name) (class-of closure))
+                        (funcall (symbol-function 'class-name) (class-of (ccl::%method-function (car (ccl::%gf-methods gf)))))
+                        (funcall (symbol-function 'class-name) (class-of gf))
+                        (funcall closure)) answers))
+          (nreverse answers))
+      (setf (ccl::%class.dependents class) original-class-dependents
+            (ccl::sgf.dependents gf) original-gf-dependents))))
+
+(defun ready-slot-errors (image)
+  (declare (ignore image))
+  (let ((object (make-condition 'cpl-derived)))
+    (list
+      (handler-case
+          (funcall (symbol-function 'ccl::update-dependent)
+                   (find-class 'cpl-derived) :dependent)
+        (ccl::no-applicable-method-exists (condition)
+          (let ((arguments (slot-value condition 'ccl::args)))
+            (list (eq (slot-value condition 'ccl::gf)
+                      (symbol-function 'ccl::update-dependent))
+                  (eq (car arguments) (find-class 'cpl-derived))
+                  (cadr arguments)))))
+      (handler-case (slot-value object 'not-a-slot)
+        (simple-error (condition)
+          (let ((arguments (funcall (symbol-function 'simple-condition-format-arguments) condition)))
+            (list (funcall (symbol-function 'simple-condition-format-control) condition)
+                  (eq (car arguments) object) (cadr arguments)))))
+      (progn
+        ;; Use the admitted slot setter; the marker is CCL's real unbound value.
+        (setf (slot-value object 'payload) (ccl::%slot-unbound-marker))
+        (core-collect)
+        (handler-case (slot-value object 'payload)
+          (unbound-slot (condition)
+            (list (slot-value condition 'ccl::name)
+                  (eq (slot-value condition 'ccl::instance) object)))))
+      (handler-bind
+          ((unbound-slot (lambda (condition)
+                           (declare (ignore condition))
+                           (core-collect)
+                           (invoke-restart 'use-value 31))))
+        (let ((value (slot-value object 'payload)))
+          (list value (slot-boundp object 'payload))))
+      (progn
+        (setf (slot-value object 'payload) 29)
+        (core-collect)
+        (slot-value object 'payload)))))
+
+(defun ready-integer-magnitude (image)
+  (declare (ignore image))
+  (let ((answers nil))
+    (dolist (n '(0 1 -1 536870911 -536870911 536870912 -536870912
+                 536870913 -536870913 1152921504606846976 -1152921504606846976
+                 #x51ad9826be1f03647905acfe123456789abcdef
+                 #x-51ad9826be1f03647905acfe123456789abcdef))
+      (let ((magnitude (ccl::%integer-abs n)))
+        (core-collect)
+        (push (list magnitude (gcd) (gcd n) (gcd n magnitude)
+                    (gcd (* n 15) (* n 21) (* n 33)) (eq n magnitude)) answers)))
+    (nreverse answers)))
+
+;;; The native package-table probe uses its real (vector . counts) shape.
+;;; Supply the hash residues explicitly so collision and wrap paths do not
+;;; depend on the host's word-sized string hash.
+(defun ready-symbol-lookup (image)
+  (declare (ignore image))
+  (let* ((vector (make-array 8 :initial-element 0))
+         (table (cons vector (cons 2 6)))
+         (answers nil))
+    (setf (svref vector 6) :alpha
+          (svref vector 0) -1
+          (svref vector 2) :beta)
+    (dolist (entry '(("ALPHA" 5) ("BETA" 4) ("MISSING" 7)
+                     ("ALPHABET" 5) ("ALPHA" 4) ("beta" 4) ("" 0)))
+      (core-collect)
+      (push (multiple-value-list
+             (ccl::%get-hashed-htab-symbol (car entry) (cadr entry) table 6 2))
+            answers))
+    (setf (svref vector 6) -1)
+    (core-collect)
+    (push (multiple-value-list (ccl::%get-hashed-htab-symbol "ALPHA" 5 table 6 2))
+          answers)
+    (setf (svref vector 0) :alpha)
+    (core-collect)
+    (push (multiple-value-list (ccl::%get-hashed-htab-symbol "ALPHA" 5 table 6 2))
+          answers)
+    (nreverse answers)))
 
 (defun ready-type-methods (image)
   (declare (ignore image))
@@ -173,6 +324,9 @@
              (values nil nil)))
       (setf (ccl::type-class-simple-= class1) #'simple
             (ccl::type-class-simple-subtypep class1) #'simple)
+      (push (mapcar (lambda (x) (not (null (ccl::ctype-p x))))
+                    (list a b c nil 17 "not a ctype" (cons nil nil)))
+            answers)
       (push (multiple-value-list (ccl::type= a a)) answers)
       (push (multiple-value-list (ccl::csubtypep a a)) answers)
       (push (multiple-value-list (ccl::type= a b)) answers)
@@ -220,6 +374,21 @@
       (ccl::%copy-gvector-to-gvector old 0 copy 0 length)
       (setq ccl::*class-table* copy
             ccl::*istruct-class* (find-class 'ccl::internal-structure)))
+    ;; D1 uses native bits without a separate native trampoline object.
+    ;; Only GFs have the side vector; inherited-cell counts identify closures.
+    (setf (svref ccl::*class-table* target::subtag-function)
+          #'(lambda (function)
+              (let ((bits (ccl::lfun-bits function)))
+                (declare (fixnum bits))
+                (cond ((logbitp ccl::$lfbits-gfn-bit bits)
+                       (ccl::%wrapper-class (ccl::gf.instance.class-wrapper function)))
+                      ((not (zerop (ldb ccl::$lfbits-numinh bits)))
+                       (find-class 'ccl::compiled-lexical-closure))
+                      ((logbitp ccl::$lfbits-method-bit bits)
+                       (find-class 'ccl::method-function))
+                      ((logbitp ccl::$lfbits-cm-bit bits)
+                       (find-class 'ccl::combined-method))
+                      (t (find-class 'compiled-function))))))
     ;; Native l1-clos-boot class-table initializer, reader-checked by the driver.
     (setf (svref ccl::*class-table* target::subtag-istruct)
           #'(lambda (i)
