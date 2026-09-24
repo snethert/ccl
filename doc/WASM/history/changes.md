@@ -4684,3 +4684,16 @@ Neither boundary is hidden by a replacement or swallowed error. The proposal
 remains isolated for Claude’s review. Closure is 838 modules / 58 missing
 edges / 54 indirect modules, 235 unattributed rows; no LL15 credit. Namespace
 and loader work follows, without further projection growth for its own sake.
+
+
+## 2026-09-24 — Review NSL-P1 after the stream constructor packet
+
+Read and imported Claude’s namespace/loader proposal byte-for-byte from
+`a7f554e3`, as Steve requested before namespace implementation. The
+[per-ID response](../stage1/namespace-loader-review.md) agrees with the build/load
+direction and records amendments: preserve normal EOF, distinguish portable
+bundle semantics from native FASL bytes, and do not confuse whole-file module
+admission with the still-refused FASL publication path. Q-9’s per-file prefix,
+Q-11’s actual cross-loaded heap proof, callback phases and boot0 timings remain
+unmeasured. R10–R12 integration is already complete. No READY criterion, image
+decision, exclusion, execution count or acceptance record changes in this review.
