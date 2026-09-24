@@ -13,7 +13,7 @@ RUNTIME={'runtime/wasm32/collector.c':'runtime-proposal/runtime/collector.c',
          'runtime/wasm32/heap-image.mjs':'runtime-proposal/runtime/heap-image.mjs'}
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def read(path):return json.loads(path.read_text())
-def reviewed(store):
+def reviewed(store,revision=None):
     packet=store/PACKET
     assert sha(packet/'packet.json')==PACKET_SHA
     files=read(packet/'packet.json')['files']
@@ -22,10 +22,14 @@ def reviewed(store):
         return read(packet/name)
     identity=bound('native-proposal-identity.json')
     assert identity==bound('native-reuse.json')['source_identity']
-    for name,digest in identity.items():assert sha(ROOT/name)==digest,name
-    for name,source in RUNTIME.items():
-        assert sha(packet/source)==files[source]
-        assert sha(ROOT/name)==files[source],name
+    def source(name):
+        if revision:
+            return subprocess.check_output(['git','show',revision+':'+name],cwd=ROOT)
+        return (ROOT/name).read_bytes()
+    for name,digest in identity.items():assert hashlib.sha256(source(name)).hexdigest()==digest,name
+    for name,proposal in RUNTIME.items():
+        assert sha(packet/proposal)==files[proposal]
+        assert hashlib.sha256(source(name)).hexdigest()==files[proposal],name
     spec=importlib.util.spec_from_file_location('r9_check',ROOT/'tests/wasm/stage1/ready-acceptance/check.py')
     r9=importlib.util.module_from_spec(spec);spec.loader.exec_module(r9)
     r9.check_bit_layout((ROOT/'tests/wasm/stage1/ready/worker.mjs').read_text(),
@@ -33,14 +37,17 @@ def reviewed(store):
     return packet,identity,bound
 
 def check(store):
-    packet,identity,bound=reviewed(store)
+    revision='4730cbae'
+    packet,identity,bound=reviewed(store,revision)
     summary=bound('summary.json');assert summary['status']=='PASS'
     acceptance=read(ROOT/'doc/WASM/stage1/acceptance-ready-runtime.json')
     review=acceptance['review']
     blob=subprocess.check_output(['git','show',review['commit']+':'+review['path']],cwd=ROOT)
     assert hashlib.sha256(blob).hexdigest()==review['sha256']
-    return dict(status='PASS',mode='REVIEWED_SOURCE_IDENTITY',packet=PACKET,packet_sha256=PACKET_SHA,
-        source_identity=identity,runtime_identity={p:sha(ROOT/p) for p in RUNTIME},
+    assert next(p for p in acceptance['packets'] if p['id']=='STAGE1-READY-JOIN-R12')['sha256']==PACKET_SHA
+    return dict(status='PASS',mode='HISTORICAL_SOURCE_AND_CURRENT_RAW_LAYOUT',
+        source_revision=revision,packet=PACKET,packet_sha256=PACKET_SHA,
+        source_identity=identity,runtime_identity={p:sha(packet/s) for p,s in RUNTIME.items()},
         comparisons_reused=summary['full_corpus_comparisons'],cold_boots_reused=summary['cold_boots'],
         original_definitions=568,non_nil=531,raw_bit_layout_check_preserved=True,new_execution=False,slot_credit=False)
 

@@ -21,6 +21,9 @@
   (fd-lseek fd 0 1))
 
 (defun %realpath (path)
+  (declare (simple-string path))
+  (when (eq (uvsize path) 0)
+    (setq path "."))
   (%wasm-file-request 5 path nil nil))
 
 (defun %unix-file-kind (path &optional check-for-link)

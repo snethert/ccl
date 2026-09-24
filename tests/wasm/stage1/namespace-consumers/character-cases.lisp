@@ -1,0 +1,41 @@
+(in-package :wasm32-compiler)
+
+(defun namespace-character-cases ()
+  (vector
+   (list :logical
+         (namestring (ccl::ccl-directory))
+         (namestring *default-pathname-defaults*)
+         (namestring (truename "ccl:a.bin"))
+         (with-open-file (stream "ccl:sub;text.lisp")
+           (list (read-line stream) (read-line stream)
+                 (multiple-value-list (read-line stream nil :end)))))
+   (list :characters
+         (with-open-file (stream "unicode.txt")
+           (let* ((first (read-char stream))
+                  (position (file-position stream)))
+             (unread-char first stream)
+             (list (stream-element-type stream) (input-stream-p stream)
+                   (output-stream-p stream) (interactive-stream-p stream)
+                   first position (peek-char nil stream) (read-char stream)
+                   (read-char stream) (read-char stream)
+                   (multiple-value-list (read-line stream))
+                   (multiple-value-list (read-line stream))
+                   (multiple-value-list (read-line stream))
+                   (read-char stream nil :end) (file-position stream)))))
+   (list :character-sequence
+         (with-open-file (stream "unicode.txt" :external-format :utf-8)
+           (let ((string (make-string 32 :initial-element #\?)))
+             (list (read-sequence string stream :start 2 :end 29)
+                   string (read-char stream nil :end)
+                   (file-position stream :start) (read-char stream)))))
+   (list :crlf
+         (with-open-file (stream "crlf.txt" :external-format '(:character-encoding :utf-8 :line-termination :crlf))
+           (list (multiple-value-list (read-line stream))
+                 (multiple-value-list (read-line stream))
+                 (multiple-value-list (read-line stream))
+                 (multiple-value-list (read-line stream nil :end)))))
+   (list :boundary
+         (with-open-file (stream "boundary.txt")
+           (list (multiple-value-list (read-line stream))
+                 (multiple-value-list (read-line stream))
+                 (read-char stream nil :end))))))

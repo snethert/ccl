@@ -24,16 +24,17 @@ function functionObject(id,pool=N){const p=functions;functions+=32;[1578,id*4,N,
 const objects=modules.map((m,i)=>functionObject(i+2,roots[i])),leaf=functionObject(1);
 const regions=[['tcr',TCR,TCR+256],['image',77824,77864],['image',786432,786432+32*symbols.length],['image',800000,functions],['image',2097152,2097152+pool.length],['vstack',ROOT,ROOT+32776],['temp',196608,212992],['control',212992,229376],['external',EXTERNAL,EXTERNAL+4096],['bindings',BINDINGS,BINDINGS+4096],['c-stack',1048576,1114112],['root-list',1180000,1184096],['scratch',1200000,1800000]].map(([role,start,end],i)=>({name:role+'-'+i,role,start,end}));
 const layout={version:1,collector:'copying',workers:1,egc:false,tcr:TCR,maximumPages:32769,logCapacity:32768,regions,
- spaces:[base,base+32768].map((start,i)=>({name:'heap-'+i,start,end:start+16384})),
+ spaces:[base,base+32768].map((start,i)=>({name:'heap-'+i,start,end:start+32768})),
  groups:['module-constants','callbacks','registry','host'].map((kind,i)=>({kind,slots:[EXTERNAL+4*i]}))};
 for(let i=0;i<4;i++)put(EXTERNAL+4*i,N);
-set(0,1);set(8,1);set(32,2);set(48,base);set(52,base+16384);set(56,base);set(68,ROOT+8);set(72,ROOT+32776);set(64,ROOT+8);set(128,ROOT);put(ROOT,0);put(ROOT+4,0);
+set(0,1);set(8,1);set(32,2);set(48,base);set(52,base+32768);set(56,base);set(68,ROOT+8);set(72,ROOT+32776);set(64,ROOT+8);set(128,ROOT);put(ROOT,0);put(ROOT+4,0);
 set(80,196608);set(76,196608);set(84,212992);set(92,212992);set(88,212992);set(96,229376);set(104,BINDINGS);set(108,0);set(120,ROOT+8200);set(124,ROOT+8264);set(188,N);
 const bytes=fs.readFileSync(out+'/collector.wasm'),digest=createHash('sha256').update(bytes).digest('hex');
 const owner=CollectorOwner.create(memory,bytes,digest,layout);
 let collections=0,requests=0;
 function collect(){if(movement){const old=t(56),limit=t(52);owner.atSafepoint(o=>o.collect());new Uint8Array(memory.buffer,old,limit-old).fill(0xdd);collections++;}}
-function allocate(n){owner.atSafepoint(o=>o.ensure(n));const p=t(48);set(48,p+n);new Uint8Array(memory.buffer,p,n).fill(0);return p;}
+function ensure(n){const result=owner.atSafepoint(o=>o.ensure(n));assert.equal(result.collected,false,'fixture budget prevents implicit collection');}
+function allocate(n){ensure(n);const p=t(48);set(48,p+n);new Uint8Array(memory.buffer,p,n).fill(0);return p;}
 const env={memory,tcr:TCR,table:new WebAssembly.Table({element:'anyfunc',initial:64}),tail_table:new WebAssembly.Table({element:'anyfunc',initial:64}),code_registry:4096,
  call_error:new WebAssembly.Tag({parameters:['i32']}),type_error:new WebAssembly.Tag({parameters:['i32','i32']}),nonlocal_exit:new WebAssembly.Tag({parameters:['i32']})};
 put(4096,64);put(4100,1);
@@ -50,7 +51,7 @@ const entries=new Map();
 for(let i=0;i<modules.length;i++){
  const m=modules[i],imports=Object.fromEntries(m.symbols.map(([wire,id])=>[wire,symbolWords.get(id)]));
  const wasm=new WebAssembly.Module(fs.readFileSync(out+'/compiled/'+m.name+'.wasm'));
- const x=new WebAssembly.Instance(wasm,{env,symbols:{condition_registry:N,error_message:N,expected_function:N,...imports},integer:{calculate:integer},floating:{calculate:floating},owner:{ensure:n=>owner.atSafepoint(o=>o.ensure(n))}});
+ const x=new WebAssembly.Instance(wasm,{env,symbols:{condition_registry:N,error_message:N,expected_function:N,...imports},integer:{calculate:integer},floating:{calculate:floating},owner:{ensure}});
  register(i+2,x);entries.set(m.definition,{fn:x.exports.entry,self:objects[i]});put(symbolWords.get(m.function)+6,objects[i]);
 }
 put(symbolWords.get(symbols.find(r=>r.name==='%WASM-FILE-REQUEST').id)+6,leaf);
@@ -71,7 +72,7 @@ const rows=[],handles=new Map();
 function row(op,...args){let value;
  switch(op){
  case 'open':{const [id,path,flags=0]=args;const v=call('FD-OPEN',[string(path),flags*4])[0];handles.set(id,v);value=v>=0?true:v;break;}
- case 'read':{const [id,n]=args,b=vector(n);value=call('FD-READ',[handles.get(id)*4,b,n*4]);const moved=get(ROOT+12),data=Array.from(new Uint8Array(memory.buffer,moved-2,n));value.push(data);break;}
+ case 'read':case 'read-cap':{const [id,n]=args,b=vector(n);value=call('FD-READ',[handles.get(id)*4,b,n*4]);const moved=get(ROOT+12),data=Array.from(new Uint8Array(memory.buffer,moved-2,n));value.push(data);if(op==='read-cap')value.push(call('FD-TELL',[handles.get(id)*4])[0]);break;}
  case 'seek':value=call('FD-LSEEK',[handles.get(args[0])*4,args[1]*4,args[2]*4]);break;
  case 'tell':value=call('FD-TELL',[handles.get(args[0])*4]);break;
  case 'size':value=call('FD-SIZE',[handles.get(args[0])*4]);break;

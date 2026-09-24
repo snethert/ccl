@@ -1,6 +1,8 @@
-# NSL-1 generated file primitives
+# NSL-1 generated file primitives, R2 (audit 176 follow-up)
 
-Twelve generated definitions execute; 160 native comparisons pass. This is a
+Files cross-compiled / cross-loaded / target-loaded: 0 / 0 / 0.
+Twelve generated definitions execute; 196 native-equal comparisons and four
+explicit bounded-read comparisons pass. This is a
 file-primitive proposal, with no new LL15 credit or increase to the accepted
 575/535 original-definition floor. Files cross-compiled to deliverable bundles,
 cross-loaded, and loaded on the target remain 0/0/0.
@@ -16,11 +18,12 @@ library replacements. No compiler or shared runtime/Lisp source is edited.
 
 The native side calls the untouched pinned CCL primitives. A small native
 adapter copies octets between the observer's vector and a stack macptr because
-native `FD-READ` has a pointer ABI. The target ABI is explicitly a simple
-unsigned-byte-8 vector, starting at index zero. There is no target macptr and
-no claim that the native pointer-based IO-BUFFER or fasloader call sites now
-work without their target branches. General OPEN/PROBE-FILE/TRUENAME, file
-stream construction and LOAD are the next clients, not execution claims here.
+native `FD-READ` has a pointer ABI. The observer uses an unsigned-byte-8 vector. The client also admits the
+seven qualified D1 integer-vector layouts by their byte extent, starting at byte
+zero, for the stream consumer ABI. It rejects node vectors and invalid extents.
+There is no target macptr. The sibling [consumer packet](../namespace-consumers/README.md)
+adds the IO-BUFFER branches and executes OPEN/PROBE-FILE/TRUENAME; bundle
+loading remains a later loader task.
 
 The internal B leaf accepts `(operation a b c)` from a generated root frame.
 It validates arguments before publishing a request. A stable 8 KiB descriptor
@@ -53,12 +56,27 @@ paths. The provider's two disclosed `%REALPATH` traversal differences remain
 in the parent packet; this unit does not silently broaden its path domain.
 
 Four fresh Workers cover 8 MiB/2 GiB placements, each with movement disabled
-and enabled. Across them: 196 requests, 98 real collections with the old heap
-poisoned, 160 native comparisons including complete buffer post-state, and 24
+and enabled. Each semispace is 32 KiB; every allocation asserts that it did not
+trigger implicit collection, so the disabled runs remain nonmoving even with
+the three large read buffers. Across them: 240 requests, 120 real collections with the old heap
+poisoned, 196 native-equal comparisons including complete buffer post-state, and 24
 generated refusal checks comparing all 64 TCR words. Every generated definition
 executes. The host also refuses two stale completion identities per request
-without writes. Thirty-five directed admission/publication cases cover the
-bridge; four altered implementations fail the complete generated caller check.
+without writes. Forty-nine directed admission/publication cases cover the
+bridge; five altered implementations fail the complete generated caller check.
+
+O-71: a 9,000-byte file witnesses the boundary. A native 8,129-byte read returns
+8,129; the target returns 8,128, leaves the last destination byte unchanged,
+and reports position 8,128. These four rows are explicitly policy comparisons,
+not native-equal credit. After seeking back, an exact-cap read, the remaining
+872 bytes, position and EOF match native. Removing the host read cap now fails.
+O-72: the target `%REALPATH` substitutes `"."` for an empty simple string; the
+owner resolves it against the manifest cwd. Native `%REALPATH ""` runs after
+setting its cwd to the matching physical directory and returns the same path.
+
+`audit176.py` also checks the historical R12 integration at `4730cbae` (O-69),
+rejects R13 as that identity, and replays the provider in a nested output path
+(O-70). All five provider result records equal their retained R1 versions.
 
 The compiler is built directly from the five integrated registration/compiler
 files over disposable pinned U1 sources. The small cold compilation takes about
@@ -70,13 +88,11 @@ only a target file not yet in any product module list.
 
 ```sh
 python3 tests/wasm/stage1/namespace-primitives/run.py \
-  /private/tmp/ccl-work/codex/namespace-primitives-author
-python3 tests/wasm/stage1/namespace-primitives/packet.py verify \
-  ../ccl-evidence/2026-09-24-namespace-primitives-r1 \
-  /private/tmp/ccl-work/codex/namespace-primitives-review
+  /private/tmp/ccl-work/codex/namespace-primitives-r2/author
 ```
 
-Run from the packet's source commit beside `ccl-evidence`. Retention verifies
+R2 observations and failures are retained within the namespace consumer pack.
+Run from its source commit beside `ccl-evidence`. Retention verifies
 source identity, saves records, probe inputs, original failures and hashes,
 and deletes the output. Rebuildable modules and native trees are not archived.
 The checked-in `--reuse-compiled` option is development-only and cannot produce

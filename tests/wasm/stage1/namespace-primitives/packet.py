@@ -5,7 +5,7 @@ import argparse
 import json
 import shutil
 from run import HERE,c,storage,run,execution_inputs
-RECORDS=('execution.json','native.json','controls.json','faults.json')
+RECORDS=('execution.json','native.json','controls.json','faults.json','audit176.json')
 
 def generated(out):
     return {str(p.relative_to(out)):c.sha(p) for p in sorted(out.rglob('*'))
@@ -34,7 +34,7 @@ def retain(out,packet):
         qualification=qualification))
     c.save(packet/'generated.json',generated(out))
     c.save(packet/'pins.json',execution_inputs())
-    c.save(packet/'packet.json',dict(id='STAGE1-NAMESPACE-PRIMITIVES-R1',files=c.inventory(packet),slot_credit=False))
+    c.save(packet/'packet.json',dict(id='STAGE1-NAMESPACE-PRIMITIVES-R2',files=c.inventory(packet),slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(storage.workspace(out))
     return dict(status='PASS',new_execution=False,output_deleted=True)

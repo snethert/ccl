@@ -12,12 +12,14 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
     if ((v&7)!==6 || v<6)fail('object tag');
     const base=v-6;span(base,4);
     const h=get(base),count=h>>>8;
-    if ((h&255)!==kind)fail('object kind');
-    const extent=4+count*(kind===191?4:1);
+    const tag=h&255;
+    if (!(Array.isArray(kind)?kind.includes(tag):tag===kind))fail('object kind');
+    const width=({191:4,199:1,207:1,215:2,223:2,167:4,175:4,183:4})[tag];
+    const extent=4+count*width;
     span(base,extent);
     const heap=base>=get(tcr+56) && base+extent<=get(tcr+48);
     if(!heap && !(kind===191 && pinned.some(r=>base>=r.start&&base+extent<=r.end)))fail('object ownership');
-    return {base,count};
+    return {base,count,bytes:count*width};
   }
   function string(v) {
     const {base,count}=object(v,191);
@@ -45,8 +47,8 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
     if([0,5,6].includes(op))path=string(av);else a=integer(av);
     if(op===0){b=integer(bv);c=integer(cv);}
     if(op===1 || op===7) {
-      const buffer=object(bv,199);c=integer(cv);
-      if(c<0 || c>buffer.count)fail('buffer count');
+      const buffer=object(bv,[199,207,215,223,167,175,183]);c=integer(cv);
+      if(c<0 || c>buffer.bytes)fail('buffer count');
     }
     if(op===2){b=integer(bv);c=integer(cv);if(c<0||c>2)fail('seek origin');}
     if(generation===0xffffffff)fail('generation exhausted');
@@ -76,8 +78,8 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
       // argument roots stay live; the buffer is reloaded after movement.
       collect();
       if(op===1 && result>=0) {
-        const buffer=object(get(args+8),199);
-        if(length>buffer.count)fail('reloaded buffer');
+        const buffer=object(get(args+8),[199,207,215,223,167,175,183]);
+        if(length>buffer.bytes)fail('reloaded buffer');
         new Uint8Array(memory.buffer,buffer.base+4,length).set(bytes);
       }
       if(op===5) {

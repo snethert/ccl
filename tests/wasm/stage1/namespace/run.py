@@ -34,6 +34,7 @@ def execution_inputs():
 def run(out):
     if (out / 'summary.json').exists():
         raise ValueError('Do not overwrite a completed run')
+    out.mkdir(parents=True, exist_ok=True)
     times = {}
     inputs = execution_inputs()
     (out / 'runtime').mkdir(exist_ok=True)

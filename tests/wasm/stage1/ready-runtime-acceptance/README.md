@@ -12,12 +12,15 @@ The integrated source check reuses audit 174's target execution explicitly:
 python3 tests/wasm/stage1/ready-runtime-acceptance/check.py --output /private/tmp/ccl-work/codex/ready-runtime-check/identity.json
 ```
 
-It binds all 35 qualified compiler/CCL files and both runtime sources to R12,
-plus the audit record. The reviewed full corpus's 26,048 comparisons and four
+It binds all 35 qualified compiler/CCL files and both runtime sources at
+`4730cbae` to R12, plus the audit record, and preserves the current independent
+raw-bit observation. R13 at `b2f0ad8f` supersedes the R12 backend and collector
+identities; its current-source check is `stream-constructor-acceptance/check.py`.
+The reviewed full corpus's 26,048 comparisons and four
 cold boots are not reported as a new integration execution. Locks and streams
 remain transient; the image loader admits complex single/double objects but
 still refuses locks and streams. The final integrated files receive a fresh
-native build and regression run:
+native build and regression run at the original integration commit:
 
 ```sh
 python3 tests/wasm/stage1/ready-runtime-acceptance/native.py --output /private/tmp/ccl-work/codex/ready-runtime-native/run
@@ -36,7 +39,9 @@ interface databases for whole-file cross-platform compilation.
 O-64: the historical R9 check now binds product sources at its integration
 commit and checks the exact independent raw-bit observation in the current
 worker. Unrelated stream/lock witnesses may change. Bit-order and padding
-mutants are rejected. This stack's checker binds the current product sources.
+mutants are rejected. After audit 176's O-69, this stack's checker likewise
+binds its historical product sources. A directed control rejects R13 as R12;
+it cannot silently claim the successor bytes were the original qualification.
 
 O-65: the added Lisp expression allocates native lock-layout witnesses with
 recursive, read/write and other kind cells. It compares CLASS-OF with the

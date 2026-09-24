@@ -4763,3 +4763,63 @@ Stage 1 slot credit. Unchanged complete native source identity reuses the R13
 native gate. Rebuildable binaries are recorded by digest, and disposable output
 is deleted after retention. Accepted execution remains 575/535, ledger 21/12/0,
 files cross-compiled to deliverable bundles / cross-loaded / target-loaded 0/0/0.
+
+
+## 2026-09-24 — Audit 176 imported; four follow-up findings addressed
+
+Imported Claude's `7b7b920a` verbatim as `a02be15f`. The review found no defect
+in R13 integration or the host/primitive namespace proposals; it did not accept
+S1-NAMESPACE-a. Both R1 namespace records now carry that review disposition.
+
+O-69: R10–R12's standing checker binds the 35 qualified source files and two
+runtime files at `4730cbae`, preserving the current independent raw-bit
+observation. R13 at `b2f0ad8f` supersedes its backend and collector identities.
+A directed control rejects R13 as R12. R9 and R13 identity checks also pass.
+O-70: the provider creates its full output directory; a nested run preserves
+all five R1 result records (57 comparisons, 80 checks, six faults, four D5 cases).
+
+Primitive R2 addresses O-71 with a 9,000-byte source: native reads 8,129 bytes,
+target reads 8,128, the unwritten tail stays intact and the position is 8,128.
+These four policy rows are not counted as native-equal. Exact-cap, tail, EOF
+and later positions are native-equal. The reviewer-surviving cap omission now
+fails. O-72 substitutes "." for an empty target simple-string path; the native
+oracle calls %REALPATH "" under the corresponding cwd. The final cold run
+passed in 76 s including standing replays: 196 native-equal rows, four bounded rows, 120 collections, 24
+generated refusals, 49 bridge controls and five rejected faults. The fixture
+uses 32 KiB semispaces and forbids implicit collection at allocation, keeping
+its nonmoving runs distinct after adding large buffers. No shared
+compiler/runtime/CCL product edits or new native R6 run; qualified identity is
+reused. R2 awaits adversarial review. Accepted originals remain 575/535; file
+counts remain 0/0/0; ledger remains 21 accepted / 12 missing of 33.
+
+## 2026-09-24 — Complete the read-only namespace consumer implementation
+
+Implemented the NSL-1 consumers through CCL's real file compiler: PROBE-FILE,
+TRUENAME, OPEN input, buffered binary/Latin-1/UTF-8 reads, file positions,
+EOF conditions and unwind cleanup. IO-BUFFER uses rooted collector-managed
+ivectors across mailbox requests; no native pointer survives collection.
+Manifest CCL/cwd roots initialize atomically, and original standard foreign-type
+initialization executes on the target with zero interface-database opens.
+
+The native projection remains the frozen READY graph. Stream methods, prototypes,
+class-name metadata, table registries and foreign types initialize on target.
+Function references retain compiler identities; unreachable code and constant
+pools are pruned without merging objects. Startup orders the original bootstrap
+function setters, the function-name table, and the original stream initializer.
+The original compiler stops and the cold-run startup/dependency failures are
+retained as development evidence, followed by the working implementation.
+
+Four fresh Workers pass 1,064 namespace requests and 542 collections, with
+47 ABI checks, 12 table-option refusals and 11 linked-symbol refusals per Worker.
+The cold compiler and all 26,048 original regression comparisons pass. The
+accepted READY/string streams pass five boots and 20 fault refusals. Native
+R6/R6a passes all 21,843 enabled tests, unchanged existing-target state, and
+identical decoded executable FASLs. Nine changed shared files pass 153 existing
+reader-profile comparisons; fifteen byte-identical foreign-reader forms have
+explicit compositional identity proofs. The native supersede temporary-file
+pathname is a declared substitution: target refusal precedes temporary creation.
+
+This is the complete read-only consumer proposal, awaiting Claude's review and
+integration under the standing workflow. Full mailbox profile; JSPI is deferred
+by NSL-P2. Source/bundle publication and loading remain NSL-2/NSL-3. No acceptance
+is inferred: 575/535 originals, 21/33 criteria and file counts 0/0/0 remain.

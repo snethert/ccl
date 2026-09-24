@@ -3820,7 +3820,9 @@
     {
       "id": "STAGE1-NAMESPACE-PROVIDER-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-namespace-provider-r1/packet.json",
-      "review_disposition": "NOT_REVIEWED",
+      "review_commit": "a02be15f9e6775c8ab3243925ad08ba19cb97c17",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "review_sha256": "2ec0e46cd23b7e1044622ce27312fb697b7670c0c562c22d05987eec6c827589",
       "scope": "NSL-1 host foundation: immutable read-only namespace manifest, private handles and positions, stat/open/pread/read/seek/close/realpath and directory iteration. 57 native matches, two declared path refusals, 80 controls and six rejected faults. Four reads through unchanged hand-built D5 harness with collection, interrupt/EOF and stale completion checks. Native standard foreign types initialized at 32-bit widths without database access. No compiler/runtime/Lisp product source changes; no generated Lisp bridge, browser/JSPI, target FTD initialization or namespace slot credit. Accepted originals stay 575/535; file counts 0/0/0.",
       "sha256": "75ffac356644cb4ad18a22f6310204e739940c55d170f05fa55d51b54cfa3416",
       "slot_credit": false
@@ -3828,9 +3830,19 @@
     {
       "id": "STAGE1-NAMESPACE-PRIMITIVES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-namespace-primitives-r1/packet.json",
-      "review_disposition": "NOT_REVIEWED",
+      "review_commit": "a02be15f9e6775c8ab3243925ad08ba19cb97c17",
+      "review_disposition": "REVIEWED_NO_DEFECT",
+      "review_sha256": "2ec0e46cd23b7e1044622ce27312fb697b7670c0c562c22d05987eec6c827589",
       "scope": "Generated read-only file primitive proposal: nine target CCL definitions, three generated callers, stable owner mailbox and rooted octet-buffer ABI. 160 native comparisons across four Workers and both placements, 98 moving collections, 24 generated refusals, 35 admission cases and four rejected faults. Cold build independent of retained compiler sessions; documented replay PASS. No shared product edits or slot credit; target pointer-based IO-BUFFER/fasloader callers and general OPEN/LOAD remain next. Accepted originals 575/535 and bundle file counts 0/0/0 unchanged.",
       "sha256": "850ede266a774071f4091307ffd1406fe142bd08ce5c611d106b40a880c9db53",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-NAMESPACE-CONSUMERS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-namespace-consumers-r1/packet.json",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Complete NSL-1 read-only consumer proposal: original PROBE-FILE/TRUENAME/OPEN input, rooted moving IO-BUFFERs, binary/Latin-1/UTF-8 reads, seeks, EOF, unwind cleanup, manifest roots and standard foreign types without a CDB. Cold compiler; four Workers, 1064 requests, 542 collections, 70 direct controls per Worker; exact packaged replay. 26048 original regression comparisons, five READY boots and 20 faults, 21843 native tests, 153 existing-target reader comparisons; native projection frozen at 612 classes / 53 GFs. Includes O-69–O-72 and primitive R2 (196 native matches, four declared capped reads, 49 controls, five faults). Declared supersede error-pathname substitution; full mailbox profile, JSPI deferred; source/bundle loading remains NSL-2/3. Shared changes await Claude review/integration. Accepted originals 575/535, ledger 21/33, file counts 0/0/0 unchanged.",
+      "sha256": "e851adaecfa7b5e441f975fe8157e6018f94799a5d33469e840a17596b720f31",
       "slot_credit": false
     }
   ],

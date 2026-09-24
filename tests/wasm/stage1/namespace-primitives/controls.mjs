@@ -52,6 +52,23 @@ refused('buffer-outside-owned-heap',x=>{x.put(TCR+48,x.buffer+4);},'object owner
 refused('buffer-negative-count',x=>{x.put(ARGS+12,-4);},'buffer count');
 refused('buffer-overrun',x=>{x.put(ARGS+12,36);},'buffer count');
 refused('count-not-fixnum',x=>{x.put(ARGS+12,N);},'fixnum');
+// FD-READ counts bytes even when a stream's backing vector has wider elements.
+// Check the logical extent for every admitted integer vector kind.
+for(const [tag,width] of [[199,1],[207,1],[215,2],[223,2],[167,4],[175,4],[183,4]]){
+ const length=8*width;
+ refused('buffer-byte-overrun-'+tag,x=>{x.put(x.buffer,8*256+tag);x.put(ARGS+12,(length+1)*4);},'buffer count');
+ const x=setup();x.put(x.buffer,8*256+tag);x.put(ARGS+12,length*4);
+ const bytes=new Uint8Array(x.memory.buffer,x.buffer+4,length+4);bytes.fill(219);
+ const run=x.client({post:({generation})=>{
+   const {words:w,pair:p}=views(x.memory);w[4]=1;w[5]=length;w[8]=length;
+   new Uint8Array(x.memory.buffer,REQUEST+64,length).fill(163);
+   Atomics.store(p,0,pair(generation,1));
+ }});
+ run(ARGS);
+ assert.deepEqual([...bytes],[...Array(length).fill(163),219,219,219,219]);
+ assert.equal(x.get(x.buffer),8*256+tag);
+ rows.push({name:'buffer-byte-extent-'+tag,bytes:length});
+}
 refused('seek-invalid-origin',x=>{x.args(2,4,0,12);},'seek origin');
 refused('path-wrong-kind',x=>{x.args(5,x.buffer+6);},'object kind');
 refused('path-too-long',x=>{x.put(x.path,4097*256+191);x.args(5,x.path+6);},'path length');

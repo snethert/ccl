@@ -11,7 +11,10 @@
  ["open","e","/ccl/empty"], ["read","e",8], ["close","e"],
  ["open","u","/ccl/λ.lisp"], ["read","u",8], ["close","u"],
  ["open","missing","/ccl/missing"], ["open","write","/ccl/a.bin",1],
- ["realpath","/ccl/sub/../a.bin"], ["realpath","/ccl/missing"],
+ ["realpath","/ccl/sub/../a.bin"], ["realpath","/ccl/missing"], ["realpath",""],
+ ["open","large","/ccl/large.bin"], ["read-cap","large",8129],
+ ["seek","large",0,0], ["read","large",8128], ["tell","large"],
+ ["read","large",8129], ["tell","large"], ["read","large",1], ["close","large"],
  ["kind","/ccl/a.bin"], ["kind","/ccl/sub"], ["kind","/ccl/missing"],
  ["read-close","/ccl/a.bin"], ["unwind-close","/ccl/a.bin"], ["effects","/ccl/a.bin"]
 ]

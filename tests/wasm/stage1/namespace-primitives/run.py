@@ -20,7 +20,11 @@ def lisp(x):
 def execution_inputs():
     paths=[p for p in c.files(HERE) if p.suffix in ('.py','.lisp','.mjs','.wat','.json')]
     paths+=c.files(c.ROOT/'runtime/wasm32')
-    paths+=[HERE.parent/'namespace'/n for n in ('namespace.mjs','fixtures.mjs','prepare.mjs')]
+    paths+=[p for p in c.files(HERE.parent/'namespace') if p.suffix in ('.py','.mjs','.lisp')]
+    for directory in ('integrated-runtime','runtime-boundary'):
+        paths+=c.files(c.ROOT/'tests/wasm/stage0'/directory)
+    paths+=[HERE.parent/n for n in ('ready-runtime-acceptance/check.py','ready-acceptance/check.py','ready/worker.mjs')]
+    paths+=[c.ROOT/'doc/WASM/stage1/acceptance-ready-runtime.json']
     paths+=[c.ROOT/n for n in ('compiler/WASM32/wasm32-backend.lisp','compiler/WASM32/wasm32-arch.lisp',
         'lib/systems.lisp','lib/compile-ccl.lisp','xdump/xwasm32-fasload.lisp',
         'doc/WASM/contracts/wasm32-layout.v1.json','doc/WASM/contracts/tcr.v2.json')]
@@ -56,6 +60,9 @@ def run(out, reuse=False):
     shutil.copyfile(HERE.parent/'namespace/namespace.mjs',out/'runtime/namespace.mjs')
     for name in ('sha256.mjs','bytes.mjs'):shutil.copyfile(c.ROOT/'runtime/wasm32'/name,out/'runtime'/name)
     c.command([c.NODE,HERE.parent/'namespace/prepare.mjs',out],out/'prepare.log')
+    c.command([c.NODE,'--input-type=module','-e',
+        "import fs from 'node:fs'; import {largeFile} from '"+(HERE/'fixtures.mjs').as_uri()+"'; "
+        "fs.writeFileSync(process.argv[1],largeFile);",out/'native-tree/ccl/large.bin'],out/'large-file.log')
     shutil.copyfile(HERE/'cases.json',out/'cases.json')
     (out/'cases.lisp').write_text(lisp(c.read(HERE/'cases.json'))+'\n')
     env=dict(os.environ,CCL_DEFAULT_DIRECTORY=str(c.ROOT)+'/',FILES_SOURCE=str(HERE)+'/',
@@ -73,10 +80,13 @@ def run(out, reuse=False):
     fault_start=time.monotonic()
     fault_rows=faults.run(out)
     times['faults']=time.monotonic()-fault_start
+    from audit176 import run as audit
+    audit_start=time.monotonic();audit(out);times['audit176']=time.monotonic()-audit_start
     result=c.read(out/'execution.json')
     times['total']=time.monotonic()-started
     assert inputs==execution_inputs(),'Sources changed during execution'
     c.save(out/'summary.json',dict(status='PASS',modules=12,comparisons=result['comparisons'],
+        bounded_reads=result['bounded_reads'],
         execution_inputs=inputs,fresh_compilation=not reuse,
         tools={str(p):c.sha(p) for p in (c.KERNEL,c.IMAGE,c.NODE,c.WABT,Path('/usr/local/opt/llvm/bin/clang'))},
         faults=len(fault_rows),controls=len(c.read(out/'controls.json')['rows']),

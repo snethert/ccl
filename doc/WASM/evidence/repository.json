@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4f1f913852b3ca299ecbb0bd60e3e259255c4f596dafff1119abdee80c3b9936",
-  "commit": "b1f0141bdb727874fae69329d18d6e04a0529c4d",
-  "immutable_evidence_files": 270183,
+  "catalog_sha256": "1735015ec392a27333cee3854fdc99027c7f98ec5a50b6cd314921f90f99b559",
+  "commit": "d63c7ec019e5f37200d6f96fb3ce7fdda65c5001",
+  "immutable_evidence_files": 270573,
   "last_scoped_addition": {
-    "bytes": 213451,
-    "directory": "2026-09-24-namespace-primitives-r1",
-    "files": 51
+    "bytes": 154061647,
+    "directory": "2026-09-24-namespace-consumers-r1",
+    "files": 389
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Generated read-only file primitive proposal: nine target CCL definitions, three generated callers, stable owner mailbox and rooted octet-buffer ABI. 160 native comparisons across four Workers and both placements, 98 moving collections, 24 generated refusals, 35 admission cases and four rejected faults. Cold build independent of retained compiler sessions; documented replay PASS. No shared product edits or slot credit; target pointer-based IO-BUFFER/fasloader callers and general OPEN/LOAD remain next. Accepted originals 575/535 and bundle file counts 0/0/0 unchanged.",
-  "source_index_sha256": "56c8d3d564d409caf52d001e79bf8101d2ae77d127affc236c236ca4bac97813",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-primitives-r1.json",
+  "scope": "Completed read-only namespace consumer proposal. Cold compiler and four Worker variants pass native public file consumers, moving buffers, roots and database-free foreign types; 1064 requests, 542 collections and 70 direct controls per Worker. Original corpus, READY, native R6/R6a and existing-target readers pass. Exact packaged replay passes. Audit 176 observations addressed; source/bundle loading remains NSL-2/3. No shared-source integration or acceptance inferred; originals 575/535 and file counts 0/0/0 unchanged.",
+  "source_index_sha256": "7e8e19c2df463cb538525fe47bf82a15f1da8ac2b9354155439decc697a7943c",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-consumers-r1.json",
   "verification": {
     "new_execution": true,
-    "report": "2026-09-24-namespace-primitives-r1/verification.json",
-    "report_sha256": "33c97ba8fc9dab754528ad6541d4491818cccf671217d856c9e7872265c02665",
+    "report": "2026-09-24-namespace-consumers-r1/verification.json",
+    "report_sha256": "8cd5162458678ce2607b1fab35bb7eeafcf7f385a24110e6fc138dbef20dfb6f",
     "status": "PASS"
   },
   "version": 1

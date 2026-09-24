@@ -62,3 +62,8 @@ This runs native, provider, faults and D5 composition in about six seconds on th
 author's machine, excluding toolchain hashing. No compiler/runtime/native Lisp
 product source changes here; no R6 rebuild is needed. Retention does not execute
 anything and removes the managed output after verifying retained records.
+
+Audit 176 found no defect in R1. O-70 is fixed in `run.py`: it creates its
+output and parents, including paths nested below the leased workspace. The
+primitive R2 packet replays that nested case and binds all five provider result
+records to R1. The original R1 verifier still requires its recorded source commit.

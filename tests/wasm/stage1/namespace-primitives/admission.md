@@ -32,6 +32,9 @@ successful-limit/overflow/negative/invalid-origin cases, preserving position.
 The full trace observes stale handles, independent positions, EOF and all
 read-only policy returns. Faults remove the post-GC buffer reload, buffer copy,
 correct EOF count and FOREIGN publication; each fails at its named observation.
+The 8,128-byte response cap has an oversized request against a 9,000-byte file;
+native and bounded outcomes are retained separately, with unwritten-tail and
+position assertions. Omitting the cap is a fifth rejected fault.
 
 The adapter preserves the accepted symbol leaf's fixed/dynamic B result
 selection and capacity checks, specialized to one value and four arguments.
