@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 import common as c
 from probe import probe
-from prepare import prepare as execution_prepare
+from compiler import execution_prepare
 HERE=Path(__file__).resolve().parent
 
 GUARD = '''  (unless (eq (ready-image-status image) t)
@@ -18,6 +18,21 @@ def check(out, ready_prepare):
     submitted=work/'startup.lisp';submitted.write_text(source.replace(GUARD,''))
     compiled=work/'compiled'
     probe(out/'base',submitted,HERE/'inputs.lisp',compiled,c.DEFAULT_CACHE,'class',4)
+    return finish(out, ready_prepare)
+
+
+def finish(out, ready_prepare):
+    work=out/'guard-mutant';compiled=work/'compiled';submitted=work/'startup.lisp'
+    # A probe copied after corpus execution carries the proposed collector.
+    # The reused base preparer first checks its original service set. Restore
+    # that one digest-bound input for the handoff, then apply this proposal.
+    expected=c.read(c.PARENT/'deterministic.json')['collector.wasm']
+    proposed=c.read(compiled/'ready-runtime.json')['collector.wasm']
+    assert c.sha(compiled/'collector.wasm') in (expected,proposed)
+    key=c.read(out/'base/build-invocation.json')['key']
+    original=c.DEFAULT_CACHE/'session'/key/'collector.wasm'
+    assert c.sha(original)==expected
+    shutil.copyfile(original,compiled/'collector.wasm')
     execution_prepare(compiled);ready_prepare(compiled)
     c.command([c.NODE,HERE/'run.mjs',compiled,'write',work/'images',work/'writer.json'],
               work/'writer.log',timeout=90)

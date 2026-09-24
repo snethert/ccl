@@ -4528,3 +4528,39 @@ Audit `9dc0d054` imported verbatim at `0f5100d0`. Steve authorized “if you agr
 Fresh R6/R6a on the integrated files passes 21,843 tests, restores 164 FASLs and preserves the existing-target comparisons. The qualification envelope binds all 33 source identities and the native result hash (O-63). Target qualification reuses the reviewed 26,048 comparisons and four cold boots; no fresh target execution is claimed. The identity command works at integration HEAD; full R9 replay remains at f48be155 because its patch anchors and pins precede integration.
 
 O-61 retains the independent raw low-bit-first and padding observations; a replacement harness must preserve them. O-62 explicitly accepts the bit-vector-kind transition from refusal to admission in this compiler profile. Historical parent evidence is unchanged. O-57 is closed; O-58 remains the disclosed NIL-frame fallback. Class conditions remain default-off. Original execution stays 550/515; ledger 21 accepted, 12 missing, zero unreviewed; no LL15 slot credit or broader READY acceptance.
+
+
+## 2026-09-24 — READY R10 native numeric closure
+
+On Steve's “proceed with the READY work”, the isolated proposal admits native
+scalar-complex-float primitives and adds the native single-float absolute-value
+LAP counterpart in target Lisp. CCL's whole-file ABS, COMPLEX, REALPART and
+IMAGPART execute unchanged, raising executed originals from 550/515 non-NIL
+to 554/519. COUNT-limited SIMPLE-VECTOR-DELETE now reaches the previously
+blocked ABS path: 30 count/direction/bounds cases observe result and callback
+order under collection. The projected class/GF surface stays at 612/50.
+
+The collector and image-loader proposals recognize exactly the two native raw
+complex layouts. Independent header/padding/component observations, forced
+allocation retries and pointer-shaped raw payloads test more than paired
+Lisp reads and writes. Sixteen layout checks pass; four isolated count-check
+omissions are rejected. No shared compiler, runtime or CCL source changes.
+
+26,048 fresh corpus comparisons pass with the proposed collector, including
+its 40 owner checks. Four cold boots pass with 1,286 collections, 45 support
+comparisons, 20 boot refusals and 31 image checks. The generated admission
+omission control is rejected. Fresh R6/R6a passes 21,843 native tests and
+restores 164 FASLs, bound to all 33 proposed compiler/CCL files.
+
+The retained author continuation discloses the probe-only fixes and the final
+guard preparation handoff: copying the executed base carried the proposed
+collector into a preparer expecting baseline bytes. Both identities are now
+checked before the original service is restored and the proposal reapplied.
+The compiled mutant was reused and executed; the passing corpus and cold boots
+were not needlessly rerun. Missing writer/reader wall times remain null;
+retention claims no new execution. Original failures and exact inputs remain.
+
+The static closure has 781 modules, 122 operators and 39,306 occurrences;
+missing edges fall 62 to 57, with 50 indirect modules. Printer locks, complete
+replacement attribution and 35 callback dispositions remain open. This is
+one READY review packet, not LL15 acceptance; the ledger stays 21/12/0 of 33.

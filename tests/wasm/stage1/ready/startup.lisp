@@ -505,3 +505,51 @@
   (ready-initialize image)
   (core-collect)
   (ready-check image))
+
+;;; Exercise native ABS through its real NUMBER-CASE expansion, including
+;;; its newly admitted scalar-complex primitive branches. Results expose only
+;;; components, so the observer never needs a second complex representation.
+(defun ready-numeric-sequences (image &optional operation a b)
+  (declare (ignore image))
+  (when operation
+    (return-from ready-numeric-sequences
+      (ready-complex-primitive operation a b)))
+  (let ((answers nil))
+    (dolist (number (list 0 1 -1 -536870912 536870911
+                         (- (ash 1 70)) (1- (ash 1 130))
+                         -0.0f0 -3.5f0 0.0d0 -3.5d0))
+      (core-collect)
+      (push (abs number) answers))
+    (dolist (pair '((3.0f0 4.0f0) (-3.0f0 4.0f0) (0.0f0 -0.0f0)
+                    (3.0d0 4.0d0) (-3.0d0 4.0d0) (0.0d0 -0.0d0)))
+      (let ((trace nil))
+        (let ((number (complex (progn (push :real trace) (core-collect) (car pair))
+                               (progn (push :imaginary trace) (core-collect) (cadr pair)))))
+          (core-collect)
+          (push (list (realpart number) (imagpart number)
+                      (abs number) (nreverse trace)) answers))))
+    ;; COUNT forces SIMPLE-VECTOR-DELETE through ABS at its early exit.
+    (dolist (backwards '(nil t))
+      (dolist (count '(0 1 2 3 20))
+        (dolist (bounds '((0 9) (1 8) (3 3)))
+          (let ((vector (vector 0 2 1 2 3 2 4 2 9)) (seen nil))
+            (let ((result (delete 2 vector :start (car bounds) :end (cadr bounds)
+                                  :count count :from-end backwards
+                                  :test (lambda (item value)
+                                          (push value seen)
+                                          (core-collect)
+                                          (eql item value)))))
+              (core-collect)
+              (push (list (coerce result 'list) (nreverse seen)) answers))))))
+    (nreverse answers)))
+
+;;; A non-allocating entry around primitive refusals; unlike the main
+;;; numerical witness it creates no lexical capture cells before admission.
+(defun ready-complex-primitive (operation a b)
+  (case operation
+        (1 (ccl::%make-complex-single-float a b))
+        (2 (ccl::%make-complex-double-float a b))
+        (3 (ccl::%complex-single-float-realpart a))
+        (4 (ccl::%complex-single-float-imagpart a))
+        (5 (ccl::%complex-double-float-realpart a))
+        (6 (ccl::%complex-double-float-imagpart a))))

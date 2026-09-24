@@ -1,4 +1,4 @@
-"""READY-required lowerings over the integrated compiler; isolated build only."""
+"""READY numerical closure over the accepted R9 compiler; isolated proposal."""
 from pathlib import Path
 import hashlib
 import build as builder
@@ -6,118 +6,28 @@ import common as c
 
 HERE=Path(__file__).resolve().parent
 BACKEND='compiler/WASM32/wasm32-backend.lisp'
-HELPER='''(defun bootstrap-make-string (forms)
-  ;; CCL's MAKE-STRING calls itself with a known character element type.
-  ;; As in its compiler macro, only constant keyword shapes open-code here.
-  ;; Other calls use the unchanged Lisp argument checks first.
-  (when (and forms (evenp (length (cdr forms))))
-    (let ((initial nil) (seen nil))
-      (loop for (key value) on (cdr forms) by #'cddr do
-        (multiple-value-bind (name constant) (bootstrap-immediate key)
-          (unless (and constant (member name '(:element-type :initial-element))
-                       (not (member name seen)))
-            (return-from bootstrap-make-string nil))
-          (push name seen)
-          (if (eq name :initial-element)
-            (setq initial value)
-            (multiple-value-bind (type constant) (bootstrap-immediate value)
-              (unless (and constant (member type '(character base-char standard-char)))
-                (return-from bootstrap-make-string nil))))))
-      (b-multiple
-       (make-b-raw-code :text
-         (bootstrap-make-vector
-          (append (list (first forms) (bootstrap-constant wasm32::subtag-simple-base-string))
-                  (when initial (list initial)))))))))
-
-'''
-
 
 def generate():
     text=(c.ROOT/BACKEND).read_text()
-    needle='(defun bootstrap-numeric-call (name forms)\n'
-    assert text.count(needle)==1
-    text=text.replace(needle,HELPER+needle)
-    old="""                (bootstrap-numeric-call (ccl::afunc-name *pool-current*)
-                                        (first (first args))))"""
-    new="""                (if (eq (ccl::afunc-name *pool-current*) 'make-string)
-                  (bootstrap-make-string (first (first args)))
-                  (bootstrap-numeric-call (ccl::afunc-name *pool-current*)
-                                          (first (first args)))))"""
-    assert text.count(old)==1
-    text=text.replace(old,new)
-    start=text.index('(defun bootstrap-type-call (name forms)')
-    end=text.index(';;; Fixnum operands',start)
-    helper="""(defun bootstrap-type-literal (form)
-  ;; TYPEP's T and NIL type specifiers have dedicated NX1 operators.
-  (when (ccl::acode-p form)
-    (case (ccl::acode-operator-name (ccl::acode-operator form))
-      ((nil) (values nil t))
-      ((t) (values t t))
-      (otherwise (bootstrap-immediate form)))))
-
-"""
-    block=text[start:end]
-    assert block.count('(bootstrap-immediate ')==2
-    text=text[:start]+helper+block.replace('(bootstrap-immediate ', '(bootstrap-type-literal ')+text[end:]
-    old_slot='''               (when (eq op 'ccl::%slot-ref)
-                 (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s))'''
-    new_slot='''               (when (eq op 'ccl::%slot-ref)
-                 (if *b-cpl-conditions*
-                   (format s "(if (i32.eq (local.get ~a) (i32.const ~d)) (then (local.set ~a ~a)))"
-                           answer wasm32::subtag-slot-unbound answer
-                           (let ((*b-tail-position* nil) (*b-producer-target* nil))
-                             (bootstrap-primary
-                              (b-call (bootstrap-constant 'ccl::%slot-unbound-trap)
-                                      (list (list (make-b-raw-code :text object)
-                                                  (make-b-raw-code :text index)
-                                                  (bootstrap-constant nil)) nil)))))
-                   (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s)))'''
-    assert text.count(old_slot)==1
-    text=text.replace(old_slot,new_slot)
-    text=text.replace('(defun bootstrap-make-vector (forms)',
-                      (HERE/'bit-vectors.lisp').read_text()+'\n(defun bootstrap-make-vector (forms)',1)
-    start=text.index('(defun bootstrap-make-vector (forms)')
-    end=text.index('(defun bootstrap-make-list (forms)',start)
-    block=text[start:end]
-    block=block.replace('(with-output-to-string (s)',
-        '(b-wat "(if (result i32) (i32.eq ~a (i32.const 1020)) (then ~a) (else ~a))" tag (bootstrap-bit-vector values) (with-output-to-string (s)',1)
-    pos=block.rfind(')');block=block[:pos]+')'+block[pos:]
-    text=text[:start]+block+text[end:]
-    start=text.index('(defun bootstrap-uvector-access (op forms)')
-    end=text.index('(defun bootstrap-heap-block',start)
-    block=text[start:end]
-    old="""                 (bootstrap-node-access
-                   (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw)"""
-    new="""                 (b-wat "(if (result i32) (i32.eq (local.get ~a) (i32.const 1020)) (then ~a) (else ~a))"
-                        tag (bootstrap-bit-access raw)
-                        (bootstrap-node-access
-                         (if (eq op 'ccl::uvset) 'ccl::%svset 'ccl::%svref) raw))"""
-    assert block.count(old)==1;block=block.replace(old,new)
-    text=text[:start]+block+text[end:]
-    start=text.index('(defun bootstrap-typed-access (op args)')
-    pos=text.index('    (case kind',start)
-    text=text[:pos]+text[pos:].replace('    (case kind','    (case kind\n      (:bit-vector (return-from bootstrap-typed-access (bootstrap-bit-access (cdr args))))',1)
-    needle="          ((and (eq name 'make-array)"
-    assert text.count(needle)==1
-    text=text.replace(needle,"""          ((and (eq name 'make-array) (bootstrap-make-bit-array forms)))
-          ((and (eq name 'sbit) (= (length forms) 2))
-           (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
-          ((and (eq name 'ccl::%sbitset) (= (length forms) 3))
-           (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
-"""+needle)
+    assert c.sha(c.ROOT/BACKEND)=='0965018e116b3b7e8e9765cda2cc4399e07e4197e7f9bad3e14372d3287a78d6'
+    anchor='(defun bootstrap-operator (ir)'
+    assert text.count(anchor)==1
+    text=text.replace(anchor,(HERE/'complex-floats.lisp').read_text()+'\n'+anchor)
+    anchor='    (case op\n      ((ccl::%setf-double-float ccl::%setf-short-float)'
+    assert text.count(anchor)==1
+    text=text.replace(anchor,'    (case op\n      ((ccl::%complex-single-float-realpart ccl::%complex-single-float-imagpart\n        ccl::%complex-double-float-realpart ccl::%complex-double-float-imagpart)\n       (bootstrap-complex-part op args))\n      ((ccl::%make-complex-single-float ccl::%make-complex-double-float)\n       (bootstrap-complex-float op args))\n      ((ccl::%setf-double-float ccl::%setf-short-float)')
     return text
-
-
-
 
 def install():
     if getattr(builder,'ready_proposal',False):return
     environment,prepare=builder.environment,builder.prepare
     def identity():
         return dict(**environment(),ready_compiler=dict(
+            collector=c.sha(c.ROOT/'runtime/wasm32/collector.c'),
+            clang=c.sha(Path('/usr/local/opt/llvm/bin/clang')),lap=c.sha(c.ROOT/'level-0/WASM32/w32-lap.lisp'),
             base=c.sha(c.ROOT/BACKEND),proposal=hashlib.sha256(generate().encode()).hexdigest(),
             derivation=c.sha(Path(__file__)),
-            bit_vectors=c.sha(HERE/'bit-vectors.lisp'),
+            complex_floats=c.sha(HERE/'complex-floats.lisp'),
             class_driver=c.sha(HERE/'numeric-files.lisp'),
             clos_methods=c.sha(HERE/'clos-methods.lisp'),
             condition_methods=c.sha(HERE/'condition-methods.lisp'),
@@ -134,11 +44,52 @@ def install():
         controls.write_text(text.replace(old,old.replace(':bootstrap-array-kind)', ':admitted)')))
         c.save(stage/'driver-manifest.json' ,c.inventory(stage/'driver'))
         path=stage/'compiled/proposal/files'/BACKEND
-        assert path.read_bytes()==(c.ROOT/BACKEND).read_bytes(), 'READY compiler base differs'
         path.write_text(generate())
         manifest=stage/'compiled/proposal/unit.json'
         record=c.read(manifest)
         row=next(r for r in record['added'] if r['path']==BACKEND)
-        row['sha256']=c.sha(path);c.save(manifest,record)
+        row['sha256']=c.sha(path)
+        lap='level-0/WASM32/w32-lap.lisp'
+        source=(c.ROOT/lap).read_text()
+        source+='''
+;;; Single-float counterpart of the native destructive absolute value.
+(defun %%short-float-abs! (n result)
+  (declare (single-float n result))
+  (%wasm-set-float-word result 0
+                        (logand #x7fffffff
+                                (the (unsigned-byte 32) (%wasm-float-word n 0))))
+  result)
+'''
+        (stage/'compiled/proposal/files'/lap).write_text(source)
+        next(r for r in record['added'] if r['path']==lap)['sha256']=c.sha(stage/'compiled/proposal/files'/lap)
+        c.save(manifest,record)
+        collector=(c.ROOT/'runtime/wasm32/collector.c').read_text()
+        anchor=' case 23:return n==3?12:0xffffffffu;'
+        assert collector.count(anchor)==1
+        collector=collector.replace(anchor,anchor+'\n case 71:return n==3?12:0xffffffffu;\n case 79:return n==5?20:0xffffffffu;')
+        (stage/'runtime/collector.c').write_text(collector)
+        clang=Path('/usr/local/opt/llvm/bin/clang')
+        c.command([clang,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-matomics','-mbulk-memory',
+          '-Wl,--no-entry','-Wl,--import-memory','-Wl,--max-memory=2147549184','-Wl,--shared-memory',
+          '-Wl,--global-base=1048576','-Wl,-z,stack-size=65536','-Wl,--export=collect','-Wl,--export=__stack_pointer',
+          stage/'runtime/collector.c','-o',stage/'ready-collector.wasm'],stage/'collector-build.log')
+        c.save(stage/'ready-runtime.json',{'collector.wasm':c.sha(stage/'ready-collector.wasm'),'source':c.sha(stage/'runtime/collector.c')})
     builder.environment,builder.prepare=identity,proposed
     builder.ready_proposal=True
+    import execute
+    execute.prepare=execution_prepare
+
+
+def execution_prepare(out):
+    from prepare import prepare
+    import shutil
+    result=prepare(out)
+    record=c.read(out/'ready-runtime.json')
+    assert c.sha(out/'ready-collector.wasm')==record['collector.wasm']
+    assert c.sha(out/'runtime/collector.c')==record['source']
+    shutil.copyfile(out/'ready-collector.wasm',out/'collector.wasm')
+    environment=c.read(out/'execution-environment.json')
+    environment['files']['collector.wasm']=record['collector.wasm']
+    environment['tooling']['ready/compiler.py']=c.sha(Path(__file__))
+    c.save(out/'execution-environment.json',environment)
+    return result

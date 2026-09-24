@@ -3754,6 +3754,14 @@
       "review_disposition": "ACCEPTED_AUXILIARY",
       "slot_credit": false,
       "scope": "Four reviewed READY R9 lowerings integrated with exact byte identity. Fresh native R6/R6a: 21843 tests, 164 FASLs restored. Reuses 26048 audited target comparisons and four cold boots. O-61/O-62/O-63 explicitly recorded; O-58 carried. No READY/LL15 acceptance."
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R10",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r10/packet.json",
+      "sha256": "921f9e0b0a25195dc2ec8d62bbe0658cee3cc646d662b96e12f48b706e0a94bd",
+      "review_disposition": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit."
     }
   ],
   "current_runs": [

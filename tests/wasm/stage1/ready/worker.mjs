@@ -402,7 +402,7 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS']){
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES']){
         const witness=native.find(row=>row.definition===name);
         assert(witness,'missing READY support oracle '+name);
         const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
@@ -449,6 +449,45 @@ import {sha256} from './runtime/sha256.mjs';
               for(let i=0;i<64;i++)if(i!==12&&i!==29)assert.equal(get(tcr+4*i),state[i],'bit length TCR '+i);
             }
           }finally{bytes(tail,8).set(saved);}
+        }
+        if(name==='READY-NUMERIC-SEQUENCES'){
+          const primitiveOwner=ownerNames.find(row=>row.package==='WASM32-COMPILER'&&row.name==='READY-COMPLEX-PRIMITIVE').id;
+          const primitive=gen.mods.find(row=>row.function===primitiveOwner);assert(primitive);
+          const invoke=(op,a,b=NIL)=>gen.invoke(primitive.name,[4*op,a,b])[0];
+          const primitiveOracle=native.find(row=>row.definition==='READY-COMPLEX-PRIMITIVE');assert(primitiveOracle);
+          assert.deepEqual(gen.invoke(primitive.name,[0,NIL,NIL]).map(decode),primitiveOracle.values,'primitive explicit execution entry');
+          const named=(name,args)=>{
+            const id=ownerNames.find(row=>row.package==='COMMON-LISP'&&row.name===name).id;
+            const module=gen.mods.filter(row=>row.cplMode&&row.function===id).at(-1);
+            assert(module,'whole-file retry entry '+name);return gen.invoke(module.name,args)[0];
+          };
+          for(const [op,tag,words] of [[1,71,[0x40400000,0xc0800000]],[2,79,[0,0x40080000,0,0xc0100000]]]){
+            const single=op===1;
+            const a=single?encode({single:words[0]}):encode({double:[words[1],words[0]]});
+            put(root+4,3);put(root+12,a);
+            const b=single?encode({single:words[1]}):encode({double:[words[3],words[2]]});put(root+16,b);
+            // Force an allocation retry in the constructor with both operands live.
+            for(let p=get(tcr+48);p<get(tcr+52);p+=8){put(p,NIL);put(p+4,NIL);}put(tcr+48,get(tcr+52));
+            const retries=retryCollections;
+            const object=named('COMPLEX',[get(root+12),get(root+16)]);put(root+4,2);put(root+12,object);
+            assert(retryCollections>retries,'complex constructor allocation retry');
+            const p=object-6,size=single?16:24;
+            assert.equal(get(p),(single?3:5)*256+tag,'native complex header');assert.equal(get(p+4),0,'native complex padding');
+            words.forEach((w,i)=>assert.equal(get(p+8+4*i),w,'native complex payload order'));
+            collect();
+            for(const component of [0,1]){
+              for(let p=get(tcr+48);p<get(tcr+52);p+=8){put(p,NIL);put(p+4,NIL);}put(tcr+48,get(tcr+52));
+              const result=named(component?'IMAGPART':'REALPART',[get(root+12)]);
+              assert.deepEqual(decode(result),single?{single:words[component]}:{double:[words[2*component+1],words[2*component]]});
+            }
+            for(const bad of [NIL,0,get(root+8)]){
+              const before=get(tcr+48);
+              assert.throws(()=>invoke(op,bad,bad),/checked [0-9]+$/,'wrong constructor operands');
+              assert.throws(()=>invoke(single?3:5,bad),/checked [0-9]+$/,'wrong complex reader operand');
+              assert.equal(get(tcr+48),before,'primitive refusal precedes allocation');
+            }
+            put(root+4,1);collect();
+          }
         }
         supportChecks.push({name,values});
       }

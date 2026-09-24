@@ -1,33 +1,34 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "391e2a792cfb0411667350f3e025f3ec56088b12d197a3a6c84fb8b41c2897ca",
-  "commit": "dbc283d21bae0df7c3fb3ba9b1889a68666dc9d3",
-  "immutable_evidence_files": 269600,
+  "catalog_sha256": "9bf740244f4e30dcbdafc76010a702a6f7f1fd3354f8c30db88d344350ff99a5",
+  "commit": "9a553a46882c8f4a67acb837f144aaafd59fcd52",
+  "immutable_evidence_files": 269672,
   "last_scoped_addition": {
-    "directory": "2026-09-24-stage1-ready-compiler-acceptance",
-    "files": 12,
-    "bytes": 19265633
+    "directory": "2026-09-24-stage1-ready-join-r10",
+    "files": 71,
+    "bytes": 48687447
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Audit 173 acceptance and byte-identical integration of four READY compiler lowerings. Fresh native R6/R6a: 21843 tests, 164 restored FASLs. Exact source identity reuses R9 target execution: 26048 comparisons and four cold boots. O-61 raw layout check preserved, O-62 bit-vector admission accepted, O-63 source-bound native record. No LL15 credit; class conditions remain default-off.",
-  "source_index_sha256": "3aaa0428b1943196aa26eb9667d53b4f81b29a32082b2663644b2c0e39eb0bc4",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-compiler-acceptance.json",
+  "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit.",
+  "source_index_sha256": "b9aabbd4bf6e1bfbc72acd4eb7275834a9c8a065d6533bcfefe39f1b74a9810d",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r10.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-24-stage1-ready-compiler-acceptance/qualification.json",
-    "report_sha256": "d4c65e86bead3fb686d67de3b4d9150de80766f12f806ed11f7bcde229b7fabc",
+    "report": "2026-09-24-stage1-ready-join-r10/summary.json",
+    "report_sha256": "9d592723ba1ad749ee3c72c2af4549e6984a65ed7d695649e38d340f44fdbff7",
     "native_rebuilt": true,
     "native_tests": 21843,
-    "execution_rebuilt_during_retention_verification": false,
-    "full_execution_replayed": false,
-    "target_comparisons_reused": 26048,
-    "cold_boots_reused": 4,
-    "identity_report": "2026-09-24-stage1-ready-compiler-acceptance/identity.json",
-    "identity_report_sha256": "0f8214b1263bd85489f6fc74ab468076e7a5f5ff19414de927dc8e886501d683"
+    "native_source_identity": "2026-09-24-stage1-ready-join-r10/native-proposal-identity.json",
+    "native_source_identity_sha256": "d0ebb4309c3946151a7cf9c6c995db7348f9ad5ce856ff89b700c3190265c830",
+    "execution_rebuilt": true,
+    "fresh_corpus_comparisons": 26048,
+    "cold_boots": 4,
+    "execution_during_retention": false,
+    "author_continuation": "logs.tar.gz:development/author-continuation.json"
   }
 }

@@ -63,9 +63,13 @@ def retain(out,packet,native):
         for name in ('native-proposal-identity.json','native-run.json'):
             shutil.copyfile(native/name,packet/name)
     backend=local('compiler').BACKEND
-    target=packet/'proposal'/backend;target.parent.mkdir(parents=True)
-    shutil.copyfile(out/'base/compiled/proposal/files'/backend,target)
-    for name in ('summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
+    for name in (backend,'level-0/WASM32/w32-lap.lisp'):
+        target=packet/'proposal'/name;target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(out/'base/compiled/proposal/files'/name,target)
+    for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
+        dest=packet/'runtime-proposal'/name;dest.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(out/'compiled'/name,dest)
+    for name in ('complex-controls.json','complex-shapes.json','summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
                  'macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json','execution-reuse.json'):
         if (out/name).exists():shutil.copyfile(out/name,packet/name)
     compiled=out/'compiled'
@@ -88,7 +92,7 @@ def retain(out,packet,native):
     pins.update({str(p.relative_to(c.ROOT)):c.sha(p) for p in (c.ROOT/'runtime/wasm32').glob('*.mjs')})
     for path in (HERE.parent/'startup-resets/selection.json',HERE.parent/'startup-runtime/classification.json',
                  c.ROOT/'doc/WASM/stage1/ready-decision.json',c.ROOT/backend,
-                 c.ROOT/'lib/sequences.lisp',c.ROOT/'lib/arrays-fry.lisp',
+                 c.ROOT/'runtime/wasm32/collector.c',c.ROOT/'level-0/WASM32/w32-lap.lisp',c.ROOT/'level-0/l0-numbers.lisp',c.ROOT/'lib/sequences.lisp',c.ROOT/'lib/arrays-fry.lisp',
                  c.ROOT/'compiler/X86/X8632/x8632-vinsns.lisp',c.ROOT/'level-1/l1-aprims.lisp',
                  c.ROOT/'lib/numbers.lisp',c.ROOT/'level-0/l0-int.lisp',c.ROOT/'level-0/nfasload.lisp',c.ROOT/'lib/lists.lisp',
                  c.ROOT/'level-1/l1-typesys.lisp',c.ROOT/'level-1/l1-clos-boot.lisp'):
@@ -98,7 +102,7 @@ def retain(out,packet,native):
     c.save(packet/'provenance.json',dict(parent=c.PARENT.name,parent_packet=c.sha(c.PARENT/'packet.json'),
        accepted_image='ce865269',image_acceptance_sha256=c.sha(c.ROOT/'doc/WASM/stage1/acceptance-class-image.json'),decision_sha256=c.sha(c.ROOT/'doc/WASM/stage1/ready-decision.json'),native_rebuild=reuse['native_rebuilt'],native_reuse=reuse['packet'],shared_source_changes=False,
        execution_during_retention=False,slot_credit=False))
-    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R9',files=c.inventory(packet),
+    c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R10',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
     shutil.rmtree(out)
@@ -118,10 +122,13 @@ def verify(packet,out):
     assert corpus(out)==c.read(packet/'full-corpus.json')
     assert c.inventory(out/'base/compiled/proposal/files')==c.read(packet/'native-proposal-identity.json')
     assert c.read(packet/'native-run.json')['status']=='PASS'
-    assert (out/'base/compiled/proposal/files'/local('compiler').BACKEND).read_bytes()==(packet/'proposal'/local('compiler').BACKEND).read_bytes()
+    for name in (local('compiler').BACKEND,'level-0/WASM32/w32-lap.lisp'):
+        assert (out/'base/compiled/proposal/files'/name).read_bytes()==(packet/'proposal'/name).read_bytes(),name
+    for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
+        assert (out/'compiled'/name).read_bytes()==(packet/'runtime-proposal'/name).read_bytes(),name
     assert result==c.read(packet/'summary.json')
     assert c.read(out/'coverage.json')==c.read(packet/'coverage.json')
-    for name in ('macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
+    for name in ('complex-controls.json','complex-shapes.json','macro-calls.json','macro-controls.json','startup-support.json','closure.json','callbacks.json','replacements.json','admission-controls.json','census-controls.json','replacement-controls.json','guard-control.json','owner-controls.json'):
         assert c.read(out/name)==c.read(packet/name),name
     return dict(status='PASS',execution_rebuilt=True,native_rebuilt=False,
                 native_reuse='exact complete proposal-source identity',summary=result)
