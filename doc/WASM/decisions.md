@@ -463,3 +463,30 @@ U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links
 #### Input identity
 
 The complete original v0.12/v1.2/v1.3 input files and their SHA-256 digests are retained in history/2026-09-11-inputs and history/inputs.json. That preserved v1.3 decision record contains the earlier v0.11/v1.1/v1.2 input hashes. New DOCX reading copies are generated from the current Markdown; tools/manage.py checks both source and generated identities.
+
+## 24 September 2026 — READY image decision amended: a cross-loaded boot replaces projection
+
+After audit 174's stopping-rule verdict on the projected READY image, the
+user directed the move to the namespace and loader ("CODEX is going to work
+on the stream constructor, and then we will adopt your proposal and move to
+namespaces"), asked for a plan ([NSL-P1](stage1/namespace-loader-plan.md)),
+had Codex review it ([response](stage1/namespace-loader-review.md)), and
+then answered the plan's Q-A: "Yes to QA. Make the change and write NSL-P2 on
+the plan branch folding in Codex's amendments."
+
+1. **Image.** `decisions.image` of
+   [stage1/ready-decision.json](stage1/ready-decision.json) now reads that
+   READY is reached by cross-loading level-0 into the bootstrap heap and
+   code set and loading level-1 as precompiled bundles through the read-only
+   namespace, with CLOS built on the target by loading its files. The
+   original sentence (projection of the pinned native image; CLOS from
+   source as Stage 2 work) is preserved in `amendments[0].superseded`.
+2. **Sequencing.** `decisions.sequencing` now points at S1-NAMESPACE-a and
+   the NSL packets; no further projection growth for its own sake.
+3. **Unchanged.** Coverage counting and the 25-replacement cap, class-mode
+   conditions, one Worker with the scheduler disabled, uncached dispatch,
+   the executed-original regression floor (now 568 / 531 accepted), the
+   inventory and every accepted record.
+
+The amendment is entered by Claude on the user's instruction, on the plan
+branch, for Codex to import with NSL-P2; nothing else in this file changes.

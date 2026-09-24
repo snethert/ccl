@@ -6,12 +6,12 @@
     "quote": "While Claude reviews, I accept its recommendations:"
   },
   "decisions": {
-    "image": "READY starts from an identity-preserving projection of the pinned native image. Building CLOS from source on the target is Stage 2 work.",
+    "image": "READY is reached by cross-loading level-0 into the bootstrap heap and code set and loading level-1 as precompiled bundles through the read-only namespace on the target; CLOS is built on the target by loading l1-clos-boot and l1-clos. The projected image of R1-R13 is qualification scaffolding for the accepted lowerings and source branches and is retired as the boot executes what it covers. (Amended 2026-09-24; original text in amendments[0].)",
     "coverage": "Measure executed original definitions; enumerate target replacements separately, capped at 25. No 100-percent admission requirement. The selected READY dependency closure must still be complete and installed; missing dependencies cannot be hidden by coverage totals.",
     "conditions": "Class mode is mandatory for the READY profile. The legacy condition-mask path is excluded from Stage 1 READY acceptance; historical evidence remains valid in its original scope.",
     "concurrency": "One Lisp Worker, scheduler disabled. Multi-worker scheduling remains a later profile. POSIX and terminate-when-unreachable remain excluded.",
     "dispatch": "Uncached standard GF dispatch is admitted at READY without a timing claim. Dispatch caching follows READY.",
-    "sequencing": "The next runtime packet is the projected-image READY join (LL15-a), measuring LL15-c/d in the same packet. No further separate service packet unless READY demonstrably needs it. LL03, LL22 and LL24 controls may execute independently."
+    "sequencing": "The next runtime packets are S1-NAMESPACE-a (NSL-1), then the cross-load writer, target bundle loader and staged boot (NSL-2 to NSL-4) of namespace-loader-plan.md. No further projection growth for its own sake. LL03, LL22 and LL24 controls may execute independently. (Amended 2026-09-24; original text in amendments[0].)"
   },
   "implementation_choices": {
     "replacement_cap": 25,
@@ -29,5 +29,38 @@
     "before_sha256": "a63a4d6170a813ae8182f183691b4fca91bb0d74bb83c5b8d856e159c4516d22",
     "after_sha256": "e4f3337a48f273bacd705051b797c9df9ce391ca4fb3c0b7929bf2e7249e2aff",
     "accepted_records_changed": 0
-  }
+  },
+  "amendments": [
+    {
+      "id": "STAGE1-READY-DECISION-A1",
+      "date": "2026-09-24",
+      "authorization": {
+        "speaker": "Steve",
+        "quote": "Yes to QA. Make the change and write NSL-P2 on the plan branch folding in Codex's amendments",
+        "context": "Q-A of doc/WASM/stage1/namespace-loader-plan.md (NSL-P1), after Codex's review in namespace-loader-review.md and Claude audit 175"
+      },
+      "changed": [
+        "decisions.image",
+        "decisions.sequencing"
+      ],
+      "superseded": {
+        "image": "READY starts from an identity-preserving projection of the pinned native image. Building CLOS from source on the target is Stage 2 work.",
+        "sequencing": "The next runtime packet is the projected-image READY join (LL15-a), measuring LL15-c/d in the same packet. No further separate service packet unless READY demonstrably needs it. LL03, LL22 and LL24 controls may execute independently."
+      },
+      "unchanged": [
+        "decisions.coverage",
+        "decisions.conditions",
+        "decisions.concurrency",
+        "decisions.dispatch",
+        "implementation_choices",
+        "criteria_amendment"
+      ],
+      "notes": [
+        "The executed-original regression floor of implementation_choices.coverage_floor stands; the accepted count is now 568 executed / 531 non-NIL per acceptance-ready-runtime.json.",
+        "implementation_choices.projection_limits continues to govern the projected image while it remains in use as qualification scaffolding.",
+        "The 25-replacement cap applies to target branches that replace a level-0/level-1 definition body under the boot path as it did under projection.",
+        "No inventory criterion, accepted record or packet is changed by this amendment."
+      ]
+    }
+  ]
 }
