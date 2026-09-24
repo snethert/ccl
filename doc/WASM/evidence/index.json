@@ -3759,25 +3759,45 @@
       "id": "STAGE1-READY-JOIN-R10",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r10/packet.json",
       "sha256": "921f9e0b0a25195dc2ec8d62bbe0658cee3cc646d662b96e12f48b706e0a94bd",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "slot_credit": false,
-      "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit."
+      "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit. Audit 174: no defect; accepted by Steve with “I accept them” and integrated as the R10–R12 stack. O-64–O-66 addressed by the acceptance controls; no LL15 credit.",
+      "review_commit": "4ccd89ea724c9f3bef9e2c6c018ef82a586a040f",
+      "review_sha256": "58787ab4c6d433fd476baa241debceba1e81770eae012b4b4c06e3564b705fcf",
+      "acceptance": "doc/WASM/stage1/acceptance-ready-runtime.json"
     },
     {
       "id": "STAGE1-READY-JOIN-R11",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r11/packet.json",
       "sha256": "740a5a19a30d65a366185d8c5f69f3aa910f371fc02b694eea7e6191fd7f14eb",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "slot_credit": false,
-      "scope": "READY R11 single-Worker recursive locks: eight native originals add execution credit, 562/525 non-NIL including R10. Native public lock APIs and cleanup macros run over target owner/depth primitives; collector traces all six lock fields, heap image still refuses locks. 26048 fresh corpus comparisons, four cold boots / 1306 collections, 50 support comparisons, 20 boot refusals, 31 image checks, eight lock layout checks, one rejected count omission, two no-write registry controls. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 35-file source identity. Clean complete author run retained separately from development failures. Closure 797 modules / 55 missing edges / 50 indirect modules; both recursive-lock edges resolved. Class/GF surface unchanged at 612/50. No inter-Worker synchronization, stream completion, shared-source integration or LL15 slot credit."
+      "scope": "READY R11 single-Worker recursive locks: eight native originals add execution credit, 562/525 non-NIL including R10. Native public lock APIs and cleanup macros run over target owner/depth primitives; collector traces all six lock fields, heap image still refuses locks. 26048 fresh corpus comparisons, four cold boots / 1306 collections, 50 support comparisons, 20 boot refusals, 31 image checks, eight lock layout checks, one rejected count omission, two no-write registry controls. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 35-file source identity. Clean complete author run retained separately from development failures. Closure 797 modules / 55 missing edges / 50 indirect modules; both recursive-lock edges resolved. Class/GF surface unchanged at 612/50. No inter-Worker synchronization, stream completion, shared-source integration or LL15 slot credit. Audit 174: no defect; accepted by Steve with “I accept them” and integrated as the R10–R12 stack. O-64–O-66 addressed by the acceptance controls; no LL15 credit.",
+      "review_commit": "4ccd89ea724c9f3bef9e2c6c018ef82a586a040f",
+      "review_sha256": "58787ab4c6d433fd476baa241debceba1e81770eae012b4b4c06e3564b705fcf",
+      "acceptance": "doc/WASM/stage1/acceptance-ready-runtime.json"
     },
     {
       "id": "STAGE1-READY-JOIN-R12",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r12/packet.json",
       "sha256": "e36a8d881fe2df73cc2ce34829165a7fa13654e3cc05157eda8c053506a21d9c",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "slot_credit": false,
-      "scope": "READY R12 native basic string output: six native originals add execution credit, 568/531 non-NIL including R10/R11. Whole-file native writers and DEFSTRUCT constructor; target class-cell ancestry, fixnum-width tests and checked string byte copy; collector traces four stream fields. 26048 fresh corpus comparisons, four cold boots / 1490 collections, 60 support comparisons, 20 boot refusals, 31 image checks, eight stream layout checks and rejected count omission, twelve copy refusals per boot. Fresh R6/R6a: 21843 tests, 164 restored FASLs, exact 35-file identity. Final execution passed; reporting-only callback census repair disclosed with original failure and phase records. Closure 814 modules / 57 missing edges / 53 indirect modules. Class/GF projection unchanged at 612/50. Public stream constructor, general streams, closure/attribution/callback completion still owed; isolated proposal, no LL15 slot credit."
+      "scope": "READY R12 native basic string output: six native originals add execution credit, 568/531 non-NIL including R10/R11. Whole-file native writers and DEFSTRUCT constructor; target class-cell ancestry, fixnum-width tests and checked string byte copy; collector traces four stream fields. 26048 fresh corpus comparisons, four cold boots / 1490 collections, 60 support comparisons, 20 boot refusals, 31 image checks, eight stream layout checks and rejected count omission, twelve copy refusals per boot. Fresh R6/R6a: 21843 tests, 164 restored FASLs, exact 35-file identity. Final execution passed; reporting-only callback census repair disclosed with original failure and phase records. Closure 814 modules / 57 missing edges / 53 indirect modules. Class/GF projection unchanged at 612/50. Public stream constructor, general streams, closure/attribution/callback completion still owed; isolated proposal, no LL15 slot credit. Audit 174: no defect; accepted by Steve with “I accept them” and integrated as the R10–R12 stack. O-64–O-66 addressed by the acceptance controls; no LL15 credit.",
+      "review_commit": "4ccd89ea724c9f3bef9e2c6c018ef82a586a040f",
+      "review_sha256": "58787ab4c6d433fd476baa241debceba1e81770eae012b4b4c06e3564b705fcf",
+      "acceptance": "doc/WASM/stage1/acceptance-ready-runtime.json"
+    },
+    {
+      "id": "STAGE1-READY-RUNTIME-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-runtime-acceptance/packet.json",
+      "sha256": "a496efd9eb5e610617bc24d4826e4511db758ee20f025d4d586fe545cdc4b49b",
+      "review_disposition": "ACCEPTED_AUXILIARY",
+      "review_commit": "4ccd89ea724c9f3bef9e2c6c018ef82a586a040f",
+      "review_sha256": "58787ab4c6d433fd476baa241debceba1e81770eae012b4b4c06e3564b705fcf",
+      "acceptance": "doc/WASM/stage1/acceptance-ready-runtime.json",
+      "slot_credit": false,
+      "scope": "Accept and integrate READY R10–R12 as one seven-file unit on Steve’s “I accept them”; audit 174 imported verbatim. All product files byte-equal to reviewed R12. Fresh native R6/R6a: 21843 tests, 164 restored FASLs; 68 real-reader comparisons across 17 existing target profiles and FUTEX on/off. Collector rebuild byte-identical. Full target 26048 comparisons reused; focused lock classifications pass four cold boots and reject the wrong-class mutant. Three token clauses individually isolated in 20 expression checks. Final integrated preparer reproduces executed input digests and native rows. R9 historical source check retains current raw-byte observation without freezing unrelated witnesses. Original execution 568/531 non-NIL; no new credit or LL15 slot acceptance. Class mode default unchanged; locks and streams remain transient."
     }
   ],
   "current_runs": [

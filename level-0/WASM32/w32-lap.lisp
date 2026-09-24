@@ -553,3 +553,11 @@
                              (logior (the (unsigned-byte 32) (ash high 16))
                                      (the (unsigned-byte 32) low)))))))
     (logand hash most-positive-fixnum)))
+
+;;; Single-float counterpart of the native destructive absolute value.
+(defun %%short-float-abs! (n result)
+  (declare (single-float n result))
+  (%wasm-set-float-word result 0
+                        (logand #x7fffffff
+                                (the (unsigned-byte 32) (%wasm-float-word n 0))))
+  result)

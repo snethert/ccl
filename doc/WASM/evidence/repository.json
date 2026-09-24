@@ -1,34 +1,34 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8974a8a13ab1eac93a95df7ed3a06825d267f4d3fed0d732b3a6feec2ba14fb2",
-  "commit": "dd870c18c673642a1f8df528624f22126c390263",
-  "immutable_evidence_files": 269843,
+  "catalog_sha256": "71329fb62824b572c6f19695964d8ba612f9cdc923f1f93c033c6497d7694efd",
+  "commit": "c8ba6877eb2279323662943bf679eeea9ce0985e",
+  "immutable_evidence_files": 269952,
   "last_scoped_addition": {
-    "directory": "2026-09-24-stage1-ready-join-r12",
-    "files": 88,
-    "bytes": 52333184
+    "directory": "2026-09-24-stage1-ready-runtime-acceptance",
+    "files": 109,
+    "bytes": 116120504
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY R12 native basic string output: six native originals add execution credit, 568/531 non-NIL including R10/R11. Whole-file native writers and DEFSTRUCT constructor; target class-cell ancestry, fixnum-width tests and checked string byte copy; collector traces four stream fields. 26048 fresh corpus comparisons, four cold boots / 1490 collections, 60 support comparisons, 20 boot refusals, 31 image checks, eight stream layout checks and rejected count omission, twelve copy refusals per boot. Fresh R6/R6a: 21843 tests, 164 restored FASLs, exact 35-file identity. Final execution passed; reporting-only callback census repair disclosed with original failure and phase records. Closure 814 modules / 57 missing edges / 53 indirect modules. Class/GF projection unchanged at 612/50. Public stream constructor, general streams, closure/attribution/callback completion still owed; isolated proposal, no LL15 slot credit.",
-  "source_index_sha256": "fb957303ac02f92f134b6e20eab46c55ec9405864a623dc8eaac2f75c7324d37",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r12.json",
+  "scope": "Accept and integrate READY R10–R12 as one seven-file unit on Steve’s “I accept them”; audit 174 imported verbatim. All product files byte-equal to reviewed R12. Fresh native R6/R6a: 21843 tests, 164 restored FASLs; 68 real-reader comparisons across 17 existing target profiles and FUTEX on/off. Collector rebuild byte-identical. Full target 26048 comparisons reused; focused lock classifications pass four cold boots and reject the wrong-class mutant. Three token clauses individually isolated in 20 expression checks. Final integrated preparer reproduces executed input digests and native rows. R9 historical source check retains current raw-byte observation without freezing unrelated witnesses. Original execution 568/531 non-NIL; no new credit or LL15 slot acceptance. Class mode default unchanged; locks and streams remain transient.",
+  "source_index_sha256": "1f2d2ee8afbefeb4860bf353709a9ebf9225b67f9352d603f0308d2d7d1ecbb7",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-runtime-acceptance.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-24-stage1-ready-join-r12/summary.json",
-    "report_sha256": "b71c7013716dda3e03d3dcccf1113b652851c27f78ba136d0f9f66aff2e55bf2",
+    "report": "2026-09-24-stage1-ready-runtime-acceptance/verification.json",
+    "report_sha256": "6508d424e820482b4a30948edbb69313650e66f5e066a84ef32da3124504ff68",
     "native_rebuilt": true,
     "native_tests": 21843,
-    "native_source_identity": "2026-09-24-stage1-ready-join-r12/native-proposal-identity.json",
+    "native_source_identity": "2026-09-24-stage1-ready-runtime-acceptance/proposal-identity.json",
     "native_source_identity_sha256": "c967af46cef23c063fe60e2b59e837c6222a208b2b3165ffff35925a19e4b6fc",
-    "execution_rebuilt": true,
-    "fresh_corpus_comparisons": 26048,
-    "cold_boots": 4,
+    "target_full_corpus_rebuilt": false,
+    "corpus_comparisons_reused": 26048,
+    "focused_cold_boots": 4,
     "execution_during_retention": false,
-    "author_run": "logs.tar.gz:development/author-run.json"
+    "author_run": "focused/author-run.json"
   }
 }

@@ -118,6 +118,7 @@
     (set-%gcable-macptrs% v)
     v))
 
+#-wasm32-target
 (defun %make-recursive-lock-ptr ()
   (record-system-lock
    (%setf-macptr
@@ -225,3 +226,11 @@ between threads."
         (decf size)))))
 
 ; end
+
+;;; Recursive locks for the exclusive, scheduler-disabled Worker profile.
+;;; The native lock object keeps its six fields. Its value is a traced pair
+;;; of owner token and recursion depth instead of a foreign lock pointer.
+#+wasm32-target
+(defun %make-recursive-lock-ptr ()
+  (vector 0 0))
+

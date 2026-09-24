@@ -41,6 +41,8 @@ static U raw_bytes(U tag,U n) {
  case 7:return n?n*4:0xffffffffu;
  case 15:return n==1?4:0xffffffffu;
  case 23:return n==3?12:0xffffffffu;
+ case 71:return n==3?12:0xffffffffu;
+ case 79:return n==5?20:0xffffffffu;
  case 159:case 167:case 175:case 183:case 191:return n*4;
  case 199:case 207:return n;
  case 215:case 223:return n*2;
@@ -139,6 +141,8 @@ EXPORT U collect(U config) {
     if(n!=3||(W)p+16>s->used||LOAD(p+4)!=0||(LOAD(p+8)!=0&&LOAD(p+8)!=4))return reject(s,BAD_OBJECT);
     scan=3;size=16;
    }
+   else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
+   else if(tag==50){if(n!=4)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(node_subtag(tag)||(tag==130&&n>=1)){if(tag==42&&n!=6&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;

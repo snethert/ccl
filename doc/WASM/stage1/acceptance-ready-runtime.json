@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_REVIEWED_AUXILIARY_STACK",
+  "authorization": {
+    "speaker": "user (Steve)",
+    "quote": "I accept them",
+    "context": "Audit 174: accept READY R10, R11 and R12 together."
+  },
+  "author": "Codex",
+  "review": {
+    "reviewer": "Claude",
+    "commit": "4ccd89ea724c9f3bef9e2c6c018ef82a586a040f",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "58787ab4c6d433fd476baa241debceba1e81770eae012b4b4c06e3564b705fcf",
+    "import_commit": "f73d7128b10a2dbc86f5f2b32275fe8a7beb6755"
+  },
+  "packets": [
+    {
+      "id": "STAGE1-READY-JOIN-R10",
+      "proposal_commit": "0573b4bb2f61f67fe08e09d60aaf9c85682f1631",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r10/packet.json",
+      "sha256": "921f9e0b0a25195dc2ec8d62bbe0658cee3cc646d662b96e12f48b706e0a94bd"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R11",
+      "proposal_commit": "7e03681aa8af2285d3634d58dc992ecd18883e6e",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r11/packet.json",
+      "sha256": "740a5a19a30d65a366185d8c5f69f3aa910f371fc02b694eea7e6191fd7f14eb"
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R12",
+      "proposal_commit": "f8180b527c7414626a0fc7cec3649fb81ed29685",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r12/packet.json",
+      "sha256": "e36a8d881fe2df73cc2ce34829165a7fa13654e3cc05157eda8c053506a21d9c"
+    }
+  ],
+  "scope": "Accept the cumulative complex-float, single-Worker recursive-lock and native string-output proposal. Integrate compiler, architecture, LAP, two level-0 files, collector and image loader as one unit. This does not accept READY or award LL15 credit.",
+  "observations": [
+    "O-64: R9 source identity is historical after this successor; its standing raw-bit observation compares the exact independently observing block, allowing unrelated witnesses to evolve. Current stack identity is checked by ready-runtime-acceptance/check.py.",
+    "O-65: focused native/target witnesses cover recursive-lock, read-write-lock and fallback classification, before/after collection, with a wrong-class control.",
+    "O-66: actual emitted token expression tested with zero, unaligned and non-positive TCR values; each clause omitted separately. Full Lisp calls require a valid immutable owner-supplied TCR before entering a frame.",
+    "Locks and streams remain transient and are refused by heap-image loading. Only complex single/double shapes are added to image admission.",
+    "The single-Worker profile has no scheduler or cross-Worker synchronization claim. Public stream construction, closure attribution and startup callbacks remain owed."
+  ],
+  "class_conditions_default_enabled": false,
+  "original_definitions_executed": 568,
+  "non_nil_witnesses": 531,
+  "slot_credit": false
+}

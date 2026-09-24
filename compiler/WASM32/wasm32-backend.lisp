@@ -2594,7 +2594,15 @@
                  (cond ((ccl::acode-p x)
                         (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
                               (args (ccl::acode-operands x)))
-                          (cond ((eq op 'ccl::immediate)
+                          (cond ((and (eq op 'ccl::%gvector)
+                                            (eql (ccl::acode-fixnum-form-p (first (first (first args))))
+                                                 wasm32::subtag-struct)
+                                            (bootstrap-structure-cell-list (second (first (first args)))))
+                                       ;; The ancestry cells are reconstructed at allocation.
+                                       ;; Only the remaining operands belong in the literal pool.
+                                       (mapc #'visit (cddr (first (first args))))
+                                       (visit (second (first args))))
+                                ((eq op 'ccl::immediate)
                                  (when (pool-literal-p (first args))
                                    (unless (member (first args) values :test #'eq)
                                      (setq values (append values (list (first args)))))))
@@ -3657,6 +3665,35 @@
                    (write-string (b-condition (b-wat "(i32.eq (local.get ~a) (i32.const ~d))" answer wasm32::subtag-slot-unbound) 4) s)))
                (format s "(local.get ~a)" answer)))))))))
 
+;;; DEFSTRUCT's hidden ancestry slot contains class cells, not foreign heap
+;;; constants. Resolve the same names as CLASS-CELL's native MAKE-LOAD-FORM.
+;;; The list spine is private to this instance; its cells have image identity.
+(defun bootstrap-structure-cell-list (form)
+  (when (and *b-cpl-conditions*
+             (ccl::acode-p form)
+             (eq (ccl::acode-operator-name (ccl::acode-operator form))
+                 'ccl::immediate))
+    (let ((cells (car (ccl::acode-operands form))))
+      (and (consp cells) (ccl::proper-list-p cells)
+           (every (lambda (cell) (typep cell 'ccl::class-cell)) cells)
+           cells))))
+
+(defun bootstrap-structure-cells (form)
+  (let ((cells (bootstrap-structure-cell-list form)))
+    (when cells
+      (make-b-raw-code
+       :text
+       (reduce (lambda (cell tail)
+                 (b-cons
+                  (make-b-raw-code
+                   :text (bootstrap-predicate-call
+                          'ccl::find-class-cell
+                          (list (make-b-raw-code
+                                 :text (bootstrap-symbol (ccl::class-cell-name cell)))
+                                (bootstrap-constant t))))
+                  (make-b-raw-code :text tail)))
+               cells :from-end t :initial-value "(i32.const 77825)")))))
+
 (defun bootstrap-gvector (forms)
   (unless forms (refuse :bootstrap-gvector))
   (let ((subtag (ccl::acode-fixnum-form-p (car forms)))
@@ -3665,7 +3702,10 @@
                  (= (logand subtag 7) wasm32::fulltag-nodeheader))
       (refuse :bootstrap-gvector-subtag))
     (bootstrap-operands
-     (cdr forms)
+     (if (and (= subtag wasm32::subtag-struct) (cdr forms))
+       (cons (or (bootstrap-structure-cells (second forms)) (second forms))
+             (cddr forms))
+       (cdr forms))
      (lambda (values)
        (b-wat "(i32.add ~a (i32.const 6))"
               (b-heap-block (* 8 (ceiling (1+ n) 2))
@@ -4423,10 +4463,67 @@
                  (b-condition (b-wat "(i32.ne (call $real_operand ~a) (local.get ~a))" value kind) 4)
                  dst result src value kind dst src dst src result))))))
 
+;;; Native 32-bit complex float objects contain unboxed components. Keep the
+;;; input objects rooted until allocation has finished, then reload them.
+(defun bootstrap-complex-part (op forms)
+  (unless (= (length forms) 1) (refuse :complex-part-arity))
+  (let* ((single (member op '(ccl::%complex-single-float-realpart
+                              ccl::%complex-single-float-imagpart)))
+         (imaginary (member op '(ccl::%complex-single-float-imagpart
+                                 ccl::%complex-double-float-imagpart)))
+         (size (if single 16 24))
+         (header (if single 839 1359))
+         (offset (if imaginary (if single 12 16) 8)))
+    (bootstrap-operands forms
+      (lambda (values)
+        (let ((object (car values)))
+          (b-wat "(drop (call $object_base ~a (i32.const ~d) (i32.const ~d)))
+                   (i32.add ~a (i32.const 6))"
+                 object size header
+                 (bootstrap-heap-block (if single "(i32.const 8)" "(i32.const 16)")
+                   (lambda (base bytes)
+                     (b-wat "(memory.fill ~a (i32.const 0) ~a)
+                              (i32.store ~a (i32.const ~d))
+                              (~a.store offset=~d ~a
+                                (~a.load offset=~d (i32.sub ~a (i32.const 6))))"
+                            base bytes base (if single 271 791)
+                            (if single "i32" "i64") (if single 4 8) base
+                            (if single "i32" "i64") offset object)))))))))
+
+(defun bootstrap-complex-float (op forms)
+  (unless (= (length forms) 2) (refuse :complex-float-arity))
+  (let* ((single (eq op 'ccl::%make-complex-single-float))
+         (part-size (if single 8 16))
+         (part-header (if single 271 791))
+         (size (if single 16 24))
+         (header (if single 839 1359))
+         (word (if single "i32" "i64")))
+    (bootstrap-operands forms
+      (lambda (values)
+        (destructuring-bind (real imaginary) values
+          (b-wat "(drop (call $object_base ~a (i32.const ~d) (i32.const ~d)))
+                   (drop (call $object_base ~a (i32.const ~d) (i32.const ~d)))
+                   (i32.add ~a (i32.const 6))"
+                 real part-size part-header imaginary part-size part-header
+                 (bootstrap-heap-block (b-wat "(i32.const ~d)" size)
+                   (lambda (base bytes)
+                     (b-wat "(memory.fill ~a (i32.const 0) ~a)
+                              (i32.store ~a (i32.const ~d))
+                              (~a.store offset=8 ~a (~a.load offset=~d (i32.sub ~a (i32.const 6))))
+                              (~a.store offset=~d ~a (~a.load offset=~d (i32.sub ~a (i32.const 6))))"
+                            base bytes base header
+                            word base word (if single 4 8) real
+                            word (if single 12 16) base word (if single 4 8) imaginary)))))))))
+
 (defun bootstrap-operator (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
     (case op
+      ((ccl::%complex-single-float-realpart ccl::%complex-single-float-imagpart
+        ccl::%complex-double-float-realpart ccl::%complex-double-float-imagpart)
+       (bootstrap-complex-part op args))
+      ((ccl::%make-complex-single-float ccl::%make-complex-double-float)
+       (bootstrap-complex-float op args))
       ((ccl::%setf-double-float ccl::%setf-short-float)
        (bootstrap-float-store args))
       ((ccl::%single-float ccl::%double-float)
@@ -4778,6 +4875,15 @@
           ((eq name 'ldb) (bootstrap-ldb forms))
           ((member name '(logand logior logxor)) (or (bootstrap-word-logical name forms) (bootstrap-logical-call name forms)))
           ((eq name '-) (bootstrap-subtract forms))
+          ((eq name 'ccl::%wasm-lock-owner-token)
+           (unless (null forms) (refuse :single-worker-lock-token-arity))
+           (b-multiple (make-b-raw-code :text
+             "(block (result i32)
+                (if (i32.or (i32.eqz (global.get $tcr))
+                            (i32.or (i32.and (global.get $tcr) (i32.const 15))
+                                    (i32.ge_u (global.get $tcr) (i32.const 2147483648))))
+                  (then (throw $call_error (i32.const 4))))
+                (global.get $tcr))")))
           ((member name '(typep ccl::require-type)) (bootstrap-type-call name forms))
           ((eq name 'ccl::%err-disp) (bootstrap-error-call forms))
           ((member name '(ccl::%symptr-value ccl::%set-symptr-value))
@@ -4943,7 +5049,8 @@
            ((signed-byte unsigned-byte)
             (and (= (length type) 2)
                  (or (eq (second type) '*)
-                     (and (integerp (second type)) (<= 1 (second type) 28)))))
+                     (and (integerp (second type))
+                          (<= 1 (second type) (if (eq (car type) 'signed-byte) 30 29))))))
            (mod (and (= (length type) 2) (integerp (second type)) (<= 1 (second type) 536870911)))))))
 
 (defun bootstrap-type-test (value type)
@@ -4986,8 +5093,8 @@
                (if (eq bits '*)
                  (if (eq (car type) 'signed-byte) 'integer '(integer 0 *))
                  (if (eq (car type) 'signed-byte)
-                   `(integer ,(- (ash 1 (1- bits))) (,(ash 1 (1- bits))))
-                   `(integer 0 (,(ash 1 bits))))))))
+                   `(integer ,(- (ash 1 (1- bits))) ,(1- (ash 1 (1- bits))))
+                   `(integer 0 ,(1- (ash 1 bits))))))))
           ((eq (car type) 'integer)
            (let ((test "(i32.const 1)"))
              (loop for bound in (cdr type) for lower = t then nil do
@@ -5173,7 +5280,7 @@
 
 ;;; Raw digit access is the target equivalent of the native bignum LAP entries.
 ;;; No allocation or callback follows validation and precedes a digit store.
-(defun bootstrap-bignum-base (object)
+(defun bootstrap-word-ivector-base (object &optional stringp)
   (let ((base (temporary)) (count (temporary)))
     (b-wat "(block (result i32) ~a
       (local.set ~a (i32.sub ~a (i32.const 6)))
@@ -5183,8 +5290,14 @@
       (local.get ~a))"
       (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))" object) 4)
       base object base count base
-      (b-condition (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base) 4)
-      (b-condition (b-wat "(i32.eqz (local.get ~a))" count) 4)
+      (b-condition
+       (if stringp
+         (b-wat "(i32.and (i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))
+                         (i32.ne (i32.load8_u (local.get ~a)) (i32.const 191)))" base base)
+         (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 7))" base)) 4)
+      (b-condition
+       (b-wat "(i32.and (i32.eq (i32.load8_u (local.get ~a)) (i32.const 7))
+                        (i32.eqz (local.get ~a)))" base count) 4)
       base count base)))
 
 (defun bootstrap-bignum-index (base index)
@@ -5201,7 +5314,7 @@
     (lambda (values)
       (let ((base (temporary)))
         (with-output-to-string (s)
-          (format s "(local.set ~a ~a)" base (bootstrap-bignum-base (first values)))
+          (format s "(local.set ~a ~a)" base (bootstrap-word-ivector-base (first values) (eq name 'ccl::%copy-ivector-to-ivector)))
           (case name
             ((ccl::%wasm-bignum-half-ref ccl::%wasm-bignum-set)
              (destructuring-bind (object index high &optional low) values
@@ -5237,7 +5350,7 @@
              (destructuring-bind (source start destination to count) values
                (declare (ignore source))
                (let ((dest (temporary)))
-                 (format s "(local.set ~a ~a)" dest (bootstrap-bignum-base destination))
+                 (format s "(local.set ~a ~a)" dest (bootstrap-word-ivector-base destination t))
                  (dolist (x (list start to count))
                    (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))" x x) 4) s))
                  (loop for object in (list (b-local base) (b-local dest))

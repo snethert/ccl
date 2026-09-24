@@ -36,6 +36,8 @@ function inventory(data) {
     if(tag===7&&n>0)raw=n*4;
     else if(tag===15&&n===1)raw=4;
     else if(tag===23&&n===3)raw=12;
+    else if(tag===71&&n===3)raw=12;
+    else if(tag===79&&n===5)raw=20;
     else if([159,167,175,183,191].includes(tag))raw=n*4;
     else if([199,207].includes(tag))raw=n;
     else if([215,223].includes(tag))raw=n*2;

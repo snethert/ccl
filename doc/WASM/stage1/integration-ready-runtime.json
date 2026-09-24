@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "acceptance": "acceptance-ready-runtime.json",
+  "acceptance_sha256": "71ea7b9bd49bb8256bc912a8677b705d84be12fc5a029055c61b25d2b076dc1b",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "0965018e116b3b7e8e9765cda2cc4399e07e4197e7f9bad3e14372d3287a78d6",
+      "after": "a507228ef7f0d2daab8f1ac545c89e55dccd37d8f9af911bcd6dc25709585fab",
+      "reviewed": "a507228ef7f0d2daab8f1ac545c89e55dccd37d8f9af911bcd6dc25709585fab"
+    },
+    {
+      "file": "compiler/WASM32/wasm32-arch.lisp",
+      "before": "011dcfa8526dec3e625226d7a24df3247163d8bd5acda7ab7df6f39daa268110",
+      "after": "c0943688e8e098b31829b801c2977bea1c557e42289be686053cabf632a544b7",
+      "reviewed": "c0943688e8e098b31829b801c2977bea1c557e42289be686053cabf632a544b7"
+    },
+    {
+      "file": "level-0/WASM32/w32-lap.lisp",
+      "before": "581f01f5e0dc5d679c7b1641d77ed7c8e900e790f32f94977f75b59c2194fbee",
+      "after": "4d5ad82060453597a863ace2695cfee8a839101159b15e42ba50e263233d4a43",
+      "reviewed": "4d5ad82060453597a863ace2695cfee8a839101159b15e42ba50e263233d4a43"
+    },
+    {
+      "file": "level-0/l0-aprims.lisp",
+      "before": "63fab0fe887f03907c9ce5aa542e22d6c7d646017f003464d370b2778c1344b0",
+      "after": "3b3a9d2ee9886c51b0a93fdb0097d55f3d7fd43e528c72a10404a6565c0a839d",
+      "reviewed": "3b3a9d2ee9886c51b0a93fdb0097d55f3d7fd43e528c72a10404a6565c0a839d"
+    },
+    {
+      "file": "level-0/l0-misc.lisp",
+      "before": "6d41a5dba28cb98a193ea622feb33409991c094119b378a460d4c1d14b53a4bf",
+      "after": "666f6bfcc07ca5d3638df30d4da744ca0d49b8c56a46ccce4b7db799e9031d74",
+      "reviewed": "666f6bfcc07ca5d3638df30d4da744ca0d49b8c56a46ccce4b7db799e9031d74"
+    },
+    {
+      "file": "runtime/wasm32/collector.c",
+      "before": "69f32dc8566b824f4ec8dffb2a283feff16170d73cf4b43d7cf92d890c15ec7d",
+      "after": "cf08cf434eea5097879cc808a52f1794d7d829fcd9f993b8ac5c660df933c380",
+      "reviewed": "cf08cf434eea5097879cc808a52f1794d7d829fcd9f993b8ac5c660df933c380"
+    },
+    {
+      "file": "runtime/wasm32/heap-image.mjs",
+      "before": "279d9ebc69bd5ce134eb09f2675b2fcdd899fa63faefd95168ea84abacad67b4",
+      "after": "764dbb281b52a1430429db4b02cc3ee2697657f34003519dd1c7a69ac1ffe2ed",
+      "reviewed": "764dbb281b52a1430429db4b02cc3ee2697657f34003519dd1c7a69ac1ffe2ed"
+    }
+  ],
+  "class_conditions_default_enabled": false,
+  "qualification": {
+    "mode": "FRESH_NATIVE_AND_FOCUSED_TARGET_WITH_REVIEWED_CORPUS_REUSE",
+    "record": "2026-09-24-stage1-ready-runtime-acceptance/qualification.json",
+    "sha256": "baf6851ed93b9a885e2fa3f1e0fda251326cdbbea99731fcf1683ce64b9b1d92",
+    "identity_record": "2026-09-24-stage1-ready-runtime-acceptance/identity.json",
+    "identity_sha256": "0db796c81df0fe482e3ce6fae839b0a680fac9b5bcd8e6ae5672775df84bda84",
+    "native_tests": 21843,
+    "native_rebuilt": true,
+    "restored_fasls": 164,
+    "reader_comparisons": 68,
+    "reader_record": "2026-09-24-stage1-ready-runtime-acceptance/readers/summary.json",
+    "reader_sha256": "67b233290ce9bb195c2890d1a96118d7a94aac8fdc7c8baebe351278a6f74199",
+    "comparisons_reused": 26048,
+    "cold_boots_reused": 4,
+    "focused_cold_boots": 4,
+    "target_full_corpus_rebuilt": false,
+    "collector_rebuild": "2026-09-24-stage1-ready-runtime-acceptance/runtime-build.json"
+  },
+  "observations": [
+    "O-64: R9 source identity is historical after this successor; its standing raw-bit observation compares the exact independently observing block, allowing unrelated witnesses to evolve. Current stack identity is checked by ready-runtime-acceptance/check.py.",
+    "O-65: focused native/target witnesses cover recursive-lock, read-write-lock and fallback classification, before/after collection, with a wrong-class control.",
+    "O-66: actual emitted token expression tested with zero, unaligned and non-positive TCR values; each clause omitted separately. Full Lisp calls require a valid immutable owner-supplied TCR before entering a frame.",
+    "Locks and streams remain transient and are refused by heap-image loading. Only complex single/double shapes are added to image admission.",
+    "The single-Worker profile has no scheduler or cross-Worker synchronization claim. Public stream construction, closure attribution and startup callbacks remain owed."
+  ],
+  "slot_credit": false
+}

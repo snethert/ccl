@@ -1,4 +1,4 @@
-# Projected-image READY join — R12
+# Projected-image READY join — R12 (accepted and integrated)
 
 This unit executes CCL's native string-output path, including the output branch
 of `%PR-INTEGER`. It adds no stream service or replacement stream writer. The
@@ -63,9 +63,10 @@ Unicode copies match native. The R11 lock controls, R10 complex
 controls, low-bit-first bit-vector byte check and generated READY admission
 control remain in the run. The first constructor failure is retained.
 
-Shared compiler, runtime and CCL files in the checkout remain unchanged; the
-isolated proposal carries the changes above. R10 and R11 remain unreviewed
-predecessors in this stack. Native qualification binds the final proposed
+At proposal commit `f8180b52`, shared compiler, runtime and CCL files were
+unchanged. Audit 174 reviewed R10–R12 together with no defect; Steve accepted
+the stack and its seven product files are now integrated. The current identity
+and native qualification commands are in [runtime acceptance](../ready-runtime-acceptance/README.md). Native qualification binds the final proposed
 backend and source files. Full target
 regression executes once; retention does not claim another execution.
 
@@ -81,6 +82,9 @@ wall times were not saved before the reporting failure and remain unrecorded.
 No class/GF expansion or LL15 slot credit is claimed.
 
 ## Reproduce
+
+Run the following historical proposal command at **`f8180b52`**. Its patch
+generator and pins precede integration; it is not a command for the new HEAD.
 
 ```sh
 python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r12 /private/tmp/ccl-work/claude/ready/verify

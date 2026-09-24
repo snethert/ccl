@@ -4624,3 +4624,32 @@ Closure: 814 modules, 57 missing edges, 53 indirect modules. The proposal stays
 isolated for review over the unreviewed R10/R11 stack; no shared compiler or
 runtime integration and no LL15 credit. Replacement attribution and the 35
 startup callback dispositions remain owed. Ledger unchanged at 21/12/0 of 33.
+
+
+## 2026-09-24 — Audit 174 acceptance; integrate READY R10–R12
+
+Imported Claude audit 174 verbatim from `4ccd89ea` as `f73d7128`. Steve then
+said “I accept them”. Integrated the seven reviewed compiler, architecture,
+LAP, level-0 and runtime files as one unit, byte-equal to the cumulative R12
+proposal. Native R6/R6a was rerun on the final integrated files: 21,843 tests
+pass and all 164 FASLs restore. The two level-0 edits additionally have an
+exact inverse-edit proof and 68 real-reader comparisons: 17 existing target
+profiles, two files, FUTEX on/off. Only source locations differ under the
+adopted allowance. The integrated collector rebuild is byte-equal to R12.
+
+O-64 is repaired: historical R9 product identity is checked at its integration
+commit while the current independent raw-bit observation remains pinned as a
+block. The new runtime check binds the current product stack. O-65 now has
+native lock-class witnesses for all three kind branches before/after movement;
+four cold boots pass and a wrong-class mutant fails. O-66 has twenty checks of
+the actual emitted token expression, with each of the three guards omitted
+separately. Invalid TCRs remain outside ordinary Lisp frame admission.
+
+The focused preparer at the integrated checkout reproduces the executed code
+manifest and native rows byte-for-byte. Its first missing-entry refusal and
+phase provenance are retained. The reviewed full corpus is reused explicitly;
+no second 26,048-comparison run or new execution credit is claimed. Accepted
+original execution is 568/531 non-NIL. Default class mode stays unchanged.
+Locks/streams remain transient, and only complex floats enter image loading.
+READY closure, replacement attribution, public stream construction and startup
+callback obligations remain; the Stage 1 ledger is still 21/12/0 of 33.
