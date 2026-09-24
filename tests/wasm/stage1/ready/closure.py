@@ -53,7 +53,7 @@ def census(probe):
     leafs = {owner('CCL', '%WASM-EQ-TABLE-' + op): op for op in ('GET', 'SET', 'REMOVE')}
     trampoline = owner('CCL', 'FUNCALLABLE-TRAMPOLINE')
     roots = [(r['name'], 'startup:' + r['definition']) for r in rows
-             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS', 'READY-INTEGER-MAGNITUDE', 'READY-SYMBOL-LOOKUP', 'READY-CLASS-PROTOCOL', 'READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES')]
+             if r['definition'] in ('READY-INITIALIZE', 'READY-CHECK', 'READY-START', 'READY-INTEGER-STRINGS', 'READY-LIST-CALLEES', 'READY-TYPE-METHODS', 'READY-INTEGER-MAGNITUDE', 'READY-SYMBOL-LOOKUP', 'READY-CLASS-PROTOCOL', 'READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS')]
     roots += [(bindings[owner('COMMON-LISP', name)], 'exercised-function-cell:' + name)
               for name in ('LDIFF', 'MAPC', 'MAPCAR', 'MAPLIST', 'MAPL', 'MAPCAN', 'MAPCON')]
     roots += [(bindings[source], 'ready-binding:' + owner_name(source))

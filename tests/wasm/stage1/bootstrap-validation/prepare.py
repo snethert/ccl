@@ -57,7 +57,7 @@ def prepare(out):
     # Conservative reservation, before any target memory or service exists.
     # The final allowance covers the fixed condition registry and its names.
     names_bytes=sum(8*((4+4*len(x['name'])+7)//8) for x in owners)
-    if len(modules)+8>4096 or 2097152+len(mat.image)+32*(len(modules)+8)+names_bytes+65536>4194304:
+    if len(modules)+8>4352 or 2097152+len(mat.image)+32*(len(modules)+8)+names_bytes+65536>4194304:
         raise ValueError('probe installation capacity')
     if 7000000+32*len(owners)>8388608:raise ValueError('symbol capacity')
     layout=out/'compiled/pool-layout.json' 

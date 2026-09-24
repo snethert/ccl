@@ -428,6 +428,15 @@
       (ccl::%copy-gvector-to-gvector old 0 copy 0 length)
       (setq ccl::*class-table* copy
             ccl::*istruct-class* (find-class 'ccl::internal-structure)))
+    ;; Native lock classification selects by the lock's kind cell. Resolve
+    ;; the already loaded classes rather than importing native closures.
+    (setf (svref ccl::*class-table* target::subtag-lock)
+          #'(lambda (lock)
+              (find-class
+               (case (ccl::%svref lock target::lock.kind-cell)
+                 (ccl::recursive-lock 'ccl::recursive-lock)
+                 (ccl::read-write-lock 'ccl::read-write-lock)
+                 (t 'ccl:lock)))))
     ;; D1 uses native bits without a separate native trampoline object.
     ;; Only GFs have the side vector; inherited-cell counts identify closures.
     (setf (svref ccl::*class-table* target::subtag-function)
@@ -553,3 +562,61 @@
         (4 (ccl::%complex-single-float-imagpart a))
         (5 (ccl::%complex-double-float-realpart a))
         (6 (ccl::%complex-double-float-imagpart a))))
+
+;;; These are the same public calls and cleanup expansion used by WRITE-STRING.
+;;; No native lock pointer crosses the image boundary: both machines allocate
+;;; a fresh lock. Collection occurs while it is held recursively.
+(defun ready-recursive-locks (image)
+  (declare (ignore image))
+  (let ((lock (ccl:make-lock "READY printer"))
+        (other (ccl:make-lock "Independent"))
+        (flag (ccl:make-lock-acquisition))
+        (trace nil))
+    (list
+     (ccl::recursive-lock-p lock)
+     (ccl::lock-name lock)
+     (ccl:grab-lock lock flag)
+     (ccl:lock-acquisition-status flag)
+     (progn (core-collect) (ccl:try-lock lock))
+     (ccl:release-lock lock)
+     (ccl:release-lock lock)
+     (catch 'done
+       (ccl:with-lock-grabbed (lock)
+         (push :outer trace)
+         (core-collect)
+         (ccl:with-lock-grabbed (lock)
+           (push :inner trace)
+           (ccl:with-lock-grabbed (other)
+             (push :other trace)
+             (core-collect)
+             (throw 'done :unwound)))))
+     (handler-case
+         (ccl:with-lock-grabbed (lock)
+           (core-collect)
+           (error "READY lock cleanup"))
+       (error () :caught))
+     (progn (ccl:clear-lock-acquisition-status flag)
+            (ccl:lock-acquisition-status flag))
+     (ccl:try-lock lock flag)
+     (ccl:lock-acquisition-status flag)
+     (ccl:release-lock lock)
+     (ccl:try-lock other)
+     (ccl:release-lock other)
+     (handler-case (ccl:release-lock lock)
+       (ccl::not-lock-owner () :not-owner))
+     (handler-case (ccl:grab-lock lock t)
+       (type-error () :bad-flag))
+     (ccl:try-lock lock)
+     (ccl:release-lock lock)
+     (nreverse trace))))
+
+(defun ready-lock-operation (operation lock flag)
+  (case operation
+    (1 (ccl:make-lock "READY state"))
+    (2 (ccl:grab-lock lock flag))
+    (3 (ccl:try-lock lock flag))
+    (4 (ccl:release-lock lock))
+    (5 (handler-case (progn (ccl:grab-lock lock flag) :acquired)
+         (error () :refused)))
+    (6 (handler-case (progn (ccl:release-lock lock) :released)
+         (error () :refused)))))

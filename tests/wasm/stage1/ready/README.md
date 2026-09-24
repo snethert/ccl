@@ -1,129 +1,102 @@
-# Projected-image READY join — R10
+# Projected-image READY join — R11
 
-Executed originals increase from **550 / 515 non-NIL to 554 / 519**:
-whole-file CCL `ABS`, `COMPLEX`, `REALPART` and `IMAGPART` now run from the
-cold image. The previous corpus contains none of those four entries; the
-coverage record binds their native source modules and the new oracle row.
-This does not recount admission or claim an LL15 slot. The projected surface
-stays at 612 classes and 50 generic functions.
+Executed originals rise from **554 / 519 non-NIL to 562 / 525**. The eight
+new originals are MAKE-LOCK, %MAKE-LOCK, LOCK-NAME, GRAB-LOCK, TRY-LOCK,
+RELEASE-LOCK and the two object-level acquire/release wrappers. The target
+primitive replacements receive no original-definition credit.
 
-## Numerical closure
+This proposal closes the recursive-lock primitive dependencies reached by
+`WRITE-STRING` in the READY graph. It implements the approved exclusive,
+scheduler-disabled Worker profile. It does not claim a complete stream layer,
+shared-memory mutual exclusion between Workers, persistent lock images or
+LL15 slot credit. The CLOS projection remains 612 classes and 50 GFs.
 
-Native `ABS` could not compile its complete NUMBER-CASE expansion because
-scalar-complex-float constructors and readers were missing. Six primitive
-lowerings now implement those operations at the backend boundary. CCL's
-public definitions compile unchanged in their whole-file environment.
-`%%short-float-abs!` is an ordinary target Lisp counterpart of the native
-single-float LAP entry, using the existing float-word accessors. There is no
-new C or JavaScript arithmetic service.
+## Implementation
 
-Constructors evaluate both operands in order and retain roots across allocation
-retry. Readers also allocate through the shared heap-block helper and reload
-the rooted source after a collection. The raw shapes follow native 32-bit CCL:
+CCL's six-field lock object and public lock functions stay in place. Target
+branches in `l0-aprims.lisp` and `l0-misc.lisp` replace the foreign lock pointer
+with a traced two-element vector: owner token and recursion depth. The token
+comes from the executing module's owner-bound TCR, through one compiler
+primitive; it is not a rebindable Lisp global. This representation needs no
+foreign-resource finalizer or registration in the native system-lock list.
 
-| Object | Subtag | Header count | Bytes | Components |
-| --- | --- | --- | --- | --- |
-| Complex single float | 71 | 3 | 16 | 32-bit words at 8 and 12 |
-| Complex double float | 79 | 5 | 24 | 64-bit words at 8 and 16 |
+`MAKE-LOCK`, `LOCK-NAME`, `GRAB-LOCK`, `TRY-LOCK`, `RELEASE-LOCK`, the object
+wrappers and acquisition-status functions compile in their original file
+contexts. The ordinary `WITH-LOCK-GRABBED` expansion handles cleanup.
+Acquisition returns T, release returns NIL, and acquisition flags follow the
+native protocol. A different owner makes TRY-LOCK return NIL; blocking acquire
+signals because this profile cannot wait. Invalid state and recursion overflow
+refuse before changing ownership or depth. Release by a non-owner signals
+`NOT-LOCK-OWNER`.
 
-The word at offset 4 is zero padding. The isolated collector and heap-image
-loader recognize exactly these counts and treat component bits as raw data.
-Pointer-shaped payloads must neither retain objects nor acquire relocations.
-These additions are proposals under this fixture; shared compiler, runtime
-and CCL files are unchanged.
+The collector admits exactly six lock fields and traces each one. A held lock
+and its owner/depth vector may move during collection. The heap-image loader
+continues to refuse locks: restoring synchronization state requires a separate
+image reset policy. Locks in this unit are constructed after image loading.
+The READY classifier follows the native lock-kind dispatch and resolves the
+classes already in the image; no native lock pointer or classifier closure is
+projected.
 
-`READY-NUMERIC-SEQUENCES` exercises eleven real inputs, including fixnum
-limits, signed bignums and signed floating zero, plus six single/double complex
-pairs. It compares magnitude, components and operand-effect order with native.
-Native `SIMPLE-VECTOR-DELETE` now reaches its ABS-dependent COUNT path:
-30 combinations cover both directions, five counts and three bound pairs,
-with collection in comparison callbacks and observed visitation order.
-No general complex-arithmetic completeness claim is made.
+## Execution and controls
 
-## Representation and failure checks
+The READY caller compares with native: public acquisition and release, recursive
+try-lock, status flags, two independent locks, collections while held, nested
+THROW cleanup, error cleanup, unowned release and invalid flags. Target-directed
+cases additionally inspect owner/depth transitions and refuse foreign ownership,
+malformed state and overflow with state preserved. The collector checks all six
+fields through movement, wrong counts and truncated storage at both placements.
+A separate compiled omission demonstrates the field-count check is required.
 
-Each writer/reader run forces allocation retry through the actual whole-file
-`COMPLEX`, `REALPART` and `IMAGPART` entries. Independent raw header, padding
-and component-word observations prevent matching reads and writes from hiding
-a wrong representation. The primitive guard entry has an explicit native
-execution row; wrong operand shapes refuse without allocating.
+The larger closure exposed the probe registry's 4,096-entry bound. Validation
+now allows 4,352 entries, with matching pre-installation and installer checks.
+The registry still begins at 4,096 and ends below NIL at 77,824; an explicit
+bound prevents overlap. The binding table's independent capacity is unchanged.
+The original overflow refusal is retained.
 
-`complex-shapes.mjs` runs at both placements. Its sixteen rows check relocation,
-non-tracing of pointer-shaped component bits, exact count admission and
-truncated extents. Invalid collector objects refuse before changing source,
-roots or TCR; invalid image payloads refuse before destination writes.
-`complex_controls.py` removes each new count check separately from the
-collector and loader. All four omissions fail their named observation.
-The existing shared object-span and allocation guards are reused, not relaxed.
+R10's scalar-complex lowering and checks remain in this stacked proposal, as do
+the low-bit-first raw bit-vector observation, image admission controls, generated
+admission-guard omission and native-state restoration. Shared compiler, runtime
+and CCL sources remain unchanged pending review. Native R6/R6a qualifies the
+complete proposed files; the validation capacity change also runs through the
+full regression corpus.
 
-The earlier low-bit-first raw bit-vector check remains load-bearing (audit173
-O-61). Its value-only observers would not distinguish paired bit-order bugs.
-All-module macro screening, explicit execution lists, direct-entry image
-refusals, owner-installed table bindings and the admission-guard omission
-control remain in the run. O-58's NIL frame on the unreached `%error` fallback
-is still disclosed.
+The first lock witness correctly refused at `LOCK-NAME`: its `REQUIRE-TYPE`
+reached the missing lock classifier. The retained failure and diagnostic calls
+identify that boundary. The corrected initializer installs the classifier into
+its private class-table copy. The scheduler file still stops at `sched_yield`
+after the selected public lock definitions; it is recorded, not counted as a
+complete file or silently ignored.
 
-## Scope and provenance
+## Results and retention
 
-The compiler is derived from the accepted R9 backend, not from its retired
-patch stack. Cache identity includes the generated backend, target LAP source,
-collector source, clang and driver dependencies. Execution binds the proposed
-collector binary. Native R6/R6a is fresh and binds all 33 final compiler/CCL
-source files: 21,843 tests pass and all 164 FASLs restore.
+The full proposed compiler/runtime passes 26,048 fresh regression comparisons,
+including the collector-owner checks. Four cold boots at both placements,
+with and without movement, pass 50 support comparisons and 1,306 collections.
+Twenty boot refusals, 31 image admission checks, eight lock layout rows and the
+lock-count omission pass. The registry capacity/overlap controls refuse without
+memory writes. R10's sixteen scalar-complex rows and four omissions still pass.
+Fresh R6/R6a passes 21,843 native tests and restores all 164 FASLs, bound to all
+35 final compiler/CCL proposal files.
 
-The author run reused its completed build while fixing probe-only failures,
-then recompiled the final explicit probe batch and freshly ran the writer,
-full regression corpus, four cold boots and guard control. The failed inputs
-and continuation record are retained. Retention itself executes nothing.
-The verifier runs those phases from scratch or their exact build cache.
+The READY census is 797 modules, with missing edges reduced from 57 to 55 and
+50 indirect modules remaining. Neither a stream-layer completion nor an LL15
+acceptance follows from that conservative dependency census.
 
-The first retry probe used a wrapper compiled with retries disabled; the
-corrected probe forces retry through the native entries. A second assertion
-incorrectly counted the main witness's capture-cell allocation as a primitive
-write; a simple primitive entry now isolates that refusal. Missing explicit
-execution and a missing mutant-driver import were refused and corrected. The
-guard probe also copied the proposed collector from the executed base while
-the reused preparer expected its original service. A digest-checked handoff
-now restores that input before applying the proposal; the already compiled
-guard module then executes unchanged. The continuation record distinguishes
-these phases; writer/reader wall times were not recovered after interruption.
-
-READY and each support caller compare their own values and represented
-post-state against the corresponding native snapshot. The native oracle's
-class table and dynamic startup state are restored after all eighteen image
-entries. A nineteenth explicit entry executes the primitive guard's default
-case; its additional operations run in the target layout checks.
-
-Complete static closure, printer locks, upstream attribution under the
-25-replacement cap and all 35 startup callback dispositions remain open.
-The radix initializer, per-name selection lists, image projection and READY
-callers remain Stage 1 scaffolding. No additional projected GF or class field
-is added in R10, and this is not complete LL15 acceptance.
-
-## Results
-
-The proposed compiler/collector passes 26,048 fresh corpus comparisons, including
-40 collector-owner checks. Four cold boots pass at both placements with 1,286
-collections, 45 support comparisons, 20 boot refusals and 31 image-admission
-checks. All sixteen scalar-complex layout rows and four count-check omission
-controls pass. The generated admission-guard omission is rejected.
-
-The closure is 781 modules / 122 operators / 39,306 occurrences, with missing
-edges reduced from 62 to 57; 50 indirect modules remain. This larger numeric
-closure is a dependency census, not an assertion that every branch executes.
+The complete author run is retained separately from development continuations.
+Native qualification is reused only against identical final proposal sources.
+The session key now explicitly includes all three source files read by the
+lock derivation, in addition to the derivation and compiler/driver identities.
+Original failed compiler inputs, the registry refusal and the lock classifier
+failure are retained. No execution is claimed during retention.
 
 ## Reproduce
 
 ```sh
-python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r10 /private/tmp/ccl-work/claude/ready/verify
+python3 tests/wasm/stage1/ready/packet.py verify ../ccl-evidence/2026-09-24-stage1-ready-join-r11 /private/tmp/ccl-work/claude/ready/verify
 ```
 
-The native qualification can be rebuilt independently:
-
-```sh
-python3 tests/wasm/stage1/ready/native.py /private/tmp/ccl-work/claude/ready-native/run
-```
-
-The saved native compiler image is review tooling, never the port's heap.
-Historical READY packets replay from their recorded source commits. Scratch
-outputs and caches are disposable; final retention deletes its source output.
+Native qualification can be rebuilt independently with `native.py` under a
+managed `ccl-work` output root. The saved native compiler image is review
+tooling, never the port's heap. Historical packets replay at their recorded
+source revisions. Replacement attribution, startup callback dispositions and
+the remaining unresolved/indirect READY edges are still owed.

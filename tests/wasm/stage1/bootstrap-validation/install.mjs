@@ -1,17 +1,18 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';
 export async function install({dir,memory,tcr,get,put,service,collector,config,result,collect,calculateI,calculateF,ensure}){
- const NIL=77825,registry=4096,table=new WebAssembly.Table({element:'anyfunc',initial:4096}),tail_table=new WebAssembly.Table({element:'anyfunc',initial:4096});
+ const NIL=77825,registry=4096,capacity=4352,table=new WebAssembly.Table({element:'anyfunc',initial:capacity}),tail_table=new WebAssembly.Table({element:'anyfunc',initial:capacity});
  const call_error=new WebAssembly.Tag({parameters:['i32']}),type_error=new WebAssembly.Tag({parameters:['i32','i32']}),nonlocal_exit=new WebAssembly.Tag({parameters:['i32']});
  const env={memory,tcr,table,tail_table,code_registry:registry,call_error,type_error,nonlocal_exit},symbols={},keywords={},codes={},functions=new Map(),entries=new Map();
  const mods=JSON.parse(fs.readFileSync(dir+'/compiled/modules.json')),material=JSON.parse(fs.readFileSync(dir+'/compiled/materialized.json'));
- assert(mods.length+8<=4096,'fixture code registry capacity');
+ assert(registry+8+16*capacity<=NIL-1,'registry must precede NIL');
+ assert(mods.length+8<=capacity,'fixture code registry capacity');
  new Uint8Array(memory.buffer,2097152,material.image.length/2).set(Buffer.from(material.image,'hex'));let cursor=2097152+material.image.length/2,symbolNext=1200000;
  function object(id,pool){const p=cursor;cursor+=32;[1578,id*4,NIL,4,NIL,NIL,pool,0].forEach((v,i)=>put(p+4*i,v));return p+6;}
  function symbol(name){if(symbols[name])return symbols[name];const p=symbolNext;symbolNext+=32;[1850,NIL,NIL,NIL,NIL,NIL,NIL,0].forEach((v,i)=>put(p+4*i,v));return symbols[name]=p+6;}
  const owners=JSON.parse(fs.readFileSync(dir+'/compiled/symbols.json')),ownerWords=new Map(),wordOwners=new Map(),extraRoots=[];
  owners.forEach((row,i)=>{const p=7000000+32*i;[1850,NIL,NIL,NIL,NIL,0,NIL,row.package===null?0:4*(i+1)].forEach((v,j)=>put(p+4*j,v));ownerWords.set(row.id,p+6);wordOwners.set(p+6,{symbol:row.id});for(const offset of [4,8,12,16,24])extraRoots.push(p+offset);});
  for(const name of ['list','alist']){keywords[name]=symbol('keyword_'+name);put(keywords[name]-2,keywords[name]);}
- put(registry,4096);put(registry+4,1);
+ put(registry,capacity);put(registry+4,1);
  function register(id,instance){[id,4,17,23].forEach((v,i)=>put(registry+8+16*id+4*i,v));table.set(id,instance.exports.entry);tail_table.set(id,instance.exports.tail_entry);}
  const eql=(await WebAssembly.instantiate(fs.readFileSync(dir+'/eql.wasm'),{env:{memory}})).instance.exports;const hash={run:eql.ht_eql,collect:()=>{throw Error('unexpected EQL collection');},config:0,operation:3,scratch:1800000,scratch_end:1940000,result:1169504};
  const eqTable=(await WebAssembly.instantiate(fs.readFileSync(dir+'/hash.wasm'),{env:{memory}})).instance.exports;

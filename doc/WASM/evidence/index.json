@@ -3762,6 +3762,14 @@
       "review_disposition": "NOT_REVIEWED",
       "slot_credit": false,
       "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit."
+    },
+    {
+      "id": "STAGE1-READY-JOIN-R11",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-24-stage1-ready-join-r11/packet.json",
+      "sha256": "740a5a19a30d65a366185d8c5f69f3aa910f371fc02b694eea7e6191fd7f14eb",
+      "review_disposition": "NOT_REVIEWED",
+      "slot_credit": false,
+      "scope": "READY R11 single-Worker recursive locks: eight native originals add execution credit, 562/525 non-NIL including R10. Native public lock APIs and cleanup macros run over target owner/depth primitives; collector traces all six lock fields, heap image still refuses locks. 26048 fresh corpus comparisons, four cold boots / 1306 collections, 50 support comparisons, 20 boot refusals, 31 image checks, eight lock layout checks, one rejected count omission, two no-write registry controls. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 35-file source identity. Clean complete author run retained separately from development failures. Closure 797 modules / 55 missing edges / 50 indirect modules; both recursive-lock edges resolved. Class/GF surface unchanged at 612/50. No inter-Worker synchronization, stream completion, shared-source integration or LL15 slot credit."
     }
   ],
   "current_runs": [

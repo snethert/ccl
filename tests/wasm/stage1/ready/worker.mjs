@@ -402,13 +402,52 @@ import {sha256} from './runtime/sha256.mjs';
         assert.deepEqual(checkBootClasses({gen,owners:ownerNames,get,put,root,collect,initialize:true}),expected.values);
         if(workerData.imageMode==='write')saveReady();
       }
-      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES']){
+      for(const name of ['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS']){
         const witness=native.find(row=>row.definition===name);
         assert(witness,'missing READY support oracle '+name);
         const values=gen.invoke(witness.name,[get(root+8)]).map(decode);
         assert.deepEqual(values,witness.values,name+' native result');
         const after=decodeGraph(get(root+8),witness.after[0].graph,graphIO);
         assert.deepEqual(after,witness.after[0],name+' native mutation');
+        if(name==='READY-RECURSIVE-LOCKS'){
+          const entry=native.find(row=>row.definition==='READY-LOCK-OPERATION');assert(entry);
+          assert.deepEqual(gen.invoke(entry.name,[0,NIL,NIL]).map(decode),entry.values);
+          const call=op=>gen.invoke(entry.name,[op*4,get(root+12),NIL])[0];
+          const refused=gen.ownerWords.get(ownerNames.find(row=>row.package==='KEYWORD'&&row.name==='REFUSED').id);
+          put(root+4,2);put(root+12,gen.invoke(entry.name,[4,NIL,NIL])[0]);
+          const state=()=>get(get(root+12)-2)-6;
+          assert.equal(get(get(root+12)-6),1602,'native six-field lock');
+          assert.equal(get(state()),762,'traced owner/depth vector');
+          assert.deepEqual([get(state()+4),get(state()+8)],[0,0]);
+          assert.equal(call(2),T);assert.equal(call(3),T);
+          assert.deepEqual([get(state()+4),get(state()+8)],[tcr,8]);
+          collect();assert.equal(call(4),NIL);
+          assert.deepEqual([get(state()+4),get(state()+8)],[tcr,4]);
+          assert.equal(call(4),NIL);
+          assert.deepEqual([get(state()+4),get(state()+8)],[0,0]);
+          for(const [owner,depth]of [[tcr+16,4],[0,4],[tcr,0],[0xfffffffc,4],[tcr,0xfffffffc],[T,4],[tcr,T],[tcr,0x7ffffffc]]){
+            put(state()+4,owner);put(state()+8,depth);
+            if(owner===tcr+16){assert.equal(call(3),NIL,'try never waits');}
+            assert.equal(call(5),refused,'invalid/foreign/exhausted lock refuses');
+            assert.deepEqual([get(state()+4),get(state()+8)],[owner,depth],'refusal preserves lock');
+          }
+          put(state()+4,0);put(state()+8,0);
+          put(root+4,3);put(root+16,get(get(root+12)-2));
+          const modules=JSON.parse(fs.readFileSync(dir+'/compiled/modules.json'));
+          const vectorOwner=ownerNames.find(row=>row.package==='COMMON-LISP'&&row.name==='VECTOR');
+          const vectorModule=modules.filter(row=>row.function===vectorOwner.id).at(-1);
+          put(root+20,gen.invoke(vectorModule.name,[0])[0]);put(root+4,4);
+          for(const malformed of [0,1]){
+            put(get(root+12)-2,malformed?get(root+20):NIL);
+            assert.equal(call(5),refused,'lock state vector shape');
+            // NIL is immediate; the short vector is still the lock's live value.
+            assert.notEqual(get(get(root+12)-2),get(root+16));
+          }
+          put(get(root+12)-2,get(root+16));put(root+4,2);
+          assert.equal(call(6),refused,'unlock without ownership');
+          assert.deepEqual([get(state()+4),get(state()+8)],[0,0]);
+          put(root+4,1);
+        }
         if(name==='READY-BIT-VECTORS'){
           for(const n of [9,33]){
             const object=gen.invoke(witness.name,[NIL,0,n*4,4])[0];

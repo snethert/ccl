@@ -49,6 +49,9 @@ def measurements(out):
               'LDIFF':'ccl:lib;lists.lisp','MAPC':'ccl:lib;lists.lisp',
               'MAP1':'ccl:lib;lists.lisp',
               'CSUBTYPEP':'ccl:level-1;l1-typesys.lisp','TYPE=':'ccl:level-1;l1-typesys.lisp'}
+    expected.update({'MAKE-LOCK':'ccl:level-0;l0-aprims.lisp','%MAKE-LOCK':'ccl:level-0;l0-aprims.lisp','LOCK-NAME':'ccl:level-0;l0-aprims.lisp',
+        '%LOCK-RECURSIVE-LOCK-OBJECT':'ccl:level-0;l0-misc.lisp','%UNLOCK-RECURSIVE-LOCK-OBJECT':'ccl:level-0;l0-misc.lisp',
+        'GRAB-LOCK':'ccl:level-1;l1-processes.lisp','RELEASE-LOCK':'ccl:level-1;l1-processes.lisp','TRY-LOCK':'ccl:level-1;l1-processes.lisp'})
     selected={}
     for name,source in expected.items():
         rows=[row for row in closure['modules'] if row['name'] and row['name'].split('::')[-1]==name]
@@ -61,6 +64,8 @@ def measurements(out):
     assert 'READY-NATIVE-CLOSURE-REFUSED' in (out/'compiled/probe.log').read_text()
     c.save(out/'startup-support.json',dict(status='PASS',whole_file_bindings=selected,
         integer_radix_pairs_per_boot=55,mapc_callbacks_per_boot=3,
+        lock_profile="one exclusive Worker; no scheduler; transient locks",
+        lock_layout_checks=8,lock_count_omissions=1,code_registry_capacity=4352,
         numeric_real_inputs_per_boot=11,complex_pairs_per_boot=6,
         counted_delete_cases_per_boot=30,complex_layout_checks=16,complex_count_omissions=4,
         bit_vector_lengths=[0,1,7,8,9,31,32,33,63,64,65,257],
@@ -99,6 +104,9 @@ def run(out):
     times['owner_controls']=c.command([c.NODE,HERE/'owner-controls.mjs',out/'compiled',out/'owner-controls.json'],out/'owner-controls.log',timeout=60)
     times['complex_shapes']=c.command([c.NODE,HERE/'complex-shapes.mjs',out/'compiled',out/'complex-shapes.json'],out/'complex-shapes.log',timeout=60)
     local('complex_controls').check(out)
+    times['lock_shapes']=c.command([c.NODE,HERE/'lock-shapes.mjs',out/'compiled',out/'lock-shapes.json'],out/'lock-shapes.log',timeout=60)
+    local('lock_controls').check(out)
+    times['registry_controls']=c.command([c.NODE,HERE/'registry-controls.mjs',out/'compiled',out/'registry-controls.json'],out/'registry-controls.log',timeout=60)
     for mode,name in [('write','writer'),('read','reader')]:
         times[name]=c.command([c.NODE,HERE/'run.mjs',out/'compiled',mode,out/'images',out/(name+'.json')],
                              out/(name+'.log'),timeout=600)
@@ -112,6 +120,9 @@ def run(out):
     return summarize(out)
 
 def summarize(out):
+    assert c.read(out/'registry-controls.json')['status']=='PASS'
+    assert c.read(out/'lock-shapes.json')['status']=='PASS'
+    assert c.read(out/'lock-controls.json')['status']=='PASS'
     assert c.read(out/'complex-shapes.json')['status']=='PASS'
     assert len(c.read(out/'complex-controls.json')['rows'])==4
     writer,reader=[c.read(out/(name+'.json')) for name in ('writer','reader')]
@@ -120,7 +131,7 @@ def summarize(out):
     admission=c.read(out/'admission-controls.json')
     assert admission['status']=='PASS' and len(admission['checks'])==31
     assert admission['imported_modules']=={name:c.sha(out/'compiled'/name) for name in admission['imported_modules']}
-    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==18
+    assert (out/'compiled/probe.log').read_text().count('READY-NATIVE-STATE-RESTORED ')==19
     assert writer['comparisons']==1 and reader['comparisons']==4
     reference=writer['results'][0]['rows'][0]
     for result in reader['results']:
@@ -132,7 +143,7 @@ def summarize(out):
     assert all(r['directEntry'] and r['rootsPreserved']==7 for r in reader['refusals'] if r['rejected'].startswith('image-'))
     assert reference['values'][:4]==[612,50,43,41]
     for result in writer['results']+reader['results']:
-        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES']
+        assert [row['name'] for row in result['supportChecks']]==['READY-INTEGER-STRINGS','READY-LIST-CALLEES','READY-TYPE-METHODS','READY-INTEGER-MAGNITUDE','READY-SYMBOL-LOOKUP','READY-CLASS-PROTOCOL','READY-SLOT-ERRORS','READY-BIT-VECTORS','READY-NUMERIC-SEQUENCES','READY-RECURSIVE-LOCKS']
         assert len(result['profileChecks'])==1
         check=result['profileChecks'][0]
         assert check['admitted'] and check['rootsPreserved']==7
@@ -157,9 +168,9 @@ def summarize(out):
         full_corpus_comparisons=full['fresh_comparisons'],
         heap_key_placements=2,heap_key_controls=2,
         classes=612,generic_functions=50,controls=len(reader['refusals']),
-        image_admission_controls=31,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=45,profile_refusals=8,public_table_bindings=4,native_state_restorations=18,
+        image_admission_controls=31,lock_layout_checks=8,lock_count_omissions=1,complex_layout_checks=16,complex_count_omissions=4,support_comparisons=50,profile_refusals=8,public_table_bindings=4,native_state_restorations=19,
         collections=sum(w['collections']+w['internalCollections'] for w in reader['results']),
-        original_definition_credit=4,slot_credit=False,
+        original_definition_credit=12,slot_credit=False,
         scope='Process READY over the selected projected class/condition image. LL15 membership and replacement census remain incomplete.')
     c.save(out/'summary.json',report);return report
 

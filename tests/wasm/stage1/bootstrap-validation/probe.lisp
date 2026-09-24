@@ -167,7 +167,7 @@
           (unless (member (getf module :source-name) names)
             (error "Compiled probe has no explicit execution entry: ~s"
                    (getf module :source-name))))
-        (when (> (+ 8 *validation-base-count* (length all)) 4096)
+        (when (> (+ 8 *validation-base-count* (length all)) 4352)
           (error "The probe exceeds the code registry capacity."))
         (with-open-file (s (concatenate 'string out "probe-modules.json")
                            :direction :output :if-exists :error)

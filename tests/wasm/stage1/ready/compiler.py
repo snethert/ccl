@@ -16,6 +16,9 @@ def generate():
     anchor='    (case op\n      ((ccl::%setf-double-float ccl::%setf-short-float)'
     assert text.count(anchor)==1
     text=text.replace(anchor,'    (case op\n      ((ccl::%complex-single-float-realpart ccl::%complex-single-float-imagpart\n        ccl::%complex-double-float-realpart ccl::%complex-double-float-imagpart)\n       (bootstrap-complex-part op args))\n      ((ccl::%make-complex-single-float ccl::%make-complex-double-float)\n       (bootstrap-complex-float op args))\n      ((ccl::%setf-double-float ccl::%setf-short-float)')
+    anchor="          ((eq name '-) (bootstrap-subtract forms))"
+    assert text.count(anchor)==1
+    text=text.replace(anchor,anchor+'\n          ((eq name \'ccl::%wasm-lock-owner-token)\n           (unless (null forms) (refuse :single-worker-lock-token-arity))\n           (b-multiple (make-b-raw-code :text\n             "(block (result i32)\n                (if (i32.or (i32.eqz (global.get $tcr))\n                            (i32.or (i32.and (global.get $tcr) (i32.const 15))\n                                    (i32.ge_u (global.get $tcr) (i32.const 2147483648))))\n                  (then (throw $call_error (i32.const 4))))\n                (global.get $tcr))")))')
     return text
 
 def install():
@@ -28,6 +31,8 @@ def install():
             base=c.sha(c.ROOT/BACKEND),proposal=hashlib.sha256(generate().encode()).hexdigest(),
             derivation=c.sha(Path(__file__)),
             complex_floats=c.sha(HERE/'complex-floats.lisp'),
+            locks=c.sha(HERE/'locks.lisp'),lock_source=c.sha(HERE/'lock_source.py'),
+            lock_inputs={name:c.sha(c.ROOT/name) for name in ('level-0/l0-aprims.lisp','level-0/l0-misc.lisp','compiler/WASM32/wasm32-arch.lisp')},
             class_driver=c.sha(HERE/'numeric-files.lisp'),
             clos_methods=c.sha(HERE/'clos-methods.lisp'),
             condition_methods=c.sha(HERE/'condition-methods.lisp'),
@@ -62,11 +67,26 @@ def install():
 '''
         (stage/'compiled/proposal/files'/lap).write_text(source)
         next(r for r in record['added'] if r['path']==lap)['sha256']=c.sha(stage/'compiled/proposal/files'/lap)
+        from lock_source import sources
+        for name,text in sources(c.ROOT).items():
+            path=stage/'compiled/proposal/files'/name
+            path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
+            rows=record['added']+record['modified']
+            row=next((r for r in rows if r['path']==name),None)
+            if row is None:
+                import subprocess
+                original=subprocess.check_output(['git','show','c994217adc56b3f8a564526cee4695893ac84d86:'+name],cwd=c.ROOT)
+                row=dict(path=name,before=hashlib.sha256(original).hexdigest())
+                record['modified'].append(row)
+            row['after' if 'before' in row else 'sha256']=c.sha(path)
         c.save(manifest,record)
         collector=(c.ROOT/'runtime/wasm32/collector.c').read_text()
         anchor=' case 23:return n==3?12:0xffffffffu;'
         assert collector.count(anchor)==1
         collector=collector.replace(anchor,anchor+'\n case 71:return n==3?12:0xffffffffu;\n case 79:return n==5?20:0xffffffffu;')
+        anchor='   else if(node_subtag(tag)'
+        assert collector.count(anchor)==1
+        collector=collector.replace(anchor,'   else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}\n'+anchor)
         (stage/'runtime/collector.c').write_text(collector)
         clang=Path('/usr/local/opt/llvm/bin/clang')
         c.command([clang,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-matomics','-mbulk-memory',

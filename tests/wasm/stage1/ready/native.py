@@ -20,8 +20,10 @@ def run(out):
     spec=importlib.util.spec_from_file_location('ready_native_driver',HERE.parent/'bootstrap-generic-dispatch/native.py')
     native=importlib.util.module_from_spec(spec);spec.loader.exec_module(native)
     driver=native.driver
-    pair=('level-1/l1-readloop.lisp','l1-fasls/l1-readloop.dx64fsl')
-    if pair not in driver.SOURCE_PAIRS:driver.SOURCE_PAIRS.append(pair)
+    for pair in [('level-1/l1-readloop.lisp','l1-fasls/l1-readloop.dx64fsl'),
+                 ('level-0/l0-aprims.lisp','level-0/l0-aprims.dx64fsl'),
+                 ('level-0/l0-misc.lisp','level-0/l0-misc.dx64fsl')]:
+        if pair not in driver.SOURCE_PAIRS:driver.SOURCE_PAIRS.append(pair)
     driver.EXPECTED=['bin/systems.dx64fsl','bin/compile-ccl.dx64fsl']+[p[1] for p in driver.SOURCE_PAIRS]
     def proposal(source,destination):
         shutil.copytree(proposed,destination)

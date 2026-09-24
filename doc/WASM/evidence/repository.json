@@ -1,34 +1,34 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "9bf740244f4e30dcbdafc76010a702a6f7f1fd3354f8c30db88d344350ff99a5",
-  "commit": "9a553a46882c8f4a67acb837f144aaafd59fcd52",
-  "immutable_evidence_files": 269672,
+  "catalog_sha256": "fd428f308104ec40b1ad6e9271ce9c8fb8b3abd4e16e34b2894241632ae10402",
+  "commit": "9b6878ad937b9385c2335b1031a96383f8a11356",
+  "immutable_evidence_files": 269755,
   "last_scoped_addition": {
-    "directory": "2026-09-24-stage1-ready-join-r10",
-    "files": 71,
-    "bytes": 48687447
+    "directory": "2026-09-24-stage1-ready-join-r11",
+    "files": 82,
+    "bytes": 50159690
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "READY R10 numerical closure: native whole-file ABS, COMPLEX, REALPART and IMAGPART execute; originals 554/519 non-NIL. Count-limited DELETE covers 30 direction/count/bounds cases. Six scalar-complex primitives, target single-float abs and exact raw collector/image shapes are isolated proposals. 26048 fresh corpus comparisons, 40 collector-owner checks, four cold boots / 1286 collections, 45 support comparisons, 20 boot refusals, 31 image checks, 16 new raw layout checks and four rejected count omissions. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 33-file source identity. Author continuation and original failures disclosed; retention executes nothing. Closure 781 modules / 57 missing edges / 50 indirect modules. Projected class/GF surface unchanged at 612/50. No shared-source integration or LL15 slot credit.",
-  "source_index_sha256": "b9aabbd4bf6e1bfbc72acd4eb7275834a9c8a065d6533bcfefe39f1b74a9810d",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r10.json",
+  "scope": "READY R11 single-Worker recursive locks: eight native originals add execution credit, 562/525 non-NIL including R10. Native public lock APIs and cleanup macros run over target owner/depth primitives; collector traces all six lock fields, heap image still refuses locks. 26048 fresh corpus comparisons, four cold boots / 1306 collections, 50 support comparisons, 20 boot refusals, 31 image checks, eight lock layout checks, one rejected count omission, two no-write registry controls. Fresh R6/R6a: 21843 tests, 164 restored FASLs, 35-file source identity. Clean complete author run retained separately from development failures. Closure 797 modules / 55 missing edges / 50 indirect modules; both recursive-lock edges resolved. Class/GF surface unchanged at 612/50. No inter-Worker synchronization, stream completion, shared-source integration or LL15 slot credit.",
+  "source_index_sha256": "5d9b17e4933ef9f67cd29f4752b015760e64fad977cf9749cb49741d6aa2d912",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-ready-join-r11.json",
   "version": 1,
   "verification": {
     "status": "PASS",
-    "report": "2026-09-24-stage1-ready-join-r10/summary.json",
-    "report_sha256": "9d592723ba1ad749ee3c72c2af4549e6984a65ed7d695649e38d340f44fdbff7",
+    "report": "2026-09-24-stage1-ready-join-r11/summary.json",
+    "report_sha256": "de42a68d895c539363186d404f62aa716c00f596998bafcd6fc905d023a1ad62",
     "native_rebuilt": true,
     "native_tests": 21843,
-    "native_source_identity": "2026-09-24-stage1-ready-join-r10/native-proposal-identity.json",
-    "native_source_identity_sha256": "d0ebb4309c3946151a7cf9c6c995db7348f9ad5ce856ff89b700c3190265c830",
+    "native_source_identity": "2026-09-24-stage1-ready-join-r11/native-proposal-identity.json",
+    "native_source_identity_sha256": "dda815602a47992fa265cd8a194873dba941f895510328e6e397b40c20c204be",
     "execution_rebuilt": true,
     "fresh_corpus_comparisons": 26048,
     "cold_boots": 4,
     "execution_during_retention": false,
-    "author_continuation": "logs.tar.gz:development/author-continuation.json"
+    "author_run": "logs.tar.gz:development/author-run.json"
   }
 }

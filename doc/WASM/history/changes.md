@@ -4564,3 +4564,29 @@ The static closure has 781 modules, 122 operators and 39,306 occurrences;
 missing edges fall 62 to 57, with 50 indirect modules. Printer locks, complete
 replacement attribution and 35 callback dispositions remain open. This is
 one READY review packet, not LL15 acceptance; the ledger stays 21/12/0 of 33.
+
+
+## 2026-09-24 — READY R11 single-Worker recursive locks
+
+On Steve's “proceed”, closed the recursive-lock primitives reached by the
+printer's WRITE-STRING path. Target branches retain CCL's six-field lock and
+public functions, replacing its foreign pointer with traced owner/depth state.
+The compiler supplies an owner-bound TCR token; the collector traces exactly
+six fields. Native cleanup macros work through recursion, collection, THROW
+and error unwinding. Foreign ownership, malformed state and overflow refuse;
+there is no scheduler, cross-Worker mutex claim or persistent lock-image claim.
+
+Eight native originals raise proposed execution from 554/519 to 562/525.
+The READY lock classifier uses existing classes, leaving the projection at
+612 classes / 50 GFs. The 4,096-code probe limit was reached and refused;
+4,352 entries fit below NIL, with pre-installation and no-write overlap checks.
+The final proposal passes 26,048 comparisons, four cold boots / 1,306 collections,
+50 support comparisons, lock layout/count controls and the existing image and
+admission checks. Fresh native qualification binds all 35 proposed source files,
+with 21,843 tests and 164 restored FASLs. Original failures remain in the packet.
+
+The compiler/runtime/CCL changes remain isolated for review; the shared changes
+are validation bounds only. R10 remains stacked, not implicitly accepted.
+The closure is 797 modules / 55 missing edges / 50 indirect modules. Stream
+completion, attribution and startup callback dispositions remain open. Ledger
+21/12/0 of 33 and no LL15 credit.
