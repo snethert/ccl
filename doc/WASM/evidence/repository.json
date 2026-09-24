@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "c58db0d648be518e946c4be1e3d488b33728b4106748c320b2344f0008d76c2a",
-  "commit": "d3512db893ecd34da894e5e4760f96dc1938560f",
-  "immutable_evidence_files": 270131,
+  "catalog_sha256": "4f1f913852b3ca299ecbb0bd60e3e259255c4f596dafff1119abdee80c3b9936",
+  "commit": "b1f0141bdb727874fae69329d18d6e04a0529c4d",
+  "immutable_evidence_files": 270183,
   "last_scoped_addition": {
-    "bytes": 1357203,
-    "directory": "2026-09-24-namespace-provider-r1",
-    "files": 65
+    "bytes": 213451,
+    "directory": "2026-09-24-namespace-primitives-r1",
+    "files": 51
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "NSL-1 host foundation: immutable read-only namespace manifest, private handles and positions, stat/open/pread/read/seek/close/realpath and directory iteration. 57 native matches, two declared path refusals, 80 controls and six rejected faults. Four reads through unchanged hand-built D5 harness with collection, interrupt/EOF and stale completion checks. Native standard foreign types initialized at 32-bit widths without database access. No compiler/runtime/Lisp product source changes; no generated Lisp bridge, browser/JSPI, target FTD initialization or namespace slot credit. Accepted originals stay 575/535; file counts 0/0/0.",
-  "source_index_sha256": "f951676f4db8d2c99be7e220ff5309289535bccc89bd8eee782226f27a3f89f2",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-provider-r1.json",
+  "scope": "Generated read-only file primitive proposal: nine target CCL definitions, three generated callers, stable owner mailbox and rooted octet-buffer ABI. 160 native comparisons across four Workers and both placements, 98 moving collections, 24 generated refusals, 35 admission cases and four rejected faults. Cold build independent of retained compiler sessions; documented replay PASS. No shared product edits or slot credit; target pointer-based IO-BUFFER/fasloader callers and general OPEN/LOAD remain next. Accepted originals 575/535 and bundle file counts 0/0/0 unchanged.",
+  "source_index_sha256": "56c8d3d564d409caf52d001e79bf8101d2ae77d127affc236c236ca4bac97813",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-primitives-r1.json",
   "verification": {
     "new_execution": true,
-    "report": "2026-09-24-namespace-provider-r1/verification.json",
-    "report_sha256": "1e13edb25247b33335b089f11d1d9de9b9586e6ba6d5bc9be722ef3300136be6",
+    "report": "2026-09-24-namespace-primitives-r1/verification.json",
+    "report_sha256": "33c97ba8fc9dab754528ad6541d4491818cccf671217d856c9e7872265c02665",
     "status": "PASS"
   },
   "version": 1

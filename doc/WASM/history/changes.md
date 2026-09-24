@@ -4733,3 +4733,33 @@ of execution phases. No shared product changes or new original-function credit;
 accepted originals remain 575/535, Stage 1 remains 21/12/0, file counts 0/0/0.
 Next is the real Lisp file-call bridge, then the first compiler/dumper path.
 All namespace outputs are deleted after retention; bounded shared caches remain.
+
+
+## 2026-09-24 — generated read-only file primitive bridge
+
+On Steve's "finish the file primitive work", added the isolated NSL-1 primitive
+proposal. CCL's file compiler builds nine target definitions and three callers;
+the real symbol cells lead through an internal B leaf to the namespace owner.
+A bounded stable mailbox carries only scalar handles and copied bytes. The
+Worker retains generated roots, suspends FOREIGN, resumes RUNNING, collects,
+reloads the octet buffer, and publishes the one-value result. This is a new
+8 KiB bridge proposal for the single-Worker profile, not a claim that the Stage 0
+interrupt/nesting protocol has been integrated into Stage 1.
+
+Four Workers compare 160 native rows, including EOF, short reads, seek/tell,
+stale handles, Unicode paths, buffer post-state, multiple values and close from
+THROW cleanup. Ninety-eight real collections poison the old spaces. Twenty-four
+generated argument refusals preserve all TCR words and never reach the host;
+35 directed bridge cases and four fault variants pass. Write denial and target
+fixnum positioning bounds are explicit. Native macptr reads use a byte-copying
+oracle adapter; the target primitive takes an octet vector. Native IO-BUFFER and
+fasloader pointer callers still need their target adaptation, and general
+OPEN/PROBE-FILE/LOAD are not claimed.
+
+The clean compiler build takes about 1.5 seconds without a retained session;
+all phases, including rebuilding the unchanged services, take about 25 seconds.
+No shared compiler/runtime/Lisp source change, no new original-definition or
+Stage 1 slot credit. Unchanged complete native source identity reuses the R13
+native gate. Rebuildable binaries are recorded by digest, and disposable output
+is deleted after retention. Accepted execution remains 575/535, ledger 21/12/0,
+files cross-compiled to deliverable bundles / cross-loaded / target-loaded 0/0/0.
