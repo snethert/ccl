@@ -25,7 +25,7 @@ export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,
   need(typeof row.name==='string'&&/^[a-zA-Z0-9_]+$/.test(row.name)&&!names.has(row.name),'NAME');names.add(row.name);
   need(Number.isInteger(row.code_id)&&row.code_id>=set.first_code_id&&row.code_id<capacity&&!ids.has(row.code_id),'CODE_ID');ids.add(row.code_id);
   need(row.version===4&&row.signature===17&&row.role===23,'CODE_ROLE');
-  need(Array.isArray(row.arity)&&row.arity.length===6&&row.arity.slice(0,2).every(n=>Number.isInteger(n)&&n>=0)&&row.arity.slice(2,5).every(v=>typeof v==='boolean')&&Array.isArray(row.arity[5])&&row.arity[5].length===0&&Number.isInteger(row.captures)&&row.captures>=0,'CALLABLE_SHAPE');
+  need(Array.isArray(row.arity)&&row.arity.length===6&&row.arity.slice(0,2).every(n=>Number.isInteger(n)&&n>=0)&&row.arity.slice(2,5).every(v=>typeof v==='boolean')&&Array.isArray(row.arity[5])&&row.arity[5].every(w=>typeof w==='string')&&(row.arity[3]||row.arity[5].length===0)&&Number.isInteger(row.captures)&&row.captures>=0,'CALLABLE_SHAPE');
   need(typeof row.profile==='string','PROFILE');
   need([0,4,8,12].every(o=>get(registry+8+16*row.code_id+o)===0),'OCCUPIED');
  }
@@ -37,6 +37,9 @@ export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,
   const symbols=Object.create(null),codes=Object.create(null);
   for(const s of row.symbols){need(!Object.hasOwn(symbols,s.wire),'SYMBOL_DUPLICATE');symbols[s.wire]=heap.reference(s.reference);}
   for(const c of row.codes){need(!Object.hasOwn(codes,c.name)&&ids.has(c.code_id),'CODE_IMPORT');codes[c.name]=c.code_id*4;}
+  // Keyword metadata names the same symbolic wires used by generated code.
+  // Their heap references relocate with the rest of this image's symbols.
+  need(row.arity[5].every(w=>Object.hasOwn(symbols,w)),'KEYWORD_SYMBOL');
   for(const i of row.d2.outputs.full.imports){
    if(i.module==='symbols')need(Object.hasOwn(symbols,i.name),'SYMBOL_IMPORT');
    if(i.module==='codes')need(Object.hasOwn(codes,i.name),'CODE_IMPORT');

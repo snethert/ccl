@@ -776,6 +776,8 @@
      (%unlock-futex ptr)))
   nil)
 
+
+
 (defun %unlock-recursive-lock-object (lock)
   (%unlock-recursive-lock-ptr (%svref lock target::lock._value-cell) lock))
 
@@ -855,7 +857,7 @@
 ;;; What happens if there are some pending readers and another writer,
 ;;; and we abort out of the semaphore wait ?  If the writer semaphore is
 ;;; signaled before we abandon interest in it
-#-futex
+#-(or futex wasm32-target)
 (defun %write-lock-rwlock-ptr (ptr lock &optional flag)
   (with-macptrs ((write-signal (%get-ptr ptr target::rwlock.writer-signal)) )
     (if (istruct-typep flag 'lock-acquisition)
@@ -887,7 +889,7 @@
            (let* ((*interrupt-level* level))
                   (%process-wait-on-semaphore-ptr write-signal 1 0 (rwlock-write-whostate lock)))
            (%get-spin-lock ptr)))))))
-#+futex
+#+(and futex (not wasm32-target))
 (defun %write-lock-rwlock-ptr (ptr lock &optional flag)
   (with-macptrs ((write-signal (%INC-ptr ptr target::rwlock.writer-signal)) )
     (if (istruct-typep flag 'lock-acquisition)
@@ -929,7 +931,7 @@
 (defun write-lock-rwlock (lock &optional flag)
   (%write-lock-rwlock-ptr (read-write-lock-ptr lock) lock flag))
 
-#-futex
+#-(or futex wasm32-target)
 (defun %read-lock-rwlock-ptr (ptr lock &optional flag)
   (with-macptrs ((read-signal (%get-ptr ptr target::rwlock.reader-signal)))
     (if (istruct-typep flag 'lock-acquisition)
@@ -962,7 +964,7 @@
              (%process-wait-on-semaphore-ptr read-signal 1 0 (rwlock-read-whostate lock)))
            (%get-spin-lock ptr)))))))
 
-#+futex
+#+(and futex (not wasm32-target))
 (defun %read-lock-rwlock-ptr (ptr lock &optional flag) 
   (with-macptrs ((reader-signal (%INC-ptr ptr target::rwlock.reader-signal)))
     (if (istruct-typep flag 'lock-acquisition)
@@ -1005,7 +1007,7 @@
 
 
 
-#-futex
+#-(or futex wasm32-target)
 (defun %unlock-rwlock-ptr (ptr lock)
   (with-macptrs ((reader-signal (%get-ptr ptr target::rwlock.reader-signal))
                  (writer-signal (%get-ptr ptr target::rwlock.writer-signal)))
@@ -1059,7 +1061,7 @@
        (setf (%get-natural ptr target::rwlock.spin) 0)
        t))))
 
-#+futex
+#+(and futex (not wasm32-target))
 (defun %unlock-rwlock-ptr (ptr lock)
   (with-macptrs ((reader-signal (%INC-ptr ptr target::rwlock.reader-signal))
                  (writer-signal (%INC-ptr ptr target::rwlock.writer-signal)))
@@ -1107,6 +1109,7 @@
 ;;; to circumvent that if we use the same notifcation object here
 ;;; that controls that cleanup process.)
 
+#-wasm32-target
 (defun %promote-rwlock (lock &optional flag)
   (let* ((ptr (read-write-lock-ptr lock)))
     (if (istruct-typep flag 'lock-acquisition)
@@ -1214,3 +1217,92 @@
   (when (zerop (decf (svref ptr 1)))
     (setf (svref ptr 0) 0))
   nil)
+
+;;; Read/write locks for one exclusive Worker with scheduling disabled.
+;;; Keep the native signed-depth convention and CCL's public lock wrappers.
+;;; Waiting for another owner or upgrading multiple read acquisitions cannot
+;;; complete in this profile, so refuse before changing the lock state.
+#+wasm32-target
+(defun %wasm-rwlock-state (ptr lock)
+  (unless (and (eq (typecode lock) target::subtag-lock)
+               (eq (%svref lock target::lock.kind-cell) 'read-write-lock)
+               (eq ptr (%svref lock target::lock._value-cell))
+               (simple-vector-p ptr) (= (length ptr) 2))
+    (error "Invalid single-Worker read/write lock."))
+  (let ((owner (svref ptr 0)) (depth (svref ptr 1)))
+    (unless (and (typep owner 'fixnum) (typep depth 'fixnum)
+                 (>= owner 0) (eq (zerop owner) (zerop depth)))
+      (error "Invalid single-Worker read/write lock state.")))
+  ptr)
+
+#+wasm32-target
+(defun %wasm-rwlock-acquisition (flag)
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) nil)
+    (when flag (report-bad-arg flag 'lock-acquisition))))
+
+#+wasm32-target
+(defun %read-lock-rwlock-ptr (ptr lock &optional flag)
+  (%wasm-rwlock-state ptr lock)
+  (%wasm-rwlock-acquisition flag)
+  (let ((self (%wasm-lock-owner-token))
+        (owner (svref ptr 0))
+        (depth (svref ptr 1)))
+    (unless (or (zerop owner) (eql owner self))
+      (error "A single-Worker read/write lock cannot wait for another owner."))
+    (when (> depth 0)
+      (error 'deadlock :lock lock))
+    (when (= depth target::target-most-negative-fixnum)
+      (error "Single-Worker read lock depth exhausted."))
+    (setf (svref ptr 0) self
+          (svref ptr 1) (1- depth))
+    (when flag (setf (lock-acquisition.status flag) t))
+    t))
+
+#+wasm32-target
+(defun %write-lock-rwlock-ptr (ptr lock &optional flag)
+  (%wasm-rwlock-state ptr lock)
+  (%wasm-rwlock-acquisition flag)
+  (let ((self (%wasm-lock-owner-token))
+        (owner (svref ptr 0))
+        (depth (svref ptr 1)))
+    (unless (or (zerop owner) (eql owner self))
+      (error "A single-Worker read/write lock cannot wait for another owner."))
+    (when (< depth 0)
+      (error 'deadlock :lock lock))
+    (when (= depth target::target-most-positive-fixnum)
+      (error "Single-Worker write lock depth exhausted."))
+    (setf (svref ptr 0) self
+          (svref ptr 1) (1+ depth))
+    (when flag (setf (lock-acquisition.status flag) t))
+    t))
+
+#+wasm32-target
+(defun %unlock-rwlock-ptr (ptr lock)
+  (%wasm-rwlock-state ptr lock)
+  (let ((depth (svref ptr 1)))
+    (when (zerop depth)
+      (error 'not-locked :lock lock))
+    (unless (eql (svref ptr 0) (%wasm-lock-owner-token))
+      (error 'not-lock-owner :lock lock))
+    (setf (svref ptr 1) (if (> depth 0) (1- depth) (1+ depth)))
+    (when (zerop (svref ptr 1))
+      (setf (svref ptr 0) 0))
+    t))
+
+#+wasm32-target
+(defun %promote-rwlock (lock &optional flag)
+  (let ((ptr (read-write-lock-ptr lock)))
+    (%wasm-rwlock-state ptr lock)
+    (%wasm-rwlock-acquisition flag)
+    (let ((depth (svref ptr 1)))
+      (when (zerop depth)
+        (error 'not-locked :lock lock))
+      (unless (eql (svref ptr 0) (%wasm-lock-owner-token))
+        (error 'not-lock-owner :lock lock))
+      (when (< depth 0)
+        (unless (= depth -1)
+          (error "Single-Worker lock promotion requires one read acquisition."))
+        (setf (svref ptr 1) 1)
+        (when flag (setf (lock-acquisition.status flag) t))
+        t))))

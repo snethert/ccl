@@ -28,6 +28,7 @@
   l)
 
 ;;; This has to run very early in the initial thread.
+#-wasm32-target
 (defun %revive-system-locks ()
   (dolist (s (population-data %system-locks%))
     (%revive-macptr s)
@@ -55,6 +56,7 @@
 
 
 
+#-wasm32-target
 (defun %cstr-pointer (string pointer &optional (nul-terminated t))
   (if (typep string 'simple-base-string)
     (locally (declare (simple-base-string string)
@@ -73,6 +75,7 @@
       nil)
     (%cstr-segment-pointer string pointer 0 (length string) nul-terminated)))
 
+#-wasm32-target
 (defun %cstr-segment-pointer (string pointer start end &optional (nul-terminated t))
   (declare (fixnum start end))
   (let* ((n (- end start)))
@@ -111,6 +114,7 @@
     (unless (typep vector 'simple-base-string) (report-bad-arg s 'base-string))
     (values vector offset (length s))))
 
+#-wasm32-target
 (defun make-gcable-macptr (flags)
   (let ((v (%alloc-misc target::xmacptr.element-count target::subtag-macptr)))
     (setf (uvref v target::xmacptr.address-cell) 0) ; ?? yup.
@@ -126,6 +130,7 @@
     (ff-call (%kernel-import target::kernel-import-new-recursive-lock)
              :address))))
 
+#-wasm32-target
 (defun %make-rwlock-ptr ()
   (record-system-lock
    (%setf-macptr
@@ -192,6 +197,7 @@ synchronization between threads."
     (report-bad-arg rw 'read-write-lock)))
   
 
+#-wasm32-target
 (defun %make-semaphore-ptr (count)
   (let* ((p (ff-call (%kernel-import target::kernel-import-new-semaphore)
 	     :signed-fullword count
@@ -234,3 +240,36 @@ between threads."
 (defun %make-recursive-lock-ptr ()
   (vector 0 0))
 
+
+;;; No native lock handles or scheduler services exist in this profile.
+#+wasm32-target
+(defun %revive-system-locks ()
+  (error "Native system-lock revival is unavailable in the Wasm bootstrap profile."))
+
+;;; Keep the CCL lock object's shape; its value is traced Lisp state.
+;;; The pair holds the owner token and signed depth (read < 0, write > 0).
+#+wasm32-target
+(defun %make-rwlock-ptr ()
+  (vector 0 0))
+
+#+wasm32-target
+(defun %make-semaphore-ptr (count)
+  (declare (ignore count))
+  (error "Semaphores require the Wasm scheduler profile."))
+
+;;; Native pointer helpers cannot address a foreign Wasm module's memory.
+;;; That later interface has its own declared copying and ownership contract.
+#+wasm32-target
+(defun %cstr-pointer (string pointer &optional (nul-terminated t))
+  (declare (ignore string pointer nul-terminated))
+  (error "Native C-string pointers are unavailable in the Wasm bootstrap profile."))
+
+#+wasm32-target
+(defun %cstr-segment-pointer (string pointer start end &optional (nul-terminated t))
+  (declare (ignore string pointer start end nul-terminated))
+  (error "Native C-string pointers are unavailable in the Wasm bootstrap profile."))
+
+#+wasm32-target
+(defun make-gcable-macptr (flags)
+  (declare (ignore flags))
+  (error "Native disposable pointers are unavailable in the Wasm bootstrap profile."))

@@ -526,14 +526,6 @@
   (declare (dynamic-extent arguments))
   (%wasm-error-condition (condition-arg datum arguments 'simple-error)))
 
-;;; The existing strong EQ leaf owns probing and relocation rehashing. Keep
-;;; the ordinary HASH-TABLE wrapper and multiple-value contract in Lisp.
-(defun %wasm-class-gethash (key table &optional default)
-  (unless (and (hash-table-p table) (eql (nhash.comparef table) 0))
-    (error "The bootstrap class table must be an EQ hash table."))
-  (%wasm-eq-table-get (nhash.vector table) key default))
-
-
 (in-package :ccl)
 
 (defun %wasm-class-writeable (table)
@@ -557,19 +549,6 @@
       ;; OLD remains published until allocation and all stores have succeeded.
       (setf (nhash.vector table) new))))
 
-;;; Keep PUTHASH's optional default and its evaluation order.
-(defun %wasm-class-puthash (key table default &optional (value default))
-  (%wasm-class-writeable table)
-  (let ((vector (nhash.vector table)))
-    (when (= (nhash.vector.count vector) (nhash.vector.size vector))
-      (unless (nth-value 1 (%wasm-eq-table-get vector key nil))
-        (%wasm-grow-class-table table))))
-  (%wasm-eq-table-set (nhash.vector table) key value))
-
-(defun %wasm-class-remhash (key table)
-  (%wasm-class-writeable table)
-  (%wasm-eq-table-remove (nhash.vector table) key nil))
-
 ;;; The class owner uses the same wrapper shape as the admitted image tables.
 ;;; It is synchronous and strong; no process lock or weak state is installed.
 (defun %wasm-make-class-table (size)
@@ -579,13 +558,6 @@
     (%istruct 'hash-table nil 0 nil
               (%alloc-misc (+ 14 (* 2 capacity)) target::subtag-hash-vector)
               nil nil nil nil nil nil nil nil nil nil nil)))
-
-(defun %wasm-class-clrhash (table)
-  (%wasm-class-writeable table)
-  (setf (nhash.vector table)
-        (%alloc-misc (+ 14 (* 2 (nhash.vector.size (nhash.vector table))))
-                     target::subtag-hash-vector))
-  table)
 
 ;;; These are checked-boundary reason codes, not condition-class masks.
 ;;; All objects are made by MAKE-CONDITION from the live class table.

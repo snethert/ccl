@@ -349,7 +349,12 @@
 (defun %find-pkg (name &optional (len (length name)))
   (declare (fixnum len))
   (require-type name 'string)
-  (with-package-list-read-lock
+  ;; The Wasm READY owner runs one Worker with scheduling disabled. Package
+  ;; lookup cannot overlap a package-list writer in this profile; native
+  ;; targets retain their reader lock. A concurrent profile must replace this
+  ;; branch with its synchronization boundary before admitting this function.
+  (#-wasm32-target with-package-list-read-lock
+   #+wasm32-target progn
     (dolist (p %all-packages%)
       (if (dolist (pkgname (pkg.names p))
             (when (and (= (the fixnum (length pkgname)) len)

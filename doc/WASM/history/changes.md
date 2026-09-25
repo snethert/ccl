@@ -1,3 +1,25 @@
+## 2026-09-25 — Audit 180 accepted; SET-PACKAGE and locks integrated
+
+Fast-forwarded Claude's review commit `5fdf9884` unchanged. The user directed
+“fix, accept and integrate” and continued general AREF work. Seven product
+files now equal the two reviewed proposals byte for byte. The exact 42-file
+qualification reuses 21,843 native tests, 164 restored FASLs, 51 existing-target
+reader comparisons and 26,048 compiler comparisons. Four fresh integrated runs
+reproduce 262 modules, 18 initializers, 32 native-equal rows, 33 controls per
+run and all 1,335 regenerable artifact hashes; the package initializer omission
+is killed. No new native build or corpus run is claimed for integration.
+
+O-88: empty-unlock/promotion guards choose NOT-LOCKED but are redundant for
+refusal with the owner check; the vector-kind check is repeated by checked
+SVREF, and depth-bound rows do not claim isolated deletion kills. O-89's two
+historical driver hashes remain an acknowledged retention gap, independently
+attributed by Claude's committed-driver replay. New final driver identities
+are checked before/after execution and at retention. A retention-driver import
+collision was corrected before the final fresh run. Original packets unchanged.
+O-90 is a separate compiler cleanup; O-91's blocking cases still refuse under
+the adopted single-Worker profile. No criterion credit: 0/0/0, 575/535, 21/12.
+The next producer work is GENERAL-AREF2 in l0-array.
+
 ## 2026-09-25 — LOADER SET-PACKAGE proposal
 
 Following the user's direction to proceed with SET-PACKAGE, the

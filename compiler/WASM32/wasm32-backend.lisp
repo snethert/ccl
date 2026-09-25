@@ -4755,12 +4755,38 @@
           (append (list (first forms) (bootstrap-constant wasm32::subtag-simple-base-string))
                   (when initial (list initial)))))))))
 
+(defun bootstrap-eql-call (forms)
+  ;; All D1 numbers with non-identity EQL semantics are boxed miscellaneous
+  ;; objects. Identity, or either operand outside that tag, needs no runtime
+  ;; numeric comparison. Keep the ordinary EQL function for the boxed case.
+  (b-multiple
+   (make-b-raw-code
+    :text
+    (bootstrap-operands
+     forms
+     (lambda (values)
+       (destructuring-bind (x y) values
+         (b-wat "(if (result i32) (i32.eq ~a ~a)
+                   (then (i32.const 77838))
+                   (else (if (result i32)
+                     (i32.or (i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))
+                             (i32.ne (i32.and ~a (i32.const 7)) (i32.const 6)))
+                     (then (i32.const 77825)) (else ~a))))"
+                x y x y
+                (bootstrap-primary
+                 (b-internal-call
+                  (bootstrap-constant 'eql)
+                  (list (mapcar (lambda (value) (make-b-raw-code :text value)) values) nil)
+                  nil)))))))))
+
 (defun bootstrap-numeric-call (name forms)
   (let ((entry (assoc name '((+ . %float-add) (- . %float-sub) (* . %float-mul)
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
                              (> . %float-gt)))))
-    (cond ((and *b-cpl-conditions* (eq name 'clrhash))
+    (cond ((and (eq name 'eql) (= (length forms) 2))
+           (bootstrap-eql-call forms))
+          ((and *b-cpl-conditions* (eq name 'clrhash))
            (b-call (bootstrap-constant 'ccl::%wasm-class-clrhash) (list forms nil)))
           ((and *b-cpl-conditions* (eq name 'remhash))
            (b-call (bootstrap-constant 'ccl::%wasm-class-remhash) (list forms nil)))
@@ -5889,15 +5915,32 @@
 (defvar *wasm32-fasl-prefix* "file")
 (defvar *wasm32-fasl-modules* nil)
 
+(defun wasm32-record-arity (arity table)
+  ;; Code records are read into scratch space. Keep all symbols in the image's
+  ;; symbol vector, including lambda-list keyword names; interning a symbol
+  ;; while reading the record would publish a scratch address in the image.
+  (let ((record (copy-seq arity)))
+    (setf (svref record 6)
+          (map 'vector (lambda (symbol)
+                         (or (position symbol table :test #'eq)
+                             (vector-push-extend symbol table)))
+               (svref arity 6)))
+    (coerce record 'list)))
+
 (defun wasm32-code-record (module table)
   ;; The ordinary CCL condition path needs the real FUNCTION symbol. Sealed
   ;; fixture condition registries are not part of a cross-loaded CCL image.
   (pushnew (list 'function "expected_function") (getf module :symbols) :test #'equal)
-  ;; TABLE is an adjustable vector of the distinct symbols the module and its
-  ;; children import; wires refer to it by index so that the loader can read
-  ;; the record without placing any of it in the target heap.
-  (list 2 (getf module :name)
-        (coerce (svref (getf module :pool) 0) 'list)
+  ;; APPLY's proper-list diagnostic uses the same type specifier as native
+  ;; CCL. Save it as ordinary FASL data; fixture-owned condition objects are
+  ;; not capabilities of a cross-loaded image.
+  (pushnew (list '(satisfies ccl::proper-list-p) "expected_proper_list")
+           (getf module :symbols) :test #'equal)
+  ;; TABLE contains distinct imported values (symbols and the fixed type
+  ;; specifier above). Wires refer to it by index so the loader can keep the
+  ;; code record in scratch while all imported values live in the image.
+  (list 3 (getf module :name)
+        (wasm32-record-arity (svref (getf module :pool) 0) table)
         (getf module :captures)
         (getf module :wat)
         (mapcar (lambda (entry)
