@@ -24,8 +24,11 @@
 (defvar *b-float-service* nil)
 (defvar *b-float-safety* 1)
 (defvar *b-call-mode* nil)
+(defvar *wasm32-fasl-publication* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
+  (when (and (null *module-result-tag*) *wasm32-fasl-publication*)
+    (return-from wasm32-pass2 (wasm32-publish-function afunc)))
   (unless *module-result-tag* (refuse :native-fasl-publication))
   (when *b-call-mode* (return-from wasm32-pass2 (b-call-pass2 afunc)))
   (when *primitive-signature* (return-from wasm32-pass2 (primitive-pass2 afunc)))
@@ -1499,6 +1502,7 @@
              (write-char #\) s))))
       (list :symbols (copy-list *bootstrap-symbols*)
             :callees (copy-list *bootstrap-callees*)
+            :code-imports (copy-list *b-code-imports*) :keywords (copy-list *b-keywords*)
             :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
 ;;; Rest/APPLY sequences execute without calls, polls or collection while
 ;;; traversing or initializing heap cells. The allocator is a checked bump
@@ -5872,3 +5876,83 @@
                            fallback))
                   *namespace-integer-vectors* :from-end t
                   :initial-value (bootstrap-basic-uvector-access op raw)))))))
+
+(in-package :wasm32-compiler)
+
+;;; Real fasl publication (NSL-2 P2-0/P2-1). Under WASM32-COMPILE-FILE, pass 2
+;;; returns one host xfunction per emitted function instead of throwing a
+;;; module record to a fixture: element 0 is the code record, the rest is the
+;;; D1 constant pool in the order the emitted code indexes it. The fasl carries
+;;; ordinary data ops plus $FASL-WASM32-FUNCTION; the cross-loader places the
+;;; function object and writes the module into the code set.
+(defvar *wasm32-fasl-publication* nil)
+(defvar *wasm32-fasl-prefix* "file")
+(defvar *wasm32-fasl-modules* nil)
+
+(defun wasm32-code-record (module table)
+  ;; The ordinary CCL condition path needs the real FUNCTION symbol. Sealed
+  ;; fixture condition registries are not part of a cross-loaded CCL image.
+  (pushnew (list 'function "expected_function") (getf module :symbols) :test #'equal)
+  ;; TABLE is an adjustable vector of the distinct symbols the module and its
+  ;; children import; wires refer to it by index so that the loader can read
+  ;; the record without placing any of it in the target heap.
+  (list 2 (getf module :name)
+        (coerce (svref (getf module :pool) 0) 'list)
+        (getf module :captures)
+        (getf module :wat)
+        (mapcar (lambda (entry)
+                  (cons (second entry)
+                        (or (position (first entry) table :test #'eq)
+                            (vector-push-extend (first entry) table))))
+                (getf module :symbols))
+        (mapcar #'second (getf module :code-imports))
+        (copy-list (getf module :keywords))
+        (mapcar (lambda (child) (wasm32-code-record child table)) (getf module :children))))
+
+(defun wasm32-xfunction (module)
+  (let* ((pool (getf module :pool)) (n (length pool))
+         (table (make-array 8 :adjustable t :fill-pointer 0))
+         (record (wasm32-code-record module table))
+         (f (ccl::%alloc-misc (+ n 2) target::subtag-xfunction)))
+    (setf (ccl::uvref f 0) record
+          (ccl::uvref f 1) (coerce table 'simple-vector))
+    (dotimes (i n) (setf (ccl::uvref f (+ i 2)) (svref pool i)))
+    f))
+
+(defun wasm32-publish-function (afunc)
+  (let* ((*module-name* (format nil "~a_~d" *wasm32-fasl-prefix* (length *wasm32-fasl-modules*)))
+         (*module-result-tag* (gensym "WASM32-FASL"))
+         (*bootstrap-emitted* (make-hash-table :test #'eq))
+         (*bootstrap-symbols* nil) (*bootstrap-callees* nil)
+         (*bootstrap-dynamic-call* nil) (*bootstrap-self-call* nil)
+         (*b-keywords* nil)
+         (module (catch *module-result-tag*
+                   (b-call-pass2 afunc)
+                   (refuse :b-no-output))))
+    (push module *wasm32-fasl-modules*)
+    ;; Pass 2 publishes through the AFUNC and returns it, as the native
+    ;; passes do; COMPILE-NAMED-FUNCTION reads the lfun and warnings from it.
+    (setf (ccl::afunc-lfun afunc) (wasm32-xfunction module))
+    afunc))
+
+(defun wasm32-compile-file (source &rest options &key (target :wasm32) (save-source-locations nil) &allow-other-keys)
+  (unless (eq target :wasm32) (error "Not the wasm32 compilation target: ~s" target))
+  (call-with-target
+   (lambda ()
+     (let ((*wasm32-fasl-publication* t)
+           (*wasm32-template-memory* t)
+           (*wasm32-fasl-modules* nil)
+           (*b-callable-metadata* t)
+           (*b-cpl-conditions* t)
+           (*bootstrap-front-end* t)
+           (*b-integer-service* t) (*b-float-service* t)
+           (*b-call-mode* t) (*b-call-links* nil)
+           (*b-special-names* '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))
+           (*b-allocation-retry* t)
+           (ccl::*nx-compile-time-compiler-macros* nil)
+           (ccl::*compiler-macros* (make-hash-table :test #'eq))
+           (*macroexpand-hook* (bootstrap-macroexpand-hook))
+           (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
+       (multiple-value-bind (path warnings failure)
+           (apply #'compile-file source :target :wasm32 :save-source-locations save-source-locations options)
+         (values path (reverse *wasm32-fasl-modules*) warnings failure))))))

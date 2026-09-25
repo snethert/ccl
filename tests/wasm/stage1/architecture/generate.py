@@ -81,15 +81,23 @@ def generate(layout,tcr):
     aliases=re.findall(r'\(:([\w-]+)\s*\.\s*,([\w-]+)\s*\)',source[start:end])
     require(len(aliases)==40,'UVECTOR_ALIAS_POPULATION')
     vectors=[(key,name.lower()) for key,name in aliases if name.lower() in values]
+    # The accepted namespace unit describes locks without implementing their kernel operations.
+    values['subtag-lock'] = dict(value=66,sources=['accepted-namespace/lock-description'])
+    vectors.insert(next(i for i,x in enumerate(vectors) if x[0]=='basic-stream')+1,('lock','subtag-lock'))
     for slot,name in SLOTS.items():require(name in values,'MISSING_ARCH_FIELD '+slot)
     lines=[';;; Generated from accepted D1 and production TCR schemas; do not edit.',
       '(defpackage "WASM32" (:use))','(in-package "WASM32")']
-    for name,row in sorted(values.items()):lines.append('(cl:defconstant %s %s)'%(name,lisp_value(row['value']).replace('(byte ','(cl:byte ')))
+    for name,row in sorted(values.items()):
+        if name=='subtag-lock':continue
+        lines.append('(cl:defconstant %s %s)'%(name,lisp_value(row['value']).replace('(byte ','(cl:byte ')))
+    lines += [';;; FASL data operations are inherited; wasm32 functions use opcode 72.']
+    lines += ['(cl:defconstant %s #x80)' % name for name in ('fasl-version','fasl-min-version','fasl-max-version')]
+    lines += (HERE/'array-size.lisp').read_text().splitlines()
     lines+=['(cl:defparameter *target-arch*', '  (arch::make-target-arch :name :wasm32 :package-name "WASM32"',
       '    :big-endian cl:nil :single-float-tag-is-subtag cl:t :symbol-tag-is-subtag cl:t',
       "    :uvector-subtags '(%s)"%' '.join('(:%s . %s)'%(key,values[name]['value']) for key,name in vectors)]
     lines+=['    :%s %s'%(slot,name) for slot,name in sorted(SLOTS.items())]
-    lines+=['    :array-data-size-function #\'unavailable-array-size',
+    lines+=['    :array-data-size-function #\'array-data-size',
       '    :array-type-name-from-ctype-function #\'unavailable-array-type))',
       '(cl:defun unavailable-array-size (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-size lowering not implemented"))',
       '(cl:defun unavailable-array-type (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-type lowering not implemented"))',
@@ -97,7 +105,8 @@ def generate(layout,tcr):
     # Functions must be defined before their function objects are installed.
     guard=lines[-3:-1];lines=lines[:-3]+[lines[-1]]
     insert=next(i for i,l in enumerate(lines) if l=='(cl:defparameter *target-arch*');lines[insert:insert]=guard
-    return '\n'.join(lines)+'\n',dict(version=1,values=values,unavailable=gaps,uvector_aliases=vectors,arch_slots=SLOTS,scope='D1 inherited data descriptions and production TCR offsets; native/replaced/deferred values excluded. Function representation, array helpers, subprimitives and cross-dump remain unimplemented.')
+    lines=[line for line in lines if not line.startswith('(cl:defun unavailable-array-size')]
+    return '\n'.join(lines)+'\n'+(HERE/'extensions.lisp').read_text(),dict(version=1,values=values,unavailable=gaps,uvector_aliases=vectors,arch_slots=SLOTS,scope='D1 inherited data descriptions and production TCR offsets; native/replaced/deferred values excluded. Includes the accepted architecture extensions and the wasm32 FASL array-size boundary; runtime behavior is qualified separately.')
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=False)

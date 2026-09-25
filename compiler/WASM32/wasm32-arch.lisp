@@ -356,7 +356,22 @@
 (cl:defconstant xmacptr.size 24)
 (cl:defconstant xmacptr.type 6)
 (cl:defconstant xmacptr.type.raw-offset 12)
-(cl:defun unavailable-array-size (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-size lowering not implemented"))
+;;; FASL data operations are inherited; wasm32 functions use opcode 72.
+(cl:defconstant fasl-version #x80)
+(cl:defconstant fasl-min-version #x80)
+(cl:defconstant fasl-max-version #x80)
+;;; D1 ivector payload bytes after the header (double and complex vectors
+;;; carry the four-byte alignment pad; bit vectors round up to bytes). Used by
+;;; the cross-loader when it allocates strings, bignums and typed vectors.
+(cl:defun array-data-size (subtag element-count)
+  (cl:case subtag
+    ((7 15 159 167 175 183 191) (cl:* 4 element-count))
+    ((199 207) element-count)
+    ((215 223) (cl:* 2 element-count))
+    ((231 239) (cl:+ 4 (cl:* 8 element-count)))
+    (247 (cl:+ 4 (cl:* 16 element-count)))
+    (255 (cl:ceiling element-count 8))
+    (cl:t (cl:error "Not a WASM32 ivector subtag: ~s" subtag))))
 (cl:defun unavailable-array-type (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-type lowering not implemented"))
 (cl:defparameter *target-arch*
   (arch::make-target-arch :name :wasm32 :package-name "WASM32"
@@ -394,7 +409,7 @@
     :t-offset t-offset
     :unbound-marker-value unbound-marker
     :word-shift word-shift
-    :array-data-size-function #'unavailable-array-size
+    :array-data-size-function #'array-data-size
     :array-type-name-from-ctype-function #'unavailable-array-type))
 (cl:provide "WASM32-ARCH")
 

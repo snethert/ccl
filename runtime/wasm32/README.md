@@ -144,7 +144,21 @@ All runtime JavaScript modules now use the reviewed synchronous `sha256.mjs` and
 
 D2 production templates: `materializer.mjs` is integrated at LL21-a scope. The compiler’s opt-in `*wasm32-template-memory*` emits canonical unshared imports, including child modules; the default shared output is unchanged. The materializer binds the owner’s ABI, classification and engine policy and verifies final bytes before compilation. It qualifies code only, not unshared runtime services or a new lazy-loader profile.
 
-Per-function code sets: `bundle.mjs` integrates the accepted LL21-b owner/build API (`validate`, `compile`, `publish`). Each module holds one generated function’s public and internal B roles. The trusted inventory binds code IDs, slots, generations, ABI/layout versions and D2 records. All instances link before publication; mid-publication failure clears the newly written slots. Retain old modules and slots across redefinition. This adds no merged fallback or new lazy-loader profile. The measured 19-module set takes about 37.1 ms for full validated installation; the 1.93 ms cold figure is lazy-tier decode/validation, not eager compilation.
+Per-function code sets: `bundle.mjs` integrates the accepted LL21-b owner/build API (`validate`, `compile`, `publish`). Each module holds one generated function's public and internal B roles. The trusted inventory binds code IDs, slots, generations, ABI/layout versions and D2 records. All instances link before publication; mid-publication failure clears the newly written slots. Retain old modules and slots across redefinition. This adds no merged fallback or new lazy-loader profile. The measured 19-module set takes about 37.1 ms for full validated installation; the 1.93 ms cold figure is lazy-tier decode/validation, not eager compilation.
+
+Cross-loaded images: `cross-image.mjs` integrates the P2-0 coordinator accepted
+after audit 179. It uses the existing D2 bundle and heap admission, with logical
+code IDs in saved artifacts and engine slots supplied through `expected.slots`.
+The whole-file `wasm32-compile-file` wrapper explicitly selects D2 templates;
+the existing per-definition default remains shared output. Both table roles
+must be unoccupied at publication. See the
+[owner contract](../../doc/WASM/contracts/cross-image-owner.md) for the trusted
+manifest, independent expected inventory and capability requirements. In the
+diagnostic fixture, the manifest's code digest is the integrity anchor; its
+inventory is derived from the bundle and is not independent authority (O-84).
+The [integration checks](../../tests/wasm/stage1/loader-acceptance/README.md)
+exercise target cold-load effects, relocation and collection. Complete boot
+and target-side LOAD remain open.
 
 Symbols: `symbols.c` and `symbol-adapter.wat` integrate LL09-a and its audit-121 follow-up. The synchronous pinned-image service implements INTERN, FIND-SYMBOL, MAKE-SYMBOL and name/package readers with versioned hash admission. The internal B adapter preserves complete results across fixed, direct and indirect delivery. Owner allocation, tables and topology remain bounded; no global registration or moving package scanner. Surrogate names refuse; Unicode scalar values including noncharacters remain admitted.
 

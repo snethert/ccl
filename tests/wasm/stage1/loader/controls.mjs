@@ -82,6 +82,8 @@ refused('symbol interior reference',x=>{const s=x.codeSet.modules[0].symbols.fin
 refused('code import outside set',x=>{x.codeSet.modules[0].codes.push({name:'absent',code_id:63});rebind(x);},/CODE_IMPORT/);
 // Change an actual inventoried header and rebind the outer digests, so these
 // cases reach the D1 shape checks instead of merely failing SHA-256.
+// O-87: keep the symbol-shape reason exact. Deleting that clause reaches a
+// later heap-boundary refusal; accepting any error would hide its removal.
 for(const [tag,cells,label,pattern] of [[98,9,'package width',/package shape/],[58,15,'host symbol width',/symbol shape/],[42,12,'host function width',/function shape/]]){
  refused(label,x=>{const v=new DataView(x.payload.buffer);const boundaries=[...x.record.relocations,...x.record.roots].map(r=>r.value).filter(r=>r.tag===6&&'heap'in r).map(r=>r.heap);const at=boundaries.find(p=>(v.getUint32(p,true)&255)===tag);assert(at!==undefined);v.setUint32(at,cells*256+tag,true);heapRebind(x);},pattern);
 }
@@ -104,6 +106,24 @@ for(const [label,mutate] of [
  ['keyword set',r=>r.arity[5]=['K']],['capture count',r=>r.captures=0.5]])
  refused('callable '+label,x=>{mutate(x.codeSet.modules[0]);rebind(x);},/CALLABLE_SHAPE/);
 refused('duplicate code wire',x=>{const r=x.codeSet.modules.find(r=>r.codes.length);assert(r);r.codes.push(r.codes[0]);rebind(x);},/CODE_IMPORT/);
+// (module (func (export "occupied"))). This sentinel is never called.
+const sentinel=new WebAssembly.Instance(new WebAssembly.Module(Uint8Array.from([
+ 0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,
+ 7,12,1,8,111,99,99,117,112,105,101,100,0,0,10,4,1,2,0,11
+]))).exports.occupied;
+// O-85: an owner can occupy either role after admission. Publication must
+// refuse and preserve the existing function as well as every other slot.
+for(const role of ['table','tail_table']){
+ const x=fresh(),a=admitCrossImage(x),slot=x.expected.slots[16];
+ x.env[role].set(slot,sentinel);
+ const memory=Uint8Array.from(new Uint8Array(x.memory.buffer));
+ const tables=[x.env.table,x.env.tail_table].map(t=>Array.from({length:t.length},(_,i)=>t.get(i)));
+ assert.throws(()=>a.install(),/^Error: OCCUPIED$/,'occupied '+role);
+ assert.equal(a.state,'ADMITTED');
+ assert.deepEqual(new Uint8Array(x.memory.buffer),memory);
+ [x.env.table,x.env.tail_table].forEach((t,j)=>tables[j].forEach((f,i)=>assert.equal(t.get(i),f)));
+ rows.push({name:'occupied '+role,status:'REFUSED',unchanged:true});
+}
 {
  const x=fresh(),a=admitCrossImage(x),p=4096+8+16*16;
  new DataView(x.memory.buffer).setUint32(p,16,true);

@@ -1636,7 +1636,11 @@ Will differ from *compiling-file* during an INCLUDE")
     (symbol (fasl-dump-symbol exp))
     (package (fasl-dump-package exp))
     (function (fasl-dump-function exp))
-    (xfunction (fasl-dump-function exp))
+    ;; A wasm32 xfunction is code record plus pool (see FASL-DUMP-WASM32-FUNCTION);
+    ;; every other target's xfunction keeps its code vector path, on any host.
+    (xfunction (if (eq (backend-name *fasl-backend*) :wasm32)
+                 (fasl-dump-wasm32-function exp)
+                 (fasl-dump-function exp)))
     (code-vector (fasl-dump-codevector exp))
     (xcode-vector (fasl-dump-codevector exp))
     (simple-vector (fasl-dump-gvector exp $fasl-t-vector))
@@ -1762,6 +1766,22 @@ Will differ from *compiling-file* during an INCLUDE")
 ;;; If we're cross-compiling, we shouldn't reference any
 ;;; (host) functions as constants; try to detect that
 ;;; case.
+;;; A wasm32 xfunction has no code vector: element 0 is the module's code
+;;; record and the remaining elements are its D1 constant pool in emitted
+;;; order. Every element is ordinary fasl data; the target's code lives in
+;;; the code set the cross-loader writes from these records.
+(defun fasl-dump-wasm32-function (f)
+  (let* ((n (uvsize f)))
+    (fasl-out-opcode $fasl-wasm32-function f)
+    (fasl-out-count n)
+    ;; Code records live only in cross-loader scratch space. Do not enter
+    ;; their strings/conses in the image's shared FASL reference table.
+    (let ((*fasdump-hash* (make-hash-table :test #'eq))
+          (*fasdump-epush* nil))
+      (fasl-dump-form (%svref f 0)))
+    (do ((i 1 (1+ i))) ((= i n))
+      (fasl-dump-form (%svref f i)))))
+
 #-x86-target
 (defun fasl-dump-function (f)
   (if (and (not (eq *fasl-backend* *host-backend*))
@@ -1806,9 +1826,9 @@ Will differ from *compiling-file* during an INCLUDE")
              ((= k function-size))
           (declare (fixnum k))
           (fasl-dump-form (uvref function-vector k)))))))
-        
 
-  
+
+
 
 ;;; Write a "concatenated function".
 (defun fasl-xdump-clfun (f)

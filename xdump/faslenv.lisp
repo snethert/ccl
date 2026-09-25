@@ -121,6 +121,7 @@
 (defconstant $fasl-nvstr 69)            ;<nvstring> Make an uninterned symbol
 (defconstant $fasl-toplevel-location 70);<expr> - Set *loading-toplevel-location* to <expr>
 (defconstant $fasl-istruct-cell 71)     ;<expr> register istruct cell for expr
+(defconstant $fasl-wasm32-function 72)  ;<count><code record:expr><count-1 pool exprs> Make a wasm32 function
 
 
 ;;; <string> means <size><size bytes> (this is no longer used)

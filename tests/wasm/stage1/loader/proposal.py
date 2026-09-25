@@ -1,4 +1,4 @@
-"""One reproducible loader proposal over the accepted product sources."""
+"""Loader source provider: the historical proposal, or verified integrated files."""
 from pathlib import Path
 import hashlib
 import importlib.util
@@ -10,6 +10,11 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[3]
 sys.path.insert(0,str(HERE.parent/'bootstrap-validation'))
 import common as c
+
+
+def integration():
+    path=ROOT/'doc/WASM/stage1/integration-loader.json'
+    return c.read(path) if path.exists() else None
 
 
 def replace(text,before,after,count=1):
@@ -46,6 +51,11 @@ def patched():
 
 
 def sources():
+    installed=integration()
+    if installed:
+        identity=installed['qualification']['source_identity']
+        c.verify_files(ROOT,identity)
+        return {name:(ROOT/name).read_text() for name in identity}
     inherited=c.read(c.STORE/'2026-09-24-namespace-consumers-r1/native/qualification.json')['source_identity']
     c.verify_files(ROOT,inherited)
     bodies={name:(ROOT/name).read_text() for name in inherited};bodies.update(patched())
@@ -67,6 +77,11 @@ def sources():
 
 
 def runtime_sources():
+    installed=integration()
+    if installed:
+        identity={r['file']:r['reviewed'] for r in installed['files'] if r['file'].startswith('runtime/')}
+        c.verify_files(ROOT,identity)
+        return {name:(ROOT/name).read_text() for name in identity}
     result={str(p.relative_to(HERE)):p.read_text() for p in (HERE/'runtime').glob('*.mjs')}
     return {'runtime/wasm32/'+Path(name).name:body for name,body in result.items()}
 
@@ -76,4 +91,7 @@ def prepare_runtime(out):
     out.mkdir(parents=True,exist_ok=True)
     for p in (ROOT/'runtime/wasm32').iterdir():
         if p.is_file() and p.suffix=='.mjs':shutil.copyfile(p,out/p.name)
-    for name,body in runtime_sources().items():(out/Path(name).name).write_text(body)
+    if integration():
+        runtime_sources() # Verify the product copies; no proposal overlay.
+    else:
+        for name,body in runtime_sources().items():(out/Path(name).name).write_text(body)

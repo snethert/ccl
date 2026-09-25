@@ -28,7 +28,11 @@ function inventory(data) {
     count=n;size=align(4+n*4);
    }else if(tag===90){
     need(n===3&&word(p+4)===0&&[0,4].includes(word(p+8)),'population');count=3;size=16;
+   }else if(tag===98){
+    // Cross-loaded package: the eight-cell shape the symbol service admits.
+    need(n===8,'package shape');count=8;size=40;
    }else if([10,26,42,58,106,114,122,250].includes(tag)||(tag===130&&n>=1)){
+    if(tag===58)need(n===7,'symbol shape');
     if(tag===42)need(n===6||n===7,'function shape');
     count=n;size=align(4+n*4);
    }else{
@@ -164,6 +168,7 @@ export function admitHeapImage({memory,record,payload,digest,regions:definitions
  let state='ADMITTED';
  const baseline=imports(memory,rs,r.roots);
  return Object.freeze({
+  reference(ref){return resolve(structuredClone(ref),objects,external,rs,start);},
   get state(){return state;},get end(){return start+data.length;},get objects(){return objects.size;},
   install(){
    need(state==='ADMITTED','install state');

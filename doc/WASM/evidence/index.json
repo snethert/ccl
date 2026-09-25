@@ -3867,9 +3867,17 @@
     {
       "id": "STAGE1-LOADER-DESIGN-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-design-r1/packet.json",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Single NSL-2 P2-0 successor to 0c3cb29f and 7fdb2543: shared XFASLOAD, opcode 72/version #x80, whole-file compiler, nested code, D2 bundle with owner-selected slots. Two files, five modules, two cold-load functions, six native-equal observations in four relocated/collecting runs. Git-free different-root replay: 36 byte-identical artifacts. 66 image checks; keyword deletion mutant killed; 19 D2 compatibility checks; five native comparison controls. R6/R6a: 21843 tests, 164 restored FASLs, 27 existing structure accessors/predicate compared; 51 reader comparisons in 17 profiles; 26048 corpus comparisons. Independent 12/21 compiles, 452 modules. Proposed combined identity awaits review; product unchanged, 0/0/0 of 167 units, originals 575/535, no credit.",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUXILIARY",
+      "scope": "Accepted by the user after audit 179 (5771567a, no defect); integrated byte-identically under the exact reviewed source identity. Single NSL-2 P2-0 successor to 0c3cb29f and 7fdb2543: shared XFASLOAD, opcode 72/version #x80, whole-file compiler, nested code, D2 bundle with owner-selected slots. Two files, five modules, two cold-load functions, six native-equal observations in four relocated/collecting runs. Git-free different-root replay: 36 byte-identical artifacts. 66 image checks; keyword deletion mutant killed; 19 D2 compatibility checks; five native comparison controls. R6/R6a: 21843 tests, 164 restored FASLs, 27 existing structure accessors/predicate compared; 51 reader comparisons in 17 profiles; 26048 corpus comparisons. Independent 12/21 compiles, 452 modules. P2-0 integrated; production file counts 0/0/0 of 167 units, originals 575/535, no credit.",
       "sha256": "31ac1213773283983f2cadbb725040db698b0e90f6b39cef042024bd05f8aaeb",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-INTEGRATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-integration/packet.json",
+      "review_disposition": "ACCEPTED_INTEGRATION_RECORD",
+      "scope": "User-authorized integration after audit 179: six compiler/loader files and three runtime files equal the reviewed P2-0 proposal; architecture generator inputs reproduce the exact source. Reuses reviewed R6/R6a, 21843 native tests with 164 restored FASLs, 51 reader rows and 26048 corpus comparisons by the 42-file source identity. Fresh integrated build and four relocated/collecting target runs reproduce reviewed FASL/heap/module identities and native observations. Audit follow-up controls are author-verified: 68 image checks, two version refusals, public/tail occupancy mutants and keyword mutant killed, 19 D2 checks. O-84 owner inventory authority documented; O-87 exact reason preserved. Counts unchanged: production 0/0/0, fixtures 2/2/0, originals 575/535, ledger 21/12; no criterion credit.",
+      "sha256": "033218e5b53fa89db5d3a8de0316795999e764afd0cbf143a2de2bbd04a4b501",
       "slot_credit": false
     }
   ],

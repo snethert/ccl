@@ -1,16 +1,17 @@
 # NSL-2 loader design of record
 
-This proposal supersedes both P2-0 implementations: `0c3cb29f` on `wasm2`
+Accepted by the user after audit 179 and integrated. This design supersedes both P2-0 implementations: `0c3cb29f` on `wasm2`
 and `7fdb2543` on `codex-loader-repair`. The user delegated the design choice
 on 25 September: “use what you want to”, “dont just listen to Claude”,
 “do the best design”. Audit 178 is evidence about those two implementations;
-it is not acceptance of this combined proposal.
+audit 179 (`5771567a`) reviewed the combined unit with no defect. The user then instructed “accept and integrate”.
 
 The design follows the original CCL initialization sequence, uses the existing
 D2 code bundle, and leaves physical table placement to the target owner.
-Functional source changes remain in disposable U1 trees pending independent
-review under [the standing workflow](../../../../CLAUDE.md). Nothing here
-changes the production acceptance counts or claims a complete CCL boot.
+The six compiler/loader files, three runtime files and architecture generator
+inputs are integrated at the exact reviewed bytes. See the
+[integration and audit follow-up](../loader-acceptance/README.md). Production
+acceptance counts remain unchanged; a complete CCL boot is still open.
 
 ## Decisions and reasons
 
@@ -27,9 +28,11 @@ changes the production acceptance counts or claims a complete CCL boot.
 `shared.patch` records the reviewed repair's six-file delta over `1a076ca4`.
 `proposal.py` verifies the base hashes, applies it in memory, changes the Wasm
 version and compilation defaults, and checks the architecture generator.
-It combines those six files with the 42-file accepted source identity used by
-native qualification. Runtime proposals are under `runtime/`; the production
-compiler and runtime in this checkout are unchanged.
+The resulting 42-file source identity is bound to native qualification. The
+original proposal and runtime copies remain here for historical comparison.
+When `integration-loader.json` is present, the drivers verify and read the
+integrated product files; runtime preparation copies the product without a
+proposal overlay. Original proposal reconstruction belongs to `c642d339`.
 
 The image coordinator snapshots the owner environment and slot map, validates
 and compiles the entire D2 bundle, admits the relocatable heap, and resolves
@@ -50,8 +53,10 @@ explicitly after installation, using the image's cold-load list.
   from a Git-free checkout at another absolute path compares both FASLs,
   raw heap/static bytes, D2 templates, materialized modules and all artifact
   manifests byte for byte. It also compares observations and level-0 stops.
-- 66 image checks include 65 checked refusals preserving memory and both
-  tables, plus a clean installation. The keyword control assembles an actual
+- The reviewed packet has 66 image checks: 65 checked refusals preserving
+  memory and both tables, plus a clean installation. Integration adds occupied
+  public/tail table cases (68 checks total), each with a killed deletion mutant.
+  Two loader-side controls refuse native and version-rewritten FASLs. The keyword control assembles an actual
   `keywords.unresolved` import and recomputes D2 and outer digests. Removing
   only `KEYWORD_IMPORT` makes that control fail. The accepted D2 fixture's
   19 compatibility/publication checks also pass.
@@ -92,9 +97,10 @@ admission credit for these independent compiles.
 | O-83 | Removed both Git dependencies. Git-free producer replay and corpus proposal classification exercised. Execution logs still retain their actual absolute command paths as provenance. |
 
 The six shared files, generated architecture inputs and three runtime files
-are a single review unit. Integration waits for review of this exact combined
-identity. The previous repair's decoded native comparison is retained and
-tightened; it does not authorize new functional differences without review.
+are a single review unit. Audit 179 reviewed this exact combined identity, and the user accepted it.
+Integration preserves all nine product files byte for byte. Native, reader and
+corpus qualification is reused by exact source identity; fresh integrated
+execution and the O-85/O-86 controls are in the integration packet.
 
 ## Reproduction and retained evidence
 

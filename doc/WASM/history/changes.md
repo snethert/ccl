@@ -1,3 +1,45 @@
+## 2026-09-25 — accept and integrate P2-0 after audit 179
+
+The user instructed “accept and integrate” after Claude's audit 179 found no
+defect and recommended `c642d339` as the P2-0 of record. Imported the audit
+unchanged by fast-forward to `5771567a`; this entry and STATUS supply its owed
+merge bookkeeping. Audit 179 independently reproduced the complete packet and
+closed O-78–O-83.
+
+[Integration](../../../tests/wasm/stage1/loader-acceptance/README.md) installs the
+six compiler/loader files and three runtime files byte-identical to the reviewed
+proposal, plus the architecture generator inputs at their established location.
+Regeneration exactly matches the reviewed architecture. The whole 42-file
+compiler identity matches the existing R6/R6a and corpus qualification; those
+21,843 native tests, 164 restored FASLs, 51 reader comparisons and 26,048 compiler
+comparisons are reused by hash. No new native build or full corpus run is claimed.
+
+Fresh execution rebuilt the integrated product from clean U1 and copied its
+runtime without a proposal overlay. Both FASLs, heap, static bytes, templates
+and materialized modules match the reviewed artifact identities. Four target
+runs reproduce the native observations, including two cold-load functions,
+allocation, a captured closure, relocation and six moving collections in each
+collecting run. All previous 66 image checks and 19 inherited D2 checks pass.
+
+O-85 adds separate occupied-public-slot and occupied-tail-slot image controls,
+with unchanged memory, both tables and the pre-existing function checked.
+Deleting either publication guard conjunct is caught by its own row. The image
+suite now has 68 checks. O-86 adds native-FASL and rewritten-version refusals;
+both report Wrong FASL version before output and restore host parameters.
+The keyword guard mutant remains killed. These follow-ups are author-verified;
+they do not change the independently reviewed product bytes.
+
+O-84 is documented in the image owner contract: the fixture's code digest is
+its independent anchor, while a production owner must obtain its expected
+inventory from trusted manifest/build data. O-87's exact symbol-shape refusal
+reason is preserved. The original reviewed packet stays immutable; one focused
+integration pack retains new proof and references unchanged qualification.
+
+Production counts remain 0/0/0 (fixtures 2/2/0), accepted originals 575/535,
+and ledger 21 accepted / 12 missing. No new criterion credit. Next is the
+ordered level-0 build through the integrated loader, including SET-PACKAGE and
+the nine retained first stops; independent 12/21 file compilation is not boot.
+
 ## 2026-09-25 — select and qualify one loader design after audit 178
 
 Imported audit 178 unchanged at `8d9551c8`; this entry and STATUS supply the

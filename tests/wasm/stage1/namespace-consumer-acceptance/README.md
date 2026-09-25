@@ -44,7 +44,8 @@ The earlier eleven package controls are historical non-isolating controls; they
 are not the proof for O-73. The new twelve cases and equivalence are that proof.
 
 ```sh
-# Current product identities, historical native qualification, fresh four-Worker
+# Historical replay at namespace integration commit 1a076ca4: identities,
+# native qualification, fresh four-Worker
 # replay and isolated admission controls, with single-clause mutants.
 python3 tests/wasm/stage1/namespace-consumer-acceptance/run.py \
   /private/tmp/ccl-work/codex/namespace-integration
@@ -55,4 +56,7 @@ Unchanged R6/R6a and reader evidence is reused by exact source identity from
 runtime replay recompiles integrated C, requires the reviewed Wasm bytes, and
 uses the integrated runtime sources. The original cold qualification command
 belongs to proposal commit `053ebf56`; it reconstructs the proposal from its
-then-current parent sources. This integration command is the HEAD check.
+then-current parent sources. This command is the historical namespace integration check at `1a076ca4`.
+The loader integration supersedes its compiler identity; the current product
+check is [loader-acceptance/check.py](../loader-acceptance/check.py), which binds
+the complete 42-file compiler source set and the reviewed loader runtime.

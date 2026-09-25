@@ -5,6 +5,21 @@
                       '("p2-0" "p2-0-second")))
        (variables ccl::*wasm32-xload-parameter-variables*)
        (before (mapcar #'symbol-value variables)))
+  ;; Native records and a Wasm record with a native version must both fail
+  ;; before the cross-loader can write any artifacts (audit 179, O-86).
+  (dolist (control '(("native" "nfcomp.dx64fsl")
+                     ("rewritten" "native-version.w32fsl")))
+    (destructuring-bind (name file) control
+      (assert (handler-case
+                  (progn
+                    (ccl::wasm32-xfasload
+                     (concatenate 'string out "refused-" name "/")
+                     (concatenate 'string out file))
+                    nil)
+                (error (condition)
+                  (search "Wrong FASL version" (format nil "~a" condition)))))
+      (assert (equal before (mapcar #'symbol-value variables)))
+      (format t "FASL-VERSION-REFUSAL-PASS ~a~%" name)))
   (let ((result (apply #'ccl::wasm32-xfasload out fasls)))
     (assert (equal before (mapcar #'symbol-value variables)))
     (format t "CROSS-LOAD-PASS ~s~%" result))

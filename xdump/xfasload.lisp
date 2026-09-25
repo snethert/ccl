@@ -97,6 +97,14 @@
   static-space-init-function
   purespace-reserve
   static-space-address
+  ;; Targets whose function objects keep the name outside the last two
+  ;; elements supply their own reader (wasm32: the D1 constant pool).
+  lfun-name-function
+  ;; Native targets retain their spaces, initialization and image writer.
+  unified-dynamic-space
+  initialize-symbols-function
+  image-writer-function
+  compile-file-function
 )
 
 (defun setup-xload-target-parameters ()
@@ -1021,17 +1029,23 @@
   (mapcar #'find-package '("CL" "CCL"  "KEYWORD" "TARGET" "OS")))
 
 
+(defvar *xload-backend-state* nil)
+
 (defun xfasload (output-file &rest pathnames)
-  (let* ((*xload-symbols* (make-hash-table :test #'eq))
+  (let* ((*xload-backend-state* nil)
+         (unified (backend-xload-info-unified-dynamic-space *xload-target-backend*))
+         (*xload-symbols* (make-hash-table :test #'eq))
          (*xload-symbol-addresses* (make-hash-table :test #'eql))
          (*xload-spaces* nil)
          (*xload-early-class-cells* nil)
          (*xload-early-istruct-cells* *xload-target-nil*)
-         (*xload-readonly-space* (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly))
-         (*xload-dynamic-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic))
+         (*xload-readonly-space* (if unified
+                                     (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic)
+                                     (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly)))
+         (*xload-dynamic-space* (if unified *xload-readonly-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic)))
 	 (*xload-static-space* (init-xload-space *xload-static-space-address* *xload-static-space-size* area-static))
-         (*xload-managed-static-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static))
-         (*xload-static-cons-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons))
+         (*xload-managed-static-space* (if unified *xload-dynamic-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static)))
+         (*xload-static-cons-space* (if unified *xload-dynamic-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons)))
 						 
          (*xload-package-alist* (xload-clone-packages (xload-initial-packages)))
          (*xload-cold-load-functions* nil)
@@ -1082,6 +1096,9 @@
 			   :space *xload-static-space*)
 	(when val-p (xload-set sym val))))
                                         ; This could be a little less ... procedural.
+    (let ((initialize (backend-xload-info-initialize-symbols-function *xload-target-backend*)))
+      (when initialize
+        (setq *xload-backend-state* (funcall initialize))))
     (xload-set '*package* (xload-package->addr *ccl-package*))
     (xload-set '*keyword-package* (xload-package->addr *keyword-package*))
     (xload-set '%all-packages% (xload-save-list (mapcar #'cdr *xload-aliased-package-addresses*)))
@@ -1146,7 +1163,10 @@
                  (format t "~&~d: ~s" idx
                          (xload-lookup-symbol-address addr)))
              *xload-special-binding-indices*)
-    (xload-dump-image output-file *xload-image-base-address*)))
+    (let ((writer (backend-xload-info-image-writer-function *xload-target-backend*)))
+      (if writer
+        (funcall writer output-file)
+        (xload-dump-image output-file *xload-image-base-address*)))))
 
 (defun xload-dump-image (output-file heap-start)
   (declare (ftype (function (t t list)) write-image-file))
@@ -1652,6 +1672,9 @@
   (xfasl-read-gvector s (xload-target-subtype :istruct)))
 
 (defun xload-lfun-name (lf)
+  (let* ((reader (backend-xload-info-lfun-name-function *xload-target-backend*)))
+    (when reader
+      (return-from xload-lfun-name (funcall reader lf))))
   (let* ((lfv (logior *xload-target-fulltag-misc*
                       (logandc2 lf *xload-target-fulltagmask*)))
          (header (xload-%svref lfv -1)))
@@ -1892,7 +1915,10 @@
 		   (> (file-write-date src)
 		      (file-write-date fasl)))
 	   (setq any t)
-	   (compile-file src :target target
+	   (funcall (or (let ((xload (find-xload-backend target)))
+                         (and xload (backend-xload-info-compile-file-function xload)))
+                       #'compile-file)
+                    src :target target
 			 :features *xcompile-features*
 			 :output-file  fasl 
 			 :verbose t)))))))

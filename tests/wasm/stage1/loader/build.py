@@ -35,10 +35,22 @@ def run(out,stops=False):
         seconds=c.command(prefix+['--load',HERE/'produce.lisp'],out/'build.log',env,cwd=source,timeout=300)
         log=(out/'build.log').read_text()
         assert 'FASL-PUBLICATION-PASS' in log,log[-3000:]
+        original=(out/'p2-0.w32fsl').read_bytes()
+        assert original[12:14]==bytes.fromhex('ff80'),'Wasm FASL version'
+        changed=bytearray(original);changed[13]=0x67
+        (out/'native-version.w32fsl').write_bytes(changed)
         for name in ('p2-0.lisp','p2-0-second.lisp'):(fixture/name).unlink()
         c.command(prefix+['--load',HERE/'load.lisp'],out/'load.log',env,cwd=source,timeout=300)
         log=(out/'load.log').read_text()
         assert 'CROSS-LOAD-PASS' in log and 'HOST-STATE-RESTORED-PASS' in log,log[-3000:]
+        controls=[]
+        for label,name in [('native','nfcomp.dx64fsl'),('rewritten','native-version.w32fsl')]:
+            assert 'FASL-VERSION-REFUSAL-PASS '+label in log,label
+            assert not (out/('refused-'+label)).exists(),'refusal published artifacts'
+            controls.append(dict(name=label,status='REFUSED',reason='Wrong FASL version',
+                sha256=c.sha(out/name),host_state_restored=True,published=False))
+        c.save(out/'fasl-controls.json',dict(status='PASS',original=c.sha(out/'p2-0.w32fsl'),
+            rewritten_byte=dict(offset=13,before=128,after=103),rows=controls))
         stop_seconds=None
         if stops:
             stop_seconds=c.command(prefix+['--load',HERE/'stops.lisp'],out/'stops.log',env,cwd=source,timeout=1800)

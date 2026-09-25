@@ -17,7 +17,7 @@ def inputs():
     separate={'r6.py','qualify.py','readers.py','comparison.py','comparison-controls.py','corpus.py','extra.py','packet.py','replay.py'}
     paths=[p for p in c.files(HERE) if p.suffix in ('.py','.lisp','.mjs','.json','.patch') and p.name not in separate and 'results' not in p.relative_to(HERE).parts]
     paths+=[c.ROOT/n for n in local('build').SOURCES+local('build').integrated()]
-    paths+=c.files(c.ROOT/'runtime/wasm32')
+    paths+=[p for p in c.files(c.ROOT/'runtime/wasm32') if p.suffix!='.md']
     paths+=[HERE.parent/'registration/load.lisp',HERE.parent/'bootstrap-validation/common.py',HERE.parent/'bootstrap-validation/storage.py']
     return {str(p.relative_to(c.ROOT)):c.sha(p) for p in sorted(set(paths))}
 def runtime(out):
