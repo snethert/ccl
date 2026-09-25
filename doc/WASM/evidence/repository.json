@@ -1,36 +1,28 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "734e4b86f8c034806d2551c43900a50c4bf7613b0f166968eda8278788ed651a",
-  "commit": "d6e654ef3502df90f320a47d2df6d7e3be107a55",
-  "immutable_evidence_files": 274152,
+  "catalog_sha256": "53e8ca47f6ad99e92fbaa948dbedde02d4fbfe462019a35c2386e4f18570e0c2",
+  "commit": "457de94568983021377354a3eebd8edadeec4ef1",
+  "immutable_evidence_files": 274743,
   "last_scoped_addition": {
-    "directory": "2026-09-25-loader-new-ptr-r1",
-    "files": 499,
-    "bytes": 17594287,
-    "catalog_entries_added": 2860,
-    "prior_packs_catalogued_from_committed_inventories": [
-      "2026-09-25-loader-design-r1",
-      "2026-09-25-loader-integration",
-      "2026-09-25-loader-set-package-r1",
-      "2026-09-25-loader-locks-r1",
-      "2026-09-25-loader-prefix-integration",
-      "2026-09-25-loader-general-aref-r1"
-    ]
+    "directory": "2026-09-25-loader-definitions-floats-r1",
+    "files": 591,
+    "bytes": 23744944,
+    "catalog_entries_added": 591
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Loader bignums and native-pointer boundaries proposal: ordered compilation reaches l0-def function layout; 470 modules, 25 initializers, 83 native-equal observations and 112 controls in four modes. Native 21843 tests and 164 restored FASLs; 34 reader comparisons and 26048 compiler/runtime comparisons; all 1445 Git-free replay artifacts equal. Three product files remain isolated pending review. Counts 0/0/0, 575/535 and 21/12 unchanged; no boot, target LOAD or foreign-module service claim.",
-  "source_index_sha256": "6729ba1b69c38f385f8b038184264965a43b6748be6e261053f786cd03003b8c",
-  "source_index_snapshot": "catalog/source-index-2026-09-25-loader-new-ptr-r1.json",
+  "scope": "Function-definition/float proposal over 928ad5ef. Ordered compilation completes l0-def, l0-error and l0-float (31/1/50 modules) after the preceding six files; next stop :EQ-VECTOR-INITIAL-ELEMENT in l0-hash. Eleven complete production FASLs plus selected unchanged original dependencies and witnesses: 595 modules, 33 initializers, 110 native-equal observations and 116 controls in each of four modes, 9/150 collections. Native-compatible optional NIL/old-result LFUN-BITS semantics, strong name registry, four target float helpers, HASHENV/NUMBER-MACROS prerequisites. Existing qualified EQ-table leaves are bound by exact source/binary identity. Four directed arity refusals; catch inspection and immutable ordinary-function setters refuse with cleanup/state restoration and omission controls. Native R6/R6a: 21843 tests, 164 restored FASLs (45 identical, 119 decoded-equal); 34 reader comparisons across 17 profiles. All 26048 compiler/runtime comparisons pass with the actually executed array collector bound and asserted. Git-free different-root replay matches all 1825 generated artifacts and all results. Prior pointer packet corpus collector identity discrepancy and original failed NIL metadata expectation are disclosed; earlier evidence unchanged. Five product files remain isolated pending Claude review. Whole-file compilation is separate from witnessed runtime paths; native macptr copying, complete numeric library, target LOAD and boot not claimed. Counts 0/0/0, originals 575/535, ledger 21/12 unchanged; no criterion credit.",
+  "source_index_sha256": "71dae089d2a21e3bc261e91e9928d1b8cbee94074adf49634f48b33965de1f82",
+  "source_index_snapshot": "catalog/source-index-2026-09-25-loader-definitions-floats-r1.json",
   "verification": {
     "status": "PASS",
     "new_execution": true,
-    "report": "2026-09-25-loader-new-ptr-r1/summary.json",
-    "report_sha256": "fa0183e77d73b65522b1dc33a5de0c59b706bc26fcd7695a3d71399529174f9d",
-    "scope": "Scoped catalog addition. New packet verified at retention; prior referenced packs reuse authenticated committed packet inventories. No full-store rehash."
+    "report": "2026-09-25-loader-definitions-floats-r1/summary.json",
+    "report_sha256": "5bf52d83fd98565dea494913c9b43bf919124ada723baea1906da1f6958941c3",
+    "scope": "Scoped catalog addition from the verified new packet inventory. Unchanged evidence uses its committed identities; no full-store rehash."
   },
   "version": 1
 }

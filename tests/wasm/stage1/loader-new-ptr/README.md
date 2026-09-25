@@ -79,7 +79,12 @@ foreign reader forms unavailable in the macOS interface database are identified
 by their original hashes and compared byte-for-byte.
 
 The complete compiler/runtime corpus passes all 26,048 comparisons with the
-final compiler and inherited collector. Four execution modes and a Git-free
+final compiler. **Qualification correction:** the retained execution environment
+identifies the older collector, despite this packet's summary naming the array
+collector. That combination was not qualified by this run. The
+[function-definition successor](../loader-def/README.md) records the discrepancy
+and runs the corpus with an explicit executed-collector identity check. The
+original evidence is unchanged. Four execution modes and a Git-free
 different-root replay qualify the loader input identity: all 1,445 generated
 FASL, heap, WAT and Wasm artifacts match byte-for-byte, along with every
 observation and control result. The inherited collector

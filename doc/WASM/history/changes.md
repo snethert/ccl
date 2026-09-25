@@ -1,3 +1,41 @@
+## 2026-09-25 — Function definitions and floating-point files advance the loader
+
+The isolated proposal extends `loader-new-ptr` at `928ad5ef` through l0-def,
+l0-error and l0-float. The next ordered compiler stop is
+:EQ-VECTOR-INITIAL-ELEMENT in l0-hash. Five proposed product files supply the
+metadata boundary, native-compatible optional NIL/old-result LFUN-BITS behavior,
+a strong function-name registry, four float helpers, and explicit compilation
+prerequisites. Native catch-frame inspection and native-pointer float copying
+have explicit unsupported boundaries. The accepted EQ-table runtime leaves are
+bound by exact source and binary identity; production consumers are unchanged.
+
+Eleven complete FASLs cross-load with their sources removed. Selected original
+dependencies and witnesses yield 595 modules, 33 ordered initializers, 110
+native-equal observations and 116 runtime controls in each of four modes, with
+9/150 collections. Four compiler arity controls pass. Function definitions,
+metadata writes, moving names, float signs/scaling/copying, subnormal decoding,
+signed zero and error strings execute. This is selective runtime coverage, not
+closure of every function in the newly compiled files or of native macptr use.
+
+Fresh R6/R6a passes 21,843 native tests and restores 164 FASLs (45 identical,
+119 decoded-equal); 75 upstream-disabled tests remain disclosed. Reader forms
+match in 34 comparisons across 17 profiles. The full corpus passes 26,048
+comparisons with an assertion binding the actually executed collector. Git-free
+replay at a different path matches all 1,825 generated artifacts and all results.
+A replay lease deadlock was fixed before the final attributed execution.
+
+The previous pointer packet claimed the array collector although its corpus
+execution environment identifies the older collector. That combination was not
+qualified by the earlier run; its evidence remains immutable. This packet fixes
+the hook ordering and qualifies the stated combination. It also corrects the
+corpus's invalid LFUN-BITS NIL refusal expectation, retaining the invalid-type
+control with T and adding NIL read checks. Original development failures and
+superseded runs are retained separately, without final qualification credit.
+
+One evidence pack is retained. Five product files remain under tests pending
+Claude review before integration. Accepted files 0/0/0, originals 575/535 and
+ledger 21/12 are unchanged. No target LOAD, full numeric library or boot claim.
+
 ## 2026-09-25 — Bignum and native-pointer work advances four more loader files
 
 The new loader proposal extends the pending general-array proposal. Ordered
