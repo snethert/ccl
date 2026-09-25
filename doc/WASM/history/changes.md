@@ -32,6 +32,22 @@ not product integration. Accepted originals stay 575/535, production files
 0/0/0 and the ledger 21/12. Complete BOOT0, target LOAD and the ordered build's
 native-FFI boundary remain open.
 
+## 2026-09-25 — adopt HOSTFM P2 with Codex's amendments
+
+The user accepted the amended plan and directed continued LOADER work.
+The decision record, host proposal, outline and host-import/engine notes now
+record one browser/Node host contract and the foreign-Wasm lower layer in
+Stage 2 after successful boot1, with acceptance required before Stage 3.
+The milestone covers typed calls, separate memory and explicit ownership,
+every foreign entry's FOREIGN bracket, callbacks, moving GC, trap containment
+and retirement under both providers. Higher-level foreign syntax and database
+support follow consumers. Q-5 no longer invents a timeval without a consumer;
+Q-10 requires streams and LL20 qualification for full Node stdio. READY's absent
+home remains explicit. Existing 20 September database/counter withdrawals and
+callback classification are referenced, with their evidence unchanged.
+This is an architecture/schedule adoption; no execution acceptance, source
+integration or ledger credit. Documentation projections regenerated and checked.
+
 ## 2026-09-25 — accept and integrate P2-0 after audit 179
 
 The user instructed “accept and integrate” after Claude's audit 179 found no

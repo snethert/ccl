@@ -2,7 +2,7 @@
 
 ```
 DOC-ID        HOSTFM-P2 (P1 was 0ac8691c; P2 amends it after Codex's review — see §10)
-STATUS        PROPOSAL — not adopted, not a decision record, no gate or ledger effect
+STATUS        ADOPTED WITH AMENDMENTS — 25 September 2026; see §11 and decisions.md
 AUTHOR        Claude (Fable 5.1), 20 September 2026
 REVIEWER      Codex (cross-provider review requested by the user)
 BASE          wasm2 at 541b4a3f; callbacks reviewed through audit 130 (3cfbfe1e)
@@ -15,9 +15,9 @@ TOUCHES       no shared compiler, runtime, kernel, contract or registered docume
 Every claim, requirement and question below has an ID. Reply per ID with one of
 `AGREE`, `DISAGREE`, `AMEND`, `UNVERIFIED`, and the evidence (file and line,
 executed probe, or specification link). Section 9 lists the questions that need
-an answer before anything here is adopted. Do not implement from this document;
-adoption is the user's decision and would be entered in `decisions.md` by the
-ordinary route. Until then, §1 is relayed user direction, not a recorded decision.
+an answer in the original adoption review. The original proposal requested the user's adoption through `decisions.md`.
+The user adopted P2 with Codex's amendments on 25 September; §11 records the
+amendments and distinguishes architecture from execution acceptance.
 
 Claim labels used throughout:
 
@@ -86,7 +86,7 @@ Capability table. "Absent" means H-2 applies.
 | CAP-stdio | Lisp standard streams | `l1-streams`, `l1-boot-2` | present: listener input and output routed to the page | present: routed by the Node owner to fds 0/1/2 |
 | CAP-tty | POSIX fds and terminal behaviour | `l1-streams`, `pty` | absent | owner-side only; interactive terminal needs stream and LL20 suspension support |
 | CAP-args | Command line | `*command-line-argument-list*` | owner-supplied list, default empty | `process.argv` tail |
-| CAP-env | Environment, cwd, home, user, hostname | `linux-files`, `misc` | absent except namespace cwd and a virtual home (see CB-21) | `process.env`, `os.*`, mapped into the namespace |
+| CAP-env | Environment, cwd, home, user, hostname | `linux-files`, `misc` | absent except namespace cwd; virtual home is a future consumer obligation (CB-21), absent in current READY | `process.env`, `os.*`, mapped into the namespace when admitted |
 | CAP-exit | Exit status | `quit` | absent; terminate Workers, report to page | an exit *request* to the Node owner, which flushes, terminates sibling Workers and sets the status. `[ENG]` `process.exit` inside a Worker stops only that Worker. |
 | CAP-signal | OS interrupt to break | `l1-lisp-threads`, trap support | absent; UI control posts the same interrupt | SIGINT on the main thread posts the interrupt |
 | CAP-proc | External processes | `run-program` | absent | `child_process` `[ENG]`; asynchronous pipes need H-4 |
@@ -97,7 +97,7 @@ Capability table. "Absent" means H-2 applies.
 | CAP-image | Image source and name | `*heap-image-name*`, loader | namespace name of a fetched blob | namespace name of a mounted file |
 | CAP-ui | Page surface: DOM, canvas, input, clipboard | CLIM IDE (`ui-overview.md`) | present *on the Page*; the Lisp Worker reaches it by proxy (FM-13) | absent |
 | CAP-ffi-native | Native C libraries, ObjC, JNI, GTK, pty, ELF/Mach-O tools | `%ff-call` users, `library/*` | absent | absent |
-| CAP-ffi-wasm | Foreign Wasm modules (§6) | new | present | present |
+| CAP-ffi-wasm | Foreign Wasm modules (§6) | new | scheduled: Stage 2 after boot1 (§11) | scheduled: same milestone, separately qualified |
 
 `[SRC]` for the CCL-surface column: foreign-call density ranks
 `level-1/linux-files.lisp` 132, `level-1/l1-numbers.lisp` 62 (libm; governed by
@@ -281,9 +281,9 @@ declaration format is left open (Q-7).
 ## 8. What this document does not claim
 
 No execution was performed for it beyond the audits cited. Every `[ENG]` row is
-unverified here. The capability table is a classification, not a schedule: it
-does not move any capability into Stage 1, and it does not reopen accepted
-units. Sockets and subprocesses under Node are expensive because their Node APIs
+unverified here. The capability table describes intended scope; §11 schedules
+the foreign-Wasm lower layer and bounds initial Node work. Adoption does not
+reopen accepted units. Sockets and subprocesses under Node are expensive because their Node APIs
 are asynchronous and CCL's are blocking; listing them as present under Node says
 they are possible, not that they are planned.
 
@@ -295,12 +295,12 @@ they are possible, not that they are planned.
 | Q-2 | Under Node, may bounded namespace reads call `fs.*Sync` inside the Lisp Worker, bracketed by FOREIGN, instead of the mailbox? | Not at first. One protocol under both providers until a measurement shows the mailbox cost matters; then admit the shortcut only for operations that cannot block without bound, with R2 untouched. |
 | Q-3 | Does the kernel-import census need a provider dimension (R-3), or can all 24 full-profile host-service rows keep one classification with provider differences behind the mailbox? | The latter, if H-1 holds; say so in the contract. |
 | Q-4 | CB-0/CB-1: is there a Lisp consumer that needs the native foreign-buffer shape, or can `gctime`/`room` read collector counters? 541b4a3f chose an approach Claude has not read. | Counters, unless a consumer forces the buffer. |
-| Q-5 | CB-10: what represents a `:timeval` record before FM-3 exists — a Lisp-side struct, or a port-owned pinned word pair? | Port-owned pinned words; revisit with FM-3. |
+| Q-5 | CB-10: is any `:timeval` representation needed before FM-3? | None without a live consumer. If a start timestamp becomes necessary, use an explicit port clock value and units, as CB-10 requires. |
 | Q-6 | FM-4: is a per-library adapter the right seam given lazy installation and the digest-bound installer, or should the generic adapter take the library as data? | Per-library, generated from the binary's export section, admitted by digest like any module. |
 | Q-7 | Should declarations for FM-5/FM-14 use WIT, a Lisp `def-foreign` form, or both? | Lisp form first; WIT import later if libraries ship it. |
 | Q-8 | Is there any accepted Stage 1 unit whose claims change under H-1…H-6? | Claude found none; existing executions keep their scope and gain no Node or provider-neutral claim; `browser-config.mjs` becomes the browser provider's first member and needs a Node sibling for CAP-cpus. |
 | Q-9 | DB-1…DB-3: agree to withdraw? If not, state the consumer that needs RESET-DB-FILES before CAP-ffi-wasm exists. | Withdraw. |
-| Q-10 | Which stage owns the Node provider's first deliverable (namespace mount plus stdio plus args, enough for DEP-C batch use)? | Alongside the Stage 1 read-only namespace, since the fixtures already run there; stdio and args are small. The user decides. |
+| Q-10 | Which stage owns the Node provider's first deliverable? | Namespace and owner-supplied arguments may accompany Stage 1 loader work. Full stdio requires stream semantics and LL20 suspension qualification in Stage 2 before Stage 3 interactive use; it is not a small Stage 1 addition or already-qualified DEP-C batch deployment. |
 
 ## 10. Review record (P1 → P2)
 
@@ -329,7 +329,36 @@ from host-only retirement after a trap. FM-9 and the constructor warning were
 also corrected. These are proposal corrections, not an adoption or execution
 of the foreign interface.
 
-Still open for the user after P2: adoption of H-1…H-6 and the provider split;
-withdrawal of STAGE1-STARTUP-DB-R1 and 44531e64; not integrating 541b4a3f
-(Codex's own review now advises against it); who authors the classification
-manifest; and Q-10's staging of the first Node deliverable.
+The original P2 left adoption, withdrawal, classification authorship and Node
+staging open. The dated adoption below supersedes that list; the historical
+reviews and their execution scope are unchanged.
+
+## 11. Adoption and amendments — 25 September 2026
+
+The user accepted Codex's recommendation: "I accept the plan with your amendments.
+Proceed with loader work." The [decision record](decisions.md#25-september-2026--hostfm-p2-adopted-with-amendments)
+adopts H-1–H-6, the callback disposition rules and FM-1–FM-15 as architecture.
+
+CAP-ffi-wasm's lower layer is a **Stage 2 milestone after successful boot1 and
+required before Stage 3**. Successful boot1 means the selected ordered level-1
+load and its required initializers have completed under NSL-4. Scope is typed
+exports, separate foreign memory, explicit copies and allocation ownership,
+every foreign entry bracketed by FOREIGN, callbacks, moving-GC preservation,
+trap containment and instance retirement. FMT-1–FMT-9 supply the proof
+obligations under browser and Node providers. The full CCL foreign vocabulary,
+generated record layouts and foreign database support follow as their consumers
+require; no bootstrap dependency is discharged by scheduling it later.
+
+Q-5 and Q-10 incorporate Codex's corrections. Current READY has no `home:` root;
+CB-21/CB-23 require a separately qualified namespace home when their consumers
+are admitted. Provider differences remain behind the semantic kernel-import
+contract and mailbox, not in generated Lisp code.
+
+Database reset packets and native counter-buffer proposal 541b4a3f were already
+withdrawn on 20 September; adoption preserves their evidence and the obligation
+to prove no live native handles or omit the subsystem. The existing
+`tests/wasm/stage1/startup-runtime/classification.json` binds all 35 callbacks
+to the retained selection; it is the authored classification work, not proof
+that the selected boot closure has run them. Codex continues LOADER; native-FFI
+stops require explicit runtime replacements, host services or justified
+exclusions. No execution acceptance, integration or ledger credit follows.

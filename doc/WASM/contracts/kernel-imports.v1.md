@@ -9,6 +9,12 @@ refuses when the committed file differs from the regeneration.
 
 ## Derivation
 
+HOSTFM-P2 adoption (25 September 2026) keeps this semantic classification:
+browser/Node provider differences live behind the host-service mailbox and its
+capability contract. They do not add provider-specific imports to generated
+Lisp code. Provider identity and per-field configuration provenance are owner
+records; deployment qualification remains separate from this census.
+
 The C table is the `defimport` list in `lisp-kernel/imports.s` and the Lisp
 table is the `KERNEL-IMPORT-` enumeration in
 `compiler/X86/X8632/x8632-arch.lisp`; both are pinned to their U1 blobs. The

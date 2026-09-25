@@ -8,6 +8,38 @@ Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligat
 
 R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
+## 25 September 2026 — HOSTFM P2 adopted with amendments
+
+The user decided: "I accept the plan with your amendments. Proceed with loader
+work." [HOSTFM-P2](host-and-foreign-modules.md#11-adoption-and-amendments--25-september-2026)
+is adopted as architecture: one Lisp-visible host contract with browser and
+Node providers; explicit capability absence; owner-validated configuration;
+virtual namespace paths; interruptible mailbox services; consumer-bound startup
+dispositions; and separate-memory foreign Wasm modules under FM-1–FM-15.
+
+CAP-ffi-wasm's lower layer is scheduled in Stage 2, after successful NSL-4
+boot1 (the selected ordered level-1 load and required initializers complete),
+and its acceptance is required before Stage 3. Typed exports, explicit copying
+and allocation ownership, FOREIGN transitions around every foreign entry,
+callbacks, moving-GC preservation, trap containment and retirement are required
+under browser and Node providers. FMT-1–FMT-9 are the milestone's proof
+obligations. Higher-level CCL foreign syntax, generated layouts and database
+support follow demonstrated consumer requirements.
+
+Do not create a timeval representation without a live consumer. Node namespace
+and arguments may accompany loader work; complete stdio requires stream and
+LL20 suspension qualification in Stage 2 before interactive Stage 3. Current
+READY's absent `home:` capability remains explicit. Provider differences stay
+behind the semantic kernel-import contract and mailbox. The database and native
+counter-buffer proposals already withdrawn on 20 September remain withdrawn,
+with their evidence retained and consumer/no-live-handle obligations open.
+The existing callback classification manifest remains bound to the original
+selection; deferral does not close a bootstrap dependency.
+
+LOADER remains the immediate implementation work. This decision grants no new
+execution acceptance, source integration or gate credit; the disposable-U1,
+R6/R6a and independent-review workflow is unchanged.
+
 ## 15 September 2026 — LL15 instrument qualification
 
 The user authorized the on-demand census policy: “I will approve the change, so

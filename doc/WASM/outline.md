@@ -212,6 +212,14 @@ A stepping API or a successful request enqueue does not prove suspension and res
 
 ### What the host must provide
 
+The user adopted [HOSTFM-P2 with amendments](host-and-foreign-modules.md#11-adoption-and-amendments--25-september-2026)
+on 25 September. Browser and Node deployment providers implement one Lisp-visible
+contract, with validated owner configuration and explicit capability absence.
+Its §4 capability table names the provider surfaces: namespace, streams and
+arguments, clocks and process services, page access and foreign modules.
+Provider selection is recorded by the owner; images and generated code remain
+provider-neutral. Potential capability is not implementation acceptance.
+
 The host contract is derived from the source census: the kernel import table, UUO/trap classes, subprimitives and direct foreign calls. Source inspection finds 65 defimport forms in both U1 and H1; the reported 266 level-1 and 141 lib/library direct foreign-call counts belong to H1 and must be re-enumerated for U1.
 
 | Surface | Treatment |
@@ -310,6 +318,17 @@ Execute coordinated cross-loaded heap and code artifacts using the real Wasm pas
 Scheduled LL tests: LL01, LL02, LL04, LL05, LL06, LL07, LL08, LL09, LL10, LL11, LL12, LL13, LL14, LL15, LL16, LL17, LL18, LL19, LL21.
 
 #### Stage 2: runtime correctness
+
+After successful NSL-4 boot1, qualify CAP-ffi-wasm's lower layer before Stage 3:
+typed exports, separate foreign memory, explicit copies and ownership, FOREIGN
+entry/re-entry for every foreign call including allocation and initialization,
+callbacks, moving GC, trap containment and instance retirement. Successful boot1
+completes the selected ordered level-1 load and required initializers under the
+[loader plan](stage1/namespace-loader-plan.md). HOSTFM FMT-1–FMT-9 apply under
+both browser and Node providers. Higher-level foreign syntax, generated layouts
+and database support follow consumer requirements. Complete Node stdio requires
+stream and LL20 suspension qualification here before Stage 3 interactive use;
+it is not implied by Node-based fixture execution.
 
 Complete level-1-required coverage; multi-Worker GC, weak references and finalization, conditions and restarts, the census-derived host services and Wasm trap, thread and callback glue; close the floating-point decision. Exit requires binding restoration, every multiple value, cleanup effects and nonlocal side-effect suppression under forced GC, and FOREIGN entry and re-entry and Worker lifecycle under randomized safepoint timing with bounded rendezvous. A late-created Worker must not replay initialization over already-mutated shared state; verify both state survival and legitimate per-Worker setup. Re-run the FOREIGN interrupt-wake schedule against production I/O, including wake during GC and completion/cancellation races on the retained descriptor. [D, D5/D7; LL20]
 

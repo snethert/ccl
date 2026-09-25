@@ -16,6 +16,14 @@ upstream kernel source changed; the fixture lives under `tests/wasm`.
 
 ## What executes
 
+The 25 September HOSTFM-P2 decision adds future deployment qualification:
+CAP-ffi-wasm's lower layer must pass its Stage 2 post-boot1 milestone under
+pinned browser and Node providers before Stage 3. Qualify foreign exception
+encoding, callbacks, trap containment and GC transitions (FMT-1–FMT-9).
+Multi-memory is optional and needs an engine row only if used; the baseline
+JavaScript boundary does not depend on it. Existing engine probes do not grant
+Node deployment or foreign-interface acceptance.
+
 One hand-built wasm32 module, `features.wat`, carries every required feature:
 multivalue function and block results, `return_call` and
 `return_call_indirect` chains of depth 10,000,000, final exception handling
