@@ -3903,6 +3903,14 @@
       "scope": "Audit 180 combined SET-PACKAGE/lock integration; seven product files byte-identical to reviewed proposals; 42 qualified compiler/CCL sources. Fresh clean-U1 product execution: 262 modules, 18 initializers, 32 native-equal rows and 33 controls in each of four runs, package-lock initializer omission killed, all 1335 regenerated artifacts equal. Native R6/R6a, readers and corpus reused by exact identity. Final execution drivers bound before/after execution and at retention. O-88 defensive guards and O-89 historical retention gap explicit. Counts 0/0/0, 575/535, 21/12; no credit.",
       "sha256": "8024f6d0bc863bba65667a4bdee4984226256fe1de765009f0d3a4228064f778",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-GENERAL-AREF-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-general-aref-r1/packet.json",
+      "sha256": "d3575f8382963629022cee0a230e8f826d24b368993a8ddb5bfb551896c17482",
+      "review_disposition": "PROPOSED_NOT_REVIEWED",
+      "scope": "General AREF/ASET proposal over audit-180 integration 33aeb696. Real ordered compiler completes l0-aprims and all l0-array (26/41 modules), then stops at %NEW-PTR in l0-bignum32. Four complete production FASLs plus selected original support and test witnesses: 327 modules, 19 initializers, 44 native-equal rows, 87 controls per run in four placement/collection modes; 8/70 collections. General rank2/3 target Lisp boundaries leave original public AREF/ASET unchanged. Array/vector-header collector scanners: 46 checks and three guard-deletion mutants; four array-helper mutants killed, with redundant type/extent checks disclosed. Fresh native R6/R6a: 21843 tests, 164 restored FASLs, 45 identical and 119 decoded-equal. Full 26048-case corpus first passes with the compiler, then all cases execute again with the new collector while compiled Lisp bytes are reused. Git-free different-root replay matches 1011 generated FASL/heap/WAT/Wasm artifacts and every observation/control. Final drivers bound before/after execution and at retention; original failures retained. Three product files remain isolated proposals; no target LOAD, full MAKE-ARRAY, saved-image array admission or boot claim. Accepted counts 0/0/0, 575/535, ledger 21/12; no criterion credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

@@ -1,3 +1,38 @@
+## 2026-09-25 — General array access advances the ordered level-0 build
+
+The new proposal compiles all of l0-array, then reaches %NEW-PTR in
+l0-bignum32. GENERAL-AREF2/3 and GENERAL-ASET2/3 call target Lisp accessors;
+CCL's original public AREF, ASET and displacement walker remain unchanged.
+Logical rank and axis bounds are checked before following displaced headers.
+No consumer rewriter, native kernel edit or JavaScript array implementation.
+
+The target now executes four complete production FASLs with the selected
+original support definitions and test scaffolding: 327 modules, 19 initializers,
+44 native-equal observations and 87 controls in each of four runs. Cases include
+ranks zero through four, displaced array/vector chains, a fill-pointer backing,
+packed bits, characters, signed and unsigned integers, assignment evaluation
+order, moving collection within argument evaluation and globally held arrays.
+There are 8 collections per plain run and 70 per extra-collection run.
+Four array validation-clause mutants and three inherited lock mutants are killed.
+
+The allocation-pressure case exposed the collector's deliberately absent array
+header layout. New tagged-cell scanners cover arrayH and vectorH, with 46 owner
+and layout checks and three independently killed shape-guard mutants. The
+original refusal is retained. Static saved-image array admission and complete
+MAKE-ARRAY are outside this unit; fixture construction has no original credit.
+
+Fresh R6/R6a passes 21,843 native tests and restores 164 FASLs (45 identical,
+119 decoded-equal). Only target-specific Lisp files change, so existing-target
+reader branches retain their integrated identities. The compiler passes all
+26,048 comparisons; the complete corpus is executed again with the new collector
+while reusing the exact compiled Lisp modules. Final input identities are checked
+before/after the producer and target runs and at retention. A Git-free replay
+from another path matches 1,011 generated artifacts and every result.
+
+The three changed product files remain an isolated proposal awaiting Claude's
+independent review. No integration or criterion credit: accepted files 0/0/0,
+originals 575/535, ledger 21/12. O-90 remains a separate compiler cleanup.
+
 ## 2026-09-25 — Audit 180 accepted; SET-PACKAGE and locks integrated
 
 Fast-forwarded Claude's review commit `5fdf9884` unchanged. The user directed

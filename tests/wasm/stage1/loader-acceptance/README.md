@@ -1,5 +1,10 @@
 # Accepted loader integration and audit 179 follow-up
 
+Historical integration at `50cd8ea1`, independently verified by audit 180.
+The SET-PACKAGE/lock successor at `33aeb696` supersedes its product identity.
+Run this historical checker from the historical checkout; the current checker
+is [loader-prefix-acceptance/check.py](../loader-prefix-acceptance/check.py).
+
 The user accepted `c642d339` as the NSL-2 P2-0 design of record and instructed
 “accept and integrate” after audit 179 (`5771567a`, no defect). Its six
 compiler/loader files and three runtime files are now integrated byte for byte
