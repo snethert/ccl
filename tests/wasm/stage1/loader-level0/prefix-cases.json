@@ -1,0 +1,244 @@
+[
+  {
+    "id": "%FIXNUM-INTLEN-0",
+    "call": [
+      "CCL",
+      "%FIXNUM-INTLEN"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "%FIXNUM-INTLEN-1",
+    "call": [
+      "CCL",
+      "%FIXNUM-INTLEN"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "%FIXNUM-INTLEN-2",
+    "call": [
+      "CCL",
+      "%FIXNUM-INTLEN"
+    ],
+    "args": [
+      31
+    ]
+  },
+  {
+    "id": "%FIXNUM-INTLEN-3",
+    "call": [
+      "CCL",
+      "%FIXNUM-INTLEN"
+    ],
+    "args": [
+      -1
+    ]
+  },
+  {
+    "id": "%FIXNUM-INTLEN-4",
+    "call": [
+      "CCL",
+      "%FIXNUM-INTLEN"
+    ],
+    "args": [
+      -3
+    ]
+  },
+  {
+    "id": "%IASH-5",
+    "call": [
+      "CCL",
+      "%IASH"
+    ],
+    "args": [
+      3,
+      2
+    ]
+  },
+  {
+    "id": "%IASH-6",
+    "call": [
+      "CCL",
+      "%IASH"
+    ],
+    "args": [
+      48,
+      -3
+    ]
+  },
+  {
+    "id": "%IASH-7",
+    "call": [
+      "CCL",
+      "%IASH"
+    ],
+    "args": [
+      -3,
+      2
+    ]
+  },
+  {
+    "id": "TRUE-13",
+    "call": [
+      "CCL",
+      "TRUE"
+    ],
+    "args": []
+  },
+  {
+    "id": "TRUE-14",
+    "call": [
+      "CCL",
+      "TRUE"
+    ],
+    "args": [
+      1,
+      2,
+      3
+    ]
+  },
+  {
+    "id": "FALSE-15",
+    "call": [
+      "CCL",
+      "FALSE"
+    ],
+    "args": []
+  },
+  {
+    "id": "FALSE-16",
+    "call": [
+      "CCL",
+      "FALSE"
+    ],
+    "args": [
+      1,
+      2,
+      3
+    ]
+  },
+  {
+    "id": "package-cl",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-CL"
+    ],
+    "args": []
+  },
+  {
+    "id": "package-keyword",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-KEYWORD"
+    ],
+    "args": []
+  },
+  {
+    "id": "package-object",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-OBJECT"
+    ],
+    "args": []
+  },
+  {
+    "id": "package-bound",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-BOUND"
+    ],
+    "args": []
+  },
+  {
+    "id": "package-missing",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-MISSING"
+    ],
+    "args": []
+  },
+  {
+    "id": "package-sequence",
+    "call": [
+      "CCL",
+      "LOADER-PACKAGE-SEQUENCE"
+    ],
+    "args": []
+  },
+  {
+    "id": "%FIXNUM-TRUNCATE-8",
+    "call": [
+      "CCL",
+      "%FIXNUM-TRUNCATE"
+    ],
+    "args": [
+      17,
+      5
+    ]
+  },
+  {
+    "id": "%FIXNUM-TRUNCATE-9",
+    "call": [
+      "CCL",
+      "%FIXNUM-TRUNCATE"
+    ],
+    "args": [
+      -17,
+      5
+    ]
+  },
+  {
+    "id": "%FIXNUM-TRUNCATE-10",
+    "call": [
+      "CCL",
+      "%FIXNUM-TRUNCATE"
+    ],
+    "args": [
+      17,
+      -5
+    ]
+  },
+  {
+    "id": "%FIXNUM-TRUNCATE-11",
+    "call": [
+      "CCL",
+      "%FIXNUM-TRUNCATE"
+    ],
+    "args": [
+      -17,
+      -5
+    ]
+  },
+  {
+    "id": "FAST-MOD-12",
+    "call": [
+      "CCL",
+      "FAST-MOD"
+    ],
+    "args": [
+      29,
+      7
+    ]
+  },
+  {
+    "id": "LOADER-EQL-IMMEDIATES",
+    "call": [
+      "CCL",
+      "LOADER-EQL-IMMEDIATES"
+    ],
+    "args": []
+  },
+  {
+    "id": "LOADER-EQL-EVALUATION",
+    "call": [
+      "CCL",
+      "LOADER-EQL-EVALUATION"
+    ],
+    "args": []
+  }
+]

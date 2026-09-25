@@ -3879,6 +3879,14 @@
       "scope": "User-authorized integration after audit 179: six compiler/loader files and three runtime files equal the reviewed P2-0 proposal; architecture generator inputs reproduce the exact source. Reuses reviewed R6/R6a, 21843 native tests with 164 restored FASLs, 51 reader rows and 26048 corpus comparisons by the 42-file source identity. Fresh integrated build and four relocated/collecting target runs reproduce reviewed FASL/heap/module identities and native observations. Audit follow-up controls are author-verified: 68 image checks, two version refusals, public/tail occupancy mutants and keyword mutant killed, 19 D2 checks. O-84 owner inventory authority documented; O-87 exact reason preserved. Counts unchanged: production 0/0/0, fixtures 2/2/0, originals 575/535, ledger 21/12; no criterion credit.",
       "sha256": "033218e5b53fa89db5d3a8de0316795999e764afd0cbf143a2de2bbd04a4b501",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-SET-PACKAGE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-set-package-r1/packet.json",
+      "review_disposition": "PROPOSED_NOT_REVIEWED",
+      "scope": "LOADER SET-PACKAGE proposal: original package functions execute on target, with a single-Worker lookup boundary and immediate/identity EQL lowering retaining the boxed fallback. Whole-file target prefix plus 20 selected original dependencies: 209 modules, 15 ordered initializers, 25 native-equal rows in four placement/collection runs, 40 moving collections per collecting run. Eight keyword rows in four runs, five FASL refusals, three isolated image clauses and deletion mutants, initializer omission caught. P2-0 regression passes 68 image checks, two version checks, keyword mutant and 19 D2 checks. Fresh 21843 native tests, 164 restored FASLs, 119 decoded-equal comparisons, 17 reader profiles, 26048 fresh corpus comparisons. Git-free different-root replay: 675 byte-identical artifacts and equal observations. Real ordered build still stops at native FFI in l0-aprims; selected forms receive no whole-file credit. Product sources are proposals only; accepted files 0/0/0, originals 575/535, ledger 21/12 unchanged.",
+      "sha256": "8fd17bd23982043b8b051b473db84f8385999d4061e41b73741698a87d7e61c8",
+      "slot_credit": false
     }
   ],
   "current_runs": [

@@ -1,3 +1,37 @@
+## 2026-09-25 — LOADER SET-PACKAGE proposal
+
+Following the user's direction to proceed with SET-PACKAGE, the
+[loader prefix packet](../../../tests/wasm/stage1/loader-level0/README.md)
+executes CCL's original SET-PACKAGE and FIND-PACKAGE definitions on the target.
+Only the package-list lock boundary changes for the adopted exclusive
+single-Worker profile. The compiler handles identity/immediate EQL comparisons
+directly while preserving the ordinary boxed fallback. Two files' IN-PACKAGE
+forms and package-sensitive effects now run in saved order on target.
+
+The real ordered cross-xload-level-0 entry point still stops at native FFI in
+l0-aprims. A separate directory compile exposed duplicate definitions returning
+failure-p alongside a FASL; removing the obsolete definitions preserves the
+adopted final bodies. Keyword metadata becomes symbolic code-record v3 data,
+with empty-key v2 compatibility, and APPLY's proper-list type is ordinary FASL
+data. Twenty complete original dependency definitions are selected solely for
+the package witness; their seven source files receive no whole-file credit.
+
+The 209-module prefix executes fifteen initializers and twenty-five native-equal
+rows in four placement/collection runs, with forty collections in each collecting
+run. Eight keyword rows pass separately. Five FASL refusals, three isolated
+image clauses/deletion mutants and an initializer-omission mutant pass, as does
+the retained P2-0 regression. Fresh native R6/R6a passes 21,843 tests and restores
+164 FASLs; 119 changed FASLs are decoded-equal. Seventeen reader profiles and the
+guard-omission mutant qualify the shared package edit. The final compiler passes
+26,048 fresh comparisons. Git-free replay reproduces all producer and packaged
+artifacts and target results after correcting absolute paths in two generated
+test sources. Original failures and their identities remain in one evidence pack.
+
+This is a proposed functional unit awaiting the standing adversarial review,
+not product integration. Accepted originals stay 575/535, production files
+0/0/0 and the ledger 21/12. Complete BOOT0, target LOAD and the ordered build's
+native-FFI boundary remain open.
+
 ## 2026-09-25 — accept and integrate P2-0 after audit 179
 
 The user instructed “accept and integrate” after Claude's audit 179 found no

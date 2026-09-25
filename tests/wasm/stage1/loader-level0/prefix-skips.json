@@ -1,0 +1,60 @@
+{
+  "reason": "EQL is undefined in this incomplete prefix; FAST-MOD calls %FIXNUM-TRUNCATE, which calls EQL. The first attempted truncate call reaches checked error 10 while reporting the missing function through an uninitialized condition environment. These five cases are not native-matched executions.",
+  "cases": [
+    {
+      "id": "%FIXNUM-TRUNCATE-8",
+      "call": [
+        "CCL",
+        "%FIXNUM-TRUNCATE"
+      ],
+      "args": [
+        17,
+        5
+      ]
+    },
+    {
+      "id": "%FIXNUM-TRUNCATE-9",
+      "call": [
+        "CCL",
+        "%FIXNUM-TRUNCATE"
+      ],
+      "args": [
+        -17,
+        5
+      ]
+    },
+    {
+      "id": "%FIXNUM-TRUNCATE-10",
+      "call": [
+        "CCL",
+        "%FIXNUM-TRUNCATE"
+      ],
+      "args": [
+        17,
+        -5
+      ]
+    },
+    {
+      "id": "%FIXNUM-TRUNCATE-11",
+      "call": [
+        "CCL",
+        "%FIXNUM-TRUNCATE"
+      ],
+      "args": [
+        -17,
+        -5
+      ]
+    },
+    {
+      "id": "FAST-MOD-12",
+      "call": [
+        "CCL",
+        "FAST-MOD"
+      ],
+      "args": [
+        29,
+        7
+      ]
+    }
+  ]
+}

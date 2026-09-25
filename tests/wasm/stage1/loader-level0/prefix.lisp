@@ -1,0 +1,40 @@
+;;; Compile the target-directory prefix with the real directory compiler.
+;;; Keep all four results: a pathname alone does not qualify a compilation.
+(in-package "CCL")
+(let* ((out (getenv "LOADER_OUTPUT"))
+       (backend (find-xload-backend :wasm32))
+       (compiler (backend-xload-info-compile-file-function backend))
+       (*save-doc-strings* t)
+       (*fasl-save-doc-strings* t)
+       (rows nil))
+  (unwind-protect
+       (progn
+         (setf (backend-xload-info-compile-file-function backend)
+               (lambda (source &rest options)
+                 (multiple-value-bind (fasl modules warnings failure)
+                     (apply compiler source options)
+                   (push (list :object
+                               (cons "file" (enough-namestring source (truename "ccl:")))
+                               (cons "fasl" (and fasl (enough-namestring fasl (truename "ccl:"))))
+                               (cons "modules" (length modules))
+                               (cons "warnings" (not (null warnings)))
+                               (cons "failure" (not (null failure)))) rows)
+                   (unless (and fasl (not failure))
+                     (error "Unqualified whole-file compilation: ~a" source))
+                   (values fasl modules warnings failure))))
+         (let ((stop
+                 (handler-case
+                     (with-cross-compilation-target (:wasm32)
+                       (dolist (directory (backend-xload-info-subdirs backend))
+                         (target-xcompile-directory :wasm32 directory t)))
+                   (error (condition)
+                     (list :object (cons "type" (string (type-of condition)))
+                           (cons "message" (format nil "~a" condition)))))))
+           (with-open-file (stream (concatenate 'string out "prefix.json")
+                                   :direction :output :if-exists :supersede)
+             (wasm32-json (list :object (cons "compiled" (reverse rows))
+                               (cons "stop" stop)) stream)
+             (terpri stream))
+           (format t "~&PREFIX-OBSERVATION-COMPLETE ~s~%" stop)))
+    (setf (backend-xload-info-compile-file-function backend) compiler)))
+(quit)

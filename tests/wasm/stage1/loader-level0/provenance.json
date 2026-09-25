@@ -1,0 +1,11 @@
+{
+  "sources": {
+    "level-0/WASM32/w32-prims.lisp": "477df9cca3affc1dd87816053841e6fff0d25ec56f38b4dbdc0ce13849fa8349",
+    "compiler/WASM32/wasm32-backend.lisp": "8ca9f22519ccfa04a548b98f71f3e6179559f5d219948a21ea0b7c4051f1b56d",
+    "xdump/xwasm32-fasload.lisp": "2e8a86c7e8ebf7d0014835f4661133d402e838a9d27d8e9c1075139c421ee5e0",
+    "runtime/wasm32/cross-image.mjs": "509ab561ecc6b8f4b05d0707fc7b788a49bd8c5f65d934e50d168cc24a536e2e",
+    "level-0/nfasload.lisp": "36a56b65d826b3dd2519896efe4591ecd710badf716d7bde5cd8437495026b3a"
+  },
+  "base_integration": "50cd8ea1",
+  "purpose": "Execute SET-PACKAGE and ordered initializers: whole-file loader metadata, single-Worker package lookup and immediate EQL lowering."
+}

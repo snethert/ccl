@@ -1,0 +1,124 @@
+[
+  {
+    "id": "keyword-0",
+    "call": [
+      "CCL",
+      "LOADER-KEYWORDS"
+    ],
+    "args": [
+      3
+    ]
+  },
+  {
+    "id": "keyword-1",
+    "call": [
+      "CCL",
+      "LOADER-KEYWORDS"
+    ],
+    "args": [
+      3,
+      {
+        "symbol": [
+          "KEYWORD",
+          "AMOUNT"
+        ]
+      },
+      11
+    ]
+  },
+  {
+    "id": "keyword-2",
+    "call": [
+      "CCL",
+      "LOADER-KEYWORDS"
+    ],
+    "args": [
+      3,
+      {
+        "symbol": [
+          "CCL",
+          "OFFSET"
+        ]
+      },
+      20,
+      {
+        "symbol": [
+          "KEYWORD",
+          "AMOUNT"
+        ]
+      },
+      8
+    ]
+  },
+  {
+    "id": "keyword-3",
+    "call": [
+      "CCL",
+      "LOADER-KEYWORDS"
+    ],
+    "args": [
+      3,
+      {
+        "symbol": [
+          "KEYWORD",
+          "AMOUNT"
+        ]
+      },
+      10,
+      {
+        "symbol": [
+          "KEYWORD",
+          "AMOUNT"
+        ]
+      },
+      99
+    ]
+  },
+  {
+    "id": "keyword-4",
+    "call": [
+      "CCL",
+      "LOADER-KEYWORDS"
+    ],
+    "args": [
+      3,
+      {
+        "symbol": [
+          "CCL",
+          "LOADER-KEYWORDS"
+        ]
+      },
+      22
+    ]
+  },
+  {
+    "id": "keyword-5",
+    "call": [
+      "CCL",
+      "LOADER-NESTED-KEYWORDS"
+    ],
+    "args": [
+      17
+    ]
+  },
+  {
+    "id": "keyword-6",
+    "call": [
+      "CCL",
+      "LOADER-APPLY-KEYWORDS"
+    ],
+    "args": [
+      12
+    ]
+  },
+  {
+    "id": "keyword-7",
+    "call": [
+      "CCL",
+      "LOADER-LEGACY"
+    ],
+    "args": [
+      41
+    ]
+  }
+]

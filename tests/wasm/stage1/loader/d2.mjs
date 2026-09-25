@@ -13,8 +13,10 @@ export function inventory(wat,stem,policy,versions){
  fs.writeFileSync(stem+'.wat',wat);
  execFileSync('/usr/local/bin/wat2wasm',['--enable-all',stem+'.wat','-o',stem+'.template.wasm']);
  const bytes=fs.readFileSync(stem+'.template.wasm');
- const sections=execFileSync('/usr/local/bin/wasm-objdump',['-x',stem+'.template.wasm'],{encoding:'utf8'});
- const instructions=execFileSync('/usr/local/bin/wasm-objdump',['-d',stem+'.template.wasm'],{encoding:'utf8'});
+ // Whole-file functions can exceed Node's default 1 MiB disassembly buffer.
+ const dumpOptions={encoding:'utf8',maxBuffer:64*1024*1024};
+ const sections=execFileSync('/usr/local/bin/wasm-objdump',['-x',stem+'.template.wasm'],dumpOptions);
+ const instructions=execFileSync('/usr/local/bin/wasm-objdump',['-d',stem+'.template.wasm'],dumpOptions);
  fs.writeFileSync(stem+'.sections.txt',sections);fs.writeFileSync(stem+'.instructions.txt',instructions);
  const ops=[...new Set(instructions.split('\n').filter(l=>l.includes('|')&&l.split('|')[1].trim()).map(l=>l.split('|')[1].trim().split(/\s+/)[0]))].sort();
  const features=[];
