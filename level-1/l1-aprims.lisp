@@ -259,8 +259,9 @@ terminate the list"
           (return top-of-top)))))))
 
 
-(defvar %setf-function-names% (make-hash-table :weak t :test 'eq))
-(defvar %setf-function-name-inverses% (make-hash-table :weak t :test 'eq))
+;;; The Wasm image owns these canonical function names for its lifetime.
+(defvar %setf-function-names% (make-hash-table #-wasm32-target :weak #-wasm32-target t :test 'eq))
+(defvar %setf-function-name-inverses% (make-hash-table #-wasm32-target :weak #-wasm32-target t :test 'eq))
 
 (defvar *setf-names-lock* (make-lock))
 (defun setf-function-name (sym)

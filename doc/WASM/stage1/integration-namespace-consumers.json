@@ -1,0 +1,142 @@
+{
+  "accepted_non_nil": 535,
+  "accepted_originals": 575,
+  "authorization": {
+    "context": "Continue and finish the namespace work; audit 177 recommends integrating unchanged product bytes after O-73 repair and O-75 disclosure.",
+    "namespace_quote": "actually finish the namespace stuff",
+    "weak_registry_quote": "Retain the documented substitution"
+  },
+  "files": [
+    {
+      "after": "2241c8eb8bc6689dc9abbec7c9b780184adc56161190e4e795608c8ae26affb3",
+      "before": "2ed8b7fc2ab382e6bdec649a835ee0c20d304e9b0671505b2bbcd6d3e8d09747",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "2241c8eb8bc6689dc9abbec7c9b780184adc56161190e4e795608c8ae26affb3"
+    },
+    {
+      "after": "477df9cca3affc1dd87816053841e6fff0d25ec56f38b4dbdc0ce13849fa8349",
+      "before": "3a98e1fcfd3b6ac747bd1c2e3cf7d01afd20e8611ef2ba90a3726f02d4fe3c2b",
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "reviewed": "477df9cca3affc1dd87816053841e6fff0d25ec56f38b4dbdc0ce13849fa8349"
+    },
+    {
+      "after": "757a81b9edc910a28a593c3f982babc98653bc3bd74cc371d606e41b734551ef",
+      "before": "f4edf56f707622844a44dbd86a9b452b7883c49db1098744c202c017c8a032b7",
+      "file": "level-0/l0-def.lisp",
+      "reviewed": "757a81b9edc910a28a593c3f982babc98653bc3bd74cc371d606e41b734551ef"
+    },
+    {
+      "after": "6cb4221224d708ccbf12d539e6b359955f2a685869f45d2190fe5655dde46a13",
+      "before": null,
+      "file": "level-1/WASM32/w32-files.lisp",
+      "reviewed": "6cb4221224d708ccbf12d539e6b359955f2a685869f45d2190fe5655dde46a13"
+    },
+    {
+      "after": "09f5da8af5086de1393824d44f8a423227eb89a53443f5bb3659d5ff785314b8",
+      "before": "fcc3f3de4e92e76aa3fbf67d913228cf432d0d9345d5df82a11a64bbd601014a",
+      "file": "level-1/l1-aprims.lisp",
+      "reviewed": "09f5da8af5086de1393824d44f8a423227eb89a53443f5bb3659d5ff785314b8"
+    },
+    {
+      "after": "5767ad25557428304541368df2150038deefd4fc64cab71263bdc5bf2b08c2aa",
+      "before": "8bcee99d44ab514b5b9d7b2a7fa24aebee3d32d96bad0a5484aa02910302bd84",
+      "file": "level-1/l1-dcode.lisp",
+      "reviewed": "5767ad25557428304541368df2150038deefd4fc64cab71263bdc5bf2b08c2aa"
+    },
+    {
+      "after": "e31b0e05afb8bebc4d4a325833a2b59677cd65e6f153a278de39f653e1e0a645",
+      "before": "71e075085bbb7c3e52c60da6cbae9ea87c4c0caf75ecc0d0631727fa472c3c04",
+      "file": "level-1/l1-files.lisp",
+      "reviewed": "e31b0e05afb8bebc4d4a325833a2b59677cd65e6f153a278de39f653e1e0a645"
+    },
+    {
+      "after": "150362b99fe09fa04cae616b89237d2e33c083cb2502a601043c1791975e4a18",
+      "before": "c37d1505d859f7ca17e0f41d2966cbac6d3dc7186e451f6e20d4fc76d4cfc15e",
+      "file": "level-1/l1-pathnames.lisp",
+      "reviewed": "150362b99fe09fa04cae616b89237d2e33c083cb2502a601043c1791975e4a18"
+    },
+    {
+      "after": "88b0733b88e0ebd3b06c97bf66e20138d8bacbce5a7dce0da875e4222f588cf6",
+      "before": "1377ce0d1c55d3b220d0b34c586e3ed3a2a6ddf17daa2a7fa41d09a65c5e0202",
+      "file": "level-1/l1-streams.lisp",
+      "reviewed": "88b0733b88e0ebd3b06c97bf66e20138d8bacbce5a7dce0da875e4222f588cf6"
+    },
+    {
+      "after": "a47811e596b4c372156746134f4c2602540137baed9de0f6726506dc51bbe641",
+      "before": "b60b6a3af9e4c3260a76a28d153fae668129cb66d52e7d2f12beeddf4c12f0a7",
+      "file": "level-1/l1-sysio.lisp",
+      "reviewed": "a47811e596b4c372156746134f4c2602540137baed9de0f6726506dc51bbe641"
+    },
+    {
+      "after": "f881079fba7afa0571b28a547c54a9fa4b20db2cc5dc212ba421d8e8dcc08a8e",
+      "before": "62d16a4d8563c30903fceda3ff62f5130a25c3f8de6b0a643dee8675eb04dca9",
+      "file": "level-1/l1-unicode.lisp",
+      "reviewed": "f881079fba7afa0571b28a547c54a9fa4b20db2cc5dc212ba421d8e8dcc08a8e"
+    },
+    {
+      "after": "a0eccb4a05b8c4e556be2624e4c833f6a79cddc4d649489dc940caf091ef2251",
+      "before": "261865c1e9f3da482523bea8a821095a83216e10690f3b08611b99ceb887042f",
+      "file": "lib/foreign-types.lisp",
+      "reviewed": "a0eccb4a05b8c4e556be2624e4c833f6a79cddc4d649489dc940caf091ef2251"
+    },
+    {
+      "after": "63e5910d40ed709ab87dd530752f6c4dc9d8dd5a102760c3658d18b9b29504f6",
+      "before": "b9e7e163ed65b56e730006e98c709bd33997cd636f976cc09ea23aa052486707",
+      "file": "runtime/wasm32/collector-owner.mjs",
+      "reviewed": "63e5910d40ed709ab87dd530752f6c4dc9d8dd5a102760c3658d18b9b29504f6"
+    },
+    {
+      "after": "c6184fcdbc2b5e97d054a8764056a3c5d18e65dd02fc5cc2917616eddfdfb018",
+      "before": "baf224e4b801496713cd6b66dd455170c32fb2e2cbc8d8e411f27a4fc73472a6",
+      "file": "runtime/wasm32/collector.c",
+      "reviewed": "c6184fcdbc2b5e97d054a8764056a3c5d18e65dd02fc5cc2917616eddfdfb018"
+    },
+    {
+      "after": "c9160b1034a3e7caa76ccf5a090be6e49df1bc86da2ec622ec8afc07a3a29264",
+      "before": "7cb6e60c2383e7bff2b427637ff5a5d2241df6767e2c8f684cf69a3b7a6674ab",
+      "file": "runtime/wasm32/symbols.c",
+      "reviewed": "c9160b1034a3e7caa76ccf5a090be6e49df1bc86da2ec622ec8afc07a3a29264"
+    }
+  ],
+  "files_cross_compiled": 0,
+  "files_cross_loaded": 0,
+  "files_target_loaded": 0,
+  "findings": {
+    "O73": "12 isolated directed refusals plus equivalence for the inner span check; new harness evidence, no product change",
+    "O75": "home: host absent; manifest ccl: and cwd only",
+    "carried": [
+      "O-74",
+      "O-76",
+      "O-77"
+    ]
+  },
+  "namespace_criterion": "Pending NSL-3 LOAD of source and precompiled bundles; no deferral or credit",
+  "packet": {
+    "directory": "2026-09-24-namespace-consumers-r1",
+    "id": "STAGE1-NAMESPACE-CONSUMERS-R1",
+    "proposal_commit": "053ebf56",
+    "sha256": "e851adaecfa7b5e441f975fe8157e6018f94799a5d33469e840a17596b720f31"
+  },
+  "qualification": {
+    "corpus_comparisons": 26048,
+    "mode": "EXACT_REVIEWED_SOURCE_REUSE",
+    "native_tests": 21843,
+    "reader_rows": 153,
+    "records": {
+      "native/qualification.json": "3ae3c7e8fa25dd020a37ad52fd3e5c22d1e1b3771eabdcb6425d17072624aad2",
+      "readers/summary.json": "1264ce7c901390a93a495f60e31c9626e3f4fc24fb40d1922cd83a1bc9d4ddf6",
+      "summary.json": "acd517efdac0dfb8750b094464fe208eb25f9484950d9fe11c598542640d71d2",
+      "verification.json": "8cd5162458678ce2607b1fab35bb7eeafcf7f385a24110e6fc138dbef20dfb6f"
+    }
+  },
+  "review": {
+    "commit": "98a160d8da6eb87941007db4cf7fb8d20b27357e",
+    "import_commit": "892c3aad",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "reviewer": "Claude Fable 5.1",
+    "sha256": "9243bb7eecee7329a8d2d1711733105d89ef4c54c7068e617dc8ef9efb263809"
+  },
+  "slot_credit": false,
+  "status": "INTEGRATED_REVIEWED_PRODUCT",
+  "version": 1
+}

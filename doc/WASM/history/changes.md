@@ -4823,3 +4823,34 @@ This is the complete read-only consumer proposal, awaiting Claude's review and
 integration under the standing workflow. Full mailbox profile; JSPI is deferred
 by NSL-P2. Source/bundle publication and loading remain NSL-2/NSL-3. No acceptance
 is inferred: 575/535 originals, 21/33 criteria and file counts 0/0/0 remain.
+
+
+## 2026-09-24 — Audit 177 follow-up and namespace consumer integration
+
+Imported Claude's audit `98a160d8` verbatim at `892c3aad`. Its full cold replay
+qualified the namespace proposal and primitive R2; O-69 through O-72 are closed.
+Integrated all fifteen reviewed product files byte-for-byte after repairing
+O-73's test isolation and disclosing O-75. No product change was necessary.
+Twelve directed cases preserve publication state and succeed only when their
+own validation clause is removed. The thirteenth inner span check is implied
+by the validated enclosing range and repeated by the final symbase span check;
+its intentional mutant survivor and equivalence are recorded. New harness
+proof remains available for the next adversarial review.
+
+Four fresh Workers using rebuilt integrated runtime services reproduce the
+reviewed results, including 1,064 namespace requests and 542 collections.
+Exact source identity reuses the already twice-executed native R6/R6a, reader
+and original-corpus evidence; no redundant native rebuild is claimed. R13's
+standing checker now uses its historical integration source at b2f0ad8f and
+rejects current namespace sources as R13. R9/R12 checks continue to pass.
+
+The target has no `home:` logical host: only manifest CCL/cwd roots. The planned
+loader uses those roots, while user init files remain outside READY. Steve's
+explicit reply, “Retain the documented substitution”, authorizes the five
+strong registries for the image lifetime; this does not implement weak tables.
+O-74's FIND-SYMBOL coverage, O-76's fixnum dispatch row and O-77's cold-replay
+hygiene remain next-packet work. No source/bundle loader or new criterion is
+claimed. S1-NAMESPACE-a waits for NSL-3 LOAD. Originals 575/535, criteria 21/33,
+and files cross-compiled/cross-loaded/target-loaded 0/0/0 remain unchanged.
+Next substantive producer work is NSL-2 P2-0: one DEFUN with a constant and a
+top-level effect through COMPILE-FILE, the real dumper and a simulated heap.

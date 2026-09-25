@@ -215,6 +215,18 @@
 
 
 
+;;; Wasm I/O buffers are traced vectors. No address into a movable vector
+;;; escapes to the host; FD-READ roots the vector and copies after resumption.
+#+wasm32-target
+(defun %make-heap-ivector (subtype size-in-bytes size-in-elts)
+  (declare (ignore size-in-bytes))
+  (values (%alloc-misc size-in-elts subtype) nil))
+
+#+wasm32-target
+(defun dispose-heap-ivector (v)
+  (declare (ignore v))
+  nil) ; The collector owns this vector's storage.
+
 #-wasm32-target
 (defun %make-heap-ivector (subtype size-in-bytes size-in-elts)
   (with-macptrs ((ptr (malloc (+ size-in-bytes
@@ -250,6 +262,8 @@
 						  target::num-subtag-bits)))
   (let* ((subtag (ccl::element-type-subtype element-type)))
     (unless
+        #+wasm32-target
+        (= (logand subtag target::fulltagmask) target::fulltag-immheader)
         #+ppc32-target
         (= (logand subtag ppc32::fulltagmask)
                ppc32::fulltag-immheader)
@@ -3392,6 +3406,12 @@
     (:inferred . nil)
     (:unicode . :unicode)))
 
+#+wasm32-target
+(defun optimal-buffer-size (fd element-type)
+  (declare (ignore fd))
+  (let ((bytes (subtag-bytes (element-type-subtype element-type) 1)))
+    (max 1 (floor *elements-per-buffer* bytes))))
+
 #-wasm32-target
 (defun optimal-buffer-size (fd element-type)
   #+windows-target (declare (ignore fd))
@@ -5666,7 +5686,8 @@
 (defun fd-stream-advance (s ioblock read-p)
   (let* ((fd (ioblock-device ioblock))
          (buf (ioblock-inbuf ioblock))
-         (bufptr (io-buffer-bufptr buf))
+         (bufptr #+wasm32-target (io-buffer-buffer buf)
+                 #-wasm32-target (io-buffer-bufptr buf))
          (size (io-buffer-size buf))
          (avail nil))
     (setf (io-buffer-idx buf) 0
@@ -5689,8 +5710,9 @@
                              'input-timeout)
                            :stream s)
                     (stream-io-error s (- error) "read")))))))
-        (let* ((n (with-eagain fd :input
-		    (fd-read fd bufptr size))))
+        (let* ((n #+wasm32-target (fd-read fd bufptr size)
+                   #-wasm32-target (with-eagain fd :input
+                                    (fd-read fd bufptr size))))
           (declare (fixnum n))
           (if (< n 0)
             (stream-io-error s (- n) "read")
@@ -5711,7 +5733,7 @@
     (not (fd-stream-eofp s ioblock))))
 
 (defun fd-stream-close (s ioblock)
-  (cancel-terminate-when-unreachable s)
+  #-wasm32-target (cancel-terminate-when-unreachable s)
   (when (ioblock-dirty ioblock)
     (stream-force-output s))
   (let* ((fd (ioblock-device ioblock)))

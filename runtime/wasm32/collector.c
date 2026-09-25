@@ -142,7 +142,7 @@ EXPORT U collect(U config) {
     scan=3;size=16;
    }
    else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
-   else if(tag==50){if(n!=4)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
+   else if(tag==50){if(n!=4&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(tag==82){if(n!=1)return reject(s,BAD_OBJECT);scan=0;size=8;}
    else if(node_subtag(tag)||(tag==130&&n>=1)){if(tag==42&&n!=6&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}

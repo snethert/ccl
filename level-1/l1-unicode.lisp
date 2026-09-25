@@ -291,6 +291,13 @@ that encoding."
 ;;; function will have "name" <name> (this is often helpful when debugging.)
 
 (defmacro define-character-encoding (name doc &rest args &key &allow-other-keys)
+  ;; Namespace streams use the original stream and vector codecs. Native
+  ;; address callbacks require a foreign-memory ABI and are absent on Wasm.
+  #+wasm32-target
+  (setq args (loop for (key value) on args by #'cddr
+                   unless (member key '(:memory-encode-function :memory-decode-function
+                                        :length-of-memory-encoding-function))
+                     append (list key value)))
   (setq name (intern (string name) "KEYWORD"))
   (let* ((encoding (gensym))
          (alias (gensym)))

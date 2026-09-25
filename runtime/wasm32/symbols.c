@@ -21,20 +21,27 @@ static U config(U c,U result){
  if((base&7)||(end&7)||(next&7)||base<4194304||end<base||next<base||next>end||!span(base,(W)end-base))return 0;
  if(sc<1114112||result<1114112||L(c+28)!=NIL||L(c+32)!=TRUE||(sc&7)||sz<8192||!span(sc,sz)||(result&3)||!span(result,16))return 0;
  if(overlap(base,(W)end-base,c,80)||overlap(base,(W)end-base,sc,sz)||overlap(base,(W)end-base,result,16)||overlap(sc,sz,c,80)||overlap(sc,sz,result,16)||overlap(c,80,result,16))return 0;
+ U lo=L(c+72),hi=L(c+76);
+ if(lo||hi){if((lo&7)||hi<lo||((hi-lo)&31)||!span(lo,(W)hi-lo)||
+  overlap(lo,(W)hi-lo,base,(W)end-base)||overlap(lo,(W)hi-lo,c,80)||
+  overlap(lo,(W)hi-lo,sc,sz)||overlap(lo,(W)hi-lo,result,16))return 0;}
  return 1;
 }
-static U vector(U c,U node,U *n){if((node&7)!=6||!inside(c,node-6,4)||(L(node-6)&255)!=250)return 0;*n=L(node-6)>>8;return *n<=1024&&inside(c,node-6,((W)*n*4+11)&~7ull);}
+static U vector(U c,U node,U *n){if((node&7)!=6||!inside(c,node-6,4)||(L(node-6)&255)!=250)return 0;*n=L(node-6)>>8;return *n<=16384&&inside(c,node-6,((W)*n*4+11)&~7ull);}
 static U string(U node,U *n){if((node&7)!=6||!span(node-6,4)||(L(node-6)&255)!=191)return 0;*n=L(node-6)>>8;if(*n>4096||!span(node-6,(W)*n*4+4))return 0;for(U i=0;i<*n;i++)if(L(node-2+4*i)>0x10ffffu||(L(node-2+4*i)>=0xd800u&&L(node-2+4*i)<=0xdfffu))return 0;return 1;}
 static U equal(U a,U b){U n,m;if(!string(a,&n)||!string(b,&m)||n!=m)return 0;for(U i=0;i<n;i++)if(L(a-2+4*i)!=L(b-2+4*i))return 0;return 1;}
 static U hash(U name){U h=2166136261u,n=L(name-6)>>8;for(U i=0;i<n;i++){h^=L(name-2+4*i);h*=16777619u;}return h;}
 EXPORT U symbol_hash(U name){U n;return string(name,&n)?hash(name):0;}
-static U symbase(U c,U sym){U p=sym==NIL?NILSYM:sym-6;if(sym!=NIL&&(sym&7)!=6)return 0;if(sym!=NIL&&sym!=TRUE&&!inside(c,p,32))return 0;return span(p,32)&&L(p)==1850?p:0;}
+static U symbase(U c,U sym){U p=sym==NIL?NILSYM:sym-6;if(sym!=NIL&&(sym&7)!=6)return 0;if(sym!=NIL&&sym!=TRUE&&!inside(c,p,32)){
+  U lo=L(c+72),hi=L(c+76);
+  if(!lo||p<lo||(W)p+32>hi||((p-lo)&31)||!span(p,32))return 0;
+ }return span(p,32)&&L(p)==1850?p:0;}
 static U package(U c,U p){U n,root=L(c+16);if(!vector(c,root,&n)||n<2||n>16)return 0;for(U i=0;i<n;i++)if(L(root-2+4*i)==p)return (p&7)==6&&inside(c,p-6,40)&&L(p-6)==2146;return 0;}
 /* Table descriptor is two conses, whose vector holds raw symbol pointers.
  * NIL is stored as its symbol pointer, never confused with an empty bucket. */
 static U table(U c,U t,U *v,U *n){
  if((t&7)!=1||!inside(c,t-1,8))return 0;U tail=L(t-1);*v=L(t+3);
- if((tail&7)!=1||!inside(c,tail-1,8)||!vector(c,*v,n)||*n<4||*n>256||(*n&(*n-1)))return 0;
+ if((tail&7)!=1||!inside(c,tail-1,8)||!vector(c,*v,n)||*n<4||*n>8192||(*n&(*n-1)))return 0;
  U count=L(tail+3),limit=L(tail-1);return !(count&3)&&count/4<=*n&&limit==*n*4;
 }
 static U symbol(U raw){return raw==NILSYM+6?NIL:raw;}

@@ -28,6 +28,17 @@
     ,@(if pathname (list pathname))
               ,@(if args args)))
 
+#+wasm32-target
+(defun %signal-file-error (err-num &optional pathname args)
+  ;; The virtual namespace has stable errno values and no native stack-frame
+  ;; pointer or libc strerror entry. Keep CCL's file condition and payload.
+  (error 'simple-file-error :pathname pathname
+         :error-type (if (< err-num 0)
+                       (%wasm-file-error-string (- err-num))
+                       (%rsc-string err-num))
+         :format-arguments (list args)))
+
+#-wasm32-target
 (defun %signal-file-error (err-num &optional pathname args)
   (declare (fixnum err-num))
   (let* ((err-code (logior (ash 2 16) (the fixnum (logand #xffff (the fixnum err-num))))))
@@ -105,7 +116,8 @@
   ;; effectively merging it with whatever random thing may be
   ;; in *DEFAULT-PATHNAME-DEFAULTS*.
   ;; I -think- that that's true for all callers of this function.
-  (let* ((*default-pathname-defaults* #p""))
+  (let* ((*default-pathname-defaults* #+wasm32-target (%cons-pathname nil nil nil)
+                                    #-wasm32-target #p""))
     (pathname (native-to-namestring name))))
 
 ;; this is used to quote full namestrings, so do not quote /'s, and on windows do not quote :'s either,
@@ -114,7 +126,8 @@
   (%path-std-quotes native nil #+windows-target "*;" #-windows-target "*;:"))
 
 (defun native-to-directory-pathname (name)
-  (let* ((*default-pathname-defaults* #p""))
+  (let* ((*default-pathname-defaults* #+wasm32-target (%cons-pathname nil nil nil)
+                                    #-wasm32-target #p""))
     #+windows-target
     (let* ((len (length name)))
       (when (and (> len 1) (not (or (eql (schar name (1- len)) #\/)
@@ -232,6 +245,8 @@
 (defun %create-file (path &key
 			 (if-exists :error)
 			 (create-directory t))
+  #+wasm32-target (declare (ignore create-directory))
+  #-wasm32-target
   (when create-directory
     (create-directory path))
   (when (directory-pathname-p path)

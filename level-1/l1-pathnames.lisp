@@ -611,6 +611,13 @@
       
              
 
+#+wasm32-target
+(defun ccl-directory ()
+  (unless *wasm-namespace-ccl-root*
+    (error "The namespace CCL root has not been initialized."))
+  (native-to-directory-pathname *wasm-namespace-ccl-root*))
+
+#-wasm32-target
 (defun ccl-directory ()
   (let* ((dirpath (getenv "CCL_DEFAULT_DIRECTORY")))
     (if (and dirpath (not (zerop (length (namestring dirpath)))))
@@ -656,6 +663,7 @@
 ;;; Hide this from COMPILE-FILE, for obscure cross-compilation reasons
 
 (defun setup-initial-translations ()
+  #-wasm32-target
   (setf (logical-pathname-translations "home")
         `(("**;*.*" ,(merge-pathnames "**/*.*" (user-homedir-pathname)))))
 

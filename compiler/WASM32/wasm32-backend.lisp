@@ -1138,7 +1138,22 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((and *bootstrap-front-end* (pool-literal-p (first args)))
+       (cond ((wasm32-function-reference-p (first args))
+              (let ((cell (wasm32-function-reference-cell (first args))))
+                (unless (and (symbolp cell) cell (null (symbol-package cell)))
+                  (refuse :function-reference-cell))
+                (b-wat "(call $function_value_lisp ~a (local.get $top))"
+                       (bootstrap-symbol cell))))
+             ((and *b-cpl-conditions* (packagep (first args)))
+              (bootstrap-predicate-call 'ccl::%wasm-package-literal
+                (list (make-b-raw-code :text
+                        (bootstrap-symbol (intern (package-name (first args)) :keyword))))))
+             ((and *b-cpl-conditions* (typep (first args) 'ccl::class-cell))
+              (bootstrap-predicate-call
+               'ccl::find-class-cell
+               (list (make-b-raw-code :text (bootstrap-symbol (ccl::class-cell-name (first args))))
+                     (bootstrap-constant t))))
+             ((and *bootstrap-front-end* (pool-literal-p (first args)))
               (pool-load (first args)))
              ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function unbound-variable storage-condition ccl::no-applicable-method-exists arithmetic-error division-by-zero)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((and *b-float-service* (member (first args) '(floating-point-invalid-operation floating-point-overflow floating-point-underflow floating-point-inexact))) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
@@ -2576,8 +2591,15 @@
 
 ;;; Isolated LL10 pass-2 extension, appended to the reviewed B backend.
 (in-package "WASM32-COMPILER")
+;;; A file compiler can refer to an emitted function before its load-time
+;;; definition publishes a public binding. Its linker-owned cell identifies
+;;; that exact emitted function, independently of later redefinitions.
+(defstruct (wasm32-function-reference (:type vector) :named
+                                     (:constructor make-wasm32-function-reference (cell)))
+  cell)
+
 (defun pool-literal-p (x)
-  (and (not (or (null x) (eq x t)
+  (and (not (wasm32-function-reference-p x)) (not (or (null x) (eq x t)
                 (and (integerp x) (<= -536870912 x 536870911))))
        (or (and *bootstrap-front-end* (symbolp x))
            (integerp x) (floatp x) (characterp x) (consp x)
@@ -2589,7 +2611,8 @@
       (when *bootstrap-front-end*
         (setq values (append values (list #x574153 (bootstrap-lfun-bits (first entry))
           (let ((keys (fourth (ccl::acode-operands (ccl::afunc-acode (first entry))))))
-            (and keys (copy-seq (or (fifth keys) #()))))))))
+            (and keys (copy-seq (or (fifth keys) #()))))
+          (ccl::afunc-name (first entry))))))
       (labels ((visit (x)
                  (cond ((ccl::acode-p x)
                         (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
@@ -3951,7 +3974,7 @@
                         count (if (eq op 'ccl::%iasr) (b-wat "(i32.shr_s ~a (i32.const 31))" value) "(i32.const 0)")
                         (if (eq op 'ccl::%iasr) "shr_s" "shr_u") value count)))))))
 
-(defun bootstrap-uvector-access (op forms)
+(defun bootstrap-basic-uvector-access (op forms)
   (bootstrap-operands forms
     (lambda (values)
       (let* ((object (first values)) (value (third values))
@@ -4162,7 +4185,7 @@
            (append (list (first forms) (bootstrap-constant wasm32::subtag-bit-vector))
                    (when initial (list initial))))))))))
 
-(defun bootstrap-make-vector (forms)
+(defun bootstrap-make-simple-vector (forms)
   (bootstrap-operands forms
     (lambda (values)
       (destructuring-bind (count tag &optional initial) values
@@ -4290,9 +4313,9 @@
                 (let ((address (b-wat "(i32.add (local.get ~a) (i32.add (i32.const 4) (i32.mul (i32.shr_u ~a (i32.const 2)) (i32.const ~d))))" base index width)))
                   (if value
                     (progn
-                      (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.or (i32.lt_s ~a (i32.const ~d)) (i32.gt_s ~a (i32.const ~d))))" value value (* 4 low) value (* 4 high)) 5) s)
-                      (format s "(i32.store~a ~a ~a) ~a" (case width (1 "8") (2 "16") (t "")) address
-                              (if (eq kind :fixnum-vector) value (b-wat "(i32.shr_s ~a (i32.const 2))" value)) value))
+                      (format s "(i32.store~a ~a ~a) ~a"
+                              (case width (1 "8") (2 "16") (t "")) address
+                              (bootstrap-integer-vector-value value subtag low high) value))
                     (let ((read (b-wat "(i32.load~a ~a)" (case width (1 (if signed "8_s" "8_u")) (2 (if signed "16_s" "16_u")) (t "")) address)))
                       (write-string (cond ((eq kind :fixnum-vector) read)
                                           ((= width 4) (bootstrap-box-word read signed))
@@ -4763,6 +4786,11 @@
            (b-multiple (make-b-raw-code :text
              (bootstrap-operands forms (lambda (values)
                (b-wat "(call $function_value_lisp ~a (local.get $top))" (first values)))))))
+          ((eq name 'ccl::%wasm-function-name)
+           (unless (= (length forms) 1) (refuse :function-name-arity))
+           (b-multiple (make-b-raw-code :text
+             (bootstrap-operands forms
+               (lambda (values) (bootstrap-function-info (first values) 3))))))
           ((member name '(ccl::lfun-bits ccl::inner-lfun-bits ccl::lfun-bits-known-function))
            (when (member (length forms) '(1 2))
              (b-multiple (make-b-raw-code :text (if (cdr forms) (bootstrap-set-function-bits forms) (bootstrap-function-bits forms))))))
@@ -4824,7 +4852,9 @@
           ((eq name 'ccl::%wasm-current-function)
            (unless (null forms) (refuse :current-function-arity))
            (b-multiple (make-b-raw-code :text "(i32.load offset=40 (local.get $context))")))
-          ((member name '(ccl::%wasm-bignum-half-ref ccl::%wasm-bignum-set ccl::%wasm-bignum-length-set ccl::%copy-ivector-to-ivector))
+          ((eq name 'ccl::%copy-ivector-to-ivector)
+           (b-multiple (make-b-raw-code :text (bootstrap-ivector-byte-copy forms))))
+          ((member name '(ccl::%wasm-bignum-half-ref ccl::%wasm-bignum-set ccl::%wasm-bignum-length-set))
            (b-multiple (make-b-raw-code :text (bootstrap-bignum-call name forms))))
           ((eq name 'ccl::%wasm-function-keyvect)
            (b-multiple (make-b-raw-code :text (bootstrap-function-keyvect forms))))
@@ -5466,7 +5496,7 @@
       (local.set ~a (if (result i32) (i32.eq (i32.load offset=16 (local.get ~a)) (i32.const 77825))
                          (then (i32.const 0)) (else (i32.const 8))))
       ~a
-      (call $span (i32.sub (local.get ~a) (i32.const 6)) (i32.add (local.get ~a) (i32.const 16)))
+      (call $span (i32.sub (local.get ~a) (i32.const 6)) (i32.add (local.get ~a) (i32.const ~d)))
       ~a
       (i32.load offset=~d (i32.add (local.get ~a) (local.get ~a))))"
       function value pool function
@@ -5474,8 +5504,8 @@
       pool
       (b-condition (b-wat "(i32.ne (i32.load8_u (i32.sub (local.get ~a) (i32.const 6))) (i32.const 250))" pool) 4)
       offset function
-      (b-condition (b-wat "(i32.lt_u (i32.shr_u (i32.load (i32.sub (local.get ~a) (i32.const 6))) (i32.const 8)) (i32.add (i32.shr_u (local.get ~a) (i32.const 2)) (i32.const 3)))" pool offset) 4)
-      pool offset
+      (b-condition (b-wat "(i32.lt_u (i32.shr_u (i32.load (i32.sub (local.get ~a) (i32.const 6))) (i32.const 8)) (i32.add (i32.shr_u (local.get ~a) (i32.const 2)) (i32.const ~d)))" pool offset (max 3 (1+ index))) 4)
+      pool offset (* 4 (1+ (max 3 (1+ index))))
       (b-condition (b-wat "(i32.ne (i32.load (i32.add (local.get ~a) (i32.sub (local.get ~a) (i32.const 2)))) (i32.const ~d))" pool offset (* 4 #x574153)) 4)
       (- (* 4 index) 2) pool offset)))
 
@@ -5686,3 +5716,159 @@
                   when value append
                     (list (make-b-raw-code :text (bootstrap-symbol keyword))
                           (make-b-raw-code :text value)))))))
+
+(in-package :wasm32-compiler)
+
+;;; The native LAP operation copies payload bytes, independently of element
+;;; type. Offsets start immediately after the header, including the D1
+;;; four-byte alignment pad of double and complex float vectors.
+(defun bootstrap-ivector-byte-extent (object base bytes stream)
+  (let ((header (temporary)) (tag (temporary)) (count (temporary)) (width (temporary)))
+    (write-string
+     (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))" object) 4)
+     stream)
+    (format stream "(local.set ~a (i32.sub ~a (i32.const 6)))
+      (call $span (local.get ~a) (i32.const 4))
+      (local.set ~a (i32.load (local.get ~a)))
+      (local.set ~a (i32.and (local.get ~a) (i32.const 255)))
+      (local.set ~a (i32.shr_u (local.get ~a) (i32.const 8)))
+      (local.set ~a (i32.const 0))"
+      base object base header base tag header count header width)
+    (dolist (entry '((7 . 4) (159 . 4) (167 . 4) (175 . 4) (183 . 4)
+                    (191 . 4) (199 . 1) (207 . 1) (215 . 2) (223 . 2)
+                    (231 . 8) (239 . 8) (247 . 16)))
+      (format stream "(if (i32.eq (local.get ~a) (i32.const ~d))
+                        (then (local.set ~a (i32.const ~d))))"
+              tag (car entry) width (cdr entry)))
+    (write-string
+     (b-condition
+      (b-wat "(i32.or
+        (i32.and (i32.eqz (local.get ~a)) (i32.ne (local.get ~a) (i32.const 255)))
+        (i32.and (i32.eq (local.get ~a) (i32.const 7)) (i32.eqz (local.get ~a))))"
+        width tag tag count) 4) stream)
+    (format stream "(local.set ~a
+      (if (result i32) (i32.eq (local.get ~a) (i32.const 255))
+        (then (i32.shr_u (i32.add (local.get ~a) (i32.const 7)) (i32.const 3)))
+        (else (i32.mul (local.get ~a) (local.get ~a)))))
+      (if (i32.and (i32.ge_u (local.get ~a) (i32.const 231))
+                   (i32.le_u (local.get ~a) (i32.const 247)))
+        (then (local.set ~a (i32.add (local.get ~a) (i32.const 4)))))
+      (call $span (local.get ~a) (i32.add (local.get ~a) (i32.const 4)))"
+      bytes tag count count width tag tag bytes bytes base bytes)))
+
+(defun bootstrap-ivector-byte-copy (forms)
+  (unless (= (length forms) 5) (refuse :ivector-copy-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (destructuring-bind (source start destination to count) values
+        (let ((src (temporary)) (dst (temporary))
+              (src-bytes (temporary)) (dst-bytes (temporary)))
+          (with-output-to-string (s)
+            (bootstrap-ivector-byte-extent source src src-bytes s)
+            (bootstrap-ivector-byte-extent destination dst dst-bytes s)
+            (dolist (value (list start to count))
+              (write-string
+               (b-condition
+                (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))"
+                       value value) 4) s))
+            (loop for offset in (list start to)
+                  for bytes in (list src-bytes dst-bytes) do
+              (write-string
+               (b-condition
+                (b-wat "(i64.gt_u
+                  (i64.add (i64.extend_i32_u (i32.shr_u ~a (i32.const 2)))
+                           (i64.extend_i32_u (i32.shr_u ~a (i32.const 2))))
+                  (i64.extend_i32_u (local.get ~a)))" offset count bytes) 4) s))
+            ;; No call or allocation occurs after validation. MEMORY.COPY
+            ;; preserves the native operation's overlapping-copy semantics.
+            (format s "(memory.copy
+              (i32.add (local.get ~a) (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2))))
+              (i32.add (local.get ~a) (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2))))
+              (i32.shr_u ~a (i32.const 2))) ~a"
+              dst to src start count destination)))))))
+
+(in-package :wasm32-compiler)
+
+;;; The existing typed accessors define these D1 layouts. Generic UVREF and
+;;; allocation must use the same representation when CCL selects a stream's
+;;; element type at run time.
+(defparameter *namespace-integer-vectors*
+  '((199 1 :unsigned-8-bit-vector 0 255)
+    (207 1 :signed-8-bit-vector -128 127)
+    (215 2 :unsigned-16-bit-vector 0 65535)
+    (223 2 :signed-16-bit-vector -32768 32767)
+    (167 4 :unsigned-32-bit-vector 0 4294967295)
+    (175 4 :signed-32-bit-vector -2147483648 2147483647)
+    (183 4 :fixnum-vector -536870912 536870911)))
+
+(defun bootstrap-integer-vector-value (value subtag low high)
+  (cond ((= subtag 167) (bootstrap-unbox-word value))
+        ((= subtag 175)
+         (let ((base (temporary)))
+           (b-wat "(if (result i32) (i32.eqz (i32.and ~a (i32.const 3)))
+              (then (i32.shr_s ~a (i32.const 2)))
+              (else (local.set ~a (call $object_base ~a (i32.const 8) (i32.const 263)))
+                    (i32.load offset=4 (local.get ~a))))" value value base value base)))
+        (t
+         (b-wat "~a ~a"
+           (b-condition
+            (b-wat "(i32.or (i32.and ~a (i32.const 3))
+                      (i32.or (i32.lt_s ~a (i32.const ~d))
+                              (i32.gt_s ~a (i32.const ~d))))"
+                   value value (* 4 low) value (* 4 high)) 5)
+           (if (= subtag 183) value (b-wat "(i32.shr_s ~a (i32.const 2))" value))))))
+
+(defun bootstrap-integer-vector (values layout)
+  (destructuring-bind (count tag &optional initial) values
+    (declare (ignore tag))
+    (destructuring-bind (subtag width kind low high) layout
+      (declare (ignore kind))
+      (let ((word (temporary)) (n (temporary)) (i (temporary)))
+        (b-wat "~a (local.set ~a (i32.shr_u ~a (i32.const 2)))
+          (local.set ~a ~a) (i32.add ~a (i32.const 6))"
+          (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3))
+                                (i32.gt_u ~a (i32.const 67108860)))" count count) 6)
+          n count word (if initial (bootstrap-integer-vector-value initial subtag low high) "(i32.const 0)")
+          (bootstrap-heap-block
+           (b-wat "(i32.and (i32.add (i32.mul (local.get ~a) (i32.const ~d))
+                                    (i32.const 11)) (i32.const -8))" n width)
+           (lambda (base bytes)
+             (b-wat "(memory.fill ~a (i32.const 0) ~a)
+               (i32.store ~a (i32.or (i32.shl (local.get ~a) (i32.const 8)) (i32.const ~d)))
+               (local.set ~a (i32.const 0))
+               (block $integer_vector_done (loop $integer_vector_fill
+                 (br_if $integer_vector_done (i32.ge_u (local.get ~a) (local.get ~a)))
+                 (i32.store~a (i32.add ~a (i32.add (i32.const 4)
+                   (i32.mul (local.get ~a) (i32.const ~d)))) (local.get ~a))
+                 (local.set ~a (i32.add (local.get ~a) (i32.const 1)))
+                 (br $integer_vector_fill)))"
+               base bytes base n subtag i i n (case width (1 "8") (2 "16") (t ""))
+               base i width word i i))))))))
+
+(defun bootstrap-make-vector (forms)
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((raw (mapcar (lambda (x) (make-b-raw-code :text x)) values)))
+        (reduce (lambda (layout fallback)
+                  (b-wat "(if (result i32) (i32.eq ~a (i32.const ~d)) (then ~a) (else ~a))"
+                         (second values) (* 4 (first layout))
+                         (bootstrap-integer-vector values layout) fallback))
+                *namespace-integer-vectors* :from-end t
+                :initial-value (bootstrap-make-simple-vector raw))))))
+
+(defun bootstrap-uvector-access (op forms)
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((tag (temporary))
+            (raw (mapcar (lambda (x) (make-b-raw-code :text x)) values)))
+        (b-wat "(local.set ~a ~a) ~a" tag (bootstrap-typecode (first values))
+          (reduce (lambda (layout fallback)
+                    (b-wat "(if (result i32) (i32.eq (local.get ~a) (i32.const ~d))
+                              (then ~a) (else ~a))"
+                           tag (* 4 (first layout))
+                           (bootstrap-typed-access
+                            (if (third values) 'ccl::%typed-uvset 'ccl::%typed-uvref)
+                            (cons (bootstrap-constant (third layout)) raw))
+                           fallback))
+                  *namespace-integer-vectors* :from-end t
+                  :initial-value (bootstrap-basic-uvector-access op raw)))))))

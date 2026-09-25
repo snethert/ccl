@@ -86,8 +86,14 @@
 
 
 (defvar *host-ftd* (make-ftd
+                    ;; The single-Worker target owns this type registry for
+                    ;; the lifetime of its image. It does not request weak
+                    ;; table semantics from the strong-table provider.
+                    #+wasm32-target :ordinal-types
+                    #+wasm32-target (make-hash-table :test #'eq)
                     :interface-db-directory
                     #.(ecase (backend-name *target-backend*)
+                        (:wasm32 nil)
                         (:linuxppc32 "ccl:headers;")
                         (:darwinppc32 "ccl:darwin-headers;")
                         (:darwinppc64 "ccl:darwin-headers64;")
@@ -118,15 +124,20 @@
                     
                       :prepend-underscores #+darwinppc-target t #-darwinppc-target nil)
                     :ff-call-expand-function
-                    'os::expand-ff-call
+                    #+wasm32-target '%wasm-native-ffi-excluded
+                    #-wasm32-target 'os::expand-ff-call
                     :ff-call-struct-return-by-implicit-arg-function
-                    'os::record-type-returns-structure-as-first-arg
+                    #+wasm32-target '%wasm-native-ffi-excluded
+                    #-wasm32-target 'os::record-type-returns-structure-as-first-arg
                     :callback-bindings-function
-                    'os::generate-callback-bindings
+                    #+wasm32-target '%wasm-native-ffi-excluded
+                    #-wasm32-target 'os::generate-callback-bindings
                     :callback-return-value-function
-                    'os::generate-callback-return-value
+                    #+wasm32-target '%wasm-native-ffi-excluded
+                    #-wasm32-target 'os::generate-callback-return-value
                     :platform-ordinal-types
-                    (case (backend-name *target-backend*)
+                    #+wasm32-target nil
+                    #-wasm32-target (case (backend-name *target-backend*)
                         (:win64 '((:struct :_stat64)))
                         (:win32 '((:struct :__stat64)))
                         (t
@@ -137,6 +148,7 @@
                            (t ()))))))
                     
 (defvar *target-ftd* *host-ftd*)
+#-wasm32-target
 (setf (backend-target-foreign-type-data *host-backend*)
       *host-ftd*)
 
@@ -1494,7 +1506,7 @@ result-type-specifer is :VOID or NIL"
   (print-unreadable-object (s stream :type t :identity t)
     (format stream "~a" (or (shlib.soname s) (shlib.pathname s)))))
 
-#-(or darwin-target windows-target)
+#-(or darwin-target windows-target wasm32-target)
 (defun dlerror ()
   (with-macptrs ((p))
     (%setf-macptr p (#_dlerror))
@@ -1840,8 +1852,15 @@ result-type-specifer is :VOID or NIL"
       (when dims
 	;; cross-compiling kludge. replaces '(or index null)
         (unless (typep (first dims) `(or
-				      ,(target-word-size-case
-					(32 '(integer 0 #.(expt 2 24)))
+				      ;; During target startup the foreign descriptor is available before
+                                ;; the compiler backend objects. Use its ABI.
+                                #+wasm32-target
+                                ,(ecase (getf (ftd-attributes *target-ftd*) :bits-per-word)
+                                   (32 '(integer 0 #.(expt 2 24)))
+                                   (64 '(integer 0 #.(expt 2 56))))
+                                #-wasm32-target
+                                ,(target-word-size-case
+                                        (32 '(integer 0 #.(expt 2 24)))
 					(64 '(integer 0 #.(expt 2 56))))
 				      null))
           (error "First dimension is not a non-negative fixnum or NIL: ~S"

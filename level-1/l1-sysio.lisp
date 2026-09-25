@@ -804,6 +804,9 @@ is :UNIX.")
 		      (setq native-truename (%create-file filename)
 			    created t))
 		     ((memq direction '(:output :io))
+                      ;; Refuse before generating or renaming a temporary
+                      ;; file. :IF-EXISTS NIL and :ERROR were handled above.
+                      #+wasm32-target (signal-file-error -30 filename)
 		      (when (eq if-exists :supersede)
 			(let ((truename (native-to-pathname native-truename)))
 			  (setq temp-name (gen-file-name truename))

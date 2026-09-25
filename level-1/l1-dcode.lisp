@@ -733,7 +733,11 @@
 
 
 (let* ((eql-specializers-lock (make-lock))
-       (eql-specializers-hash (make-hash-table :test #'eql  :weak :value)))
+       ;; The Wasm bootstrap owns its canonical specializers for the image
+       ;; lifetime; it does not request weak-table semantics.
+       (eql-specializers-hash (make-hash-table :test #'eql
+                                             #-wasm32-target :weak
+                                             #-wasm32-target :value)))
   (defun intern-eql-specializer (object)
     (with-lock-grabbed (eql-specializers-lock)
       (or (gethash object eql-specializers-hash)

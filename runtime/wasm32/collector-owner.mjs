@@ -70,6 +70,7 @@ export class CollectorOwner {
     if(tag%8===2||tag%8===7){
      offset=4;
      if(tag===90){need(n===3&&p+16<=region.end&&this.#get(p+4)===0&&(this.#get(p+8)===0||this.#get(p+8)===4),'image population shape');count=3;bytes=16;}
+     else if(tag===98){need(n===8,'image package shape');count=8;bytes=40;}
      else if([10,26,42,58,106,114,122,250].includes(tag)||(tag===130&&n>=1)){count=n;bytes=align(4+4*n,8);}
      else{count=0;let raw;
       if(tag===7&&n>0)raw=n*4;else if(tag===15&&n===1)raw=4;else if(tag===23&&n===3)raw=12;else if([159,167,175,183,191].includes(tag))raw=n*4;else if([199,207].includes(tag))raw=n;else if([215,223].includes(tag))raw=n*2;else if([231,239].includes(tag))raw=4+8*n;else if(tag===247)raw=4+16*n;else if(tag===255)raw=Math.ceil(n/8);

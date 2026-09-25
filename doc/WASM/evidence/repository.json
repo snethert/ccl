@@ -1,25 +1,25 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1735015ec392a27333cee3854fdc99027c7f98ec5a50b6cd314921f90f99b559",
-  "commit": "d63c7ec019e5f37200d6f96fb3ce7fdda65c5001",
-  "immutable_evidence_files": 270573,
+  "catalog_sha256": "aec97a7e23b54357deca64bbf0fac98798dd4a7396d16d1624bea8903265735f",
+  "commit": "a2d926db4da8c74a345307c4e86a6a82745ef38d",
+  "immutable_evidence_files": 270645,
   "last_scoped_addition": {
-    "bytes": 154061647,
-    "directory": "2026-09-24-namespace-consumers-r1",
-    "files": 389
+    "bytes": 1648354,
+    "directory": "2026-09-24-namespace-consumer-integration",
+    "files": 71
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Completed read-only namespace consumer proposal. Cold compiler and four Worker variants pass native public file consumers, moving buffers, roots and database-free foreign types; 1064 requests, 542 collections and 70 direct controls per Worker. Original corpus, READY, native R6/R6a and existing-target readers pass. Exact packaged replay passes. Audit 176 observations addressed; source/bundle loading remains NSL-2/3. No shared-source integration or acceptance inferred; originals 575/535 and file counts 0/0/0 unchanged.",
-  "source_index_sha256": "7e8e19c2df463cb538525fe47bf82a15f1da8ac2b9354155439decc697a7943c",
-  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-consumers-r1.json",
+  "scope": "Namespace consumer product integrated byte-identically to audit 177 proposal. O-73 isolated controls and O-75 disclosure supplied; strong-table substitution explicitly retained. Four fresh integrated-runtime Workers match reviewed records. Native R6/R6a, readers and corpus reused by exact source identity. New follow-up evidence awaits review; no namespace criterion or original/file-count credit.",
+  "source_index_sha256": "a0ce139a5b6447912da952e54262421f5c221575c944d830b9c89d1f87499d3f",
+  "source_index_snapshot": "catalog/source-index-2026-09-24-namespace-consumer-integration.json",
   "verification": {
     "new_execution": true,
-    "report": "2026-09-24-namespace-consumers-r1/verification.json",
-    "report_sha256": "8cd5162458678ce2607b1fab35bb7eeafcf7f385a24110e6fc138dbef20dfb6f",
+    "report": "2026-09-24-namespace-consumer-integration/integration.json",
+    "report_sha256": "c27f7eb579c0ea95b67bdbfc1107ac752f24e030254786af562206d6f056f97a",
     "status": "PASS"
   },
   "version": 1
