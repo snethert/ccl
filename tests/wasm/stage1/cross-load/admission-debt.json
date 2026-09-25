@@ -1,0 +1,15 @@
+{
+  "scope": "Explicit minor producer refusal-probe debt carried to the next substantive NSL-2 packet under CLAUDE.md. No equivalence or completed coverage is claimed.",
+  "items": [
+    {"site": "wasm32-fasl-pass2", "clause": "child-code refusal", "status": "OBSERVED_IN_LEVEL0_FRONTIER; isolated single-check mutation pending"}
+  ],
+  "covered": {
+    "guards.json": "21 directed producer checks: context, function owner, target, native image operation, host function and record shapes, both module text positions, and array count/kind.",
+    "fasl-controls/results.json": "Eight real FASL refusals: version, text lower/upper length and ASCII, duplicate module, pool pointer kind/subtype/minimum count. Each preserves absence of producer output.",
+    "checks.json": "16 runtime controls; each independent new package/service predicate has a directed refusal. The host-width fault is an observation mismatch, not an admission predicate."
+  },
+  "equivalences": [
+    "wasm32-xload-json receives only typed internal producer records under this contract; the final invalid-value branch is an internal producer assertion, not external input admission.",
+    "Reader version/length/byte checks use the same code for every function/text occurrence; real FASL controls exercise the first occurrence. Writer text checks separately exercise both positions."
+  ]
+}

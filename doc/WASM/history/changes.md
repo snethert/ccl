@@ -1,3 +1,27 @@
+## 2026-09-25 — implement the first real Wasm FASL/cross-load producer
+
+NSL-2 P2-0 now sends an ordinary DEFUN, shared constant and top-level effects
+through CCL's actual file compiler and dumper. A fresh process cross-loads the
+FASL after deleting the source, emits a D1 heap and code bundle, and two fresh
+Workers execute the definition with native-matched data and sharing. Sixteen
+runtime controls, eight real-FASL refusals and 21 producer guard checks preserve
+the admission boundary.
+The real IN-PACKAGE initializer stays queued; boot and target LOAD are not claimed.
+
+Native qualification covers 21,843 tests, all 164 FASLs, five architectures and
+17 target profiles, with all baseline outputs restored. The full cold compiler
+corpus covers 26,048 comparisons. The rejected shared counter design's native
+gensym drift and the subsequently fixed missing FASLENV dependency are retained.
+Remaining producer clause probes are explicitly recorded for the next packet.
+
+The 21 ordered level-0 inputs now have independent fresh-host first-stop records;
+four compile whole. The ordered build still stops in `%REVIVE-SYSTEM-LOCKS` at
+the native-FFI exclusion. Ordered production counts remain 0/0/0 against 167
+native units, fixture counts 1/1/0, accepted originals 575/535 and ledger 21/33.
+All compiler/runtime edits are disposable proposals pending Claude's review.
+
+[Implementation and reproduction](../../../tests/wasm/stage1/cross-load/README.md).
+
 ## 2026-09-23 — accept audit 168 and integrate the class-image loader
 
 Steve authorized “I accept if you agree”; Codex agrees with Claude's scope and

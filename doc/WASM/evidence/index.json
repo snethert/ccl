@@ -3855,6 +3855,14 @@
       "scope": "Focused audit-177 follow-up and byte-exact reviewed product integration. Twelve isolated refusals/mutants and one equivalent span clause; four fresh integrated-runtime Worker records equal R1; native qualification reused by exact source identity. Strong-table substitution expressly retained; home: absent disclosed. New controls await review; no file or criterion credit.",
       "sha256": "bd52083c652521e1684e2213dd64b28ce0a2ea93db7e13cdef3c19fea29d7952",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-CROSS-LOAD-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-cross-load-r1/packet.json",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "NSL-2 P2-0 proposal: real COMPILE-FILE/dumper, FASL-only fresh-host cross-load, D1 heap and existing code bundle, native-matched execution in two Workers, 45 controls. Cold 26048 compiler comparisons; 21843 native tests, R6/R6a and 164 restored FASLs. Four of 21 level-0 files compile independently; ordered first stop is %REVIVE-SYSTEM-LOCKS / native-FFI exclusion. Ordered production counts 0/0/0 of 167; fixture 1/1/0; boot, target LOAD and child-code linking remain open. Original failures retained and disposable outputs deleted; no product integration or acceptance credit.",
+      "sha256": "21d79da92d358336e5b09fe6835d55de2ced2fe2d62fae7c8b589495807d8e08",
+      "slot_credit": false
     }
   ],
   "current_runs": [
