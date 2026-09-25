@@ -1,3 +1,42 @@
+## 2026-09-25 — Bignum and native-pointer work advances four more loader files
+
+The new loader proposal extends the pending general-array proposal. Ordered
+compilation completes l0-bignum32, l0-bignum64, l0-cfm-support and l0-complex
+before stopping at :FUNCTION-IMMEDIATE-LAYOUT in l0-def. The bignum64 file is
+reader-empty apart from its package form on the 32-bit target; no 64-bit
+arithmetic implementation is claimed.
+
+Six native-address MPN helpers and UNSIGNEDWIDE->INTEGER receive explicit
+Wasm error boundaries. The original Lisp-digit multiplication algorithm and
+other bignum bodies compile and execute. Foreign-library sentinels initialize
+to NIL and five native linker entrypoints refuse with Lisp cleanup. The backend
+also lowers %ILLEGAL-MARKER and admits compilation-owned function literals in
+later FASL initializers, refusing native functions and other compilations'
+xfunctions. The separate foreign Wasm module interface remains post-boot work.
+
+Eight complete production FASLs, selected original dependencies and witnesses
+yield 470 modules, 25 ordered initializers and 83 native-equal observations in
+four placement/collection modes. Cases cover signed 80-, 128- and 544-bit
+arithmetic, digit-boundary shifts, division, GCD, repeated allocation, markers,
+foreign-registry state and an initializer's stored function literal. There are
+8 collections per ordinary run and 115 per extra-collection run. Each run must
+execute 112 controls, including the inherited 87, twelve pointer refusals,
+twelve refusal-omission controls and a function-binding independence control.
+Two compiler controls enforce the ownership boundary for function literals.
+
+Fresh R6/R6a passes 21,843 native tests and restores all 164 FASLs (45
+identical, 119 decoded-equal). Both changed native files read identically under
+17 existing target profiles. All 26,048 compiler/runtime comparisons pass with
+the final backend and the inherited array collector. A Git-free replay at a
+different path matches all 1,445 generated artifacts and every observation and
+control. Final driver identities are bound before/after execution and retention.
+Original ordered failures
+and developmental harness failures are retained with their stated limits.
+
+The isolated proposal remains subject to Claude's independent review. No
+product integration, target LOAD or boot claim: accepted files 0/0/0, originals
+575/535 and ledger 21/12 remain unchanged.
+
 ## 2026-09-25 — General array access advances the ordered level-0 build
 
 The new proposal compiles all of l0-array, then reaches %NEW-PTR in

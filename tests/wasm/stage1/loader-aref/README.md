@@ -1,5 +1,8 @@
 # General AREF/ASET through the ordered level-0 loader
 
+The [bignum/native-pointer successor](../loader-new-ptr/README.md) extends this
+pending proposal through l0-complex and reaches function layout in l0-def.
+
 This proposal follows the accepted audit-180 integration at `33aeb696`.
 The ordered compiler now completes **l0-aprims and l0-array** (26 and 41
 modules), then stops at **%NEW-PTR in l0-bignum32**. Both FASL pathname and

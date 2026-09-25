@@ -1,27 +1,36 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "095b1053fbe7e46e65dab228d6b999ea5c9c4c4e4cf745e5f5691ac034648fbc",
-  "commit": "30944885472f3b79096790df3cc73f70f53a6f93",
-  "immutable_evidence_files": 271292,
+  "catalog_sha256": "734e4b86f8c034806d2551c43900a50c4bf7613b0f166968eda8278788ed651a",
+  "commit": "d6e654ef3502df90f320a47d2df6d7e3be107a55",
+  "immutable_evidence_files": 274152,
   "last_scoped_addition": {
-    "bytes": 255854757,
-    "directory": "2026-09-25-cross-load-r1",
-    "files": 647
+    "directory": "2026-09-25-loader-new-ptr-r1",
+    "files": 499,
+    "bytes": 17594287,
+    "catalog_entries_added": 2860,
+    "prior_packs_catalogued_from_committed_inventories": [
+      "2026-09-25-loader-design-r1",
+      "2026-09-25-loader-integration",
+      "2026-09-25-loader-set-package-r1",
+      "2026-09-25-loader-locks-r1",
+      "2026-09-25-loader-prefix-integration",
+      "2026-09-25-loader-general-aref-r1"
+    ]
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "NSL-2 P2-0 proposal: real COMPILE-FILE/dumper, FASL-only fresh-host cross-load, D1 heap and existing code bundle, native-matched execution in two Workers, 45 controls. Cold 26048 compiler comparisons; 21843 native tests, R6/R6a and 164 restored FASLs. Four of 21 level-0 files compile independently; ordered first stop is %REVIVE-SYSTEM-LOCKS / native-FFI exclusion. Ordered production counts 0/0/0 of 167; fixture 1/1/0; boot, target LOAD and child-code linking remain open. Original failures retained and disposable outputs deleted; no product integration or acceptance credit.",
-  "source_index_sha256": "2c3abf4f5cf6cdd9f0d9eb32e0fe4a8f8f7f5fff597a3bedff6bf93152e92da2",
-  "source_index_snapshot": "catalog/source-index-2026-09-25-cross-load-r1.json",
+  "scope": "Loader bignums and native-pointer boundaries proposal: ordered compilation reaches l0-def function layout; 470 modules, 25 initializers, 83 native-equal observations and 112 controls in four modes. Native 21843 tests and 164 restored FASLs; 34 reader comparisons and 26048 compiler/runtime comparisons; all 1445 Git-free replay artifacts equal. Three product files remain isolated pending review. Counts 0/0/0, 575/535 and 21/12 unchanged; no boot, target LOAD or foreign-module service claim.",
+  "source_index_sha256": "6729ba1b69c38f385f8b038184264965a43b6748be6e261053f786cd03003b8c",
+  "source_index_snapshot": "catalog/source-index-2026-09-25-loader-new-ptr-r1.json",
   "verification": {
+    "status": "PASS",
     "new_execution": true,
-    "report": "2026-09-25-cross-load-r1/summary.json",
-    "report_sha256": "3d76fa71b79de5449184abddadbc6f5ee31d91cf28ef75cb9248535ef926fb71",
-    "scope": "New packet verified during retention; prior catalog reused by its recorded hash. No full-store audit.",
-    "status": "PASS"
+    "report": "2026-09-25-loader-new-ptr-r1/summary.json",
+    "report_sha256": "fa0183e77d73b65522b1dc33a5de0c59b706bc26fcd7695a3d71399529174f9d",
+    "scope": "Scoped catalog addition. New packet verified at retention; prior referenced packs reuse authenticated committed packet inventories. No full-store rehash."
   },
   "version": 1
 }
