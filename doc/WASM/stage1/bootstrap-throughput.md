@@ -259,6 +259,32 @@ alone is not durable retention. This preserves BT-19's in-place workflow.
 The old evidence store is not trimmed until its archive-dependent verifiers
 can regenerate or retrieve elided inputs. The under-10-GB target remains owed.
 
+### P6 (Claude, 25 September, after audit 181) — the headline counter and the harness-to-product ratio — awaiting adoption
+
+Relayed user direction, given after audit 181: U-9 "Why are we at 0/0/0? Why does that never move? … That commit had one line of lisp and a ton of Python edits." then "please do" to a directive.
+
+Measured at d2841e95 (STAGE1-LOADER-DEFINITIONS-FLOATS-R1):
+
+| What the commit contains | Lines |
+| --- | --- |
+| Product Lisp actually changed (backend 21, `w32-lap` 30, `w32-prims` 4, `l0-def` 21, `l0-float` 3) | 79 |
+| Full copies of those five product files under `loader-def/files/` | 9,396 |
+| Python/JS harness (`run.py`, `exercise.py`, `replay.py`, `packet.py`, `qualify.py`, `readers.py`, `hash-leaves.*`, `metadata.py`, controls, witnesses) | ≈860 |
+| STATUS, history, README, index | ≈190 |
+
+The two proposals below it have the same shape (aref: 9 + 54 + 9 lines of product change inside 7,789; new-ptr: 12 + 48 + 34 inside 10,114). Each packet's drivers wrap the previous packet's drivers, so the harness grows with every step and every reviewer replay re-executes the whole chain (audit 181: producer 2 m 47 s, execution 1 m 30 s, native 3 m, corpus 12 m — for 79 lines of Lisp).
+
+Meanwhile the headline stays `0/0/0` at every commit since NSL-P2 defined it. The reason is a reading Codex added to M-1, not anything in M-1: a file is counted only after its proposal is integrated *and* only when the whole-file compile ran through a product build path rather than the packet's `ordered.py`; whole-file compiles inside a packet are booked as "diagnostic". Under that reading the first number cannot move until an integrated product build exists that nobody has scheduled, and the third cannot move until NSL-3's target `LOAD`. Integration itself does not move it either (33aeb696 moved seven files into the product and the row still says 0/0/0). The number that did move today is the one the user cannot see: whole-file compiled / cross-loaded went from 3 / 3 (audit 180) to 11 / 11 (`l0-aprims`, `l0-array`, `l0-bignum32`, `l0-bignum64`, `l0-cfm-support`, `l0-complex`, `l0-def`, `l0-error`, `l0-float`, plus `w32-lap` and `w32-prims`), all with the real compiler, sources deleted before cross-load, and 110 native-equal observations executing out of the resulting image.
+
+Rules:
+
+- BT-20. M-1 counts what happened, not what was accepted. `files cross-compiled: a of N` is the number of level-0/level-1 files that compile whole with the real `wasm32-compile-file` (no failure-p, no rewritten body); `files cross-loaded: b of N` the number of those FASLs that cross-load into one image with their sources removed; `files target-loaded: c of N` stays zero until the target's own `LOAD` exists (as M-1 already says). Whether the compile ran inside a packet driver or a product build is irrelevant — a whole-file compile by the real compiler is the event. The "diagnostic" label is retired. Acceptance and integration state are the STATUS row's *State* column, not a multiplier on the count. Under BT-20 the headline at d2841e95 is 11 / 11 / 0 of N, with N and the first stop (`l0-hash`, `:EQ-VECTOR-INITIAL-ELEMENT`) on the same line; the two BT-1 numbers and the accepted floor follow as before.
+- BT-21. A proposal is a patch, not a copy. `files/` holds a unified diff against the pinned parent (one `proposal.patch` plus the parent identity), applied by `product.sources()`; the full text is never committed. A reviewer reads the change; a packet's line count then reflects its change. The existing three stacked proposals are converted when they are integrated, not before.
+- BT-22. Stacked packets share drivers by import, not by wrapping. The next packet in a chain extends the previous one's case list, witness file and control list through declared extension points (a `cases()` list to append to, a `witnesses` directory to add a file to, a `controls` list), not by monkey-patching `c.command`/`c.save` and rewriting the generated `execute.mjs` with string replacements (audit 181 O-96). One driver set per chain; a new packet adds files, it does not add a layer.
+- BT-23. Whole-file steps are the unit of work and of report. Every producer commit says in its first line what BT-20 counts moved and what the next stop is; a commit that moves none of them says so (M-2). Codex's per-commit cost line (M-3) adds one number: product Lisp lines changed.
+
+BT-20 is a wording change to three STATUS rows and one `packet.py` field (`accepted_files` → `whole_file`), effective at the next commit; BT-21 and BT-22 apply from the next new packet after the loader-def stack is integrated.
+
 ## READY selection adopted — 23 September
 
 [Steve's READY decision](ready-decision.json) supersedes BT-0's universal
