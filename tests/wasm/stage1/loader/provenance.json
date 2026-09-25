@@ -1,0 +1,13 @@
+{
+  "base": "1a076ca4",
+  "reviewed_loader": "7fdb2543dd6f8ecf29ac256c4e5c876c21a550cd",
+  "review": "8d9551c8439dffe174b300514d6b085ba50247b6",
+  "sources": {
+    "compiler/WASM32/wasm32-arch.lisp": "c0943688e8e098b31829b801c2977bea1c557e42289be686053cabf632a544b7",
+    "compiler/WASM32/wasm32-backend.lisp": "2241c8eb8bc6689dc9abbec7c9b780184adc56161190e4e795608c8ae26affb3",
+    "lib/nfcomp.lisp": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c",
+    "xdump/faslenv.lisp": "6be549e780eb8bef88f75b8b760cada7be6686e1ae08d0eaa33114d2346ba410",
+    "xdump/xfasload.lisp": "70184b11180edbf69901eff60628dab250d46e9847efa101a3db0dbc0e0ab41e",
+    "xdump/xwasm32-fasload.lisp": "3f7fc3fcf4c346e9a56b0f51902ceb14c446b154546f030ce4b928d06f369c94"
+  }
+}

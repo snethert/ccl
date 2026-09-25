@@ -1,0 +1,635 @@
+diff --git a/compiler/WASM32/wasm32-arch.lisp b/compiler/WASM32/wasm32-arch.lisp
+index fe89cd39..e6a594d9 100644
+--- a/compiler/WASM32/wasm32-arch.lisp
++++ b/compiler/WASM32/wasm32-arch.lisp
+@@ -356,7 +356,22 @@
+ (cl:defconstant xmacptr.size 24)
+ (cl:defconstant xmacptr.type 6)
+ (cl:defconstant xmacptr.type.raw-offset 12)
+-(cl:defun unavailable-array-size (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-size lowering not implemented"))
++;;; FASL data operations are inherited; wasm32 functions use opcode 72.
++(cl:defconstant fasl-version #x67)
++(cl:defconstant fasl-min-version #x67)
++(cl:defconstant fasl-max-version #x67)
++;;; D1 ivector payload bytes after the header (double and complex vectors
++;;; carry the four-byte alignment pad; bit vectors round up to bytes). Used by
++;;; the cross-loader when it allocates strings, bignums and typed vectors.
++(cl:defun array-data-size (subtag element-count)
++  (cl:case subtag
++    ((7 15 159 167 175 183 191) (cl:* 4 element-count))
++    ((199 207) element-count)
++    ((215 223) (cl:* 2 element-count))
++    ((231 239) (cl:+ 4 (cl:* 8 element-count)))
++    (247 (cl:+ 4 (cl:* 16 element-count)))
++    (255 (cl:ceiling element-count 8))
++    (cl:t (cl:error "Not a WASM32 ivector subtag: ~s" subtag))))
+ (cl:defun unavailable-array-type (cl:&rest args) (cl:declare (cl:ignore args)) (cl:error "WASM32 array-type lowering not implemented"))
+ (cl:defparameter *target-arch*
+   (arch::make-target-arch :name :wasm32 :package-name "WASM32"
+@@ -394,7 +409,7 @@
+     :t-offset t-offset
+     :unbound-marker-value unbound-marker
+     :word-shift word-shift
+-    :array-data-size-function #'unavailable-array-size
++    :array-data-size-function #'array-data-size
+     :array-type-name-from-ctype-function #'unavailable-array-type))
+ (cl:provide "WASM32-ARCH")
+ 
+diff --git a/compiler/WASM32/wasm32-backend.lisp b/compiler/WASM32/wasm32-backend.lisp
+index 5583a255..2fc93415 100644
+--- a/compiler/WASM32/wasm32-backend.lisp
++++ b/compiler/WASM32/wasm32-backend.lisp
+@@ -24,8 +24,11 @@
+ (defvar *b-float-service* nil)
+ (defvar *b-float-safety* 1)
+ (defvar *b-call-mode* nil)
++(defvar *wasm32-fasl-publication* nil)
+ (defun wasm32-pass2 (afunc &rest ignored)
+   (declare (ignore ignored))
++  (when (and (null *module-result-tag*) *wasm32-fasl-publication*)
++    (return-from wasm32-pass2 (wasm32-publish-function afunc)))
+   (unless *module-result-tag* (refuse :native-fasl-publication))
+   (when *b-call-mode* (return-from wasm32-pass2 (b-call-pass2 afunc)))
+   (when *primitive-signature* (return-from wasm32-pass2 (primitive-pass2 afunc)))
+@@ -1499,6 +1502,7 @@
+              (write-char #\) s))))
+       (list :symbols (copy-list *bootstrap-symbols*)
+             :callees (copy-list *bootstrap-callees*)
++            :code-imports (copy-list *b-code-imports*) :keywords (copy-list *b-keywords*)
+             :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
+ ;;; Rest/APPLY sequences execute without calls, polls or collection while
+ ;;; traversing or initializing heap cells. The allocator is a checked bump
+@@ -5872,3 +5876,82 @@
+                            fallback))
+                   *namespace-integer-vectors* :from-end t
+                   :initial-value (bootstrap-basic-uvector-access op raw)))))))
++
++(in-package :wasm32-compiler)
++
++;;; Real fasl publication (NSL-2 P2-0/P2-1). Under WASM32-COMPILE-FILE, pass 2
++;;; returns one host xfunction per emitted function instead of throwing a
++;;; module record to a fixture: element 0 is the code record, the rest is the
++;;; D1 constant pool in the order the emitted code indexes it. The fasl carries
++;;; ordinary data ops plus $FASL-WASM32-FUNCTION; the cross-loader places the
++;;; function object and writes the module into the code set.
++(defvar *wasm32-fasl-publication* nil)
++(defvar *wasm32-fasl-prefix* "file")
++(defvar *wasm32-fasl-modules* nil)
++
++(defun wasm32-code-record (module table)
++  ;; The ordinary CCL condition path needs the real FUNCTION symbol. Sealed
++  ;; fixture condition registries are not part of a cross-loaded CCL image.
++  (pushnew (list 'function "expected_function") (getf module :symbols) :test #'equal)
++  ;; TABLE is an adjustable vector of the distinct symbols the module and its
++  ;; children import; wires refer to it by index so that the loader can read
++  ;; the record without placing any of it in the target heap.
++  (list 2 (getf module :name)
++        (coerce (svref (getf module :pool) 0) 'list)
++        (getf module :captures)
++        (getf module :wat)
++        (mapcar (lambda (entry)
++                  (cons (second entry)
++                        (or (position (first entry) table :test #'eq)
++                            (vector-push-extend (first entry) table))))
++                (getf module :symbols))
++        (mapcar #'second (getf module :code-imports))
++        (copy-list (getf module :keywords))
++        (mapcar (lambda (child) (wasm32-code-record child table)) (getf module :children))))
++
++(defun wasm32-xfunction (module)
++  (let* ((pool (getf module :pool)) (n (length pool))
++         (table (make-array 8 :adjustable t :fill-pointer 0))
++         (record (wasm32-code-record module table))
++         (f (ccl::%alloc-misc (+ n 2) target::subtag-xfunction)))
++    (setf (ccl::uvref f 0) record
++          (ccl::uvref f 1) (coerce table 'simple-vector))
++    (dotimes (i n) (setf (ccl::uvref f (+ i 2)) (svref pool i)))
++    f))
++
++(defun wasm32-publish-function (afunc)
++  (let* ((*module-name* (format nil "~a_~d" *wasm32-fasl-prefix* (length *wasm32-fasl-modules*)))
++         (*module-result-tag* (gensym "WASM32-FASL"))
++         (*bootstrap-emitted* (make-hash-table :test #'eq))
++         (*bootstrap-symbols* nil) (*bootstrap-callees* nil)
++         (*bootstrap-dynamic-call* nil) (*bootstrap-self-call* nil)
++         (*b-keywords* nil)
++         (module (catch *module-result-tag*
++                   (b-call-pass2 afunc)
++                   (refuse :b-no-output))))
++    (push module *wasm32-fasl-modules*)
++    ;; Pass 2 publishes through the AFUNC and returns it, as the native
++    ;; passes do; COMPILE-NAMED-FUNCTION reads the lfun and warnings from it.
++    (setf (ccl::afunc-lfun afunc) (wasm32-xfunction module))
++    afunc))
++
++(defun wasm32-compile-file (source &rest options &key (target :wasm32) &allow-other-keys)
++  (unless (eq target :wasm32) (error "Not the wasm32 compilation target: ~s" target))
++  (call-with-target
++   (lambda ()
++     (let ((*wasm32-fasl-publication* t)
++           (*wasm32-fasl-modules* nil)
++           (*b-callable-metadata* t)
++           (*b-cpl-conditions* t)
++           (*bootstrap-front-end* t)
++           (*b-integer-service* t) (*b-float-service* t)
++           (*b-call-mode* t) (*b-call-links* nil)
++           (*b-special-names* '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))
++           (*b-allocation-retry* t)
++           (ccl::*nx-compile-time-compiler-macros* nil)
++           (ccl::*compiler-macros* (make-hash-table :test #'eq))
++           (*macroexpand-hook* (bootstrap-macroexpand-hook))
++           (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
++       (multiple-value-bind (path warnings failure)
++           (apply #'compile-file source :target :wasm32 options)
++         (values path (reverse *wasm32-fasl-modules*) warnings failure))))))
+diff --git a/lib/nfcomp.lisp b/lib/nfcomp.lisp
+index 8ecd2b93..c160938a 100644
+--- a/lib/nfcomp.lisp
++++ b/lib/nfcomp.lisp
+@@ -1636,7 +1636,11 @@ Will differ from *compiling-file* during an INCLUDE")
+     (symbol (fasl-dump-symbol exp))
+     (package (fasl-dump-package exp))
+     (function (fasl-dump-function exp))
+-    (xfunction (fasl-dump-function exp))
++    ;; A wasm32 xfunction is code record plus pool (see FASL-DUMP-WASM32-FUNCTION);
++    ;; every other target's xfunction keeps its code vector path, on any host.
++    (xfunction (if (eq (backend-name *fasl-backend*) :wasm32)
++                 (fasl-dump-wasm32-function exp)
++                 (fasl-dump-function exp)))
+     (code-vector (fasl-dump-codevector exp))
+     (xcode-vector (fasl-dump-codevector exp))
+     (simple-vector (fasl-dump-gvector exp $fasl-t-vector))
+@@ -1762,6 +1766,22 @@ Will differ from *compiling-file* during an INCLUDE")
+ ;;; If we're cross-compiling, we shouldn't reference any
+ ;;; (host) functions as constants; try to detect that
+ ;;; case.
++;;; A wasm32 xfunction has no code vector: element 0 is the module's code
++;;; record and the remaining elements are its D1 constant pool in emitted
++;;; order. Every element is ordinary fasl data; the target's code lives in
++;;; the code set the cross-loader writes from these records.
++(defun fasl-dump-wasm32-function (f)
++  (let* ((n (uvsize f)))
++    (fasl-out-opcode $fasl-wasm32-function f)
++    (fasl-out-count n)
++    ;; Code records live only in cross-loader scratch space. Do not enter
++    ;; their strings/conses in the image's shared FASL reference table.
++    (let ((*fasdump-hash* (make-hash-table :test #'eq))
++          (*fasdump-epush* nil))
++      (fasl-dump-form (%svref f 0)))
++    (do ((i 1 (1+ i))) ((= i n))
++      (fasl-dump-form (%svref f i)))))
++
+ #-x86-target
+ (defun fasl-dump-function (f)
+   (if (and (not (eq *fasl-backend* *host-backend*))
+@@ -1806,9 +1826,9 @@ Will differ from *compiling-file* during an INCLUDE")
+              ((= k function-size))
+           (declare (fixnum k))
+           (fasl-dump-form (uvref function-vector k)))))))
+-        
+ 
+-  
++
++
+ 
+ ;;; Write a "concatenated function".
+ (defun fasl-xdump-clfun (f)
+diff --git a/xdump/faslenv.lisp b/xdump/faslenv.lisp
+index 1262f50b..8fa2fef2 100644
+--- a/xdump/faslenv.lisp
++++ b/xdump/faslenv.lisp
+@@ -121,6 +121,7 @@
+ (defconstant $fasl-nvstr 69)            ;<nvstring> Make an uninterned symbol
+ (defconstant $fasl-toplevel-location 70);<expr> - Set *loading-toplevel-location* to <expr>
+ (defconstant $fasl-istruct-cell 71)     ;<expr> register istruct cell for expr
++(defconstant $fasl-wasm32-function 72)  ;<count><code record:expr><count-1 pool exprs> Make a wasm32 function
+ 
+ 
+ ;;; <string> means <size><size bytes> (this is no longer used)
+diff --git a/xdump/xfasload.lisp b/xdump/xfasload.lisp
+index c7b4e39b..cb4d0edb 100644
+--- a/xdump/xfasload.lisp
++++ b/xdump/xfasload.lisp
+@@ -97,6 +97,14 @@
+   static-space-init-function
+   purespace-reserve
+   static-space-address
++  ;; Targets whose function objects keep the name outside the last two
++  ;; elements supply their own reader (wasm32: the D1 constant pool).
++  lfun-name-function
++  ;; Native targets retain their spaces, initialization and image writer.
++  unified-dynamic-space
++  initialize-symbols-function
++  image-writer-function
++  compile-file-function
+ )
+ 
+ (defun setup-xload-target-parameters ()
+@@ -1021,17 +1029,23 @@
+   (mapcar #'find-package '("CL" "CCL"  "KEYWORD" "TARGET" "OS")))
+ 
+ 
++(defvar *xload-backend-state* nil)
++
+ (defun xfasload (output-file &rest pathnames)
+-  (let* ((*xload-symbols* (make-hash-table :test #'eq))
++  (let* ((*xload-backend-state* nil)
++         (unified (backend-xload-info-unified-dynamic-space *xload-target-backend*))
++         (*xload-symbols* (make-hash-table :test #'eq))
+          (*xload-symbol-addresses* (make-hash-table :test #'eql))
+          (*xload-spaces* nil)
+          (*xload-early-class-cells* nil)
+          (*xload-early-istruct-cells* *xload-target-nil*)
+-         (*xload-readonly-space* (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly))
+-         (*xload-dynamic-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic))
++         (*xload-readonly-space* (if unified
++                                     (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic)
++                                     (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly)))
++         (*xload-dynamic-space* (if unified *xload-readonly-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic)))
+ 	 (*xload-static-space* (init-xload-space *xload-static-space-address* *xload-static-space-size* area-static))
+-         (*xload-managed-static-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static))
+-         (*xload-static-cons-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons))
++         (*xload-managed-static-space* (if unified *xload-dynamic-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static)))
++         (*xload-static-cons-space* (if unified *xload-dynamic-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons)))
+ 						 
+          (*xload-package-alist* (xload-clone-packages (xload-initial-packages)))
+          (*xload-cold-load-functions* nil)
+@@ -1082,6 +1096,9 @@
+ 			   :space *xload-static-space*)
+ 	(when val-p (xload-set sym val))))
+                                         ; This could be a little less ... procedural.
++    (let ((initialize (backend-xload-info-initialize-symbols-function *xload-target-backend*)))
++      (when initialize
++        (setq *xload-backend-state* (funcall initialize))))
+     (xload-set '*package* (xload-package->addr *ccl-package*))
+     (xload-set '*keyword-package* (xload-package->addr *keyword-package*))
+     (xload-set '%all-packages% (xload-save-list (mapcar #'cdr *xload-aliased-package-addresses*)))
+@@ -1146,7 +1163,10 @@
+                  (format t "~&~d: ~s" idx
+                          (xload-lookup-symbol-address addr)))
+              *xload-special-binding-indices*)
+-    (xload-dump-image output-file *xload-image-base-address*)))
++    (let ((writer (backend-xload-info-image-writer-function *xload-target-backend*)))
++      (if writer
++        (funcall writer output-file)
++        (xload-dump-image output-file *xload-image-base-address*)))))
+ 
+ (defun xload-dump-image (output-file heap-start)
+   (declare (ftype (function (t t list)) write-image-file))
+@@ -1652,6 +1672,9 @@
+   (xfasl-read-gvector s (xload-target-subtype :istruct)))
+ 
+ (defun xload-lfun-name (lf)
++  (let* ((reader (backend-xload-info-lfun-name-function *xload-target-backend*)))
++    (when reader
++      (return-from xload-lfun-name (funcall reader lf))))
+   (let* ((lfv (logior *xload-target-fulltag-misc*
+                       (logandc2 lf *xload-target-fulltagmask*)))
+          (header (xload-%svref lfv -1)))
+@@ -1892,7 +1915,10 @@
+ 		   (> (file-write-date src)
+ 		      (file-write-date fasl)))
+ 	   (setq any t)
+-	   (compile-file src :target target
++	   (funcall (or (let ((xload (find-xload-backend target)))
++                         (and xload (backend-xload-info-compile-file-function xload)))
++                       #'compile-file)
++                    src :target target
+ 			 :features *xcompile-features*
+ 			 :output-file  fasl 
+ 			 :verbose t)))))))
+diff --git a/xdump/xwasm32-fasload.lisp b/xdump/xwasm32-fasload.lisp
+index 95b29dc1..bac8fb67 100644
+--- a/xdump/xwasm32-fasload.lisp
++++ b/xdump/xwasm32-fasload.lisp
+@@ -1,26 +1,316 @@
+-;;; Wasm registration counterpart of U1 xx8632-fasload.lisp.
+-;;; The Stage 1E heap/code writer is deliberately not implemented by this slice.
++;;; Wasm registration counterpart of U1 xx8632-fasload.lisp, made real for
++;;; NSL-2 (P2-2): the host cross-loader for wasm32 fasls and the writer of
++;;; the two coordinated artifacts of outline section 07 — the bootstrap heap
++;;; (bytes of one D1 dynamic space plus the canonical static objects) and the
++;;; code set (one module record per emitted function, with its WAT, arity,
++;;; symbol imports and code imports). No native instruction word, trampoline,
++;;; host address or engine table index enters either artifact.
+ (in-package "CCL")
++(eval-when (:compile-toplevel :execute)
++  (require "FASLENV" "ccl:xdump;faslenv"))
++
+ (eval-when (:compile-toplevel :load-toplevel :execute)
+   (require "XFASLOAD" "ccl:xdump;xfasload"))
+-(defun wasm32-xload-unavailable (&rest arguments)
+-  (declare (ignore arguments))
+-  (wasm32-compiler::refuse :coordinated-heap-code-writer))
++
++;;; D1 function objects: header (6 . 42); cells code-id, environment,
++;;; version 1, metadata, debug, pool. The pool begins with arity and debug
++;;; vectors, followed by (#x574153, lfun-bits, key vector, name).
++(defconstant wasm32-function-subtag 42)
++(defconstant wasm32-function-cells 6)
++(defparameter *wasm32-static-space-address* 77824)
++(defparameter *wasm32-image-base-address* 2097152)
++(defparameter *wasm32-scratch-space-address* #x40000000)
++(defparameter *wasm32-first-code-id* 16)
++
++(defstruct wasm32-xload-state code-set (code-names (make-hash-table :test #'eq)) (next-code-id 16) scratch)
++(define-symbol-macro *wasm32-code-set* (wasm32-xload-state-code-set *xload-backend-state*))
++(define-symbol-macro *wasm32-code-names* (wasm32-xload-state-code-names *xload-backend-state*))
++(define-symbol-macro *wasm32-next-code-id* (wasm32-xload-state-next-code-id *xload-backend-state*))
++(define-symbol-macro *wasm32-scratch-space* (wasm32-xload-state-scratch *xload-backend-state*))
++
++(defun wasm32-initialize-kernel-symbols ()
++  (dolist (symbol '(*package* *keyword-package* %all-packages% %unbound-function%
++                    *gc-event-status-bits* %toplevel-catch% %closure-code% %macro-code%
++                    %builtin-functions% %toplevel-function% *openmcl-svn-revision* *optional-features*))
++    (xload-copy-symbol symbol))
++  (make-wasm32-xload-state
++   :next-code-id *wasm32-first-code-id*
++   :scratch (init-xload-space *wasm32-scratch-space-address* (ash 1 20) area-dynamic)))
++
++(defun wasm32-write-image (directory)
++  (wasm32-write-artifacts directory *xload-dynamic-space* *xload-static-space*))
++
++;;; D1 canonical objects: NIL's cons cell at 77824, T at 77832, NIL at 77864.
++;;; The nil-relative list (T NIL) places the two symbols behind the cons.
++(defun wasm32-initialize-static-space ()
++  (xload-make-cons *xload-target-nil* *xload-target-nil* *xload-static-space*))
++
++(defun wasm32-macro-apply-code ()
++  *xload-target-nil*)
++
++(defun wasm32-function-header ()
++  (make-xload-header wasm32-function-cells wasm32-function-subtag))
++
++(defun wasm32-xload-function-pool (lf)
++  (let* ((lfv (logior *xload-target-fulltag-misc*
++                      (logandc2 lf *xload-target-fulltagmask*))))
++    (unless (= (xload-%svref lfv -1) (wasm32-function-header))
++      (error "Not a wasm32 function address: #x~x" lf))
++    (let* ((pool (xload-%svref lfv 5)))
++      (unless (>= (ash (xload-%svref pool -1) (- target::num-subtag-bits)) 6)
++        (error "Function at #x~x has no function-info prefix" lf))
++      pool)))
++
++(defun wasm32-xload-lfun-name (lf)
++  (xload-%svref (wasm32-xload-function-pool lf) 5))
++
+ (defvar *wasm32-xload-backend*
+   (make-backend-xload-info
+    :name :wasm32 :compiler-target-name :wasm32
+-   :macro-apply-code-function 'wasm32-xload-unavailable
+-   :static-space-init-function 'wasm32-xload-unavailable
+-   ;; No native instruction word, trampoline, image address or image filename
+-   ;; is a valid Wasm substitute. Refuse before the native writer is entered.
+-   :closure-trampoline-code nil :udf-code nil
+-   :default-image-name nil :default-startup-file-name nil
+-   :subdirs '("ccl:level-0;WASM32;") :nil-relative-symbols nil
+-   :image-base-address nil :static-space-address nil :purespace-reserve nil))
++   :macro-apply-code-function 'wasm32-macro-apply-code
++   :static-space-init-function 'wasm32-initialize-static-space
++   ;; No code vectors: %closure-code% is NIL and the undefined-function
++   ;; object is a one-element vector holding NIL, never a native word.
++   :closure-trampoline-code nil :udf-code 77825
++   :default-image-name "ccl:wasm32-boot;" :default-startup-file-name "ccl:level-1.w32fsl"
++   :unified-dynamic-space t
++   :initialize-symbols-function 'wasm32-initialize-kernel-symbols
++   :image-writer-function 'wasm32-write-image
++   :compile-file-function 'wasm32-compiler::wasm32-compile-file
++   :subdirs '("ccl:level-0;WASM32;") :nil-relative-symbols '(t nil)
++   :image-base-address 2097152 :static-space-address 77824 :purespace-reserve 0
++   :lfun-name-function 'wasm32-xload-lfun-name))
+ (when (and (find-xload-backend :wasm32)
+            (not (eq (find-xload-backend :wasm32) *wasm32-xload-backend*)))
+   (error "Conflicting WASM32 cross-loader"))
+ (add-xload-backend *wasm32-xload-backend*)
++
++;;; Reading host-side records out of the scratch space.
++(defun wasm32-scratch-list (addr)
++  (loop until (= addr *xload-target-nil*)
++        collect (xload-car addr)
++        do (setq addr (xload-cdr addr))))
++
++(defun wasm32-scratch-fixnum (word)
++  (unless (zerop (logand word 3)) (error "Not a fixnum in the code record: #x~x" word))
++  (ash word (- *xload-target-fixnumshift*)))
++
++(defun wasm32-scratch-string (addr)
++  (xload-get-string addr))
++
++;;; A code record is (version name arity captures wat wires codes keywords children):
++;;; wires are (wire-string . index) into the module's symbol vector, codes
++;;; are the imported module names, children are nested records.
++(defun wasm32-register-code (record symbols unit)
++  (destructuring-bind (version name arity captures wat wires codes keywords children)
++      (wasm32-scratch-list record)
++    (unless (= (wasm32-scratch-fixnum version) 2)
++      (error "Unsupported wasm32 code record version"))
++    (let* ((name (wasm32-scratch-string name))
++           (children (mapcar (lambda (child) (wasm32-register-code child symbols unit))
++                             (wasm32-scratch-list children)))
++           (id (prog1 *wasm32-next-code-id* (incf *wasm32-next-code-id*))))
++      (when (wasm32-scratch-list keywords)
++        (error "Keyword imports are not admitted by this loader"))
++      (when (assoc name (gethash unit *wasm32-code-names*) :test #'string=)
++        (error "Duplicate module name ~s" name))
++      (push (cons name id) (gethash unit *wasm32-code-names*))
++      (push (list :id id :name (format nil "module_~d" id)
++                  :arity (destructuring-bind (schema required optional restp keysp allow-other-keys keys)
++                             (wasm32-scratch-list arity)
++                           (unless (and (= (wasm32-scratch-fixnum schema) 1)
++                                        (= (xload-%svref keys -1) 250))
++                             (error "Unsupported wasm32 callable metadata"))
++                           (list (wasm32-scratch-fixnum required)
++                                 (wasm32-scratch-fixnum optional)
++                                 (not (= restp *xload-target-nil*))
++                                 (not (= keysp *xload-target-nil*))
++                                 (not (= allow-other-keys *xload-target-nil*))
++                                 nil))
++                  :captures (wasm32-scratch-fixnum captures)
++                  :wat (wasm32-scratch-string wat)
++                  :symbols (mapcar (lambda (pair)
++                                     (cons (wasm32-scratch-string (xload-car pair))
++                                           (xload-%svref symbols (wasm32-scratch-fixnum (xload-cdr pair)))))
++                                   (wasm32-scratch-list wires))
++                  :codes (mapcar (lambda (code)
++                                   (let* ((code (wasm32-scratch-string code))
++                                          (entry (assoc code (gethash unit *wasm32-code-names*) :test #'string=)))
++                                     (unless entry (error "Code import ~s precedes its module" code))
++                                     entry))
++                                 (wasm32-scratch-list codes))
++                  :children children)
++            *wasm32-code-set*)
++      id)))
++
++(defun wasm32-fasl-function (s)
++  (let* ((n (%fasl-read-count s))
++         (fn (xload-make-gvector wasm32-function-subtag wasm32-function-cells)))
++    (unless (>= n 8) (error "Malformed wasm32 function"))
++    (%epushval s fn)
++    (let* ((record (let ((*xload-dynamic-space* *wasm32-scratch-space*)
++                         (*xload-readonly-space* *wasm32-scratch-space*))
++                     (%fasl-expr s)))
++           (symbols (%fasl-expr s))
++           (pool (xload-make-gvector :simple-vector (- n 2))))
++      (dotimes (i (- n 2))
++        (setf (xload-%svref pool i) (%fasl-expr s)))
++      ;; Every record carries its complete nested code graph. Resolve code
++      ;; wires in this record's private namespace; published names use code IDs.
++      (let ((id (wasm32-register-code record symbols (list nil))))
++        (setf (xload-%svref fn 0) (ash id *xload-target-fixnumshift*)
++              (xload-%svref fn 1) *xload-target-nil*
++              (xload-%svref fn 2) (ash 1 *xload-target-fixnumshift*)
++              (xload-%svref fn 3) (xload-%svref pool 0)
++              (xload-%svref fn 4) (xload-%svref pool 1)
++              (xload-%svref fn 5) pool))
++      (setf (faslstate.faslval s) fn))))
++
++(setf (svref *xload-fasl-dispatch-table* $fasl-wasm32-function)
++      #'wasm32-fasl-function)
++
++;;; Only the representation and artifact boundaries are target-specific.
++;;; The shared XFASLOAD performs its original kernel initialization, file load,
++;;; cold-load list construction, documentation, binding indices and packages.
++(defparameter *wasm32-xload-parameter-variables*
++  '(*xload-image-base-address*
++    *xload-purespace-reserve*
++    *xload-readonly-space-address*
++    *xload-dynamic-space-address*
++    *xload-managed-static-space-address*
++    *xload-static-space-address*
++    *xload-target-nil*
++    *xload-target-unbound-marker*
++    *xload-target-misc-header-offset*
++    *xload-target-misc-subtag-offset*
++    *xload-target-fixnumshift*
++    *xload-target-fulltag-cons*
++    *xload-target-car-offset*
++    *xload-target-cdr-offset*
++    *xload-target-cons-size*
++    *xload-target-fulltagmask*
++    *xload-target-misc-data-offset*
++    *xload-target-fulltag-misc*
++    *xload-target-subtag-char*
++    *xload-target-charcode-shift*
++    *xload-target-big-endian*
++    *xload-host-big-endian*
++    *xload-target-use-code-vectors*
++    *xload-target-fulltag-for-symbols*
++    *xload-target-fulltag-for-functions*
++    *xload-target-char-code-limit*
++    *xload-static-cons-space-address*))
++
++(defun wasm32-xfasload (output-directory &rest pathnames)
++  (with-cross-compilation-target (:wasm32)
++    (let* ((*xload-target-backend* *wasm32-xload-backend*)
++           (*target-backend* (find-backend :wasm32))
++           (*xload-startup-file* (backend-xload-info-default-startup-file-name *xload-target-backend*)))
++      (progv *wasm32-xload-parameter-variables*
++             (mapcar #'symbol-value *wasm32-xload-parameter-variables*)
++        (setup-xload-target-parameters)
++        (apply #'xfasload output-directory pathnames)))))
++
++;;; Artifact writer. Bytes are little-endian words exactly as the target
++;;; memory holds them; every reference stays a D1 tagged word relative to the
++;;; declared space starts, which the JavaScript writer turns into the
++;;; heap-image.mjs record. JSON here is deliberately minimal.
++(defun wasm32-json-string (string stream)
++  (write-char #\" stream)
++  (loop for c across string do
++    (let ((code (char-code c)))
++      (cond ((char= c #\") (write-string "\\\"" stream))
++            ((char= c #\\) (write-string "\\\\" stream))
++            ((< code 32) (format stream "\\u~4,'0x" code))
++            (t (write-char c stream)))))
++  (write-char #\" stream))
++
++(defun wasm32-json (value stream)
++  (cond ((null value) (write-string "null" stream))
++        ((eq value t) (write-string "true" stream))
++        ((integerp value) (format stream "~d" value))
++        ((stringp value) (wasm32-json-string value stream))
++        ((and (consp value) (eq (car value) :object))
++         (write-char #\{ stream)
++         (loop for (key . item) in (cdr value) for i from 0 do
++           (unless (zerop i) (write-char #\, stream))
++           (wasm32-json-string key stream) (write-char #\: stream) (wasm32-json item stream))
++         (write-char #\} stream))
++        ((listp value)
++         (write-char #\[ stream)
++         (loop for item in value for i from 0 do
++           (unless (zerop i) (write-char #\, stream))
++           (wasm32-json item stream))
++         (write-char #\] stream))
++        (t (error "Unsupported JSON value ~s" value))))
++
++(defun wasm32-write-space (space pathname)
++  (let* ((data (xload-space-data space))
++         (bytes (xload-space-lowptr space)))
++    (with-open-file (s pathname :direction :output :if-exists :supersede
++                       :element-type '(unsigned-byte 8))
++      (dotimes (i (floor bytes 4))
++        (let ((word (aref data i)))
++          (dotimes (k 4)
++            (write-byte (ldb (byte 8 (* 8 k)) word) s)))))
++    bytes))
++
++(defun wasm32-module-json (module)
++  (list :object
++        (cons "id" (getf module :id))
++        (cons "name" (getf module :name))
++        (cons "arity" (getf module :arity))
++        (cons "captures" (getf module :captures))
++        (cons "wat" (getf module :wat))
++        (cons "symbols" (mapcar (lambda (pair) (list (car pair) (cdr pair))) (getf module :symbols)))
++        (cons "codes" (mapcar (lambda (pair) (list (car pair) (cdr pair))) (getf module :codes)))
++        (cons "children" (getf module :children))))
++
++(defun wasm32-write-artifacts (directory dynamic static)
++  (let* ((directory (pathname directory))
++         (heap-bytes (wasm32-write-space dynamic (merge-pathnames "heap.bin" directory)))
++         (static-bytes (wasm32-write-space static (merge-pathnames "static.bin" directory)))
++         (symbols nil))
++    (maphash (lambda (address symbol)
++               (push (list :object
++                           (cons "package" (and (symbol-package symbol) (package-name (symbol-package symbol))))
++                           (cons "name" (symbol-name symbol))
++                           (cons "address" address))
++                     symbols))
++             *xload-symbol-addresses*)
++    (setq symbols (sort symbols #'< :key (lambda (row) (cdr (fourth row)))))
++    (flet ((value-of (symbol)
++             (let ((address (xload-lookup-symbol symbol)))
++               (if address (xload-symbol-value address) nil))))
++      (with-open-file (s (merge-pathnames "image.json" directory) :direction :output :if-exists :supersede)
++        (wasm32-json
++         (list :object
++               (cons "version" 1)
++               (cons "layout" "D1")
++               (cons "dynamic" (list :object (cons "start" (xload-space-vaddr dynamic)) (cons "bytes" heap-bytes)))
++               (cons "static" (list :object (cons "start" (xload-space-vaddr static)) (cons "bytes" static-bytes)))
++               (cons "nil" *xload-target-nil*)
++               (cons "t" (+ *xload-target-nil* (arch::target-t-offset (backend-target-arch *target-backend*))))
++               (cons "unbound" *xload-target-unbound-marker*)
++               (cons "values" (list :object
++                                    (cons "cold-load-functions" (value-of '*xload-cold-load-functions*))
++                                    (cons "toplevel-function" (value-of '%toplevel-function%))
++                                    (cons "all-packages" (value-of '%all-packages%))
++                                    (cons "unbound-function" (value-of '%unbound-function%))))
++               (cons "symbols" symbols))
++         s)
++        (terpri s)))
++    (with-open-file (s (merge-pathnames "code-set.json" directory) :direction :output :if-exists :supersede)
++      (wasm32-json
++       (list :object
++             (cons "version" 1)
++             (cons "first-code-id" *wasm32-first-code-id*)
++             (cons "modules" (mapcar #'wasm32-module-json (reverse *wasm32-code-set*))))
++       s)
++      (terpri s))
++    (list :heap-bytes heap-bytes :static-bytes static-bytes
++          :symbols (length symbols) :modules (length *wasm32-code-set*))))
++
+ (defun wasm32-cross-load (&rest arguments)
+-  (apply #'wasm32-xload-unavailable arguments))
++  (apply #'wasm32-xfasload arguments))
+ (provide "XWASM32FASLOAD")

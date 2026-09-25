@@ -1,3 +1,8 @@
+> Historical P2-0 proposal A, reviewed in audit 178. Superseded for future
+> work by the [consolidated loader design](../loader/README.md). Its target
+> witness executes the constant-returning definition; the IN-PACKAGE
+> initializer stays queued, and its top-level effect is applied on the host.
+
 # NSL-2 P2-0: real FASL publication and cross-loading
 
 Ordered production files cross-compiled / cross-loaded / target-loaded remain

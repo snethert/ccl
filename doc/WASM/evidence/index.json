@@ -3859,9 +3859,17 @@
     {
       "id": "STAGE1-CROSS-LOAD-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-cross-load-r1/packet.json",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "NSL-2 P2-0 proposal: real COMPILE-FILE/dumper, FASL-only fresh-host cross-load, D1 heap and existing code bundle, native-matched execution in two Workers, 45 controls. Cold 26048 compiler comparisons; 21843 native tests, R6/R6a and 164 restored FASLs. Four of 21 level-0 files compile independently; ordered first stop is %REVIVE-SYSTEM-LOCKS / native-FFI exclusion. Ordered production counts 0/0/0 of 167; fixture 1/1/0; boot, target LOAD and child-code linking remain open. Original failures retained and disposable outputs deleted; no product integration or acceptance credit.",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_HISTORICAL",
+      "scope": "Historical proposal A, reviewed without executed defect in audit 178 (8d9551c8). Superseded by STAGE1-LOADER-DESIGN-R1. Constant-only target call; top-level effect applied on the host and IN-PACKAGE initializer queued. Independent 4/21 file compiles; original evidence and counts unchanged. NSL-2 P2-0 proposal: real COMPILE-FILE/dumper, FASL-only fresh-host cross-load, D1 heap and existing code bundle, native-matched execution in two Workers, 45 controls. Cold 26048 compiler comparisons; 21843 native tests, R6/R6a and 164 restored FASLs. Four of 21 level-0 files compile independently; ordered first stop is %REVIVE-SYSTEM-LOCKS / native-FFI exclusion. Ordered production counts 0/0/0 of 167; fixture 1/1/0; boot, target LOAD and child-code linking remain open. Original failures retained and disposable outputs deleted; no product integration or acceptance credit.",
       "sha256": "21d79da92d358336e5b09fe6835d55de2ced2fe2d62fae7c8b589495807d8e08",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-DESIGN-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-design-r1/packet.json",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Single NSL-2 P2-0 successor to 0c3cb29f and 7fdb2543: shared XFASLOAD, opcode 72/version #x80, whole-file compiler, nested code, D2 bundle with owner-selected slots. Two files, five modules, two cold-load functions, six native-equal observations in four relocated/collecting runs. Git-free different-root replay: 36 byte-identical artifacts. 66 image checks; keyword deletion mutant killed; 19 D2 compatibility checks; five native comparison controls. R6/R6a: 21843 tests, 164 restored FASLs, 27 existing structure accessors/predicate compared; 51 reader comparisons in 17 profiles; 26048 corpus comparisons. Independent 12/21 compiles, 452 modules. Proposed combined identity awaits review; product unchanged, 0/0/0 of 167 units, originals 575/535, no credit.",
+      "sha256": "31ac1213773283983f2cadbb725040db698b0e90f6b39cef042024bd05f8aaeb",
       "slot_credit": false
     }
   ],

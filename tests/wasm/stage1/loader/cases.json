@@ -1,0 +1,47 @@
+[
+  {
+    "value": [
+      "CCL",
+      "*P2-0-EFFECT*"
+    ]
+  },
+  {
+    "call": [
+      "CCL",
+      "P2-0-ANSWER"
+    ],
+    "args": [
+      7
+    ]
+  },
+  {
+    "call": [
+      "CCL",
+      "P2-0-ANSWER"
+    ],
+    "args": [
+      -3
+    ]
+  },
+  {
+    "value": [
+      "CCL",
+      "*P2-0-EFFECT*"
+    ]
+  },
+  {
+    "value": [
+      "CCL",
+      "*P2-0-SECOND-EFFECT*"
+    ]
+  },
+  {
+    "call": [
+      "CCL",
+      "P2-0-SECOND"
+    ],
+    "args": [
+      -5
+    ]
+  }
+]

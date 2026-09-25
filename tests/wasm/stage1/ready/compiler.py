@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import subprocess
 import shutil
+import tarfile
 import build as builder
 import common as c
 HERE=Path(__file__).resolve().parent
@@ -58,13 +59,16 @@ def install():
         c.save(stage/'driver-manifest.json',c.inventory(stage/'driver'))
         root=stage/'compiled/proposal';manifest=dict(source_revision='c994217adc56b3f8a564526cee4695893ac84d86',added=[],modified=[])
         shutil.rmtree(root/'files');(root/'files').mkdir()
-        for name,text in source_files().items():
+        bodies=source_files()
+        with tarfile.open(c.STORE/'macos-u1-inputs/source.tar') as archive:
+            members=set(archive.getnames())
+            originals={name:archive.extractfile(name).read() for name in bodies if name in members}
+        for name,text in bodies.items():
             path=root/'files'/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
-            original=subprocess.run(['git','show',manifest['source_revision']+':'+name],cwd=c.ROOT,capture_output=True)
-            if original.returncode:
+            if name not in originals:
                 manifest['added'].append(dict(path=name,sha256=c.sha(path)))
             else:
-                manifest['modified'].append(dict(path=name,before=hashlib.sha256(original.stdout).hexdigest(),after=c.sha(path)))
+                manifest['modified'].append(dict(path=name,before=hashlib.sha256(originals[name]).hexdigest(),after=c.sha(path)))
         c.save(root/'unit.json',manifest)
         shutil.copyfile(c.ROOT/'runtime/wasm32/collector.c',stage/'runtime/collector.c')
         clang=Path('/usr/local/opt/llvm/bin/clang')

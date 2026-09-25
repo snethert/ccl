@@ -1,3 +1,41 @@
+## 2026-09-25 — select and qualify one loader design after audit 178
+
+Imported audit 178 unchanged at `8d9551c8`; this entry and STATUS supply the
+merge bookkeeping owed by that review. The audit found no executed defect in
+either P2-0 fork. It distinguished the first proposal's host-applied effect and
+queued initializer from the repair's real target cold-load execution. Both
+historical records remain available.
+
+The user delegated the design choice and asked Codex to judge independently.
+The [consolidated proposal](../../../tests/wasm/stage1/loader/README.md) keeps
+CCL's shared XFASLOAD sequence with representation/output hooks, whole-file
+target compilation and nested code. It uses opcode 72 with Wasm-only FASL
+version #x80, disables source locations by default, and reuses the D2 bundle
+and generated-module validators. Logical code IDs are separate from owner
+selected engine table slots. This is the P2-0 design of record; neither old
+branch is merged wholesale.
+
+Two files produce five modules, including a captured closure. A fresh process
+loads only the FASLs after deleting the source fixtures. Two cold-load
+functions and six observations match native in four executions, with two heap
+placements and collecting/noncollecting modes. Another-path Git-free replay
+matches all 36 checked artifact files byte for byte. There are 66 image checks,
+an isolated keyword-guard deletion caught by the actual-import control, and
+19 passing inherited D2 checks. The native comparator now compares all 27
+existing structure accessors/predicate; accessor and setter mutants reject.
+R6/R6a passes 21,843 native tests and restores all 164 FASLs. The reader matrix
+passes 51 comparisons in 17 profiles, excluding version #x80 everywhere;
+the full compiler corpus passes 26,048 fresh comparisons. The two Git-based
+proposal/baseline lookups were replaced with pinned archive reads.
+
+Independent level-0 results are 12/21 files and 452 modules, with nine retained
+first stops. These are not an ordered boot or target LOAD. The combined six
+shared files and three runtime files remain a disposable proposal pending
+fresh independent review; production source, ledger 21/12, accepted originals
+575/535, and production file counts 0/0/0 are unchanged. One compact evidence
+pack retains the results and original development failures, with compressed
+reports and hashes for regenerable binaries.
+
 ## 2026-09-25 — implement the first real Wasm FASL/cross-load producer
 
 NSL-2 P2-0 now sends an ordinary DEFUN, shared constant and top-level effects
