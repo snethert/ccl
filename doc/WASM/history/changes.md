@@ -32,6 +32,40 @@ not product integration. Accepted originals stay 575/535, production files
 0/0/0 and the ledger 21/12. Complete BOOT0, target LOAD and the ordered build's
 native-FFI boundary remain open.
 
+## 2026-09-25 — qualify the LOADER native-lock boundary
+
+The [loader-lock proposal](../../../tests/wasm/stage1/loader-locks/README.md)
+builds on unintegrated SET-PACKAGE. The actual ordered compiler completes
+l0-aprims.lisp, with 26 modules and no warnings or failure, then retains the
+next stop: GENERAL-AREF2 in l0-array.lisp. The two target-directory files are
+compiled separately; this is not misreported as an ordered three-file prefix.
+
+The three complete FASLs and selected complete support definitions produce
+262 modules. All 18 cold-load initializers execute; the package-lock allocation
+and semaphore type-predicate registration run on the target. Four fresh
+placement/collection runs match 32 native rows, including real package locks,
+recursive acquisition, one-reader promotion, flags, nonlocal cleanup and locks
+held across moving collection. Plain runs collect once through allocation;
+extra-collection runs collect 51 times and poison retired space. Thirty-three
+controls per run preserve state and kill three exact guard deletions. Omitting
+only the package-lock initializer fails its direct observation.
+
+Only two proposed shared files change. Native branches remain intact; Wasm
+uses traced single-Worker lock state and five explicit native-service refusals.
+The disposition manifest preserves the remaining boot-consumer obligations,
+including RESTORE-LISP-POINTERS. One native already-writing promotion sequence
+returns NIL and then times out in unlock; the original failure and a focused
+probe are retained, with no native-equality credit for that sequence.
+
+Fresh R6/R6a passes 21,843 tests, restores 164 FASLs and compares 45 identical
+plus 119 decoded-equal artifacts. Thirty-four reader comparisons cover both
+files under 17 profiles, and an inverted native guard fails. The complete
+source set passes 26,048 fresh corpus comparisons. Git-free replay at another
+absolute path matches 801 artifacts and every target observation. One bounded
+packet retains evidence and original stops. No shared product source is
+integrated; both this unit and SET-PACKAGE await independent review. Production
+files remain 0/0/0, originals 575/535, ledger 21/12, no criterion credit.
+
 ## 2026-09-25 — adopt HOSTFM P2 with Codex's amendments
 
 The user accepted the amended plan and directed continued LOADER work.

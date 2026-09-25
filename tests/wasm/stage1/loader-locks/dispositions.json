@@ -1,0 +1,18 @@
+{
+  "profile": "one exclusive Worker, scheduler disabled; transient managed locks",
+  "source_files": ["level-0/l0-aprims.lisp", "level-0/l0-misc.lisp"],
+  "replacements": [
+    {"name": "%MAKE-RWLOCK-PTR", "kind": "runtime", "effect": "fresh traced owner/depth vector"},
+    {"name": "%READ-LOCK-RWLOCK-PTR", "kind": "runtime", "effect": "recursive read acquisition; conflicting writer refuses"},
+    {"name": "%WRITE-LOCK-RWLOCK-PTR", "kind": "runtime", "effect": "recursive write acquisition; readers and other owners refuse"},
+    {"name": "%UNLOCK-RWLOCK-PTR", "kind": "runtime", "effect": "release one acquisition with ownership and empty-state checks"},
+    {"name": "%PROMOTE-RWLOCK", "kind": "runtime", "effect": "promote exactly one read acquisition; multiple readers refuse", "native_limit": "already-writing promotion then unlock times out; no native-equality credit for that branch"},
+    {"name": "%REVIVE-SYSTEM-LOCKS", "kind": "explicit-unavailable", "consumer": "lib/dumplisp.lisp: RESTORE-LISP-POINTERS", "obligation": "resolve the selected boot consumer and prove absence of native handles or supply managed restoration; this refusal is not closure"},
+    {"name": "%MAKE-SEMAPHORE-PTR", "kind": "explicit-unavailable", "consumer": "MAKE-SEMAPHORE and scheduler users", "obligation": "scheduler/D5 service before those consumers are admitted"},
+    {"name": "%CSTR-POINTER", "kind": "explicit-unavailable", "consumer": "WITH-CSTRS, level-1/l1-utils.lisp, native database and pointer users", "obligation": "replace or exclude each selected native-pointer consumer; no foreign-Wasm-memory claim"},
+    {"name": "%CSTR-SEGMENT-POINTER", "kind": "explicit-unavailable", "consumer": "WITH-CSTRS and %CSTR-POINTER", "obligation": "same native-pointer boundary"},
+    {"name": "MAKE-GCABLE-MACPTR", "kind": "explicit-unavailable", "consumer": "native lock constructors and native %MAKE-GCABLE-PTR in l1-aprims", "obligation": "native constructors excluded for Wasm; broader selected consumers still require disposition"}
+  ],
+  "accepted_replacement_credit": 0,
+  "note": "Ten named proposed boundaries; this manifest does not alter READY replacement accounting or discharge startup dependencies."
+}

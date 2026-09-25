@@ -3887,6 +3887,14 @@
       "scope": "LOADER SET-PACKAGE proposal: original package functions execute on target, with a single-Worker lookup boundary and immediate/identity EQL lowering retaining the boxed fallback. Whole-file target prefix plus 20 selected original dependencies: 209 modules, 15 ordered initializers, 25 native-equal rows in four placement/collection runs, 40 moving collections per collecting run. Eight keyword rows in four runs, five FASL refusals, three isolated image clauses and deletion mutants, initializer omission caught. P2-0 regression passes 68 image checks, two version checks, keyword mutant and 19 D2 checks. Fresh 21843 native tests, 164 restored FASLs, 119 decoded-equal comparisons, 17 reader profiles, 26048 fresh corpus comparisons. Git-free different-root replay: 675 byte-identical artifacts and equal observations. Real ordered build still stops at native FFI in l0-aprims; selected forms receive no whole-file credit. Product sources are proposals only; accepted files 0/0/0, originals 575/535, ledger 21/12 unchanged.",
       "sha256": "8fd17bd23982043b8b051b473db84f8385999d4061e41b73741698a87d7e61c8",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-LOCKS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-locks-r1/packet.json",
+      "review_disposition": "PROPOSED_NOT_REVIEWED",
+      "scope": "LOADER native-lock boundary proposal over unintegrated SET-PACKAGE: the real ordered compiler completes l0-aprims (26 modules, no warnings/failure) and next stops at GENERAL-AREF2 in l0-array. Three whole production FASLs plus 36 complete support definitions from seven other files produce 262 modules; 18 initializers and 32 native-equal rows in four placement/collection runs, with 1/51 moving collections in plain/extra-collection modes. Real package-lock initialization, recursive readers/writers, one-reader promotion, acquisition flags, THROW/error cleanup and moving held locks; 33 controls per run, three exact guard mutants killed and a separate package-initializer omission killed. Five native operations explicitly refuse; their selected-consumer obligations remain open. Fresh 21843 native tests, 164 restored FASLs, 45 identical/119 decoded-equal; 34 reader comparisons in 17 profiles with guard mutant killed; 26048 fresh compiler comparisons. Git-free replay compares 801 artifacts and every observation exactly. Native already-writing promotion/unlock timeout retained, not credited. Shared changes remain in tests/wasm/stage1; no integration or acceptance. Files 0/0/0, originals 575/535, ledger 21/12 unchanged.",
+      "sha256": "2da0abb83740b67a3808690d563f2667569fb1c6d2fc2444924c1834b7cc3c05",
+      "slot_credit": false
     }
   ],
   "current_runs": [
