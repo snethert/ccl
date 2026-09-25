@@ -1,5 +1,10 @@
 # Bignums and native-pointer boundaries through the level-0 loader
 
+Audit 181 found no defect. This proposal was accepted and integrated with its
+successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
+The packet description below records the original proposal and its evidence.
+Use the successor integration driver with the current checkout.
+
 This proposal extends the general-array proposal at `e2de2fd9`. The real
 ordered compiler completes l0-aprims (26 modules), l0-array (41), l0-bignum32
 (69), l0-bignum64 (1), l0-cfm-support (23), and l0-complex (2), then stops at

@@ -349,6 +349,9 @@
   ;Returns a freshly consed float.  float can also be a macptr.
   (cond ((double-float-p f) (%copy-double-float f (%make-dfloat)))
         ((macptrp f)
+         #+wasm32-target
+         (error "Native pointer float copying is unavailable on wasm32.")
+         #-wasm32-target
          (let ((float (%make-dfloat)))
            (%copy-ptr-to-ivector f 0 float (* 4 target::double-float.value-cell) 8)
            float))

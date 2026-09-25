@@ -25,6 +25,7 @@
 (defvar *b-float-safety* 1)
 (defvar *b-call-mode* nil)
 (defvar *wasm32-fasl-publication* nil)
+(defvar *wasm32-fasl-functions* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
   (when (and (null *module-result-tag*) *wasm32-fasl-publication*)
@@ -2605,7 +2606,9 @@
 (defun pool-literal-p (x)
   (and (not (wasm32-function-reference-p x)) (not (or (null x) (eq x t)
                 (and (integerp x) (<= -536870912 x 536870911))))
-       (or (and *bootstrap-front-end* (symbolp x))
+       (or (and *wasm32-fasl-publication*
+                (member x *wasm32-fasl-functions* :test #'eq))
+           (and *bootstrap-front-end* (symbolp x))
            (integerp x) (floatp x) (characterp x) (consp x)
            (typep x 'simple-array))))
 (defun pool-plan ()
@@ -4600,11 +4603,21 @@
        (bootstrap-shift op args))
       ((ccl::uvref ccl::uvset)
        (bootstrap-uvector-access op args))
+      ((ccl::general-aref2 ccl::general-aref3 ccl::general-aset2 ccl::general-aset3)
+       (bootstrap-primary
+        (b-call (bootstrap-constant
+                 (ecase op
+                   (ccl::general-aref2 'ccl::%aref2)
+                   (ccl::general-aref3 'ccl::%aref3)
+                   (ccl::general-aset2 'ccl::%aset2)
+                   (ccl::general-aset3 'ccl::%aset3)))
+                (list args nil))))
       ((ccl::%aref1 ccl::aset1 ccl::realpart ccl::imagpart ccl::complex)
        (bootstrap-primary
         (b-call (bootstrap-constant (if (eq op 'ccl::aset1) 'ccl::%aset1 op))
                 (list args nil))))
       (ccl::%slot-unbound-marker (b-wat "(i32.const ~d)" wasm32::slot-unbound-marker))
+      (ccl::%illegal-marker (b-wat "(i32.const ~d)" wasm32::illegal-marker))
       (ccl::eq
        (let* ((left (second args)) (right (third args))
               (form (cond ((eql (ccl::acode-fixnum-form-p left) 0) right)
@@ -4821,9 +4834,13 @@
            (b-multiple (make-b-raw-code :text
              (bootstrap-operands forms
                (lambda (values) (bootstrap-function-info (first values) 3))))))
+          ((eq name 'ccl::%wasm-function-bits)
+           (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
+           (b-multiple (make-b-raw-code :text
+             (if (cdr forms) (bootstrap-set-function-bits forms) (bootstrap-function-bits forms)))))
           ((member name '(ccl::lfun-bits ccl::inner-lfun-bits ccl::lfun-bits-known-function))
-           (when (member (length forms) '(1 2))
-             (b-multiple (make-b-raw-code :text (if (cdr forms) (bootstrap-set-function-bits forms) (bootstrap-function-bits forms))))))
+           (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
+           (b-multiple (make-b-raw-code :text (bootstrap-lfun-bits-access forms))))
           ((and (eq name 'make-array) (bootstrap-make-bit-array forms)))
           ((and (eq name 'sbit) (= (length forms) 2))
            (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
@@ -5553,6 +5570,21 @@
           function (first values) function function
           (bootstrap-function-info (first values) 1))))))
 
+(defun bootstrap-lfun-bits-access (forms)
+  ;; The public accessor returns the old bits, and NIL means no store.
+  ;; Evaluate both operands once before reading or modifying metadata.
+  (bootstrap-operands forms
+    (lambda (values)
+      (let* ((raw (mapcar (lambda (value) (make-b-raw-code :text value)) values))
+             (old (temporary)))
+        (b-wat "(block (result i32) (local.set ~a ~a) ~a (local.get ~a))"
+               old (bootstrap-function-bits (list (first raw)))
+               (if (cdr raw)
+                 (b-wat "(if (i32.ne ~a (i32.const 77825)) (then (drop ~a)))"
+                        (second values) (bootstrap-set-function-bits raw))
+                 "")
+               old)))))
+
 (defun bootstrap-set-function-bits (forms)
   (bootstrap-operands forms
     (lambda (values)
@@ -5960,6 +5992,12 @@
     (setf (ccl::uvref f 0) record
           (ccl::uvref f 1) (coerce table 'simple-vector))
     (dotimes (i n) (setf (ccl::uvref f (+ i 2)) (svref pool i)))
+    ;; COMPILE-FILE can retain a previously emitted function as an immediate
+    ;; in a later initializer (for example %FHAVE aliases in l0-def). Admit
+    ;; only objects created by this compilation, never host function objects
+    ;; or xfunctions from another target. Ordinary FASL identity preserves
+    ;; sharing between the definition and this pool reference.
+    (push f *wasm32-fasl-functions*)
     f))
 
 (defun wasm32-publish-function (afunc)
@@ -5985,6 +6023,7 @@
      (let ((*wasm32-fasl-publication* t)
            (*wasm32-template-memory* t)
            (*wasm32-fasl-modules* nil)
+           (*wasm32-fasl-functions* nil)
            (*b-callable-metadata* t)
            (*b-cpl-conditions* t)
            (*bootstrap-front-end* t)

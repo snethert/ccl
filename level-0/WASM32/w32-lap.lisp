@@ -23,6 +23,9 @@
 
 (in-package "CCL")
 
+(eval-when (:compile-toplevel :execute)
+  (require "NUMBER-MACROS"))
+
 ;;;; Fixnum arithmetic (x8632-numbers.lisp)
 ;;;
 ;;; %ILOGCOUNT is lowered by the backend and needs no definition here.
@@ -149,6 +152,60 @@
           (return (values a offset)))
         (setq offset (%i+ offset (%svref a target::arrayh.displacement-cell))
               a (%svref a target::arrayh.data-vector-cell))))))
+
+;;; The general two- and three-dimensional operations emitted by NX1 use
+;;; the ordinary array headers and UVREF/UVSET element accessors.  Displacement
+;;; is followed only after checking the logical array's rank and dimensions.
+(defun %wasm-array-subscript (array axis index)
+  (unless (typep index 'fixnum)
+    (report-bad-arg index 'fixnum))
+  (let ((dimension (%svref array (the fixnum (+ target::arrayH.dim0-cell axis)))))
+    (declare (fixnum dimension index))
+    (unless (and (>= index 0) (< index dimension))
+      (%err-disp $XARROOB index array))
+    index))
+
+(defun %wasm-array-index (array rank i j k)
+  (unless (= (the fixnum (typecode array)) target::subtag-arrayH)
+    (if (typep array 'array)
+      (%err-disp $XNDIMS array rank)
+      (report-bad-arg array 'array)))
+  (unless (= (the fixnum (%svref array target::arrayH.rank-cell)) rank)
+    (%err-disp $XNDIMS array rank))
+  (let* ((i (%wasm-array-subscript array 0 i))
+         (j (%wasm-array-subscript array 1 j))
+         (row (+ (the fixnum (* (the fixnum i)
+                                (the fixnum (%svref array (1+ target::arrayH.dim0-cell)))))
+                 (the fixnum j))))
+    (declare (fixnum row))
+    (if (= rank 2)
+      row
+      (+ (the fixnum (* row (the fixnum (%svref array (+ 2 target::arrayH.dim0-cell)))))
+         (the fixnum (%wasm-array-subscript array 2 k))))))
+
+(defun %aref2 (array i j)
+  (let ((index (%wasm-array-index array 2 i j 0)))
+    (declare (fixnum index))
+    (multiple-value-bind (data offset) (%array-header-data-and-offset array)
+      (uvref data (the fixnum (+ (the fixnum offset) index))))))
+
+(defun %aref3 (array i j k)
+  (let ((index (%wasm-array-index array 3 i j k)))
+    (declare (fixnum index))
+    (multiple-value-bind (data offset) (%array-header-data-and-offset array)
+      (uvref data (the fixnum (+ (the fixnum offset) index))))))
+
+(defun %aset2 (array i j new)
+  (let ((index (%wasm-array-index array 2 i j 0)))
+    (declare (fixnum index))
+    (multiple-value-bind (data offset) (%array-header-data-and-offset array)
+      (setf (uvref data (the fixnum (+ (the fixnum offset) index))) new))))
+
+(defun %aset3 (array i j k new)
+  (let ((index (%wasm-array-index array 3 i j k)))
+    (declare (fixnum index))
+    (multiple-value-bind (data offset) (%array-header-data-and-offset array)
+      (setf (uvref data (the fixnum (+ (the fixnum offset) index))) new))))
 
 (defun %init-gvector (len value vector)
   (declare (fixnum len))
@@ -561,3 +618,30 @@
                         (logand #x7fffffff
                                 (the (unsigned-byte 32) (%wasm-float-word n 0))))
   result)
+
+;;;; Remaining float-word operations used by the complete l0-float file.
+
+(defun %sfloat-hwords (sfloat)
+  (declare (single-float sfloat))
+  (let ((bits (%wasm-float-word sfloat 0)))
+    (values (ash bits -16) (logand bits #xffff))))
+
+;;; As on the native targets, these are used with nonzero subnormals.
+(defun dfloat-significand-zeros (dfloat)
+  (declare (double-float dfloat))
+  (let ((high (logand (%wasm-float-word dfloat 1) #xfffff)))
+    (if (zerop high)
+      (- 52 (integer-length (%wasm-float-word dfloat 0)))
+      (- 20 (integer-length high)))))
+
+(defun sfloat-significand-zeros (sfloat)
+  (declare (single-float sfloat))
+  (- 23 (integer-length (logand (%wasm-float-word sfloat 0) #x7fffff))))
+
+(defun %%scale-sfloat! (sfloat int result)
+  (declare (single-float sfloat result) (fixnum int))
+  (let ((scale (%make-sfloat)))
+    (declare (single-float scale))
+    (%wasm-set-float-word scale 0
+                         (ash (logand int #xff) IEEE-single-float-exponent-offset))
+    (%setf-short-float result (* sfloat scale))))

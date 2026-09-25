@@ -1,5 +1,10 @@
 # Function definitions and floating-point files through the ordered loader
 
+Audit 181 found no defect. This proposal was accepted and integrated with its
+successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
+The packet description below records the original proposal and its evidence.
+Use the successor integration driver with the current checkout.
+
 This isolated proposal extends `loader-new-ptr` at `928ad5ef`. The ordered
 compiler completes `l0-def` (31 modules), `l0-error` (1), and `l0-float` (50),
 after the preceding six files, then stops at **:EQ-VECTOR-INITIAL-ELEMENT in

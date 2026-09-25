@@ -144,6 +144,15 @@ EXPORT U collect(U config) {
    else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(tag==50){if(n!=4&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(tag==82){if(n!=1)return reject(s,BAD_OBJECT);scan=0;size=8;}
+   else if(tag==234||tag==242){
+    /* Array/vector headers contain only tagged cells, including dimensions,
+     * displacement and flags. Follow the data cell through displaced chains.
+     * This validates the scanner shape, not array-constructor semantics. */
+    if(n<5||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
+    if(tag==234&&LOAD(p+4)!=(n-5)*4)return reject(s,BAD_OBJECT);
+    if(tag==242&&n!=5)return reject(s,BAD_OBJECT);
+    scan=n;size=4+(W)n*4;
+   }
    else if(node_subtag(tag)||(tag==130&&n>=1)){if(tag==42&&n!=6&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else {bytes=raw_bytes(tag,n);if(bytes==0xffffffffu)return reject(s,BAD_OBJECT);scan=0;size=4+(W)bytes;}
    size=(size+7)&~(W)7;

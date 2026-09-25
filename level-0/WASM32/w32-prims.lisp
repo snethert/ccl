@@ -3,6 +3,10 @@
 ;;; Like the native LAP entries, these remain callable through function cells.
 (in-package "CCL")
 
+(eval-when (:compile-toplevel :execute)
+  ;; Class-table accessors below use HASHENV's native field definitions.
+  (require "HASHENV" "ccl:xdump;hashenv"))
+
 (defun lisptag (object)
   (lisptag object))
 

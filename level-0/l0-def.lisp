@@ -36,7 +36,10 @@
     (%symbol-bits sym (bitset $sym_vbit_special oldbits))
     initp))
 
-(setq *lfun-names* (make-hash-table :test 'eq :weak t))
+(setq *lfun-names*
+      #-wasm32-target (make-hash-table :test 'eq :weak t)
+      ;; Stage 1 keeps these names strongly, as it does other bootstrap tables.
+      #+wasm32-target (%wasm-make-class-table 64))
 
 (defun lookup-lfun-name (lfun) 
   (gethash lfun *lfun-names*))
@@ -218,6 +221,17 @@
           (lfun-vector-name fun new-name))))
     stored-name))
 
+#+wasm32-target
+(defun lfun-bits (function &optional new)
+  (unless (functionp function)
+    (setq function (require-type function 'function)))
+  (let ((old (%wasm-function-bits function)))
+    ;; NIL requests only a read. The primitive setter currently admits
+    ;; funcallable instances; ordinary immutable code metadata refuses.
+    (when new (%wasm-function-bits function new))
+    old))
+
+#-wasm32-target
 (defun lfun-bits (function &optional new)
   (unless (functionp function)
     (setq function (require-type function 'function)))
@@ -283,6 +297,12 @@
   (%fixnum-set-natural fixnum (if newval-p offset 0) (%ptr-to-int newval))
   newval)
 
+#+wasm32-target
+(defun nth-catch-frame-tag (n)
+  (declare (ignore n))
+  (error "Native catch-frame inspection is unavailable on wasm32."))
+
+#-wasm32-target
 (defun nth-catch-frame-tag (n)
   (declare (fixnum n))
   (let* ((frame (%catch-top (%current-tcr))))

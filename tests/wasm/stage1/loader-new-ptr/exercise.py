@@ -9,6 +9,19 @@ PARENT = HERE.parent / 'loader-aref'
 c = product.c
 
 
+def expand_table_capacity(text):
+    # Fail closed if the generated harness changes; unrelated literals stay put.
+    for before, after, count in (
+        ('table_capacity:512', 'table_capacity:1024', 1),
+        ("new WebAssembly.Table({element:'anyfunc',initial:512})",
+         "new WebAssembly.Table({element:'anyfunc',initial:1024})", 2),
+        ('put(REGISTRY,512)', 'put(REGISTRY,1024)', 1),
+    ):
+        assert text.count(before) == count, (before, text.count(before), count)
+        text = text.replace(before, after)
+    return text
+
+
 def cases():
     result = []
     def add(name, args):
@@ -44,7 +57,7 @@ def run(out):
             text = script.read_text()
             assert text.count("from './controls.mjs'") == 1
             # The owner still selects placement; only table capacity grows.
-            text = text.replace('512', '1024')
+            text = expand_table_capacity(text)
             text = text.replace("from './controls.mjs'", "from './pointer-controls.mjs'")
             script.write_text(text)
             (out / 'pointer-controls.mjs').write_text((HERE / 'controls.mjs').read_text())

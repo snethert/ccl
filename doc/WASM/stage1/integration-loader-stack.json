@@ -1,0 +1,257 @@
+{
+  "accepted_originals": [
+    575,
+    535
+  ],
+  "authorization": {
+    "audit_181_recommendation": "accept the three proposals for integration as one unit, after Codex records O-92 and adds the O-94 witness",
+    "proceed": "proceed with the next sizeable group of work items the `wasm2` branch in the CCL checkout",
+    "scope": "Conditional recommendation applied to the byte-identical reviewed product stack; follow-up changes are harness and obligation records only."
+  },
+  "boot": false,
+  "files": [
+    {
+      "after": "4acb9be3e97e3b1fac7a7c50078c09eef2ff40647dac59ba33d7869a29418ebb",
+      "before": "2eaf9ad1027347bdc34fcc628c3c07f21a063a62eb0a35e3689974cd919701fd",
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "proposal": "tests/wasm/stage1/loader-def/files/compiler/WASM32/wasm32-backend.lisp",
+      "reviewed": "4acb9be3e97e3b1fac7a7c50078c09eef2ff40647dac59ba33d7869a29418ebb"
+    },
+    {
+      "after": "901f5d18d9989080abce500e377316709afb87310a8d2ad565e9ff2cead8f326",
+      "before": "4d5ad82060453597a863ace2695cfee8a839101159b15e42ba50e263233d4a43",
+      "file": "level-0/WASM32/w32-lap.lisp",
+      "proposal": "tests/wasm/stage1/loader-def/files/level-0/WASM32/w32-lap.lisp",
+      "reviewed": "901f5d18d9989080abce500e377316709afb87310a8d2ad565e9ff2cead8f326"
+    },
+    {
+      "after": "80d25ce173a718864430d3089d5f603773e6623449bb5aad17e5dbb845fce8bf",
+      "before": "ed83672dfc5d1cfd00e2c7495f55b508e074a3cc3ae6693713002df3affab058",
+      "file": "level-0/WASM32/w32-prims.lisp",
+      "proposal": "tests/wasm/stage1/loader-def/files/level-0/WASM32/w32-prims.lisp",
+      "reviewed": "80d25ce173a718864430d3089d5f603773e6623449bb5aad17e5dbb845fce8bf"
+    },
+    {
+      "after": "7a4fe8acf9462030680e2bf8614ef74508f1819708f754273d4558250a408a00",
+      "before": "759dd2b6b51ac7bb6dc99a706a0b59f1398e6aace583329db8dd66f639dedddc",
+      "file": "level-0/l0-bignum32.lisp",
+      "proposal": "tests/wasm/stage1/loader-new-ptr/files/level-0/l0-bignum32.lisp",
+      "reviewed": "7a4fe8acf9462030680e2bf8614ef74508f1819708f754273d4558250a408a00"
+    },
+    {
+      "after": "8eee94e83805c6bd009ceafbe6594b5c2adb7e36628ded11aab0fec0cf25058b",
+      "before": "9685fc680682a7f542bb6c74144c0ca0348b00fa297315537c19c488089f3b3e",
+      "file": "level-0/l0-cfm-support.lisp",
+      "proposal": "tests/wasm/stage1/loader-new-ptr/files/level-0/l0-cfm-support.lisp",
+      "reviewed": "8eee94e83805c6bd009ceafbe6594b5c2adb7e36628ded11aab0fec0cf25058b"
+    },
+    {
+      "after": "798d1dae08d039db70543e57d69fd9e97a4bf68946ec004d45a4fdb9cd72800d",
+      "before": "757a81b9edc910a28a593c3f982babc98653bc3bd74cc371d606e41b734551ef",
+      "file": "level-0/l0-def.lisp",
+      "proposal": "tests/wasm/stage1/loader-def/files/level-0/l0-def.lisp",
+      "reviewed": "798d1dae08d039db70543e57d69fd9e97a4bf68946ec004d45a4fdb9cd72800d"
+    },
+    {
+      "after": "d2b1b5c73fa791538b9df10b8e51aabddc7b8850addfb5fa2e6447f54f2547e4",
+      "before": "0ad8c449411e07a4c223db2d0f7a37cdafd6ca196e5fb616aeed0ad345fef868",
+      "file": "level-0/l0-float.lisp",
+      "proposal": "tests/wasm/stage1/loader-def/files/level-0/l0-float.lisp",
+      "reviewed": "d2b1b5c73fa791538b9df10b8e51aabddc7b8850addfb5fa2e6447f54f2547e4"
+    },
+    {
+      "after": "ae0db153907c1ff4310dfb0cef3ad96fbae49b62dff122eafeb8fb6511580ff3",
+      "before": "c6184fcdbc2b5e97d054a8764056a3c5d18e65dd02fc5cc2917616eddfdfb018",
+      "file": "runtime/wasm32/collector.c",
+      "proposal": "tests/wasm/stage1/loader-aref/files/runtime/wasm32/collector.c",
+      "reviewed": "ae0db153907c1ff4310dfb0cef3ad96fbae49b62dff122eafeb8fb6511580ff3"
+    }
+  ],
+  "follow_up": {
+    "O-92": {
+      "consumers": [
+        "level-1/l1-clos-boot.lisp:313,630-641,777",
+        "level-1/l1-clos.lisp:959",
+        "lib/encapsulate.lisp:538,790,893"
+      ],
+      "current_scope": "Funcallable-instance writes and ordinary-function checked refusals do not discharge this obligation.",
+      "obligation": "COPY-METHOD-FUNCTION-BITS writes LFUN-BITS of ordinary compiled method functions. The current wasm32 setter refuses these writes. Before level-1 CLOS boot, provide writable metadata or an explicit target implementation preserving method/next-method/argument bits, with native-matched method construction and dispatch witnesses.",
+      "status": "OPEN_BEFORE_LEVEL1_CLOS_BOOT"
+    },
+    "O-93": {
+      "note": "Earlier pointer corpus ran the older collector. Its immutable evidence has no credit for the claimed array combination; the definitions packet qualifies and asserts the actually executed collector.",
+      "status": "CLOSED_BY_REVIEWED_DEFINITIONS_PACKET"
+    },
+    "O-94": {
+      "case": "float-subnormal-10",
+      "expected_values": [
+        true,
+        -1029,
+        null,
+        45,
+        null
+      ],
+      "expression": "(decode-float (scale-float 1.0d0 -1030))",
+      "mutant": "Change nonzero-high dfloat-significand-zeros subtraction from 20 to 21; new witness must differ, old 110 must remain equal.",
+      "status": "WITNESS_ADDED"
+    },
+    "O-95": {
+      "note": "%%SCALE-SFLOAT! masks the exponent to eight bits; native LAP does not. Equal within the admitted exponent range. Out-of-range helper calls and the full numerical library are not qualified.",
+      "status": "CARRIED_NUMERIC_RANGE_LIMIT"
+    },
+    "O-96": {
+      "note": "Both exercise drivers use the same checked capacity helper: one manifest field, two table constructors and one registry header. Unrelated 512 literals are preserved. Absolute host placements remain scaffolding under O-70/O-77.",
+      "status": "ANCHORED"
+    }
+  },
+  "id": "STAGE1-LOADER-STACK-INTEGRATION",
+  "ledger": [
+    21,
+    12
+  ],
+  "packets": {
+    "aref": {
+      "path": "2026-09-25-loader-general-aref-r1",
+      "records": {
+        "collector/summary.json": "29407d04222de222d792ba4a29fb972f2b700098490da56db482fb1d3aef2c04",
+        "compressed.json": "b43df0b67fb2af2d694f078fb01a779ca3c94f70cd9afade50ec6f272a5e2727",
+        "regenerable.json": "836807439b7f960f2f8ed3a5dc38bf0ff4c152d2655cb72a3fea0ec8f50a1136"
+      },
+      "sha256": "d3575f8382963629022cee0a230e8f826d24b368993a8ddb5bfb551896c17482"
+    },
+    "definitions": {
+      "path": "2026-09-25-loader-definitions-floats-r1",
+      "records": {
+        "compressed.json": "d75ec612da9bde623ae07ff95ff5effb717a7b2c1d1913a6d2e655cf8584be00",
+        "corpus/base/execution-environment.json.gz": "68a17d4e68144cbb1548b3858cc792e0045aa49f94cbf51fe8a5f60db5a3ce1f",
+        "corpus/regression.json": "f7f3882e76e25b7693b958db4db330137e409cdd7dfad7be33f2454c5c0110c2",
+        "execution/summary.json.gz": "66a7acd3fd2bb533eb5a223c8b3d2239f3f8bdc5377d1b5fb087877841095eac",
+        "native/qualification.json": "dcdaf869554f8ce7c7c11a4379de7fc6a25541e0752042e63288a5c364d43cf4",
+        "native/results/run.json": "eb776f2a9ca54836afcf7ffb6cd79b611fa947ff15483e777b9e0313484b7f04",
+        "readers/summary.json": "e7b06340e1ee3d7046077613df144355b9704e12688b09a0f2fdeb858dbb97c5",
+        "regenerable.json": "754b3c8fbe38d99e889add89f9eb8f2dc7245e2c97663381b02735cc630a5c5c"
+      },
+      "sha256": "44bd77354b0e6b8349ee6c2d0cf4a19efef39611a1187a2811556308d4893fc0"
+    },
+    "pointer": {
+      "path": "2026-09-25-loader-new-ptr-r1",
+      "records": {
+        "compressed.json": "3791ae0ec59c1843258b4639328534cc190f8d74f50e84b68794a7027797ff59",
+        "readers/summary.json": "a5915c932c173c61ab81df68ca3b31ad19b51579d9f66d570a67c0fc36c9a90c",
+        "regenerable.json": "5486346dbf6405bd105e58675c94ef7a82cd6aef2144426f26b3863b2777896d"
+      },
+      "sha256": "08826aa771dbaf747095f2f660e239fed84c68e1b0abe40dcc0600594678029a"
+    }
+  },
+  "production_files": [
+    0,
+    0,
+    0
+  ],
+  "qualification": {
+    "collector_checks": 46,
+    "collector_guard_mutants": 3,
+    "compiler_comparisons": 26048,
+    "mode": "REUSED_BY_EXACT_REVIEWED_SOURCE_IDENTITY",
+    "native_tests": 21843,
+    "reader_rows": 68,
+    "restored_fasls": 164,
+    "source_identity": {
+      "compiler/WASM32/wasm32-arch.lisp": "20bb682fd1cfdf2e2da58e1a1ea11a22be12b5eac24b9f5c1db0ae034ef0994b",
+      "compiler/WASM32/wasm32-backend.lisp": "4acb9be3e97e3b1fac7a7c50078c09eef2ff40647dac59ba33d7869a29418ebb",
+      "level-0/WASM32/w32-lap.lisp": "901f5d18d9989080abce500e377316709afb87310a8d2ad565e9ff2cead8f326",
+      "level-0/WASM32/w32-prims.lisp": "80d25ce173a718864430d3089d5f603773e6623449bb5aad17e5dbb845fce8bf",
+      "level-0/l0-aprims.lisp": "b428b150b3a19a62df9fd715c42fb6d14627992462e82fdcb0a814f657819561",
+      "level-0/l0-array.lisp": "c77510e0bb984d2bf11259ad8144ce1beefaf9ffa3cf0359b12ad46de1c70e43",
+      "level-0/l0-bignum32.lisp": "7a4fe8acf9462030680e2bf8614ef74508f1819708f754273d4558250a408a00",
+      "level-0/l0-cfm-support.lisp": "8eee94e83805c6bd009ceafbe6594b5c2adb7e36628ded11aab0fec0cf25058b",
+      "level-0/l0-def.lisp": "798d1dae08d039db70543e57d69fd9e97a4bf68946ec004d45a4fdb9cd72800d",
+      "level-0/l0-float.lisp": "d2b1b5c73fa791538b9df10b8e51aabddc7b8850addfb5fa2e6447f54f2547e4",
+      "level-0/l0-io.lisp": "10bdbac8fb6aabd286abe88f29718e5146b572ebde6f50e2ff5b75fa490e01a7",
+      "level-0/l0-misc.lisp": "2082e02fdc62528c621618bf121bc2789ee94577f0cd171a3e6e9b373e4656eb",
+      "level-0/l0-pred.lisp": "0caf3e38bf356e81fb87266f130dfd658de7ada90b6123310a6c56a5e96e26d4",
+      "level-0/l0-symbol.lisp": "e75054495a424a3dbfe823d35fb9942dbf9ad31cbe72d36c9776f660abb15e1f",
+      "level-0/l0-utils.lisp": "f2595bebbd8aedb11cd5a366642a546baea914344f481a534d70113d276ad536",
+      "level-0/nfasload.lisp": "5d575488cdeda65ebfd52925ca4d00f475c4238f59259c21db261a2b6e59aee9",
+      "level-1/WASM32/w32-files.lisp": "6cb4221224d708ccbf12d539e6b359955f2a685869f45d2190fe5655dde46a13",
+      "level-1/l1-application.lisp": "ab814012e729c46ca3278ce31e8e87c94cc1109b422ed8a297fe094addf101bf",
+      "level-1/l1-aprims.lisp": "09f5da8af5086de1393824d44f8a423227eb89a53443f5bb3659d5ff785314b8",
+      "level-1/l1-boot-2.lisp": "30acc9a852933bbaf4a7fc8415339627d6fc8973ae8b59764b94dc8c4caeea01",
+      "level-1/l1-callbacks.lisp": "c13fab904b32d1e25614b952e2e96f65476d0a85608781b603fc595ac6286385",
+      "level-1/l1-clos-boot.lisp": "561be9e6267c26f098a02123b3b02f4b0182e4650cca654ace03a26820770730",
+      "level-1/l1-clos.lisp": "290ad4564a77af780deb371376a4e1ff1d19d016ff858adb128fdd5b85b6f558",
+      "level-1/l1-dcode.lisp": "5767ad25557428304541368df2150038deefd4fc64cab71263bdc5bf2b08c2aa",
+      "level-1/l1-error-signal.lisp": "0616348d24e71b911d79e46d80976d071da1c46ef3080188cfcdb3f280014049",
+      "level-1/l1-files.lisp": "e31b0e05afb8bebc4d4a325833a2b59677cd65e6f153a278de39f653e1e0a645",
+      "level-1/l1-io.lisp": "921183847179bffb98936a0d7df1d3146379014c8e82f9331432793c9767bd0f",
+      "level-1/l1-lisp-threads.lisp": "3b3963d7beb89a0b00c8f30ef83105048acbe50e15169ee6c115f4b7732345dc",
+      "level-1/l1-numbers.lisp": "c1c200f559105f45c4d27473e5afa82307b7f379b1e686522dc8df936909f233",
+      "level-1/l1-pathnames.lisp": "150362b99fe09fa04cae616b89237d2e33c083cb2502a601043c1791975e4a18",
+      "level-1/l1-readloop.lisp": "29592ad95f7f5937403901ff475931b09e1ee245b8fb19a8a0dbf4b96850bbad",
+      "level-1/l1-streams.lisp": "88b0733b88e0ebd3b06c97bf66e20138d8bacbce5a7dce0da875e4222f588cf6",
+      "level-1/l1-sysio.lisp": "a47811e596b4c372156746134f4c2602540137baed9de0f6726506dc51bbe641",
+      "level-1/l1-unicode.lisp": "f881079fba7afa0571b28a547c54a9fa4b20db2cc5dc212ba421d8e8dcc08a8e",
+      "level-1/l1-utils.lisp": "ba8c494161657f7cfeb632422734f5ed7a0aa6b796652ffaa4abbc40727372d5",
+      "level-1/linux-files.lisp": "adb637861aad8c50dd5bed283adb02661f736e6c351b691c1990f842b13e4e21",
+      "lib/compile-ccl.lisp": "074c7c53182e4fe62b7ce24d4856f5bda8c80b05ebec8e4f445e7cb112ede010",
+      "lib/foreign-types.lisp": "a0eccb4a05b8c4e556be2624e4c833f6a79cddc4d649489dc940caf091ef2251",
+      "lib/nfcomp.lisp": "fd2c20e18a1c5e10f7f9bbb938961f5a8c3734aafb5c806c5fb70a13f7025c4e",
+      "lib/systems.lisp": "5cd03249a56ca6d1d8ccaa245c72b7dd2fadaf028c5ce9a1cce45a80855f3b35",
+      "xdump/faslenv.lisp": "e53f8c667c0c3ab1992e45fffa9f4c33b63cda0511d5065eaaaaa26de747dbbc",
+      "xdump/xfasload.lisp": "d8ad0db169176f95015dd04d87f16cbb1be47f83268c9dafbcd8f533c41624dc",
+      "xdump/xwasm32-fasload.lisp": "c497fa4679ee797f4fdcf80ae39e800f3c3e85292cb005fa8b920fb9279ffccf"
+    }
+  },
+  "review": {
+    "audit": 181,
+    "bytes": 1125449,
+    "commit": "973c10bb623fa144d3bdae7bebc78b79021f5e03",
+    "path": "doc/WASM/stage0/claude-review.md",
+    "sha256": "b16f118cf86e4cbbee86f6e9d47245e00bd45dc4810b4cd3917591bd69b9ca8c"
+  },
+  "runtime_identity": {
+    "runtime/wasm32/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "runtime/wasm32/README.md": "5b7b96ebe98ad937ff0876e30b4946012feee9d089321e77938d6610bbacf151",
+    "runtime/wasm32/allocation-service.mjs": "b695a15d3b142b94087a7ba179e7b6bce4e18207ce8ce9cb002f02bc4568a6eb",
+    "runtime/wasm32/binary.mjs": "73f525c4201e1254d58f2f64797630f73ba02ab28550e5e54b44bd3ab567a0e4",
+    "runtime/wasm32/bootstrap-install.mjs": "821c1251300adf98d10dd234ef32e8dff8158a398555d42a7dd8af6d837bc55c",
+    "runtime/wasm32/bootstrap-populations.mjs": "f3ca246249e7580a3fc5899bf56b06f730d638928a7d5e838cc5546d00d7a02d",
+    "runtime/wasm32/bootstrap-schedule.mjs": "e0d651a3cfcf17000a761cc9ccd7cd8e06b0ad05b4ea0639bfc3430dedf8f6aa",
+    "runtime/wasm32/bootstrap-tables.mjs": "a7e87661a8c8f0282858708185e641c467834312d80c745ea3d5b94605f1083d",
+    "runtime/wasm32/browser-config.mjs": "1b103e5a632eb47dd80a4108b78da4ef214ac1148eca94024c4907c1f153c1a7",
+    "runtime/wasm32/build-float.py": "9f72e9a4bc19a259de3c68d9108f34350b65daa7b6c3dbf0d5905ba47cc7ffef",
+    "runtime/wasm32/bundle.mjs": "76a5c2cebf46abf273b98041e6656feb0d71ff858d77732b282333215d5ef5ec",
+    "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
+    "runtime/wasm32/collector-owner.mjs": "63e5910d40ed709ab87dd530752f6c4dc9d8dd5a102760c3658d18b9b29504f6",
+    "runtime/wasm32/collector.c": "ae0db153907c1ff4310dfb0cef3ad96fbae49b62dff122eafeb8fb6511580ff3",
+    "runtime/wasm32/config.mjs": "2188a5e74425ae3e311a452a6987097420dd8f32dedf2b66d4e69bd8fa369e36",
+    "runtime/wasm32/cross-image.mjs": "175c5147f446963cffe72fa93821fd40195e354d5e11db0f85877b4a43d3e7a0",
+    "runtime/wasm32/float-detector.wat": "a529062e17c137637670e63b25a6b48b2cde1701b049da92ab6b64af2cdd3e77",
+    "runtime/wasm32/float-service.mjs": "b3897d726b889bd26a95b6b6850b475d8fa9f34d489a1fbb06a1475599bb050c",
+    "runtime/wasm32/float.c": "22eed0f892d5ecc6bf28157c67e274f54a47198cdb4b141fd5042a00e0907c9d",
+    "runtime/wasm32/floating-capabilities.mjs": "4c723777e4f0ca6d2f5b65ac2df105c2d9fa4b7cfa33a29c8af32f6843a03c53",
+    "runtime/wasm32/hash-adapter.wat": "597302944dd8a80e0747b8a4d6874db4962a8a2b26847453927736112490402d",
+    "runtime/wasm32/hash.c": "253753a4406317b45154620fc5923288325a7992a79464f4861572c141ede9db",
+    "runtime/wasm32/heap-image.mjs": "24fc4d5f37021827fe40984c76902c2f6f12fe7c8399fe9a0a6e0e606a343c26",
+    "runtime/wasm32/initialization-owner.mjs": "b4d42ff62f0c7a9fc6e9b7f5fab7147d902d85c5dd62286bdd0c3d8a2939e911",
+    "runtime/wasm32/installer.mjs": "0ddd3c1e719c25aad5b027f3a889220c26e147582f31c863971343969c405a3a",
+    "runtime/wasm32/integer-service.mjs": "b37e143b8e08292560efbacec99a13e234af37f02995a7d626acc80021c89504",
+    "runtime/wasm32/integer.c": "869535abda0d754b4d39fabd2bd9b97efed909d2215bb42308336ec08be7b632",
+    "runtime/wasm32/loader.mjs": "229df07e712aac35fbe1fce2634e894cf073b3f8917c5fcd77e5e96a5fe1679a",
+    "runtime/wasm32/materializer.mjs": "251d9145930fd68bf58621fb1530f81c6e3af55918d8e2638e05903dc12a4723",
+    "runtime/wasm32/numeric-capabilities.mjs": "2b43bec1b3afb6b3c9f949abbf6a068fa19e3ae6044a52fd285cede765ff051a",
+    "runtime/wasm32/ranges.mjs": "2100929e8ae264ef4ad326d56f032d3f53eb5fcc6cec8b080da486941571b04b",
+    "runtime/wasm32/scalar-service.mjs": "c429c4a57a2c099de53d3c85a42bf224bab9084c41172c017a01188d8a8f75d3",
+    "runtime/wasm32/scalar.wasm": "1fff023a631895a04b4cd73203501a1dd6b762b5aa240b81b64cb6e68e165071",
+    "runtime/wasm32/scalar.wat": "54d412dc365137c615364f22fa82c5996046b712dfbc0e66795a28e2a0a18e3f",
+    "runtime/wasm32/service.mjs": "ab69ce10d55f7a3c2a32771cb84bd5920a6c9fe2c2561d169561e1eaf7ed25b3",
+    "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907",
+    "runtime/wasm32/stub.wat": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+    "runtime/wasm32/symbol-adapter.wat": "892de9556607dbae9a0d04f976d216fc85267e7813d9056cb836ca3b7bd75c81",
+    "runtime/wasm32/symbols.c": "c9160b1034a3e7caa76ccf5a090be6e49df1bc86da2ec622ec8afc07a3a29264",
+    "runtime/wasm32/transcend.c": "4fe687045efae1024b22c395f517316c68d5301dfd95c92ae6d094aec7fbfbf2"
+  },
+  "slot_credit": false,
+  "status": "ACCEPTED_AND_INTEGRATED",
+  "target_load": false
+}

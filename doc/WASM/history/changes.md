@@ -1,3 +1,51 @@
+## 2026-09-25 — Audit 181 accepted; reviewed loader stack integrated
+
+Imported `973c10bb` unchanged by fast-forward, preserving Claude's audit of
+`33aeb696`, `e2de2fd9`, `928ad5ef` and `d2841e95`. No defect. The review branch
+was deleted after its heading landed; the reviewer worktree remains detached
+at its review commit. The user's instruction to proceed and the supplied
+conditional recommendation are recorded in `integration-loader-stack.json`.
+
+The three proposals integrate as one unit: eight product files are byte-equal
+to the reviewed copies, with all 43 qualified compiler/CCL source identities
+and the reviewed runtime bound. O-92 is now an explicit precondition of
+level-1 CLOS boot: COPY-METHOD-FUNCTION-BITS needs ordinary-function LFUN-BITS
+writes, which the current Wasm setter refuses. Funcallable-instance writes
+and the checked refusal do not close that obligation. O-93 was already closed
+by the definitions packet's actual-collector corpus assertion. O-95's
+single-float exponent-mask range limit remains explicit. O-96's two global
+literal replacements now share a checked capacity helper; unrelated literals
+are preserved and changed anchor counts refuse. Fixed host addresses remain
+scaffolding under O-70/O-77; O-90 remains a separate compiler cleanup.
+
+O-94 adds a nonzero-high-word double subnormal: decoding 1.0d0 scaled by -1030
+must return fraction 0.5, exponent -1029 and precision 45. The integration
+harness preserves the previous 110 observations and all 116 controls and
+adds this 111th native comparison in four placement/collection modes.
+The image remains 595 modules and 33 initializers, with 9/151 collections.
+All eleven production FASLs remain byte-identical to the reviewed packet.
+The reviewer's exact significand mutant leaves the old observations equal
+and changes the new case's exponent and precision to -1030 and 44; fraction
+stays 0.5. A mistaken initial mutant expectation and a replay-driver import
+collision are retained as harness development failures, without product credit.
+
+Native R6/R6a (21,843 tests, 164 restored FASLs), 26,048 corpus comparisons
+and 46 collector checks are reused by exact identity. The integration also
+binds all 68 reader comparisons from the pointer and definitions packets,
+including complete-source hashes around normalized unchanged foreign forms.
+No repeated native/corpus run is claimed. Final harness execution and the
+Git-free replay bind final drivers before and after execution and retention.
+All 1,825 replayed artifacts are byte-equal; 2,997 regenerable artifacts still
+match the original reviewed packet. The mutant is killed in all four modes.
+Additional follow-up harness evidence remains available for adversarial review.
+
+The ordered compiler still completes nine consecutive level-0 files through
+l0-float and stops at :EQ-VECTOR-INITIAL-ELEMENT in l0-hash. One finalized
+integration evidence pack retains the fresh runs, the killed mutant, replay
+and necessary original development evidence. Previous packs remain immutable.
+Production counts 0/0/0, original executions 575/535 and ledger 21/12 stay
+unchanged; no target LOAD or boot claim.
+
 ## 2026-09-25 — Function definitions and floating-point files advance the loader
 
 The isolated proposal extends `loader-new-ptr` at `928ad5ef` through l0-def,

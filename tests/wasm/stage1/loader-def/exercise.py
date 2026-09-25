@@ -19,7 +19,7 @@ def cases():
         add('def-' + name, [])
     for name in ('float-signs', 'float-decode', 'float-scale', 'float-copy', 'error-strings', 'def-funcallable-bits'):
         add(name, [])
-    for kind in range(10):
+    for kind in range(11):
         add('float-subnormal', [kind])
     return result
 
@@ -41,7 +41,7 @@ def run(out):
                 '  if(tag===130)return {istruct:decode(get(get(v-2)+3),depth+1),slots:(get(v-6)>>>8)-1};\n  if(tag===191)')
             assert text.count("from './controls.mjs'") == 1
             # The owner still selects placement; only table capacity grows.
-            text = text.replace('512', '1024')
+            text = product.module('pointer_capacity', HERE.parent / 'loader-new-ptr/exercise.py').expand_table_capacity(text)
             text = text.replace("['c-stack',1048576,1114112]",
                 "['image',280000,280096],['c-stack',1048576,1114112]")
             anchor = '// Drain the package witness'
@@ -71,7 +71,7 @@ const hashLeaves=await installHashLeaves({memory,env,get,put,binary,hash,symbolA
         result = driver.run(out)
         for row in result['runs'].values():
             assert len(row['refusals']) == 116
-            assert len(row['observations']) == 110
+            assert len(row['observations']) == 111
         return result
     finally:
         c.save, c.command = save, command

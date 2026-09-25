@@ -1,5 +1,10 @@
 # General AREF/ASET through the ordered level-0 loader
 
+Audit 181 found no defect. This proposal was accepted and integrated with its
+successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
+The packet description below records the original proposal and its evidence.
+Use the successor integration driver with the current checkout.
+
 The [bignum/native-pointer successor](../loader-new-ptr/README.md) extends this
 pending proposal through l0-complex and reaches function layout in l0-def.
 

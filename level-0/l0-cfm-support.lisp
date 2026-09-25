@@ -29,6 +29,7 @@
 ;;; "entry" (a foreign symbol address, possibly represented as
 ;;; something cheaper than a MACPTR.)  Destructively modify
 ;;; ADDR so that it points to where ENTRY points.
+#-wasm32-target
 (defun entry->addr (entry addr)
   #+ppc32-target
   ;; On PPC32, all function addresses have their low 2 bits clear;
@@ -81,6 +82,7 @@
 (defvar *rtld-next*)
 (defvar *rtld-default*)
 (defvar *rtld-use*)
+#-wasm32-target
 (setq *rtld-next* (%incf-ptr (%null-ptr) -1)
       *rtld-default* (%int-to-ptr #+(or linux-target darwin-target windows-target)  0
 				  #-(or linux-target darwin-target windows-target)  -2)
@@ -597,6 +599,7 @@
 ;;; function addresses on at least a 16-byte boundary, but some
 ;;; linkers don't quite get the concept ...)
 
+#-wasm32-target
 (defun foreign-symbol-entry (name &optional (handle *rtld-use*))
   "Try to resolve the address of the foreign symbol name. If successful,
 return a fixnum representation of that address, else return NIL."
@@ -945,6 +948,7 @@ return that address encapsulated in a MACPTR, else returns NIL."
 )
 
 
+#-wasm32-target
 (defun refresh-external-entrypoints ()
   #+linux-target
   (setq *statically-linked* (not (eql 0 (%get-kernel-global 'statically-linked))))
@@ -1005,3 +1009,33 @@ the operating system."
           (error "Error opening shared library ~a : ~a." name error-string))))
 
 
+
+;;; Native dynamic-linker sentinels are not addresses in a foreign Wasm memory.
+;;; Keep the registry state empty until the separate foreign-module interface
+;;; supplies its own library identity and allocation ownership.
+#+wasm32-target
+(setq *rtld-next* nil *rtld-default* nil *rtld-use* nil)
+
+#+wasm32-target
+(defun entry->addr (entry addr)
+  (declare (ignore entry addr))
+  (error "Native entrypoint addresses are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun foreign-symbol-entry (name &optional (handle *rtld-use*))
+  (declare (ignore name handle))
+  (error "Native foreign symbol lookup is unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun foreign-symbol-address (name &optional (map *rtld-use*))
+  (declare (ignore name map))
+  (error "Native foreign symbol addresses are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun refresh-external-entrypoints ()
+  (error "Native entrypoint revival is unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun open-shared-library-internal (name)
+  (declare (ignore name))
+  (error "Native shared libraries are unavailable on the Wasm target."))

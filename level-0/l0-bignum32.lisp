@@ -221,6 +221,7 @@
 
 ;;; Squaring is often simpler than multiplication.  This should never
 ;;; be called with (>= N *sqr-karatsuba-threshold*).
+#-wasm32-target
 (defun mpn-sqr-basecase (prodp up n)
   (declare (fixnum prodp up n))
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -263,6 +264,7 @@
 
 ;;; For large enough values of N, squaring via Karatsuba-style
 ;;; divide&conquer is faster than in the base case.
+#-wasm32-target
 (defun mpn-kara-sqr-n (p a n ws)
   (declare (fixnum p a n ws))
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -397,6 +399,7 @@
 ;;; Karatsuba subroutine: multiply A and B, store result at P, use WS
 ;;; as scrach space.  Treats A and B as if they were both of size N;
 ;;; if that's not true, caller must fuss around the edges.
+#-wasm32-target
 (defun mpn-kara-mul-n (p a b n ws)
   (declare (fixnum p a b n ws))
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -568,6 +571,7 @@
 
 ;;; Square UP, of length UN.  I wonder if a Karatsuba multiply might be
 ;;; faster than a basecase square.
+#-wasm32-target
 (defun mpn-sqr-n (prodp up un)
   (declare (fixnum prodp up un))
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -579,6 +583,7 @@
 	(mpn-kara-sqr-n prodp up un (macptr->fixnum wsptr))))))
 
 ;;; Subroutine: store AxB at P.  Assumes A & B to be of length N
+#-wasm32-target
 (defun mpn-mul-n (p a b n)
   (declare (fixnum p a b n))
   (declare (optimize (speed 3) (safety 0) (space 0)))  
@@ -592,6 +597,7 @@
 ;;; This does Karatsuba if operands are big enough; if they are
 ;;; and they differ in size, this computes the product of the
 ;;; smaller-size slices, then fixes up the resut.
+#-wasm32-target
 (defun mpn-mul (prodp up un vp vn)
   (declare (fixnum prodp up un vp vn))
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -677,6 +683,40 @@
 			 (the fixnum (- (the fixnum (- l un)) vn))
 			 c)
 			tt)))))))))))
+
+;;; These MPN entries use native addresses encoded as fixnums and temporary
+;;; macptrs. The Wasm multiplication path below uses Lisp bignum digits instead.
+;;; Foreign Wasm memories have a separate ownership/copying interface; a Lisp
+;;; heap address cannot stand in for a native pointer here.
+#+wasm32-target
+(defun mpn-sqr-basecase (prodp up n)
+  (declare (ignore prodp up n))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun mpn-kara-sqr-n (p a n ws)
+  (declare (ignore p a n ws))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun mpn-kara-mul-n (p a b n ws)
+  (declare (ignore p a b n ws))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun mpn-sqr-n (prodp up un)
+  (declare (ignore prodp up un))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun mpn-mul-n (p a b n)
+  (declare (ignore p a b n))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
+
+#+wasm32-target
+(defun mpn-mul (prodp up un vp vn)
+  (declare (ignore prodp up un vp vn))
+  (error "Native MPN pointers are unavailable on the Wasm target."))
 
 (defun multiply-bignums (a b &optional res)
   (declare (ignore res))
@@ -2080,6 +2120,7 @@
   (declare (ignore res))
   (with-negated-bignum-buffers u v %positive-bignum-bignum-gcd))
 
+#-wasm32-target
 (defun unsignedwide->integer (uwidep)
   (with-bignum-buffers ((b 3))
     (setf (uvref b 0) (%get-unsigned-long uwidep 4)
@@ -2088,6 +2129,13 @@
       (if (typep n 'bignum)
         (copy-bignum n)
         n))))
+
+;;; The native argument is a pointer to an external, high-word-first record.
+;;; Lisp bignum digit access does not implement that foreign record contract.
+#+wasm32-target
+(defun unsignedwide->integer (uwidep)
+  (declare (ignore uwidep))
+  (error "Native unsignedwide pointers are unavailable on the Wasm target."))
 
 (defun one-bignum-factor-of-two (a)  
   (declare (type bignum-type a))
