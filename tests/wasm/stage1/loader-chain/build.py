@@ -10,7 +10,8 @@ import tempfile
 HERE = Path(__file__).resolve().parent
 
 
-def run(out, product, witnesses, inputs, checks=()):
+def run(out, product, witnesses, inputs, checks=(), level1=False,
+        execution_files=None, support_forms=(), preflights=(), crossload_stop=None):
     c = product.c
     out.mkdir(parents=True, exist_ok=True)
     bodies = product.sources()
@@ -21,6 +22,7 @@ def run(out, product, witnesses, inputs, checks=()):
     shutil.copyfile(c.KERNEL, kernel); kernel.chmod(0o755)
     (out / 'packages.lisp').write_text('\n'.join(p.read_text() for p in witnesses))
     (out / 'load-checks.lisp').write_text('\n'.join(p.read_text() for p in checks))
+    (out / 'support-forms.lisp').write_text('(' + '\n'.join(support_forms) + ')\n')
     for filename, source in [('array-boundary.lisp', 'level-0/WASM32/w32-lap.lisp'),
                              ('bignum-boundary.lisp', 'level-0/l0-bignum32.lisp')]:
         (out / filename).write_text(bodies[source])
@@ -40,9 +42,25 @@ def run(out, product, witnesses, inputs, checks=()):
             '--load', HERE.parent / 'registration/load.lisp']
         def invoke(driver, log):
             c.command(prefix + ['--load', driver], out / log, env, cwd=source, timeout=600)
+        for index, driver in enumerate(preflights):
+            invoke(driver, 'preflight-%d.log' % index)
         invoke(HERE / 'ordered.lisp', 'ordered.log')
+        ordered = c.read(out / 'ordered.json')
+        if level1 and ordered['stop'] is None:
+            # Native level-0 and level-1 builds use separate compiler sessions.
+            # Preserve each real phase result; a level-0 failure still stops.
+            c.save(out / 'ordered-level0.json', ordered)
+            env['LOADER_LEVEL_1'] = 'only'
+            invoke(HERE / 'ordered.lisp', 'ordered-level1.log')
+            second = c.read(out / 'ordered.json')
+            c.save(out / 'ordered-level1.json', second)
+            ordered = dict(attempts=ordered['attempts'] + second['attempts'],
+                           stop=second['stop'], host_state_restored=bool(
+                               ordered['host_state_restored'] and second['host_state_restored']))
+            c.save(out / 'ordered.json', ordered)
+            del env['LOADER_LEVEL_1']
         invoke(HERE.parent / 'loader-level0/prefix.lisp', 'prefix.log')
-        ordered, target = c.read(out / 'ordered.json'), c.read(out / 'prefix.json')
+        target = c.read(out / 'prefix.json')
         assert target['stop'] is None
         completed = []
         for row in target['compiled'] + ordered['attempts']:
@@ -56,18 +74,38 @@ def run(out, product, witnesses, inputs, checks=()):
         shutil.copyfile(fixture / 'package-support.lisp', out / 'package-support.source.lisp')
         # Do not rely on sources, an instrumented boot image, or the producer's heap.
         fasls = []
+        loaded = []
+        stopped = False
         for row in completed:
             assert row['fasl'] and not row['failure']
             name = Path(row['fasl']).name
             shutil.copyfile(source / row['fasl'], out / name)
             (source / row['file']).unlink()
-            fasls.append(name)
+            stopped = stopped or row['file'] == crossload_stop
+            if not stopped:
+                fasls.append(name)
+                loaded.append(row)
+        assert crossload_stop is None or stopped, 'cross-load stop not compiled'
         for name in ('package-support', 'package-first', 'package-second'):
             (fixture / (name + '.lisp')).unlink()
             fasls.append(name + '.w32fsl')
         (out / 'load-order.lisp').write_text('(' + ' '.join(json.dumps(x) for x in fasls) + ')\n')
         invoke(HERE / 'load.lisp', 'load.log')
         assert 'PREFIX-CROSS-LOAD-PASS' in (out / 'load.log').read_text()
-        c.save(out / 'whole-file.json', dict(whole_file=[len(completed), len(completed), 0],
-            files=completed, sources_removed=True, stop=ordered['stop']))
+        c.save(out / 'whole-file.json', dict(whole_file=[len(completed), len(loaded), 0],
+            files=completed, crossloaded=loaded, sources_removed=True, stop=ordered['stop'],
+            crossload_stop=crossload_stop))
+        if execution_files is not None:
+            # Preserve the complete source-free image as the cross-load event.
+            # A smaller execution image is an explicitly enumerated witness,
+            # never evidence that deferred boot initializers ran.
+            (out / 'prefix').rename(out / 'whole-image')
+            selected = [Path(row['fasl']).name for row in completed
+                        if execution_files(row['file'])]
+            selected += ['package-support.w32fsl', 'package-first.w32fsl', 'package-second.w32fsl']
+            (out / 'load-order.lisp').write_text('(' + ' '.join(json.dumps(x) for x in selected) + ')\n')
+            invoke(HERE / 'load.lisp', 'execution-load.log')
+            c.save(out / 'execution-files.json', dict(fasls=selected,
+                deferred=[row['file'] for row in completed if not execution_files(row['file'])],
+                boot=False))
     return c.read(out / 'whole-file.json')

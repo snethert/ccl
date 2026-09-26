@@ -7,8 +7,8 @@ import common as c
 import proposal
 import storage
 
-def top_forms(text):
-    depth=0;start=0;i=0;quote=None;block=0
+def top_forms(text, nested=False):
+    depth=0;starts=[];i=0;quote=None;block=0
     while i<len(text):
         ch=text[i]
         if block:
@@ -25,28 +25,30 @@ def top_forms(text):
             continue
         elif ch in ('"','|'):quote=ch
         elif ch=='(':
-            if depth==0:start=i
+            starts.append(i)
             depth+=1
         elif ch==')':
             depth-=1;assert depth>=0
-            if depth==0:yield text[start:i+1]
+            start=starts.pop()
+            if nested or depth==0:yield text[start:i+1]
         i+=1
     assert depth==0 and not quote and not block
 
-def run(out, source_provider=None, prelude=''):
+def run(out, source_provider=None, prelude='', baseline_sources=None):
     out.mkdir(parents=True,exist_ok=True)
     sources={name:body for name,body in (source_provider or proposal.sources)().items() if '/WASM32/' not in name}
     omitted=[];full={}
     for name,body in sources.items():
-        old=(c.ROOT/name).read_text();full[name]={'before':c.sha(c.ROOT/name),'after':__import__('hashlib').sha256(body.encode()).hexdigest()}
+        old=(baseline_sources[name] if baseline_sources is not None else (c.ROOT/name).read_text())
+        full[name]={'before':__import__('hashlib').sha256(old.encode()).hexdigest(),'after':__import__('hashlib').sha256(body.encode()).hexdigest()}
         # Foreign entries for Windows are unavailable in the macOS CDB. An
         # unchanged complete form needs no reread to establish equivalence.
         # Keep its original conditional prefix and replace only that proven
         # identical form on both sides. Every changed form remains intact.
-        for form in top_forms(old):
-            if ('#_' in form or '#$' in form) and old.count(form)==body.count(form)==1:
+        for form in top_forms(old, nested=True):
+            if ('#_' in form or '#$' in form) and old.count(form)==body.count(form)>0:
                 digest=__import__('hashlib').sha256(form.encode()).hexdigest()
-                omitted.append(dict(file=name,sha256=digest,bytes=len(form.encode())))
+                omitted.append(dict(file=name,sha256=digest,bytes=len(form.encode()),occurrences=old.count(form)))
                 (out/(digest+'.unchanged.lisp')).write_text(form+'\n')
                 old=old.replace(form,'(progn)');body=body.replace(form,'(progn)')
         for label,text in [('before',old),('after',body)]:

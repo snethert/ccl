@@ -3967,6 +3967,14 @@
       "review_disposition": "ACCEPTED_INTEGRATION_RECORD_FOLLOWUP_HARNESS_PENDING_REVIEW",
       "scope": "Audit 183 (18ae70b3), no defect: hash, FASL and GC proposals accepted and integrated together. Fourteen changed files match the reviewed stack byte-for-byte; 45 qualified Lisp sources and runtime inputs bound. Fresh Git-free different-root integration execution reproduces 1197 modules, 66/69 initializers, 145/149 native-equal rows, 141 controls and 13/229 collections in four modes; all 3628 regenerable artifacts match. Fresh integrated corpus passes 26048 comparisons. Native R6/R6a 21843 tests and 164 restored FASLs, 102 readers across 17 profiles, and 82 collector checks with ten killed faults reused by exact identity. O-97/O-98/O-101/O-102 closed; O-103 equivalent owner clauses recorded; O-104 saved-image witness and O-105 immediate encoding/FASL branch obligations carried. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit. New integration harness awaits adversarial review.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-LEVEL1-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-level1-r1/packet.json",
+      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+      "scope": "Ordered level-1 work implemented directly, awaiting Claude review. Whole-file counts advance from 21/21/0 to 29/24/0; next compilation stop is %CURRENT-TCR in random-state seeding, and cross-load stops at SETF-FUNCTION-NAME in l1-boot-2. Four execution modes: 1343 modules, 86/93 initializers, 151/155 observations (148 native-equal and three explicit target expectations), 141 controls and 14/259 collections. Four pending cases and seven startup refusals keep execution INCOMPLETE. Native R6/R6a passes 21843 tests and restores 164 FASLs; 68 reader comparisons across 17 profiles and 26048 fresh corpus comparisons pass. Unchanged collector/owner qualification reused by exact identity (82 checks, ten killed faults). Product Lisp 22 added / 10 removed. Accepted originals 575/535, admission 2050/2231 (not recounted), ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "sha256": "36583e319bdf203905225d93a51f38660b11e8eb57b7f46ddd3be27cbc556651",
+      "slot_credit": false
     }
   ],
   "current_runs": [

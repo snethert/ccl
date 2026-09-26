@@ -11,7 +11,7 @@
        (progn
          (setf (backend-xload-info-compile-file-function backend)
                (lambda (source &rest options)
-                 (let ((name (enough-namestring source (truename "ccl:"))))
+                 (let ((name (enough-namestring (truename source) (truename "ccl:"))))
                    (push (list :object (cons "file" name)) rows)
                    (format t "~&ORDERED-COMPILE ~a~%" name)
                    (multiple-value-bind (fasl modules warnings failure)
@@ -29,7 +29,13 @@
                  (handler-case
                      ;; The shared producer cross-loads in a fresh process
                      ;; after removing sources. Avoid an earlier redundant load.
-                     (progn (cross-compile-level-0 :wasm32 t) nil)
+                     (progn
+                       (unless (equal (getenv "LOADER_LEVEL_1") "only")
+                         (cross-compile-level-0 :wasm32 t))
+                       (when (getenv "LOADER_LEVEL_1")
+                         (with-cross-compilation-target (:wasm32)
+                           (target-xcompile-level-1 :wasm32 t)))
+                       nil)
                    (error (condition)
                      (list :object
                            (cons "type" (string (type-of condition)))

@@ -122,7 +122,7 @@ def debug_bytes(data,generated_constants=False):
                 changes.append(dict(start=start,end=end,name=arglist,debug=True,macro_arglist=True))
     return bytes(result),sorted(changes,key=lambda x:x['start']),functions
 
-def compare(before,after,source_before,source_after,filename):
+def compare(before,after,source_before,source_after,filename,intentional=None):
     if source_before==source_after:
         a,am,af=debug_bytes(before,True);b,bm,bf=debug_bytes(after,True)
         if a==b:
@@ -174,7 +174,7 @@ def compare(before,after,source_before,source_after,filename):
             return json.dumps(n,sort_keys=True)
         return None
     def check(a,b):
-        allowed=INTENTIONAL.get(filename,set())
+        allowed=INTENTIONAL.get(filename,set()) if intentional is None else set(intentional)
         def remove(rows,side):
             result=[]
             for row in rows:

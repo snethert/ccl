@@ -15,7 +15,8 @@ def accepted():
     return sorted(set(names))
 def sources():
     return proposal.sources()
-def run(out, source_provider=None, branch_sources=None):
+def run(out, source_provider=None, branch_sources=None, compiler_comparator=None,
+        compiler_changes=None):
     started=time.monotonic();out.mkdir(parents=True,exist_ok=True)
     bodies=(source_provider or sources)();identity={name:hashlib.sha256(body.encode()).hexdigest() for name,body in bodies.items()}
     spec=importlib.util.spec_from_file_location('cross_load_native_driver',HERE.parent/'bootstrap-generic-dispatch/native.py')
@@ -30,7 +31,14 @@ def run(out, source_provider=None, branch_sources=None):
     assert text.count(old)==1
     text=text.replace(old,'qualify_all(source,out,inputs,baseline,registered)').replace("'identical':162","'identical':164-len(changed)")
     text=text.replace("HERE/'smoke.lisp'",repr(str(HERE/'smoke.lisp')))
+    if compiler_changes is not None:
+        text=text.replace("{'CCL::TARGET-COMPILER-MODULES','CCL::TARGET-XLOAD-MODULES'}", 'COMPILER_CHANGES')
+        text=text.replace('len(old)-2', 'len(old)-len(COMPILER_CHANGES)')
     exec(compile(text,str(HERE.parent/'registration/run.py'),'exec'),driver.__dict__)
+    if compiler_changes is not None:
+        driver.COMPILER_CHANGES=set(compiler_changes)
+    if compiler_comparator is not None:
+        driver.compare_compiler=compiler_comparator
     driver.qualify_all=qualify.run
     def prepare(source,destination):
         destination.mkdir(parents=True)

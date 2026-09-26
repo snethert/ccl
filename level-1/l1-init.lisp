@@ -297,7 +297,10 @@ for compiling files that are not expected to change.")
 (defparameter *autoload-lisp-package* nil)   ; Make 'em suffer
 (defparameter *apropos-case-sensitive-p* nil)
 
-(defloadvar *total-gc-microseconds* (let* ((timeval-size
+;; These native accounting buffers have no address in a Wasm image. NIL
+;; denotes unavailable accounting; it must not be read as a native pointer.
+(defloadvar *total-gc-microseconds* #+wasm32-target nil
+  #-wasm32-target (let* ((timeval-size
                                             #.(%foreign-type-or-record-size
                                                :timeval :bytes))
                                            (p (malloc (* 5 timeval-size))))
@@ -305,7 +308,8 @@ for compiling files that are not expected to change.")
                                       p))
 
 
-(defloadvar *total-bytes-freed* (let* ((p (malloc 8)))
+(defloadvar *total-bytes-freed* #+wasm32-target nil
+  #-wasm32-target (let* ((p (malloc 8)))
                                   (setf (%get-long p 0) 0
                                         (%get-long p 4) 0)
                                   p))
@@ -320,6 +324,8 @@ persists across calls to SAVE-APPLICATION; it can be specified via
 the command-line argument --terminal-encoding (-K)")
 
 
+;; Native foreign pointers are outside the Wasm capability boundary.
+#-wasm32-target
 (defconstant +null-ptr+ (%null-ptr))
 
 (defparameter *load-preserves-optimization-settings* nil
@@ -329,4 +335,3 @@ the command-line argument --terminal-encoding (-K)")
    When false, those effects persist until superseded.")
 
 ;;; end of L1-init.lisp
-

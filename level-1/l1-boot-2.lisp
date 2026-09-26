@@ -69,7 +69,10 @@ present and false otherwise. This variable shouldn't be set by user code.")
 (defstatic *auto-flush-streams-lock* (make-lock))
 
 
-(defvar *batch-flag* (not (eql (%get-kernel-global 'batch-flag) 0)))
+;; The single-Worker Wasm bootstrap starts without an interactive terminal.
+;; A host entry may establish this variable before loading the boot file.
+(defvar *batch-flag* #+wasm32-target t
+                     #-wasm32-target (not (eql (%get-kernel-global 'batch-flag) 0)))
 (defloadvar *quiet-flag* nil)
 (defvar *terminal-input* ())
 (defvar *terminal-output* ())
@@ -392,7 +395,6 @@ present and false otherwise. This variable shouldn't be set by user code.")
     (setq *%fasload-verbose* nil)
     )
 )
-
 
 
 

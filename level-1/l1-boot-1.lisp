@@ -50,6 +50,8 @@
     (,platform-cpu-arm . :arm)))
 
 (defun host-platform ()
+  #+wasm32-target (values :wasm 32 :wasm32)
+  #-wasm32-target
   (let* ((pf (%get-kernel-global 'host-platform)))
     (values
      (or (cdr (assoc (logand pf platform-os-mask)
@@ -108,6 +110,7 @@
 
 ; only do these if exist
 (defun init-logical-directories ()
+  #-wasm32-target
   (replace-base-translation "home:"  (user-homedir-pathname))
   (replace-base-translation "ccl:" (ccl-directory)))
 
@@ -117,7 +120,6 @@
 (catch :toplevel
   (init-logical-directories)
   )
-
 
 
 

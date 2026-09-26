@@ -1,3 +1,46 @@
+## 2026-09-26 — Whole-file 21/21/0 to 29/24/0; next SETF names and random-state seeding
+
+The [ordered level-1 group](../../../tests/wasm/stage1/loader-level1/README.md)
+is implemented directly on `wasm2`, awaiting Claude's adversarial review.
+TARGET-COMPILE-MODULES now calls the registered Wasm compiler while preserving
+native dispatch. Wasm boot branches identify the platform, omit unavailable
+home-directory setup, default to batch mode and represent native accounting
+buffers as unavailable. Lambda-list metadata follows the adopted strong
+retention policy. Upstream kernel source is unchanged.
+
+Eight complete level-1 files compile through `l1-symhash`; the next file,
+`l1-numbers`, stops at %CURRENT-TCR in INIT-RANDOM-STATE-SEEDS. The source-free
+ordered cross-load adds `level-1`, `l1-cl-package` and `l1-boot-1`, then stops
+before the retained SETF-FUNCTION-NAME FASL-EVAL failure in `l1-boot-2`.
+The execution image separately enumerates all level-0 files and whole
+`l1-utils`, with selected complete support forms receiving no whole-file credit.
+Compilation phases use separate fresh sessions, preserving the earlier combined
+session's duplicate-definition failure without credit.
+
+All four execution modes produce 151/155 expected observations: 148 match native
+behavior and three state explicit target platform/accounting/retention
+expectations. Each mode has 1,343 modules, 86/93 executed initializers and
+141 controls, with 14/259 collections. The four prior pending cases and seven
+startup refusals remain explicit; complete execution status stays INCOMPLETE.
+Native R6/R6a passes 21,843 tests with all 164 FASLs restored. The four modified
+level-1 sources pass 68 reader comparisons across 17 profiles; the compiler and
+runtime pass all 26,048 corpus comparisons freshly. The unchanged collector and
+owner reuse audit 183's 82 checks and ten killed faults by exact identity.
+
+Product Lisp delta is **22 added / 10 removed**. Final execution took 253.16
+seconds, native qualification 180.38 seconds, corpus preparation 410.67 seconds
+and corpus execution 215.89 seconds. The single retained evidence pack is
+`2026-09-26-loader-level1-r1`, including necessary original failures and exact
+input identities; generated binaries are inventoried by hash. No redundant
+integration harness or replay was created.
+
+Whole-file counts are **29/24/0 of 167**; accepted originals remain **575/535**,
+admission **2,050/2,231** (not recounted), and the ledger **21 accepted / 12 missing**.
+No target LOAD, complete boot, RNG service or criterion credit is claimed.
+Canonical setter identities and the random-seeding boundary are the next
+ordered blockers; O-104's restored-image hash witness and O-105's target-FASL
+obligations remain open.
+
 ## 2026-09-26 — User rescinds isolated implementation packets
 
 The user rescinded the isolated-packet requirement because separate

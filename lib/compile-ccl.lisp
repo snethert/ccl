@@ -313,7 +313,11 @@
       (if (needs-compile-p fasl sources force-compile)
         (progn
           (require'nfcomp)
-          (compile-file (car sources)
+          (funcall (or (let ((xload (and (eq target :wasm32)
+                                       (find-xload-backend target))))
+                         (and xload (backend-xload-info-compile-file-function xload)))
+                       #'compile-file)
+                   (car sources)
 			:output-file fasl
 			:verbose t
 			:target target)))))))
@@ -935,4 +939,3 @@ the lisp and run REBUILD-CCL again.")
               (when exit
                 (quit (if failed-tests 1 0)))
               failed-tests)))))))
-

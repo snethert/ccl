@@ -117,7 +117,8 @@ if(initialized){
   catch(error){
    const id=get(get(list+3)-2)>>>2,row=codeSet.modules.find(m=>m.code_id===id);
    const expected=expectedRefusals.find(r=>r.reason===error.message && r.symbols.every(sym=>
-    row.symbols.some(s=>resolve(s.reference)===symbolAddress(...sym))));
+    row.symbols.some(s=>resolve(s.reference)===symbolAddress(...sym))) && (r.childSymbols??[]).every(sym=>
+    row.children.some(id=>codeSet.modules.find(m=>m.code_id===id)?.symbols.some(s=>resolve(s.reference)===symbolAddress(...sym)))));
    if(!expected)throw new Error('initializer '+id+': '+error.message,{cause:error});
    for(const dependency of expected.unbound??[])
     assert.equal(get(symbolAddress(...dependency)+6),roots['unbound-function'],'declared missing function '+dependency.join('::'));

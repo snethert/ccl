@@ -686,7 +686,8 @@ vector
 (defvar *lfun-names*)
 
 
-(defvar %lambda-lists% (make-hash-table :test #'eq :weak t))
+;; Bootstrap metadata follows the Wasm image's strong-retention policy.
+(defvar %lambda-lists% (make-hash-table :test #'eq #-wasm32-target :weak #-wasm32-target t))
 (defparameter *save-arglist-info* t)
 
 
@@ -1127,4 +1128,3 @@ vector
 (defsetf pathname-encoding-name set-pathname-encoding-name)
 
 ;end of L1-utils.lisp
-

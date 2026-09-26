@@ -95,6 +95,26 @@
                      (setf (second copy) (second row))
                      (write copy :stream s) (terpri s))))))))))
 
+    (let ((extra (concatenate 'string out "support-forms.lisp")))
+      (when (probe-file extra)
+        (call-with-target
+         (lambda ()
+           (let ((*package* (find-package "CCL")))
+             (with-open-file (groups extra)
+               (dolist (group (read groups))
+                 (destructuring-bind (path operator &rest names) group
+                   (let ((found nil))
+                     (with-open-file (input path)
+                       (loop for form = (read input nil :end) until (eq form :end) do
+                         (when (and (consp form) (eq (car form) operator)
+                                    (member (second form) names))
+                           (assert (not (member (second form) found)))
+                           (push (second form) found)
+                           (write form :stream s) (terpri s))))
+                     (assert (null (set-difference names found)))
+                     (push (list :object (cons "source" path)
+                                 (cons "operator" (symbol-name operator))
+                                 (cons "definitions" (mapcar #'symbol-name (reverse found)))) rows))))))))))
     (with-open-file (probes (concatenate 'string (ccl:getenv "LOADER_SOURCE") "packages.lisp"))
       (loop for line = (read-line probes nil nil) while line do (write-line line s))))
   (with-open-file (s (concatenate 'string out "package-origins.json")
