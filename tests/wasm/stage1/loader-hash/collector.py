@@ -18,7 +18,7 @@ setup();put(EXTERNAL,node(74,Array(20).fill(51)));collect();pass('uninitialized-
 setup();const h=nativeHash(),k=cons(43*4);put(h-2+14*4,k);put(h-2+15*4,cons(97*4));put(h-2+8*4,4);put(EXTERNAL,h);
 collect();const mh=get(EXTERNAL);assert.equal(get(get(mh-2+14*4)+3),43*4);assert.equal(get(get(mh-2+15*4)+3),97*4);
 assert.equal(get(mh+2)&(1<<29),1<<29);pass('native-hash-key-movement');
-for(const [name,offset,value] of [['weak',8,1<<14],['size',52,16],['count',36,16],['free-list',16,0],['unaligned-flags',8,(1<<30)+1]]){
+for(const [name,offset,value] of [['finalizeable',8,1<<12],['size',52,16],['count',36,16],['free-list',16,0],['unaligned-flags',8,(1<<30)+1]]){
  setup();const p=nativeHash()-6;put(p+offset,value);put(EXTERNAL,p+6);refused('native-hash-'+name,collect,'collection refused 2');
 }
 setup();const raw=node(74,Array(20).fill(51));put(raw+2,0);put(EXTERNAL,raw);refused('mixed-uninitialized-hash',collect,'collection refused 2');

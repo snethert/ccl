@@ -181,6 +181,13 @@ admitted empty state; registration refuses. Entry data is compiler input, not
 an automatically loaded native Lisp file. Production root discovery, installation
 at CCL symbols, scheduling disablement and the READY join remain required.
 
+Runtime-created native-shape hash vectors now support weak keys and weak values
+through the copying collector's ephemeron fixed point. Image-built owner tables
+retain the strong policy above. Finalizeable tables remain refused. Implementation
+and qualification scope are recorded in
+[runtime weak hash tables](../../tests/wasm/stage1/loader-level1/weak-hash.md);
+this extension awaits adversarial review.
+
 The accepted math R2 service includes pinned musl transcendental algorithms.
 Build it with `python3 runtime/wasm32/build-float.py --output /tmp/ccl-float-build`.
 `libm/COPYRIGHT` and `libm/provenance.json` carry licence and source identities.

@@ -686,8 +686,7 @@ vector
 (defvar *lfun-names*)
 
 
-;; Bootstrap metadata follows the Wasm image's strong-retention policy.
-(defvar %lambda-lists% (make-hash-table :test #'eq #-wasm32-target :weak #-wasm32-target t))
+(defvar %lambda-lists% (make-hash-table :test #'eq :weak t))
 (defparameter *save-arglist-info* t)
 
 

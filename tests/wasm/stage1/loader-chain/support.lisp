@@ -106,6 +106,12 @@
                    (let ((found nil))
                      (with-open-file (input path)
                        (loop for form = (read input nil :end) until (eq form :end) do
+                         ;; Preserve HASHENV/LISPEQU's original compile prelude
+                         ;; when selecting the public weak-table predicate.
+                         (when (and (equal path "ccl:lib;hash.lisp")
+                                    (consp form) (eq (car form) 'eval-when))
+                           (eval form)
+                           (write form :stream s) (terpri s))
                          (when (and (consp form) (eq (car form) operator)
                                     (member (second form) names))
                            (assert (not (member (second form) found)))
@@ -124,7 +130,10 @@
       (wasm32-compile-file path :output-file (concatenate 'string out "package-support.w32fsl"))
     (declare (ignore modules warnings))
     (assert (and fasl (not failure))))
-  (dolist (name '("package-first" "package-second"))
+  (dolist (name (append '("package-first" "package-second")
+                       (let ((path (concatenate 'string out "extra-files.lisp")))
+                         (when (probe-file path)
+                           (with-open-file (s path) (read s))))))
     (multiple-value-bind (fasl modules warnings failure)
         (wasm32-compile-file (concatenate 'string "ccl:tests;wasm;stage1;loader-level0;" name ".lisp")
                             :output-file (concatenate 'string out name ".w32fsl"))

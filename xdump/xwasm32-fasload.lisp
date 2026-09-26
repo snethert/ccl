@@ -22,7 +22,7 @@
 (defparameter *wasm32-scratch-space-address* #x40000000)
 (defparameter *wasm32-first-code-id* 16)
 
-(defstruct wasm32-xload-state code-set (code-names (make-hash-table :test #'eq)) (next-code-id 16) scratch)
+(defstruct wasm32-xload-state code-set (code-names (make-hash-table :test #'eq)) (next-code-id 16) scratch setf-names)
 (define-symbol-macro *wasm32-code-set* (wasm32-xload-state-code-set *xload-backend-state*))
 (define-symbol-macro *wasm32-code-names* (wasm32-xload-state-code-names *xload-backend-state*))
 (define-symbol-macro *wasm32-next-code-id* (wasm32-xload-state-next-code-id *xload-backend-state*))
@@ -31,14 +31,30 @@
 (defun wasm32-initialize-kernel-symbols ()
   (dolist (symbol '(*package* *keyword-package* %all-packages% %unbound-function%
                     *gc-event-status-bits* %toplevel-catch% %closure-code% %macro-code%
-                    %builtin-functions% %toplevel-function% *openmcl-svn-revision* *optional-features*))
+                    %builtin-functions% %toplevel-function% *openmcl-svn-revision* *optional-features*
+                    wasm32-setf-function-name wasm32-setf-function-base))
     (xload-copy-symbol symbol))
   (make-wasm32-xload-state
    :next-code-id *wasm32-first-code-id*
    :scratch (init-xload-space *wasm32-scratch-space-address* (ash 1 20) area-dynamic)))
 
 (defun wasm32-write-image (directory)
+  ;; Publish after FASL-DEFUN has recorded source information on these plists.
+  (dolist (pair (wasm32-xload-state-setf-names *xload-backend-state*))
+    (wasm32-xload-putprop (car pair) 'wasm32-setf-function-name (cdr pair))
+    (wasm32-xload-putprop (cdr pair) 'wasm32-setf-function-base
+                          (if (= (car pair) (xload-lookup-symbol nil))
+                            *xload-target-nil* (car pair))))
   (wasm32-write-artifacts directory *xload-dynamic-space* *xload-static-space*))
+
+(defun wasm32-xload-putprop (symbol key value)
+  (let* ((cell (xload-%svref symbol target::symbol.plist-cell))
+         (plist (if (xload-target-consp cell) (xload-cdr cell) *xload-target-nil*)))
+    (unless (xload-target-consp cell)
+      (setq cell (xload-make-cons cell plist))
+      (setf (xload-%svref symbol target::symbol.plist-cell) cell))
+    (setf (xload-cdr cell)
+          (xload-make-cons (xload-copy-symbol key) (xload-make-cons value plist)))))
 
 ;;; D1 canonical objects: NIL's cons cell at 77824, T at 77832, NIL at 77864.
 ;;; The nil-relative list (T NIL) places the two symbols behind the cons.
@@ -77,6 +93,7 @@
    :initialize-symbols-function 'wasm32-initialize-kernel-symbols
    :image-writer-function 'wasm32-write-image
    :compile-file-function 'wasm32-compiler::wasm32-compile-file
+   :cold-eval-function 'wasm32-cold-eval
    :subdirs '("ccl:level-0;WASM32;") :nil-relative-symbols '(t nil)
    :image-base-address 2097152 :static-space-address 77824 :purespace-reserve 0
    :lfun-name-function 'wasm32-xload-lfun-name))
@@ -84,6 +101,41 @@
            (not (eq (find-xload-backend :wasm32) *wasm32-xload-backend*)))
   (error "Conflicting WASM32 cross-loader"))
 (add-xload-backend *wasm32-xload-backend*)
+
+;;; Only the exact (SETF-FUNCTION-NAME (QUOTE symbol)) form is admitted.
+;;; Canonical names live on target plists, so later target lookup sees the
+;;; very same uninterned symbol that independently compiled FASLs share.
+(defun wasm32-cold-eval (expr)
+  (flet ((one-argument (form)
+           (and (xload-target-consp form)
+                (let ((tail (xload-cdr form)))
+                  (and (xload-target-consp tail)
+                       (= (xload-cdr tail) *xload-target-nil*)
+                       tail)))))
+    (let* ((args (one-argument expr))
+           (quoted (and args (xload-car args)))
+           (value (and quoted (one-argument quoted))))
+      (unless (and args value
+                   (eq (xload-lookup-symbol-address (xload-car expr))
+                       'setf-function-name)
+                   (eq (xload-lookup-symbol-address (xload-car quoted)) 'quote)
+                   (let ((symbol (xload-car value)))
+                     (or (= symbol *xload-target-nil*)
+                         (and (= (logand symbol *xload-target-fulltagmask*)
+                                 *xload-target-fulltag-for-symbols*)
+                              (= (xload-%svref symbol -1) (xload-symbol-header))))))
+        (error "Unsupported wasm32 cold-load expression: #x~x" expr))
+      (let* ((base (if (= (xload-car value) *xload-target-nil*)
+                    (xload-lookup-symbol nil) (xload-car value)))
+             (existing (assoc base (wasm32-xload-state-setf-names *xload-backend-state*))))
+        (when existing (return-from wasm32-cold-eval (cdr existing)))
+        (let* ((name (xload-make-symbol
+                      (xload-save-string
+                       (concatenate 'string "(setf "
+                                    (xload-get-string (xload-%svref base target::symbol.pname-cell))
+                                    ")")))))
+          (push (cons base name) (wasm32-xload-state-setf-names *xload-backend-state*))
+          name)))))
 
 ;;; Reading host-side records out of the scratch space.
 (defun wasm32-scratch-list (addr)
@@ -98,23 +150,59 @@
 (defun wasm32-scratch-string (addr)
   (xload-get-string addr))
 
-;;; A code record is (version name arity captures wat wires codes keywords children):
+;;; A code record is (version name arity captures wat wires codes keywords children
+;;;                   special-indices):
 ;;; wires are (wire-string . index) into the module's symbol vector, codes
 ;;; are the imported module names, children are nested records.
-(defun wasm32-register-code (record symbols unit)
-  (destructuring-bind (version name arity captures wat wires codes keywords children)
-      (wasm32-scratch-list record)
-    (unless (member (wasm32-scratch-fixnum version) '(2 3))
+(defun wasm32-code-record-fields (record)
+  (let* ((fields (wasm32-scratch-list record))
+         (version (and fields (wasm32-scratch-fixnum (first fields)))))
+    (unless (or (and (member version '(2 3)) (= (length fields) 9))
+                (and (eql version 4) (= (length fields) 10)))
       (error "Unsupported wasm32 code record version"))
+    fields))
+
+(defun wasm32-reserve-code-names (record unit)
+  ;; LABELS and nested closures may refer to later siblings. Assign all code
+  ;; identities before resolving imports, retaining the private unit namespace.
+  (let ((names nil) (next-id *wasm32-next-code-id*))
+    (labels ((walk (record)
+               (let* ((fields (wasm32-code-record-fields record))
+                      (name (wasm32-scratch-string (second fields))))
+                 (dolist (child (wasm32-scratch-list (ninth fields))) (walk child))
+                 (when (assoc name names :test #'string=)
+                   (error "Duplicate module name ~s" name))
+                 (push (cons name (prog1 next-id (incf next-id))) names))))
+      (walk record))
+    (setf (gethash unit *wasm32-code-names*) names
+          *wasm32-next-code-id* next-id)))
+
+(defun wasm32-register-code (record symbols unit)
+  (destructuring-bind (version name arity captures wat wires codes keywords children
+                      &optional (special-indices *xload-target-nil*))
+      (wasm32-code-record-fields record)
+    (let ((specials
+            (loop for word in (wasm32-scratch-list special-indices)
+                  for index = (wasm32-scratch-fixnum word)
+                  collect
+                  (progn
+                    (unless (and (<= 0 index)
+                                 (< index (ash (xload-%svref symbols -1) -8)))
+                      (error "Invalid wasm32 special symbol index"))
+                    (let ((symbol (xload-%svref symbols index)))
+                      (unless (and (= (logand symbol *xload-target-fulltagmask*)
+                                      *xload-target-fulltag-for-symbols*)
+                                   (= (xload-%svref symbol -1) (xload-symbol-header)))
+                        (error "Invalid wasm32 special symbol"))
+                      symbol)))))
+      (dolist (symbol specials) (xload-ensure-binding-index symbol)))
     (let* ((name (wasm32-scratch-string name))
            (children (mapcar (lambda (child) (wasm32-register-code child symbols unit))
                              (wasm32-scratch-list children)))
-           (id (prog1 *wasm32-next-code-id* (incf *wasm32-next-code-id*))))
+           (id (cdr (assoc name (gethash unit *wasm32-code-names*) :test #'string=))))
       (when (wasm32-scratch-list keywords)
         (error "Keyword imports are not admitted by this loader"))
-      (when (assoc name (gethash unit *wasm32-code-names*) :test #'string=)
-        (error "Duplicate module name ~s" name))
-      (push (cons name id) (gethash unit *wasm32-code-names*))
+      (unless id (error "Unreserved wasm32 module name ~s" name))
       (push (list :id id :name (format nil "module_~d" id)
                   :arity (destructuring-bind (schema required optional restp keysp allow-other-keys keys)
                              (wasm32-scratch-list arity)
@@ -149,7 +237,7 @@
                   :codes (mapcar (lambda (code)
                                    (let* ((code (wasm32-scratch-string code))
                                           (entry (assoc code (gethash unit *wasm32-code-names*) :test #'string=)))
-                                     (unless entry (error "Code import ~s precedes its module" code))
+                                     (unless entry (error "Unknown code import ~s" code))
                                      entry))
                                  (wasm32-scratch-list codes))
                   :children children)
@@ -181,7 +269,9 @@
         (setf (xload-%svref pool i) (%fasl-expr s)))
       ;; Every record carries its complete nested code graph. Resolve code
       ;; wires in this record's private namespace; published names use code IDs.
-      (let ((id (wasm32-register-code record symbols (list nil))))
+      (let* ((unit (list nil))
+             (id (progn (wasm32-reserve-code-names record unit)
+                        (wasm32-register-code record symbols unit))))
         (setf (xload-%svref fn 0) (ash id *xload-target-fixnumshift*)
               (xload-%svref fn 1) *xload-target-nil*
               (xload-%svref fn 2) (ash 1 *xload-target-fixnumshift*)

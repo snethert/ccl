@@ -8,14 +8,16 @@ import shutil
 HERE = Path(__file__).resolve().parent
 
 
-def run(out, product, cases, witnesses, controls, inputs, startup_refusals=None, pending_cases=None):
+def run(out, product, cases, witnesses, controls, inputs, startup_refusals=None, pending_cases=None,
+        written=None):
     c = product.c
     assert c.read(out / 'proposal-inputs.json') == inputs
     pins = {n: hashlib.sha256(b.encode()).hexdigest() for n,b in product.sources().items()}
     assert c.read(out / 'identity.json')['source_identity'] == pins
     product.prepare_runtime(out / 'runtime')
     product.runtime(out / 'runtime')
-    product.module('hash_leaves', HERE.parent / 'loader-def/hash-leaves.py').prepare(out)
+    product.module('hash_leaves', HERE.parent / 'loader-def/hash-leaves.py').prepare(
+        out, equality=getattr(product, 'equality_leaf', False))
     for folder, name, target in (
         ('loader-chain', 'execute.mjs', 'execute.mjs'),
         ('loader', 'write.mjs', 'write.mjs'), ('loader', 'd2.mjs', 'd2.mjs'),
@@ -40,8 +42,17 @@ def run(out, product, cases, witnesses, controls, inputs, startup_refusals=None,
         sha256=c.sha(c.ROOT / 'doc/WASM/contracts/wasm32-layout.v1.json'))))
     driver = product.module('chain_loader', HERE.parent / 'loader/run.py')
     artifacts = out / 'prefix/artifacts'
-    written = driver.node([out / 'write.mjs', out / 'prefix', artifacts,
-                           out / 'policy.json', out / 'versions.json'], out / 'write.log')
+    if written is None:
+        written = driver.node([out / 'write.mjs', out / 'prefix', artifacts,
+                               out / 'policy.json', out / 'versions.json'], out / 'write.log')
+    else:
+        # Reuse only the materialization result; admission below revalidates
+        # every module and heap digest before publication in every mode.
+        assert written == json.loads((out / 'write.log').read_text().splitlines()[-1])
+        manifest = c.read(artifacts / 'manifest.json')
+        assert written['digest'] == manifest['heap']['digest']
+        assert written['codeDigest'] == manifest['codeDigest']
+        assert written['modules'] == manifest['modules']
     native = out / 'native'; native.mkdir(exist_ok=True)
     support = out / 'native-source'; support.mkdir(exist_ok=True)
     for name in ('keywords.lisp', 'package-first.lisp', 'package-second.lisp', 'native.lisp'):

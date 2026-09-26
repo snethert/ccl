@@ -14,7 +14,7 @@
   pass(tracking?'native-hash-key-movement':'native-hash-untracked-key-movement');
  }
  for(const [name,offset,value] of [
-  ['weak',8,1<<14],['size',52,16],['count',36,16],['free-list',16,0],
+  ['finalizeable',8,1<<12],['weak-value-without-weak',8,1<<13],['size',52,16],['count',36,16],['free-list',16,0],
   ['unaligned-flags',8,(1<<30)+1],['finalization-list',20,0],
   ['cache-index-limit',40,20*4],['cache-index-type',40,1],['gc-count-type',12,1],
   ['deleted-count',32,16],['deleted-count-type',32,1],['count-type',36,1],

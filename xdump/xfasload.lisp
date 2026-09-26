@@ -105,6 +105,8 @@
   initialize-symbols-function
   image-writer-function
   compile-file-function
+  ;; Optional target evaluator for otherwise unsupported cold-load forms.
+  cold-eval-function
 )
 
 (defun setup-xload-target-parameters ()
@@ -1516,6 +1518,9 @@
                 (eq (xload-lookup-symbol-address (xload-cdar expr))
                     'quote))
            (%epushval s (xload-register-istruct-cell (xload-cadr (xload-cadr expr)))))
+          ((backend-xload-info-cold-eval-function *xload-target-backend*)
+           (%epushval s (funcall (backend-xload-info-cold-eval-function
+                                  *xload-target-backend*) expr)))
           (t
            (error "Can't evaluate expression ~s in cold load ." expr)
            (%epushval s (eval expr))))))         ; could maybe evaluate symbols, constants ...

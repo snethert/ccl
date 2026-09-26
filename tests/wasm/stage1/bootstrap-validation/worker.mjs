@@ -327,7 +327,9 @@ import {sha256} from './runtime/sha256.mjs';
   }
   // Generic logical operations now reach CCL's own definitions instead of refusing a bignum.
   assert.deepEqual(gen.invoke('core_logical',[encode({integer:'1152921504606846976'}),0]).map(decode),[0,{integer:'1152921504606846976'},0,{integer:'1152921504606846992'},-1,0]);
-  refused('core_ldb',[encode({integer:'1152921504606846976'})],32);
+  // The current compiler admits bignum LDB through the integer boundary.
+  assert.deepEqual(gen.invoke('core_ldb',[encode({integer:'1152921504606846976'})]).map(decode),[0,0,0,0]);
+  assert.deepEqual(gen.invoke('core_ldb',[encode({integer:'1169810003209490996'})]).map(decode),[18,4660,15,0]);
   refused('core_integer_divide',[4,8],45);
   refused('core_integer_divide',[28,12],45);
   refused('core_access',[0,0],4);

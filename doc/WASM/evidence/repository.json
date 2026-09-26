@@ -1,27 +1,39 @@
 {
   "branch": "main",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "403d054aab282357126a898152b75fd1d3d35dc06e4c9fa434175c34009d1551",
-  "commit": "d9135566ef1137986d09fdb843c9211c3532ef7f",
-  "immutable_evidence_files": 289001,
+  "catalog_sha256": "e3d3a5220bf3c8b04e2c38486bba1c01eb33afe657901b58dfc2bdad34c9400b",
+  "commit": "526338fc8693b2da4042ec440158a2ee9fbee36f",
+  "immutable_evidence_files": 297241,
   "last_scoped_addition": {
-    "bytes": 142761476,
-    "catalog_entries_added": 3291,
-    "directory": "2026-09-26-loader-level1-r1",
-    "files": 3291
+    "bytes": 1226583074,
+    "catalog_entries_added": 8240,
+    "directories": [
+      {
+        "bytes": 1045305217,
+        "directory": "2026-09-26-weak-hash-r1",
+        "files": 4264
+      },
+      {
+        "bytes": 181277857,
+        "directory": "2026-09-26-loader-level1-r2",
+        "files": 3975
+      }
+    ],
+    "directory": "2026-09-26-loader-level1-r2",
+    "files": 8239
   },
   "off_machine_backup": false,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "prior_indexed_references_verified": 77967,
   "remote": null,
-  "scope": "Ordered level-1 work implemented directly, awaiting Claude review. Whole-file counts advance from 21/21/0 to 29/24/0; next compilation stop is %CURRENT-TCR in random-state seeding, and cross-load stops at SETF-FUNCTION-NAME in l1-boot-2. Four execution modes: 1343 modules, 86/93 initializers, 151/155 observations (148 native-equal and three explicit target expectations), 141 controls and 14/259 collections. Four pending cases and seven startup refusals keep execution INCOMPLETE. Native R6/R6a passes 21843 tests and restores 164 FASLs; 68 reader comparisons across 17 profiles and 26048 fresh corpus comparisons pass. Unchanged collector/owner qualification reused by exact identity (82 checks, ten killed faults). Product Lisp 22 added / 10 removed. Accepted originals 575/535, admission 2050/2231 (not recounted), ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
-  "source_index_sha256": "93bad6d7998d62e6a14d65a30aa3cacf490eaa4033fe72e759894a1c66a443a4",
-  "source_index_snapshot": "catalog/source-index-2026-09-26-loader-level1.json",
+  "scope": "Ordered level-1 continuation and runtime weak tables, awaiting Claude review. Whole-file 29/24/0 to 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK. Canonical setter names, target special and sibling-code identities, random-source boundary, native weak constructors and collector fixed point. Four modes: 1478 modules, 93/97 initializers, 176 observations (169 native-computed, including one adapted RNG setup, and seven literal target expectations), 141 controls, 25/298 collections; 52 weak comparisons. Five pending cases and four startup refusals keep execution INCOMPLETE. Native 21843 tests and 164 restored FASLs; 221 U1 reader comparisons over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutations reused by exact source/owner/binary identity from STAGE1-WEAK-HASH-R1. O-106/O-107 fixed, O-108 reporting corrected, O-110 reconciled, O-111 Git dependency removed. Product Lisp +337/-69, collector C +78/-17. Originals 575/535, admission 2050/2231 and ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+  "source_index_sha256": "68fa7977bb6cc33b68128a5ac6b0a6a578ef54401f4f8f9fb01bc7d82e60dd12",
+  "source_index_snapshot": "catalog/source-index-2026-09-26-loader-level1-r2.json",
   "verification": {
     "new_execution": true,
-    "report": "2026-09-26-loader-level1-r1/summary.json",
-    "report_sha256": "66e2dbc38733a79c055b23f777657a2043b86c1be2fd78879633baa097c0c483",
-    "scope": "Scoped addition: final packet verified once during retention; catalog entries use that verified inventory and new snapshot identity. Prior catalog entries reused unchanged; no full-store rehash.",
+    "report": "2026-09-26-loader-level1-r2/summary.json",
+    "report_sha256": "4033bde74ec142663c296fc3408977d214ed8028df37dd0aaf482b62a40ec857",
+    "scope": "Final continuation verified once during retention; weak-table pack inventory reused by pinned manifest identity. Scoped catalog addition only; no full-store rehash.",
     "status": "PASS"
   },
   "version": 1

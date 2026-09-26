@@ -50,7 +50,7 @@
     (,platform-cpu-arm . :arm)))
 
 (defun host-platform ()
-  #+wasm32-target (values :wasm 32 :wasm32)
+  #+wasm32-target (values :wasm 32 :wasm)
   #-wasm32-target
   (let* ((pf (%get-kernel-global 'host-platform)))
     (values
@@ -120,7 +120,6 @@
 (catch :toplevel
   (init-logical-directories)
   )
-
 
 
 

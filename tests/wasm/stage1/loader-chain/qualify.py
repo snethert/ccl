@@ -7,7 +7,7 @@ import storage
 
 
 
-def run(kind, out, product):
+def run(kind, out, product, native_prelude=""):
     HERE, c = product.HERE, product.c
     out.mkdir(parents=True, exist_ok=True)
     bodies = product.sources()
@@ -47,7 +47,7 @@ def run(kind, out, product):
         return result
     product.module('chain_corpus', HERE.parent / 'loader/corpus.py').run(
         out, product.sources, prepare_execution, runtime,
-        "(dolist (name '(ccl::%map-areas ccl::%map-lfuns)) (pushnew name wasm32-compiler::*funcallable-deferred-inputs*))")
+        "(progn (dolist (name '(ccl::%map-areas ccl::%map-lfuns)) (pushnew name wasm32-compiler::*funcallable-deferred-inputs*)) " + native_prelude + ")")
     assert c.read(out / 'base/execution-environment.json')['files']['collector.wasm'] == runtime['binary']
     result = c.read(out / 'regression.json'); result['runtime'] = runtime
     result['native_skips'] = {name: 'Target requires collector-owner enumeration; native heap walk has no matching target operation.' for name in ('CCL::%MAP-AREAS', 'CCL::%MAP-LFUNS')}

@@ -40,10 +40,15 @@
     (record-source-file symbol 'variable)
     symbol))
 
-(defstatic *kernel-tcr-area-lock* (%make-lock (%null-ptr) "Kernel tcr-area-lock"))
+(defstatic *kernel-tcr-area-lock*
+  #+wasm32-target (make-lock "Kernel tcr-area-lock")
+  #-wasm32-target (%make-lock (%null-ptr) "Kernel tcr-area-lock"))
 
-(defstatic *kernel-exception-lock* (%make-lock (%null-ptr) "Kernel exception-lock"))
+(defstatic *kernel-exception-lock*
+  #+wasm32-target (make-lock "Kernel exception-lock")
+  #-wasm32-target (%make-lock (%null-ptr) "Kernel exception-lock"))
   
+#-wasm32-target
 (def-ccl-pointers kernel-locks ()
   (let* ((p (recursive-lock-ptr *kernel-tcr-area-lock*))
          (q (recursive-lock-ptr *kernel-exception-lock*)))
@@ -259,14 +264,14 @@ terminate the list"
           (return top-of-top)))))))
 
 
-;;; The Wasm image owns these canonical function names for its lifetime.
-(defvar %setf-function-names% (make-hash-table #-wasm32-target :weak #-wasm32-target t :test 'eq))
-(defvar %setf-function-name-inverses% (make-hash-table #-wasm32-target :weak #-wasm32-target t :test 'eq))
+(defvar %setf-function-names% (make-hash-table :weak t :test 'eq))
+(defvar %setf-function-name-inverses% (make-hash-table :weak t :test 'eq))
 
 (defvar *setf-names-lock* (make-lock))
 (defun setf-function-name (sym)
   "Returns the uninterned symbol that holds the binding of (SETF sym)"
-   (or (gethash sym %setf-function-names%)
+   (or #+wasm32-target (get sym 'wasm32-setf-function-name)
+       (gethash sym %setf-function-names%)
        (with-lock-grabbed (*setf-names-lock*)
          (or (gethash sym %setf-function-names%)
              (let* ((setf-function-symbol (construct-setf-function-name sym)))
@@ -274,9 +279,16 @@ terminate the list"
                      (gethash sym %setf-function-names%) setf-function-symbol))))))
 
 (defun existing-setf-function-name (sym)
+  #+wasm32-target
+  (let ((name (get sym 'wasm32-setf-function-name)))
+    (when name (return-from existing-setf-function-name name)))
   (gethash sym %setf-function-names%))
 
 (defun maybe-setf-name (sym)
+  #+wasm32-target
+  (let ((base (get sym 'wasm32-setf-function-base sym)))
+    (unless (eq base sym)
+      (return-from maybe-setf-name `(setf ,base))))
   (let* ((other (gethash sym %setf-function-name-inverses%)))
     (if other
       `(setf ,other)
@@ -1067,14 +1079,27 @@ terminate the list"
 
 
 
+#+wasm32-target
+(defvar *wasm-toplevel-function* nil)
+
 (defun %set-toplevel (&optional (fun nil fun-p))
   ;(setq fun (require-type fun '(or symbol function)))
+  #+wasm32-target
+  (prog1 *wasm-toplevel-function*
+    (when fun-p (setq *wasm-toplevel-function* fun)))
+  #-wasm32-target
   (let* ((tcr (%current-tcr)))
     (prog1 (%tcr-toplevel-function tcr)
       (when fun-p
 	(%set-tcr-toplevel-function tcr fun)))))
 
 
+#+wasm32-target
+(defun gccounts ()
+  ;; The current collector has one copying generation; every GC is full.
+  (let ((count (%get-gc-count))) (values count count 0 0 0)))
+
+#-wasm32-target
 (defun gccounts ()
   (let* ((total (%get-gc-count))
          (full (full-gccount))
@@ -1143,18 +1168,24 @@ to print messages on each ephemeral GC."
 Since this is generally a volatile piece of information, it's not clear
 whether this function serves a useful purpose when native threads are
 involved."
+  #+wasm32-target nil
+  #-wasm32-target
   (and (egc-enabled-p)
        (not (eql 0 (%get-kernel-global 'oldest-ephemeral)))))
 
 ; this IS effectively a passive way of inquiring about enabled status.
 (defun egc-enabled-p ()
   "Return T if the EGC was enabled at the time of the call, NIL otherwise."
+  #+wasm32-target nil
+  #-wasm32-target
   (not (eql 0 (%fixnum-ref (%active-dynamic-area) target::area.older))))
 
 (defun egc-configuration ()
   "Return as multiple values the sizes in kilobytes of the thresholds
 associated with the youngest ephemeral generation, the middle ephemeral
 generation, and the oldest ephemeral generation."
+  #+wasm32-target (error "The Wasm collector has no ephemeral generations.")
+  #-wasm32-target
   (let* ((ta (%get-kernel-global 'tenured-area))
          (g2 (%fixnum-ref ta target::area.younger))
          (g1 (%fixnum-ref g2 target::area.younger))
@@ -1168,6 +1199,9 @@ generation, and the oldest ephemeral generation."
   "If the EGC is currently disabled, put the indicated threshold sizes in
 effect and returns T, otherwise, returns NIL.  The provided threshold sizes
 are rounded up to a multiple of 64Kbytes."
+  #+wasm32-target (declare (ignore e0size e1size e2size))
+  #+wasm32-target (error "The Wasm collector has no ephemeral generations.")
+  #-wasm32-target
   (let* ((was-enabled (egc-active-p))
          (e2size (require-type e2size '(unsigned-byte 18)))
          (e1size (require-type e1size '(unsigned-byte 18)))
@@ -1187,6 +1221,9 @@ are rounded up to a multiple of 64Kbytes."
 
 
 (defun macptr-flags (macptr)
+  #+wasm32-target (declare (ignore macptr))
+  #+wasm32-target (error "Native macptr flags are unavailable on Wasm.")
+  #-wasm32-target
   (if (eql (uvsize (setq macptr (require-type macptr 'macptr))) 1)
     0
     (uvref macptr TARGET::XMACPTR.FLAGS-CELL)))
@@ -1196,6 +1233,9 @@ are rounded up to a multiple of 64Kbytes."
 ; on linked list), but we might have other reasons for setting
 ; other flag bits.
 (defun set-macptr-flags (macptr value) 
+  #+wasm32-target (declare (ignore macptr value))
+  #+wasm32-target (error "Native macptr flags are unavailable on Wasm.")
+  #-wasm32-target
   (unless (eql (uvsize (setq macptr (require-type macptr 'macptr))) 1)
     (setf (%svref macptr TARGET::XMACPTR.FLAGS-CELL) value)
     value))
@@ -1209,6 +1249,9 @@ are rounded up to a multiple of 64Kbytes."
     p))
 
 (defun %gcable-ptr-p (p)
+  #+wasm32-target (declare (ignore p))
+  #+wasm32-target nil
+  #-wasm32-target
   (and (typep p 'macptr)
        (= (uvsize p) target::xmacptr.element-count)))
 
@@ -3663,9 +3706,3 @@ are rounded up to a multiple of 64Kbytes."
                (backend-target-foreign-type-data *target-backend*))
   (:nicknames "OS")
   (:use "COMMON-LISP"))
-
-
-
-
-
-

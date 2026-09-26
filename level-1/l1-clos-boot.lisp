@@ -21,6 +21,7 @@
 
 
 (in-package "CCL")
+#+wasm32-target (declaim (special *ivector-vector-classes*))
 
 
 (defstatic *clos-optimizations-active* nil)
@@ -2110,7 +2111,7 @@ to replace that class with ~s" name old-class new-class)
               (find-class 'unsigned-doubleword-vector)
               (find-class 'double-float-vector))))
 
-  #+arm-target
+  #+(or arm-target wasm32-target)
   (defparameter *ivector-vector-classes*
     (vector (find-class 'short-float-vector)
             (find-class 'unsigned-long-vector)
@@ -2220,6 +2221,9 @@ to replace that class with ~s" name old-class new-class)
             class))))
 
   (defun %ordinal-type-class-for-macptr (p)
+    #+wasm32-target (declare (ignore p))
+    #+wasm32-target (error "Native macptr classes are unavailable on Wasm.")
+    #-wasm32-target
     (with-lock-grabbed (ordinal-type-class-alist-lock)
       (or (unless (%null-ptr-p p)
             (cdr (assoc (%macptr-type p) ordinal-type-class-alist :key #'foreign-type-ordinal)))
@@ -2363,8 +2367,8 @@ to replace that class with ~s" name old-class new-class)
           (map-subtag arm::subtag-code-vector code-vector)
           #+ppc32-target
           (map-subtag ppc32::subtag-creole-object creole-object)
-          (map-subtag target::subtag-xcode-vector xcode-vector)
-          (map-subtag target::subtag-xfunction xfunction)
+          #-wasm32-target (map-subtag target::subtag-xcode-vector xcode-vector)
+          #-wasm32-target (map-subtag target::subtag-xfunction xfunction)
           #+arm-target
           (map-subtag arm::subtag-pseudofunction pseudofunction)
           (map-subtag target::subtag-single-float-vector simple-short-float-vector)
@@ -2390,7 +2394,7 @@ to replace that class with ~s" name old-class new-class)
           (map-subtag target::subtag-complex-double-float complex-double-float)
           (map-subtag target::subtag-complex-single-float-vector simple-complex-single-float-vector)
           (map-subtag target::subtag-complex-double-float-vector simple-complex-double-float-vector)
-          (map-subtag target::subtag-catch-frame catch-frame)
+          #-wasm32-target (map-subtag target::subtag-catch-frame catch-frame)
           (map-subtag target::subtag-hash-vector hash-table-vector)
           (map-subtag target::subtag-value-cell value-cell)
           (map-subtag target::subtag-pool pool)
@@ -3920,4 +3924,3 @@ to replace that class with ~s" name old-class new-class)
         (dolist (method (%gf-methods f))
           (%add-direct-methods method)))))
   (setq *maintain-class-direct-methods* t))   ; no error, all is well
-

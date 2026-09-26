@@ -8,7 +8,7 @@ export async function installHashLeaves({memory,env,get,put,binary,hash,pins,sym
     assert([...layout.regions,...layout.spaces].every(r=>end<=r.start||start>=r.end));
   }
   for(const [name,digest] of Object.entries(pins.binaries))
-    assert.equal(hash(binary(name.slice(0,-5))),digest,name);
+    assert.equal(hash(binary(name.split('/').at(-1).slice(0,-5))),digest,name);
   const service=(await WebAssembly.instantiate(binary('hash'),{env:{memory}})).instance.exports;
   const adapter=await WebAssembly.compile(binary('hash-adapter'));
   const names=['%WASM-EQ-TABLE-GET','%WASM-EQ-TABLE-SET','%WASM-EQ-TABLE-REMOVE'];
@@ -23,6 +23,21 @@ export async function installHashLeaves({memory,env,get,put,binary,hash,pins,sym
     [id,4,17,23].forEach((v,i)=>put(registry+8+16*id+4*i,v));
     env.table.set(id,instance.exports.entry);env.tail_table.set(id,instance.exports.tail_entry);
     put(symbolAddress('CCL',name)+6,base+6);
+  }
+  if(pins.equality) {
+    const id=4,base=280096;
+    assert.equal(env.table.get(id),null);assert.equal(env.tail_table.get(id),null);
+    assert.deepEqual([0,4,8,12].map(i=>get(registry+8+16*id+i)),[0,0,0,0]);
+    const eql=(await WebAssembly.instantiate(binary('eql'),{env:{memory}})).instance.exports;
+    const instance=await WebAssembly.instantiate(binary('runtime_eql'),{env,hash:{run:eql.ht_eql,
+      collect:()=>{throw Error('EQL leaf must not collect');},config:0,operation:3,
+      scratch:1800000,scratch_end:1940000,result:1169504}});
+    [1578,id*4,N,4,N,N,N,0].forEach((v,i)=>put(base+4*i,v));
+    [id,4,17,23].forEach((v,i)=>put(registry+8+16*id+4*i,v));
+    env.table.set(id,instance.instance.exports.entry);
+    env.tail_table.set(id,instance.instance.exports.tail_entry);
+    put(symbolAddress('COMMON-LISP','EQL')+6,base+6);
+    names.push('COMMON-LISP::EQL');
   }
   return {names,...pins};
 }

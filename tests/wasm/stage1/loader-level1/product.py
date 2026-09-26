@@ -8,6 +8,9 @@ sys.path.insert(0, str(HERE.parent / 'bootstrap-validation'))
 sys.path.append(str(HERE.parent / 'loader'))
 import common as c
 
+# Reuse the corpus's qualified callable EQL leaf for native hash constructors.
+equality_leaf = True
+
 
 def module(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -18,17 +21,24 @@ def module(name, path):
 
 def sources():
     names = set(c.read(c.ROOT / 'doc/WASM/stage1/integration-loader-gc.json')['source_identity'])
-    names.update(('level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp'))
+    names.update(('level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp',
+                  'level-1/l1-numbers.lisp', 'level-1/l1-aprims.lisp', 'level-0/l0-numbers.lisp',
+                  'level-1/l1-clos-boot.lisp', 'level-1/l1-dcode.lisp'))
     return {name: (c.ROOT / name).read_text() for name in sorted(names)}
 
 
 def runtime(out):
     out.mkdir(parents=True, exist_ok=True)
     module('level1_runtime', HERE.parent / 'loader/run.py').runtime(out)
-    record = c.read(c.ROOT / 'doc/WASM/stage1/integration-loader-gc.json')
-    c.verify_files(c.ROOT, record['runtime_identity'])
-    assert c.sha(out / 'collector.wasm') == record['runtime']['binary']
-    c.save(out / 'array-runtime.json', record['runtime'])
+    # Runtime changes receive fresh collector evidence; do not claim the old binary.
+    source = c.ROOT / 'runtime/wasm32/collector.c'
+    (out / 'collector.c').write_bytes(source.read_bytes())
+    c.save(out / 'array-runtime.json', dict(source=c.sha(source),
+        binary=c.sha(out / 'collector.wasm'),
+        owner=c.sha(c.ROOT / 'runtime/wasm32/collector-owner.mjs'),
+        gc_count=dict(offset=204, maximum=536870911,
+            contract=c.sha(HERE.parent / 'loader-gc/counter.md'),
+            schema=c.sha(HERE.parent / 'loader-gc/counter-schema.json'))))
 
 
 def prepare_runtime(out):

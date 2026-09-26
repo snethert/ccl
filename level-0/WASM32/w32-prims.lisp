@@ -7,6 +7,31 @@
   ;; Class-table accessors below use HASHENV's native field definitions.
   (require "HASHENV" "ccl:xdump;hashenv"))
 
+;;; The embedding supplies fresh entropy through a Lisp callable.  A cold
+;;; image never serializes host entropy or silently substitutes a fixed seed.
+(defvar *wasm-random-source* nil)
+
+(defun %wasm-random-u32 ()
+  (unless *wasm-random-source*
+    (error "No Wasm random source is installed."))
+  (require-type (funcall *wasm-random-source*) '(unsigned-byte 32)))
+
+;;; Native subprims supply these compound list accessors. Keep their target
+;;; definitions in Lisp, including the ordinary CAR/CDR checks and NIL rules.
+(macrolet ((define-cxr (name)
+             (let ((form 'list) (string (symbol-name name)))
+               (loop for i downfrom (- (length string) 2) to 1 do
+                 (setq form (list (if (char= (char string i) #\A) 'car 'cdr) form)))
+               `(defun ,name (list) ,form))))
+  (define-cxr caaaar) (define-cxr caaadr)
+  (define-cxr caadar) (define-cxr caaddr)
+  (define-cxr cadaar) (define-cxr cadadr)
+  (define-cxr caddar) (define-cxr cadddr)
+  (define-cxr cdaaar) (define-cxr cdaadr)
+  (define-cxr cdadar) (define-cxr cdaddr)
+  (define-cxr cddaar) (define-cxr cddadr)
+  (define-cxr cdddar) (define-cxr cddddr))
+
 (defun lisptag (object)
   (lisptag object))
 
@@ -662,15 +687,27 @@
                    (t 23))))
     (walk object 7)))
 
-;;; Existing generated callers enter these representation-boundary functions
-;;; directly. Keep their strong EQ leaf and dispatch other admitted tests to
-;;; the traced pair representation below.
+;;; Generated callers can receive either an early image-owned table or a
+;;; runtime table made by l0-hash. Native vectors have a zero GC-link word;
+;;; owner vectors use NIL, and the early pair representation is a simple vector.
+(defun %wasm-native-hash-table-p (table)
+  (and (hash-table-p table)
+       (let ((vector (nhash.vector table)))
+         (and (= (the fixnum (typecode vector)) target::subtag-hash-vector)
+              (eql (nhash.vector.link vector) 0)))))
+
 (defun %wasm-class-gethash (key table &optional default)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-class-gethash
+      (funcall (symbol-function 'gethash) key table default)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-eq-table-get (nhash.vector table) key default)
     (%wasm-gethash key table default)))
 
 (defun %wasm-class-puthash (key table default &optional (value default))
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-class-puthash
+      (funcall (symbol-function 'puthash) key table value)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn
       (%wasm-class-writeable table)
@@ -682,12 +719,18 @@
     (%wasm-puthash key table value)))
 
 (defun %wasm-class-remhash (key table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-class-remhash
+      (funcall (symbol-function 'remhash) key table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn (%wasm-class-writeable table)
            (%wasm-eq-table-remove (nhash.vector table) key nil))
     (%wasm-remhash key table)))
 
 (defun %wasm-class-clrhash (table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-class-clrhash
+      (funcall (symbol-function 'clrhash) table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn
       (%wasm-class-writeable table)
@@ -731,12 +774,18 @@
   (nhash.vector table))
 
 (defun %wasm-gethash (key table &optional default)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-gethash
+      (funcall (symbol-function 'gethash) key table default)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-class-gethash key table default)
     (let ((pair (assoc key (svref (%wasm-table-pairs table) 0) :test (nhash.comparef table))))
       (if pair (values (cdr pair) t) (values default nil)))))
 
 (defun %wasm-puthash (key table default &optional (value default))
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-puthash
+      (funcall (symbol-function 'puthash) key table value)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-class-puthash key table value)
     (let* ((state (%wasm-table-pairs table))
@@ -750,6 +799,9 @@
       value)))
 
 (defun %wasm-remhash (key table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-remhash
+      (funcall (symbol-function 'remhash) key table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-class-remhash key table)
     (let* ((state (%wasm-table-pairs table))
@@ -761,6 +813,9 @@
       (not (null pair)))))
 
 (defun %wasm-clrhash (table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-clrhash
+      (funcall (symbol-function 'clrhash) table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-class-clrhash table)
     (let ((state (%wasm-table-pairs table)))
@@ -769,11 +824,17 @@
       table)))
 
 (defun %wasm-hash-table-count (table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-hash-table-count
+      (funcall (symbol-function 'hash-table-count) table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (nhash.vector.count (nhash.vector table))
     (svref (%wasm-table-pairs table) 1)))
 
 (defun %wasm-maphash (function table)
+  (when (%wasm-native-hash-table-p table)
+    (return-from %wasm-maphash
+      (funcall (symbol-function 'maphash) function table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (let* ((vector (nhash.vector table)) (size (nhash.vector.size vector)))
       (dotimes (i size)

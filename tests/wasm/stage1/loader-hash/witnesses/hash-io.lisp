@@ -82,5 +82,5 @@
            (6 (%get-unsigned-byte buffer nil))
            (7 (%alloc-misc 15 target::subtag-hash-vector (%unbound-marker)))
            (8 (%alloc-misc 16 target::subtag-hash-vector (if (= kind 8) nil (%unbound-marker))))
-           (9 (%cons-nhash-vector 31 (ash 1 $nhash_weak_bit)))))
+           (9 (%cons-nhash-vector 31 (ash 1 $nhash_finalizeable_bit)))))
     (incf *loader-buffer-cleanup*)))

@@ -425,6 +425,8 @@
 
 (defun init-random-state-seeds ()
   (let* ((ticks (ldb (byte 32 0)
+		     #+wasm32-target (%wasm-random-u32)
+		     #-wasm32-target
 		     (+ (mixup-hash-code (%current-tcr))
 			(let* ((iface (primary-ip-interface)))
 			  (or (and iface (ip-interface-addr iface))
@@ -439,7 +441,11 @@
 
 (defun %cons-mrg31k3p-state (x0 x1 x2 x3 x4 x5)
   (let ((array (make-array 6 :element-type '(unsigned-byte 32)
-			   :initial-contents (list x0 x1 x2 x3 x4 x5))))
+			   #-wasm32-target :initial-contents
+                           #-wasm32-target (list x0 x1 x2 x3 x4 x5))))
+    #+wasm32-target
+    (setf (aref array 0) x0 (aref array 1) x1 (aref array 2) x2
+          (aref array 3) x3 (aref array 4) x4 (aref array 5) x5)
     (%istruct 'random-state array)))
 
 (defun initialize-mrg31k3p-state (x0 x1 x2 x3 x4 x5)
@@ -472,7 +478,7 @@
 	  collect (1+ (mod n (1- mrg31k3p-limit))) into seed
 	  finally (return (apply #'%cons-mrg31k3p-state seed)))))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun random-mrg31k3p-state ()
   (with-open-file (stream "/dev/urandom" :element-type '(unsigned-byte 32)
 			  :if-does-not-exist nil)
@@ -483,6 +489,12 @@
 	  ;; excluding zero values.
 	  collect (1+ (mod n (1- mrg31k3p-limit))) into seed
 	  finally (return (apply #'%cons-mrg31k3p-state seed)))))
+
+#+wasm32-target
+(defun random-mrg31k3p-state ()
+  (loop repeat 6
+        collect (1+ (mod (%wasm-random-u32) (1- mrg31k3p-limit))) into seed
+        finally (return (apply #'%cons-mrg31k3p-state seed))))
 
 (defun initial-random-state ()
   (initialize-mrg31k3p-state 314159 42 1776 271828 6021023 1066))
@@ -496,6 +508,11 @@
     (random-mrg31k3p-state)
     (progn
       (setq state (require-type (or state *random-state*) 'random-state))
+      #+wasm32-target
+      (let ((seed (random.mrg31k3p-state state)))
+        (%cons-mrg31k3p-state (aref seed 0) (aref seed 1) (aref seed 2)
+                             (aref seed 3) (aref seed 4) (aref seed 5)))
+      #-wasm32-target
       (let ((seed (coerce (random.mrg31k3p-state state) 'list)))
 	(apply #'%cons-mrg31k3p-state seed)))))
 

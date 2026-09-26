@@ -1,6 +1,14 @@
 # Ordered level-1 bootstrap prefix
 
-Implemented directly on `wasm2`; awaiting Claude's adversarial review.
+The [level-1 continuation](continuation.md) advances the pending checkout to
+36/36/0 and addresses audit 184 O-106/O-107.
+
+The runtime weak-table extension and its separate qualification are described
+in [weak hash support](weak-hash.md). The report below records the earlier
+level-1 prefix; image-built metadata retains its Phase 1 strong representation.
+
+The original prefix was accepted after audit 184 (`fb23aeae`) on the user's
+“accept and proceed” instruction. The continuation below awaits its own review.
 Whole-file compilation and cross-loading are reported independently of acceptance.
 Counts advance from **21/21/0 to 29/24/0 of 167** (compiled / cross-loaded /
 target-loaded). The retained report is
@@ -52,8 +60,9 @@ EQL; package registration needs that table; force-export needs callable STRING=;
 the pathname escape DEFSTATIC initializer is not ready; the TYPE-OF alias needs
 callable %TYPE-OF; and both accounting variables' pointer-function registrations
 are not ready. The pathname and registration failures are retained as checked
-refusals without claiming a complete dependency diagnosis. Accounting values
-are witnessed independently as NIL; registration and complete boot stay open.
+refusals without claiming a complete dependency diagnosis. Audit 184 O-108 corrected the accounting claim: these rows observe the
+declaration's placeholder NIL, because registration refuses before the value
+expression executes. Registration and complete boot stay open.
 
 ```sh
 python3 tests/wasm/stage1/bootstrap-validation/run.py gc

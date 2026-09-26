@@ -3963,17 +3963,35 @@
     {
       "id": "STAGE1-LOADER-GC-INTEGRATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-gc-integration/packet.json",
+      "review_disposition": "ACCEPTED_AUDIT_184",
+      "scope": "Audit 183 (18ae70b3), no defect: hash, FASL and GC proposals accepted and integrated together. Fourteen changed files match the reviewed stack byte-for-byte; 45 qualified Lisp sources and runtime inputs bound. Fresh Git-free different-root integration execution reproduces 1197 modules, 66/69 initializers, 145/149 native-equal rows, 141 controls and 13/229 collections in four modes; all 3628 regenerable artifacts match. Fresh integrated corpus passes 26048 comparisons. Native R6/R6a 21843 tests and 164 restored FASLs, 102 readers across 17 profiles, and 82 collector checks with ten killed faults reused by exact identity. O-97/O-98/O-101/O-102 closed; O-103 equivalent owner clauses recorded; O-104 saved-image witness and O-105 immediate encoding/FASL branch obligations carried. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit. Integration harness reviewed by audit 184. Accepted by the user after audit 184; no defect. O-106 through O-112 are recorded in STATUS and history; accounting NIL is only a declaration placeholder witness. Acceptance reuses the reviewed qualification, with no new execution or criterion credit.",
       "sha256": "b00e70062e62bbb75411124d195bdd8617ce179ceaff86fb72aa5afcb915b0f4",
-      "review_disposition": "ACCEPTED_INTEGRATION_RECORD_FOLLOWUP_HARNESS_PENDING_REVIEW",
-      "scope": "Audit 183 (18ae70b3), no defect: hash, FASL and GC proposals accepted and integrated together. Fourteen changed files match the reviewed stack byte-for-byte; 45 qualified Lisp sources and runtime inputs bound. Fresh Git-free different-root integration execution reproduces 1197 modules, 66/69 initializers, 145/149 native-equal rows, 141 controls and 13/229 collections in four modes; all 3628 regenerable artifacts match. Fresh integrated corpus passes 26048 comparisons. Native R6/R6a 21843 tests and 164 restored FASLs, 102 readers across 17 profiles, and 82 collector checks with ten killed faults reused by exact identity. O-97/O-98/O-101/O-102 closed; O-103 equivalent owner clauses recorded; O-104 saved-image witness and O-105 immediate encoding/FASL branch obligations carried. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit. New integration harness awaits adversarial review.",
-      "slot_credit": false
+      "slot_credit": false,
+      "review_commit": "fb23aeae3f2aa3e7b2fce7115c21c1ce7485aace"
     },
     {
       "id": "STAGE1-LOADER-LEVEL1-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-level1-r1/packet.json",
-      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
-      "scope": "Ordered level-1 work implemented directly, awaiting Claude review. Whole-file counts advance from 21/21/0 to 29/24/0; next compilation stop is %CURRENT-TCR in random-state seeding, and cross-load stops at SETF-FUNCTION-NAME in l1-boot-2. Four execution modes: 1343 modules, 86/93 initializers, 151/155 observations (148 native-equal and three explicit target expectations), 141 controls and 14/259 collections. Four pending cases and seven startup refusals keep execution INCOMPLETE. Native R6/R6a passes 21843 tests and restores 164 FASLs; 68 reader comparisons across 17 profiles and 26048 fresh corpus comparisons pass. Unchanged collector/owner qualification reused by exact identity (82 checks, ten killed faults). Product Lisp 22 added / 10 removed. Accepted originals 575/535, admission 2050/2231 (not recounted), ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "review_disposition": "ACCEPTED_AUDIT_184",
+      "scope": "Ordered level-1 work implemented directly, reviewed by Claude. Whole-file counts advance from 21/21/0 to 29/24/0; next compilation stop is %CURRENT-TCR in random-state seeding, and cross-load stops at SETF-FUNCTION-NAME in l1-boot-2. Four execution modes: 1343 modules, 86/93 initializers, 151/155 observations (148 native-equal and three explicit target expectations), 141 controls and 14/259 collections. Four pending cases and seven startup refusals keep execution INCOMPLETE. Native R6/R6a passes 21843 tests and restores 164 FASLs; 68 reader comparisons across 17 profiles and 26048 fresh corpus comparisons pass. Unchanged collector/owner qualification reused by exact identity (82 checks, ten killed faults). Product Lisp 22 added / 10 removed. Accepted originals 575/535, admission 2050/2231 (not recounted), ledger 21/12 unchanged; no target LOAD, boot or criterion credit. Accepted by the user after audit 184; no defect. O-106 through O-112 are recorded in STATUS and history; accounting NIL is only a declaration placeholder witness. Acceptance reuses the reviewed qualification, with no new execution or criterion credit.",
       "sha256": "36583e319bdf203905225d93a51f38660b11e8eb57b7f46ddd3be27cbc556651",
+      "slot_credit": false,
+      "review_commit": "fb23aeae3f2aa3e7b2fce7115c21c1ce7485aace"
+    },
+    {
+      "id": "STAGE1-WEAK-HASH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-weak-hash-r1/packet.json",
+      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+      "scope": "Runtime native-shape weak-key/weak-value hash support and restored weak constructors. 123 collector checks, 17 killed mutations and 52 new native-matched comparisons across four execution modes pass. Native R6/R6a: 21843 tests, 164 restored FASLs; 221 reader comparisons across 17 profiles; 26112 fresh full-corpus comparisons. Prefix remains INCOMPLETE with five inherited pending cases and four startup refusals. Owner image-builder strong policy remains; this prefix has unbound metadata globals, whose restored runtime constructors create weak tables. Native signed tracking-mask admission corrected. Current checkout whole-file count is 36/36/0 with l1-streams :BOOTSTRAP-TYPECHECK next; no weak-change count movement or acceptance credit. Product delta relative to task start: Lisp +54/-25, C +78/-17. Original failures and exact input/tool identities retained; Claude review pending.",
+      "sha256": "db324e5c84377e85e567aea95bf622620799cb20717e9c887360c8c824d9b082",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-LEVEL1-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-level1-r2/packet.json",
+      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+      "scope": "Ordered level-1 continuation and runtime weak tables, awaiting Claude review. Whole-file 29/24/0 to 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK. Canonical setter names, target special and sibling-code identities, random-source boundary, native weak constructors and collector fixed point. Four modes: 1478 modules, 93/97 initializers, 176 observations (169 native-computed, including one adapted RNG setup, and seven literal target expectations), 141 controls, 25/298 collections; 52 weak comparisons. Five pending cases and four startup refusals keep execution INCOMPLETE. Native 21843 tests and 164 restored FASLs; 221 U1 reader comparisons over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutations reused by exact source/owner/binary identity from STAGE1-WEAK-HASH-R1. O-106/O-107 fixed, O-108 reporting corrected, O-110 reconciled, O-111 Git dependency removed. Product Lisp +337/-69, collector C +78/-17. Originals 575/535, admission 2050/2231 and ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "sha256": "7bec3b889d5fec8408a9d904537c9cf627dab2f273a9ffcc362b5683f461478a",
       "slot_credit": false
     }
   ],

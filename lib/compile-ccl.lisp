@@ -306,6 +306,8 @@
 
 ;compile if needed.
 (defun target-compile-modules (modules target force-compile)
+  (declare (ftype (function (t) t) find-xload-backend
+                  backend-xload-info-compile-file-function))
   (if (not (listp modules)) (setq modules (list modules)))
   (in-development-mode
    (dolist (module modules t)
@@ -314,8 +316,8 @@
         (progn
           (require'nfcomp)
           (funcall (or (let ((xload (and (eq target :wasm32)
-                                       (find-xload-backend target))))
-                         (and xload (backend-xload-info-compile-file-function xload)))
+                                       (funcall 'find-xload-backend target))))
+                         (and xload (funcall 'backend-xload-info-compile-file-function xload)))
                        #'compile-file)
                    (car sources)
 			:output-file fasl

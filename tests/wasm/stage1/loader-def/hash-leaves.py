@@ -1,12 +1,13 @@
 """Reuse the accepted EQ-table service and internal B adapter by exact identity."""
 import hashlib
+from pathlib import Path
 import tarfile
 import product
 
 c = product.c
 
 
-def prepare(out):
+def prepare(out, equality=False):
     packet = c.PARENT / 'packet.json'
     assert c.sha(packet) == '509d916f2255a6707c3779744240f7a025b6a4499ca45e69c4e52100659d05a1'
     records = {row['path']: row['sha256'] for row in c.read(packet)['files']}
@@ -21,10 +22,10 @@ def prepare(out):
     runtime.mkdir(exist_ok=True)
     binaries = {}
     with tarfile.open(c.PARENT / 'execution.tar.gz') as archive:
-        for name in ('hash.wasm', 'hash-adapter.wasm'):
+        for name in ('hash.wasm', 'hash-adapter.wasm') + (('eql.wasm', 'compiled/runtime_eql.wasm') if equality else ()):
             body = archive.extractfile(name).read()
             binaries[name] = hashlib.sha256(body).hexdigest()
             assert binaries[name] == expected[name]
-            (runtime / name).write_bytes(body)
+            (runtime / Path(name).name).write_bytes(body)
     c.save(out / 'hash-leaves.json', dict(sources=sources, binaries=binaries,
-        reference=str(c.PARENT.name) + '/packet.json', packet=c.sha(packet)))
+        reference=str(c.PARENT.name) + '/packet.json', packet=c.sha(packet), equality=equality))

@@ -74,6 +74,72 @@ static U forward(State *s,U value) {
  queue(s)[s->queued++]=index;s->live++;
  return dest+tag;
 }
+static void drain(State *s) {
+ while(s->cursor<s->queued && !s->error){
+  Object *o=objects(s)+queue(s)[s->cursor++];U scan=o->scan,p=o->moved;
+  /* Native pools discard recyclable contents at every collection. */
+  if(LOAD(p)==338)STORE(p+4,NIL);
+  if(scan==0xffffffffu)scan=2;
+  else {
+   /* Header cells (including cached key/value) remain strong. */
+   if((LOAD(p)&255)==74&&(LOAD(p+8)&0x4000))scan=14;
+   p+=4;
+  }
+  for(U index=0;index<scan&&!s->error;index++){
+   U old=LOAD(p+4*index),v=forward(s,old);STORE(p+4*index,v);
+   /* Only bucket-key movement requests a rehash, and only when tracked. */
+   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v&&(LOAD(o->moved+8)&(1u<<30)))
+    STORE(o->moved+8,LOAD(o->moved+8)|(1u<<29));
+  }
+ }
+}
+/* Test original source references without retaining them. Validate identity
+ * and lowtag even for a pair that will be reaped. Never inspect a destination
+ * slot here: a to-space pointer in the source graph is a bad reference. */
+static U dead(State *s,U value) {
+ U tag=value&7,base,index;
+ if(value==NIL||value==77838u||(tag!=1&&tag!=6))return 0;
+ base=value-tag;
+ if(inside(base,s->to,s->end))return fail(s,BAD_REFERENCE);
+ if(!inside(base,s->from,s->limit))return 0;
+ index=find(s,base);
+ if(index==0xffffffffu||(tag==1)!=(objects(s)[index].scan==0xffffffffu))return fail(s,BAD_REFERENCE);
+ return !objects(s)[index].moved;
+}
+static void weak_pairs(State *s) {
+ /* Re-read original pairs on each pass. This both avoids forwarding a
+  * to-space pointer and lets a newly discovered weak vector join this pass.
+  * Productive passes copy at least one object; draining alone cannot let a
+  * pair keep its own weak element alive through its nonweak element. */
+ for(U progress=1;progress&&!s->error;){
+  progress=0;
+  for(U qi=0;qi<s->queued&&!s->error;qi++){
+   Object *o=objects(s)+queue(s)[qi];U h=o->moved,f,n,wi;
+   if(o->scan==0xffffffffu||(LOAD(h)&255)!=74||!((f=LOAD(h+8))&0x4000))continue;
+   n=o->scan;wi=(f&0x2000)?1:0;
+   for(U k=14;k+1<n&&!s->error;k+=2){
+    U key=LOAD(o->old+4+4*k),value=LOAD(o->old+8+4*k);
+    U kd=dead(s,key),vd=dead(s,value),before=s->live,nk,nv;
+    if(s->error||(wi?vd:kd))continue;
+    nk=forward(s,key);nv=forward(s,value);
+    STORE(h+4+4*k,nk);STORE(h+8+4*k,nv);
+    if(key!=nk&&(f&(1u<<30)))STORE(h+8,LOAD(h+8)|(1u<<29));
+    if(s->live!=before){progress=1;drain(s);}
+   }
+  }
+ }
+ for(U qi=0;qi<s->queued&&!s->error;qi++){
+  Object *o=objects(s)+queue(s)[qi];U h=o->moved,f,n,wi;
+  if(o->scan==0xffffffffu||(LOAD(h)&255)!=74||!((f=LOAD(h+8))&0x4000))continue;
+  n=o->scan;wi=(f&0x2000)?1:0;
+  for(U k=14;k+1<n&&!s->error;k+=2){
+   if(!dead(s,LOAD(o->old+4+4*(k+wi))))continue;
+   STORE(h+4+4*k,83);STORE(h+8+4*k,(f&0x800)?83:NIL);
+   STORE(h+36,LOAD(h+36)-4);
+   if(!(f&0x800))STORE(h+32,LOAD(h+32)+4);
+  }
+ }
+}
 static void root(State *s,U slot) {
  U old,value;
  if(s->error)return;
@@ -130,8 +196,8 @@ EXPORT U collect(U config) {
   if((tag&7)==2||(tag&7)==7){
    if(tag==74){
     /* Native Lisp constructors first fill every cell with the free marker.
-     * Once initialized, only strong vectors are admitted. All fields are
-     * tagged roots; the native weak-link word is zero on this target. */
+     * The native weak-link word stays zero; reachable weak vectors are
+     * discovered through the copying queue, with no source-space writes. */
     if(LOAD(p+4)==51){
      if(n<16||((n-14)&1)||n>32782||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
      for(U j=0;j<n;j++)if(LOAD(p+4+4*j)!=51)return reject(s,BAD_OBJECT);
@@ -139,7 +205,14 @@ EXPORT U collect(U config) {
      U capacity=n>=14?(n-14)/2:0,flags;
      if(n<16||((n-14)&1)||capacity>16384||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
      flags=LOAD(p+8);
-     if((flags&3)||(flags&~0x780c0800u)||LOAD(p+52)!=capacity*4)return reject(s,BAD_OBJECT);
+     /* UPDATE-HASH-FLAGS uses -(1 << track_keys_bit), so a native tracked
+      * fixnum also carries the sign bit. It is not an independent flag. */
+     if(flags&0x80000000u){
+      if(!(flags&(1u<<30)))return reject(s,BAD_OBJECT);
+      flags&=0x7fffffffu;
+     }
+     if((flags&3)||(flags&~0x780c6800u)||LOAD(p+52)!=capacity*4)return reject(s,BAD_OBJECT);
+     if((flags&0x2000)&&!(flags&0x4000))return reject(s,BAD_OBJECT);
      if((LOAD(p+12)&3)||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=51)return reject(s,BAD_OBJECT);
      if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
      if(LOAD(p+40)!=NIL&&((LOAD(p+40)&3)||LOAD(p+40)/4>=n))return reject(s,BAD_OBJECT);
@@ -227,20 +300,8 @@ EXPORT U collect(U config) {
  }
  if(s->extra_count>s->logcap-s->updates)fail(s,NO_WORKSPACE);
  for(index=0;index<s->extra_count&&!s->error;index++)root(s,LOAD(s->extra+4*index));
- while(s->cursor<s->queued && !s->error){
-  Object *o=objects(s)+queue(s)[s->cursor++];
-  scan=o->scan;p=o->moved;
-  /* Native pools discard recyclable contents at every collection.
-   * Clear only the destination; source/root publication remains atomic. */
-  if(LOAD(p)==338)STORE(p+4,NIL);
-  if(scan==0xffffffffu)scan=2;else p+=4;
-  for(index=0;index<scan&&!s->error;index++){U old=LOAD(p+4*index),v=forward(s,old);STORE(p+4*index,v);
-   /* Payload index 14 is object word 15: first key. Cached keys are roots,
-    * but only bucket-key movement requests a rehash. Destination-only write
-    * preserves the collector's source/root atomicity on refusal. */
-   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v&&(LOAD(o->moved+8)&(1u<<30)))
-    STORE(o->moved+8,LOAD(o->moved+8)|(1u<<29));}
- }
+ drain(s);
+ weak_pairs(s);
  if(s->error)return s->error;
  /* No call, poll, owner callback or allocation between validation and commit. */
  for(index=0;index<s->updates;index++)STORE(updates(s)[index].slot,updates(s)[index].value);

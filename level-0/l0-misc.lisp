@@ -535,7 +535,7 @@
 (defvar %documentation-lock% nil)
 
 (setq %documentation
-  (make-hash-table :weak #-wasm32-target t #+wasm32-target nil
+  (make-hash-table :weak t
                    :size 100 :test 'eq :rehash-threshold .95)
   %documentation-lock% (make-lock))
 

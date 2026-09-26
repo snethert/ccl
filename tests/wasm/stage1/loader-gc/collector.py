@@ -10,10 +10,13 @@ import storage
 c = product.c
 
 
-def run(out):
+def run(out, product_provider=None, extra_cases=(), extra_mutants=()):
+    product = product_provider or globals()["product"]
     out.mkdir(parents=True, exist_ok=True)
+    product.prepare_runtime(out)
     product.runtime(out)
-    schema = c.read(product.HERE / 'counter-schema.json')
+    here = Path(__file__).resolve().parent
+    schema = c.read(here / 'counter-schema.json')
     parent = c.read(c.ROOT / schema['parent'])
     assert c.sha(c.ROOT / schema['parent']) == schema['parent_sha256']
     assert parent['reserved'] == schema['reserved_before'] == [204, 256]
@@ -23,7 +26,8 @@ def run(out):
     assert all(f['offset'] + f['width'] <= 204 for f in parent['fields'])
     code = (product.HERE.parent / 'collector-owner/check.mjs').read_text()
     extra = (product.HERE.parent / 'loader-aref/collector-cases.mjs').read_text()
-    extra += (product.HERE / 'collector-cases.mjs').read_text()
+    extra += (here / 'collector-cases.mjs').read_text()
+    extra += ''.join(Path(p).read_text() for p in extra_cases)
     anchor = 'fs.writeFileSync(process.argv[3],'
     assert code.count(anchor) == 1
     (out / 'check.mjs').write_text(code.replace(anchor, extra + '\n' + anchor))
@@ -61,6 +65,9 @@ def run(out):
     gate = ' if(LOAD(s->tcr+204)>=536870911u)return reject(s,BAD_OWNER);'
     assert source.count(gate) == 1
     faults.append(('COUNT-BOUND', source.replace(gate, ''), 'raw-collection-count-exhaustion'))
+    for name, old, new, label in extra_mutants:
+        assert source.count(old) == 1, name
+        faults.append((name, source.replace(old, new), label))
     results = []
     for name, body, label in faults:
         folder = out / name; folder.mkdir(exist_ok=True)

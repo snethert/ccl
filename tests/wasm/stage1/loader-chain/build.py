@@ -11,7 +11,8 @@ HERE = Path(__file__).resolve().parent
 
 
 def run(out, product, witnesses, inputs, checks=(), level1=False,
-        execution_files=None, support_forms=(), preflights=(), crossload_stop=None):
+        execution_files=None, support_forms=(), preflights=(), crossload_stop=None,
+        extra_files=()):
     c = product.c
     out.mkdir(parents=True, exist_ok=True)
     bodies = product.sources()
@@ -23,6 +24,9 @@ def run(out, product, witnesses, inputs, checks=(), level1=False,
     (out / 'packages.lisp').write_text('\n'.join(p.read_text() for p in witnesses))
     (out / 'load-checks.lisp').write_text('\n'.join(p.read_text() for p in checks))
     (out / 'support-forms.lisp').write_text('(' + '\n'.join(support_forms) + ')\n')
+    extra_names = [p.stem for p in extra_files]
+    assert len(set(extra_names)) == len(extra_names)
+    (out / 'extra-files.lisp').write_text('(' + ' '.join(json.dumps(n) for n in extra_names) + ')\n')
     for filename, source in [('array-boundary.lisp', 'level-0/WASM32/w32-lap.lisp'),
                              ('bignum-boundary.lisp', 'level-0/l0-bignum32.lisp')]:
         (out / filename).write_text(bodies[source])
@@ -70,6 +74,8 @@ def run(out, product, witnesses, inputs, checks=(), level1=False,
         fixture.mkdir(parents=True, exist_ok=True)
         for name in ('package-first.lisp', 'package-second.lisp'):
             shutil.copyfile(HERE.parent / 'loader-level0' / name, fixture / name)
+        for path in extra_files:
+            shutil.copyfile(path, fixture / path.name)
         invoke(HERE / 'support.lisp', 'support.log')
         shutil.copyfile(fixture / 'package-support.lisp', out / 'package-support.source.lisp')
         # Do not rely on sources, an instrumented boot image, or the producer's heap.
@@ -86,7 +92,7 @@ def run(out, product, witnesses, inputs, checks=(), level1=False,
                 fasls.append(name)
                 loaded.append(row)
         assert crossload_stop is None or stopped, 'cross-load stop not compiled'
-        for name in ('package-support', 'package-first', 'package-second'):
+        for name in ['package-support', 'package-first', 'package-second', *extra_names]:
             (fixture / (name + '.lisp')).unlink()
             fasls.append(name + '.w32fsl')
         (out / 'load-order.lisp').write_text('(' + ' '.join(json.dumps(x) for x in fasls) + ')\n')
@@ -102,7 +108,8 @@ def run(out, product, witnesses, inputs, checks=(), level1=False,
             (out / 'prefix').rename(out / 'whole-image')
             selected = [Path(row['fasl']).name for row in completed
                         if execution_files(row['file'])]
-            selected += ['package-support.w32fsl', 'package-first.w32fsl', 'package-second.w32fsl']
+            selected += [name + '.w32fsl' for name in
+                         ['package-support', 'package-first', 'package-second', *extra_names]]
             (out / 'load-order.lisp').write_text('(' + ' '.join(json.dumps(x) for x in selected) + ')\n')
             invoke(HERE / 'load.lisp', 'execution-load.log')
             c.save(out / 'execution-files.json', dict(fasls=selected,

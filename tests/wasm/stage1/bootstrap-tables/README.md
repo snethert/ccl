@@ -1,5 +1,11 @@
 # Stage 1 bootstrap strong-table substitute
 
+2026-09-26 scope update: runtime-created native-shape hash tables now use weak
+semantics; their former Wasm strong-substitute guards have been removed.
+This historical policy still applies to image-built owner-created tables,
+including `%lambda-lists%` and `%setf-function-names%`. Converting that image
+representation is a separate step. See [weak hash support](../loader-level1/weak-hash.md).
+
 User decision: **“Use the Stage 1 strong substitute.”** Bootstrap tables that
 would be weak in native CCL may retain both keys and values in Stage 1. Weak
 semantics remain owed in Stage 2. This changes lifetime, memory use, counts and

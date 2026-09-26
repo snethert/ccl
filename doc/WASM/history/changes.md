@@ -1,3 +1,53 @@
+## 2026-09-26 — Whole-file 29/24/0 to 36/36/0; next l1-streams type checking
+
+The [level-1 continuation](../../../tests/wasm/stage1/loader-level1/continuation.md)
+adds seven compiled files and twelve cross-loaded files. The cold loader now
+admits canonical SETF names across independent FASLs. Its code records preserve
+target-only special bindings and reserve nested code identities before resolving
+sibling references. The Wasm random-source boundary replaces native TCR and
+OS entropy dependencies; wide byte tests and bignum LDB preserve the ordinary
+random generator's bits. RNG, local specials, mutual LABELS and list sorting
+execute. The next compile stop is `l1-streams`, `:BOOTSTRAP-TYPECHECK`.
+
+Runtime native-shape weak-key and weak-value hash tables use the collector's
+fixed-point traversal and the native Lisp hash definitions. Runtime weak
+constructors are restored, including lambda lists (O-110); metadata built by
+the image owner retains its existing representation. The separate weak pack
+retains its 123 collector checks, 17 killed mutations and original failures.
+Its collector, owner, binary and six source/driver pins are unchanged, so those
+checks are reused by exact identity in the final continuation record.
+
+O-106 is fixed by quoted calls plus local function-type declarations: quoted
+FUNCALL alone still warned, as the retained failed attempt shows. The final
+native build has neither dispatcher warning. O-107 changes the CPU family to
+`:wasm`, yielding the conventional `WasmWASM32`; the target CPU witness passes.
+O-111's readers now use the pinned pristine U1 archive without Git and the
+runner checks its dispatch report directly. O-108 is corrected in documentation:
+accounting values are declaration placeholders. Seven rows use literal target
+expectations, including four seed rows omitted from the earlier weak summary's
+classification. Of the other 169 native-computed observations, one fresh-RNG
+case uses an explicitly equivalent native seed setup. No raw result changed.
+
+All four modes run 1,478 modules, 93/97 initializers, 176 observations and
+141 controls, with 25/298 collections; all 52 weak-table comparisons match native.
+Five pending cases and four startup refusals remain explicit, so execution is
+INCOMPLETE. Native R6/R6a passes 21,843 tests and restores 164 FASLs; 221 reader
+comparisons cover all 17 existing profiles; 26,112 corpus comparisons pass
+freshly. Dispatch covers all 18 entries and cold evaluation has 13 refusal controls.
+
+The final pack is `2026-09-26-loader-level1-r2`; original development failures
+and input/tool identities are retained, generated binaries inventoried by hash,
+and unchanged collector evidence referenced rather than copied. Product Lisp
+changes **337 added / 69 removed**; collector C **78 added / 17 removed**.
+Final execution costs 340.36 seconds, native 181.65, corpus preparation 421.78
+and corpus execution 228.07. These are validation costs, not runtime benchmarks.
+
+The actual diff/commit awaits Claude's adversarial review. Audit 184 accepted
+only the preceding prefix. Whole-file counts are **36/36/0 of 167**, originals
+**575/535**, admission **2,050/2,231** (not recounted), ledger **21/12**. O-109
+boot defaults, O-112 boot order, O-104 restored-image GC locks and O-105 target
+FASL obligations remain open. No target LOAD, full boot or criterion credit.
+
 ## 2026-09-26 — Audit 184 accepted; whole-file counts remain 29/24/0
 
 The user instructed “accept and proceed”. Audit `fb23aeae` is merged

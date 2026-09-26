@@ -15,7 +15,14 @@
                    (push (list :object (cons "file" name)) rows)
                    (format t "~&ORDERED-COMPILE ~a~%" name)
                    (multiple-value-bind (fasl modules warnings failure)
-                       (apply compiler source options)
+                       (handler-bind
+                           ((wasm32-compiler::unsupported-wasm32-code
+                              (lambda (condition)
+                                (format t "~&ORDERED-REFUSAL ~s: ~a~%"
+                                        (and wasm32-compiler::*pool-current*
+                                             (afunc-name wasm32-compiler::*pool-current*))
+                                        condition))))
+                         (apply compiler source options))
                      (setf (cdr (car rows))
                            (append (cdr (car rows))
                                    (list (cons "fasl" (and fasl (enough-namestring fasl (truename "ccl:"))))

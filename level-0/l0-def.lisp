@@ -37,9 +37,7 @@
     initp))
 
 (setq *lfun-names*
-      #-wasm32-target (make-hash-table :test 'eq :weak t)
-      ;; Stage 1 keeps these names strongly, as it does other bootstrap tables.
-      #+wasm32-target (%wasm-make-class-table 64))
+      (make-hash-table :test 'eq :weak t))
 
 (defun lookup-lfun-name (lfun) 
   (gethash lfun *lfun-names*))
@@ -185,7 +183,7 @@
                  (%wasm-function-name fun))))
       (when set-name-p
         (unless *wasm-function-vector-names*
-          (setq *wasm-function-vector-names* (%wasm-make-class-table 16)))
+          (setq *wasm-function-vector-names* (make-hash-table :test 'eq :weak t :size 16)))
         (puthash fun *wasm-function-vector-names* new-name))
       old)))
 

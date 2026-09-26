@@ -1916,7 +1916,8 @@
   (declaim (inline %16-random-bits)))
 
 (defun %16-random-bits (state)
-  (logand #xffff (the fixnum (%mrg31k3p state))))
+  (logand #xffff (the #-wasm32-target fixnum #+wasm32-target (unsigned-byte 31)
+                     (%mrg31k3p state))))
 
 #+64-bit-target
 (defun %big-fixnum-random (number state)
@@ -1935,6 +1936,15 @@
 ;;; produced by %mrg31k2p.
 #+32-bit-target
 (defun %bignum-random (number state)
+  #+wasm32-target
+  (let* ((bits (+ (integer-length number) 8))
+         (half-words (ceiling bits 16))
+         (dividend 0))
+    ;; Build the same low-to-high sequence of 16-bit words without treating
+    ;; a bignum as an array of a different element type.
+    (dotimes (i half-words (mod dividend number))
+      (setq dividend (logior dividend (ash (%16-random-bits state) (* i 16))))))
+  #-wasm32-target
   (let* ((bits (+ (integer-length number) 8))
          (half-words (ash (the fixnum (+ bits 15)) -4))
          (long-words (ash (+ half-words 1) -1))
@@ -1985,6 +1995,7 @@
 (defun %single-float-random (number state)
   (declare (single-float number))
   (let ((bits (%mrg31k3p state)))
+    #+wasm32-target (setq bits (logand bits #x7fffff))
     (* number
        (1- (the single-float (make-short-float-from-fixnums bits 127 1))))))
 
@@ -1992,6 +2003,7 @@
   (declare (double-float number))
   (let ((hi (%mrg31k3p state))
         (lo (%mrg31k3p state)))
+    #+wasm32-target (setq hi (logand hi #xffffff) lo (logand lo #xfffffff))
     (* number
        (1- (the double-float (make-float-from-fixnums hi lo 1023 1))))))
 
@@ -1999,7 +2011,10 @@
   (if (not (typep state 'random-state)) (report-bad-arg state 'random-state))
   (cond
     ((and (fixnump number) (> (the fixnum number) 0))
-     #+32-bit-target
+     ;; The portable generator retains all 31 bits on Wasm; its output may
+     ;; therefore be a bignum even when the requested bound is a fixnum.
+     #+wasm32-target (mod (%mrg31k3p state) number)
+     #+(and 32-bit-target (not wasm32-target))
      (fast-mod (%mrg31k3p state) number)
      #+64-bit-target
      (if (< number mrg31k3p-limit)

@@ -26,6 +26,7 @@
 (defvar *b-call-mode* nil)
 (defvar *wasm32-fasl-publication* nil)
 (defvar *wasm32-fasl-functions* nil)
+(defvar *wasm32-fasl-specials* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
   (when (and (null *module-result-tag*) *wasm32-fasl-publication*)
@@ -390,6 +391,8 @@
   (and var (logbitp ccl::$vbitspecial (ccl::nx-var-bits var))))
 (defun b-special-symbol (symbol)
   (when *bootstrap-front-end*
+    (when *wasm32-fasl-publication*
+      (pushnew symbol *wasm32-fasl-specials* :test #'eq))
     (return-from b-special-symbol (bootstrap-symbol symbol)))
   (let ((pair (assoc symbol '((ccl::*interrupt-level* . "interrupt_level") (ccl::%wasm-gc-service% . "gc_service") (ccl::%wasm-interrupt-service% . "interrupt_service")))))
     (when pair (pushnew (cdr pair) *b-symbols* :test #'equal)
@@ -5181,8 +5184,10 @@
     (string . stringp) (simple-string . ccl::simple-string-p)
     (simple-base-string . ccl::simple-base-string-p)
     (simple-vector . simple-vector-p) (simple-bit-vector . simple-bit-vector-p)
+    (bit-vector . bit-vector-p) (pathname . pathnamep)
     (vector . vectorp) (array . arrayp) (sequence . ccl::sequencep)
-    (function . functionp) (package . packagep)
+    (function . functionp) (package . packagep) (random-state . random-state-p)
+    (hash-table . hash-table-p) (ccl::gvector . ccl::gvectorp)
     (ccl::eql-specializer . ccl::eql-specializer-p)
     (class . ccl::classp) (ccl::standard-method . ccl::standard-method-p)
     (ccl::macptr . ccl::macptrp)
@@ -5223,7 +5228,7 @@
             (and (= (length type) 2)
                  (or (eq (second type) '*)
                      (and (integerp (second type))
-                          (<= 1 (second type) (if (eq (car type) 'signed-byte) 30 29))))))
+                          (<= (if (eq (car type) 'signed-byte) 1 0) (second type) 536870911)))))
            (mod (and (= (length type) 2) (integerp (second type)) (<= 1 (second type) 536870911)))))))
 
 (defun bootstrap-type-test (value type)
@@ -5262,12 +5267,32 @@
           ((eq (car type) 'mod) (bootstrap-type-test value `(integer 0 (,(second type)))))
           ((member (car type) '(signed-byte unsigned-byte))
            (let ((bits (second type)))
-             (bootstrap-type-test value
+             (if (and (integerp bits)
+                      (> bits (if (eq (car type) 'signed-byte) 30 29)))
+               ;; INTEGER-LENGTH handles either representation, including
+               ;; negative signed bounds, without synthesizing pool literals.
+               (b-wat "(if (result i32) ~a (then ~a) (else (i32.const 0)))"
+                      (predicate 'integerp)
+                      (let ((length-test
+                              (bootstrap-true-p
+                               (bootstrap-primary
+                                (bootstrap-numeric-call '<=
+                                  (list (make-b-raw-code
+                                         :text (bootstrap-primary
+                                                (b-integer-call '%integer-length
+                                                  (list (make-b-raw-code :text value)))))
+                                        (bootstrap-constant
+                                         (if (eq (car type) 'signed-byte) (1- bits) bits))))))))
+                        (if (eq (car type) 'signed-byte)
+                          length-test
+                          (b-wat "(if (result i32) ~a (then ~a) (else (i32.const 0)))"
+                                 (bootstrap-type-test value '(integer 0 *)) length-test))))
+               (bootstrap-type-test value
                (if (eq bits '*)
                  (if (eq (car type) 'signed-byte) 'integer '(integer 0 *))
                  (if (eq (car type) 'signed-byte)
                    `(integer ,(- (ash 1 (1- bits))) ,(1- (ash 1 (1- bits))))
-                   `(integer 0 ,(1- (ash 1 bits))))))))
+                   `(integer 0 ,(1- (ash 1 bits)))))))))
           ((eq (car type) 'integer)
            (let ((test "(i32.const 1)"))
              (loop for bound in (cdr type) for lower = t then nil do
@@ -5409,12 +5434,23 @@
              (make-b-raw-code :text
                (bootstrap-operands forms
                  (lambda (values)
-                   (let ((x (second values)))
-                     (b-wat "(if (i32.and ~a (i32.const 3)) (then
-                               (throw $call_error (i32.const 32))))
-                             (i32.shl (i32.and (i32.shr_s (i32.shr_s ~a (i32.const 2))
-                                                       (i32.const ~d)) (i32.const ~d)) (i32.const 2))"
-                            x x (min position 31) (1- (ash 1 size))))))))))))))
+                   (let* ((x (second values))
+                          (mask (1- (ash 1 size)))
+                          (slow
+                            (bootstrap-primary
+                             (bootstrap-logical-call
+                              'logand
+                              (list (make-b-raw-code
+                                     :text (bootstrap-primary
+                                            (b-integer-call '%integer-ash
+                                              (list (make-b-raw-code :text x)
+                                                    (bootstrap-constant (- position))))))
+                                    (bootstrap-constant mask))))))
+                     (b-wat "(if (result i32) (i32.and ~a (i32.const 3))
+                               (then ~a)
+                               (else (i32.shl (i32.and (i32.shr_s (i32.shr_s ~a (i32.const 2))
+                                                       (i32.const ~d)) (i32.const ~d)) (i32.const 2))))"
+                            x slow x (min position 31) mask))))))))))))
 
 
 ;;; A lexpr points at the count word of a retained root frame. Validate that
@@ -6087,7 +6123,7 @@
   ;; TABLE contains distinct imported values (symbols and the fixed type
   ;; specifier above). Wires refer to it by index so the loader can keep the
   ;; code record in scratch while all imported values live in the image.
-  (list 3 (getf module :name)
+  (list 4 (getf module :name)
         (wasm32-record-arity (svref (getf module :pool) 0) table)
         (getf module :captures)
         (getf module :wat)
@@ -6098,7 +6134,12 @@
                 (getf module :symbols))
         (mapcar #'second (getf module :code-imports))
         (copy-list (getf module :keywords))
-        (mapcar (lambda (child) (wasm32-code-record child table)) (getf module :children))))
+        (mapcar (lambda (child) (wasm32-code-record child table)) (getf module :children))
+        ;; Host binding indices say nothing about specials first introduced
+        ;; in target code, including locally declared special variables.
+        (loop for (symbol) in (getf module :symbols)
+              when (member symbol *wasm32-fasl-specials* :test #'eq)
+              collect (position symbol table :test #'eq))))
 
 (defun wasm32-xfunction (module)
   (let* ((pool (getf module :pool)) (n (length pool))
@@ -6108,6 +6149,11 @@
     (setf (ccl::uvref f 0) record
           (ccl::uvref f 1) (coerce table 'simple-vector))
     (dotimes (i n) (setf (ccl::uvref f (+ i 2)) (svref pool i)))
+    ;; FASL-DEFUN installs a symbol's function cell.  As on native targets,
+    ;; a setter's binding name is its canonical uninterned symbol; NFComp
+    ;; serializes that identity as SETF-FUNCTION-NAME, not as a list address.
+    (when (ccl::setf-function-name-p (svref pool 5))
+      (setf (ccl::uvref f 7) (ccl::setf-function-name (cadr (svref pool 5)))))
     ;; COMPILE-FILE can retain a previously emitted function as an immediate
     ;; in a later initializer (for example %FHAVE aliases in l0-def). Admit
     ;; only objects created by this compilation, never host function objects
@@ -6122,6 +6168,7 @@
          (*bootstrap-emitted* (make-hash-table :test #'eq))
          (*bootstrap-symbols* nil) (*bootstrap-callees* nil)
          (*bootstrap-dynamic-call* nil) (*bootstrap-self-call* nil)
+         (*wasm32-fasl-specials* nil)
          (*b-keywords* nil)
          (module (catch *module-result-tag*
                    (b-call-pass2 afunc)

@@ -13,7 +13,7 @@ const read=n=>JSON.parse(fs.readFileSync(artifacts+'/'+n));
 const manifest=read('manifest.json'),record=read('heap-image.json'),codeSet=read('code-set.json');
 const policy=JSON.parse(fs.readFileSync(new URL('./policy.json',import.meta.url)));
 const versions=JSON.parse(fs.readFileSync(new URL('./versions.json',import.meta.url)));
-const expected={...versions,modules:codeSet.modules.map(m=>[m.name,m.code_id,m.generation]),table_capacity:2048,reserved_slots:[0,1,2,3],
+const expected={...versions,modules:codeSet.modules.map(m=>[m.name,m.code_id,m.generation]),table_capacity:2048,reserved_slots:[0,1,2,3,4],
  slots:Object.fromEntries(codeSet.modules.map(m=>[m.code_id,m.code_id+(process.argv.includes('--relocate')?20:8)]))};
 const payload=fs.readFileSync(artifacts+'/heap.payload.bin'),fixed=fs.readFileSync(artifacts+'/static.bin');
 const memory=new WebAssembly.Memory({initial:Math.ceil((20971520+65536)/65536),maximum:32769,shared:true});
@@ -24,7 +24,7 @@ const regions=[{name:'static',start:manifest.static.start,size:fixed.length,kind
 const resolve=r=>Object.hasOwn(r,'heap')?start+r.heap+r.tag:regions.find(x=>x.name===r.region).start+r.offset+r.tag;
 // TCR, stacks and collector as the accepted single-Worker fixtures lay them out.
 const image=[['image',manifest.static.start,manifest.static.start+fixed.length],['image',start,end],['image',manifest.roots.start,manifest.roots.start+64]];
-const layoutRegions=[['tcr',TCR,TCR+256],...image,['vstack',ROOT,ROOT+32776],['temp',196608,212992],['control',212992,229376],['external',EXTERNAL,EXTERNAL+4096],['bindings',BINDINGS,BINDINGS+4096],['image',280000,280096],['c-stack',1048576,1114112],['root-list',4600000,5648576],['scratch',12582912,20971520]].map(([role,s,e],i)=>({name:role+'-'+i,role,start:s,end:e}));
+const layoutRegions=[['tcr',TCR,TCR+256],...image,['vstack',ROOT,ROOT+32776],['temp',196608,212992],['control',212992,229376],['external',EXTERNAL,EXTERNAL+4096],['bindings',BINDINGS,BINDINGS+4096],['image',280000,280128],['c-stack',1048576,1114112],['root-list',4600000,5648576],['scratch',12582912,20971520]].map(([role,s,e],i)=>({name:role+'-'+i,role,start:s,end:e}));
 const layout={version:1,collector:'copying',workers:1,egc:false,tcr:TCR,maximumPages:32769,logCapacity:262144,regions:layoutRegions,
  spaces:[base,base+65536].map((s,i)=>({name:'heap-'+i,start:s,end:s+65536})),
  groups:['module-constants','callbacks','registry','host'].map((kind,i)=>({kind,slots:[EXTERNAL+4*i]}))};
@@ -159,6 +159,11 @@ const encode=a=>a===null?N:a===true?T:typeof a==='number'?a*4:symbolAddress(...a
 const cases=JSON.parse(fs.readFileSync(casesPath)),observations=[],failures=[];
 const pendingCases=JSON.parse(fs.readFileSync(new URL('./pending-cases.json',import.meta.url)));
 for(const c of cases){
+ if(c.beforeCollect){
+  const setup=c.beforeCollect;
+  callObject(get(symbolAddress(...setup.call)+6),setup.args.map(encode));
+  collect();
+ }
  const fn=get(symbolAddress(...c.call)-6+12);
  try{observations.push({id:c.id,values:callObject(fn,c.args.map(encode))});}
  catch(error){
