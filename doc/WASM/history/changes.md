@@ -1,3 +1,22 @@
+## 2026-09-26 — Audit 182 imported; hash/FASL integration held
+
+Merge Claude's `f716268e` unchanged, preserving the intervening CLIM documentation
+commit. Tier 0 verifies audit-181 integration and P6 adoption. Tier 2 independently
+reproduces the stacked hash/FASL proposals, all 21 source-free level-0 FASLs,
+143 native-equal rows in four modes, all 3,595 regenerable artifacts, and the
+native, reader, corpus and collector results.
+
+O-97 is a product defect: real GC-count reads and all stores must agree with the
+collector owner's successful collections. O-98 requires directed admission
+controls and killed mutants before integration. O-99 immediate cross-encoding
+is owed with target LOAD; O-100 descriptor and boundary controls, O-101 forced
+tracking, and O-102 retention hygiene are carried into the repair work.
+
+No implementation is accepted or integrated. Actual whole-file counts remain
+21/21/0, accepted original execution 575/535, ledger 21/12. Cost: documentation
+and review import only; no new runtime execution, retained pack, or product Lisp
+changes. The repair proposal is the next deliverable.
+
 ## 2026-09-25 — Whole-file 20/20/0 → 21/21/0; target code installation remains
 
 The [FASL reader proposal](../../../tests/wasm/stage1/loader-fasl/README.md)
