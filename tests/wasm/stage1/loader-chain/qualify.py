@@ -41,6 +41,8 @@ def run(kind, out, product):
         env = c.read(base / 'execution-environment.json')
         env['files']['collector.wasm'] = runtime['binary']
         env['array_runtime'] = runtime
+        if hasattr(product, 'prepare_execution_runtime'):
+            product.prepare_execution_runtime(base, env)
         c.save(base / 'execution-environment.json', env)
         return result
     product.module('chain_corpus', HERE.parent / 'loader/corpus.py').run(

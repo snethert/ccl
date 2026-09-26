@@ -1,0 +1,25 @@
+{
+  "append_field": {
+    "alignment": 4,
+    "classification": "bounded",
+    "description": "Successful copying transactions, 0..536870911; never wraps.",
+    "group": "allocation_area",
+    "name": "gc_count",
+    "offset": 204,
+    "owner": "collector",
+    "update": "Copying service commit only; exhaustion refuses before publication.",
+    "width": 4
+  },
+  "parent": "doc/WASM/contracts/tcr.v2.json",
+  "parent_sha256": "42d50182a2d26fcd0a84c8f6da625db7f33fd7608547a45af082dfe6f539f107",
+  "profile": "single-worker-copying-gc-count-v1",
+  "reserved_after": [
+    208,
+    256
+  ],
+  "reserved_before": [
+    204,
+    256
+  ],
+  "size_bytes": 256
+}

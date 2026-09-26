@@ -32,6 +32,12 @@ for(let i=0;i<4;i++)put(EXTERNAL+4*i,N);
 set(0,1);set(8,1);set(32,2);set(48,base);set(52,base+65536);set(56,base);set(68,ROOT+8);set(72,ROOT+32776);set(64,ROOT+8);set(128,ROOT);put(ROOT,0);put(ROOT+4,0);
 set(80,196608);set(76,196608);set(84,212992);set(92,212992);set(88,212992);set(96,229376);set(104,BINDINGS);set(108,0);set(120,ROOT+8200);set(124,ROOT+8264);set(188,N);
 const binary=n=>fs.readFileSync(runtime+'/'+n+'.wasm'),hash=b=>createHash('sha256').update(b).digest('hex');
+const runtimeIdentity=JSON.parse(fs.readFileSync(runtime+'/array-runtime.json'));
+const gcCountOffset=runtimeIdentity.gc_count?.offset;
+if(gcCountOffset!==undefined){
+ assert.equal(gcCountOffset,204);assert.equal(runtimeIdentity.gc_count.maximum,536870911);
+ assert.equal(hash(fs.readFileSync(runtime+'/collector-owner.mjs')),runtimeIdentity.owner);
+}
 const owner=CollectorOwner.create(memory,binary('collector'),hash(binary('collector')),layout);
 let collections=0;
 function collect(){const old=t(56),limit=t(52);owner.atSafepoint(o=>o.collect());new Uint8Array(memory.buffer,old,limit-old).fill(0xdd);collections++;}
@@ -79,7 +85,8 @@ function callObject(fn,args,decodeValues=true){
  put(ROOT+4,args.length);args.forEach((v,i)=>put(ROOT+8+i*4,v));set(64,ROOT+8);set(128,ROOT);set(116,0);set(120,ROOT+8200);set(124,ROOT+8264);
  const before=Array.from({length:64},(_,i)=>t(i*4));let result;
  try{result=entry(fn,args.length);}catch(error){if(error.is?.(env.call_error))throw Error('checked '+error.getArg(env.call_error,0));if(error.is?.(env.type_error))throw Error('type_error '+error.getArg(env.type_error,0)+' '+error.getArg(env.type_error,1));throw error;}
- for(let i=0;i<64;i++)if(![48,52,56,104,108,116].includes(i*4))assert.equal(t(i*4),before[i],'TCR '+i*4);
+ for(let i=0;i<64;i++)if(![48,52,56,104,108,116,gcCountOffset].includes(i*4))assert.equal(t(i*4),before[i],'TCR '+i*4);
+ if(gcCountOffset!==undefined)assert.equal(t(gcCountOffset),owner.collectionCount,'owner collection count');
  assert.equal(result[1],t(116));assert.equal(result[0]>>>0,result[1]?get(ROOT+8200):N);
  const values=Array.from({length:result[1]},(_,i)=>(decodeValues?decode(get(ROOT+8200+i*4)):get(ROOT+8200+i*4)));put(ROOT+4,0);set(116,0);return values;
 }
@@ -162,6 +169,6 @@ for(const c of cases){
 import {controls as inheritedControls} from './definition-controls.mjs';
 import {controls as extraControls} from './extra-controls.mjs';
 const controls=ctx=>[...inheritedControls(ctx),...extraControls(ctx)];
-const refusals=controls({get,put,N,T,EXTERNAL,TCR,t,symbolAddress,callObject});
+const refusals=controls({get,put,N,T,EXTERNAL,TCR,t,symbolAddress,callObject,collect,owner});
 console.log(JSON.stringify({hashLeaves,refusals,status:failures.length?'INCOMPLETE':startupRefusals.length?'WITNESSES_PASS_STARTUP_INCOMPLETE':'PASS',failures,startupRefusals,initializersQueued:coldLoad.length,initializersExecuted:coldResults.length,coldResults,
  startupBlocker:startupRefusals.length?startupRefusals[0].name:initialized?null:'CCL::SET-PACKAGE',blockedCalls,observations,metadata,collections,objects:admitted.objects,modules:codeSet.modules.length}));

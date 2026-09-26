@@ -1,5 +1,6 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';
-export async function install({dir,memory,tcr,get,put,service,collector,config,result,collect,calculateI,calculateF,ensure}){
+export async function install({dir,memory,tcr,get,put,service,collector,config,result,collect,calculateI,calculateF,ensure,gcCount=null}){
+ if(gcCount){assert.equal(gcCount.offset,204);assert.equal(gcCount.maximum,536870911);}
  const NIL=77825,registry=4096,capacity=4352,table=new WebAssembly.Table({element:'anyfunc',initial:capacity}),tail_table=new WebAssembly.Table({element:'anyfunc',initial:capacity});
  const call_error=new WebAssembly.Tag({parameters:['i32']}),type_error=new WebAssembly.Tag({parameters:['i32','i32']}),nonlocal_exit=new WebAssembly.Tag({parameters:['i32']});
  const env={memory,tcr,table,tail_table,code_registry:registry,call_error,type_error,nonlocal_exit},symbols={},keywords={},codes={},functions=new Map(),entries=new Map();
@@ -92,7 +93,8 @@ export async function install({dir,memory,tcr,get,put,service,collector,config,r
    const bindings=Array.from({length:4096},(_,i)=>get(680000+4*i));
    const before=Array.from({length:64},(_,i)=>get(tcr+4*i));let pair;
    let failure;try{pair=entry.fn(entry.self,args.length);}catch(e){failure=e;}
-   for(let i=0;i<64;i++)if(![48,52,56,116].includes(i*4))assert.equal(get(tcr+4*i),before[i],name+' restored TCR '+i*4);
+   for(let i=0;i<64;i++)if(![48,52,56,116,gcCount?.offset].includes(i*4))assert.equal(get(tcr+4*i),before[i],name+' restored TCR '+i*4);
+   if(gcCount)assert(get(tcr+gcCount.offset)>=before[gcCount.offset/4]&&get(tcr+gcCount.offset)<=gcCount.maximum,name+' monotonic collection count');
    assert.deepEqual(Array.from({length:4096},(_,i)=>get(680000+4*i)),bindings,name+' restored bindings');
    if(failure){assert.equal(get(tcr+116),before[29],name+' failed MV count');throw Error(name+': '+(failure.is?.(call_error)?'checked '+failure.getArg(call_error,0):failure.is?.(type_error)?'type_error '+failure.getArg(type_error,0):failure));}assert.equal(pair[1]>>>0,get(tcr+116),name+' result count');assert.equal(pair[0]>>>0,pair[1]?get(output):NIL,name+' primary');invocations++;
    const values=Array.from({length:pair[1]>>>0},(_,i)=>get(output+i*4));put(tcr+116,0);return values;

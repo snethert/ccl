@@ -1,0 +1,130 @@
+--- a/compiler/WASM32/wasm32-arch.lisp
++++ b/compiler/WASM32/wasm32-arch.lisp
+@@ -631,3 +631,6 @@
+        (declare (dynamic-extent ,@(names)) (short-float ,@(names)))
+        ,@(inits)
+        ,@body)))
++
++;;; Collector-owner successful-copy count; raw, never scanned.
++(cl:defconstant wasm32::tcr.gc_count 204)
+--- a/compiler/WASM32/wasm32-backend.lisp
++++ b/compiler/WASM32/wasm32-backend.lisp
+@@ -4896,6 +4896,13 @@
+            (b-multiple (make-b-raw-code :text
+              (bootstrap-operands forms
+                (lambda (values) (bootstrap-function-info (first values) 3))))))
++          ((eq name 'ccl::%wasm-gc-count)
++           (unless (null forms) (refuse :gc-count-arity))
++           (b-multiple (make-b-raw-code :text
++             (b-wat "~a (i32.shl ~a (i32.const 2))"
++               (b-condition (b-wat "(i32.gt_u ~a (i32.const 536870911))"
++                                  (b-load wasm32::tcr.gc_count)) 6)
++               (b-load wasm32::tcr.gc_count)))))
+           ((eq name 'ccl::%wasm-area-size)
+            (unless (= (length forms) 1) (refuse :area-size-arity))
+            (let* ((selector (ccl::acode-fixnum-form-p (first forms)))
+--- a/level-0/WASM32/w32-prims.lisp
++++ b/level-0/WASM32/w32-prims.lisp
+@@ -805,3 +805,8 @@
+   (unless (packagep package)
+     (setq package (%wasm-package-literal (string package))))
+   (%wasm-symbol-find (ensure-simple-string name) package nil))
++
++(in-package :ccl)
++
++(defun %get-gc-count ()
++  (%wasm-gc-count))
+--- a/level-0/l0-hash.lisp
++++ b/level-0/l0-hash.lisp
+@@ -135,7 +135,7 @@
+ (defun %set-does-not-need-rehashing (vector)
+   (let* ((flags (nhash.vector.flags vector)))
+     (declare (fixnum flags))
+-    (setf (nhash.vector.gc-count vector) #+wasm32-target 0 #-wasm32-target (%get-gc-count))
++    (setf (nhash.vector.gc-count vector) (%get-gc-count))
+     (when (logbitp $nhash_track_keys_bit flags)
+       (setf (nhash.vector.flags vector)
+             (logand (lognot (ash 1 $nhash_key_moved_bit)) flags)))))
+@@ -148,7 +148,7 @@
+   (let* ((vector (nhash.vector hash))
+          (flags (nhash.vector.flags vector)))
+     (declare (fixnum flags))
+-    (setf (nhash.vector.gc-count vector) (the fixnum (1- #+wasm32-target 0 #-wasm32-target (the fixnum (%get-gc-count)))))
++    (setf (nhash.vector.gc-count vector) (the fixnum (1- (the fixnum (%get-gc-count)))))
+     (when (logbitp $nhash_track_keys_bit flags)
+       (setf (nhash.vector.flags vector) (logior (ash 1 $nhash_key_moved_bit) flags)))))
+ 
+@@ -1947,10 +1947,8 @@
+   (let ((size (vector-index->index (uvsize vector))))
+     (declare (fixnum size))
+     (setf (nhash.vector.link vector) 0
+-          (nhash.vector.flags vector)
+-          #+wasm32-target (logior (ash 1 $nhash_track_keys_bit) flags)
+-          #-wasm32-target flags
+-          (nhash.vector.gc-count vector) #+wasm32-target 0 #-wasm32-target (%get-gc-count)
++          (nhash.vector.flags vector) flags
++          (nhash.vector.gc-count vector) (%get-gc-count)
+           (nhash.vector.free-alist vector) nil
+           (nhash.vector.finalization-alist vector) nil
+           (nhash.vector.hash vector) nil
+--- a/runtime/wasm32/collector.c
++++ b/runtime/wasm32/collector.c
+@@ -113,6 +113,8 @@
+  if((config&15)||!extent(config,sizeof(State)))return BAD_OWNER;
+  s=(State *)(unsigned long)config;s->error=s->count=s->queued=s->cursor=s->updates=s->live=s->roots=s->reclaimed=0;
+  if((s->tcr&15)||!extent(s->tcr,256))return reject(s,BAD_OWNER);
++ /* No wrap: an old hash stamp must never alias a later collection. */
++ if(LOAD(s->tcr+204)>=536870911u)return reject(s,BAD_OWNER);
+  s->from=LOAD(s->tcr+56);s->used=LOAD(s->tcr+48);s->limit=LOAD(s->tcr+52);
+  s->stacklo=LOAD(s->tcr+68);s->stackhi=LOAD(s->tcr+72);s->next=s->to;
+  if(!s->from||!s->to||((s->from|s->used|s->limit|s->to|s->end)&7)||s->from>s->used||s->used>s->limit||s->to>s->end||!extent(s->from,(W)s->limit-s->from)||!extent(s->to,(W)s->end-s->to)||overlap(s->from,(W)s->limit-s->from,s->to,(W)s->end-s->to))return reject(s,BAD_OWNER);
+@@ -244,5 +246,6 @@
+  for(index=0;index<s->updates;index++)STORE(updates(s)[index].slot,updates(s)[index].value);
+  s->reclaimed=(s->used-s->from)-(s->next-s->to);
+  STORE(s->tcr+56,s->to);STORE(s->tcr+48,s->next);STORE(s->tcr+52,s->end);
++ STORE(s->tcr+204,LOAD(s->tcr+204)+1);
+  return 0;
+ }
+--- a/tests/wasm/stage1/loader/architecture/extensions.lisp
++++ b/tests/wasm/stage1/loader/architecture/extensions.lisp
+@@ -217,3 +217,6 @@
+        (declare (dynamic-extent ,@(names)) (short-float ,@(names)))
+        ,@(inits)
+        ,@body)))
++
++;;; Collector-owner successful-copy count; raw, never scanned.
++(cl:defconstant wasm32::tcr.gc_count 204)
+--- a/runtime/wasm32/collector-owner.mjs
++++ b/runtime/wasm32/collector-owner.mjs
+@@ -28,6 +28,7 @@
+   }
+   return Object.freeze({boundary:this.#scalarBoundary,bounds:Object.freeze(bounds)});
+  }
++ get collectionCount(){const count=this.#t(204);need(count<=536870911,'collection count');return count;}
+  get tcr(){return this.#layout.tcr;}
+  get view(){this.#refresh();return this.#view;}
+  get viewEpoch(){this.#refresh();return this.#epoch;}
+@@ -91,6 +92,7 @@
+  }
+  #validateLive(){
+   this.#refresh();const view=this.#view,t=o=>view.getUint32(this.#layout.tcr+o,true);const spaces=this.#spaces,base=t(56),used=t(48),limit=t(52);
++  need(t(204)<=536870911,'collection count');
+   const active=spaces.find(r=>r.start===base&&r.end===limit);need(active&&used>=base&&used<=limit&&used%8===0,'allocation ownership');
+   const v=this.#region('vstack'),temp=this.#region('temp'),control=this.#region('control');
+   need(t(68)===v.start+8&&t(72)===v.end,'value-stack ownership');
+@@ -119,6 +121,7 @@
+  #copy(destination){
+   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
+   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
++  const count=this.collectionCount;need(count<536870911,'collection count exhausted');
+   this.#busy=true;
+   try{
+    // All admission precedes the first scratch write. Mutator/image/root bytes
+@@ -128,6 +131,7 @@
+    slots.forEach((p,i)=>this.#set(list.start+4*i,p));
+    const status=this.#collector.collect(scratch.start);
+    need(status===0,'collection refused '+status);
++   need(this.collectionCount===count+1,'collection count publication');
+    return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),reclaimed:this.#get(scratch.start+92),rootSlots:slots.length};
+   }finally{this.#busy=false;}
+  }

@@ -1,3 +1,47 @@
+## 2026-09-26 — Whole-file 21/21/0 unchanged; repair hash GC protocol before target LOAD
+
+The [audit-182 repair proposal](../../../tests/wasm/stage1/loader-gc/README.md)
+restores all three native GC-stamp expressions and implements the target
+%GET-GC-COUNT leaf against a collector-owned successful-copy counter. The
+counter commits with roots and allocation pointers, increments for each copy
+in a two-copy growth operation, and refuses exhaustion before publication.
+Its additive TCR extension reserves byte offset 204 without rewriting the
+historical v2 contract. Native constructor tracking flags are restored.
+
+The corrected original-stack witness reproduces O-97 in all four modes;
+native returns two NILs. The repaired image has 1,197 modules, 145/149
+native-equal rows, 141 controls per mode, 66/69 executed initializers and
+13/229 collections. The four pending rows and three startup refusals remain:
+PUTHASH's GC-lock functions, malformed-input condition delivery, and callable
+EQL, STRING= and ASSOC. No target LOAD or complete boot is claimed.
+
+O-98 now has 82 collector checks and ten killed mutants, including all nine
+audit mutations. The redundant individual deletion/count bounds are explained
+under the admitted unsigned-count contract. New O-100 controls isolate the
+allocator upper bound and a negative parser offset with zero copy length;
+descriptor branches and the immediate-character limit remain open. O-99
+cross-encoded immediate dumping remains a target-LOAD obligation. O-102's
+fresh-output inventory separates exploratory files from final execution.
+
+Final sources pass 21,843 native tests, all 164 restored FASLs, decoded-code
+equality, 102 comparisons across 17 reader profiles and 26,048 fresh corpus
+comparisons. Original compile and witness failures, and a run rejected for
+a changed control hash, remain in development evidence. No failed iteration
+receives verification credit. The final different-root Git-free replay matches
+all 3,628 regenerable artifacts, including the native FASL and saved compiler
+image, and every result in all four execution modes.
+
+Product Lisp delta: 19 added / 6 removed; fixture architecture: 3 added;
+collector C: 3 added; collector owner: 4 added. Native qualification took
+179.73 seconds; full-corpus execution took 230.16 seconds. Author reading and
+editing were not separately timed; no reviewer or target-startup time is
+claimed. This is a proposal awaiting Claude review before joint hash/FASL
+integration. Accepted originals remain 575/535, admission 2,050/2,231 (not
+recounted), Stage 1 ledger 21 accepted / 12 missing; no acceptance credit.
+Final retained evidence: 114,538,636 bytes in `2026-09-26-loader-gc-r1`, packet
+SHA-256 `f8d4c671ba05b7665d1e3532733b7d588fa5b6c491d1241635862847d931eae5`.
+Disposable author and replay workspaces removed after verified retention.
+
 ## 2026-09-26 — Audit 182 imported; hash/FASL integration held
 
 Merge Claude's `f716268e` unchanged, preserving the intervening CLIM documentation

@@ -24,7 +24,8 @@ import {sha256} from './runtime/sha256.mjs';
     bytes(old,size).fill(0xda);internalCollections++;
   }
   let serviceOwner,integer,floating,integerCalls=0,floatCalls=0,fastChecks=0,retryCollections=0,activeCase='';
-  const gen=await install({dir,memory,tcr,get,put,collect,calculateI:(...a)=>{integerCalls++;return integer(...a);},calculateF:(...a)=>{floatCalls++;return floating(...a);},ensure:bytes=>{collect();retryCollections++;if(get(tcr+52)-get(tcr+48)<bytes)throw new WebAssembly.Exception(gen.call_error,[6]);}});
+  const gcCount=JSON.parse(fs.readFileSync(dir+'/execution-environment.json')).array_runtime?.gc_count??null;
+  const gen=await install({dir,memory,tcr,get,put,collect,gcCount,calculateI:(...a)=>{integerCalls++;return integer(...a);},calculateF:(...a)=>{floatCalls++;return floating(...a);},ensure:bytes=>{collect();retryCollections++;if(get(tcr+52)-get(tcr+48)<bytes)throw new WebAssembly.Exception(gen.call_error,[6]);}});
   const ci=fs.readFileSync(dir+'/integer.wasm'),cf=fs.readFileSync(dir+'/float.wasm'),cd=fs.readFileSync(dir+'/detector.wasm'),cb=fs.readFileSync(dir+'/collector.wasm');
   put(NIL-1,NIL);put(NIL+3,NIL);
   function services(){
