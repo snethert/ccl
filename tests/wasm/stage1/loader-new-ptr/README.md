@@ -1,5 +1,10 @@
 # Bignums and native-pointer boundaries through the level-0 loader
 
+**Whole-file cross-compiled / cross-loaded / target-loaded: 8/8/0 of 167 native reference units; first stop: :FUNCTION-IMMEDIATE-LAYOUT in l0-def.**
+BT-20 reporting correction; no new execution. Admission was not recounted;
+original executions and their accepted floor remain 575/535. See the
+[P6 adoption and denominator identity](../../../../doc/WASM/stage1/bootstrap-throughput.md).
+
 Audit 181 found no defect. This proposal was accepted and integrated with its
 successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
 The packet description below records the original proposal and its evidence.
@@ -100,8 +105,8 @@ a bypassed control hook and a path-dependent diagnostic FASL; both are retained
 with the fixes and final driver identity, without credit for superseded runs.
 
 No target LOAD, foreign module service, function-immediate layout, complete
-complex arithmetic or boot is claimed. Accepted files **0/0/0**, originals
-**575/535**, and ledger **21/12** remain unchanged. O-90's inherited duplicate
+complex arithmetic or boot is claimed. Whole-file counts at this packet are
+**8/8/0** under BT-20; originals **575/535** and ledger **21/12** remain unchanged. O-90's inherited duplicate
 integer definitions remain a separate cleanup.
 
 ## Reproduce

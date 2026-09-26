@@ -471,9 +471,13 @@ fixes are batched — a stop is not a packet.
   (admitted as written; executed and matching native) and the accepted floor
   (568 / 531) remain as the next lines; LL15-c/d are not silently replaced by
   a file count.
+  Adopted [BT-20](bootstrap-throughput.md) counts successful whole-file
+  compilation and source-removed cross-loading as they happen, including
+  packet drivers. Acceptance and integration are separate state; the accepted
+  original-execution floor is now 575/535.
 - M-2. A packet that moves none of M-1 says so in its first line.
 - M-3. Cost lines stay: author wall time by phase, reviewer tier and time,
-  evidence bytes retained.
+  evidence bytes retained, and product Lisp lines changed (BT-23).
 
 ## 11. Change log from P1 (each with the review ID it answers)
 

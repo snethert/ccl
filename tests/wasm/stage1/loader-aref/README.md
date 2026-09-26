@@ -1,5 +1,10 @@
 # General AREF/ASET through the ordered level-0 loader
 
+**Whole-file cross-compiled / cross-loaded / target-loaded: 4/4/0 of 167 native reference units; first stop: %NEW-PTR in l0-bignum32.**
+BT-20 reporting correction; no new execution. Admission was not recounted;
+original executions and their accepted floor remain 575/535. See the
+[P6 adoption and denominator identity](../../../../doc/WASM/stage1/bootstrap-throughput.md).
+
 Audit 181 found no defect. This proposal was accepted and integrated with its
 successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
 The packet description below records the original proposal and its evidence.
@@ -81,9 +86,9 @@ Final driver identities are bound before and after execution and at retention.
 
 General MAKE-ARRAY, floating/complex array backings, statically specialized
 SIMPLE-TYPED-AREF2/3 lowerings, saved-image array admission, target LOAD and a
-complete boot are outside this packet. The new source remains subject to
-Claude's independent review. Accepted production counts **0/0/0**, originals
-**575/535**, and ledger **21/12** remain unchanged. O-90's pre-existing duplicate
+complete boot are outside this packet. Audit 181 reviewed this source before
+stack integration. Whole-file counts at this packet are **4/4/0** under BT-20;
+originals **575/535** and ledger **21/12** remain unchanged. O-90's pre-existing duplicate
 integer definitions remain a separate cleanup, outside this proposal identity.
 
 ## Reproduce

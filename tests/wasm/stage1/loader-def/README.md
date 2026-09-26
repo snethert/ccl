@@ -1,5 +1,10 @@
 # Function definitions and floating-point files through the ordered loader
 
+**Whole-file cross-compiled / cross-loaded / target-loaded: 11/11/0 of 167 native reference units; first stop: :EQ-VECTOR-INITIAL-ELEMENT in l0-hash.**
+BT-20 reporting correction; no new execution. Admission was not recounted;
+original executions and their accepted floor remain 575/535. See the
+[P6 adoption and denominator identity](../../../../doc/WASM/stage1/bootstrap-throughput.md).
+
 Audit 181 found no defect. This proposal was accepted and integrated with its
 successors as one reviewed stack; see [the integration and audit dispositions](../loader-stack-acceptance/README.md).
 The packet description below records the original proposal and its evidence.
@@ -13,9 +18,10 @@ modules). Both pathname and failure-p are checked. Eleven complete production
 FASLs are cross-loaded after their sources are deleted. Selected complete
 original dependencies and test witnesses receive no whole-file credit.
 
-Five proposed product files remain under `files/`. The upstream kernel is
-unchanged. Claude review is required before integration; accepted file counts
-**0/0/0**, original executions **575/535**, and ledger **21/12** remain unchanged.
+Five reviewed product copies remain under `files/` for historical replay.
+They were integrated with the stack after audit 181. Whole-file counts are
+**11/11/0** under BT-20; original executions **575/535** and ledger **21/12**
+remain unchanged. The upstream kernel is unchanged.
 
 The function-definition file uses the existing Wasm metadata accessors instead
 of native function vectors. Its name registry uses the adopted Stage 1 strong
@@ -99,3 +105,8 @@ python3 tests/wasm/stage1/loader-def/replay.py /private/tmp/ccl-work/codex/loade
 parent and overlays this proposal, then runs the producer and execution drivers
 inside that extraction without Git metadata. Final drivers and product inputs
 are bound before and after execution and at retention.
+
+P6 changes the retention summary field to `whole_file: [11, 11, 0]`.
+Retained evidence keeps its original schema and driver identities; reproduce
+those exact historical records from their recorded revisions. This reporting
+change adds no compiler or runtime execution.

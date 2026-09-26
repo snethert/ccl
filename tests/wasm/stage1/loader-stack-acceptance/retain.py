@@ -68,7 +68,7 @@ def retain(out, mutant, replay, development, destination):
             review='AUDIT_181_NO_DEFECT', follow_up_review='PENDING_HARNESS_REVIEW',
             integration=result, mutant=c.read(mutant / 'mutant.json'),
             replay_artifacts=len(c.read(replay / 'summary.json')['artifacts']),
-            accepted_files=[0,0,0], accepted_originals=[575,535], ledger=[21,12],
+            whole_file=[11,11,0], accepted_originals=[575,535], ledger=[21,12],
             slot_credit=False, target_load=False, boot=False))
         c.save(stage / 'regenerable.json', generated)
         c.save(stage / 'compressed.json', compressed)

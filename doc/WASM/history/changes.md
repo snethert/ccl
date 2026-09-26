@@ -1,3 +1,24 @@
+## 2026-09-25 — P6 adopted; whole-file reporting corrected to 11/11/0
+
+Steve said “accept and integrate” for `5918bd73`. The directive is merged
+into `wasm2` and BT-20–BT-23 are active. Whole-file execution counts move by
+0/0/0; the displayed count is corrected to 11/11/0 of the existing 167-unit
+native reference. The next stop remains :EQ-VECTOR-INITIAL-ELEMENT in
+l0-hash. The array and pointer packet reports now show 4/4/0 and 8/8/0.
+Acceptance stays separate. The next new packet uses pinned-parent patches
+and shared-driver extension points; historical proposal identities remain.
+
+The definitions and integration retention writers emit `whole_file` instead
+of `accepted_files`. No retained record is rewritten. Ordered success rows
+and production FASL inventories agree with all three reported counts, with
+their packet and member hashes checked. Python syntax and field checks pass.
+The existing loader-stack identity check and document checker pass; native
+and corpus results are reused, with no fresh compiler/runtime execution.
+
+Cost: author reading/editing phases were not timed; reporting, identity and
+document checks each took under one second. No new reviewer run or tier is
+claimed. New retained evidence: 0 bytes. Product Lisp lines changed: 0.
+
 ## 2026-09-25 — Audit 181 accepted; reviewed loader stack integrated
 
 Imported `973c10bb` unchanged by fast-forward, preserving Claude's audit of

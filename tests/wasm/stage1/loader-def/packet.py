@@ -87,7 +87,7 @@ def retain(destination, execution, native, corpus, readers, replay, development)
             native_tests=21843, restored_fasls=164, compiler_comparisons=26048,
             readers=c.read(readers / 'summary.json'), collector_reused=c.sha(parent / 'collector/summary.json'),
             replay=dict(status='PASS', artifacts=len(c.read(replay / 'summary.json')['artifacts'])),
-            accepted_files=[0, 0, 0], accepted_originals=[575, 535], ledger=[21, 12],
+            whole_file=[11, 11, 0], accepted_originals=[575, 535], ledger=[21, 12],
             slot_credit=False, target_load=False, boot=False,
             references={name: c.sha(c.STORE / name) for name in (
                 '2026-09-25-loader-general-aref-r1/packet.json',

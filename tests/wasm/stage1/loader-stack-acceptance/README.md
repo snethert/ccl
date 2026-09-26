@@ -1,5 +1,10 @@
 # Audit 181: reviewed loader stack integration
 
+**Whole-file cross-compiled / cross-loaded / target-loaded: 11/11/0 of 167 native reference units; first stop: :EQ-VECTOR-INITIAL-ELEMENT in l0-hash.**
+BT-20 reporting correction; no new execution. Admission was not recounted;
+original executions and their accepted floor remain 575/535. See the
+[P6 adoption and denominator identity](../../../../doc/WASM/stage1/bootstrap-throughput.md).
+
 Audit `973c10bb` is imported unchanged. The reviewer found no defect in the
 three-proposal stack (`e2de2fd9`, `928ad5ef`, `d2841e95`) above audit 180's
 integration. The user's instruction to proceed and the supplied conditional
@@ -62,8 +67,8 @@ explains the initial wrong mutant expectation and replay import collision.
 
 The ordered compiler still completes nine level-0 files and stops at
 `:EQ-VECTOR-INITIAL-ELEMENT` in `l0-hash`. O-90's duplicate integer-definition
-cleanup remains separate. Production counts **0/0/0**, original executions
-**575/535**, and ledger **21/12** stay unchanged. No target LOAD or boot credit.
+cleanup remains separate. Whole-file counts are **11/11/0** under BT-20;
+original executions **575/535** and ledger **21/12** stay unchanged. No target LOAD or boot credit.
 The product integration is covered by audit 181; these additional harness
 checks remain available for the next adversarial review.
 
@@ -79,3 +84,8 @@ The superseded isolated drivers retain their original integrated-base contract.
 Use this successor driver with the current checkout; historical runs remain
 reproducible from their recorded revisions. Retention leaves prior packets
 unchanged and removes disposable outputs only after verifying the new packet.
+
+P6 changes the retention summary field to `whole_file: [11, 11, 0]`.
+Retained evidence keeps its original schema and driver identities; reproduce
+those exact historical records from their recorded revisions. This reporting
+change adds no compiler or runtime execution.
