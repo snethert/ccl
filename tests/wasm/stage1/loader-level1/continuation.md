@@ -4,8 +4,8 @@ Whole-file counts advance **29/24/0 → 36/36/0 of 167**. The additional complet
 files are `l1-numbers`, `l1-aprims`, `l1-sort`, `l1-dcode`, `l1-clos-boot`,
 `l1-clos` and `l1-unicode`. Cross-loading now reaches the same 36-file prefix,
 with sources removed. Compilation stops in `l1-streams` at
-`:BOOTSTRAP-TYPECHECK`. This continuation is implemented directly and awaits
-Claude's adversarial review; audit 184 accepted only the earlier prefix.
+`:BOOTSTRAP-TYPECHECK`. Audit 185 (`fd385a5f`) found no defect; the user
+accepted this continuation and its runtime weak tables.
 
 The cross-loader admits the exact `(SETF-FUNCTION-NAME (QUOTE symbol))` form
 through its optional target evaluator. Independently compiled files share the

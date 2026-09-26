@@ -1,3 +1,19 @@
+## 2026-09-26 — Audit 185 accepted; whole-file counts remain 36/36/0
+
+Audit `fd385a5f` is merged byte-identically. The user's supplied disposition
+accepts `a55b18c6`, the level-1 continuation and runtime weak tables, with no
+defect. The independent replay reproduced 4,491 execution artifacts, 21,843
+native tests, 221 reader comparisons, 26,112 fresh corpus comparisons and
+123 collector checks with 17 killed mutants. All five reviewer mutants died.
+Acceptance uses this supplied evidence without another replay.
+
+O-113 requires separating nondeterministic saved host images from reproducible
+artifacts. O-114 seed-condition refusals remain pending. O-115 supersedes strong
+substitutes for runtime tables; image-built tables still need conversion when
+carried by the builder. O-116 requests an explanation of the witness's indirect
+calls. O-117 carries O-104/O-105/O-109/O-112. Counts remain 36/36/0 of 167,
+originals 575/535 and ledger 21/12; no target LOAD, boot or criterion credit.
+
 ## 2026-09-26 — Whole-file 29/24/0 to 36/36/0; next l1-streams type checking
 
 The [level-1 continuation](../../../tests/wasm/stage1/loader-level1/continuation.md)

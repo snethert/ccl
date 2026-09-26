@@ -8,7 +8,7 @@ in [weak hash support](weak-hash.md). The report below records the earlier
 level-1 prefix; image-built metadata retains its Phase 1 strong representation.
 
 The original prefix was accepted after audit 184 (`fb23aeae`) on the user's
-“accept and proceed” instruction. The continuation below awaits its own review.
+“accept and proceed” instruction. Audit 185 accepted the continuation and runtime weak tables.
 Whole-file compilation and cross-loading are reported independently of acceptance.
 Counts advance from **21/21/0 to 29/24/0 of 167** (compiled / cross-loaded /
 target-loaded). The retained report is

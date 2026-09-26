@@ -1,8 +1,8 @@
 # Runtime weak hash tables
 
 The 26 September request supersedes the Stage 1 strong-table substitute for
-runtime-created native-shape tables. This implementation awaits Claude's
-adversarial review; executed results are not acceptance credit.
+runtime-created native-shape tables. Audit 185 (`fd385a5f`) found no defect;
+the user accepted this implementation without additional criterion credit.
 
 The collector admits weak keys and weak values, traces the fourteen header
 cells strongly (including the cache), then computes the ephemeron fixed point.
