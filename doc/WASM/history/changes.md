@@ -1,3 +1,18 @@
+## 2026-09-26 — User rescinds isolated implementation packets
+
+The user rescinded the isolated-packet requirement because separate
+integrations consume too much time and tokens. Authorized implementation
+now happens directly in the working checkout, with the actual Git diff or
+commit reviewed by Claude before acceptance. Separate proposal copies,
+pinned-parent patch packets and a later source-integration step are no
+longer required. Acceptance bookkeeping reuses qualification for unchanged
+code instead of creating a second integration harness and replay.
+
+Standing rules, current status and the throughput directive now reflect
+this decision. Existing R6/R6a, independent review before acceptance, scope
+limits and evidence provenance remain in force. Documentation only; no
+product changes or count movement.
+
 ## 2026-09-26 — Audit 183 accepted; hash, FASL and GC integrated together
 
 The user instructed Codex to accept and integrate the latest reviewed code.

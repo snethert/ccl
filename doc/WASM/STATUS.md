@@ -1,6 +1,6 @@
 # Current status — 2026-09-26
 
-Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. The reviewed Stage 1A compiler registration unit is integrated; upstream kernel source remains unchanged. Stage 0 is accepted. Under the user's 16 September authorization, Codex authors Stage 1 in disposable clean U1 copies; Claude reviews before integration. All work is on `wasm2`.
+Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. The reviewed Stage 1A compiler registration unit is integrated; upstream kernel source remains unchanged. Stage 0 is accepted. Under the user's 26 September workflow decision, Codex implements authorized Stage 1 changes directly in the working checkout; Claude reviews before acceptance. Isolated proposal packets and a separate source-integration step are no longer required. All work is on `wasm2`.
 
 **Files cross-compiled: 21 of 167; cross-loaded: 21 of 167; target-loaded: 0 of 167. All level-0 files compile; target code installation (FASL opcode 72) still refuses. Ordered level-1 compilation has not been attempted by this producer.**
 

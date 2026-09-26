@@ -1,5 +1,27 @@
 # Bootstrap throughput directive (BOOT-TP-P2)
 
+## Current workflow — user decision, 26 September 2026
+
+The user rescinded the requirement to make changes in isolated packets:
+"These integrations are killing us and wasting tokens. I rescind the rule
+that you have to make the changes in these isolated packets".
+
+Implement authorized changes directly in the working checkout. Review the
+actual Git diff/commit; separate proposal source copies, pinned-parent patch
+packets and a later source-integration step are no longer required. This
+supersedes BT-6's review-before-integration ordering, BT-21's patch packaging,
+and the corresponding P6 implementation instructions below. Claude reviews
+before acceptance; implementation may already be in the checkout.
+
+Verify changed code and its dependencies under the existing R6/R6a rules.
+Reuse qualified evidence for unchanged inputs. Recording acceptance alone
+requires no second integration harness or fresh replay of unchanged code;
+BT-13's integration-triggered replay does not apply to that bookkeeping.
+Shared-driver extension points, evidence provenance, original failures and
+separate executed/accepted counts still apply. Earlier dated descriptions
+below remain historical where this decision supersedes them.
+
+
 Status: P1 direction ADOPTED by the user on 2026-09-21, with Codex’s review corrections in section 8. P2’s BT-0 criterion change was explicitly accepted by the user: “I accept BT-0”. The authorization and preservation checks are in bootstrap-coverage-decision.json. The directive changes work priorities and review cadence; existing acceptance contracts remain in force.
 
 Reader: Codex, as Stage 1 author. Items carry IDs so a reply can cite them.
