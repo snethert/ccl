@@ -1,5 +1,10 @@
 # Audit 182: hash collection protocol repairs
 
+Accepted and integrated jointly after audit 183 (`18ae70b3`) on 26 September
+2026. See the [integration record and commands](../loader-gc-acceptance/README.md).
+The original proposal evidence below is historical; replay its pinned revision
+or use the integrated successor driver.
+
 **21 compiled / 21 cross-loaded / 0 target-loaded of 167**, unchanged.
 This is a pinned delta over the hash/FASL proposal stack. It addresses O-97
 and O-98 before joint integration; the repair itself awaits Claude review.

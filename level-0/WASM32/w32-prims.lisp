@@ -446,8 +446,7 @@
 (defun %wasm-class-of-list (object)
   (if object *cons-class* *null-class*))
 
-(defun macptrp (object)
-  (= (typecode object) target::subtag-macptr))
+;;; MACPTRP is defined in the shared l0-pred file.
 
 ;;; EQL-SPECIALIZER's standard reader. Its OBJECT slot follows DIRECT-METHODS;
 ;;; the native class-slot inventory qualifies this index with the image.
@@ -806,3 +805,8 @@
   (unless (packagep package)
     (setq package (%wasm-package-literal (string package))))
   (%wasm-symbol-find (ensure-simple-string name) package nil))
+
+(in-package :ccl)
+
+(defun %get-gc-count ()
+  (%wasm-gc-count))

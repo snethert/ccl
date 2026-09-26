@@ -2,20 +2,15 @@
 ;;; A target buffer is a simple octet vector, never a foreign pointer.
 (in-package "CCL")
 
-(defun fd-open (path flags &optional (create-mode #o666))
-  (%wasm-file-request 0 path flags create-mode))
 
-(defun fd-read (fd buffer nbytes)
-  (%wasm-file-request 1 fd buffer nbytes))
 
-(defun fd-lseek (fd offset whence)
-  (%wasm-file-request 2 fd offset whence))
 
-(defun fd-close (fd)
-  (%wasm-file-request 3 fd nil nil))
 
-(defun fd-size (fd)
-  (%wasm-file-request 4 fd nil nil))
+
+
+
+
+
 
 (defun fd-tell (fd)
   (fd-lseek fd 0 1))
@@ -34,8 +29,7 @@
           ((eq kind 2) :directory)
           (t nil))))
 
-(defun fd-write (fd buffer nbytes)
-  (%wasm-file-request 7 fd buffer nbytes))
+
 
 ;;; The virtual namespace owns the current directory; no process cwd leaks in.
 (defun current-directory-name ()

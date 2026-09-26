@@ -181,12 +181,22 @@
 
 
 ;;; write nbytes bytes from buffer buf to file-descriptor fd.
+#+wasm32-target
+(defun fd-write (fd buffer nbytes)
+  (%wasm-file-request 7 fd buffer nbytes))
+
+#-wasm32-target
 (defun fd-write (fd buf nbytes)
   (ignoring-eintr
    (int-errno-ffcall
     (%kernel-import target::kernel-import-lisp-write)
              :int fd :address buf :ssize_t nbytes :ssize_t)))
 
+#+wasm32-target
+(defun fd-read (fd buffer nbytes)
+  (%wasm-file-request 1 fd buffer nbytes))
+
+#-wasm32-target
 (defun fd-read (fd buf nbytes)
   (ignoring-eintr
    (int-errno-ffcall
@@ -211,6 +221,11 @@
               (character-encoding-name encoding))))))
 
 
+#+wasm32-target
+(defun fd-open-path (p flags create-mode)
+  (fd-open p flags create-mode))
+
+#-wasm32-target
 (defun fd-open-path (p flags create-mode)
   (let* ((fd (int-errno-ffcall
               (%kernel-import target::kernel-import-lisp-open)
@@ -225,6 +240,11 @@
                 :address p :int flags :mode_t create-mode :int)))
     fd))
 
+#+wasm32-target
+(defun fd-open (path flags &optional (create-mode #o666))
+  (%wasm-file-request 0 path flags create-mode))
+
+#-wasm32-target
 (defun fd-open (path flags &optional (create-mode #o666))
   #+darwin-target (with-utf-8-cstrs ((p path))
                     (fd-open-path p flags create-mode))
@@ -238,12 +258,23 @@
       (with-cstrs ((p path))
         (fd-open-path p flags create-mode)))))
 
+#+wasm32-target
+(defun fd-chmod (fd mode)
+  (declare (ignore fd mode))
+  -30)
+
+#-wasm32-target
 (defun fd-chmod (fd mode)
   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-fchmod)
                     :int fd
                     :mode_t mode
                     :int))
 
+#+wasm32-target
+(defun fd-lseek (fd offset whence)
+  (%wasm-file-request 2 fd offset whence))
+
+#-wasm32-target
 (defun fd-lseek (fd offset whence)
   (int-errno-ffcall
    (%kernel-import target::kernel-import-lisp-lseek)
@@ -252,6 +283,11 @@
    :int whence
    :signed-doubleword))
 
+#+wasm32-target
+(defun fd-close (fd)
+  (%wasm-file-request 3 fd nil nil))
+
+#-wasm32-target
 (defun fd-close (fd)
   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-close)
                     :int fd
@@ -262,6 +298,11 @@
 
 ;;; Kernels prior to 2.4 don't seem to have a "stat" variant
 ;;; that handles 64-bit file offsets.
+#+wasm32-target
+(defun fd-size (fd)
+  (%wasm-file-request 4 fd nil nil))
+
+#-wasm32-target
 (defun fd-size (fd)
   (rlet ((stat #+win64-target #>_stat64 #+win32-target #>__stat64 #-windows-target :stat))
     (if (eql 0 (ff-call (%kernel-import target::kernel-import-lisp-fstat)
@@ -275,10 +316,24 @@
       -1)))
 
 
+#+wasm32-target
+(defun fd-ftruncate (fd new)
+  (declare (ignore fd new))
+  -30)
+
+#-wasm32-target
 (defun fd-ftruncate (fd new)
   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-ftruncate)
                     :int fd :off_t new :int))
 
+#+wasm32-target
+(defun %string-to-stderr (str)
+  (let* ((size (utf-8-octets-in-string str 0 (length str)))
+         (buffer (make-array size :element-type '(unsigned-byte 8))))
+    (utf-8-memory-encode str buffer 0 0 (length str))
+    (fd-write 2 buffer size)))
+
+#-wasm32-target
 (defun %string-to-stderr (str)
   (with-cstrs ((s str))
     (fd-write 2 s (length str))))

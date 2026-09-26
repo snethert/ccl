@@ -1,5 +1,10 @@
 # Complete level-0 FASL reader proposal
 
+Accepted and integrated jointly after audit 183 (`18ae70b3`) on 26 September
+2026. See the [integration record and commands](../loader-gc-acceptance/README.md).
+The original proposal evidence below is historical; replay its pinned revision
+or use the integrated successor driver.
+
 **21 compiled / 21 cross-loaded / 0 target-loaded of 167**, up from 20/20/0.
 All 21 level-0 files compile whole. Target `LOAD` still needs the Wasm code
 installer for opcode 72. This is a pinned delta over the hash/I/O proposal

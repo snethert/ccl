@@ -1,5 +1,10 @@
 # Whole-file hash / I/O proposal
 
+Accepted and integrated jointly after audit 183 (`18ae70b3`) on 26 September
+2026. See the [integration record and commands](../loader-gc-acceptance/README.md).
+The original proposal evidence below is historical; replay its pinned revision
+or use the integrated successor driver.
+
 Pinned-parent patch against `ccf4b638c4150413b8ca4e429b881fd492606bee`.
 **20 compiled / 20 cross-loaded / 0 target-loaded of 167**, up from 11/11/0.
 Next ordered stop: `level-0/nfasload.lisp`, `%CONSMACPTR%`.

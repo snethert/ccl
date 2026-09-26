@@ -559,8 +559,11 @@
 
 (cl:defconstant single-float.element-count 1)
 (cl:defconstant double-float.element-count 3)
+(cl:defconstant ratio.element-count 2)
 (cl:defconstant ratio.numer-cell 0)
 (cl:defconstant ratio.denom-cell 1)
+(cl:defconstant complex.realpart-cell 0)
+(cl:defconstant complex.imagpart-cell 1)
 
 (cl:in-package :wasm32-compiler)
 
@@ -628,3 +631,6 @@
        (declare (dynamic-extent ,@(names)) (short-float ,@(names)))
        ,@(inits)
        ,@body)))
+
+;;; Collector-owner successful-copy count; raw, never scanned.
+(cl:defconstant wasm32::tcr.gc_count 204)

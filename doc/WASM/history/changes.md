@@ -1,3 +1,49 @@
+## 2026-09-26 — Audit 183 accepted; hash, FASL and GC integrated together
+
+The user instructed Codex to accept and integrate the latest reviewed code.
+Audit `18ae70b3` is imported byte-identically, including its no-defect
+recommendation. The hash (`fe93c6ed`), FASL (`665fa165`) and GC repair
+(`1760cd0c`) proposals enter the main checkout as one unit. Fourteen changed
+files exactly match the reviewed stack; the [integration record](../stage1/integration-loader-gc.json)
+binds all 45 qualified Lisp sources, the collector, owner, runtime inputs,
+immutable qualification reports and audit identity.
+
+O-97 and O-98 are closed. Native constructor flags (O-101) and evidence
+retention hygiene (O-102) are also repaired. Under O-103, the post-call
+TCR/getter equality is a bound check, not independent counting evidence.
+The owner's validation bound duplicates its getter bound (RM4); its
+publication check is redundant while the admitted collector increments
+(RM5), but detects the missing-increment mutant (RM1). Both omissions are
+therefore equivalent under the admitted collector contract; defensive
+checks are retained without product changes.
+
+O-104 stays open: saved-image count rebasing is not admitted; the future
+collect-then-GETHASH witness must include a restored-image table when the
+GC-lock functions land. Differing stamps conservatively request rehash.
+O-105 carries O-99 host immediate encoding/refusal and O-100 descriptor
+refill, seek, `%FASLOAD` buffer and character-limit controls to target LOAD.
+Earlier O-92 ordinary method metadata and O-95 exponent limits stay open.
+
+Fresh integration replay from a Git-free tree at a different root reproduces
+all four execution summaries and all **3,628 regenerable artifacts**. It
+executes 1,197 modules, 66/69 initializers, 145/149 native-equal rows and
+141 controls per mode (13/229 collections). Native R6/R6a (21,843 tests,
+164 restored FASLs), 102 reader comparisons and 82 collector checks with
+ten killed faults are reused by exact reviewed source/runtime identity.
+The integrated compiler/runtime corpus also passes **26,048 fresh comparisons**,
+with zero inherited or sampled results; execution took 216.31 seconds.
+The [integration harness](../../../tests/wasm/stage1/loader-gc-acceptance/README.md)
+uses the shared producer/execution extension points and remains available for
+the next adversarial review. The retained integration packet is
+`2026-09-26-loader-gc-integration`; original proposal packets stay immutable.
+
+Whole-file counts stay **21/21/0 of 167**, originals **575/535**, admission
+**2,050/2,231** (not recounted), ledger **21 accepted / 12 missing**.
+Target code installation (FASL opcode 72) remains the next stop; no target
+LOAD, boot or criterion credit. The integration adds no new product behavior
+beyond the reviewed proposals. Product Lisp transferred: **379 added / 30
+removed**, excluding the fixture architecture and runtime C/JavaScript.
+
 ## 2026-09-26 — Whole-file 21/21/0 unchanged; repair hash GC protocol before target LOAD
 
 The [audit-182 repair proposal](../../../tests/wasm/stage1/loader-gc/README.md)

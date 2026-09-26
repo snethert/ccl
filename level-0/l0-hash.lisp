@@ -1936,6 +1936,9 @@ before doing so.")
 
 (defun %cons-nhash-vector (size &optional (flags 0))
   (declare (fixnum size))
+  #+wasm32-target
+  (when (logtest (logandc2 $nhash_weak_flags_mask (ash 1 $nhash_keys_frozen_bit)) flags)
+    (error "Weak hash vectors are unavailable on this target."))
   (let* ((vector (%alloc-misc (+ (+ size size) $nhash.vector_overhead) target::subtag-hash-vector free-hash-marker)))
     (%init-nhash-vector vector flags)
     vector))

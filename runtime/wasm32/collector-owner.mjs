@@ -28,6 +28,7 @@ export class CollectorOwner {
   }
   return Object.freeze({boundary:this.#scalarBoundary,bounds:Object.freeze(bounds)});
  }
+ get collectionCount(){const count=this.#t(204);need(count<=536870911,'collection count');return count;}
  get tcr(){return this.#layout.tcr;}
  get view(){this.#refresh();return this.#view;}
  get viewEpoch(){this.#refresh();return this.#epoch;}
@@ -91,6 +92,7 @@ export class CollectorOwner {
  }
  #validateLive(){
   this.#refresh();const view=this.#view,t=o=>view.getUint32(this.#layout.tcr+o,true);const spaces=this.#spaces,base=t(56),used=t(48),limit=t(52);
+  need(t(204)<=536870911,'collection count');
   const active=spaces.find(r=>r.start===base&&r.end===limit);need(active&&used>=base&&used<=limit&&used%8===0,'allocation ownership');
   const v=this.#region('vstack'),temp=this.#region('temp'),control=this.#region('control');
   need(t(68)===v.start+8&&t(72)===v.end,'value-stack ownership');
@@ -119,6 +121,7 @@ export class CollectorOwner {
  #copy(destination){
   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
+  const count=this.collectionCount;need(count<536870911,'collection count exhausted');
   this.#busy=true;
   try{
    // All admission precedes the first scratch write. Mutator/image/root bytes
@@ -128,6 +131,7 @@ export class CollectorOwner {
    slots.forEach((p,i)=>this.#set(list.start+4*i,p));
    const status=this.#collector.collect(scratch.start);
    need(status===0,'collection refused '+status);
+   need(this.collectionCount===count+1,'collection count publication');
    return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),reclaimed:this.#get(scratch.start+92),rootSlots:slots.length};
   }finally{this.#busy=false;}
  }

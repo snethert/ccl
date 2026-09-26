@@ -66,6 +66,17 @@
     (incf (the fixnum (faslstate.faslecnt s))))
   val)
 
+#+wasm32-target
+(defun %simple-fasl-read-buffer (s)
+  (let* ((buffer (faslstate.iobuffer s))
+         (n (fd-read (faslstate.faslfd s) (svref buffer 0) $fasl-buf-len)))
+    (declare (fixnum n))
+    (unless (> n 0)
+      (error "Unexpected end of FASL input: ~s" (faslstate.faslfname s)))
+    (setf (svref buffer 1) 0
+          (faslstate.bufcount s) n)))
+
+#-wasm32-target
 (defun %simple-fasl-read-buffer (s)
   (let* ((fd (faslstate.faslfd s))
          (buffer (faslstate.iobuffer s))
@@ -81,6 +92,18 @@
         (error "Fix this: look at errno, EOF")))))
 
  
+#+wasm32-target
+(defun %simple-fasl-read-byte (s)
+  (when (zerop (the fixnum (faslstate.bufcount s)))
+    (%fasl-read-buffer s))
+  (let* ((buffer (faslstate.iobuffer s))
+         (index (svref buffer 1)))
+    (declare (fixnum index))
+    (prog1 (aref (svref buffer 0) index)
+      (setf (svref buffer 1) (1+ index))
+      (decf (the fixnum (faslstate.bufcount s))))))
+
+#-wasm32-target
 (defun %simple-fasl-read-byte (s)
   (loop
     (let* ((buffer (faslstate.iobuffer s))
@@ -119,6 +142,25 @@
       (declare (type (unsigned-byte 8) b))
       (setq done (logbitp 7 b) val (logior val (ash (logand b #x7f) shift))))))
 
+#+wasm32-target
+(defun %simple-fasl-read-n-bytes (s ivector byte-offset n)
+  (declare (fixnum byte-offset n))
+  (unless (and (>= byte-offset 0) (>= n 0))
+    (error "Invalid FASL byte range."))
+  (loop while (> n 0) do
+    (when (zerop (the fixnum (faslstate.bufcount s)))
+      (%fasl-read-buffer s))
+    (let* ((buffer (faslstate.iobuffer s))
+           (index (svref buffer 1))
+           (count (min n (the fixnum (faslstate.bufcount s)))))
+      (declare (fixnum index count))
+      (%copy-ivector-to-ivector (svref buffer 0) index ivector byte-offset count)
+      (incf (the fixnum (svref buffer 1)) count)
+      (decf (the fixnum (faslstate.bufcount s)) count)
+      (incf byte-offset count)
+      (decf n count))))
+
+#-wasm32-target
 (defun %simple-fasl-read-n-bytes (s ivector byte-offset n)
   (declare (fixnum byte-offset n))
   (do* ()
@@ -422,7 +464,9 @@
 (deffaslop $fasl-platform (s)
   (%cant-epush s)
   (let* ((platform (%fasl-expr s))
-         (host-platform (%get-kernel-global 'host-platform)))
+         (host-platform #+wasm32-target
+                        (logior platform-cpu-wasm32 platform-os-wasm platform-word-size-32)
+                        #-wasm32-target (%get-kernel-global 'host-platform)))
     (declare (fixnum platform host-platform))
     (unless (= platform host-platform)
       (error "Not a native fasl file : ~s" (faslstate.faslfname s)))))
@@ -582,6 +626,19 @@
 (deffaslop $fasl-nil (s)
   (%epushval s nil))
 
+#+wasm32-target
+(deffaslop $fasl-timm (s)
+  (let ((word (%fasl-read-long s)))
+    (%epushval s
+      (cond ((eql word target::unbound-marker) (%unbound-marker))
+            ((eql word target::slot-unbound-marker) (%slot-unbound-marker))
+            ((eql word target::illegal-marker) (%illegal-marker))
+            ((and (= (logand word #xff) target::subtag-character)
+                  (< (ash word -8) char-code-limit))
+             (code-char (ash word -8)))
+            (t (%bad-fasl s))))))
+
+#-wasm32-target
 (deffaslop $fasl-timm (s)
   (rlet ((p :int))
     (setf (%get-long p) (%fasl-read-long s))
@@ -688,7 +745,7 @@
 
 
 
-#-x86-target
+#-(or x86-target wasm32-target)
 (deffaslop $fasl-code-vector (s)
   (let* ((element-count (%fasl-read-count s))
          (size-in-bytes (* 4 element-count))
@@ -731,6 +788,15 @@
 (deffaslop $fasl-t-vector (s)
   (fasl-read-gvector s target::subtag-simple-vector))
 
+#+wasm32-target
+(deffaslop $fasl-code-vector (s)
+  (%bad-fasl s))
+
+#+wasm32-target
+(deffaslop $fasl-function (s)
+  (%bad-fasl s))
+
+#-wasm32-target
 (deffaslop $fasl-function (s)
   (fasl-read-gvector s target::subtag-function))
 
@@ -812,6 +878,12 @@
 ;; list of lfuns and (source-fn-name vector-of-lfuns external-format id), the latter put there by fasloading.
 (defvar *code-covered-functions* nil)
 
+#+wasm32-target
+(defun register-code-covered-functions (functions &optional external-format id)
+  (declare (ignore functions external-format id))
+  (error "Native code-coverage notes are unavailable on this target."))
+
+#-wasm32-target
 (defun register-code-covered-functions (functions &optional external-format id)
   ;; unpack the parent-note references - see comment at fcomp-digest-code-notes
   (labels ((reg (lfun refs)
@@ -848,6 +920,27 @@
 
 ;;; The loader itself
 
+#+wasm32-target
+(defun %simple-fasl-set-file-pos (s new)
+  (let* ((fd (faslstate.faslfd s))
+         (end (fd-tell fd))
+         (buffer (faslstate.iobuffer s))
+         (available (faslstate.bufcount s))
+         (index (svref buffer 1))
+         (remaining (- end new)))
+    (declare (fixnum end available index remaining))
+    (unless (and (typep new 'fixnum) (>= new 0))
+      (error "Invalid FASL file position."))
+    (if (and (>= remaining 0) (<= remaining (+ index available)))
+      (setf (svref buffer 1) (- (+ index available) remaining)
+            (faslstate.bufcount s) remaining)
+      (let ((position (fd-lseek fd new target::io-seek-set)))
+        (unless (= position new)
+          (error "Cannot seek FASL input to ~s." new))
+        (setf (svref buffer 1) 0
+              (faslstate.bufcount s) 0)))))
+
+#-wasm32-target
 (defun %simple-fasl-set-file-pos (s new)
   (let* ((fd (faslstate.faslfd s))
          (posoffset (fd-tell fd)))
@@ -973,7 +1066,11 @@
     (setf (faslstate.faslfname s) string)
     (setf (faslstate.fasldispatch s) table)
     (setf (faslstate.faslversion s) 0)
-    (%stack-block ((buffer (+ target::node-size $fasl-buf-len)))
+    (#-wasm32-target %stack-block #+wasm32-target let
+        ((buffer #-wasm32-target (+ target::node-size $fasl-buf-len)
+                 #+wasm32-target (vector (make-array $fasl-buf-len
+                                                    :element-type '(unsigned-byte 8))
+                                        0)))
       (setf (faslstate.iobuffer s) buffer)
       (%fasl-init-buffer s)
       (let* ((parse-string (make-string 255 :element-type 'base-char)))
@@ -1213,7 +1310,8 @@
                         *xload-cold-load-documentation*
                         *xload-startup-file*
                         *early-class-cells*))
-      (%set-tcr-toplevel-function (%current-tcr) nil) ; should get reset by l1-boot.
+      #+wasm32-target (setq %toplevel-function% nil)
+      #-wasm32-target (%set-tcr-toplevel-function (%current-tcr) nil) ; should get reset by l1-boot.
       (setq %system-locks% (%cons-population nil))
       ;; Need to make %ALL-PACKAGES-LOCK% early, so that we can casually
       ;; do SET-PACKAGE in cold load functions.

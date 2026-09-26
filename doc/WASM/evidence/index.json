@@ -3935,6 +3935,38 @@
       "review_disposition": "ACCEPTED_INTEGRATION_RECORD_FOLLOWUP_HARNESS_PENDING_REVIEW",
       "scope": "Audit 181 (973c10bb), no defect: conditional recommendation followed after recording O-92 and adding O-94. Eight product files byte-identical to the reviewed three-proposal stack; all 43 qualified compiler/CCL sources and runtime inputs bound. Fresh integrated execution: 595 modules, 33 initializers, 111 native-equal observations and 116 controls in each of four modes, 9/151 collections. The exact nonzero-high significand mutant is killed by the new subnormal observation in every mode while the old 110 remain equal. Both table-capacity edits are anchored with unrelated-literal and anchor-count controls. All 1825 Git-free different-root replay artifacts match; 2997 regenerable artifacts, including eleven production FASLs, still match the reviewed packet. Native R6/R6a 21843 tests and 164 restored FASLs, 26048 corpus comparisons, 68 reader comparisons and 46 collector checks reused by exact identity. O-92 ordinary method-function metadata writes remain required before level-1 CLOS boot; O-93 already closed by the definitions packet, O-95 exponent range limit carried. Original harness failures retained; follow-up harness evidence awaits adversarial review. Ordered compilation still stops at :EQ-VECTOR-INITIAL-ELEMENT in l0-hash. Production 0/0/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-HASH-IO-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-hash-io-r1/packet.json",
+      "sha256": "f5b78e3e2bca43b1c9f9674c32b470a856d86b0b0abcd50caf81ab04dc8e93d5",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUDIT_183",
+      "scope": "Accepted and integrated jointly with the hash/FASL/GC stack after audit 183 (18ae70b3). Only the final repaired stack is qualified with the executed collector and owner. Original proposal records remain immutable. See integration-loader-gc.json for exact source identity and O-103\u2013O-105 dispositions. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-FASL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-25-loader-fasl-r1/packet.json",
+      "sha256": "70efd188f81351d2c5b354efbf04729cbdd23a7b47f89c160a185b8c83fad704",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUDIT_183",
+      "scope": "Accepted and integrated jointly with the hash/FASL/GC stack after audit 183 (18ae70b3). Only the final repaired stack is qualified with the executed collector and owner. Original proposal records remain immutable. See integration-loader-gc.json for exact source identity and O-103\u2013O-105 dispositions. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-GC-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-gc-r1/packet.json",
+      "sha256": "f8d4c671ba05b7665d1e3532733b7d588fa5b6c491d1241635862847d931eae5",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUDIT_183",
+      "scope": "Accepted and integrated jointly with the hash/FASL/GC stack after audit 183 (18ae70b3). Only the final repaired stack is qualified with the executed collector and owner. Original proposal records remain immutable. See integration-loader-gc.json for exact source identity and O-103\u2013O-105 dispositions. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
+      "slot_credit": false
+    },
+    {
+      "id": "STAGE1-LOADER-GC-INTEGRATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-gc-integration/packet.json",
+      "sha256": "b00e70062e62bbb75411124d195bdd8617ce179ceaff86fb72aa5afcb915b0f4",
+      "review_disposition": "ACCEPTED_INTEGRATION_RECORD_FOLLOWUP_HARNESS_PENDING_REVIEW",
+      "scope": "Audit 183 (18ae70b3), no defect: hash, FASL and GC proposals accepted and integrated together. Fourteen changed files match the reviewed stack byte-for-byte; 45 qualified Lisp sources and runtime inputs bound. Fresh Git-free different-root integration execution reproduces 1197 modules, 66/69 initializers, 145/149 native-equal rows, 141 controls and 13/229 collections in four modes; all 3628 regenerable artifacts match. Fresh integrated corpus passes 26048 comparisons. Native R6/R6a 21843 tests and 164 restored FASLs, 102 readers across 17 profiles, and 82 collector checks with ten killed faults reused by exact identity. O-97/O-98/O-101/O-102 closed; O-103 equivalent owner clauses recorded; O-104 saved-image witness and O-105 immediate encoding/FASL branch obligations carried. Whole-file 21/21/0, originals 575/535, ledger 21/12 unchanged; no target LOAD, boot or criterion credit. New integration harness awaits adversarial review.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

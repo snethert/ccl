@@ -98,6 +98,11 @@
 ; This takes a simple-base-string and passes a C string into
 ; the kernel "Bug" routine.  Not too fancy, but neither is #_DebugStr,
 ; and there's a better chance that users would see this message.
+#+wasm32-target
+(defun bug (arg)
+  (error "~a" arg))
+
+#-wasm32-target
 (defun bug (arg)
   (if (typep arg 'simple-base-string)
     #+x86-target
@@ -118,6 +123,11 @@
   (+ (unsignedwide->integer *total-bytes-freed*)
      (%heap-bytes-allocated)))
 
+#+wasm32-target
+(defun %freebytes ()
+  (%wasm-area-size 0))
+
+#-wasm32-target
 (defun %freebytes ()
   (with-macptrs (p)
     (%setf-macptr-to-object p
@@ -126,6 +136,11 @@
     (- (%get-natural p target::area.high)
        (%get-natural p target::area.active))))
 
+#+wasm32-target
+(defun %reservedbytes ()
+  (%wasm-area-size 2))
+
+#-wasm32-target
 (defun %reservedbytes ()
   (with-macptrs (p)
     (%setf-macptr-to-object p (%get-kernel-global 'all-areas))
@@ -142,10 +157,20 @@
   (declare (ignore address))
   t)
 
+#+wasm32-target
+(defun frozen-space-dnodes ()
+  0)
+
+#-wasm32-target
 (defun frozen-space-dnodes ()
   "Returns the current size of the frozen area."
   (%fixnum-ref-natural (%get-kernel-global 'tenured-area)
                        target::area.static-dnodes))
+#+wasm32-target
+(defun %usedbytes ()
+  (error "Whole-image accounting requires a Wasm collector-owner service."))
+
+#-wasm32-target
 (defun %usedbytes ()
   (with-lock-grabbed (*kernel-exception-lock*)
     (with-lock-grabbed (*kernel-tcr-area-lock*)
@@ -171,6 +196,12 @@
 
 
 
+#+wasm32-target
+(defun %stack-space ()
+  (let ((free (%wasm-area-size 3)) (used (%wasm-area-size 4)))
+    (values (+ free used) used free)))
+
+#-wasm32-target
 (defun %stack-space ()
   (%normalize-areas)
   (let ((free 0)
@@ -224,6 +255,13 @@
 ;;;   vsp used
 ;;;   tsp free  (not on ARM)
 ;;;   tsp used  (not on ARM)
+#+wasm32-target
+(defun %thread-stack-space (&optional (thread *current-lisp-thread*))
+  (unless (eq thread *current-lisp-thread*)
+    (error "Cannot inspect another Worker stack."))
+  (values 0 0 (%wasm-area-size 3) (%wasm-area-size 4) 0 0))
+
+#-wasm32-target
 (defun %thread-stack-space (&optional (thread *current-lisp-thread*))
   (when (eq thread *current-lisp-thread*)
     (%normalize-areas))
@@ -497,7 +535,8 @@
 (defvar %documentation-lock% nil)
 
 (setq %documentation
-  (make-hash-table :weak t :size 100 :test 'eq :rehash-threshold .95)
+  (make-hash-table :weak #-wasm32-target t #+wasm32-target nil
+                   :size 100 :test 'eq :rehash-threshold .95)
   %documentation-lock% (make-lock))
 
 (defun %put-documentation (thing doc-id doc)
@@ -553,7 +592,7 @@
 (defparameter *spin-lock-tries* 1)
 (defparameter *spin-lock-timeouts* 0)
 
-#+(and (not futex) (not x86-target))
+#+(and (not futex) (not x86-target) (not wasm32-target))
 (defun %get-spin-lock (p)
   (let* ((self (%current-tcr))
          (n *spin-lock-tries*))
@@ -784,6 +823,16 @@
 
 
 
+#+wasm32-target
+(defun %%lock-owner (lock)
+  (let* ((state (%wasm-recursive-lock-state
+                 (%svref lock target::lock._value-cell) lock))
+         (owner (svref state 0)))
+    (cond ((zerop owner) nil)
+          ((eql owner (%wasm-lock-owner-token)) *current-process*)
+          (t (error "Cannot inspect another Worker's lock.")))))
+
+#-wasm32-target
 (defun %%lock-owner (lock)
   "Intended for debugging only; ownership may change while this code
    is running."
@@ -1158,6 +1207,12 @@
                       
 
 
+#+wasm32-target
+(defun safe-get-ptr (p &optional dest)
+  (declare (ignore p dest))
+  (error "Native pointer storage is unavailable on this target."))
+
+#-wasm32-target
 (defun safe-get-ptr (p &optional dest)
   (if (null dest)
     (setq dest (%null-ptr))

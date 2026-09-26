@@ -234,7 +234,8 @@
 ;;; Special binding indices, and the inverse mapping between indices
 ;;; and symbols
 (let* ((binding-index-lock (make-lock))
-       (binding-index-reverse-map (make-hash-table :test #'eq :weak :value))
+       (binding-index-reverse-map (make-hash-table :test #'eq :weak
+                                                  #-wasm32-target :value #+wasm32-target nil))
        (next-binding-index 0))
   (defun %set-binding-index (val) (setq next-binding-index val))
   (defun next-binding-index () (1+ next-binding-index))

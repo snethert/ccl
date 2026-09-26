@@ -4171,25 +4171,31 @@
                      n base payload
                      (if initial (b-wat "(i32.sub (i32.const 0) (i32.shr_u ~a (i32.const 2)))" initial) "(i32.const 0)") n)))) s)))))
 
-(defun bootstrap-make-bit-array (forms)
+(defun bootstrap-make-typed-array (forms)
   (when (and forms (evenp (length (cdr forms))))
-    (let ((initial nil) (seen nil) (bitp nil))
+    (let ((initial nil) (seen nil) (subtag nil))
       (loop for (key value) on (cdr forms) by #'cddr do
         (multiple-value-bind (name constant) (bootstrap-immediate key)
           (unless (and constant (member name '(:element-type :initial-element))
                        (not (member name seen)))
-            (return-from bootstrap-make-bit-array nil))
+            (return-from bootstrap-make-typed-array nil))
           (push name seen)
           (if (eq name :initial-element)
             (setq initial value)
             (multiple-value-bind (type constant) (bootstrap-immediate value)
-              (unless (and constant (eq type 'bit))
-                (return-from bootstrap-make-bit-array nil))
-              (setq bitp t)))))
-      (when bitp
+              (unless (and constant
+                           (setq subtag
+                             (cdr (assoc type
+                               '((bit . 255) ((unsigned-byte 8) . 199)
+                                 ((signed-byte 8) . 207) ((unsigned-byte 16) . 215)
+                                 ((signed-byte 16) . 223) ((unsigned-byte 32) . 167)
+                                 ((signed-byte 32) . 175) (fixnum . 183))
+                               :test #'equal))))
+                (return-from bootstrap-make-typed-array nil))))))
+      (when subtag
         (b-multiple (make-b-raw-code :text
           (bootstrap-make-vector
-           (append (list (first forms) (bootstrap-constant wasm32::subtag-bit-vector))
+           (append (list (first forms) (bootstrap-constant subtag))
                    (when initial (list initial))))))))))
 
 (defun bootstrap-make-simple-vector (forms)
@@ -4545,6 +4551,54 @@
                             word base word (if single 4 8) real
                             word (if single 12 16) base word (if single 4 8) imaginary)))))))))
 
+;;; Namespace buffers are bounded octet vectors. NX1 wraps the pointer
+;;; operand in %MACPTRPTR%; unwrap only that declared boundary, retaining the
+;;; buffer as a rooted Lisp object throughout operand evaluation/allocation.
+(defun bootstrap-buffer-memory (op forms)
+  (let* ((store (eq op 'ccl::%immediate-set-xxx))
+         (bits (first forms))
+         (width (and (integerp bits) (logand bits 15)))
+         (pointer (second forms)))
+    (unless (and (= (length forms) (if store 4 3))
+                 (member width '(1 2 4))
+                 (zerop (logand bits (lognot 63)))
+                 (ccl::acode-p pointer)
+                 (eq (ccl::acode-operator-name (ccl::acode-operator pointer))
+                     'ccl::%macptrptr%)
+                 (= (length (ccl::acode-operands pointer)) 1))
+      (refuse :buffer-memory-layout))
+    (bootstrap-operands (cons (first (ccl::acode-operands pointer)) (cddr forms))
+      (lambda (values)
+        (destructuring-bind (buffer offset &optional value) values
+          (let* ((base (temporary)) (bytes (temporary)) (address (temporary))
+                 (word (temporary)) (signed (if store (not (logbitp 5 bits)) (logbitp 5 bits))))
+            (with-output-to-string (s)
+              (bootstrap-ivector-byte-extent buffer base bytes s)
+              (write-string (b-condition
+                (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 199))" base) 5) s)
+              (write-string (b-condition
+                (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))" offset offset) 4) s)
+              (write-string (b-condition
+                (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (i32.shr_u ~a (i32.const 2)))
+                  (i64.const ~d)) (i64.extend_i32_u (local.get ~a)))" offset width bytes) 4) s)
+              (format s "(local.set ~a (i32.add (local.get ~a)
+                (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2)))))" address base offset)
+              (if store
+                (progn
+                  (format s "(local.set ~a ~a)" word
+                    (bootstrap-integer-vector-value value
+                      (if (= width 4) (if signed 175 167) 199)
+                      (if signed (- (ash 1 (1- (* width 8)))) 0)
+                      (1- (ash 1 (- (* width 8) (if signed 1 0))))))
+                  (format s "(i32.store~a (local.get ~a) (local.get ~a)) ~a"
+                    (case width (1 "8") (2 "16") (t "")) address word value))
+                (write-string
+                  (let ((load (b-wat "(i32.load~a (local.get ~a))"
+                          (case width (1 (if signed "8_s" "8_u"))
+                                      (2 (if signed "16_s" "16_u")) (t "")) address)))
+                    (if (= width 4) (bootstrap-box-word load signed)
+                      (b-wat "(i32.shl ~a (i32.const 2))" load))) s)))))))))
+
 (defun bootstrap-operator (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
@@ -4570,6 +4624,8 @@
                   (drop (call $object_base ~a (i32.const 32) (i32.const 1850)))
                   (i32.store offset=2 ~a (local.get ~a)) (local.get ~a))"
                 value (b-scalar (second args)) symbol symbol value value)))
+      ((ccl::immediate-get-xxx ccl::%immediate-set-xxx)
+       (bootstrap-buffer-memory op args))
       (ccl::list*
        (reduce (lambda (head tail) (b-cons head (make-b-raw-code :text tail)))
                (first (first args)) :from-end t
@@ -4617,6 +4673,12 @@
         (b-call (bootstrap-constant (if (eq op 'ccl::aset1) 'ccl::%aset1 op))
                 (list args nil))))
       (ccl::%slot-unbound-marker (b-wat "(i32.const ~d)" wasm32::slot-unbound-marker))
+      (ccl::%word-to-int
+       (bootstrap-operands args
+         (lambda (values)
+           (b-wat "~a (i32.shr_s (i32.shl ~a (i32.const 14)) (i32.const 14))"
+                  (b-condition (b-wat "(i32.and ~a (i32.const 3))" (first values)) 5)
+                  (first values)))))
       (ccl::%illegal-marker (b-wat "(i32.const ~d)" wasm32::illegal-marker))
       (ccl::eq
        (let* ((left (second args)) (right (third args))
@@ -4834,6 +4896,25 @@
            (b-multiple (make-b-raw-code :text
              (bootstrap-operands forms
                (lambda (values) (bootstrap-function-info (first values) 3))))))
+          ((eq name 'ccl::%wasm-gc-count)
+           (unless (null forms) (refuse :gc-count-arity))
+           (b-multiple (make-b-raw-code :text
+             (b-wat "~a (i32.shl ~a (i32.const 2))"
+               (b-condition (b-wat "(i32.gt_u ~a (i32.const 536870911))"
+                                  (b-load wasm32::tcr.gc_count)) 6)
+               (b-load wasm32::tcr.gc_count)))))
+          ((eq name 'ccl::%wasm-area-size)
+           (unless (= (length forms) 1) (refuse :area-size-arity))
+           (let* ((selector (ccl::acode-fixnum-form-p (first forms)))
+                  (fields (case selector
+                            (0 '(52 . 48)) (1 '(48 . 56)) (2 '(52 . 56))
+                            (3 '(72 . 64)) (4 '(64 . 68)))))
+             (unless fields (refuse :area-size-selector))
+             (b-multiple (make-b-raw-code :text
+               (bootstrap-box-word
+                 (b-wat "~a (i32.sub ~a ~a)"
+                   (b-condition (b-wat "(i32.lt_u ~a ~a)" (b-load (car fields)) (b-load (cdr fields))) 6)
+                   (b-load (car fields)) (b-load (cdr fields))) nil)))))
           ((eq name 'ccl::%wasm-function-bits)
            (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
            (b-multiple (make-b-raw-code :text
@@ -4841,7 +4922,7 @@
           ((member name '(ccl::lfun-bits ccl::inner-lfun-bits ccl::lfun-bits-known-function))
            (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
            (b-multiple (make-b-raw-code :text (bootstrap-lfun-bits-access forms))))
-          ((and (eq name 'make-array) (bootstrap-make-bit-array forms)))
+          ((and (eq name 'make-array) (bootstrap-make-typed-array forms)))
           ((and (eq name 'sbit) (= (length forms) 2))
            (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
           ((and (eq name 'ccl::%sbitset) (= (length forms) 3))
@@ -5652,11 +5733,46 @@
 
 (in-package :wasm32-compiler)
 
+;;; The explicit initial element is the native hash constructor protocol.
+;;; Fill every payload cell before publishing the allocation. The collector
+;;; recognizes this uninitialized marker vector until %INIT-NHASH-VECTOR runs.
+(defun bootstrap-allocate-native-hash-vector (forms)
+  (bootstrap-operands forms
+    (lambda (values)
+      (let ((count (first values)) (initial (third values))
+            (n (temporary)) (i (temporary)))
+        (b-wat "~a ~a (local.set ~a (i32.shr_u ~a (i32.const 2)))
+                 (i32.add ~a (i32.const 6))"
+          (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 7))
+            (i32.or (i32.lt_s ~a (i32.const 64)) (i32.gt_u ~a (i32.const 131128))))"
+            count count count) 6)
+          (b-condition (b-wat "(i32.ne ~a (i32.const 51))" initial) 6)
+          n count
+          (bootstrap-heap-block
+            (b-wat "(i32.add ~a (i32.const 8))" count)
+            (lambda (base bytes)
+              (b-wat "(memory.fill ~a (i32.const 0) ~a)
+                (i32.store ~a (i32.or (i32.shl (local.get ~a) (i32.const 8)) (i32.const 74)))
+                (local.set ~a (i32.const 0))
+                (block $hash_done (loop $hash_fill
+                  (br_if $hash_done (i32.ge_u (local.get ~a) (local.get ~a)))
+                  (i32.store offset=4 (i32.add ~a (i32.shl (local.get ~a) (i32.const 2))) (i32.const 51))
+                  (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $hash_fill)))"
+                base bytes base n i i n base i i i))))))))
+
 ;;; An EQ backing vector must be valid before the next safepoint. Initialize
 ;;; the accepted strong-owner prefix and buckets inside one heap block.
 (defun bootstrap-allocate-eq-vector (forms)
   (when (and *b-cpl-conditions*
              (eql (ccl::acode-fixnum-form-p (second forms)) wasm32::subtag-hash-vector))
+    (when (= (length forms) 3)
+      ;; Preserve the existing directed refusal for known invalid literals.
+      ;; The native constructor supplies the UNBOUND-MARKER operator instead.
+      (multiple-value-bind (initial constant) (bootstrap-type-literal (third forms))
+        (declare (ignore initial))
+        (when constant (refuse :eq-vector-initial-element)))
+      (return-from bootstrap-allocate-eq-vector
+        (bootstrap-allocate-native-hash-vector forms)))
     (unless (= (length forms) 2) (refuse :eq-vector-initial-element))
     (bootstrap-operands forms
       (lambda (values)

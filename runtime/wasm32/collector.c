@@ -113,6 +113,8 @@ EXPORT U collect(U config) {
  if((config&15)||!extent(config,sizeof(State)))return BAD_OWNER;
  s=(State *)(unsigned long)config;s->error=s->count=s->queued=s->cursor=s->updates=s->live=s->roots=s->reclaimed=0;
  if((s->tcr&15)||!extent(s->tcr,256))return reject(s,BAD_OWNER);
+ /* No wrap: an old hash stamp must never alias a later collection. */
+ if(LOAD(s->tcr+204)>=536870911u)return reject(s,BAD_OWNER);
  s->from=LOAD(s->tcr+56);s->used=LOAD(s->tcr+48);s->limit=LOAD(s->tcr+52);
  s->stacklo=LOAD(s->tcr+68);s->stackhi=LOAD(s->tcr+72);s->next=s->to;
  if(!s->from||!s->to||((s->from|s->used|s->limit|s->to|s->end)&7)||s->from>s->used||s->used>s->limit||s->to>s->end||!extent(s->from,(W)s->limit-s->from)||!extent(s->to,(W)s->end-s->to)||overlap(s->from,(W)s->limit-s->from,s->to,(W)s->end-s->to))return reject(s,BAD_OWNER);
@@ -127,13 +129,30 @@ EXPORT U collect(U config) {
   header=LOAD(p);tag=header&255;n=header>>8;scan=0xffffffffu;size=8;
   if((tag&7)==2||(tag&7)==7){
    if(tag==74){
-    /* Only strong owner-created EQ vectors; never infer weak semantics. */
+    /* Native Lisp constructors first fill every cell with the free marker.
+     * Once initialized, only strong vectors are admitted. All fields are
+     * tagged roots; the native weak-link word is zero on this target. */
+    if(LOAD(p+4)==51){
+     if(n<16||((n-14)&1)||n>32782||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
+     for(U j=0;j<n;j++)if(LOAD(p+4+4*j)!=51)return reject(s,BAD_OBJECT);
+    }else if(LOAD(p+4)==0){
+     U capacity=n>=14?(n-14)/2:0,flags;
+     if(n<16||((n-14)&1)||capacity>16384||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
+     flags=LOAD(p+8);
+     if((flags&3)||(flags&~0x780c0800u)||LOAD(p+52)!=capacity*4)return reject(s,BAD_OBJECT);
+     if((LOAD(p+12)&3)||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=51)return reject(s,BAD_OBJECT);
+     if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
+     if(LOAD(p+40)!=NIL&&((LOAD(p+40)&3)||LOAD(p+40)/4>=n))return reject(s,BAD_OBJECT);
+     /* The reciprocal may be a bignum for a one-slot vector. */
+    }else{
+    /* Keep the existing strong owner-created EQ protocol unchanged. */
     U capacity=n>=14?(n-14)/2:0;
     if(n<22||((n-14)&1)||capacity>16384||(capacity&(capacity-1))||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
     if((LOAD(p+8)&~((1u<<30)|(1u<<29)))||!(LOAD(p+8)&(1u<<30))||LOAD(p+52)!=capacity*4||LOAD(p+56)!=0)return reject(s,BAD_OBJECT);
     if(LOAD(p+4)!=NIL||LOAD(p+12)!=0||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=0||LOAD(p+28)!=NIL)return reject(s,BAD_OBJECT);
     if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
     if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
+    }
     scan=n;size=4+(W)n*4;
    }
    else if(tag==90){
@@ -219,7 +238,7 @@ EXPORT U collect(U config) {
    /* Payload index 14 is object word 15: first key. Cached keys are roots,
     * but only bucket-key movement requests a rehash. Destination-only write
     * preserves the collector's source/root atomicity on refusal. */
-   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v)
+   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v&&(LOAD(o->moved+8)&(1u<<30)))
     STORE(o->moved+8,LOAD(o->moved+8)|(1u<<29));}
  }
  if(s->error)return s->error;
@@ -227,5 +246,6 @@ EXPORT U collect(U config) {
  for(index=0;index<s->updates;index++)STORE(updates(s)[index].slot,updates(s)[index].value);
  s->reclaimed=(s->used-s->from)-(s->next-s->to);
  STORE(s->tcr+56,s->to);STORE(s->tcr+48,s->next);STORE(s->tcr+52,s->end);
+ STORE(s->tcr+204,LOAD(s->tcr+204)+1);
  return 0;
 }

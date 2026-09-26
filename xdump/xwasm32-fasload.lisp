@@ -156,7 +156,18 @@
             *wasm32-code-set*)
       id)))
 
+(defun wasm32-reserve-code-record-space ()
+  ;; Code records contain large WAT strings. Growing by one allocation at a
+  ;; time repeatedly copies the entire accumulated scratch arena. Keep geometric
+  ;; headroom, without changing addresses or discarding FASL expression-table
+  ;; references to earlier records. XFASLOAD still handles an oversized record.
+  (let* ((space *wasm32-scratch-space*)
+         (size (xload-space-size space)))
+    (when (> (xload-space-lowptr space) (ash size -1))
+      (xload-more-space space size))))
+
 (defun wasm32-fasl-function (s)
+  (wasm32-reserve-code-record-space)
   (let* ((n (%fasl-read-count s))
          (fn (xload-make-gvector wasm32-function-subtag wasm32-function-cells)))
     (unless (>= n 8) (error "Malformed wasm32 function"))
