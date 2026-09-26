@@ -3995,6 +3995,14 @@
       "scope": "Ordered level-1 continuation and runtime weak tables, accepted after audit 185. Whole-file 29/24/0 to 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK. Canonical setter names, target special and sibling-code identities, random-source boundary, native weak constructors and collector fixed point. Four modes: 1478 modules, 93/97 initializers, 176 observations (169 native-computed, including one adapted RNG setup, and seven literal target expectations), 141 controls, 25/298 collections; 52 weak comparisons. Five pending cases and four startup refusals keep execution INCOMPLETE. Native 21843 tests and 164 restored FASLs; 221 U1 reader comparisons over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutations reused by exact source/owner/binary identity from STAGE1-WEAK-HASH-R1. O-106/O-107 fixed, O-108 reporting corrected, O-110 reconciled, O-111 Git dependency removed. Product Lisp +337/-69, collector C +78/-17. Originals 575/535, admission 2050/2231 and ledger 21/12 unchanged; no target LOAD, boot or criterion credit.",
       "sha256": "7bec3b889d5fec8408a9d904537c9cf627dab2f273a9ffcc362b5683f461478a",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-NAMESPACE-WEAK-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-namespace-weak-r1/packet.json",
+      "sha256": "44dd3d4267df247083b6787d412258b8b6df255e86642a67fe7021c180188865",
+      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+      "scope": "Restore weak-value FTD ordinal types and preserve native namespace hash bindings and weak-key function names. Four modes: 1480 modules, 93/97 initializers, 177 observations, 141 controls, 25/299 collections. Native R6/R6a 21843 tests / 164 restored FASLs; 238 readers over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutants reused by exact identity. O-113 host images have a separate inventory and a directed retention check; the immutable R2 inventory has a bound correction. O-116 indirect calls explained. Initial witness missing MAPCAR/EVERY fixed with ordinary loops. One native weak-count oracle difference remains unexplained; three fresh native replays and the final unchanged-image four-mode run agree, original evidence retained. Fixture documentation weakness awaits native-hash migration. Product Lisp +3/-16. Whole-file 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK; originals 575/535, ledger 21/12, no criterion credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

@@ -50,19 +50,11 @@
 (defvar *wasm-namespace-ccl-root* nil)
 
 (defun %wasm-namespace-support-initialize ()
-  ;; Install the target's table and package representation boundaries before
-  ;; the original type, foreign-type and stream initializers run.
-  (fset 'make-hash-table #'%wasm-make-hash-table)
-  (fset 'gethash #'%wasm-gethash)
-  (fset 'puthash #'%wasm-puthash)
-  (fset 'remhash #'%wasm-remhash)
-  (fset 'clrhash #'%wasm-clrhash)
-  (fset 'maphash #'%wasm-maphash)
-  (fset 'hash-table-count #'%wasm-hash-table-count)
-  (fset 'sxhash #'%wasm-sxhash)
+  ;; Keep the native hash bindings and the weak *LFUN-NAMES* table created
+  ;; by l0-def. Generated accessors dispatch image-owned tables separately;
+  ;; their native-table path calls these public bindings.
   (fset 'intern #'%wasm-intern)
   (fset 'find-symbol #'%wasm-find-symbol)
-  (setq *lfun-names* (%wasm-make-class-table 16))
   t)
 
 (defun %wasm-namespace-initialize (ccl-root)

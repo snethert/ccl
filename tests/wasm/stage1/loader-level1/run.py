@@ -44,7 +44,7 @@ def run(out, resume=False):
         dict(id='gc-fresh', call=['CCL', 'LOADER-GC-FRESH'], args=[]),
         dict(id='gc-constructor-flags', call=['CCL', 'LOADER-GC-CONSTRUCTOR-FLAGS'], args=[])]
     cases += [dict(id='level1-' + name, call=['CCL', 'LOADER-LEVEL1-' + name.upper()], args=[])
-              for name in ('platform', 'metrics', 'metadata', 'plist', 'keyword', 'sets',
+              for name in ('namespace-tables', 'platform', 'metrics', 'metadata', 'plist', 'keyword', 'sets',
                            'setter', 'seed-zero', 'seed-high', 'seed-max', 'seed-refusals', 'seed-collect',
                            'random-state', 'random-fresh', 'random-bounds',
                            'local-special', 'local-functions', 'sort', 'sort-key')]
@@ -76,7 +76,8 @@ def run(out, resume=False):
           extra_files=[HERE / 'setter-second.lisp'],
           execution_files=lambda name: name.startswith('level-0/') or name in
               ('level-1/l1-utils.lisp', 'level-1/l1-numbers.lisp', 'level-1/l1-sort.lisp'),
-          support_forms=['("ccl:lib;hash.lisp" defun hash-table-weak-p next-hash-table-iteration-1 maphash)',
+          support_forms=['("ccl:level-1;WASM32;w32-files.lisp" defun %wasm-namespace-support-initialize)',
+                         '("ccl:lib;hash.lisp" defun hash-table-weak-p next-hash-table-iteration-1 maphash)',
                          '("ccl:level-1;l1-aprims.lisp" defun setf-function-name existing-setf-function-name maybe-setf-name nthcdr)',
                          '("ccl:level-1;l1-boot-1.lisp" defun host-platform)',
                          '("ccl:level-1;l1-init.lisp" defloadvar *total-gc-microseconds* *total-bytes-freed*)'])

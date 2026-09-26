@@ -86,11 +86,6 @@
 
 
 (defvar *host-ftd* (make-ftd
-                    ;; The single-Worker target owns this type registry for
-                    ;; the lifetime of its image. It does not request weak
-                    ;; table semantics from the strong-table provider.
-                    #+wasm32-target :ordinal-types
-                    #+wasm32-target (make-hash-table :test #'eq)
                     :interface-db-directory
                     #.(ecase (backend-name *target-backend*)
                         (:wasm32 nil)

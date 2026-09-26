@@ -1,5 +1,9 @@
 (in-package "CCL")
 
+;;; Indirect calls deliberately exercise the installed public function cells.
+;;; Direct generated hash access can use the Wasm representation dispatchers;
+;;; these calls check that native constructors/counting remain callable too.
+;;; The product l0-def/l1-utils initializers also call MAKE-HASH-TABLE directly.
 (defvar *loader-weak-table* nil)
 (defvar *loader-weak-reference* nil)
 

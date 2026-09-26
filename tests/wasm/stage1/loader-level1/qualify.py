@@ -10,7 +10,7 @@ SHARED = ('level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.l
           'level-1/l1-utils.lisp', 'level-1/l1-numbers.lisp', 'level-1/l1-aprims.lisp',
           'level-1/l1-clos-boot.lisp', 'level-0/l0-numbers.lisp',
           'level-0/l0-hash.lisp', 'level-0/l0-def.lisp', 'level-0/l0-misc.lisp',
-          'level-0/l0-symbol.lisp', 'level-1/l1-dcode.lisp')
+          'level-0/l0-symbol.lisp', 'level-1/l1-dcode.lisp', 'lib/foreign-types.lisp')
 COMPILER_CHANGES = ('CCL::TARGET-COMPILER-MODULES', 'CCL::TARGET-XLOAD-MODULES',
                     'CCL::TARGET-COMPILE-MODULES')
 

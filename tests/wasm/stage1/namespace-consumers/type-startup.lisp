@@ -143,6 +143,8 @@
              ccl::*character-class* (find-class 'character)
              ccl::*base-char-class* (find-class 'base-char)
              ccl::*standard-char-class* (find-class 'standard-char))
+       ;; Restore :WEAK T when this historical harness uses native hash tables.
+       ;; Its namespace-init.lisp still installs the early strong-only provider.
        ;; All documentation keys in this fixture are already rooted symbols;
        ;; its owned strong table has the same liveness for those keys.
        (setq ccl::%documentation (make-hash-table :test 'eq)

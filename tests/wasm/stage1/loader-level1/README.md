@@ -1,7 +1,8 @@
 # Ordered level-1 bootstrap prefix
 
-The [level-1 continuation](continuation.md) advances the pending checkout to
-36/36/0 and addresses audit 184 O-106/O-107.
+The accepted [level-1 continuation](continuation.md) advances the checkout to
+36/36/0 and addresses audit 184 O-106/O-107. The subsequent
+[namespace substitutions](substitutions.md) preserve its native weak tables.
 
 The runtime weak-table extension and its separate qualification are described
 in [weak hash support](weak-hash.md). The report below records the earlier

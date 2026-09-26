@@ -9,7 +9,7 @@ import storage
 c, HERE = product.c, product.HERE
 
 
-def retain(destination, execution, native, readers, corpus, development):
+def retain(destination, execution, native, readers, corpus, development, retention):
     sources = {n: hashlib.sha256(b.encode()).hexdigest() for n, b in product.sources().items()}
     result = c.read(execution / 'summary.json')
     assert result['source_identity'] == sources
@@ -21,7 +21,7 @@ def retain(destination, execution, native, readers, corpus, development):
     for name in ('FIND-XLOAD-BACKEND', 'BACKEND-XLOAD-INFO-COMPILE-FILE-FUNCTION'):
         assert 'Undefined function ' + name not in build_log
     matrix = c.read(readers / 'summary.json')
-    assert matrix['status'] == 'PASS' and matrix['comparisons'] == 221
+    assert matrix['status'] == 'PASS' and matrix['comparisons'] == 238
     assert all(sources[n] == r['after'] for n, r in matrix['full_sources'].items())
     regression = c.read(corpus / 'regression.json')
     assert regression['status'] == 'PASS' and regression['fresh_comparisons'] == 26112
@@ -42,7 +42,16 @@ def retain(destination, execution, native, readers, corpus, development):
     assert result['runtime'] == collector['runtime']
     assert c.sha(c.ROOT / 'runtime/wasm32/collector.c') == collector['runtime']['source']
     assert c.sha(c.ROOT / 'runtime/wasm32/collector-owner.mjs') == collector['runtime']['owner']
-    record = dict(status='IMPLEMENTED_AWAITING_REVIEW', review='NOT_REVIEWED',
+    for run in result['runs'].values():
+        row = next(r for r in run['observations'] if r['id'] == 'level1-namespace-tables')
+        assert row['values'] == [True, True, True]
+    checks = c.read(retention / 'retention-check.json')
+    assert checks['status'] == 'PASS'
+    assert checks['source'] == c.sha(HERE.parent / 'loader-chain/retain.py')
+    assert checks['check'] == c.sha(HERE.parent / 'loader-chain/retention-check.py')
+    record = dict(deliverable='namespace weak-table substitutions',
+        retention_checks=c.sha(retention / 'retention-check.json'),
+        status='IMPLEMENTED_AWAITING_REVIEW' , review='NOT_REVIEWED',
         whole_file=result['whole_file'], source_identity=sources, runtime=result['runtime'],
         execution_status=result['status'], accepted_originals=[575, 535], ledger=[21, 12],
         collector_reused=dict(checks=123, killed_faults=17, packet=str(prior / 'packet.json'),
@@ -51,16 +60,18 @@ def retain(destination, execution, native, readers, corpus, development):
         target_load=False, boot=False, slot_credit=False,
         native_inputs=c.sha(c.STORE / 'macos-u1-inputs/pins.json'))
     roots = dict(execution=execution, native=native, readers=readers, corpus=corpus,
-                 development=development)
+                 development=development, retention=retention)
     for path in roots.values(): storage.workspace(path)
     product.module('level1_retain', HERE.parent / 'loader-chain/retain.py').retain(
-        c, destination, roots, 'STAGE1-LOADER-LEVEL1-R2', record)
+        c, destination, roots, 'STAGE1-NAMESPACE-WEAK-R1', record,
+        extra={'audit185-inventory-correction.json': c.read(
+            c.ROOT / 'doc/WASM/stage1/audit185-inventory-correction.json')})
     for path in roots.values(): shutil.rmtree(path)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('destination', 'execution', 'native', 'readers', 'corpus', 'development'):
+    for name in ('destination', 'execution', 'native', 'readers', 'corpus', 'development', 'retention'):
         parser.add_argument('--' + name, type=Path, required=True)
     args = vars(parser.parse_args())
     with storage.lease([p for n, p in args.items() if n != 'destination']):

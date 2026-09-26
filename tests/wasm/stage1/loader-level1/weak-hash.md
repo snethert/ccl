@@ -49,6 +49,12 @@ finalization/termination, multi-Worker GC and upstream kernel source remain
 outside this change. Finalizeable vectors and weak bits on owner-created
 vectors continue to refuse.
 
+O-116: the witness's `FUNCALL`/`SYMBOL-FUNCTION` idiom deliberately tests the
+installed public constructor and count function cells. Generated accessors can
+use the Wasm representation dispatchers; the indirect calls also check their
+public native destinations. Product `l0-def` and `l1-utils` initializers call
+`MAKE-HASH-TABLE` directly, so constructor coverage includes both call paths.
+
 The declared level-1 runner extensions compile `weak-witnesses.lisp` and the
 original `hash-table-weak-p`, `maphash` and iterator definitions. Four modes compare EQ `:weak t`,
 EQ `:weak :key`, EQ `:weak :value`, and EQUAL `:weak :value`, each with a retained

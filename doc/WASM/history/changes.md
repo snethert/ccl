@@ -1,3 +1,35 @@
+## 2026-09-26 — Namespace weak-table substitutions; whole-file 36/36/0 unchanged
+
+The [follow-up](../../../tests/wasm/stage1/loader-level1/substitutions.md)
+removes the strong Wasm ordinal-types override from `*host-ftd*`, restoring the
+existing weak-value default. Namespace support preserves native hash function
+bindings and the weak-key `*lfun-names*` table. The legacy namespace fixture's
+`%documentation` conversion remains conditional on its native-hash migration.
+Product Lisp changes **3 added / 16 removed**; next stop remains
+`l1-streams`, `:BOOTSTRAP-TYPECHECK`.
+
+O-113: saved host-image hashes move to a separate non-reproducible inventory;
+a bound correction qualifies the immutable R2 pack's old inventory. A directed
+retention check varies the image while requiring unchanged reproducible output
+and valid report packs. O-116 explains why weak witnesses call public function
+cells indirectly; direct product constructors are also covered.
+
+All four target modes pass 1,480 modules, 93/97 initializers, 177 observations,
+141 controls and 25/299 collections. Native R6/R6a passes 21,843 tests with
+164 FASLs restored; 238 reader comparisons cover 17 profiles; the full corpus
+passes 26,112 fresh comparisons. Collector qualification is reused by exact
+identity. The new witness's initial MAPCAR/EVERY calls were unavailable in this
+prefix and were replaced with ordinary loops; the failure and diagnostic are
+retained. One native weak-count oracle gave 1 rather than the target's 0;
+three fresh native replays and the final oracle gave 0. That repeatability
+limitation remains unexplained and disclosed, with the original result retained.
+The final execution reuses unchanged compiled artifacts through checked resume.
+
+Evidence: `2026-09-26-namespace-weak-r1`. This follow-up awaits Claude review;
+audit 185's accepted continuation is unchanged. O-114 seed refusals, O-115's image-builder
+conversion and O-117 remain open. Whole-file **36/36/0**, originals **575/535**,
+ledger **21/12**; no target LOAD, full boot or criterion credit.
+
 ## 2026-09-26 — Audit 185 accepted; whole-file counts remain 36/36/0
 
 Audit `fd385a5f` is merged byte-identically. The user's supplied disposition

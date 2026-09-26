@@ -10,7 +10,7 @@ import tempfile
 def retain(c, destination, roots, identity, record, extra=None):
     assert not destination.exists()
     stage = Path(tempfile.mkdtemp(prefix='.loader-report-', dir=destination.parent))
-    generated, compressed = {}, {}
+    generated, compressed, nondeterministic = {}, {}, {}
     try:
         for label, root in roots.items():
             for path in c.files(root):
@@ -21,7 +21,12 @@ def retain(c, destination, roots, identity, record, extra=None):
                 if label == 'development' and path.suffix not in ('.log', '.json', '.patch', '.lisp', '.mjs', '.txt', '.py'): continue
                 name = str(Path(label) / rel)
                 row = dict(sha256=c.sha(path), bytes=path.stat().st_size)
-                if path.suffix in ('.wasm', '.wat', '.bin', '.w32fsl', '.dx64fsl', '.image') or path.name == 'dx86cl64':
+                # Saved native heaps vary with layout even for identical inputs.
+                # Bind the observed image without claiming byte reproduction.
+                if path.suffix == '.image':
+                    nondeterministic[name] = dict(**row, reason='saved host heap layout')
+                    continue
+                if path.suffix in ('.wasm', '.wat', '.bin', '.w32fsl', '.dx64fsl') or path.name == 'dx86cl64':
                     generated[name] = row; continue
                 target = stage / name; target.parent.mkdir(parents=True, exist_ok=True)
                 if row['bytes'] > 131072:
@@ -39,6 +44,7 @@ def retain(c, destination, roots, identity, record, extra=None):
         c.save(stage / 'summary.json', record)
         c.save(stage / 'regenerable.json', generated)
         c.save(stage / 'compressed.json', compressed)
+        c.save(stage / 'non-reproducible.json', nondeterministic)
         c.save(stage / 'packet.json', dict(id=identity, status='PROPOSED', files=c.inventory(stage)))
         c.verify_files(stage, c.read(stage / 'packet.json')['files'])
         os.rename(stage, destination)

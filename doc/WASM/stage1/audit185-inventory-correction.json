@@ -1,0 +1,17 @@
+{
+  "audit": "fd385a5f",
+  "observation": "O-113",
+  "inventory": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-loader-level1-r2/regenerable.json",
+  "sha256": "c4c4087e6fa7485dc7135b8af056a24a00f09d2ff604aeb90c89150f2d326201",
+  "interpretation": "Remove these entries from the reproducible comparison set; their hashes identify only the observed host images. Historical pack bytes stay unchanged.",
+  "non_reproducible": {
+    "native/results/baseline.image": {
+      "bytes": 25825520,
+      "sha256": "415e027cf3fb4fb55989adcb219602376dc25cf7e05d8608f576fed5e802a48e"
+    },
+    "native/results/registered.image": {
+      "bytes": 25817328,
+      "sha256": "41364853ff7d796c0d789c4c7c9ddaa589e57aae4f0dc113f7a4c27c458544f5"
+    }
+  }
+}

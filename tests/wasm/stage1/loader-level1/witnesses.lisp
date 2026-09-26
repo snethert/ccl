@@ -161,3 +161,21 @@
          (sorted (sort-list (list a b c d) #'< #'car)))
     (values (eq (first sorted) b) (eq (second sorted) d)
             (eq (third sorted) a) (eq (fourth sorted) c))))
+
+(defun loader-level1-namespace-tables ()
+  ;; Invoke the real namespace initializer after level-0 has made its tables.
+  ;; Native has no namespace initializer; compare its unchanged bindings/table.
+  (let ((names '(make-hash-table gethash puthash remhash clrhash maphash
+                 hash-table-count sxhash))
+        (functions nil)
+        (preserved t)
+        (table *lfun-names*))
+    (dolist (name names)
+      (push (cons name (symbol-function name)) functions))
+    #+wasm32-target (%wasm-namespace-support-initialize)
+    (dolist (entry functions)
+      (unless (eq (cdr entry) (symbol-function (car entry)))
+        (setq preserved nil)))
+    (values preserved
+            (eq table *lfun-names*)
+            (eq (hash-table-weak-p *lfun-names*) :key))))
