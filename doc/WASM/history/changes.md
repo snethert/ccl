@@ -1,3 +1,30 @@
+## 2026-09-26 — Audit 184 accepted; whole-file counts remain 29/24/0
+
+The user instructed “accept and proceed”. Audit `fb23aeae` is merged
+byte-identically; `e9301356` is accepted as the implemented level-1 prefix.
+The reviewer found no defect in it, the audit-183 integration or the direct
+implementation workflow. Its full replay reproduced 4,076 regenerable
+artifacts, 21,843 native tests, 68 reader comparisons across 17 profiles and
+26,048 fresh corpus comparisons. Acceptance reuses that evidence; no second
+integration harness or replay is needed.
+
+O-106 (late-bound compiler calls warn in native builds) and O-107 (duplicated
+32 in the platform string) are assigned to the next substantive change.
+O-108 corrects the evidence claim: the accounting rows observe the declaration's
+placeholder NIL because pointer registration refuses before the value runs.
+They do not independently witness execution of the NIL initializer. The three
+target-specific expectation rows are distinguished from native comparisons.
+O-109 keeps batch-mode and directory setup unwitnessed, with GC accounting,
+batch-flag reset and foreign null-pointer consumers still owed at their files.
+O-110 requires reconciling lambda-list retention with the pending weak-table
+work. O-111 carries Git-free reader replay; O-112 requires actual boot order
+when the image boots. Compile-order cross-loading confers no boot claim.
+
+Whole-file counts stay **29/24/0 of 167**, originals **575/535**, and the Stage 1
+ledger **21 accepted / 12 missing**. No target LOAD, complete boot or criterion
+credit. Product Lisp changed: **0**. Existing uncommitted weak-table and
+further level-1 work is outside this acceptance.
+
 ## 2026-09-26 — Whole-file 21/21/0 to 29/24/0; next SETF names and random-state seeding
 
 The [ordered level-1 group](../../../tests/wasm/stage1/loader-level1/README.md)
