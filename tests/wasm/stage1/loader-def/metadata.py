@@ -1,5 +1,6 @@
 """Native LFUN-BITS treats optional NIL as a read, not an invalid store."""
 import product
+from pathlib import Path
 
 c = product.c
 
@@ -27,5 +28,5 @@ def overlay(base):
     path.write_text(source.replace(before, positive + before))
     env = c.read(base / 'execution-environment.json')
     env['files']['metadata-check.mjs'] = c.sha(path)
-    env['tooling']['loader-def/metadata.py'] = c.sha(product.HERE / 'metadata.py')
+    env['tooling']['loader-def/metadata.py'] = c.sha(Path(__file__))
     c.save(base / 'execution-environment.json', env)

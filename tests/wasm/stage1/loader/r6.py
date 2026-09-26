@@ -15,9 +15,9 @@ def accepted():
     return sorted(set(names))
 def sources():
     return proposal.sources()
-def run(out):
+def run(out, source_provider=None, branch_sources=None):
     started=time.monotonic();out.mkdir(parents=True,exist_ok=True)
-    bodies=sources();identity={name:hashlib.sha256(body.encode()).hexdigest() for name,body in bodies.items()}
+    bodies=(source_provider or sources)();identity={name:hashlib.sha256(body.encode()).hexdigest() for name,body in bodies.items()}
     spec=importlib.util.spec_from_file_location('cross_load_native_driver',HERE.parent/'bootstrap-generic-dispatch/native.py')
     native=importlib.util.module_from_spec(spec);spec.loader.exec_module(native)
     # Keep the established rebuild, native tests, snapshots and reversal. The
@@ -44,7 +44,7 @@ def run(out):
     c.save(out/'proposal-identity.json',identity)
     status=driver.run(c.STORE/'macos-u1-inputs',c.KERNEL,out/'work',out/'results',c.STORE/'2026-09-16-stage1-1a-r2/native')
     assert status==0
-    c.save(out/'qualification.json',dict(status='PASS',source_identity=identity,branch_sources=BRANCH,
+    c.save(out/'qualification.json',dict(status='PASS',source_identity=identity,branch_sources=branch_sources or BRANCH,
         native_run=c.sha(out/'results/run.json'),seconds=time.monotonic()-started))
     return status
 if __name__=='__main__':

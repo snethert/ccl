@@ -33,9 +33,9 @@ def top_forms(text):
         i+=1
     assert depth==0 and not quote and not block
 
-def run(out):
+def run(out, source_provider=None, prelude=''):
     out.mkdir(parents=True,exist_ok=True)
-    sources={name:body for name,body in proposal.sources().items() if '/WASM32/' not in name}
+    sources={name:body for name,body in (source_provider or proposal.sources)().items() if '/WASM32/' not in name}
     omitted=[];full={}
     for name,body in sources.items():
         old=(c.ROOT/name).read_text();full[name]={'before':c.sha(c.ROOT/name),'after':__import__('hashlib').sha256(body.encode()).hexdigest()}
@@ -69,7 +69,7 @@ def run(out):
                      '(pathname-host pathname-device pathname-directory
                        pathname-name pathname-type pathname-version))))
         ((consp a)''')
-    (out/'readers.lisp').write_text(script)
+    (out/'readers.lisp').write_text(prelude + '\n' + script)
     with tempfile.TemporaryDirectory(prefix='u1-',dir=out) as tmp:
         source=Path(tmp)
         for name in ('source.tar','bootstrap.tar.gz'):

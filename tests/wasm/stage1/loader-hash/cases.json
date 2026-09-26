@@ -1,0 +1,114 @@
+[
+  {
+    "id": "io-roundtrip-0",
+    "call": [
+      "CCL",
+      "LOADER-IO-ROUNDTRIP"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "io-roundtrip-1",
+    "call": [
+      "CCL",
+      "LOADER-IO-ROUNDTRIP"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "io-roundtrip-2",
+    "call": [
+      "CCL",
+      "LOADER-IO-ROUNDTRIP"
+    ],
+    "args": [
+      2
+    ]
+  },
+  {
+    "id": "io-roundtrip-3",
+    "call": [
+      "CCL",
+      "LOADER-IO-ROUNDTRIP"
+    ],
+    "args": [
+      3
+    ]
+  },
+  {
+    "id": "io-words-",
+    "call": [
+      "CCL",
+      "LOADER-IO-WORDS"
+    ],
+    "args": []
+  },
+  {
+    "id": "io-utf16-",
+    "call": [
+      "CCL",
+      "LOADER-IO-UTF16"
+    ],
+    "args": []
+  },
+  {
+    "id": "hash-table-",
+    "call": [
+      "CCL",
+      "LOADER-HASH-TABLE"
+    ],
+    "args": []
+  },
+  {
+    "id": "misc-sequences-",
+    "call": [
+      "CCL",
+      "LOADER-MISC-SEQUENCES"
+    ],
+    "args": []
+  },
+  {
+    "id": "hash-vector-1",
+    "call": [
+      "CCL",
+      "LOADER-HASH-VECTOR"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "hash-vector-3",
+    "call": [
+      "CCL",
+      "LOADER-HASH-VECTOR"
+    ],
+    "args": [
+      3
+    ]
+  },
+  {
+    "id": "hash-vector-31",
+    "call": [
+      "CCL",
+      "LOADER-HASH-VECTOR"
+    ],
+    "args": [
+      31
+    ]
+  },
+  {
+    "id": "hash-vector-64",
+    "call": [
+      "CCL",
+      "LOADER-HASH-VECTOR"
+    ],
+    "args": [
+      64
+    ]
+  }
+]

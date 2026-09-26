@@ -1,0 +1,589 @@
+--- a/compiler/WASM32/wasm32-arch.lisp
++++ b/compiler/WASM32/wasm32-arch.lisp
+@@ -561,6 +561,8 @@
+ (cl:defconstant double-float.element-count 3)
+ (cl:defconstant ratio.numer-cell 0)
+ (cl:defconstant ratio.denom-cell 1)
++(cl:defconstant complex.realpart-cell 0)
++(cl:defconstant complex.imagpart-cell 1)
+ 
+ (cl:in-package :wasm32-compiler)
+ 
+--- a/compiler/WASM32/wasm32-backend.lisp
++++ b/compiler/WASM32/wasm32-backend.lisp
+@@ -4171,25 +4171,31 @@
+                      n base payload
+                      (if initial (b-wat "(i32.sub (i32.const 0) (i32.shr_u ~a (i32.const 2)))" initial) "(i32.const 0)") n)))) s)))))
+ 
+-(defun bootstrap-make-bit-array (forms)
++(defun bootstrap-make-typed-array (forms)
+   (when (and forms (evenp (length (cdr forms))))
+-    (let ((initial nil) (seen nil) (bitp nil))
++    (let ((initial nil) (seen nil) (subtag nil))
+       (loop for (key value) on (cdr forms) by #'cddr do
+         (multiple-value-bind (name constant) (bootstrap-immediate key)
+           (unless (and constant (member name '(:element-type :initial-element))
+                        (not (member name seen)))
+-            (return-from bootstrap-make-bit-array nil))
++            (return-from bootstrap-make-typed-array nil))
+           (push name seen)
+           (if (eq name :initial-element)
+             (setq initial value)
+             (multiple-value-bind (type constant) (bootstrap-immediate value)
+-              (unless (and constant (eq type 'bit))
+-                (return-from bootstrap-make-bit-array nil))
+-              (setq bitp t)))))
+-      (when bitp
++              (unless (and constant
++                           (setq subtag
++                             (cdr (assoc type
++                               '((bit . 255) ((unsigned-byte 8) . 199)
++                                 ((signed-byte 8) . 207) ((unsigned-byte 16) . 215)
++                                 ((signed-byte 16) . 223) ((unsigned-byte 32) . 167)
++                                 ((signed-byte 32) . 175) (fixnum . 183))
++                               :test #'equal))))
++                (return-from bootstrap-make-typed-array nil))))))
++      (when subtag
+         (b-multiple (make-b-raw-code :text
+           (bootstrap-make-vector
+-           (append (list (first forms) (bootstrap-constant wasm32::subtag-bit-vector))
++           (append (list (first forms) (bootstrap-constant subtag))
+                    (when initial (list initial))))))))))
+ 
+ (defun bootstrap-make-simple-vector (forms)
+@@ -4545,6 +4551,54 @@
+                             word base word (if single 4 8) real
+                             word (if single 12 16) base word (if single 4 8) imaginary)))))))))
+ 
++;;; Namespace buffers are bounded octet vectors. NX1 wraps the pointer
++;;; operand in %MACPTRPTR%; unwrap only that declared boundary, retaining the
++;;; buffer as a rooted Lisp object throughout operand evaluation/allocation.
++(defun bootstrap-buffer-memory (op forms)
++  (let* ((store (eq op 'ccl::%immediate-set-xxx))
++         (bits (first forms))
++         (width (and (integerp bits) (logand bits 15)))
++         (pointer (second forms)))
++    (unless (and (= (length forms) (if store 4 3))
++                 (member width '(1 2 4))
++                 (zerop (logand bits (lognot 63)))
++                 (ccl::acode-p pointer)
++                 (eq (ccl::acode-operator-name (ccl::acode-operator pointer))
++                     'ccl::%macptrptr%)
++                 (= (length (ccl::acode-operands pointer)) 1))
++      (refuse :buffer-memory-layout))
++    (bootstrap-operands (cons (first (ccl::acode-operands pointer)) (cddr forms))
++      (lambda (values)
++        (destructuring-bind (buffer offset &optional value) values
++          (let* ((base (temporary)) (bytes (temporary)) (address (temporary))
++                 (word (temporary)) (signed (if store (not (logbitp 5 bits)) (logbitp 5 bits))))
++            (with-output-to-string (s)
++              (bootstrap-ivector-byte-extent buffer base bytes s)
++              (write-string (b-condition
++                (b-wat "(i32.ne (i32.load8_u (local.get ~a)) (i32.const 199))" base) 5) s)
++              (write-string (b-condition
++                (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))" offset offset) 4) s)
++              (write-string (b-condition
++                (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (i32.shr_u ~a (i32.const 2)))
++                  (i64.const ~d)) (i64.extend_i32_u (local.get ~a)))" offset width bytes) 4) s)
++              (format s "(local.set ~a (i32.add (local.get ~a)
++                (i32.add (i32.const 4) (i32.shr_u ~a (i32.const 2)))))" address base offset)
++              (if store
++                (progn
++                  (format s "(local.set ~a ~a)" word
++                    (bootstrap-integer-vector-value value
++                      (if (= width 4) (if signed 175 167) 199)
++                      (if signed (- (ash 1 (1- (* width 8)))) 0)
++                      (1- (ash 1 (- (* width 8) (if signed 1 0))))))
++                  (format s "(i32.store~a (local.get ~a) (local.get ~a)) ~a"
++                    (case width (1 "8") (2 "16") (t "")) address word value))
++                (write-string
++                  (let ((load (b-wat "(i32.load~a (local.get ~a))"
++                          (case width (1 (if signed "8_s" "8_u"))
++                                      (2 (if signed "16_s" "16_u")) (t "")) address)))
++                    (if (= width 4) (bootstrap-box-word load signed)
++                      (b-wat "(i32.shl ~a (i32.const 2))" load))) s)))))))))
++
+ (defun bootstrap-operator (ir)
+   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
+         (args (ccl::acode-operands ir)))
+@@ -4570,6 +4624,8 @@
+                   (drop (call $object_base ~a (i32.const 32) (i32.const 1850)))
+                   (i32.store offset=2 ~a (local.get ~a)) (local.get ~a))"
+                 value (b-scalar (second args)) symbol symbol value value)))
++      ((ccl::immediate-get-xxx ccl::%immediate-set-xxx)
++       (bootstrap-buffer-memory op args))
+       (ccl::list*
+        (reduce (lambda (head tail) (b-cons head (make-b-raw-code :text tail)))
+                (first (first args)) :from-end t
+@@ -4834,6 +4890,18 @@
+            (b-multiple (make-b-raw-code :text
+              (bootstrap-operands forms
+                (lambda (values) (bootstrap-function-info (first values) 3))))))
++          ((eq name 'ccl::%wasm-area-size)
++           (unless (= (length forms) 1) (refuse :area-size-arity))
++           (let* ((selector (ccl::acode-fixnum-form-p (first forms)))
++                  (fields (case selector
++                            (0 '(52 . 48)) (1 '(48 . 56)) (2 '(52 . 56))
++                            (3 '(72 . 64)) (4 '(64 . 68)))))
++             (unless fields (refuse :area-size-selector))
++             (b-multiple (make-b-raw-code :text
++               (bootstrap-box-word
++                 (b-wat "~a (i32.sub ~a ~a)"
++                   (b-condition (b-wat "(i32.lt_u ~a ~a)" (b-load (car fields)) (b-load (cdr fields))) 6)
++                   (b-load (car fields)) (b-load (cdr fields))) nil)))))
+           ((eq name 'ccl::%wasm-function-bits)
+            (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
+            (b-multiple (make-b-raw-code :text
+@@ -4841,7 +4909,7 @@
+           ((member name '(ccl::lfun-bits ccl::inner-lfun-bits ccl::lfun-bits-known-function))
+            (unless (member (length forms) '(1 2)) (refuse :function-bits-arity))
+            (b-multiple (make-b-raw-code :text (bootstrap-lfun-bits-access forms))))
+-          ((and (eq name 'make-array) (bootstrap-make-bit-array forms)))
++          ((and (eq name 'make-array) (bootstrap-make-typed-array forms)))
+           ((and (eq name 'sbit) (= (length forms) 2))
+            (b-multiple (make-b-raw-code :text (bootstrap-bit-access forms))))
+           ((and (eq name 'ccl::%sbitset) (= (length forms) 3))
+@@ -5652,11 +5720,46 @@
+ 
+ (in-package :wasm32-compiler)
+ 
++;;; The explicit initial element is the native hash constructor protocol.
++;;; Fill every payload cell before publishing the allocation. The collector
++;;; recognizes this uninitialized marker vector until %INIT-NHASH-VECTOR runs.
++(defun bootstrap-allocate-native-hash-vector (forms)
++  (bootstrap-operands forms
++    (lambda (values)
++      (let ((count (first values)) (initial (third values))
++            (n (temporary)) (i (temporary)))
++        (b-wat "~a ~a (local.set ~a (i32.shr_u ~a (i32.const 2)))
++                 (i32.add ~a (i32.const 6))"
++          (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 7))
++            (i32.or (i32.lt_s ~a (i32.const 64)) (i32.gt_u ~a (i32.const 131128))))"
++            count count count) 6)
++          (b-condition (b-wat "(i32.ne ~a (i32.const 51))" initial) 6)
++          n count
++          (bootstrap-heap-block
++            (b-wat "(i32.add ~a (i32.const 8))" count)
++            (lambda (base bytes)
++              (b-wat "(memory.fill ~a (i32.const 0) ~a)
++                (i32.store ~a (i32.or (i32.shl (local.get ~a) (i32.const 8)) (i32.const 74)))
++                (local.set ~a (i32.const 0))
++                (block $hash_done (loop $hash_fill
++                  (br_if $hash_done (i32.ge_u (local.get ~a) (local.get ~a)))
++                  (i32.store offset=4 (i32.add ~a (i32.shl (local.get ~a) (i32.const 2))) (i32.const 51))
++                  (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $hash_fill)))"
++                base bytes base n i i n base i i i))))))))
++
+ ;;; An EQ backing vector must be valid before the next safepoint. Initialize
+ ;;; the accepted strong-owner prefix and buckets inside one heap block.
+ (defun bootstrap-allocate-eq-vector (forms)
+   (when (and *b-cpl-conditions*
+              (eql (ccl::acode-fixnum-form-p (second forms)) wasm32::subtag-hash-vector))
++    (when (= (length forms) 3)
++      ;; Preserve the existing directed refusal for known invalid literals.
++      ;; The native constructor supplies the UNBOUND-MARKER operator instead.
++      (multiple-value-bind (initial constant) (bootstrap-type-literal (third forms))
++        (declare (ignore initial))
++        (when constant (refuse :eq-vector-initial-element)))
++      (return-from bootstrap-allocate-eq-vector
++        (bootstrap-allocate-native-hash-vector forms)))
+     (unless (= (length forms) 2) (refuse :eq-vector-initial-element))
+     (bootstrap-operands forms
+       (lambda (values)
+--- a/level-0/l0-hash.lisp
++++ b/level-0/l0-hash.lisp
+@@ -135,7 +135,7 @@
+ (defun %set-does-not-need-rehashing (vector)
+   (let* ((flags (nhash.vector.flags vector)))
+     (declare (fixnum flags))
+-    (setf (nhash.vector.gc-count vector) (%get-gc-count))
++    (setf (nhash.vector.gc-count vector) #+wasm32-target 0 #-wasm32-target (%get-gc-count))
+     (when (logbitp $nhash_track_keys_bit flags)
+       (setf (nhash.vector.flags vector)
+             (logand (lognot (ash 1 $nhash_key_moved_bit)) flags)))))
+@@ -148,7 +148,7 @@
+   (let* ((vector (nhash.vector hash))
+          (flags (nhash.vector.flags vector)))
+     (declare (fixnum flags))
+-    (setf (nhash.vector.gc-count vector) (the fixnum (1- (the fixnum (%get-gc-count)))))
++    (setf (nhash.vector.gc-count vector) (the fixnum (1- #+wasm32-target 0 #-wasm32-target (the fixnum (%get-gc-count)))))
+     (when (logbitp $nhash_track_keys_bit flags)
+       (setf (nhash.vector.flags vector) (logior (ash 1 $nhash_key_moved_bit) flags)))))
+ 
+@@ -1936,6 +1936,9 @@
+ 
+ (defun %cons-nhash-vector (size &optional (flags 0))
+   (declare (fixnum size))
++  #+wasm32-target
++  (when (logtest (logandc2 $nhash_weak_flags_mask (ash 1 $nhash_keys_frozen_bit)) flags)
++    (error "Weak hash vectors are unavailable on this target."))
+   (let* ((vector (%alloc-misc (+ (+ size size) $nhash.vector_overhead) target::subtag-hash-vector free-hash-marker)))
+     (%init-nhash-vector vector flags)
+     vector))
+@@ -1944,8 +1947,10 @@
+   (let ((size (vector-index->index (uvsize vector))))
+     (declare (fixnum size))
+     (setf (nhash.vector.link vector) 0
+-          (nhash.vector.flags vector) flags
+-          (nhash.vector.gc-count vector) (%get-gc-count)
++          (nhash.vector.flags vector)
++          #+wasm32-target (logior (ash 1 $nhash_track_keys_bit) flags)
++          #-wasm32-target flags
++          (nhash.vector.gc-count vector) #+wasm32-target 0 #-wasm32-target (%get-gc-count)
+           (nhash.vector.free-alist vector) nil
+           (nhash.vector.finalization-alist vector) nil
+           (nhash.vector.hash vector) nil
+--- a/level-0/l0-io.lisp
++++ b/level-0/l0-io.lisp
+@@ -181,12 +181,22 @@
+ 
+ 
+ ;;; write nbytes bytes from buffer buf to file-descriptor fd.
++#+wasm32-target
++(defun fd-write (fd buffer nbytes)
++  (%wasm-file-request 7 fd buffer nbytes))
++
++#-wasm32-target
+ (defun fd-write (fd buf nbytes)
+   (ignoring-eintr
+    (int-errno-ffcall
+     (%kernel-import target::kernel-import-lisp-write)
+              :int fd :address buf :ssize_t nbytes :ssize_t)))
+ 
++#+wasm32-target
++(defun fd-read (fd buffer nbytes)
++  (%wasm-file-request 1 fd buffer nbytes))
++
++#-wasm32-target
+ (defun fd-read (fd buf nbytes)
+   (ignoring-eintr
+    (int-errno-ffcall
+@@ -211,6 +221,11 @@
+               (character-encoding-name encoding))))))
+ 
+ 
++#+wasm32-target
++(defun fd-open-path (p flags create-mode)
++  (fd-open p flags create-mode))
++
++#-wasm32-target
+ (defun fd-open-path (p flags create-mode)
+   (let* ((fd (int-errno-ffcall
+               (%kernel-import target::kernel-import-lisp-open)
+@@ -225,6 +240,11 @@
+                 :address p :int flags :mode_t create-mode :int)))
+     fd))
+ 
++#+wasm32-target
++(defun fd-open (path flags &optional (create-mode #o666))
++  (%wasm-file-request 0 path flags create-mode))
++
++#-wasm32-target
+ (defun fd-open (path flags &optional (create-mode #o666))
+   #+darwin-target (with-utf-8-cstrs ((p path))
+                     (fd-open-path p flags create-mode))
+@@ -238,12 +258,23 @@
+       (with-cstrs ((p path))
+         (fd-open-path p flags create-mode)))))
+ 
++#+wasm32-target
++(defun fd-chmod (fd mode)
++  (declare (ignore fd mode))
++  -30)
++
++#-wasm32-target
+ (defun fd-chmod (fd mode)
+   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-fchmod)
+                     :int fd
+                     :mode_t mode
+                     :int))
+ 
++#+wasm32-target
++(defun fd-lseek (fd offset whence)
++  (%wasm-file-request 2 fd offset whence))
++
++#-wasm32-target
+ (defun fd-lseek (fd offset whence)
+   (int-errno-ffcall
+    (%kernel-import target::kernel-import-lisp-lseek)
+@@ -252,6 +283,11 @@
+    :int whence
+    :signed-doubleword))
+ 
++#+wasm32-target
++(defun fd-close (fd)
++  (%wasm-file-request 3 fd nil nil))
++
++#-wasm32-target
+ (defun fd-close (fd)
+   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-close)
+                     :int fd
+@@ -262,6 +298,11 @@
+ 
+ ;;; Kernels prior to 2.4 don't seem to have a "stat" variant
+ ;;; that handles 64-bit file offsets.
++#+wasm32-target
++(defun fd-size (fd)
++  (%wasm-file-request 4 fd nil nil))
++
++#-wasm32-target
+ (defun fd-size (fd)
+   (rlet ((stat #+win64-target #>_stat64 #+win32-target #>__stat64 #-windows-target :stat))
+     (if (eql 0 (ff-call (%kernel-import target::kernel-import-lisp-fstat)
+@@ -275,10 +316,24 @@
+       -1)))
+ 
+ 
++#+wasm32-target
++(defun fd-ftruncate (fd new)
++  (declare (ignore fd new))
++  -30)
++
++#-wasm32-target
+ (defun fd-ftruncate (fd new)
+   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-ftruncate)
+                     :int fd :off_t new :int))
+ 
++#+wasm32-target
++(defun %string-to-stderr (str)
++  (let* ((size (utf-8-octets-in-string str 0 (length str)))
++         (buffer (make-array size :element-type '(unsigned-byte 8))))
++    (utf-8-memory-encode str buffer 0 0 (length str))
++    (fd-write 2 buffer size)))
++
++#-wasm32-target
+ (defun %string-to-stderr (str)
+   (with-cstrs ((s str))
+     (fd-write 2 s (length str))))
+--- a/level-0/l0-misc.lisp
++++ b/level-0/l0-misc.lisp
+@@ -98,6 +98,11 @@
+ ; This takes a simple-base-string and passes a C string into
+ ; the kernel "Bug" routine.  Not too fancy, but neither is #_DebugStr,
+ ; and there's a better chance that users would see this message.
++#+wasm32-target
++(defun bug (arg)
++  (error "~a" arg))
++
++#-wasm32-target
+ (defun bug (arg)
+   (if (typep arg 'simple-base-string)
+     #+x86-target
+@@ -118,6 +123,11 @@
+   (+ (unsignedwide->integer *total-bytes-freed*)
+      (%heap-bytes-allocated)))
+ 
++#+wasm32-target
++(defun %freebytes ()
++  (%wasm-area-size 0))
++
++#-wasm32-target
+ (defun %freebytes ()
+   (with-macptrs (p)
+     (%setf-macptr-to-object p
+@@ -126,6 +136,11 @@
+     (- (%get-natural p target::area.high)
+        (%get-natural p target::area.active))))
+ 
++#+wasm32-target
++(defun %reservedbytes ()
++  (%wasm-area-size 2))
++
++#-wasm32-target
+ (defun %reservedbytes ()
+   (with-macptrs (p)
+     (%setf-macptr-to-object p (%get-kernel-global 'all-areas))
+@@ -142,10 +157,20 @@
+   (declare (ignore address))
+   t)
+ 
++#+wasm32-target
++(defun frozen-space-dnodes ()
++  0)
++
++#-wasm32-target
+ (defun frozen-space-dnodes ()
+   "Returns the current size of the frozen area."
+   (%fixnum-ref-natural (%get-kernel-global 'tenured-area)
+                        target::area.static-dnodes))
++#+wasm32-target
++(defun %usedbytes ()
++  (error "Whole-image accounting requires a Wasm collector-owner service."))
++
++#-wasm32-target
+ (defun %usedbytes ()
+   (with-lock-grabbed (*kernel-exception-lock*)
+     (with-lock-grabbed (*kernel-tcr-area-lock*)
+@@ -171,6 +196,12 @@
+ 
+ 
+ 
++#+wasm32-target
++(defun %stack-space ()
++  (let ((free (%wasm-area-size 3)) (used (%wasm-area-size 4)))
++    (values (+ free used) used free)))
++
++#-wasm32-target
+ (defun %stack-space ()
+   (%normalize-areas)
+   (let ((free 0)
+@@ -224,6 +255,13 @@
+ ;;;   vsp used
+ ;;;   tsp free  (not on ARM)
+ ;;;   tsp used  (not on ARM)
++#+wasm32-target
++(defun %thread-stack-space (&optional (thread *current-lisp-thread*))
++  (unless (eq thread *current-lisp-thread*)
++    (error "Cannot inspect another Worker stack."))
++  (values 0 0 (%wasm-area-size 3) (%wasm-area-size 4) 0 0))
++
++#-wasm32-target
+ (defun %thread-stack-space (&optional (thread *current-lisp-thread*))
+   (when (eq thread *current-lisp-thread*)
+     (%normalize-areas))
+@@ -553,7 +591,7 @@
+ (defparameter *spin-lock-tries* 1)
+ (defparameter *spin-lock-timeouts* 0)
+ 
+-#+(and (not futex) (not x86-target))
++#+(and (not futex) (not x86-target) (not wasm32-target))
+ (defun %get-spin-lock (p)
+   (let* ((self (%current-tcr))
+          (n *spin-lock-tries*))
+@@ -784,6 +822,16 @@
+ 
+ 
+ 
++#+wasm32-target
++(defun %%lock-owner (lock)
++  (let* ((state (%wasm-recursive-lock-state
++                 (%svref lock target::lock._value-cell) lock))
++         (owner (svref state 0)))
++    (cond ((zerop owner) nil)
++          ((eql owner (%wasm-lock-owner-token)) *current-process*)
++          (t (error "Cannot inspect another Worker's lock.")))))
++
++#-wasm32-target
+ (defun %%lock-owner (lock)
+   "Intended for debugging only; ownership may change while this code
+    is running."
+@@ -1158,6 +1206,12 @@
+                       
+ 
+ 
++#+wasm32-target
++(defun safe-get-ptr (p &optional dest)
++  (declare (ignore p dest))
++  (error "Native pointer storage is unavailable on this target."))
++
++#-wasm32-target
+ (defun safe-get-ptr (p &optional dest)
+   (if (null dest)
+     (setq dest (%null-ptr))
+--- a/level-0/l0-utils.lisp
++++ b/level-0/l0-utils.lisp
+@@ -56,6 +56,12 @@
+ 
+ 
+ ;;; We MAY need a scheme for finding all of the areas in a lisp library.
++#+wasm32-target
++(defun %map-areas (function &optional area)
++  (declare (ignore function area))
++  (error "Heap enumeration requires a Wasm collector-owner service."))
++
++#-wasm32-target
+ (defun %map-areas (function &optional area)
+   (let* ((area (cond ((or (eq area t) (eq area nil)) nil)
+                      ((consp area) (mapcar #'heap-area-code area)) ;; list of areas
+--- a/level-1/WASM32/w32-files.lisp
++++ b/level-1/WASM32/w32-files.lisp
+@@ -2,20 +2,15 @@
+ ;;; A target buffer is a simple octet vector, never a foreign pointer.
+ (in-package "CCL")
+ 
+-(defun fd-open (path flags &optional (create-mode #o666))
+-  (%wasm-file-request 0 path flags create-mode))
+ 
+-(defun fd-read (fd buffer nbytes)
+-  (%wasm-file-request 1 fd buffer nbytes))
+ 
+-(defun fd-lseek (fd offset whence)
+-  (%wasm-file-request 2 fd offset whence))
+ 
+-(defun fd-close (fd)
+-  (%wasm-file-request 3 fd nil nil))
+ 
+-(defun fd-size (fd)
+-  (%wasm-file-request 4 fd nil nil))
++
++
++
++
++
+ 
+ (defun fd-tell (fd)
+   (fd-lseek fd 0 1))
+@@ -34,8 +29,7 @@
+           ((eq kind 2) :directory)
+           (t nil))))
+ 
+-(defun fd-write (fd buffer nbytes)
+-  (%wasm-file-request 7 fd buffer nbytes))
++
+ 
+ ;;; The virtual namespace owns the current directory; no process cwd leaks in.
+ (defun current-directory-name ()
+--- a/runtime/wasm32/collector.c
++++ b/runtime/wasm32/collector.c
+@@ -127,13 +127,30 @@
+   header=LOAD(p);tag=header&255;n=header>>8;scan=0xffffffffu;size=8;
+   if((tag&7)==2||(tag&7)==7){
+    if(tag==74){
+-    /* Only strong owner-created EQ vectors; never infer weak semantics. */
++    /* Native Lisp constructors first fill every cell with the free marker.
++     * Once initialized, only strong vectors are admitted. All fields are
++     * tagged roots; the native weak-link word is zero on this target. */
++    if(LOAD(p+4)==51){
++     if(n<16||((n-14)&1)||n>32782||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
++     for(U j=0;j<n;j++)if(LOAD(p+4+4*j)!=51)return reject(s,BAD_OBJECT);
++    }else if(LOAD(p+4)==0){
++     U capacity=n>=14?(n-14)/2:0,flags;
++     if(n<16||((n-14)&1)||capacity>16384||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
++     flags=LOAD(p+8);
++     if((flags&3)||(flags&~0x780c0800u)||LOAD(p+52)!=capacity*4)return reject(s,BAD_OBJECT);
++     if((LOAD(p+12)&3)||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=51)return reject(s,BAD_OBJECT);
++     if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
++     if(LOAD(p+40)!=NIL&&((LOAD(p+40)&3)||LOAD(p+40)/4>=n))return reject(s,BAD_OBJECT);
++     /* The reciprocal may be a bignum for a one-slot vector. */
++    }else{
++    /* Keep the existing strong owner-created EQ protocol unchanged. */
+     U capacity=n>=14?(n-14)/2:0;
+     if(n<22||((n-14)&1)||capacity>16384||(capacity&(capacity-1))||(W)p+4+4*(W)n>s->used)return reject(s,BAD_OBJECT);
+     if((LOAD(p+8)&~((1u<<30)|(1u<<29)))||!(LOAD(p+8)&(1u<<30))||LOAD(p+52)!=capacity*4||LOAD(p+56)!=0)return reject(s,BAD_OBJECT);
+     if(LOAD(p+4)!=NIL||LOAD(p+12)!=0||LOAD(p+16)!=NIL||LOAD(p+20)!=NIL||LOAD(p+24)!=0||LOAD(p+28)!=NIL)return reject(s,BAD_OBJECT);
+     if(((LOAD(p+32)|LOAD(p+36))&3)||LOAD(p+32)/4>capacity||LOAD(p+36)/4>capacity||LOAD(p+32)/4+LOAD(p+36)/4>capacity)return reject(s,BAD_OBJECT);
+     if(LOAD(p+40)!=0xfffffffcu&&((LOAD(p+40)&3)||LOAD(p+40)/4>=capacity))return reject(s,BAD_OBJECT);
++    }
+     scan=n;size=4+(W)n*4;
+    }
+    else if(tag==90){
+@@ -219,7 +236,7 @@
+    /* Payload index 14 is object word 15: first key. Cached keys are roots,
+     * but only bucket-key movement requests a rehash. Destination-only write
+     * preserves the collector's source/root atomicity on refusal. */
+-   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v)
++   if((LOAD(o->moved)&255)==74&&index>=14&&!(index&1)&&old!=v&&(LOAD(o->moved+8)&(1u<<30)))
+     STORE(o->moved+8,LOAD(o->moved+8)|(1u<<29));}
+  }
+  if(s->error)return s->error;
+--- a/tests/wasm/stage1/loader/architecture/extensions.lisp
++++ b/tests/wasm/stage1/loader/architecture/extensions.lisp
+@@ -147,6 +147,8 @@
+ (cl:defconstant double-float.element-count 3)
+ (cl:defconstant ratio.numer-cell 0)
+ (cl:defconstant ratio.denom-cell 1)
++(cl:defconstant complex.realpart-cell 0)
++(cl:defconstant complex.imagpart-cell 1)
+ 
+ (cl:in-package :wasm32-compiler)
+ 

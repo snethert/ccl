@@ -1,0 +1,4 @@
+[
+  {"name":"documentation weak table","symbols":[["CCL","%DOCUMENTATION"]],"reason":"checked 10"},
+  {"name":"binding-index weak value table","symbols":[["CCL","%DEFUN"],["COMMON-LISP","EQ"],["COMMON-LISP","MAKE-HASH-TABLE"],["CCL","MAKE-LOCK"]],"reason":"checked 10"}
+]

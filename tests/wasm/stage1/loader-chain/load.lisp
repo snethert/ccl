@@ -1,0 +1,11 @@
+;;; All production source files have been removed before this fresh process.
+(in-package "CCL")
+(let* ((out (getenv "LOADER_OUTPUT"))
+       (fasls (with-open-file (s (concatenate 'string out "load-order.lisp")) (read s)))
+       (variables *wasm32-xload-parameter-variables*)
+       (before (mapcar #'symbol-value variables)))
+  (apply #'wasm32-xfasload (concatenate 'string out "prefix/")
+    (mapcar (lambda (name) (concatenate 'string out name)) fasls))
+  (assert (equal before (mapcar #'symbol-value variables)))
+  (format t "PREFIX-CROSS-LOAD-PASS~%"))
+(quit)
