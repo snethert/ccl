@@ -10,7 +10,7 @@ import tempfile
 HERE = Path(__file__).resolve().parent
 
 
-def run(out, product, witnesses, inputs):
+def run(out, product, witnesses, inputs, checks=()):
     c = product.c
     out.mkdir(parents=True, exist_ok=True)
     bodies = product.sources()
@@ -20,6 +20,7 @@ def run(out, product, witnesses, inputs):
     kernel = out / 'dx86cl64'
     shutil.copyfile(c.KERNEL, kernel); kernel.chmod(0o755)
     (out / 'packages.lisp').write_text('\n'.join(p.read_text() for p in witnesses))
+    (out / 'load-checks.lisp').write_text('\n'.join(p.read_text() for p in checks))
     for filename, source in [('array-boundary.lisp', 'level-0/WASM32/w32-lap.lisp'),
                              ('bignum-boundary.lisp', 'level-0/l0-bignum32.lisp')]:
         (out / filename).write_text(bodies[source])
@@ -43,7 +44,10 @@ def run(out, product, witnesses, inputs):
         invoke(HERE.parent / 'loader-level0/prefix.lisp', 'prefix.log')
         ordered, target = c.read(out / 'ordered.json'), c.read(out / 'prefix.json')
         assert target['stop'] is None
-        completed = target['compiled'] + [r for r in ordered['attempts'] if r.get('fasl') and not r['failure']]
+        completed = []
+        for row in target['compiled'] + ordered['attempts']:
+            if row.get('fasl') and not row['failure'] and not any(r['file'] == row['file'] for r in completed):
+                completed.append(row)
         fixture = source / 'tests/wasm/stage1/loader-level0'
         fixture.mkdir(parents=True, exist_ok=True)
         for name in ('package-first.lisp', 'package-second.lisp'):

@@ -1,0 +1,232 @@
+[
+  {
+    "id": "fasl-word-0",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "fasl-word-1",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "fasl-word-32767",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      32767
+    ]
+  },
+  {
+    "id": "fasl-word-32768",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      32768
+    ]
+  },
+  {
+    "id": "fasl-word-65535",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      65535
+    ]
+  },
+  {
+    "id": "fasl-word-65536",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      65536
+    ]
+  },
+  {
+    "id": "fasl-word--1",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      -1
+    ]
+  },
+  {
+    "id": "fasl-word--32769",
+    "call": [
+      "CCL",
+      "LOADER-FASL-WORD"
+    ],
+    "args": [
+      -32769
+    ]
+  },
+  {
+    "id": "fasl-numbers-",
+    "call": [
+      "CCL",
+      "LOADER-FASL-NUMBERS"
+    ],
+    "args": []
+  },
+  {
+    "id": "fasl-counts-",
+    "call": [
+      "CCL",
+      "LOADER-FASL-COUNTS"
+    ],
+    "args": []
+  },
+  {
+    "id": "fasl-copy-",
+    "call": [
+      "CCL",
+      "LOADER-FASL-COPY"
+    ],
+    "args": []
+  },
+  {
+    "id": "fasl-list-",
+    "call": [
+      "CCL",
+      "LOADER-FASL-LIST"
+    ],
+    "args": []
+  },
+  {
+    "id": "fasl-epush-",
+    "call": [
+      "CCL",
+      "LOADER-FASL-EPUSH"
+    ],
+    "args": []
+  },
+  {
+    "id": "fasl-utf8-0",
+    "call": [
+      "CCL",
+      "LOADER-FASL-UTF8"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "fasl-utf8-1",
+    "call": [
+      "CCL",
+      "LOADER-FASL-UTF8"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "fasl-utf8-2",
+    "call": [
+      "CCL",
+      "LOADER-FASL-UTF8"
+    ],
+    "args": [
+      2
+    ]
+  },
+  {
+    "id": "fasl-utf8-3",
+    "call": [
+      "CCL",
+      "LOADER-FASL-UTF8"
+    ],
+    "args": [
+      3
+    ]
+  },
+  {
+    "id": "fasl-refusals-0",
+    "call": [
+      "CCL",
+      "LOADER-FASL-REFUSALS"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "fasl-refusals-1",
+    "call": [
+      "CCL",
+      "LOADER-FASL-REFUSALS"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "fasl-refusals-2",
+    "call": [
+      "CCL",
+      "LOADER-FASL-REFUSALS"
+    ],
+    "args": [
+      2
+    ]
+  },
+  {
+    "id": "fasl-immediate-0",
+    "call": [
+      "CCL",
+      "LOADER-FASL-IMMEDIATE"
+    ],
+    "args": [
+      0
+    ]
+  },
+  {
+    "id": "fasl-immediate-1",
+    "call": [
+      "CCL",
+      "LOADER-FASL-IMMEDIATE"
+    ],
+    "args": [
+      1
+    ]
+  },
+  {
+    "id": "fasl-immediate-2",
+    "call": [
+      "CCL",
+      "LOADER-FASL-IMMEDIATE"
+    ],
+    "args": [
+      2
+    ]
+  },
+  {
+    "id": "fasl-immediate-3",
+    "call": [
+      "CCL",
+      "LOADER-FASL-IMMEDIATE"
+    ],
+    "args": [
+      3
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "fasl-refusals-0": "Malformed opcode raises checked 10 instead of reaching the native ERROR handler; no native-match credit.",
+  "fasl-refusals-1": "Unallocated expression reference raises checked 10 instead of reaching the native ERROR handler; no native-match credit.",
+  "fasl-refusals-2": "Fixture EOF raises checked 10 instead of reaching the native ERROR handler; no native-match credit."
+}

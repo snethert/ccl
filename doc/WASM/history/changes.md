@@ -1,3 +1,36 @@
+## 2026-09-25 — Whole-file 20/20/0 → 21/21/0; target code installation remains
+
+The [FASL reader proposal](../../../tests/wasm/stage1/loader-fasl/README.md)
+completes ordered level-0 compilation, including 145 modules from nfasload.
+Twenty-one unique production FASLs cross-load in a fresh process after their
+sources are removed. The target code installer for opcode 72 remains absent;
+ordered level-1 compilation is outside this producer's measured scope.
+
+Add the octet-buffer FASL boundary, signed-word lowering, target immediate
+validation and native-code refusals. Remove the duplicate MACPTRP definition,
+use the adopted strong-retention constructors at two bootstrap weak-table sites,
+and grow host cross-loader scratch space geometrically. Shared drivers expose
+explicit checks and preserve the new startup dependencies in their reports.
+
+Execution remains INCOMPLETE: 143/147 native rows match in each of four modes,
+136 controls pass per mode, and 63/66 initializers execute. Missing callable
+EQL, STRING= and ASSOC block three initializers. PUTHASH still lacks GC-lock
+services; three malformed-input cases raise checked errors without reaching
+the native Lisp handler. No target LOAD, complete boot, or new acceptance credit.
+
+Final sources pass 21,843 native tests with 164 FASLs restored, identical decoded
+existing-target code, 102 reader comparisons across 17 profiles, and 26,048
+fresh compiler/runtime comparisons. Unchanged collector checks are reused by
+identity. A different-root Git-free replay reproduces all 3,593 artifacts and
+all four execution modes. The patch remains outside product paths pending
+Claude review.
+
+Cost: author reading/editing and native qualification were not separately timed.
+The first corrected host cross-load took 21.49 seconds; final full-corpus
+execution took 216.26 seconds. No reviewer run or target-startup timing is
+claimed. Product Lisp delta: 125 added / 8 removed. Final retained evidence:
+112,834,240 bytes; regenerable binaries are represented by hashes.
+
 ## 2026-09-25 — P6 adopted; whole-file reporting corrected to 11/11/0
 
 Steve said “accept and integrate” for `5918bd73`. The directive is merged

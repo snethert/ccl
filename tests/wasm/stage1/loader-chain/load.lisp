@@ -1,5 +1,7 @@
 ;;; All production source files have been removed before this fresh process.
 (in-package "CCL")
+(let ((checks (concatenate 'string (getenv "LOADER_OUTPUT") "load-checks.lisp")))
+  (when (probe-file checks) (load checks)))
 (let* ((out (getenv "LOADER_OUTPUT"))
        (fasls (with-open-file (s (concatenate 'string out "load-order.lisp")) (read s)))
        (variables *wasm32-xload-parameter-variables*)

@@ -112,6 +112,9 @@ if(initialized){
    const expected=expectedRefusals.find(r=>r.reason===error.message && r.symbols.every(sym=>
     row.symbols.some(s=>resolve(s.reference)===symbolAddress(...sym))));
    if(!expected)throw new Error('initializer '+id+': '+error.message,{cause:error});
+   for(const dependency of expected.unbound??[])
+    assert.equal(get(symbolAddress(...dependency)+6),roots['unbound-function'],'declared missing function '+dependency.join('::'));
+   if(expected.after)assert(startupRefusals.some(r=>r.name===expected.after),'declared preceding refusal');
    assert(!startupRefusals.some(r=>r.name===expected.name));
    startupRefusals.push({...expected,codeId:id});
   }

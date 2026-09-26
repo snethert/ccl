@@ -27,7 +27,9 @@
                      (values fasl modules warnings failure)))))
          (let ((stop
                  (handler-case
-                     (progn (cross-xload-level-0 :wasm32 :force) nil)
+                     ;; The shared producer cross-loads in a fresh process
+                     ;; after removing sources. Avoid an earlier redundant load.
+                     (progn (cross-compile-level-0 :wasm32 t) nil)
                    (error (condition)
                      (list :object
                            (cons "type" (string (type-of condition)))

@@ -1,0 +1,73 @@
+[
+  {
+    "name": "package-reference table needs callable EQL",
+    "symbols": [
+      [
+        "CCL",
+        "*PACKAGE-REFS*"
+      ],
+      [
+        "COMMON-LISP",
+        "EQUAL"
+      ],
+      [
+        "COMMON-LISP",
+        "MAKE-HASH-TABLE"
+      ]
+    ],
+    "unbound": [
+      [
+        "COMMON-LISP",
+        "EQL"
+      ]
+    ],
+    "reason": "checked 10"
+  },
+  {
+    "name": "package registration needs package-reference table",
+    "symbols": [
+      [
+        "CCL",
+        "REGISTER-PACKAGE-REF"
+      ],
+      [
+        "CCL",
+        "%ALL-PACKAGES%"
+      ]
+    ],
+    "after": "package-reference table needs callable EQL",
+    "reason": "checked 10"
+  },
+  {
+    "name": "force-export packages need callable STRING= and ASSOC",
+    "symbols": [
+      [
+        "CCL",
+        "%DEFUN"
+      ],
+      [
+        "CCL",
+        "MAKE-LOCK"
+      ],
+      [
+        "CCL",
+        "%WASM-PACKAGE-LITERAL"
+      ],
+      [
+        "KEYWORD",
+        "KEYWORD"
+      ]
+    ],
+    "unbound": [
+      [
+        "COMMON-LISP",
+        "STRING="
+      ],
+      [
+        "COMMON-LISP",
+        "ASSOC"
+      ]
+    ],
+    "reason": "checked 10"
+  }
+]
