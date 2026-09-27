@@ -4990,3 +4990,61 @@ P1 — repeated `LOAD` of one runtime container after READY (a post-image varian
 ### Disposition
 
 **No product defect; recommend accepting all four product groups.** Plainly: everything the three reports claim reproduces from the committed sources on a Git-free tree — the boot image, both archives and every FASL byte are identical to Codex's; both fresh Workers reach READY with the same 83 loads and the two refusals stop where they should; the full call census is the same 44,724,264 calls; the isolated launch is 25.8 s here against Codex's 27.6 s; all 11,939 linked functions reverse to byte-identical templates; native R6/R6a, the reader matrix, the hot-helper comparison and every host-side control pass with Codex's exact counts; and seven of eight mutants, one per claimed guarantee, are killed by the fixtures that claim them. The one unexecuted mutant is a fixture-strength note, not a defect. What should be fixed in the next producer commit rather than debated: the uncaught generation-capacity exception on a third reload (O-134) and the still-unchanged fault masking before the error system (O-124); the README root-cell count (O-138) is a one-line correction. The corpus is the one stage I could not rerun, for a reason that is the user's to resolve (O-137: the shared RAM volume is holding 11 GB of Codex outputs); Codex's record binds the same sources. Counts: the measure is now **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances, 25.8 s to READY at 32 MiB spaces**; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
+
+## Hundred-and-eighty-ninth Claude audit — the two Codex commits above audit 188: the acceptance record c6538d37 (docs only) and the refusal follow-up e511c2ac (O-124 verification, O-134 file-service refusal), with the compiler corpus replayed independently — 27 September 2026
+
+Replayed from a Git-free `git archive e511c2ac` tree on the RAM disk (`/private/tmp/ccl-work/claude/a189`, deleted after the audit) with the `ccl-evidence` symlink; every disposable output lived on the 16 GiB RAM volume, which Codex had cleared (15 GiB free at the start).
+
+### What the commits do
+
+- **c6538d37** (docs only, 11 files): accepts the four product groups after audit 188, binds the acceptance to `136b58cb`, corrects the runtime README root-cell count to 126,226 / 504,904 bytes (O-138, matching my count), records O-124/O-134 as open and the RAM volume cleared (O-137). No product code.
+- **e511c2ac** (host + tests + docs, product Lisp 0/0): four host files change. `code-archive.mjs` throws `GENERATION_CAPACITY` with a `code` property instead of through `need`; `file-client.mjs run(args, prepareOpen)` calls the loader's admission callback for `open` after every argument, frame, thread-state and generation check and before any request is posted, returning the tagged errno `(error*4)|0` when the callback returns a negative integer and refusing anything else (`open refusal`); `target-load-session.mjs` moves the whole open preparation into that callback and translates only `GENERATION_CAPACITY` into `-ERRNO.GENERATION_CAPACITY` (12, ENOMEM); `file-protocol.mjs` adds the errno. New `generation-refusal-check.mjs` (eleven checks against the real smoke archive), three new file-service control groups, two error-service modes in the focused check, a post-image witness that reloads `l1-sort` (publishing generation two, then meeting CCL's kernel-redefinition error) and asserts `FD-OPEN` returns −12 twice, and `ready-check.py` assertions for two generations and no open sessions. Codex also states that O-124 was already fixed by ea82d8e7 and that audit 188 cited the wrong emitter.
+
+### Tier 0 — identity
+
+- Evidence pack `2026-09-27-audit188-refusals-r1` at ccl-evidence commit e823730c; `summary.json` 0667878f… and `index.json` f92a84e1… equal the hashes in `refusal-followup.json` and `evidence/index.json`.
+- All nine `sourceIdentity` files (four runtime, five tests) hash-equal to the tree; all 68 `unchanged-shared-inputs.json` sources hash-equal (native R6/R6a and reader reuse is bound correctly); the five SEP-1 Lisp sources (`040f3246`, `3b92cf3f`, `cd7097c9`, `45a9a663`, `539147e6`) are unchanged from the accepted revision, so one corpus run covers both this commit and the audit-188 debt.
+- Fresh focused fixture and post-image bundle: **627 of 630** files in `fixtures-inventory.json` byte-identical; the two differences are `postimage-final/compile.log` (four lines naming the source path) and `postimage-parent.json` (the `image` path, documented as intentional); `focused/check.json` is produced by the check run, not the build.
+
+### Tier 2 — replay
+
+| Stage | Codex | Claude |
+|---|---|---|
+| Compiler corpus (`qualify.py corpus`, full tier) | 26,204 fresh / 0 inherited / 0 sampled, 217.9 s, skipped for this commit "by user direction" | **26,204 fresh / 0 inherited / 0 sampled, 209.9 s, cold compiler PASS** — closes O-137 |
+| `generation-refusal-check.mjs` | 11 checks PASS | 11 checks PASS; the same test against `git archive c6538d37 runtime/wasm32` dies with the uncaught `Error: code archive: GENERATION_CAPACITY` |
+| Focused loader `check.mjs` on the fresh fixture | 18 modules, modes [0, 2] | PASS, 18 modules, `earlyErrorModes` [0, 2], 7 controls |
+| File-service controls | 57 groups | `NAMESPACE-ADMISSION-PASS 57` |
+| Archive controls / async / retention | 81 / 11 / 3,922 marked, 0 retained | 81 / 11 / 3,922 marked, 0 retained (three generations) |
+| READY a (traced), b | [83, 83], generations 2 | `ready-check.py` PASS [83, 83], heap 973c98eb…, code ca6991d1…, nine assertions including "generation budget returns errno through Lisp"; every compared report field (status, reason, loads, product modules/instances, digests, collections) equal to Codex's |
+| Omitted bundle / empty namespace | refuse | refuse, generations 1, fields equal |
+| Third LOAD (`--startup-load=/ccl/l1-fasls/l1-sort.w32fsl`) | STOPPED / checked 4 after 82, two host opens, no abandoned session | `check-third-load.py` PASS, identical fields |
+
+No timing was measured; Codex claims none.
+
+### Mutants (remove-one-check against Codex's own checks)
+
+| Mutant | Change | Result |
+|---|---|---|
+| M1 | `file-client.mjs`: run `prepareOpen` before the frame/thread-state checks | **killed** — "thread validation precedes capacity refusal" (missing expected exception); controls still pass |
+| M2 | `target-load-session.mjs`: translate every reserve error, not only `GENERATION_CAPACITY` | **killed** — "unrelated admission errors are not translated" |
+| M3 | `code-archive.mjs`: revert to `need(…,'GENERATION_CAPACITY')` (no `code` property) | **killed** — uncaught `GENERATION_CAPACITY` |
+| M4 | `file-client.mjs`: drop the `open refusal` validation of the callback's result | **killed** by the file-service control `invalid-open-admission-result` (the generation check alone cannot see it) |
+| M5 (Codex's) | restore the handler-dependent guard in the emitted class-condition helper (`mutate-early-error.py`) | **killed** — check reports 11 where 5 is required, as Codex recorded |
+
+### Probes
+
+- **P1** — pre-fix baseline: see the replay table; the host exception is reproduced at c6538d37 and gone at e511c2ac.
+- **P2** — probe post-image (handler-wrapped loads after the witness has consumed both generations; Worker reaches READY): a LOAD of a missing file signals `(:FILE-ERROR SIMPLE-FILE-ERROR)`; a LOAD refused by the generation budget signals `(:ERROR UNDEFINED-FUNCTION)` whose message is **"Undefined function: %GET-FRAME-PTR"**.
+- **P3** — direct signalling: `(%signal-file-error -2 "/x")`, `-12`, `-30` all signal `SIMPLE-FILE-ERROR` ("No such file or directory : …", "File operation failed : …", "Read-only file system : …"); `(%strerror 12)` returns. So the wasm32 file-error path handles errno 12; the failure is in LOAD's own dispatch.
+
+### Observations
+
+- **O-142 — DEFECT in the Lisp-facing result of the O-134 fix (not in the host change).** `load` (`level-1/l1-files.lisp:1343–1345`) handles a `%fasload` failure with `(%err-disp err)`; `%err-disp` (`l1-error-signal.lisp:32`) calls `%get-frame-ptr`, which is `#-wasm32-target` (`l1-lisp-threads.lisp:690`). The −12 therefore reaches Lisp as `UNDEFINED-FUNCTION %GET-FRAME-PTR`: catchable as `error`, not as `file-error`, with a message that hides the cause. A missing file takes the `probe-file` path (`l1-files.lisp:1305`, `signal-file-error $err-no-file`) and signals a proper `SIMPLE-FILE-ERROR`, so the requested parity with a missing file is not reached. Codex's README (`runtime/wasm32/README.md:166–168`) and `refusal-followup.md` describe the outcome as "%err-disp, which exits with checked 4 … not a catchable file-error"; the "checked 4" is only what an unhandled undefined-function fault produces at top level in the third-load run, the same code the omitted-bundle refusal produces. Fix: a `#+wasm32-target` branch in `load` routing a negative `err` through `signal-file-error` (P3 shows that path works, one or two lines), or a wasm32 `%get-frame-ptr`; then correct the two documents. Until then O-134 is fixed at the host boundary but not closed.
+- **O-143 — pre-existing, broader.** With `%get-frame-ptr` excluded, every remaining caller fails the same way after READY: `%err-disp`/`%errno-disp`, `%check-type` (`l1-error-system.lisp:1201`), `invoke-debugger` (`l1-readloop-lds.lisp:556`), `%last-fn-on-stack`, the package-conflict restarts (`l1-symhash.lisp:214, 239`) and the FASL header errors (`nfasload.lisp:1185`). Not introduced by this commit; belongs to the error-system work.
+- **O-144 — correction of audit 188's O-124.** My claim that the guard at `wasm32-backend.lisp:2546` was the active one was wrong: that function is `prior-numeric-b-implicit-runtime`, used only when `*b-cpl-conditions*` is nil. `wasm32-compile-file` (line 6559) binds it to `t`, `b-implicit-runtime` (line 3486) then returns `bootstrap-class-implicit-runtime` (line 6168), whose guard (line 6191) checks only `tcr.error_service_mode`, as changed by ea82d8e7 (the hunk removing the `%handlers%` read is in that function). Codex is right; the fresh focused check confirms the first fault (5) is preserved with a handler bound in modes 0 and 2, and restoring the old guard is killed. **O-124 CLOSED.** The legacy numeric emitter and `b-type-failure`'s `legacy-cons-p` branch (line 2792) keep the handler-dependent guard; Codex documents this as intentional for the non-class corpus runtime, and whole-file compilation never selects it.
+- **O-145 — witness design.** The post-image witness now consumes the last runtime generation in every READY run (`ready-check.py` asserts two); any later post-image reload witness will be refused by budget, and the −12 outcome is asserted through `FD-OPEN` only, which is why O-142 went unnoticed. Minor.
+- **O-137 CLOSED** by the corpus replay above. **O-138 CLOSED** by c6538d37.
+
+### Disposition
+
+The host change is correct: admission runs after complete validation and before any request or TCR change, refusal leaves memory, tables, roots and sessions untouched (read in `reserve`/`createGeneration`: the capacity throw precedes every mutation), only generation exhaustion is translated, and all four remove-one mutants are killed by Codex's own checks. The O-124 verification is correct and my audit-188 finding is withdrawn. The independent corpus replay reproduces Codex's 26,204 exactly. **One defect stands (O-142):** the refusal reaches Lisp as an undefined-function error that masks the cause, and the commit's documentation misdescribes that behaviour as a designed terminal refusal. Recommendation: accept the host change and the O-124 closure; hold the "O-134 fixed" claim and the README/refusal-followup wording until `load`'s errno path is corrected on wasm32 and re-witnessed with a handler-wrapped LOAD. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; corpus 26,204 independently replayed; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
