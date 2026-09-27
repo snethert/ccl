@@ -565,3 +565,23 @@ optima. The executed P-0 baseline is retained. Seven product modules, target
 FASL publication order and the future scope of direct calls remain as adopted.
 This entry updates the plan; it does not record implementation or acceptance
 of the archive, collector-range or sizing changes.
+
+## Module consolidation input-lifetime amendment — 27 September 2026
+
+The user asked whether loading data could be read, used and dereferenced so
+JavaScript GC could reclaim it during launch, then directed: "update the
+plan". [MCP-P7](stage1/module-consolidation-plan.md), A-16, makes bounded
+staging and explicit buffer ownership/release requirements of P-1. Archive
+inputs belong to the admission Worker, reached by direct read or ownership
+transfer; temporary binaries, decoded manifests and closed-session data are
+released after their last use, on success and failure. Compact authenticated
+metadata and live executable generations remain available for repeated LOAD.
+The small FASL set may stay resident; evicted bytes require authenticated
+rereads from the configured read-only backing store.
+
+P-1 verifies actual retaining paths, failure cleanup and repeated LOAD, and
+measures owned input bytes alongside peak/READY memory; P-2 extends the gates
+to boot. Making data collectible does not promise immediate GC or RSS return.
+The prior Worker-heap figure is not manifest-only, and the residual after
+subtracting counters from RSS is not measured engine memory. This is a plan
+amendment only; implementation and memory savings remain to be verified.

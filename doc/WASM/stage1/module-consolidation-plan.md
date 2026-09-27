@@ -1,31 +1,33 @@
 # Module consolidation plan — from 11,938 engine modules at READY to 7
 
 ```
-DOC-ID        MCP-P6 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
+DOC-ID        MCP-P7 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
               its four corrections; P4 folds in Codex's three corrections of P3, after which
               Codex considers the plan valid for implementation; P5 records the
               user's adoption, the memory measurements F-12 and the direct-call direction A-13;
-              P6 records completed P-0 and the user's heap/stack sizing amendment)
+              P6 records completed P-0 and the user's heap/stack sizing amendment;
+              P7 adds bounded input ownership and release during loading)
 STATUS        ADOPTED by the user, 27 September 2026 (U-5: "Yes to all three"), after
               Codex judged P4 valid for implementation; packet contents, sizes and order
               remain Codex's implementation choices; A-13 is a recorded future direction
 AUTHOR        Claude (Fable 5.1), 27 September 2026, after the READY commit ea82d8e7
-AMENDMENT     Codex, 27 September 2026, user direction U-6; documentation only
+AMENDMENT     Codex, 27 September 2026, user directions U-6/U-7; documentation only
 READER        Codex, as Stage 1 author; review amended items by ID
 BASE          wasm2 at ea82d8e7 (READY under decision A2); measured on the retained
               loader-startup-timing-r1 inputs boot-r21 and bundles-r18
-TOUCHES       P6: this document and doc/WASM/decisions.md; no implementation change
+TOUCHES       P7: this document and doc/WASM/decisions.md; no implementation change
 CHANGES       §9 records revision history; §10's import qualifications still apply
 ```
 
 ## 0. How to read this
 
 Every item carries an ID; IDs from P1 are kept, amended items are marked with
-revision labels such as `(P6)`; new items continue the numbering. Review amended
+revision labels such as `(P7)`; new items continue the numbering. Review amended
 items by ID with `AGREE`, `DISAGREE`, `AMEND` or `UNVERIFIED`. Facts (F) name
 their measurements or source evidence. F-13 is the executed P-0 baseline;
-F-14 gives native defaults and the current Wasm growth policy. Diagnosis (D),
-target (T), archive design (A), packets (P), risks (R) and questions (Q) follow.
+F-14 gives native defaults and the current Wasm growth policy; F-15 records
+current input retention. Diagnosis (D), target (T), archive design (A),
+packets (P), risks (R) and questions (Q) follow.
 The prototype is a measurement
 instrument: it establishes sizes, tool scale and engine cost. It is not a
 proposed implementation and did not execute Lisp.
@@ -61,6 +63,11 @@ proposed implementation and did not execute Lisp.
   configuration and measurement gates in A-14/A-15 and P-1. These values
   are defaults to evaluate, not a measured optimum or a READY-time promise.
   Document revision MCP-P6 is separate from the future direct-call packet P-6.
+- U-7 (P7). User: "Must everything be in memory at once? Can't things be read,
+  used and derefenced in the JS so the JS collector works alongside?", then
+  "update the plan". Add explicit buffer ownership, bounded staging and
+  release gates to P-1 (A-16), preserving admission and repeated LOAD.
+
 ## 2. Facts at ea82d8e7
 
 - F-1. Module counts on the READY path (`stats.mjs` on bundles-r18; boot from
@@ -206,6 +213,19 @@ proposed implementation and did not execute Lisp.
   The current owner grows only if collection cannot satisfy the next
   allocation; a nearly full heap can therefore collect repeatedly without
   gaining useful free space ([owner](../../../runtime/wasm32/collector-owner.mjs)).
+- F-15 (P7). Source retention, checked at `9ae6bfd8`: the
+  [driver](../../../tests/wasm/stage1/loader-target/boot0.mjs) reads all bundles,
+  creates a main-thread namespace and sends `files` through `workerData`
+  without a transfer list. The Worker builds its own namespace.
+  [bundleNamespace](../../../runtime/wasm32/target-load-session.mjs) keeps a
+  full bundle copy and module rows per file; closing a load removes its open
+  session, not that inventory. The
+  [decoder](../../../runtime/wasm32/target-bundle.mjs) also snapshots its input
+  and copies decoded sections. These paths explain avoidable retention;
+  they do not establish a disjoint byte attribution. In particular, F-13's
+  roughly 0.75 GiB Worker JS heap is not a manifest-only measurement, and
+  RSS minus the exposed counters is not a measurement of engine code memory.
+
 ## 3. Diagnosis
 
 - D-1 (P2). The count is the visible symptom of three multiplicative costs:
@@ -406,10 +426,12 @@ proposed implementation and did not execute Lisp.
   tier in Lisp; same output, but a backend change with R6/R6a. Alternative
   (ii): Binaryen `wasm-merge` plus duplicate-function elimination; a new
   pinned toolchain and binary rewriting, not recommended.
-- A-11. Files stay as they are: 82 FASL streams, `bundleNamespace` and
-  `%fasload` unchanged. The `.w32bundle` container loses its per-module code
+- A-11 (P7). Preserve the exact 82 FASL streams, namespace behavior and
+  `%fasload` semantics. The `.w32bundle` container loses its per-module code
   and templates and keeps the FASL bytes and the unit catalog; the archive
-  is a separate file named by digest in the namespace.
+  is a separate file named by digest in the namespace. `bundleNamespace`
+  ownership/storage changes under A-16; retaining all input containers in
+  both threads is not part of the namespace contract.
 
 - A-12 (P4). Rooting and publication transactions, both journaled with
   prior values, never assuming a prior value was zero or NIL. The paired
@@ -522,6 +544,61 @@ proposed implementation and did not execute Lisp.
   Ranges reduce bookkeeping; collection still examines their tagged values
   and updates moved references. Measure allocation, registration and
   collection costs separately; no complete removal of F-13's costs is assumed.
+- A-16 (P7). Input ownership and release, included in P-1 under U-7.
+  Stage one archive's admission inputs at a time, release its temporary
+  state, then stage the next; retain the compiled modules needed by A-5.
+  Declare the bound on in-flight reads and working buffers. Whole-archive
+  authentication/validation may still require a full source buffer; P-1
+  does not require a streaming hash or browser delivery redesign.
+
+  | data | owner and lifetime |
+  |---|---|
+  | raw archive/container bytes, template/patch buffers, decode scratch | admission owner only; release after their last check and compilation completes, or on failure |
+  | parsed validation manifest and classification temporaries | admission owner; validate fully, extract compact runtime metadata, then release |
+  | compact file/unit/function metadata and digests | retain for namespace lookup, install checks, generation creation and repeated LOAD |
+  | FASL bytes | retaining the approximately 5.8 MB set is allowed; otherwise use a bounded cache with authenticated rereads |
+  | per-open decode/read buffers and session metadata | release on close or failure, including partial loads; preserve published units under A-4 |
+  | compiled modules, live instances, registry/table entries and roots | retain under the generation contract; releasing source bytes does not unload executable code |
+
+  Make the Worker the runtime archive admission/cache owner. The main thread
+  needs file-service data and a compact directory, not its own archive binary
+  and validation-manifest inventory. Read into the owner directly or transfer
+  an exclusively owned `ArrayBuffer` across the thread boundary. Do not clone
+  full archives through `workerData`. Transfer detaches the sender's buffer;
+  use standalone buffers, not a pooled Node Buffer's backing store
+  ([Node transfer rules](https://nodejs.org/api/worker_threads.html#portpostmessagevalue-transferlist)).
+  Preserve private authenticated snapshots: a mutable shared buffer or
+  caller-held alias cannot replace them. Document any necessary copy and
+  release the source at the earliest valid boundary. Await all consumers,
+  including asynchronous digest/compile operations, before detaching or
+  reusing their input.
+
+  Drop every reference, including caches, `workerData`, closures, error/debug
+  records and typed-array views. A small view must not pin a large archive;
+  copy compact retained data into its own storage where necessary. Keep
+  evidence as paths, digests and scalar results rather than retained payloads.
+  Project metadata only after A-1/A-6 admission succeeds, retaining everything
+  needed for per-unit checks, imports and future generations. The complete
+  manifest and verification evidence remain durable, digest-bound artifacts
+  for audit; trimming runtime objects must not remove an admission predicate.
+
+  If bytes are evicted, reread only from the configured read-only backing
+  store and authenticate against the pinned directory/manifest digests before
+  use or publication. Do not add an arbitrary filesystem/network fallback.
+  Keeping the small FASL set resident is a valid P-1 implementation. Either
+  choice preserves seek/read behavior, repeated/recursive/overlapping LOAD,
+  partial-close reservations and old closures. New generations reuse the
+  admitted module and compact metadata without retaining another raw archive.
+
+  Cleanup covers success, decode/digest/compile/instantiate refusal and
+  teardown, preserving A-12 rollback and other live sessions. Release makes
+  objects eligible for JS collection; it cannot schedule collection or
+  promise immediate RSS reduction. V8 can mark concurrently, but not all GC
+  work is concurrent ([V8 GC](https://v8.dev/blog/concurrent-marking)). Normal
+  startup must not depend on forced GC, finalizers or sleeps. Engine-owned
+  compiled/debug data is reported separately where observable and is not
+  presumed released with the JS source buffer.
+
 ## 6. Packets
 
 - P-0 (P3). Measure (small, first). One bounded, instrumented fresh-process
@@ -537,9 +614,9 @@ proposed implementation and did not execute Lisp.
   experiment. This is the baseline P-1 is judged against and tells whether
   a Lisp-side plan is needed (D-4). P6 status: completed at `0675ba83`, F-13;
   retain that baseline rather than launching another unchanged v1 run.
-- P-1 (P6). Runtime archive (A-1, A-2, A-3, A-4, A-5, A-6, A-7, A-10, A-11,
-  A-12, A-14, A-15); `target-bundle.mjs`/`target-load-session.mjs` gain the v2 admission
-  and generations; v1 stays for post-image files. Gates: READY reproduces (81
+- P-1 (P7). Runtime archive (A-1, A-2, A-3, A-4, A-5, A-6, A-7, A-10, A-11,
+  A-12, A-14, A-15, A-16); `target-bundle.mjs`/`target-load-session.mjs` gain v2
+  admission and generations; v1 stays for post-image files. Gates: READY reproduces (81
   nested loads, two post-image loads in two fresh Workers, both refusals,
   Unicode output); A-8 (a) and (b) over all 10,891 functions; A-4 and A-12
   tests; product engine module count at READY = 1,048 (1,042 boot modules
@@ -550,6 +627,22 @@ proposed implementation and did not execute Lisp.
   coexistence and capacity refusals. Verify stack boundaries, disjoint layout,
   headroom growth before allocation failure, inhibited collection and checked
   refusal with valid state when growth cannot satisfy an allocation.
+
+  Verify A-16 ownership and cleanup: sender detachment on transfer, no retained
+  raw-buffer aliases in the compact cache, release on close and each failure
+  exit, digest mismatch on reread if eviction is implemented, and
+  repeated/overlapping LOAD with old closures intact. Record unique owned
+  backing-buffer bytes and counts by thread/category, including their peak
+  and values at admission start/end, file close and READY, alongside
+  P-0's heap/external/ArrayBuffer/linear-memory/RSS counters. At READY the v2
+  admission buffers and full validation manifests have no application-owned
+  retainers; retained compact metadata and FASLs are itemized. Inspect actual
+  retaining paths as well as counters in a focused fixture. Repeated LOAD
+  must not accumulate raw inputs or closed-session data; report intended
+  generation/root/registry growth separately. A separate forced-GC diagnostic
+  may help distinguish retention from delayed collection, but is not the
+  timed READY run or a correctness dependency. P-1 itemizes remaining v1 boot
+  storage; P-2 applies the same lifetime gates to the boot archive.
 
   Compare initial space sizes of 16, 32 and 64 MiB per space on the same
   archive, engine and workload, keeping the 16 MiB free-space policy constant.
@@ -564,16 +657,20 @@ proposed implementation and did not execute Lisp.
   time/memory tradeoff; report inconclusive single-run differences as such.
   Initial sizing evidence is on the P-0 engine; reuse the same defaults for
   subsequent engine qualification and record untested engines explicitly.
-- P-2. Boot archive: `cross-image.mjs` admits v2; `write.mjs` emits the
+- P-2 (P7). Boot archive: `cross-image.mjs` admits v2; `write.mjs` emits the
   archive and the reference block; heap `codeDigest` is recomputed (the heap
   payload itself must stay byte-equal). Gates: boot identity, READY as P-1,
-  product engine module count at READY = 7.
-- P-3 (P2). `crypto.subtle` digest, manifest slimming, streamed WABT
-  classification (A-6), and the browser import/export limit check (F-7) on
+  product engine module count at READY = 7; A-16 release and retention gates
+  now cover both archive tiers.
+- P-3 (P7). `crypto.subtle` digest, further serialized-manifest slimming,
+  streamed WABT classification (A-6), and the browser import/export limit check (F-7) on
   the shipped archive. Gate: import count of the runtime archive under 100
-  (fixed imports plus `$roots` and `$code_base`) and P-0 rerun.
-- P-4 (P2). Record the LL21-b re-decision only after measuring retention
-  (R-4): chosen packaging v2, the measurements (F-2..F-8, P-0/P-1 timings,
+  (fixed imports plus `$roots` and `$code_base`) and P-0 instrumentation rerun
+  on the changed path. Compact runtime metadata and temporary-input release
+  are already P-1 requirements, not deferred to this packet.
+- P-4 (P7). Record the LL21-b re-decision only after measuring retention
+  (R-4), distinguishing live generations from temporary-input retention
+  (A-16): chosen packaging v2, the measurements (F-2..F-8, P-0/P-1 timings,
   the retention figures) in the inventory record, `runtime/wasm32/README.md`,
   and the sentences in `namespace-loader-plan.md` and `bundle.mjs` that name
   one function per module; state that the lazy stub loader and
@@ -626,6 +723,14 @@ proposed implementation and did not execute Lisp.
   establish the tradeoff. A range is not a single GC reference: every
   published pointer cell still requires tracing. No engine-specific optimum,
   elimination of the 115 s root cost, or post-consolidation RSS is promised.
+- R-9 (P7). Dropping one reference is insufficient if a namespace cache,
+  captured manifest, view or diagnostic record still owns the data. Logical
+  release counters alone do not prove reachability or physical reclamation;
+  A-16/P-1 require retaining-path checks and comparable memory milestones.
+  Collection timing and engine-internal binary/code retention remain outside
+  the loader's control. Keep peak memory, retained inputs and READY RSS as
+  separate measurements, without an additive engine-memory estimate.
+
 ## 8. Questions for the user
 
 - Q-A. Adopt the target of 7 engine modules at READY, one archive per image
@@ -716,6 +821,16 @@ complete layout/scratch accounting; A-15 adds published root ranges while
 preserving A-12. P-1 gains correctness gates and the bounded 16/32/64 MiB
 comparison; R-8 records the workspace/latency tradeoff. P-0 is complete and
 its unchanged baseline is reused. Direct calls remain future packet P-6.
+
+Changes in P7, on user direction U-7: F-15 records the current retention
+paths and the limits of memory attribution. A-11 preserves namespace/FASL
+semantics while allowing storage changes. A-16 defines bounded staging,
+exclusive buffer ownership, transfer, release, compact runtime metadata and
+authenticated rereads. P-1 gains lifetime/failure/repeated-LOAD checks and
+memory milestones; P-2 extends them to boot; P-3's later serialized-manifest
+work does not defer P-1 release. P-4 separates temporary inputs from generation
+retention, and R-9 records GC/retainer limits. No implementation, benchmark or
+acceptance is recorded by this documentation amendment.
 
 ## 10. Codex import review — 27 September 2026
 
