@@ -140,11 +140,38 @@ compiler and primitive binaries are unchanged; LL16-a is accepted at its reviewe
 
 Strong EQ backing vectors: `hash.c`, `hash-adapter.wat` and the collector’s moved-key scanner are integrated at the reviewed LL18-b scope. Fixed capacity, internal owner-installed callable entries; production installation and CL hash-form lowering remain open.
 
-All runtime JavaScript modules now use the reviewed synchronous `sha256.mjs` and `bytes.mjs` helpers. No runtime module imports Node crypto or uses Buffer. Factories keep their existing signatures; load binary bytes with the host’s file or fetch APIs before calling them. Loader/installer snapshots always own copies. SHA-256 remains construction/installation work, and very large inputs may block the Worker. See the [integration record](../../doc/WASM/stage1/integration-portable-digests.json) for exact bytes, checks and audit-117 browser limitations. The earlier `fs` example is a Node host example, not a runtime dependency.
+The v1 runtime uses the reviewed synchronous `sha256.mjs` and `bytes.mjs`
+helpers. V2 archive admission also offers async entry points using Web Crypto
+for full-module digests. No runtime module imports Node crypto or uses Buffer.
+Archive ArrayBuffer inputs are consumed and detached; Uint8Array inputs retain
+the defensive-copy contract. Admission snapshots metadata before suspension;
+publication stays synchronous. The v1 [integration record](../../doc/WASM/stage1/integration-portable-digests.json)
+retains its original scope and browser limitations.
 
 D2 production templates: `materializer.mjs` is integrated at LL21-a scope. The compiler’s opt-in `*wasm32-template-memory*` emits canonical unshared imports, including child modules; the default shared output is unchanged. The materializer binds the owner’s ABI, classification and engine policy and verifies final bytes before compilation. It qualifies code only, not unshared runtime services or a new lazy-loader profile.
 
 Per-function code sets: `bundle.mjs` integrates the accepted LL21-b owner/build API (`validate`, `compile`, `publish`). Each module holds one generated function's public and internal B roles. The trusted inventory binds code IDs, slots, generations, ABI/layout versions and D2 records. All instances link before publication; mid-publication failure clears the newly written slots. Retain old modules and slots across redefinition. This adds no merged fallback or new lazy-loader profile. The measured 19-module set takes about 37.1 ms for full validated installation; the 1.93 ms cold figure is lazy-tier decode/validation, not eager compilation.
+
+Bootstrap now selects `code-archive-v2`: one level-0 module and one runtime
+module, plus five service/adapter modules, for seven product modules and eleven
+instances at ordinary READY. `code-archive.mjs` maps each logical code ID to its
+generation's offset, paired table slots, ABI and layout. Helper code is shared;
+symbol cells are shared only by compiler-provided identity. Opcode 72 publishes
+units in FASL order. Repeated or overlapping LOAD reserves a fresh generation
+when needed; close releases only unpublished reservations. A live generation
+retains its complete module, code window and root block. There is no generation
+reclamation policy in this change. The runtime generation reserves 10,891 IDs
+and 125,208 root cells (500,832 bytes), independently of publication count.
+
+The main thread retains the FASLs; the Worker retains compact unit/dispatch
+metadata. Raw archive bytes and full D2 validation manifests are temporary.
+`layout.mjs` derives disjoint areas and capacities from inventories. Defaults
+are 32 MiB per heap space, 16 MiB free headroom, 512 KiB temporary space and
+1 MiB each for control and value stacks. Root slices use the existing collector
+list ABI. See the [measurements and retention diagnostics](../../doc/WASM/stage1/module-consolidation-results.md).
+This LL21-b re-decision is implemented and author-verified, awaiting independent
+review. Ordinary post-image files, `loader.mjs` and `installer.mjs` remain v1;
+the lazy stub path is outside archive bootstrap.
 
 Cross-loaded images: `cross-image.mjs` integrates the P2-0 coordinator accepted
 after audit 179. It uses the existing D2 bundle and heap admission, with logical

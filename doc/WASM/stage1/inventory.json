@@ -561,7 +561,7 @@
       "assertions": [
         {
           "id": "S1-LL21-b:granularity",
-          "description": "Bootstrap module granularity is chosen from measured bytes, compile, instantiate and install latency and retained-code growth of the generated bundles under the benchmark policy, with the chosen packaging recorded and every logical code ID mapped to slot, module, ABI and layout versions."
+          "description": "Bootstrap module granularity is chosen from measured bytes, compile, instantiate and install latency and retained-code growth of the generated bundles under the benchmark policy, with the chosen packaging recorded and every logical code ID mapped to slot, module, ABI and layout versions. The 2026-09-27 bootstrap re-decision selects code-archive-v2, one module per image tier, with generation-relative code IDs, paired slots and per-generation root blocks. The complete byte equivalence, startup/sizing measurements and repeated-LOAD retention evidence are recorded in doc/WASM/stage1/module-consolidation-results.md. This implementation awaits independent review; accepted v1 granularity evidence remains applicable to post-image and lazy compatibility paths."
         }
       ],
       "status": "EXECUTED",

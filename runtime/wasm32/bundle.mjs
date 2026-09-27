@@ -1,4 +1,5 @@
-// Trusted-owner code-set admission. One generated function per module, two B roles.
+// V1 trusted-owner admission: one generated function per module, two B roles.
+// Post-image/lazy compatibility; bootstrap v2 uses code-archive.mjs.
 import {sha256} from './sha256.mjs';
 import {inspect} from './binary.mjs';
 import {entryRanges} from './ranges.mjs';

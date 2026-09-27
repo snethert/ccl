@@ -11,10 +11,24 @@ READY passes in two fresh Workers from the same level-0 image: 81 nested runtime
 loads and two ordinary post-image `--load` files complete in each. The outer
 `level-1` load hands off to the application through `:toplevel`, so it is counted
 as an opened runtime bundle, not a normally returning LOAD. All 82 runtime
-bundles compile without a stop. The traced run observes 5,028 distinct modules;
+bundles compile without a stop. The traced run observes 5,028 distinct logical functions;
 the second run disables the call/callback census but retains the LOAD observer.
 The historical 21-file stop and failed corpus
 at `ffbdb2e7` remain historical evidence.
+
+The default build emits one archive per bootstrap tier and small FASL
+containers: seven product engine modules, eleven instances at ordinary READY.
+V1 remains available with `--v1` on the materialization scripts and is selected
+for post-image fixtures. See the [consolidation report](../../../../doc/WASM/stage1/module-consolidation-results.md)
+for byte equivalence, sizing, generations, ownership and engine checks.
+`archive-check.mjs` and `archive-controls.mjs` check publication and refusals;
+`archive-async-check.mjs` checks hashing suspension and caller mutation.
+`retention-check.mjs` requires `node --expose-gc` and a RAM-disk output directory;
+its heap snapshot is a separate diagnostic, never part of a timed READY run.
+`archive-browser-check.mjs BOOT_WASM RUNTIME_WASM OUTPUT PLAYWRIGHT` checks
+construction in installed Chromium, Firefox and WebKit versions. It uses
+asynchronous browser instantiation to respect Chromium's main-thread size
+restriction; it does not execute Lisp or qualify browser READY.
 
 ## Profile and implementation
 

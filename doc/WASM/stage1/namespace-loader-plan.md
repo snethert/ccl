@@ -76,10 +76,14 @@ remains the user's.
   - S1-LL13-a initialization (`initialization/owner.mjs`);
   - S1-LL21-a materialization (`materializer.mjs`) and S1-LL21-b granularity
     — `bundle.mjs` is integrated (bootstrap-core/-admission/-carry records),
-    one generated function per module, code-set map from logical code ID to
-    module, roles, slots, ABI and layout versions;
+    the accepted v1 path has one generated function per module, with logical
+    code IDs mapped to module, roles, slots, ABI and layout versions. The
+    implemented [consolidation](module-consolidation-results.md) selects one
+    archive per bootstrap tier and preserves that mapping through generations;
+    its LL21-b re-decision awaits independent review;
   - `loader.mjs` / `installer.mjs` (single-Worker lazy installer, paired
-    tables, catalog as integrity authority); `bootstrap-install.mjs` and
+    tables, catalog as integrity authority; these remain v1-only and off the
+    archive READY path); `bootstrap-install.mjs` and
     `bootstrap-schedule.mjs` (digest-bound initializer schedule);
   - S1-LL18 collector, owner and allocation retry; `heap-image.mjs` (D1 heap
     writer and loader with relocations, roots, code digest, refusal before

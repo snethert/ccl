@@ -20,6 +20,11 @@ TOUCHES       P8: this document and doc/WASM/decisions.md; imported review uncha
 CHANGES       §9 records revision history; §10's import qualifications still apply
 ```
 
+Implementation status, 27 September 2026: P-1a/P-2, P-1b, P-1c, P-3 and P-4
+are implemented and author-verified. See the [results and evidence](module-consolidation-results.md).
+Independent review remains pending. P-5/P-6 remain future work; optional P-7
+is explicitly deferred on the measured collector-preparation cost.
+
 ## 0. How to read this
 
 Every item carries an ID; IDs from P1 are kept, amended items are marked with

@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "status": "IMPLEMENTED_AUTHOR_VERIFIED",
+  "review": "Independent adversarial review required before acceptance",
+  "plan": "MCP-P8",
+  "implementationCommits": [
+    "484643be",
+    "ac813bce",
+    "5e807214",
+    "cd0947f1"
+  ],
+  "evidenceRoot": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-module-consolidation-r1",
+  "index": {
+    "file": "final-index.json",
+    "sha256": "6c35b323bc12c770e6ee3a3a87c3664c78a941a74f424753387012c387d503a6"
+  },
+  "inputsAndToolchain": "p3-final/inputs.json",
+  "reproduction": "REPRODUCE.md",
+  "baseline": {
+    "record": "doc/WASM/stage1/module-consolidation-p0.json",
+    "readySeconds": 341.087,
+    "peakRssGiB": 4.833,
+    "productModules": 11938
+  },
+  "final": {
+    "readySeconds": 51.041296142578126,
+    "peakRssBytes": 1812357120,
+    "rssAtReadyBytes": 1811804160,
+    "productModules": 7,
+    "productInstances": 11,
+    "instrumentation": {
+      "modules": 1,
+      "instances": 1042
+    },
+    "runtimeReturnedLoads": 81,
+    "collections": 6,
+    "initialSpaceMiB": 32,
+    "freeHeadroomMiB": 16
+  },
+  "verification": {
+    "originalFunctionTemplatesByteIdentical": 11933,
+    "runtimeFunctions": 10891,
+    "bootFunctions": 1042,
+    "archiveControls": 81,
+    "asyncChecks": 11,
+    "rootBlockChecks": 14,
+    "layoutChecks": 22,
+    "reusedOwnerChecks": 40,
+    "postimageLoadsPerWorker": [
+      83,
+      83
+    ],
+    "executionSetEqual": 5028,
+    "retentionMarkedObjects": 3922,
+    "retentionReachableObjects": [],
+    "browserConstruction": [
+      "Chromium 145.0.7632.6",
+      "Firefox 146.0",
+      "Playwright WebKit 26.0"
+    ]
+  },
+  "unchanged": [
+    "Wasm bodies/templates",
+    "82 final FASL containers relative to first archive build",
+    "boot heap payload",
+    "collector C ABI and bytes",
+    "shared native compiler and upstream kernel source"
+  ],
+  "deferred": [
+    "P-5 browser delivery",
+    "P-6 guarded direct calls",
+    "P-7 optional C root-range ABI; preparation cost does not justify it"
+  ],
+  "artifacts": {
+    "REPRODUCE.md": {
+      "sha256": "8c61e2bb17590375a519ec6a0aaeea78bdee8d6f0bcf3bad8c06a7d7cdc41329",
+      "bytes": 3817
+    },
+    "stage1.json": {
+      "sha256": "312c75aca8298dbbe80386fd0acb0c9804134f83ba2cec18212b39385765ad67",
+      "bytes": 450
+    },
+    "stage2.json": {
+      "sha256": "56e34e062d3ce524bfefd819cd5b50dc8d65d66ada57811cd396cb4793772590",
+      "bytes": 1893
+    },
+    "stage3.json": {
+      "sha256": "d0eb7b33011bab29640c723cd6585dd8fb80cd0e0ddb2ca3133f4b53caca24cb",
+      "bytes": 5003
+    },
+    "stage4.json": {
+      "sha256": "3ffb062c997bf32cd3385f1fd26404b575b737346bf84860f155c9198ccb227a",
+      "bytes": 3591
+    },
+    "archive-artifacts.tar.gz": {
+      "sha256": "0a7e82e2ce7d70c895a61365c26758433a982f739ca265b411d5b2811c787763",
+      "bytes": 21003210
+    },
+    "runtime-inputs.tar.gz": {
+      "sha256": "74f1c4d4a92d58e17475420b74e620b567e9fbae855083a907a370870dfe763f",
+      "bytes": 265493642
+    },
+    "metadata-final.tar.gz": {
+      "sha256": "12629bd4fd5ebe9cb0d9432bc9ef253a1051e1d19b8c720195fb5d106ebc244f",
+      "bytes": 2900686
+    },
+    "postimage-final.tar.gz": {
+      "sha256": "954177cb8e70fd1a711b345bef6dcdb507d717f26cbe733c1ff746608e62bfe6",
+      "bytes": 139989
+    },
+    "retention-final.tar.gz": {
+      "sha256": "f4acb4c7754c6d6860a553c56f6532501e15fa82f78e2b6c15f81c3e4ededd20",
+      "bytes": 1384674
+    },
+    "archive-async.json": {
+      "sha256": "4dd625051266a07a5293ea2fb3bdb48f198641cef5fbc52bf04ef4d6d8f945fb",
+      "bytes": 426
+    },
+    "archive-controls-final.json": {
+      "sha256": "d332d053c131dd5e75348952a305b89e45fa2b426fed9ddfafd520f9e2059f0d",
+      "bytes": 1659
+    },
+    "archive-smoke-final.json": {
+      "sha256": "dc55a72c03ce01c2432bda3a60b32c68f46fe401ee6e1760e98286dfa5cf138a",
+      "bytes": 180
+    },
+    "metadata-boot.json": {
+      "sha256": "bd779032706ea9b4a6a0389b459332d201196ed4f1fe3d90fc22d8d2ba1964ae",
+      "bytes": 497
+    },
+    "metadata-runtime.json": {
+      "sha256": "66a623c647e2a98d162244e1f3ae78e1c96a0cdf5763ce0ec2938842e3593f68",
+      "bytes": 500
+    },
+    "execution-final.json": {
+      "sha256": "fdd7f607689c0df531df01eb9816f34b9b86b00fc7e843466a2736fc172c3dc3",
+      "bytes": 447
+    },
+    "ready-final/result.json": {
+      "sha256": "f8ad4fcf713763c09f7f6e2bff7b5d6f1c6c288b47604b85932bba4162237613",
+      "bytes": 1907
+    },
+    "browser/result.json": {
+      "sha256": "a29ea65ba07afcb6da5d6d07d359cdbb063fce77c1af2640f36c5bde146576f0",
+      "bytes": 3570
+    },
+    "p3-final/timing.json": {
+      "sha256": "cc244d9c9ba4fb39d21320168aabf61729b44349c338d5c0a641ceba03f7aa8d",
+      "bytes": 365565
+    },
+    "p3-final/inputs.json": {
+      "sha256": "432197d1ab16a36e170c272a5116388ebdbf3fe2d0b8c08d87aa63baf1e61b07",
+      "bytes": 10211
+    },
+    "p3-final/run.json": {
+      "sha256": "c9b83860165502c4d106d3b9a601af7c133d9d49ecf5ccdf974bd1f800daa5d7",
+      "bytes": 341
+    }
+  }
+}

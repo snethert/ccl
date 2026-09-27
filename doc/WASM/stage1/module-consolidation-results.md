@@ -169,3 +169,83 @@ empty namespace both stop without the post-image marker. These results complete
 the deferred end-to-end archive gates; they do not claim independent acceptance.
 The final report also counts v1 post-image modules and instances when present,
 in addition to the ordinary seven-module, eleven-instance READY path.
+
+## Final admission and LL21-b decision (P-3/P-4)
+
+The final implementation reaches ordinary READY in **51.041 seconds**, with
+**1.688 GiB peak RSS**, 1.687 GiB RSS at READY, six collections, seven product
+modules and eleven product instances. The LOAD observer is counted separately:
+one instrumentation module and 1,042 wrapper instances. Post-image witnesses
+add 50 v1 modules/instances in each fresh Worker, giving 57 product modules and
+61 instances for those tests. They are not part of the ordinary seven-module
+startup workload. The traced witness again executes exactly the baseline's
+5,028 distinct logical file/function pairs.
+
+| Measured step | READY | Peak RSS |
+|---|---:|---:|
+| P-0, retained baseline | 341.087 s | 4.833 GiB |
+| P-1a, runtime archive | 138.602 s | 2.099 GiB |
+| P-2, boot archive | 131.685 s | 2.012 GiB |
+| P-1b, selected 32 MiB spaces | 54.512 s | 2.196 GiB |
+| P-1c, transferred/released inputs | 55.828 s | 1.649 GiB |
+| P-3, native hashes and compact manifest | 51.041 s | 1.688 GiB |
+
+P-3 uses Web Crypto for the archive's full/template digests and native Node
+hashing for the host file source. The same admission implementation serves sync
+and async callers. Caller bytes, manifest and policy are isolated before any
+suspension; publication does not suspend. Eleven async checks cover digest and
+policy refusals, hash failure cleanup, and caller mutation during suspension.
+The final archive suite has 81 refusal/publication controls. Streamed WABT
+classification was already required by the original consolidation build.
+
+Per-function helper lists now reference one shared helper set. The manifest
+also binds helper body hashes and indices and records callable arity/captures.
+Runtime JSON shrinks from 34,050,338 to 22,145,868 bytes; boot archive JSON from
+3,383,492 to 2,251,127 bytes. Independent metadata comparison expands the helper
+sets and reproduces every original manifest field, then matches all callable
+metadata to compiler records. WAT, templates, full Wasm binaries, all 82 FASL
+containers and the heap payload are unchanged, so the original complete
+rewrite/byte-equivalence evidence remains qualified. Boot metadata/codeDigest
+changes are rebound by freshly compiled post-image witnesses.
+
+Against P-1c, host archive reads fall from 2.508 to 0.246 seconds and the runtime
+archive compile/materialization span from 2.987 to 0.532 seconds. Exclusive
+unmeasured Lisp/host/observer work remains 41.343 seconds; these measurements do
+not identify pure Lisp CPU time. Final owned-input peaks are 92,542,758 bytes
+on the main thread and 86,788,738 in the Worker. READY still retains only the
+main thread's 5,754,020 FASL bytes, with zero Worker v2 buffers or full validation
+manifests. The final expanded heap diagnostic marks 3,922 objects, including
+nested D2 inventories and function/entry arrays; none remains reachable. The
+positive control is identified explicitly in the retained snapshot. Compact
+runtime metadata consists of 10,891 dispatch rows, 8,816 unit records and an
+82-file directory; these intentional records are distinct from raw inputs.
+
+The first P-3 measurement was 50.491 seconds/1.721 GiB. A final policy snapshot
+guard and explicit instrumentation counts were then added and verified; the
+final measurement above binds that source. Both journals remain in the pack.
+The small timing/RSS differences between individual runs are not a statistical
+ranking. Relative to P-1c, P-3 shows lower admission time and slightly higher
+peak RSS, rather than an additional proven memory reduction.
+
+Both shipped archives compile and instantiate in Chromium 145.0.7632.6,
+Firefox 146.0 and Playwright WebKit 26.0. Each has 13 imports; boot has 2,084
+exports and runtime 21,782. These are construction/limit checks, not browser
+Lisp startup qualification or a claim about installed Safari. The initial
+automation-version mismatch and Chromium's main-thread synchronous 8 MiB
+restriction are retained as failures. The corrected harness pins matching
+Playwright 1.58.1 and uses asynchronous instantiation; no engine limit is raised.
+
+LL21-b now selects **one archive per bootstrap tier**, with generation-relative
+code IDs and paired slots. A live generation keeps the entire compiled module,
+its reserved code window and root block; unloading generations remains outside
+this implementation. Repeated LOAD growth is intentional and measured, while
+raw inputs and closed sessions do not accumulate. V1 post-image files and the
+lazy stub loader/installer retain their existing packaging. P-5 delivery and
+P-6 guarded direct calls remain the plan's explicitly deferred future work;
+P-7's optional C collector range ABI is deferred on the measured evidence.
+
+Implementation commits are `484643be`, `ac813bce`, `5e807214` and `cd0947f1`.
+The [evidence index](module-consolidation-results.json) binds the retained
+results, artifacts and reproduction commands. All execution claims above are
+author verification. Claude's independent adversarial review remains required
+before acceptance; no acceptance record is changed by this report.
