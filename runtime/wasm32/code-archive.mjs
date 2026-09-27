@@ -12,10 +12,11 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const uint=n=>Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff;
 const digest=s=>typeof s==='string'&&/^[0-9a-f]{64}$/.test(s);
 export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capabilities={},versions,policy,
-  allocateCode,reserveRoots,registerRoots,slotOffset=8,maxGenerations=Infinity,measure=(_p,run)=>run()}) {
+  allocateCode,reserveRoots,registerRoots,slotOffset=8,maxGenerations=Infinity,onBuffers=()=>{},onManifest=()=>{},measure=(_p,run)=>run()}) {
+ try{
  env={...env};capabilities=Object.fromEntries(Object.entries(capabilities).map(([k,v])=>[k,{...v}]));
  need(manifest&&typeof manifest==='object','MANIFEST');
- manifest=structuredClone(manifest);
+ manifest=structuredClone(manifest);onManifest('validation-manifest',manifest);
  const count=manifest.function_count;
  need(manifest.version===1&&manifest.packaging===ARCHIVE_PACKAGING,'PACKAGING');
  need(same(manifest.abi,versions.abi)&&same(manifest.layout,versions.layout),'VERSIONS');
@@ -52,7 +53,9 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
  }
  need(nextRoot===manifest.root_cells&&owned.size===count,'COMPLETE_UNITS');
  need(manifest.d2?.outputs?.full&&manifest.d2.template&&manifest.d2.classification&&manifest.d2.abi,'D2');
- bytes=snapshotBytes(bytes);
+ // ArrayBuffers are consumed; views retain the defensive snapshot contract.
+ bytes=bytes instanceof ArrayBuffer?new Uint8Array(structuredClone(bytes,{transfer:[bytes]})):snapshotBytes(bytes);
+ onBuffers('archive-work',[bytes]);
  const x=inspect(bytes,{ownerRetry:true});
  const fixed=[
   {module:'env',name:'memory',kind:'memory',flags:3,minimum:1,maximum:32769},
@@ -77,7 +80,7 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
    need(same(row[role],r),'RANGE');bodies.push(bytes.subarray(r.start,r.end));
   }
   const body=new Uint8Array(bodies[0].length+bodies[1].length);body.set(bodies[0]);body.set(bodies[1],bodies[0].length);
-  need(sha256(body)===row.body_sha256,'BODY_DIGEST');
+  onBuffers('body-digest',[body]);need(sha256(body)===row.body_sha256,'BODY_DIGEST');onBuffers('body-digest',[]);
  }
  const module=measure('archive.compile',()=>installArchive(bytes,manifest,policy,x));bytes=null;
  // Runtime closures retain only identity/dispatch rows, never validation inputs.
@@ -172,4 +175,5 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
    publishedUnits:generations.reduce((n,g)=>n+[...g.units.values()].filter(u=>u.state==='published').length,0),openSessions:sessions.size})
  });
  return api;
+ }finally{onBuffers('archive-work',[]);onBuffers('body-digest',[]);onManifest('validation-manifest',null);}
 }

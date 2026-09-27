@@ -15,11 +15,16 @@ import {bundleNamespace, targetLoadSession} from '../../../../runtime/wasm32/tar
 import {serviceRequest} from '../../../../runtime/wasm32/file-host.mjs';
 import {processService, ProcessReady} from '../../../../runtime/wasm32/process-service.mjs';
 import {deriveLayout} from '../../../../runtime/wasm32/layout.mjs';
+import {inputInventory} from '../../../../runtime/wasm32/input-inventory.mjs';
+import {archiveSource,readArchiveSource} from './archive-source.mjs';
 import {startupTiming} from './startup-timing.mjs';
 
 const timingPrefix = isMainThread ? process.argv.find(a => a.startsWith('--timing='))?.slice(9) : workerData.timingPrefix;
 const timing = startupTiming(timingPrefix, isMainThread ? 'main' : 'worker');
 const measure = timing?.measure ?? ((_phase, run) => run());
+const inputs=inputInventory();
+const onBuffers=(label,values)=>{inputs.release(label);if(values.length)inputs.hold(label,'admissionWork',values);};
+const onManifest=(label,value)=>value?inputs.holdManifest(label,value):inputs.releaseManifest(label);
 
 if (isMainThread) {
   const runtimeDirectory = new URL('../../../../runtime/wasm32/', import.meta.url);
@@ -34,10 +39,18 @@ if (isMainThread) {
   const limit = Number(process.argv.find(a => a.startsWith('--bundle-limit='))?.split('=')[1] ?? Infinity);
   const layoutConfig=JSON.parse(process.argv.find(a=>a.startsWith('--layout='))?.slice(9)??'{}');
   const archives=bundleDirs.flatMap(dir=>{
-    const a=JSON.parse(fs.readFileSync(dir+'/bundle-manifest.json')).archive;if(!a)return [];
-    const metadata=fs.readFileSync(dir+'/'+a.manifest);assert.equal(sha256(metadata),a.manifest_sha256);
-    return [{digest:a.sha256,bytes:new Uint8Array(fs.readFileSync(dir+'/'+a.file)),manifest:JSON.parse(metadata)}];
+    const a=JSON.parse(fs.readFileSync(dir+'/bundle-manifest.json')).archive;
+    return a?[archiveSource(dir,a)]:[];
   });
+  const artifacts=out+'/boot/artifacts',bootManifest=JSON.parse(fs.readFileSync(artifacts+'/manifest.json'));
+  let bootArchive=bootManifest.archive?archiveSource(artifacts,bootManifest.archive,'boot'):null;
+  if(!bootArchive){
+    const raw=fs.readFileSync(artifacts+'/code-set.json'),set=JSON.parse(raw);
+    if(set.archive)bootArchive=archiveSource(artifacts,{file:'boot.archive.wasm',manifest:'code-set.json',
+      sha256:set.archive.binary_sha256,manifest_sha256:sha256(raw),function_count:set.archive.function_count,root_cells:set.archive.root_cells},'boot');
+  }
+  const catalog=new Map([...archives,...(bootArchive?[bootArchive]:[])].map(a=>[a.digest,a]));
+  const directory=a=>({kind:a.kind,digest:a.digest,manifestDigest:a.manifestDigest,function_count:a.function_count,root_cells:a.root_cells});
   const selected = new Map();
   for (const dir of bundleDirs) for (const row of JSON.parse(fs.readFileSync(dir + '/bundle-manifest.json')).files)
     selected.set(row.path, {path: row.path, sha256: row.sha256, sourceDir: dir + '/' + row.stem,
@@ -45,21 +58,40 @@ if (isMainThread) {
   const omittedBundles = process.argv.filter(a => a.startsWith('--omit-bundle=')).map(a => a.slice(14));
   for (const path of omittedBundles) assert(selected.delete(path), 'omitted bundle must exist: ' + path);
   const files = [...selected.values()].slice(0, limit);
-  timing?.memory('bundles-read', {bundleBytes: files.reduce((n, f) => n + f.bytes.length, 0)});
-  const namespace = measure('namespace.create', () => bundleNamespace({files, measure})), session = namespace.session();
-  timing?.memory('namespace-created');
+  inputs.hold('containers','containers',files.map(f=>f.bytes));
+  timing?.memory('bundles-read', {inputOwnership:inputs.snapshot()});
+  const namespace = measure('namespace.create', () => bundleNamespace({files, measure,retainCode:false})), session = namespace.session();
+  const ownedInputs=()=>inputs.snapshot({fasl:namespace.namespace.storage()});
+  timing?.memory('namespace-created',{inputOwnership:ownedInputs()});
   assert(!inspectCode || trace, '--inspect-code requires --trace');
   const dumpFailure = process.argv.includes('--dump-failure');
   const startupLoads = process.argv.filter(a => a.startsWith('--startup-load=')).map(a => a.slice(15));
   const callbackSelection = JSON.parse(fs.readFileSync(new URL('../startup-resets/selection.json', import.meta.url)));
-  timing?.event('worker-send', {bundleBytes: files.reduce((n, f) => n + f.bytes.length, 0)});
-  const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode, files, archives, layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
-  const sampling = timing && setInterval(() => timing.memory('periodic'), 1000);
+  const workerFiles=files.map(({path,sha256,sourceDir,bytes})=>{const container=namespace.containers.get(path);
+    return {path,sha256,sourceDir,...(container?{container}:{bytes})};});
+  timing?.event('worker-send',{inputOwnership:ownedInputs()});
+  const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode,
+    files:workerFiles,archives:archives.map(directory),bootArchive:bootArchive?directory(bootArchive):null,
+    layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
+  selected.clear();files.length=0;workerFiles.length=0;inputs.release('containers');
+  timing?.memory('directory-delivered',{inputOwnership:ownedInputs()});
+  const sampling = timing && setInterval(() => timing.memory('periodic',{inputOwnership:ownedInputs()}), 1000);
   sampling?.unref();
   let memory;
   const result = await new Promise((resolve, reject) => {
     worker.on('message', message => {
       try {
+        if(message.type==='archive-request'){
+          const source=catalog.get(message.digest);assert(source,'unknown archive request');
+          const data=measure('archive.read',()=>readArchiveSource(source));
+          inputs.hold('archive-code','archiveBytes',[data.bytes]);inputs.hold('archive-manifest','manifestBytes',[data.metadata]);
+          timing?.memory('archive-read',{tier:source.kind,inputOwnership:ownedInputs()});
+          try{
+            worker.postMessage({type:'archive-input',digest:source.digest,...data},[data.bytes,data.metadata]);
+            assert.equal(data.bytes.byteLength,0);assert.equal(data.metadata.byteLength,0);
+          }finally{inputs.release('archive-code');inputs.release('archive-manifest');}
+          timing?.memory('archive-transferred',{tier:source.kind,senderDetached:true,inputOwnership:ownedInputs()});return;
+        }
         if (message.type === 'memory') { memory = message.memory; return; }
         if (message.type === 'request') {
           measure('host.request', () => assert(serviceRequest(memory, session, message.lifetime, message.generation))); return;
@@ -72,7 +104,7 @@ if (isMainThread) {
     worker.once('exit', code => { if (code) reject(Error('boot Worker exit ' + code)); });
   });
   if (sampling) clearInterval(sampling);
-  timing?.memory('result-received', {status: result.status});
+  timing?.memory('result-received', {status: result.status,inputOwnership:ownedInputs()});
   const report = process.argv.find(a => a.startsWith('--report='))?.slice(9) ??
     out + (inspectCode ? '/boot0-checks.json' : trace ? '/boot0-trace.json' : '/boot0.json');
   fs.writeFileSync(report, JSON.stringify(result, null, 2) + '\n');
@@ -82,8 +114,27 @@ if (isMainThread) {
 } else {
   const {out, runtime} = workerData, artifacts = out + '/boot/artifacts';
   const json = name => JSON.parse(fs.readFileSync(name));
-  const manifest = json(artifacts + '/manifest.json'), record = json(artifacts + '/heap-image.json');
-  const codeSet = json(artifacts + '/code-set.json'), policy = json(out + '/policy.json'), versions = json(out + '/versions.json');
+  const manifest=json(artifacts+'/manifest.json');let record=json(artifacts+'/heap-image.json');
+  async function receiveArchive(descriptor){
+    let message=await new Promise((resolve,reject)=>{
+      const listener=m=>{if(m.type==='archive-input'&&m.digest===descriptor.digest){parentPort.off('message',listener);resolve(m);}};
+      parentPort.on('message',listener);parentPort.postMessage({type:'archive-request',digest:descriptor.digest});
+    });
+    inputs.hold('archive-code','archiveBytes',[message.bytes]);inputs.hold('archive-manifest','manifestBytes',[message.metadata]);
+    timing?.memory('archive-received',{tier:descriptor.kind,inputOwnership:inputs.snapshot()});
+    try{
+      assert.equal(sha256(message.metadata),descriptor.manifestDigest,'archive metadata digest');
+      const parsed=JSON.parse(new TextDecoder('utf8',{fatal:true}).decode(message.metadata));inputs.holdManifest('source-manifest',parsed);
+      const archive=descriptor.kind==='boot'?parsed.archive:parsed;
+      assert.equal(archive.function_count,descriptor.function_count);assert.equal(archive.root_cells,descriptor.root_cells);
+      const result={digest:descriptor.digest,bytes:message.bytes,manifest:archive,...(descriptor.kind==='boot'?{codeSet:parsed}:{})};
+      message.metadata=null;inputs.release('archive-manifest');return result;
+    }catch(e){inputs.release('archive-code');inputs.release('archive-manifest');inputs.releaseManifest('source-manifest');throw e;}
+    finally{message=null;}
+  }
+  let bootInput=workerData.bootArchive?await receiveArchive(workerData.bootArchive):null;
+  const codeSet=bootInput?.codeSet??json(artifacts+'/code-set.json'),bootIsArchive=!!codeSet.archive,
+    policy=json(out+'/policy.json'),versions=json(out+'/versions.json');
   const N=77825,tcr=1024;
   const imageRegions=[{start:manifest.static.start,end:manifest.static.start+manifest.static.bytes},
     {start:manifest.heap.start,end:manifest.heap.start+manifest.heap.bytes},
@@ -91,8 +142,8 @@ if (isMainThread) {
     {start:280000,end:280256}];
   const layout=deriveLayout(workerData.layoutConfig,{bootFunctions:codeSet.modules.length,
     bootRootCells:codeSet.archive?.root_cells??0,
-    runtimeFunctions:workerData.archives.reduce((n,a)=>n+a.manifest.function_count,0),
-    runtimeRootCells:workerData.archives.reduce((n,a)=>n+a.manifest.root_cells,0),image:imageRegions});
+    runtimeFunctions:workerData.archives.reduce((n,a)=>n+a.function_count,0),
+    runtimeRootCells:workerData.archives.reduce((n,a)=>n+a.root_cells,0),image:imageRegions});
   const {registry,root,external,bindings}=layout,capacity=layout.tableCapacity;
   const memory=new WebAssembly.Memory({initial:layout.initialPages,maximum:32769,shared:true});
   const get = p => new DataView(memory.buffer).getUint32(p, true), put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
@@ -111,11 +162,12 @@ if (isMainThread) {
   const runtimeIdentity = json(runtime + '/array-runtime.json');
   assert.equal(sha256(fs.readFileSync(new URL('../../../../runtime/wasm32/collector.c', import.meta.url))), runtimeIdentity.source);
   assert.equal(sha256(binary('collector')), runtimeIdentity.binary);
-  let lastCollection;const stackHighWater={value:0,temp:0,control:0};
+  let lastCollection,loader;const inputState=()=>inputs.snapshot(loader?.ownership());
+  const stackHighWater={value:0,temp:0,control:0};
   const heapState = () => {
     for(const [name,offset,start] of [['value',64,root+8],['temp',76,get(tcr+80)],['control',88,get(tcr+92)]])
       stackHighWater[name]=Math.max(stackHighWater[name],get(tcr+offset)-start);
-    return ({configuration:layout.configuration,stackHighWaterLowerBounds:{...stackHighWater},linearMemoryBytes: memory.buffer.byteLength,
+    return ({inputOwnership:inputState(),configuration:layout.configuration,stackHighWaterLowerBounds:{...stackHighWater},linearMemoryBytes: memory.buffer.byteLength,
     allocatedHeapBytes: get(tcr + 48) - get(tcr + 56), activeHeapCapacityBytes: get(tcr + 52) - get(tcr + 56),
     collections: owner.collectionCount, storage: owner.storage, lastCollection});};
   const owner = CollectorOwner.create(memory, binary('collector'), runtimeIdentity.binary, layout,
@@ -141,12 +193,19 @@ if (isMainThread) {
     detectorBytes: binary('detector'), detectorDigest: sha256(binary('detector'))});
   const expected = {...versions, modules: codeSet.modules.map(m => [m.name, m.code_id, m.generation]),
     table_capacity: capacity, reserved_slots: [0, 1, 2, 3, 4, 5, 6, 7, 8], slots: Object.fromEntries(codeSet.modules.map(m => [m.code_id, m.code_id + 8]))};
-  const admitted = measure('boot.admit', () => admitCrossImage({memory, owner, manifest, record, codeSet, regions, env, policy, expected,
+  let admitted,installed;
+  try{
+  admitted = measure('boot.admit', () => admitCrossImage({memory, owner, onBuffers, onManifest, manifest, record, codeSet, regions, env, policy, expected,
     payload: fs.readFileSync(artifacts + '/heap.payload.bin'),
-    readBytes: name => fs.readFileSync(artifacts + '/' + name + '.wasm'),
+    readBytes: name => name==='boot.archive'&&bootInput?bootInput.bytes:fs.readFileSync(artifacts + '/' + name + '.wasm'),
     readTemplate: name => fs.readFileSync(artifacts + '/' + name + '.template.wasm'),
     capabilities: {owner: {ensure: allocationService(owner, env.call_error)}, integer: {calculate: integer}, floating: {calculate: floating}}}));
-  const installed = measure('boot.install', () => admitted.install());
+  installed = measure('boot.install', () => admitted.install());
+  }finally{
+  admitted=null;record=null;
+  if(bootInput){bootInput.bytes=null;bootInput.manifest=null;bootInput.codeSet=null;bootInput=null;codeSet.archive=null;inputs.release('archive-code');inputs.releaseManifest('source-manifest');}
+  timing?.memory('boot-admission-end',{validationManifests:0,inputOwnership:inputState()});
+  }
   timing?.memory('boot-installed', heapState());
   const resolve = r => Object.hasOwn(r, 'heap') ? start + r.heap + r.tag :
     regions.find(x => x.name === r.region).start + r.offset + r.tag;
@@ -160,7 +219,11 @@ if (isMainThread) {
   let observeInstalled = () => {}, enableObservation = () => {};
   let traceActive = workerData.trace && !workerData.traceFrom;
   const pendingObservations = [];
-  const loader = targetLoadSession({files: workerData.files, archives:workerData.archives, generations:layout.configuration.generations, memory, env, owner, versions, policy, capabilities, pinned,
+  loader = await targetLoadSession({files: workerData.files, archives:workerData.archives, generations:layout.configuration.generations, memory, env, owner, versions, policy, capabilities, pinned,
+    readArchive:receiveArchive,onBuffers,onManifest,onInput:(label,a)=>{
+      if(label==='admission-end'){inputs.release('archive-code');inputs.releaseManifest('source-manifest');}
+      timing?.memory(label,{validationManifests:label==='admission-start'?1:0,inputOwnership:inputState()});
+    },
     measure, onAdmission: path => timing?.memory('file-admitted', {path, ...heapState()}),
     nextCode: Math.max(...codeSet.modules.map(m => m.code_id)) + 1,
     nextSlot: Math.max(...Object.values(expected.slots)) + 1,
@@ -169,6 +232,7 @@ if (isMainThread) {
     onClose: (path, fd) => { loadEvents.push({event: 'close', path, fd}); timing?.close(path, fd);
       timing?.memory('file-closed', {path, ...heapState()}); },
     onInstall: (path, entries) => observeInstalled(path, entries)});
+  workerData.archives=null;workerData.bootArchive=null;
   const adapter = new WebAssembly.Module(fs.readFileSync(out + '/host-call-adapter.wasm'));
   const waitCell = new Int32Array(new SharedArrayBuffer(4));
   const processRequest = processService({memory,
@@ -365,6 +429,7 @@ if (isMainThread) {
     assert(!workerData.inspectCode || observation || workerData.inspectCode > Math.max(...codeSet.modules.map(r => r.code_id)),
       'requested diagnostic code ID is absent');
   }
+  installed.instances=null;
   const index = manifest.roots.names.indexOf('toplevel-function');
   const fn = get(manifest.roots.start + index * 4), id = get(fn - 2) >>> 2;
   assert.equal(get(fn - 6), 1578);
@@ -384,11 +449,13 @@ if (isMainThread) {
       fs.writeFileSync(out + '/failure-spaces.json', JSON.stringify(owner.spaces));
     }
   }
+  const abandonedSessions=loader.closeSessions();
   timing?.memory(result.ready ? 'READY' : 'STOPPED', heapState());
   timing?.finish();
   parentPort.postMessage({...result, boot0: handoff, firstFailure, terminalFailureChain, recentFailures, firstCheck, firstCondition, observation, traceFrom: workerData.traceFrom ?? null, loadEvents, entry: '%TOPLEVEL-FUNCTION%', modules: codeSet.modules.length,
-    productModules:5+(codeSet.archive?1:codeSet.modules.length)+loader.archives().length,
-    archiveStorage:loader.archives(),openFiles:loader.openFiles(),
+    productModules:5+(bootIsArchive?1:codeSet.modules.length)+loader.productCounts().modules,
+    productInstances:9+(bootIsArchive?1:codeSet.modules.length)+loader.productCounts().instances,
+    abandonedSessions,inputOwnership:inputState(),archiveStorage:loader.archives(),openFiles:loader.openFiles(),
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
     environment: {node: process.version, runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
       observer: workerData.trace ? sha256(fs.readFileSync(out + '/observe.wasm')) : null,

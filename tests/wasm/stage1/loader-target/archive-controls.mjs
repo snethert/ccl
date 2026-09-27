@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {admitCodeArchive} from '../../../../runtime/wasm32/code-archive.mjs';
 import {encodeTargetContainer,decodeTargetContainer} from '../../../../runtime/wasm32/target-bundle.mjs';
 import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
+import {inputInventory} from '../../../../runtime/wasm32/input-inventory.mjs';
 const [fixture,archiveDir]=process.argv.slice(2),read=n=>JSON.parse(fs.readFileSync(fixture+'/'+n));
 const bytes=fs.readFileSync(archiveDir+'/smoke.wasm'),manifest=JSON.parse(fs.readFileSync(archiveDir+'/smoke.json'));
 const memory=new WebAssembly.Memory({initial:32,maximum:32769,shared:true}),registry=4096;
@@ -13,7 +14,10 @@ const env={memory,tcr:1024,code_registry:registry,table:new WebAssembly.Table({e
 put(registry,128);put(registry+4,1);
 let nextCode=16,nextRoot=65536,failRegistration=false,failReservation=false;
 const roots=new Set(),unexpected=()=>{throw Error('unexpected capability');};
+const inputs=inputInventory();
 const options={maxGenerations:2,bytes,manifest,digest:sha256(bytes),env,versions:read('versions.json'),policy:read('policy.json'),
+ onBuffers:(label,values)=>{inputs.release(label);if(values.length)inputs.hold(label,'validation',values);},
+ onManifest:(label,value)=>{inputs.releaseManifest(label);if(value)inputs.holdManifest(label,value);},
  capabilities:{owner:{ensure:unexpected},integer:{calculate:unexpected},floating:{calculate:unexpected}},
  allocateCode:(n,j)=>{const old=nextCode;nextCode+=n;j.push(()=>nextCode=old);return old;},
  reserveRoots:(n,j)=>{if(failReservation)throw Error('ROOT_REFUSAL');const base=nextRoot;nextRoot+=n*4;j.push(()=>nextRoot=base);return {base,count:n};},
@@ -21,7 +25,8 @@ const options={maxGenerations:2,bytes,manifest,digest:sha256(bytes),env,versions
 const state=()=>({bytes:new Uint8Array(memory.buffer).slice(),nextCode,nextRoot,roots:[...roots],
  table:Array.from({length:128},(_,i)=>env.table.get(i)),tail:Array.from({length:128},(_,i)=>env.tail_table.get(i))});
 const checks=[];
-function refuse(name,run,pattern){const before=state();assert.throws(run,pattern);assert.deepEqual(state(),before);checks.push(name);}
+function refuse(name,run,pattern){const before=state();assert.throws(run,pattern);assert.deepEqual(state(),before);
+ assert.equal(inputs.snapshot().bytes,0);assert.equal(inputs.snapshot().validationManifests,0);checks.push(name);}
 for(const [name,change,pattern] of [
  ['null-function',m=>m.functions[0]=null,/FUNCTION/],['null-unit',m=>m.units[0]=null,/UNIT/],
  ['count-negative',m=>m.function_count=-1,/COUNTS/],['roots-fractional',m=>m.root_cells=1.5,/COUNTS/],

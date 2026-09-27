@@ -9,25 +9,33 @@ import {admitCodeArchive} from './code-archive.mjs';
 import {sha256} from './sha256.mjs';
 
 const need = (ok, why) => { if (!ok) throw Error('target load: ' + why); };
-export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure = (_phase, run) => run()}) {
+export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure = (_phase, run) => run(), directoryOnly=false, retainCode=true, discardInputs=false}) {
   const entries = new Map([['/', {path: '/', kind: 'directory'}]]), bundles = new Map(), containers = new Map();
+  try{
   for (const file of files) {
     need(!entries.has(file.path), 'DUPLICATE_FILE');
-    const v2=targetContainerVersion(file.bytes)===2;
-    const decoded = measure('namespace.decode', () => (v2?decodeTargetContainer:decodeTargetBundle)(file.bytes, file.sha256), {path: file.path});
+    const v2=file.container!==undefined||targetContainerVersion(file.bytes)===2;
+    const decoded=file.container?{manifest:file.container,fasl:file.fasl??new Uint8Array()}:
+      measure('namespace.decode', () => (v2?decodeTargetContainer:decodeTargetBundle)(file.bytes, file.sha256), {path: file.path});
+    if(v2){
+      need(/^[0-9a-f]{64}$/.test(decoded.manifest.archive_sha256)&&Array.isArray(decoded.manifest.units)&&
+        decoded.manifest.units.every(n=>typeof n==='string')&&new Set(decoded.manifest.units).size===decoded.manifest.units.length,'CONTAINER');
+    }
+    const fasl=directoryOnly?new Uint8Array():decoded.fasl;
     let parent = file.path.slice(0, file.path.lastIndexOf('/')) || '/';
     while (parent !== '/') {
       need(!entries.has(parent) || entries.get(parent).kind === 'directory', 'PARENT');
       entries.set(parent, {path: parent, kind: 'directory'});
       parent = parent.slice(0, parent.lastIndexOf('/')) || '/';
     }
-    entries.set(file.path, {path: file.path, kind: 'file', bytes: decoded.fasl, sha256: sha256(decoded.fasl)});
-    if(v2)containers.set(file.path,{archive_sha256:decoded.manifest.archive_sha256,units:decoded.manifest.units});
-    else bundles.set(file.path, {bytes: new Uint8Array(file.bytes), digest: file.sha256,
+    entries.set(file.path, {path: file.path, kind: 'file', bytes: fasl, sha256: sha256(fasl)});
+    if(v2)containers.set(file.path,{archive_sha256:decoded.manifest.archive_sha256,units:[...decoded.manifest.units]});
+    else if(retainCode)bundles.set(file.path, {bytes: new Uint8Array(file.bytes), digest: file.sha256,
       modules: decoded.manifest.codeSet.modules});
   }
+  }finally{if(discardInputs)for(const file of files){delete file.bytes;delete file.fasl;}}
   for (const path of [cwd, cclRoot]) if (!entries.has(path)) entries.set(path, {path, kind: 'directory'});
-  const namespace = createNamespace({version: 1, entries: [...entries.values()], cwd, cclRoot});
+  const namespace = createNamespace({version: 1, entries: [...entries.values()], cwd, cclRoot});entries.clear();
   const path = value => /^ccl:/i.test(value) ? cclRoot + '/' + value.slice(4).replaceAll(';', '/') : value;
   const session = () => {
     const inner = namespace.session();
@@ -35,17 +43,22 @@ export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure 
       open: (name, mode) => inner.open(path(name), mode),
       stat: name => inner.stat(path(name)), realpath: name => inner.realpath(path(name))});
   };
-  return Object.freeze({namespace, bundles, containers, session});
+  return Object.freeze({namespace, bundles, containers, session,ownership:()=>({fasl:namespace.storage(),
+    v1Bundles:{bytes:[...bundles.values()].reduce((n,b)=>n+b.bytes.byteLength,0),count:bundles.size}})});
 }
 
-export function targetLoadSession({files, archives=[], generations=2, memory, env, owner, versions, policy, capabilities,
+export async function targetLoadSession({files, archives=[], readArchive, onInput=()=>{}, onBuffers=()=>{}, onManifest=()=>{}, generations=2, memory, env, owner, versions, policy, capabilities,
   nextCode, nextSlot, slotOffset=nextSlot-nextCode, post, pinned, onOpen = () => {}, onClose = () => {}, onInstall = () => {},
   measure = (_phase, run) => run(), onAdmission = () => {}}) {
-  const source = measure('namespace.create', () => bundleNamespace({files, measure})), paths = source.session(), open = new Map();
+  const source = measure('namespace.create', () => bundleNamespace({files, measure, directoryOnly:true,discardInputs:true})), paths = source.session(), open = new Map();
   const admitted=new Map();
-  for(const a of archives){
+  let v1Modules=0,v1Instances=0;
+  for(const descriptor of archives){
+    let a=readArchive?await readArchive(descriptor):descriptor;
+    onInput('admission-start',a);
+    try{
     need(!admitted.has(a.digest),'DUPLICATE_ARCHIVE');
-    const archive=measure('archive.admit',()=>admitCodeArchive({...a,env,capabilities,versions,policy,slotOffset,maxGenerations:generations,measure,
+    const archive=measure('archive.admit',()=>admitCodeArchive({...a,env,capabilities,versions,policy,slotOffset,maxGenerations:generations,measure,onBuffers,onManifest,
       allocateCode:(n,journal)=>{const base=nextCode,slot=nextSlot;nextCode+=n;nextSlot+=n;
         journal.push(()=>{nextCode=base;nextSlot=slot;});return base;},
       reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));
@@ -53,6 +66,7 @@ export function targetLoadSession({files, archives=[], generations=2, memory, en
       registerRoots:(block,cells,journal)=>{owner.atSafepoint(()=>block.register(cells));
         journal.push(()=>owner.atSafepoint(()=>block.unregister(cells)));}}));
     archive.prepare();admitted.set(a.digest,archive);onAdmission(a.digest);
+    }finally{a.bytes=null;a.manifest=null;onInput('admission-end',a);a=null;}
   }
   const get = p => new DataView(memory.buffer).getUint32(p, true);
   const put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
@@ -95,8 +109,9 @@ export function targetLoadSession({files, archives=[], generations=2, memory, en
           const timed = (phase, run) => measure(phase, run, {path});
           const session = timed('bundle.admit', () => admitTargetBundle({...bundle, env, capabilities, versions, policy,
             codeIds, slots, rootCells, measure: timed}));
+          v1Modules+=bundle.modules.length;
           onAdmission(path);
-          pending = {path, install: targetCodeService({memory, session}), session, code, slot};
+          pending = {path, install: targetCodeService({memory, session}), session, code, slot, installed:0};
         }
       }
       let result;
@@ -113,10 +128,16 @@ export function targetLoadSession({files, archives=[], generations=2, memory, en
     install(args) {
       const fd = get(args + 8); need(fd % 4 === 0 && open.has(fd >> 2), 'CLOSED_SESSION');
       const file = open.get(fd >> 2), result = file.install(get(args), get(args + 4));
-      onInstall(file.path, file.session.entries());
+      const entries=file.session.entries();
+      if(!file.archive){v1Instances+=entries.length-file.installed;file.installed=entries.length;}
+      onInstall(file.path, entries);
       return result;
     },
+    closeSessions(){const abandoned=[...open.values()].map(r=>r.path);
+      for(const row of open.values())row.archive?.release(row.token);open.clear();return abandoned;},
+    ownership:()=>source.ownership(),
     archives:()=>[...admitted.values()].map(a=>a.storage()),
+    productCounts:()=>({modules:admitted.size+v1Modules,instances:v1Instances+[...admitted.values()].reduce((n,a)=>n+a.storage().generations,0)}),
     openFiles: () => [...open.values()].map(row => row.path)
   });
 }

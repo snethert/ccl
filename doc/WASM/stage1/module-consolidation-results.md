@@ -125,3 +125,47 @@ valid live roots, inhibited growth, and stack bounds. The C collector bytes are
 unchanged. P-7's optional C root-range interface is deferred: host preparation
 is below 0.1 seconds total at the selected default, so this workload does not
 justify changing and requalifying that ABI.
+
+## Input ownership and release (P-1c)
+
+The main thread now owns the FASL namespace and reads one archive tier on
+request. It verifies both file digests on every read and transfers standalone
+buffers; both sender buffers detach. The Worker keeps a compact file directory,
+consumes archive buffers, and releases raw bytes and full validation manifests
+after each admission. Publication remains synchronous. Closing a LOAD releases
+its unpublished reservations; terminal exits release outstanding sessions.
+
+With the same archives and 32 MiB configuration, READY took **55.828 seconds**,
+with **1.649 GiB peak RSS** and 1.649 GiB RSS at READY. The preceding ownership
+configuration took 54.512 seconds and 2.196 GiB peak RSS. This single run shows
+lower memory use, not a speed improvement. The baseline remains 341.087 seconds
+and 4.833 GiB. Full thread timings and every ownership milestone are retained in
+`ownership/` and summarized in `stage3.json` in the evidence pack.
+
+At READY the main thread owns 5,754,020 FASL bytes in 82 buffers; the Worker
+owns zero v2 input bytes and zero full validation manifests. Main peak owned
+input bytes were 104,447,228; Worker peak was 98,693,208. These describe backing
+buffers owned by the application, not engine code storage or an RSS partition.
+Each admission-end and file-close observation records ownership separately.
+
+The focused load-session diagnostic exercises real transferred buffers,
+digest failures on reread, failed admission, thrown/refused host opens,
+overlapping LOAD, partial close, terminal close, and main-thread FASL rereads
+after archive cleanup. Three generations intentionally retain one compiled
+module, three instances, 657 reserved root cells and distinct logical code IDs
+16, 34 and 52; closed-session count is zero. No marked temporary input survives
+forced GC: all 37 WeakRefs clear, and the heap snapshot contains only the
+deliberately retained positive-control marker. The loader, its tables and its
+generations remain alive during that diagnostic. The snapshot is retained;
+forced GC is separate from the timed launch and is not a correctness dependency.
+All 73 admission controls also assert zero remaining tracked validation inputs
+after refusal. The fixture's initial invalid dummy special-symbol failure is
+retained, followed by the corrected successful fixture.
+
+Both fresh post-image Workers pass the existing READY contract: 83 returned
+loads each, independent 111/222 state and 112/223 functions, Unicode stdout and
+stderr, and observed Lisp service adapters. Required-bundle omission and the
+empty namespace both stop without the post-image marker. These results complete
+the deferred end-to-end archive gates; they do not claim independent acceptance.
+The final report also counts v1 post-image modules and instances when present,
+in addition to the ordinary seven-module, eleven-instance READY path.

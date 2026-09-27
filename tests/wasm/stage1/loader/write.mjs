@@ -61,7 +61,7 @@ export function write(dir,out,policy,versions,inventoryCode=inventory,archive=nu
  fs.writeFileSync(path.join(out,'static.bin'),fixed);
  const symbols=image.symbols.map(s=>({package:s.package,name:s.name,reference:reference(s.address)}));
  const manifest={version:1,layout:'D1',heap:{start,bytes:payload.length,digest,payloadDigest:record.payloadDigest,objects},static:{start:image.static.start,bytes:fixed.length,sha256:sha256(fixed)},
-  roots:{start:ROOTS,names:ROOT_NAMES,slots:rootSlots},nil:image.nil,t:image.t,unbound:image.unbound,codeDigest,modules:modules.length,symbols};
+  roots:{start:ROOTS,names:ROOT_NAMES,slots:rootSlots},nil:image.nil,t:image.t,unbound:image.unbound,codeDigest,modules:modules.length,symbols,...(archive?{archive:{file:'boot.archive.wasm',manifest:'code-set.json',sha256:archive.binary_sha256,manifest_sha256:sha256(fs.readFileSync(path.join(out,'code-set.json'))),function_count:archive.function_count,root_cells:archive.root_cells}}:{})};
  fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(manifest,null,1)+'\n');
  return {digest,codeDigest,objects,modules:modules.length,relocations:record.relocations.length,heapBytes:payload.length};
 }

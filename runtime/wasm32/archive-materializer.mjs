@@ -1,13 +1,12 @@
-import {snapshotBytes} from './bytes.mjs';
 import {sha256} from './sha256.mjs';
 import {inspect} from './binary.mjs';
 import {VERSION,memoryOffset} from './materializer.mjs';
 const need=(v,s)=>{if(!v)throw Error(s);},same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
 // Archive D2 re-derivation: one template digest, one full digest, one structural
-// parse and one engine module. Only the canonical memory flag may differ.
+// parse and one engine module. Input is the caller's private owned snapshot. Only the canonical memory flag may differ.
 export function installArchive(input,archive,policy,parsed){
- const bytes=snapshotBytes(input),d=archive.d2,fullDigest=sha256(bytes);
+ const bytes=input,d=archive.d2,fullDigest=sha256(bytes);
  need(fullDigest===archive.binary_sha256,'INSTALLED_DIGEST');
  need(Number.isInteger(d.template.offset)&&bytes[d.template.offset]===3,'MEMORY_PATCH');
  bytes[d.template.offset]=1;

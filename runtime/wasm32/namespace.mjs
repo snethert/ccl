@@ -164,5 +164,6 @@ export function createNamespace(configuration) {
     };
     return Object.freeze(api);
   }
-  return Object.freeze({identity, cwd, cclRoot, session});
+  return Object.freeze({identity, cwd, cclRoot, session,
+    storage:()=>({bytes:total,count:[...tree.values()].filter(r=>r.kind==='file'&&r.bytes.byteLength>0).length})});
 }

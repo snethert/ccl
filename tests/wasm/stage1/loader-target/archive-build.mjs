@@ -14,7 +14,7 @@ for(const file of manifest.files){
 const stem=out+'/runtime.archive';
 const archive=await inventoryArchive(stem,read('policy.json'),read('versions.json'),link({units,outWat:stem+'.wat'}));
 fs.writeFileSync(stem+'.json',JSON.stringify(archive));
-manifest.archive={file:'runtime.archive.wasm',sha256:archive.binary_sha256,manifest:'runtime.archive.json',manifest_sha256:sha256(fs.readFileSync(stem+'.json'))};
+manifest.archive={file:'runtime.archive.wasm',sha256:archive.binary_sha256,manifest:'runtime.archive.json',function_count:archive.function_count,root_cells:archive.root_cells,manifest_sha256:sha256(fs.readFileSync(stem+'.json'))};
 for(const file of manifest.files){
  const bytes=encodeTargetContainer({units:archive.units.filter(u=>u.file===file.path).map(u=>u.name),
   archive_sha256:archive.binary_sha256,fasl:fs.readFileSync(out+'/'+file.stem+'.w32fsl')});
