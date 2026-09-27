@@ -206,7 +206,7 @@ def compare_compiler(before,after,source_before,source_after):
     return {'decoded_forms':len(a),'source_notes_checked':notes,'unchanged_except_source_locations':len(a)-2,'intentional_executable_components':changed}
 
 
-def compare_systems(before,after,source_before,source_after):
+def compare_systems(before,after,source_before,source_after,extra_entries=()):
     import copy
     readers=[DataFasl(x) for x in (before,after)];a,b=[r.decode() for r in readers]
     sources=[LiteralSource(x) for x in (source_before,source_after)];forms=[r.decode() for r in sources]
@@ -222,14 +222,21 @@ def compare_systems(before,after,source_before,source_after):
     at=next(i for i,row in enumerate(old) if elements(row)[0]==symbol('CCL::BACKEND'))+1
     added=[conslist(symbol('CCL::'+n.upper()),'ccl:bin;'+n,conslist(path)) for n,path in [
       ('wasm32-arch','ccl:compiler;WASM32;wasm32-arch.lisp'),('wasm32-backend','ccl:compiler;WASM32;wasm32-backend.lisp'),('xwasm32fasload','ccl:xdump;xwasm32-fasload.lisp')]]
-    require(new==old[:at]+added+old[at:],'SYSTEMS_ADDITION_BOUND')
+    expected=old[:at]+added+old[at:]
+    inserted=[(at,len(added))]
+    for anchor,name,output,source in extra_entries:
+        position=next(i for i,row in enumerate(expected) if elements(row)[0]==symbol(anchor))+1
+        require(all(elements(row)[0]!=symbol('CCL::'+name.upper()) for row in expected),'SYSTEMS_DUPLICATE_ADDITION')
+        expected.insert(position,conslist(symbol('CCL::'+name.upper()),output,conslist(source)))
+        inserted=[(i+(position<=i),n) for i,n in inserted]+[(position,1)]
+    require(new==expected,'SYSTEMS_ADDITION_BOUND')
     spans=[r.spans for r in readers];locs=[spans[i][id(x[4])] for i,x in enumerate((a,b))]
     lists=[spans[i][id(x[5]['defparameter'][1])][0] for i,x in enumerate((a,b))]
     starts=[spans[i][id(x[0])][0] for i,x in enumerate((old,new))]
     edits=[(8,12,before[8:12]),(*locs[1],before[slice(*locs[0])]),
-      (lists[1],starts[1],before[lists[0]:starts[0]]),
-      (spans[1][id(new[at])][0],spans[1][id(new[at+2])][1],b'')]
+      (lists[1],starts[1],before[lists[0]:starts[0]])]
+    edits.extend((spans[1][id(new[i])][0],spans[1][id(new[i+n-1])][1],b'') for i,n in inserted)
     accounted=after
     for start,end,replacement in sorted(edits,reverse=True):accounted=accounted[:start]+replacement+accounted[end:]
     require(accounted==before,'SYSTEMS_UNEXPLAINED_BYTES')
-    return {'decoded_forms':6,'added_entries':3,'unchanged_executable_bytes':len(bytes.fromhex(a[3]['call']['function']['code'])),'byte_accounting':'Only three entries, list count, source extent and file length differ.'}
+    return {'decoded_forms':6,'added_entries':sum(n for _,n in inserted),'extra_entries':list(extra_entries),'unchanged_executable_bytes':len(bytes.fromhex(a[3]['call']['function']['code'])),'byte_accounting':'Only declared entries, list count, source extent and file length differ.'}

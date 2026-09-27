@@ -2010,7 +2010,7 @@ changing its name to ~s may have serious consequences." class new))
                          (eq (instance.class-wrapper instance) wrapper)))
              (%slot-ref (instance.slots instance) location))
             (t (no-applicable-method (method-generic-function (car (%gf-dispatch-table-methods dt))) instance))))))
-(register-dcode-proto #'singleton-reader-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'singleton-reader-dcode *gf-proto-one-arg*)
 
 ;;; Dcode for a GF whose methods are all reader-methods which access a
 ;;; slot in one or more classes which have multiple subclasses, all of
@@ -2022,7 +2022,7 @@ changing its name to ~s may have serious consequences." class new))
               (%svref dt %gf-dispatch-table-first-data))
       (%slot-ref (instance.slots instance) (%svref dt (1+ %gf-dispatch-table-first-data)))
       (no-applicable-method (method-generic-function (car (%gf-dispatch-table-methods dt))) instance)))
-(register-dcode-proto #'reader-constant-location-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'reader-constant-location-dcode *gf-proto-one-arg*)
 
 ;;; Dcode for a GF whose methods are all reader-methods which access a
 ;;; slot in one or more classes which have multiple subclasses, all of
@@ -2044,7 +2044,7 @@ changing its name to ~s may have serious consequences." class new))
              (not (eql 0 (sbit bits defining-class-ordinal))))
       (%slot-ref (instance.slots instance) (%svref dt (1+ %gf-dispatch-table-first-data)))
       (no-applicable-method (method-generic-function (car (%gf-dispatch-table-methods dt))) instance))))
-(register-dcode-proto #'reader-constant-location-inherited-from-single-class-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'reader-constant-location-inherited-from-single-class-dcode *gf-proto-one-arg*)
 
 ;;; It may be faster to make individual functions that take their
 ;;; "parameters" (defining class ordinal, slot location) as constants.
@@ -2101,7 +2101,7 @@ changing its name to ~s may have serious consequences." class new))
             (return t)))
       (%slot-ref (instance.slots instance) (%svref dt (1+ %gf-dispatch-table-first-data)))
       (no-applicable-method (method-generic-function (car (%gf-dispatch-table-methods dt))) instance))))
-(register-dcode-proto #'reader-constant-location-inherited-from-multiple-classes-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'reader-constant-location-inherited-from-multiple-classes-dcode *gf-proto-one-arg*)
 
 
 ;;; Similar to the case above, but we use an alist to map classes
@@ -2117,7 +2117,7 @@ changing its name to ~s may have serious consequences." class new))
     (if location
       (%slot-ref (instance.slots instance) location)
       (no-applicable-method (method-generic-function (car (%gf-dispatch-table-methods dt))) instance))))
-(register-dcode-proto #'reader-variable-location-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'reader-variable-location-dcode *gf-proto-one-arg*)
 
 (defun class-and-slot-location-alist (classes slot-name)
   (let* ((alist nil))
@@ -2243,20 +2243,20 @@ changing its name to ~s may have serious consequences." class new))
         (%apply-lexpr-tail-wise mf args))
       ;;; Let %%1st-arg-dcode deal with it.
       (%%1st-arg-dcode dt args))))
-(register-dcode-proto #'%%1st-arg-eql-method-hack-dcode *gf-proto*)
+#-wasm32-target (register-dcode-proto #'%%1st-arg-eql-method-hack-dcode *gf-proto*)
 
 (defun %%1st-two-arg-eql-method-hack-dcode (dt arg1 arg2)
   (let* ((mf (if (typep arg1 'symbol) (get arg1 dt))))
     (if mf
       (funcall mf arg1 arg2)
       (%%1st-two-arg-dcode dt arg1 arg2))))
-(register-dcode-proto #'%%1st-two-arg-eql-method-hack-dcode *gf-proto-two-arg*)
+#-wasm32-target (register-dcode-proto #'%%1st-two-arg-eql-method-hack-dcode *gf-proto-two-arg*)
 
 (defun %%one-arg-eql-method-hack-dcode (dt arg)
   (let* ((mf (if (typep arg 'symbol) (get arg dt))))
     (if mf
       (funcall mf arg))))
-(register-dcode-proto #'%%one-arg-eql-method-hack-dcode *gf-proto-one-arg*)
+#-wasm32-target (register-dcode-proto #'%%one-arg-eql-method-hack-dcode *gf-proto-one-arg*)
 
 (defun install-eql-method-hack-dcode (gf)
   (let* ((bits (inner-lfun-bits gf))

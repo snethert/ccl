@@ -40,14 +40,24 @@
          (kind (if realpath (%unix-file-kind realpath))))
     (if kind (values realpath kind) (values nil nil))))
 
-(defun fd-input-available-p (fd timeout)
+(defun fd-input-available-p (fd &optional timeout)
   (declare (ignore timeout))
   ;; All admitted regular byte sources are ready, including EOF.
-  (>= (fd-size fd) 0))
+  (let ((size (fd-size fd)))
+    (if (minusp size) (values nil size) (values t 0))))
+
+(defun fd-ready-for-output-p (fd &optional timeout)
+  (declare (ignore timeout))
+  (let ((size (fd-size fd)))
+    (values nil (if (minusp size) size -30))))
 
 ;;; The owner passes the admitted manifest's CCL root. The current directory
 ;;; comes from the same namespace session through %REALPATH.
-(defvar *wasm-namespace-ccl-root* nil)
+(defun %wasm-startup-string (index)
+  (let ((string (make-string (%wasm-process-request 5 index nil))))
+    (%wasm-process-request 5 index string)))
+
+(defvar *wasm-namespace-ccl-root* (%wasm-startup-string 1))
 
 (defun %wasm-namespace-support-initialize ()
   ;; Keep the native hash bindings and the weak *LFUN-NAMES* table created
@@ -77,17 +87,20 @@
             %logical-host-translations% translations)
       t)))
 
-(defun %wasm-file-error-string (errno)
+(defun %strerror (errno)
   (case errno
-    (2 "No such file or directory : ~s")
-    (9 "Bad file descriptor : ~s")
-    (17 "File exists : ~s")
-    (20 "Not a directory : ~s")
-    (21 "Is a directory : ~s")
-    (22 "Invalid argument : ~s")
-    (24 "Too many open files : ~s")
-    (30 "Read-only file system : ~s")
-    (t "File operation failed : ~s")))
+    (2 "No such file or directory")
+    (9 "Bad file descriptor")
+    (17 "File exists")
+    (20 "Not a directory")
+    (21 "Is a directory")
+    (22 "Invalid argument")
+    (24 "Too many open files")
+    (30 "Read-only file system")
+    (t "File operation failed")))
+
+(defun %wasm-file-error-string (errno)
+  (concatenate 'simple-base-string (%strerror errno) " : ~s"))
 
 (defun %wasm-native-ffi-excluded (&rest arguments)
   (declare (ignore arguments))

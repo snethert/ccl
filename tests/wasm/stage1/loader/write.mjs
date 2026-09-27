@@ -11,7 +11,7 @@ import {PACKAGING} from './runtime/bundle.mjs';
 import {inventory} from './d2.mjs';
 const need=(v,s)=>{if(!v)throw Error('write: '+s);};
 const RUNTIME_SYMBOLS=['condition_registry','error_message','expected_function'],ROOTS=1190000,ROOT_NAMES=['cold-load-functions','all-packages','toplevel-function','unbound-function'];
-export function write(dir,out,policy,versions){
+export function write(dir,out,policy,versions,inventoryCode=inventory){
  fs.mkdirSync(out,{recursive:true});
  const image=JSON.parse(fs.readFileSync(path.join(dir,'image.json'))),codeSet=JSON.parse(fs.readFileSync(path.join(dir,'code-set.json')));
  const heap=fs.readFileSync(path.join(dir,'heap.bin')),fixed=fs.readFileSync(path.join(dir,'static.bin'));
@@ -32,7 +32,7 @@ export function write(dir,out,policy,versions){
  const modules=[];
  for(const m of codeSet.modules){
   m.symbols??=[];m.codes??=[];m.children??=[];m.arity=m.arity.map((v,i)=>i===5?(v??[]):i>=2?!!v:v); // the Lisp writer prints NIL as null
-  const compiled=inventory(m.wat,path.join(out,m.name),policy,versions);
+  const compiled=inventoryCode(m.wat,path.join(out,m.name),policy,versions);
   const imports=compiled.d2.outputs.full.imports;
   const symbols=m.symbols.map(([wire,address])=>({wire,reference:reference(address)}));
   for(const i of imports)if(i.module==='symbols')need(symbols.some(s=>s.wire===i.name),'unresolved symbol '+i.name);

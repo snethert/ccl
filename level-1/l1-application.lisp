@@ -64,6 +64,7 @@
   (declare (ignore operation args)))
 
 
+#-wasm32-target
 (defun %usage-exit (banner exit-status other-args)
   (with-cstrs ((banner banner)
 	       (other-args other-args))
@@ -72,6 +73,12 @@
 	     :signed-fullword exit-status
 	     :address other-args
 	     :void)))
+
+#+wasm32-target
+(defun %usage-exit (banner exit-status other-args)
+  (%string-to-stderr banner)
+  (%string-to-stderr other-args)
+  (%wasm-process-request 3 exit-status nil))
 
 (defloadvar *unprocessed-command-line-arguments* ())
 
@@ -144,9 +151,13 @@
       (if (assoc :version opts)
         ;; Can't use lisp streams yet.
 	(progn
+          #-wasm32-target
           (with-cstrs ((s (format nil "~&~a~&" (application-version-string a))))
             (fd-write 1 s (%cstrlen s)))
-	  (#_ _exit 0))
+          #+wasm32-target
+          (%string-to-stderr (format nil "~&~a~&" (application-version-string a)))
+          #-wasm32-target (#_ _exit 0)
+          #+wasm32-target (%wasm-process-request 3 0 nil))
         (let* ((encoding (assoc :terminal-encoding opts)))
           (when (cdr encoding)
             (let* ((encoding-name
@@ -281,6 +292,13 @@ Default version returns Clozure CL version info."
 (defmethod repl-function-name ((a lisp-development-system))
   'listener-function)
 
+#+wasm32-target
+(defmethod toplevel-function ((a lisp-development-system) init-file)
+  (declare (ignore a))
+  (startup-ccl (and *load-lisp-init-file* init-file))
+  (%wasm-process-request 8 nil nil))
+
+#-wasm32-target
 (defmethod toplevel-function ((a lisp-development-system) init-file)
   (let* ((sr (input-stream-shared-resource *terminal-input*))
          (f (or (repl-function-name a) 'listener-function)))
@@ -319,4 +337,3 @@ Default version returns Clozure CL version info."
 (defmethod application-init-file ((app lisp-development-system))
   ;; This is the init file loaded before cocoa.
   *ccl-init-file*)
-

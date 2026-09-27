@@ -61,9 +61,10 @@ function decode(v){if(v===N)return null;if(v===T)return true;if(!(v&3))return v>
 const calls={};
 function call(name,args){
  const e=entries.get(name);assert(e,name);put(ROOT+4,args.length);args.forEach((v,i)=>put(ROOT+8+i*4,v));set(64,ROOT+8);set(128,ROOT);set(116,0);set(120,ROOT+8200);set(124,ROOT+8264);
- const before=Array.from({length:64},(_,i)=>t(i*4));let result;
+ const before=Array.from({length:64},(_,i)=>t(i*4)), beforeCollections=collections;let result;
  try{result=e.fn(e.self,args.length);}catch(error){if(error.is?.(env.call_error))throw Error(name+': checked '+error.getArg(env.call_error,0));throw error;}
- for(let i=0;i<64;i++)if(![48,52,56,116].includes(i*4))assert.equal(t(i*4),before[i],name+' TCR '+i*4);
+ for(let i=0;i<64;i++)if(![48,52,56,116,204].includes(i*4))assert.equal(t(i*4),before[i],name+' TCR '+i*4);
+ assert.equal(t(204)-before[51],collections-beforeCollections,name+' collection publication');
  assert.equal(result[1],t(116));assert.equal(result[0]>>>0,get(ROOT+8200));
  calls[name]=(calls[name]||0)+1;
  return Array.from({length:result[1]},(_,i)=>decode(get(ROOT+8200+i*4)));

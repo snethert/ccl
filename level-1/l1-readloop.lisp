@@ -113,7 +113,9 @@
    error occurs while preparing to quit.  The error handler should exit"
   (if (or (null exit) (typep exit '(signed-byte 32)))
     (setq exit (let ((exit-status (or exit 0)))
-                 #'(lambda () (#__exit exit-status))))
+                 #'(lambda ()
+                     #-wasm32-target (#__exit exit-status)
+                     #+wasm32-target (%wasm-process-request 3 exit-status nil))))
     (unless (typep exit 'function)
       (report-bad-arg exit '(or (signed-byte 32) function))))
   (let* ((ip *initial-process*)
@@ -868,4 +870,3 @@
 
 
 ;end of L1-readloop.lisp
-

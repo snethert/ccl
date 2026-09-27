@@ -467,7 +467,11 @@
   
 
 
+;; Wasm dispatches through the funcallable instance's ordinary B entry.
+;; Native code-copying prototypes are not part of that representation.
+#-wasm32-target
 (defparameter *gf-proto-one-arg*  #'gag-one-arg)
+#-wasm32-target
 (defparameter *gf-proto-two-arg*  #'gag-two-arg)
 
 
@@ -800,6 +804,7 @@
         (%apply-lexpr-tail-wise method args))
       (apply method args))))
 
+#-wasm32-target
 (register-dcode-proto #'%%0-arg-dcode *gf-proto*)
 
 (defun dcode-too-few-args (arg-count cm-or-gf)
@@ -821,17 +826,20 @@
       (when (null args) (dcode-too-few-args 0 (%gf-dispatch-table-gf dt)))
       (let ((method (%find-1st-arg-combined-method dt (%car args))))
         (apply method args)))))
+#-wasm32-target
 (register-dcode-proto #'%%1st-arg-dcode *gf-proto*)
 
 (defun %%one-arg-dcode (dt  arg)
   (let ((method (%find-1st-arg-combined-method dt arg)))
     (funcall method arg)))
+#-wasm32-target
 (register-dcode-proto #'%%one-arg-dcode *gf-proto-one-arg*)
 
 ;;; two args - specialized on first
 (defun %%1st-two-arg-dcode (dt arg1 arg2)
   (let ((method (%find-1st-arg-combined-method dt arg1)))
     (funcall method arg1 arg2)))
+#-wasm32-target
 (register-dcode-proto #'%%1st-two-arg-dcode *gf-proto-two-arg*)
 
 
@@ -850,6 +858,7 @@
       (when (>= argnum args-len) (dcode-too-few-args args-len (%gf-dispatch-table-gf dt)))
       (let ((method (%find-nth-arg-combined-method dt (%lexpr-ref args args-len argnum) args)))
 	(%apply-lexpr-tail-wise method args)))))
+#-wasm32-target
 (register-dcode-proto #'%%nth-arg-dcode *gf-proto*)
 
 (defun 0-arg-combined-method-trap (gf)
@@ -1990,6 +1999,5 @@
           (if (null next-methods)
             (%rplaca (cdr magic) method))
           (apply-with-method-context magic method-function args))))))
-
 
 

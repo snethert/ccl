@@ -59,7 +59,8 @@
   (bin-load "dll-node")
   (l1-load "l1-unicode")
   (l1-load "l1-streams")
-  (l1-load "linux-files")
+  #-wasm32-target (l1-load "linux-files")
+  #+wasm32-target (l1-load "w32-files")
   (bin-load "chars")
   (l1-load "l1-files")
   (provide "SEQUENCES")
@@ -82,6 +83,7 @@
   (l1-load "l1-reader")
   (l1-load "l1-readloop")
   (l1-load "l1-readloop-lds")
+  #+wasm32-target (l1-load "w32-streams")
   (l1-load "l1-error-system")
 
   (l1-load "l1-events")

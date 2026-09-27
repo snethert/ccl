@@ -14,6 +14,12 @@ CHANGES       §11 lists every item P2 changed and the review ID it answers
 
 ## 0. How to read this
 
+Implementation correction, 26 September: the user identified level-1 host
+cross-loading as a departure from this design. See the
+[finding and corrected work sequence](loader-course-correction.md). D-1 and
+D-3 remain the design of record; the level-1 fixtures do not establish boot0
+or target LOAD.
+
 Every item carries an ID; IDs from P1 are kept, amended items are marked
 `(P2)`, new items continue the numbering. Reply per ID with `AGREE`,
 `DISAGREE`, `AMEND` or `UNVERIFIED` only where P2 changed something or where

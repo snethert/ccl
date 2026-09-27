@@ -1,5 +1,12 @@
 # Ordered level-1 bootstrap prefix
 
+The user's [26 September loader correction](../../../../doc/WASM/stage1/loader-course-correction.md)
+supersedes this fixture's next-work direction. Level-1 host cross-loading
+and the selected execution image do not establish the adopted boot path.
+Preserve the recorded results below; next implementation work is target code
+installation, the real level-0 boot0, then target loading in native runtime
+order. The accepted continuation and weak-table work keep their stated scope.
+
 The accepted [level-1 continuation](continuation.md) advances the checkout to
 36/36/0 and addresses audit 184 O-106/O-107. The subsequent
 [namespace substitutions](substitutions.md) preserve its native weak tables.

@@ -1451,3 +1451,6 @@
   (check-error-global '*error-output* #'is-output-stream-p #'standard-output)
   (check-error-global '*trace-output* #'is-output-stream-p #'standard-output))
 
+;; All condition constructors and accessors are now installed on the target.
+#+wasm32-target
+(%wasm-enable-error-service)

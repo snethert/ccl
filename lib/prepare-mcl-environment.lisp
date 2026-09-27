@@ -21,6 +21,9 @@
 (in-package "CCL")
 
 (defun %reset-outermost-binding (symbol value)
+  #+wasm32-target
+  (%wasm-reset-outermost-binding symbol value)
+  #-wasm32-target
   (let* ((symvector (symptr->symvector symbol))
          (idx (%svref symvector target::symbol.binding-index-cell))
          (marker (%no-thread-local-binding-marker)))
@@ -84,7 +87,6 @@ methods as being not predefined (this is a fairly expensive operation.)"
   `(let* ((*package* (find-package "CCL"))
 	  (*warn-if-redefine-kernel* nil))
     ,@body))
-
 
 
 

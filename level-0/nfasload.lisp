@@ -796,6 +796,45 @@
 (deffaslop $fasl-function (s)
   (%bad-fasl s))
 
+#+wasm32-target
+(defun %wasm-install-code (record symbols fd)
+  (%wasm-host-install-code record symbols fd))
+
+#+wasm32-target
+(defun %wasm-code-binding-indices (record symbols)
+  (dolist (index (nth 9 record))
+    (ensure-binding-index (svref symbols index)))
+  (dolist (child (nth 8 record))
+    (%wasm-code-binding-indices child symbols)))
+
+#+wasm32-target
+(deffaslop $fasl-wasm32-function (s)
+  ;; Preserve the ordinary FASL expression-table identity, including a pool
+  ;; which refers back to this function. Code installation receives traced
+  ;; Lisp arguments; the owner must copy request data before any suspension.
+  (let* ((n (%fasl-read-count s)))
+    (declare (fixnum n))
+    (unless (>= n 8)
+      (%bad-fasl s))
+    (let* ((function (%gvector target::subtag-function 0 nil 1 nil nil nil)))
+      (%epushval s function)
+      (let* ((record (%fasl-expr s))
+             (symbols (%fasl-expr s))
+             (pool (make-array (the fixnum (- n 2)))))
+        (dotimes (i (- n 2))
+          (setf (svref pool i) (%fasl-expr s)))
+        ;; A logical code ID is returned, never an engine table slot. The
+        ;; installer admits the complete nested code graph before publishing.
+        (%wasm-code-binding-indices record symbols)
+        (let ((code (%wasm-install-code record symbols (faslstate.faslfd s))))
+          (unless (and (fixnump code) (> code 0))
+            (%bad-fasl s))
+          (setf (%svref function 0) code
+                (%svref function 3) (svref pool 0)
+                (%svref function 4) (svref pool 1)
+                (%svref function 5) pool)))
+      (setf (faslstate.faslval s) function))))
+
 #-wasm32-target
 (deffaslop $fasl-function (s)
   (fasl-read-gvector s target::subtag-function))
@@ -1142,7 +1181,7 @@
               (declare (fixnum psize))
               (if (>= psize size) 
                 (return psize))))))
-  (setf (htvec htab) (make-array size #|:initial-element 0|#))
+  (setf (htvec htab) (make-array size))
   (setf (htcount htab) 0)
   (setf (htlimit htab) (the fixnum (- size (the fixnum (ash size -3)))))
   htab)
@@ -1338,4 +1377,3 @@
                               (setq max idx))))))
         (%set-binding-index max))
       (%fasload *xload-startup-file*)))
-

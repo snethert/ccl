@@ -4295,11 +4295,14 @@
                      (union-ctype-types ctype))))))
 
 
+#-wasm32-target
 (defvar *simple-predicate-function-prototype*
   #'(lambda (thing)
       (%%typep thing #.(specifier-type t))))
 
 (defun make-simple-type-predicate (function datum)
+  #+wasm32-target
+  (lambda (thing) (funcall function thing datum))
   #+ppc-target
   (gvector :function
            (uvref *simple-predicate-function-prototype* 0)
@@ -4392,4 +4395,3 @@
                          (multiple-value-bind (win sure)
                              (ctypep value nowctype)
                            (or (not sure) win))))))))))
-

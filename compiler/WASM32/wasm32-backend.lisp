@@ -27,6 +27,7 @@
 (defvar *wasm32-fasl-publication* nil)
 (defvar *wasm32-fasl-functions* nil)
 (defvar *wasm32-fasl-specials* nil)
+(defvar *wasm32-rooted-imports* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
   (when (and (null *module-result-tag*) *wasm32-fasl-publication*)
@@ -734,7 +735,7 @@
   (if (b-special-p var) (b-wat "(i32.store ~a ~a)" (b-bound-address var) value) (b-bind-value var value)))
 (defun b-stage-read (var)
   (if (b-special-p var) (b-wat "(i32.load ~a)" (b-bound-address var)) (b-read-variable var)))
-(defun b-keyword-scan (required opt keys)
+(defun b-keyword-scan (required opt keys &optional methodp)
   ;; Validate and stage before publishing parameter bindings. A handler for
   ;; malformed keyword arguments must still see the caller's dynamic values.
   (when keys
@@ -759,7 +760,10 @@
           (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)) (local.set ~a (local.get ~a))))))"
             key (b-keyword :allow-other-keys) known allow-seen allow-seen allow-value value)
           (format s "(if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 2))) (br $keys_scan)))" known unknown cursor cursor)
-          (unless allow
+          ;; The generic function checks the union of its applicable methods'
+          ;; keywords. Native method entries bind their own keys while allowing
+          ;; keys accepted by another method (x862-lambda's METHODP flag).
+          (unless (or allow methodp)
             (write-string (b-condition (b-wat "(i32.and (local.get ~a) (i32.eq (local.get ~a) (i32.const 77825)))" unknown allow-value) 16) s))
 )))))
 (defun b-binding-code (required opt keys rest)
@@ -979,9 +983,10 @@
   ;; already use U1's fresh cons tag and CATCH inside this local boundary.
   (labels ((referenced (x)
              (cond ((ccl::acode-p x)
-                    (or (and (eq (ccl::acode-operator-name (ccl::acode-operator x)) 'ccl::local-return-from)
+                    (and (not (eq (ccl::acode-operator-name (ccl::acode-operator x)) 'ccl::immediate))
+                     (or (and (eq (ccl::acode-operator-name (ccl::acode-operator x)) 'ccl::local-return-from)
                              (eq (first (ccl::acode-operands x)) identity))
-                        (some #'referenced (ccl::acode-operands x))))
+                        (some #'referenced (ccl::acode-operands x)))))
                    ((consp x) (some #'referenced x)))))
     (if (not (referenced body)) (b-multiple body)
       (b-exit-frame 3 "(i32.const 77825)"
@@ -1119,9 +1124,14 @@
        (b-raw-code-text (reduce (lambda (a b) (make-b-raw-code :text (b-cons a b))) (first args) :from-end t :initial-value (make-b-raw-code :text "(i32.const 77825)"))))
       (ccl::typed-form
        (when *bootstrap-front-end*
-         ;; NX1's optional third operand requests a runtime type check.
-         ;; Do not erase a check which the target cannot yet implement.
-         (when (third args) (refuse :bootstrap-typecheck))
+         ;; NX1's optional third operand requests the same runtime check as
+         ;; REQUIRE-TYPE. Keep unsupported type specifiers as directed refusals.
+         (when (third args)
+           (return-from b-scalar-inner
+             (bootstrap-primary
+              (or (bootstrap-type-call 'ccl::require-type
+                    (list (second args) (bootstrap-constant (first args))))
+                  (refuse :bootstrap-typecheck)))))
          (return-from b-scalar-inner (b-scalar (second args))))
        (unless (and (eq (first args) 'list)
                     (member (ccl::acode-operator-name (ccl::acode-operator (second args))) '(ccl::special-ref ccl::bound-special-ref))
@@ -1261,8 +1271,10 @@
     (case op
       (ccl::typed-form
        (if *bootstrap-front-end*
-         (progn
-           (when (third args) (refuse :bootstrap-typecheck))
+         (if (third args)
+           (or (bootstrap-type-call 'ccl::require-type
+                 (list (second args) (bootstrap-constant (first args))))
+               (refuse :bootstrap-typecheck))
            (b-multiple (second args)))
          (b-multiple (make-b-raw-code :text (b-scalar ir)))))
       (ccl::%decls-body (b-multiple (first args)))
@@ -1428,7 +1440,8 @@
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
            (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first aux) (first opt) (third opt) (list rest) (second keys) (third keys)))))
            (code (let ((prepare (concatenate 'string (metadata-entry afunc) (or (b-environment-entry) "") (b-initialize-cells)))
-                       (key-scan (or (b-keyword-scan arity opt keys) "")))
+                       (key-scan (or (b-keyword-scan arity opt keys
+                                      (logbitp ccl::$fbitmethodp (ccl::afunc-bits afunc))) "")))
                    (flet ((emit-body () (concatenate 'string
                       (with-output-to-string (s)
                         (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (member v *b-bound-vars* :test #'eq)) do
@@ -1507,7 +1520,25 @@
       (list :symbols (copy-list *bootstrap-symbols*)
             :callees (copy-list *bootstrap-callees*)
             :code-imports (copy-list *b-code-imports*) :keywords (copy-list *b-keywords*)
-            :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
+            :pool (cdr (assoc afunc *pool-layouts* :test #'eq)) :name *module-name* :arity arity
+            :wat (if *wasm32-rooted-imports* (wasm32-root-symbol-reads wat) wat)
+            :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
+
+(defun wasm32-root-symbol-reads (wat)
+  ;; Relocate emitted symbol reads through stable, collector-traced cells.
+  ;; This changes the backend's import representation, not the Lisp source.
+  ;; The compiler emits these identifiers; no user string is interpreted here.
+  (let ((prefix "(global.get $symbol_") (start 0))
+    (with-output-to-string (s)
+      (loop for position = (search prefix wat :start2 start)
+            while position do
+              (write-string wat s :start start :end position)
+              (let ((end (1+ (position #\) wat :start position))))
+                (write-string "(i32.load " s)
+                (write-string wat s :start position :end end)
+                (write-char #\) s)
+                (setq start end)))
+      (write-string wat s :start start))))
 ;;; Rest/APPLY sequences execute without calls, polls or collection while
 ;;; traversing or initializing heap cells. The allocator is a checked bump
 ;;; pointer in the thread-owned TCR area; exhaustion never publishes a list.
@@ -1963,7 +1994,8 @@
                (*required-vars* (first args)))
           (push (cons f (mapcar #'ccl::nx-root-var (ccl::afunc-inherited-vars f))) *b-environments*)
           (dolist (v (append (first args) (first (second args)) (third (second args))
-                            (list (third args)) (second (fourth args)) (third (fourth args)) (b-local-variables ir)))
+                            (list (third args)) (second (fourth args)) (third (fourth args))
+                            (first (fifth args)) (b-local-variables ir)))
             (when v (push (cons (ccl::nx-root-var v) f) owners)))
           (visit ir (lambda (node)
             (let ((op (ccl::acode-operator-name (ccl::acode-operator node))) (a (ccl::acode-operands node)))
@@ -2635,6 +2667,12 @@
                                        ;; Only the remaining operands belong in the literal pool.
                                        (mapc #'visit (cddr (first (first args))))
                                        (visit (second (first args))))
+                                ((and (eq op 'ccl::typed-form) (third args))
+                                 (let ((type (first args)))
+                                   (when (and (pool-literal-p type)
+                                              (not (member type values :test #'eq)))
+                                     (setq values (append values (list type)))))
+                                 (visit (second args)))
                                 ((eq op 'ccl::immediate)
                                  (when (pool-literal-p (first args))
                                    (unless (member (first args) values :test #'eq)
@@ -3251,7 +3289,10 @@
   (let* ((args (ccl::acode-operands (ccl::afunc-acode afunc)))
          (keys (fourth args)))
     (vector 1 (length (first args)) (length (first (second args)))
-            (not (null (third args))) (not (null keys)) (not (null (first keys)))
+            (not (null (third args))) (not (null keys))
+            (and (not (null keys))
+                 (or (not (null (first keys)))
+                     (logbitp ccl::$fbitmethodp (ccl::afunc-bits afunc))))
             (copy-seq (or (fifth keys) #())))))
 (defun metadata-debug (afunc)
   (let ((entry (assoc afunc *b-functions* :test #'eq))
@@ -3524,7 +3565,7 @@
         ;; Native compiler macros may fold using host representation facts.
         ;; Ordinary macros and NX1's target-aware operators remain available.
         (ccl::*nx-compile-time-compiler-macros* nil)
-        (ccl::*compiler-macros* (make-hash-table :test #'eq))
+        (ccl::*compiler-macros* (bootstrap-compiler-macros))
         (*macroexpand-hook* (bootstrap-macroexpand-hook))
         (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
     (catch *module-result-tag*
@@ -3599,11 +3640,27 @@
             (list 'ccl::lfun-bits (second form)))
           (funcall hook expander form environment)))))
 
+(defun bootstrap-compiler-macros ()
+  ;; These unchanged CCL expansions use target-aware comparisons and preserve
+  ;; argument evaluation. Level-0 callers need them before l1-numbers installs
+  ;; the callable MIN/MAX entries. Do not enable host representation folding.
+  (let ((table (make-hash-table :test #'eq)))
+    (dolist (name '(+ - * / min max make-string make-array nth nthcdr proclaim
+                   char= char/= char< char<= char> char>=
+                   ccl::min-2 ccl::max-2 ccl::imin-2 ccl::imax-2))
+      (let ((expander (compiler-macro-function name)))
+        (unless expander (error "Missing bootstrap compiler macro: ~s" name))
+        (setf (gethash name table) expander)))
+    table))
+
 (defun bootstrap-alphatizers ()
   (let ((table (make-hash-table :test #'eq)))
     (maphash (lambda (name function) (setf (gethash name table) function))
              ccl::*nx1-alphatizers*)
-    (setf (gethash 'load-time-value table) #'bootstrap-no-load-time-value)
+    ;; File bundles use NFComp's ordinary FASL load-time thunk. Standalone
+    ;; compilation and cold images still cannot evaluate target functions.
+    (unless *wasm32-rooted-imports*
+      (setf (gethash 'load-time-value table) #'bootstrap-no-load-time-value))
     table))
 
 (in-package :wasm32-compiler)
@@ -3769,6 +3826,9 @@
              (b-wat "(i32.add ~a ~a)" a b))
             ((ccl::%i- ccl::fixnum-sub-no-overflow)
              (b-wat "(i32.sub ~a ~a)" a b))
+            (ccl::%i*
+             (b-wat "(i32.mul (i32.shr_s ~a (i32.const 2)) ~a)" a b))
+            (ccl::%%ineg (b-wat "(i32.sub (i32.const 0) ~a)" a))
             (ccl::%ilogand2 (b-wat "(i32.and ~a ~a)" a b))
             (ccl::%ilogior2 (b-wat "(i32.or ~a ~a)" a b))
             (ccl::%ilogxor2 (b-wat "(i32.xor ~a ~a)" a b))
@@ -4232,7 +4292,10 @@
                          (if initial (b-wat "(i32.shr_u ~a (i32.const 2))" initial) "(i32.const 0)")
                          base i
                          (b-wat "(if (result i32) (i32.or (i32.eq (local.get ~a) (i32.const 1000)) (i32.eq (local.get ~a) (i32.const 424))) (then ~a) (else ~a))"
-                                kind kind (or initial "(i32.const 77825)")
+                                ;; ALLOCATE-TYPED-VECTOR defaults to zero.
+                                ;; MAKE-ARRAY's native compiler macro omits
+                                ;; an explicit zero initializer on that basis.
+                                kind kind (or initial "(i32.const 0)")
                                 (if initial (b-wat "(i32.shr_u ~a (i32.const 8))" initial) "(i32.const 0)")) i i)))) s))))))))
 
 (defun bootstrap-make-list (forms)
@@ -4606,6 +4669,17 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
     (case op
+      ((ccl::require-fixnum ccl::require-symbol ccl::require-list ccl::require-real
+        ccl::require-simple-string ccl::require-simple-vector ccl::require-character
+        ccl::require-number ccl::require-integer ccl::require-s8 ccl::require-u8
+        ccl::require-s16 ccl::require-u16 ccl::require-s32 ccl::require-u32
+        ccl::require-s64 ccl::require-u64)
+       (bootstrap-require op args))
+      (ccl::%current-tcr
+       (unless (null args) (refuse :current-tcr-arity))
+       ;; An aligned nonmoving owner token has the native tagged-fixnum shape.
+       (b-wat "~a (global.get $tcr)"
+         (b-condition "(i32.or (i32.eqz (global.get $tcr)) (i32.or (i32.and (global.get $tcr) (i32.const 15)) (i32.ge_u (global.get $tcr) (i32.const 2147483648))))" 4)))
       ((ccl::%complex-single-float-realpart ccl::%complex-single-float-imagpart
         ccl::%complex-double-float-realpart ccl::%complex-double-float-imagpart)
        (bootstrap-complex-part op args))
@@ -4617,8 +4691,23 @@
        (bootstrap-primary
         (b-float-call (if (eq op 'ccl::%single-float) '%float-single '%float-double)
                       (list (car args) (ccl::make-acode (ccl::%nx1-operator ccl::fixnum) 0)))))
+      ((ccl::%fixnum-to-single ccl::%fixnum-to-double)
+       (bootstrap-operands args
+         (lambda (values)
+           (b-wat "~a ~a"
+             (b-condition (b-wat "(i32.and ~a (i32.const 3))" (car values)) 5)
+             (bootstrap-primary
+              (b-float-call (if (eq op 'ccl::%fixnum-to-single) '%float-single '%float-double)
+                            (list (make-b-raw-code :text (car values)) (bootstrap-constant 0))))))))
       ((ccl::natural-shift-left ccl::natural-shift-right)
        (bootstrap-natural-shift op args))
+      ((ccl::%natural+ ccl::%natural-)
+       (bootstrap-operands args
+         (lambda (values)
+           (bootstrap-box-word
+            (b-wat "(i32.~a ~a ~a)" (if (eq op 'ccl::%natural+) "add" "sub")
+                   (bootstrap-unbox-word (first values))
+                   (bootstrap-unbox-word (second values))) nil))))
       (ccl::minus1
        (bootstrap-primary (bootstrap-subtract args)))
       (ccl::global-setq
@@ -4713,10 +4802,27 @@
                           (if (eq op 'ccl::%izerop) "eq" "gt_s") (car values))
                    (if (eq op 'ccl::%izerop)
                      (ccl::acode-immediate-operand (car args)) :eq))))))
-      ((ccl::add2 ccl::sub2 ccl::mul2 ccl::div2)
+      ((ccl::add2 ccl::sub2 ccl::mul2 ccl::div2
+        ccl::fixnum-add-overflow ccl::fixnum-sub-overflow)
        (bootstrap-primary
         (bootstrap-numeric-call
-         (ecase op (ccl::add2 '+) (ccl::sub2 '-) (ccl::mul2 '*) (ccl::div2 '/)) args)))
+         (ecase op ((ccl::add2 ccl::fixnum-add-overflow) '+)
+                   ((ccl::sub2 ccl::fixnum-sub-overflow) '-)
+                   (ccl::mul2 '*) (ccl::div2 '/)) args)))
+      (ccl::%ineg
+       (bootstrap-primary
+        (b-integer-call '%integer-sub (list (bootstrap-constant 0) (first args)))))
+      ((ccl::%double-float+-2 ccl::%double-float--2
+        ccl::%double-float*-2 ccl::%double-float/-2
+        ccl::%short-float+-2 ccl::%short-float--2
+        ccl::%short-float*-2 ccl::%short-float/-2)
+       (bootstrap-primary
+        (b-float-call
+         (ecase op
+           ((ccl::%double-float+-2 ccl::%short-float+-2) '%float-add)
+           ((ccl::%double-float--2 ccl::%short-float--2) '%float-sub)
+           ((ccl::%double-float*-2 ccl::%short-float*-2) '%float-mul)
+           ((ccl::%double-float/-2 ccl::%short-float/-2) '%float-div)) args)))
       (ccl::numcmp
        (if (every (lambda (x) (ccl::acode-form-typep x 'fixnum t)) (cdr args))
          (b-scalar (ccl::make-acode (ccl::%nx1-operator ccl::%i<>)
@@ -4806,8 +4912,8 @@
        (b-wat "(block (result i32) ~a (i32.load (local.get $results)))"
               (b-integer-call '%integer-ash args)))
       (ccl::%i<> (bootstrap-fixnum-operator op (cdr args) (ccl::acode-immediate-operand (car args))))
-      ((ccl::%i+ ccl::%i- ccl::fixnum-add-no-overflow ccl::fixnum-sub-no-overflow
-        ccl::%ilogand2 ccl::%ilogior2 ccl::%ilogxor2 ccl::%ilognot)
+      ((ccl::%i+ ccl::%i- ccl::%i* ccl::fixnum-add-no-overflow ccl::fixnum-sub-no-overflow
+        ccl::%%ineg ccl::%ilogand2 ccl::%ilogior2 ccl::%ilogxor2 ccl::%ilognot)
        (bootstrap-fixnum-operator op args)))))
 
 (defun bootstrap-make-string (forms)
@@ -4899,6 +5005,10 @@
            (b-multiple (make-b-raw-code :text
              (bootstrap-operands forms
                (lambda (values) (bootstrap-function-info (first values) 3))))))
+          ((eq name 'ccl::%wasm-enable-error-service)
+           (unless (null forms) (refuse :error-service-arity))
+           (b-multiple (make-b-raw-code :text
+             "(i32.store offset=192 (global.get $tcr) (i32.const 1)) (i32.const 77825)")))
           ((eq name 'ccl::%wasm-gc-count)
            (unless (null forms) (refuse :gc-count-arity))
            (b-multiple (make-b-raw-code :text
@@ -4911,7 +5021,7 @@
            (let* ((selector (ccl::acode-fixnum-form-p (first forms)))
                   (fields (case selector
                             (0 '(52 . 48)) (1 '(48 . 56)) (2 '(52 . 56))
-                            (3 '(72 . 64)) (4 '(64 . 68)))))
+                            (3 '(72 . 64)) (4 '(64 . 68)) (5 '(72 . 68)))))
              (unless fields (refuse :area-size-selector))
              (b-multiple (make-b-raw-code :text
                (bootstrap-box-word
@@ -5050,6 +5160,9 @@
                             (then (i32.const 77825))
                             (else (i32.load (local.get ~a)))))"
                        location symbol location symbol location)))))))
+
+          ((eq name 'ccl::%wasm-reset-outermost-binding)
+           (b-multiple (make-b-raw-code :text (bootstrap-reset-outermost-binding forms))))
 
           ((eq name 'ccl::%wasm-lock-owner-token)
            (unless (null forms) (refuse :single-worker-lock-token-arity))
@@ -5192,6 +5305,7 @@
     (class . ccl::classp) (ccl::standard-method . ccl::standard-method-p)
     (ccl::macptr . ccl::macptrp)
     (standard-generic-function . ccl::standard-generic-function-p)
+    (generic-function . ccl::generic-function-p)
     (ccl::funcallable-standard-object . ccl::funcallable-instance-p) (restart . ccl::restartp)
     (ccl::istruct . ccl::istructp) (structure-object . ccl::structurep)))
 
@@ -5209,7 +5323,9 @@
   (b-wat "(i32.ne ~a (i32.const 77825))" code))
 
 (defun bootstrap-small-literal-p (x)
-  (or (null x) (eq x t) (and (integerp x) (<= -536870912 x 536870911))))
+  ;; Symbols use the same rooted literal identity as ordinary EQ/EQL calls.
+  ;; TYPECASE uses (MEMBER *) while the runtime type system is bootstrapping.
+  (or (symbolp x) (characterp x) (and (integerp x) (<= -536870912 x 536870911))))
 
 (defun bootstrap-type-supported-p (type)
   (cond ((symbolp type) (or (and *b-cpl-conditions* (symbolp type) (not (member type '(nil t bit signed-byte unsigned-byte))) (not (assoc type *bootstrap-type-predicates*)) (find-class type nil)) (member type '(nil t bit signed-byte unsigned-byte))
@@ -5260,9 +5376,12 @@
           ((member (car type) '(eql member))
            (reduce (lambda (item tail)
                      (b-wat "(if (result i32) ~a (then (i32.const 1)) (else ~a))"
-                            (bootstrap-true-p
-                             (bootstrap-predicate-call 'eql
-                               (list (make-b-raw-code :text value) (bootstrap-constant item)))) tail))
+                            ;; Every admitted literal here has identity EQL
+                            ;; semantics: symbol, character, or fixnum.
+                            (b-wat "(i32.eq ~a ~a)" value
+                                   (if (and item (not (eq item t)) (symbolp item))
+                                     (bootstrap-symbol item)
+                                     (b-scalar (bootstrap-constant item)))) tail))
                    (cdr type) :from-end t :initial-value "(i32.const 0)"))
           ((eq (car type) 'mod) (bootstrap-type-test value `(integer 0 (,(second type)))))
           ((member (car type) '(signed-byte unsigned-byte))
@@ -5315,6 +5434,119 @@
       ((nil) (values nil t))
       ((t) (values t t))
       (otherwise (bootstrap-immediate form)))))
+
+(defun bootstrap-reset-outermost-binding (forms)
+  (unless (= (length forms) 2) (refuse :reset-binding-arity))
+  (bootstrap-operands forms
+    (lambda (values)
+      (destructuring-bind (symbol value) values
+        (let ((index (temporary)) (p (temporary)))
+          (with-output-to-string (s)
+            (format s "(local.set ~a (i32.shl (call $binding_index ~a) (i32.const 2)))"
+                    index symbol)
+            ;; Validate the complete descending B binding chain before any
+            ;; write. The record layout is shared with B-BIND-SYMBOL/UNBIND_TO.
+            (format s "(local.set ~a ~a)
+                       (block $binding_check_done (loop $binding_check
+                         (br_if $binding_check_done (i32.eqz (local.get ~a)))"
+                    p (b-load wasm32::tcr.db_link) p)
+            (write-string
+             (b-condition
+              (b-wat "(i32.or (i32.and (local.get ~a) (i32.const 15))
+                        (i32.or (i32.lt_u (local.get ~a) ~a)
+                          (i64.gt_u (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const 32))
+                                    (i64.extend_i32_u ~a))))"
+                     p p (b-load wasm32::tcr.vsp_base) p (b-load wasm32::tcr.vsp_limit)) 11) s)
+            (format s "(call $span (local.get ~a) (i32.const 32))" p)
+            (write-string
+             (b-condition
+              (b-wat "(i32.or (i32.ne (i32.load offset=24 (local.get ~a)) (i32.const 1112425521))
+                        (i32.ge_u (i32.load (local.get ~a)) (local.get ~a)))" p p p) 11) s)
+            (format s "(local.set ~a (i32.load (local.get ~a))) (br $binding_check)))" p p)
+            (format s "(local.set ~a ~a)
+                       (block $binding_reset_done (loop $binding_reset
+                         (br_if $binding_reset_done (i32.eqz (local.get ~a)))
+                         (if (i32.and (i32.ne (local.get ~a) (i32.const 0))
+                               (i32.and (i32.eq (i32.load offset=4 (local.get ~a)) (local.get ~a))
+                                 (i32.ne (i32.load offset=20 (local.get ~a)) (i32.const 243))))
+                           (then (i32.store offset=20 (local.get ~a) ~a)))
+                         (local.set ~a (i32.load (local.get ~a))) (br $binding_reset)))
+                       (i32.store offset=2 ~a ~a) ~a"
+                    p (b-load wasm32::tcr.db_link) p index p index p p value p p symbol value value)))))))
+
+(defun bootstrap-require (op args)
+  ;; NX1 emits these checks as operators, including in LEVEL-2's callable
+  ;; wrappers. Their expected types are compiler metadata, not pool literals.
+  (unless (= (length args) 1) (refuse :require-arity))
+  (let ((type (cdr (assoc op
+                '((ccl::require-fixnum . fixnum) (ccl::require-symbol . symbol)
+                  (ccl::require-list . list) (ccl::require-real . real)
+                  (ccl::require-simple-string . simple-string)
+                  (ccl::require-simple-vector . simple-vector)
+                  (ccl::require-character . character) (ccl::require-number . number)
+                  (ccl::require-integer . integer)
+                  (ccl::require-s8 signed-byte 8) (ccl::require-u8 unsigned-byte 8)
+                  (ccl::require-s16 signed-byte 16) (ccl::require-u16 unsigned-byte 16)
+                  (ccl::require-s32 signed-byte 32) (ccl::require-u32 unsigned-byte 32)
+                  (ccl::require-s64 signed-byte 64) (ccl::require-u64 unsigned-byte 64))))))
+    (bootstrap-operands args
+      (lambda (values)
+        (let ((object (car values)))
+          (b-wat "(if (i32.eqz ~a) (then ~a)) ~a"
+            (bootstrap-require-test object type)
+            (b-frame 1
+              (lambda (root)
+                (labels ((literal (x)
+                           (cond ((consp x)
+                                  (b-cons (make-b-raw-code :text (literal (car x)))
+                                          (make-b-raw-code :text (literal (cdr x)))))
+                                 ((and x (symbolp x)) (bootstrap-symbol x))
+                                 (t (b-scalar (bootstrap-constant x))))))
+                  (b-wat "(i32.store offset=8 ~a ~a)
+                          (call $implicit_error_details (i32.const 5) (local.get $top)
+                                ~a (i32.load offset=8 ~a)) unreachable"
+                         root (literal type) object root))))
+            object))))))
+
+(defun bootstrap-require-test (object type)
+  ;; These NX1 operators check representation directly on native targets.
+  ;; In particular, they do not call their own callable LEVEL-2 wrappers.
+  (let ((code (temporary)))
+    (labels ((codes (&rest tags)
+               (reduce (lambda (tag tail)
+                         (b-wat "(i32.or (i32.eq (local.get ~a) (i32.const ~d)) ~a)"
+                                code (* 4 tag) tail))
+                       tags :from-end t :initial-value "(i32.const 0)")))
+      (b-wat "(block (result i32) (local.set ~a ~a) ~a)"
+        code (bootstrap-typecode object)
+        (cond ((consp type)
+               (let* ((signed (eq (car type) 'signed-byte)) (bits (second type))
+                      (low (if signed (max -536870912 (- (ash 1 (1- bits)))) 0))
+                      (high (min 536870911 (1- (ash 1 (- bits (if signed 1 0)))))))
+                 (b-wat "(if (result i32) (i32.eqz (local.get ~a))
+                           (then (i32.and (i32.ge_s ~a (i32.const ~d))
+                                          (i32.le_s ~a (i32.const ~d))))
+                           (else ~a))"
+                   code object (* 4 low) object (* 4 high)
+                   (if (<= bits (if signed 30 29)) "(i32.const 0)"
+                     (b-wat "(if (result i32) ~a (then ~a) (else (i32.const 0)))"
+                       (codes wasm32::subtag-bignum)
+                       (bootstrap-type-test object type))))))
+              (t (ecase type
+                   (fixnum (codes wasm32::tag-fixnum))
+                   (symbol (b-wat "(i32.or (i32.eq ~a (i32.const 77825)) ~a)"
+                                  object (codes wasm32::subtag-symbol)))
+                   (list (codes wasm32::tag-list))
+                   (simple-string (codes wasm32::subtag-simple-base-string))
+                   (simple-vector (codes wasm32::subtag-simple-vector))
+                   (character (b-wat "(i32.eq (i32.and ~a (i32.const 255)) (i32.const 75))" object))
+                   (integer (codes wasm32::tag-fixnum wasm32::subtag-bignum))
+                   (real (codes wasm32::tag-fixnum wasm32::subtag-bignum wasm32::subtag-ratio
+                                wasm32::subtag-single-float wasm32::subtag-double-float))
+                   (number (codes wasm32::tag-fixnum wasm32::subtag-bignum wasm32::subtag-ratio
+                                  wasm32::subtag-single-float wasm32::subtag-double-float
+                                  wasm32::subtag-complex wasm32::subtag-complex-single-float
+                                  wasm32::subtag-complex-double-float)))))))))
 
 (defun bootstrap-type-call (name forms)
   (when (and (member (length forms) '(2 3))
@@ -5747,7 +5979,8 @@
 
 ;;; The owner supplies native class cells, not ancestry bits. The vector and
 ;;; cells are image roots; their class objects and CPLs may move. Resolve a
-;;; cell afresh at each test, then call CCL's ordinary class predicate.
+;;; cell afresh at each test. Use CLASS-TYPEP's CPL membership operation
+;;; directly: its public wrapper is loaded after CLOS bootstraps itself.
 (defun bootstrap-condition-class-p (type)
   (and (symbolp type) (find-class type nil) (subtypep type 'condition)))
 
@@ -5758,12 +5991,21 @@
 
 (defun bootstrap-condition-typep (object type)
   (setq *b-condition-used* t)
-  (bootstrap-true-p
-    (bootstrap-predicate-call 'ccl::class-typep
-      (list (make-b-raw-code :text object)
-            (make-b-raw-code :text
-              (bootstrap-predicate-call 'find-class
-                (list (make-b-raw-code :text type))))))))
+  ;; OBJECT may refer to the current result buffer. Save both inputs before
+  ;; FIND-CLASS reuses that buffer or any of the following calls collects.
+  (bootstrap-operands
+   (list (make-b-raw-code :text object) (make-b-raw-code :text type))
+   (lambda (values)
+     (bootstrap-true-p
+      (bootstrap-predicate-call 'ccl::memq
+       (list (make-b-raw-code :text
+               (bootstrap-predicate-call 'find-class
+                 (list (make-b-raw-code :text (second values)))))
+             (make-b-raw-code :text
+               (bootstrap-predicate-call 'ccl::%inited-class-cpl
+                 (list (make-b-raw-code :text
+                         (bootstrap-predicate-call 'class-of
+                           (list (make-b-raw-code :text (first values))))))))))))))
 
 (defun bootstrap-condition-class-runtime () "")
 
@@ -6123,7 +6365,7 @@
   ;; TABLE contains distinct imported values (symbols and the fixed type
   ;; specifier above). Wires refer to it by index so the loader can keep the
   ;; code record in scratch while all imported values live in the image.
-  (list 4 (getf module :name)
+  (list (if *wasm32-rooted-imports* 5 4) (getf module :name)
         (wasm32-record-arity (svref (getf module :pool) 0) table)
         (getf module :captures)
         (getf module :wat)
@@ -6141,12 +6383,23 @@
               when (member symbol *wasm32-fasl-specials* :test #'eq)
               collect (position symbol table :test #'eq))))
 
+(defun wasm32-install-record (record)
+  ;; The bundle owns authenticated engine code. Its FASL carries only the
+  ;; relocation descriptor; parsing compiler WAT in Lisp serves no purpose.
+  (let ((descriptor (copy-list record)))
+    (setf (first descriptor) 6
+          (fifth descriptor) nil
+          (nth 8 descriptor) (mapcar #'wasm32-install-record (nth 8 record)))
+    descriptor))
+
 (defun wasm32-xfunction (module)
   (let* ((pool (getf module :pool)) (n (length pool))
          (table (make-array 8 :adjustable t :fill-pointer 0))
          (record (wasm32-code-record module table))
          (f (ccl::%alloc-misc (+ n 2) target::subtag-xfunction)))
-    (setf (ccl::uvref f 0) record
+    (setf (ccl::uvref f 0) (if *wasm32-rooted-imports*
+                           (wasm32-install-record record)
+                           record)
           (ccl::uvref f 1) (coerce table 'simple-vector))
     (dotimes (i n) (setf (ccl::uvref f (+ i 2)) (svref pool i)))
     ;; FASL-DEFUN installs a symbol's function cell.  As on native targets,
@@ -6160,7 +6413,7 @@
     ;; or xfunctions from another target. Ordinary FASL identity preserves
     ;; sharing between the definition and this pool reference.
     (push f *wasm32-fasl-functions*)
-    f))
+    (values f record (length table))))
 
 (defun wasm32-publish-function (afunc)
   (let* ((*module-name* (format nil "~a_~d" *wasm32-fasl-prefix* (length *wasm32-fasl-modules*)))
@@ -6173,10 +6426,15 @@
          (module (catch *module-result-tag*
                    (b-call-pass2 afunc)
                    (refuse :b-no-output))))
-    (push module *wasm32-fasl-modules*)
     ;; Pass 2 publishes through the AFUNC and returns it, as the native
     ;; passes do; COMPILE-NAMED-FUNCTION reads the lfun and warnings from it.
-    (setf (ccl::afunc-lfun afunc) (wasm32-xfunction module))
+    (multiple-value-bind (function record symbol-count) (wasm32-xfunction module)
+      ;; Preserve the exact record; reconstructing it after this compilation
+      ;; would lose the function's local-special indices.
+      (setf (ccl::afunc-lfun afunc) function
+            (getf module :fasl-code-record) record
+            (getf module :fasl-symbol-count) symbol-count))
+    (push module *wasm32-fasl-modules*)
     afunc))
 
 (defun wasm32-compile-file (source &rest options &key (target :wasm32) (save-source-locations nil) &allow-other-keys)
@@ -6195,7 +6453,7 @@
            (*b-special-names* '(ccl::%handlers% ccl::%restarts% *debugger-hook* ccl::*interrupt-level*))
            (*b-allocation-retry* t)
            (ccl::*nx-compile-time-compiler-macros* nil)
-           (ccl::*compiler-macros* (make-hash-table :test #'eq))
+           (ccl::*compiler-macros* (bootstrap-compiler-macros))
            (*macroexpand-hook* (bootstrap-macroexpand-hook))
            (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
        (multiple-value-bind (path warnings failure)

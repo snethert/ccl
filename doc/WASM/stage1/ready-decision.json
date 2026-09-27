@@ -11,7 +11,8 @@
     "conditions": "Class mode is mandatory for the READY profile. The legacy condition-mask path is excluded from Stage 1 READY acceptance; historical evidence remains valid in its original scope.",
     "concurrency": "One Lisp Worker, scheduler disabled. Multi-worker scheduling remains a later profile. POSIX and terminate-when-unreachable remain excluded.",
     "dispatch": "Uncached standard GF dispatch is admitted at READY without a timing claim. Dispatch caching follows READY.",
-    "sequencing": "The next runtime packets are S1-NAMESPACE-a (NSL-1), then the cross-load writer, target bundle loader and staged boot (NSL-2 to NSL-4) of namespace-loader-plan.md. No further projection growth for its own sake. LL03, LL22 and LL24 controls may execute independently. (Amended 2026-09-24; original text in amendments[0].)"
+    "sequencing": "The next runtime packets are S1-NAMESPACE-a (NSL-1), then the cross-load writer, target bundle loader and staged boot (NSL-2 to NSL-4) of namespace-loader-plan.md. No further projection growth for its own sake. LL03, LL22 and LL24 controls may execute independently. (Amended 2026-09-24; original text in amendments[0].)",
+    "startup_boundary": "Working host-backed stdout/stderr; startup-ccl runs in the initial process; interactive listener and in-image compiler follow READY."
   },
   "implementation_choices": {
     "replacement_cap": 25,
@@ -60,6 +61,30 @@
         "implementation_choices.projection_limits continues to govern the projected image while it remains in use as qualification scaffolding.",
         "The 25-replacement cap applies to target branches that replace a level-0/level-1 definition body under the boot path as it did under projection.",
         "No inventory criterion, accepted record or packet is changed by this amendment."
+      ]
+    },
+    {
+      "id": "STAGE1-READY-DECISION-A2",
+      "date": "2026-09-26",
+      "authorization": {
+        "speaker": "Steve",
+        "quote": "Use that READY boundary",
+        "question": "For the READY profile, I recommend working host-backed stdout/stderr, running startup-ccl in the initial process, and deferring the interactive listener and in-image compiler until after READY. Does that match your intended boundary?"
+      },
+      "changed": [
+        "decisions.startup_boundary"
+      ],
+      "unchanged": [
+        "decisions.coverage",
+        "decisions.conditions",
+        "decisions.concurrency",
+        "decisions.dispatch"
+      ],
+      "notes": [
+        "This is a profile ruling, not evidence that READY has executed.",
+        "Host-backed output must support ordinary stream operations and flushing.",
+        "The initial process runs startup-ccl without creating a listener thread.",
+        "Interactive listener and in-image EVAL/COMPILE/COMPILE-FILE are deferred until after READY."
       ]
     }
   ]

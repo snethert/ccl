@@ -357,6 +357,10 @@
 (cl:defconstant xmacptr.type 6)
 (cl:defconstant xmacptr.type.raw-offset 12)
 ;;; FASL data operations are inherited; wasm32 functions use opcode 72.
+;;; Common reader/printer names for the D1 layouts above.
+(cl:defconstant value-cell.value-cell 0)
+(cl:defconstant xmacptr.element-count 5)
+(cl:defconstant array-total-size-limit (cl:expt 2 (cl:- nbits-in-word num-subtag-bits)))
 (cl:defconstant fasl-version #x80)
 (cl:defconstant fasl-min-version #x80)
 (cl:defconstant fasl-max-version #x80)

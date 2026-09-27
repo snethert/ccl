@@ -127,9 +127,10 @@ def finish(out,entry,allmods,new):
       '-Wl,--global-base=1048576','-Wl,-z,stack-size=65536','-Wl,--export=collect','-Wl,--export=__stack_pointer',
       target/'runtime/collector.c','-o',target/'collector.wasm'],out/'collector.log')
     for name in ('client.mjs','protocol.mjs','host.mjs'):
-        shutil.copyfile(HERE.parent/'namespace-primitives'/name,target/name)
+        shutil.copyfile(c.ROOT/'runtime/wasm32'/('file-'+name),target/('file-'+name))
+        (target/name).write_text("export * from './file-" + name + "';\n")
     c.command([c.WABT,HERE.parent/'namespace-primitives/adapter.wat','--enable-all','-o',target/'file-adapter.wasm'],out/'adapter.log')
-    shutil.copyfile(HERE.parent/'namespace/namespace.mjs',target/'runtime/namespace.mjs')
+    shutil.copyfile(c.ROOT/'runtime/wasm32/namespace.mjs',target/'runtime/namespace.mjs')
     shutil.copyfile(HERE.parent/'ready/bindings.json',target/'ready-bindings.json')
     import symbols
     (target/'runtime/symbols.c').write_text(symbols.source())

@@ -1,5 +1,16 @@
 # Bootstrap throughput directive (BOOT-TP-P2)
 
+## Loader direction — user correction, 26 September 2026
+
+The [loader course correction](loader-course-correction.md) restores NSL-P2's
+boundary: cross-load level-0 into the boot image, execute its real bootstrap,
+then target-load level-1 in native runtime order. BT-20 records whole-file
+events; it does not make level-1 host cross-loading the implementation goal.
+Keep the observed 36/36/0 and distinguish its 21 level-0 / 15 level-1 split.
+Next work is target code installation and boot0, followed by target level-1
+loading. Host level-1 compilation remains required; further cold-evaluator
+extensions solely to cross-load level-1 do not advance the adopted method.
+
 ## Current workflow — user decision, 26 September 2026
 
 The user rescinded the requirement to make changes in isolated packets:

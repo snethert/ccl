@@ -57,7 +57,7 @@ def run(out, reuse=False):
     c.command([c.WABT,*c.FLAGS,HERE/'adapter.wat','-o',out/'adapter.wasm'],out/'adapter.log')
     runtime_seconds=time.monotonic()-runtime_start
     (out/'runtime').mkdir(exist_ok=True)
-    shutil.copyfile(HERE.parent/'namespace/namespace.mjs',out/'runtime/namespace.mjs')
+    shutil.copyfile(c.ROOT/'runtime/wasm32/namespace.mjs',out/'runtime/namespace.mjs')
     for name in ('sha256.mjs','bytes.mjs'):shutil.copyfile(c.ROOT/'runtime/wasm32'/name,out/'runtime'/name)
     c.command([c.NODE,HERE.parent/'namespace/prepare.mjs',out],out/'prepare.log')
     c.command([c.NODE,'--input-type=module','-e',

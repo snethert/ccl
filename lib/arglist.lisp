@@ -190,6 +190,9 @@
           (values (nreverse res) t))
         (values nil (zerop ncells))))))
 
+;; Native instruction PCs and argument-check traps belong to the native
+;; backtrace interface. Wasm's callable metadata has no native PC range.
+#-wasm32-target
 (defun arg-names-from-map (lfun pc)
   (when lfun
     (multiple-value-bind (nreq nopt restp nkeys allow-other-keys

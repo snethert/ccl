@@ -21,9 +21,16 @@ def module(name, path):
 
 def sources():
     names = set(c.read(c.ROOT / 'doc/WASM/stage1/integration-loader-gc.json')['source_identity'])
-    names.update(('level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp',
+    names.update(('level-1/level-1.lisp', 'level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp',
+                  'level-1/WASM32/w32-streams.lisp',
+                  'lib/level-2.lisp', 'lib/prepare-mcl-environment.lisp', 'lib/arglist.lisp',
                   'level-1/l1-numbers.lisp', 'level-1/l1-aprims.lisp', 'level-0/l0-numbers.lisp',
-                  'level-1/l1-clos-boot.lisp', 'level-1/l1-dcode.lisp'))
+                  'level-1/l1-clos-boot.lisp', 'level-1/l1-dcode.lisp', 'level-1/l1-typesys.lisp',
+                  'level-1/l1-application.lisp', 'level-1/l1-processes.lisp',
+                  'level-1/l1-readloop.lisp', 'level-1/l1-readloop-lds.lisp',
+                  'level-1/l1-events.lisp', 'level-1/l1-error-system.lisp',
+                  'level-1/l1-sysio.lisp', 'level-1/l1-pathnames.lisp',
+                  'level-1/l1-boot-3.lisp', 'level-1/l1-error-signal.lisp'))
     return {name: (c.ROOT / name).read_text() for name in sorted(names)}
 
 

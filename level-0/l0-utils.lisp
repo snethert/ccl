@@ -58,8 +58,17 @@
 ;;; We MAY need a scheme for finding all of the areas in a lisp library.
 #+wasm32-target
 (defun %map-areas (function &optional area)
-  (declare (ignore function area))
-  (error "Heap enumeration requires a Wasm collector-owner service."))
+  (let* ((areas (cond ((or (null area) (eq area t)) 3)
+                      (t (let ((mask 0))
+                           (dolist (name (if (consp area) area (list area)) mask)
+                             (let ((code (heap-area-code name)))
+                               (when (= code area-dynamic) (setq mask (logior mask 1)))
+                               (when (or (= code area-static) (= code area-readonly)
+                                         (= code area-managed-static))
+                                 (setq mask (logior mask 2)))))))))
+         (objects (%wasm-heap-snapshot areas)))
+    (dotimes (i (length objects))
+      (funcall function (svref objects i)))))
 
 #-wasm32-target
 (defun %map-areas (function &optional area)

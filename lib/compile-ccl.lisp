@@ -270,7 +270,9 @@
 
 
 (defun target-level-1-modules (&optional (target (backend-name *host-backend*)))
-  (append *level-1-modules*
+  (append (if (eq target :wasm32)
+            (remove 'l1-sockets (substitute 'w32-files 'linux-files *level-1-modules*))
+            *level-1-modules*)
 	  (case target
 	    ((:linuxppc32 :darwinppc32 :linuxppc64 :darwinppc64)
 	     '(ppc-error-signal ppc-trap-support

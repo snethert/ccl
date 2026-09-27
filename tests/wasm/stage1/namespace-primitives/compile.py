@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE.parent/'bootstrap-validation'))
 import common as c
 def run(out):
     sources = ['compiler/WASM32/wasm32-backend.lisp', 'compiler/WASM32/wasm32-arch.lisp',
-               'lib/systems.lisp','lib/compile-ccl.lisp','xdump/xwasm32-fasload.lisp']
+               'lib/systems.lisp','lib/compile-ccl.lisp','xdump/faslenv.lisp','xdump/xfasload.lisp','xdump/xwasm32-fasload.lisp']
     out.mkdir(parents=True, exist_ok=True)
     # Exporters create new files: never mix a failed compile with its successor.
     for path in out.glob('*.json'):path.unlink()
@@ -30,7 +30,7 @@ def run(out):
             path=source/name;path.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(c.ROOT/name,path)
         env['CCL_DEFAULT_DIRECTORY']=str(source)+'/'
         argv=[kernel,'-I',c.IMAGE,'--no-init','--batch','--eval',
-              '(ccl::in-development-mode (load "ccl:lib;systems.lisp") (load "ccl:lib;compile-ccl.lisp"))',
+              '(ccl::in-development-mode (load "ccl:lib;systems.lisp") (load "ccl:lib;compile-ccl.lisp") (load "ccl:xdump;faslenv.lisp"))',
               '--load',HERE.parent/'registration/load.lisp',
               '--load',HERE.parent/'constants/export.lisp',
               '--load',HERE.parent/'bootstrap-values/extra.lisp',

@@ -26,7 +26,7 @@ def execution_inputs():
     paths = [p for p in c.files(HERE) if p.suffix in ('.py', '.mjs', '.lisp')]
     for directory in ('integrated-runtime', 'runtime-boundary'):
         paths += c.files(c.ROOT / 'tests/wasm/stage0' / directory)
-    paths += [c.ROOT / 'runtime/wasm32' / name for name in ('sha256.mjs', 'bytes.mjs')]
+    paths += [c.ROOT / 'runtime/wasm32' / name for name in ('namespace.mjs', 'sha256.mjs', 'bytes.mjs')]
     paths += [HERE.parent / 'bootstrap-validation' / name for name in ('common.py', 'storage.py')]
     return {str(p.relative_to(c.ROOT)): c.sha(p) for p in sorted(set(paths))}
 
@@ -38,7 +38,7 @@ def run(out):
     times = {}
     inputs = execution_inputs()
     (out / 'runtime').mkdir(exist_ok=True)
-    shutil.copyfile(HERE / 'namespace.mjs', out / 'runtime/namespace.mjs')
+    shutil.copyfile(c.ROOT / 'runtime/wasm32/namespace.mjs', out / 'runtime/namespace.mjs')
     for name in ('sha256.mjs', 'bytes.mjs'):
         shutil.copyfile(c.ROOT / 'runtime/wasm32' / name, out / 'runtime' / name)
     c.command([c.NODE, HERE / 'prepare.mjs', out], out / 'prepare.log')
@@ -67,7 +67,7 @@ def run(out):
             controls=len(record['checks']), faults=len(faults), mailbox_cases=len(c.read(out / 'mailbox.json')['rows']),
             foreign_types=c.read(out / 'foreign-types.json'), namespace_identity=record['identity'],
             times=times, kernel=c.sha(c.KERNEL), image=c.sha(c.IMAGE), node=c.sha(c.NODE),
-            implementation=c.sha(HERE / 'namespace.mjs'), generated_lisp=False,
+            implementation=c.sha(c.ROOT / 'runtime/wasm32/namespace.mjs'), generated_lisp=False,
             slot_credit=False, files_loaded_on_target=0))
     kernel.unlink()
     return c.read(out / 'summary.json')

@@ -335,6 +335,16 @@
 ;;;Don't use DEFUN since it should be illegal to DEFUN compiler special forms...
 ;;;Of course, these aren't special forms.
 (macrolet ((%eval-redef (name vars &rest body)
+             ;; Exclude native pointer entrypoints without changing native
+             ;; macro-call source notes or grouping their initialization code.
+             #+wasm32-target
+             (when (memq name '(%get-fixnum %get-ptr %int-to-ptr %ptr-to-int
+                               %ptr-eql %setf-macptr %null-ptr-p %set-ptr %inc-ptr
+                               %reference-external-entry-point %get-bit %set-bit
+                               %get-double-float %get-single-float
+                               %set-double-float %set-single-float
+                               %fixnum-ref-double-float %fixnum-set-double-float))
+               (return-from %eval-redef nil))
              (when (null body) (setq body `((,name ,@vars))))
              `(setf (symbol-function ',name)
                     (qlfun ,name ,vars ,@body))))
@@ -442,6 +452,7 @@
   
   (%eval-redef %get-bit (ptr offset))
   (%eval-redef %set-bit (ptr offset val))
+  ;; Native floating-point pointer access is outside the Wasm FFI profile.
   (%eval-redef %get-double-float (ptr &optional (offset 0))
 	       (%get-double-float ptr offset))
   (%eval-redef %get-single-float (ptr &optional (offset 0))
@@ -471,6 +482,7 @@
 ;;; I'd guess that the majority of bitfields in the world whose width is
 ;;; greater than 1 have a width of two.  If that's true, this is probably
 ;;; faster than trying to be more clever about it would be.
+#-wasm32-target
 (defun %get-bitfield (ptr start-bit width)
   (declare (fixnum start-bit width))
   (do* ((bit #+big-endian-target start-bit
@@ -483,6 +495,7 @@
     (declare (fixnum val i bit))
     (setq val (logior (ash val 1) (%get-bit ptr bit)))))
 
+#-wasm32-target
 (defun %set-bitfield (ptr start width val)
   (declare (fixnum val start width))
   (do* ((v val (ash v -1))
@@ -518,4 +531,3 @@
 
 
 ;; end of level-2.lisp
-

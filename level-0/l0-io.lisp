@@ -328,10 +328,7 @@
 
 #+wasm32-target
 (defun %string-to-stderr (str)
-  (let* ((size (utf-8-octets-in-string str 0 (length str)))
-         (buffer (make-array size :element-type '(unsigned-byte 8))))
-    (utf-8-memory-encode str buffer 0 0 (length str))
-    (fd-write 2 buffer size)))
+  (%wasm-host-write-string str))
 
 #-wasm32-target
 (defun %string-to-stderr (str)
@@ -366,7 +363,6 @@
         (ff-call 
          (%kernel-import target::kernel-import-free)
          :address addr :void)))))
-
 
 
 

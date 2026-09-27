@@ -6,6 +6,7 @@ from unit import HERE,ROOT,U1,Unit,proposal,sha,save
 from fasl import compare_compiler,compare_systems
 OBSERVER=ROOT/'tests/wasm/native-census/observer.lisp'
 TEST_DRIVER=ROOT/'tests/wasm/native-baseline/tests.lisp'
+SYSTEM_ADDITIONS={'CCL::WASM32-ARCH','CCL::WASM32-BACKEND','CCL::XWASM32FASLOAD'}
 
 def run(inputs,kernel,work,out,baseline_from=None):
     if (platform.system(),platform.machine())!=('Darwin','x86_64'):raise ValueError('macOS x86-64 required')
@@ -85,7 +86,7 @@ def run(inputs,kernel,work,out,baseline_from=None):
             after=snapshot('registered-snapshot',True)
             for key in ('native','architectures','targets'):
                 if before[key]!=after[key]:raise ValueError('R6a/native state differs: '+key)
-            added={'CCL::WASM32-ARCH','CCL::WASM32-BACKEND','CCL::XWASM32FASLOAD'}
+            added=set(SYSTEM_ADDITIONS)
             if [r for r in after['modules'] if r['name'] not in added]!=before['modules']:raise ValueError('existing system entries differ')
             if {r['name'] for r in after['modules']}-{r['name'] for r in before['modules']}!=added:raise ValueError('added system entries differ')
             old={r['name']:r for r in before['shared_functions']};new={r['name']:r for r in after['shared_functions']}

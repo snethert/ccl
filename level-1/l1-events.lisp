@@ -35,6 +35,8 @@
     (when (eq name (ptask.name task))
       (return task))))
 
+;; The single-Worker Wasm profile has no periodic-task scheduler.
+#-wasm32-target
 (defun %install-periodic-task (name function interval &optional 
                                     (flags 0)
                                     (privatedata (%null-ptr)))
@@ -128,9 +130,11 @@
         (funcall *quit-interrupt-hook* signum))))
   ;; Exit by resignalling, as per http://www.cons.org/cracauer/sigint.html
   (quit #'(lambda ()
+            #-wasm32-target
             (ff-call (%kernel-import target::kernel-import-lisp-sigexit) :signed signum)
             ;; Shouldn't get here
-            (#__exit 143))))
+            #-wasm32-target (#__exit 143)
+            #+wasm32-target (%wasm-process-request 3 (+ 128 signum) nil))))
 
 (defstatic *running-periodic-tasks* nil)
 
@@ -163,6 +167,7 @@
 (defconstant $user-interrupt-break 1)
 (defconstant $user-interrupt-quit 2)
 
+#-wasm32-target
 (defun housekeeping ()
   (progn
     (handle-gc-hooks)
@@ -201,6 +206,7 @@
                   (maybe-run-periodic-task task))))))))))
 
 
+#-wasm32-target
 (defun %remove-periodic-task (name)
   (with-lock-grabbed (*periodic-task-lock*)
     (let ((task (find-named-periodic-task name)))
@@ -237,6 +243,7 @@
     (setq *auto-flush-streams* (delete s *auto-flush-streams*))))
 
 ; Is it really necessary to keep this guy in a special variable ?
+#-wasm32-target
 (defloadvar *event-dispatch-task* 
   (%install-periodic-task 
    'auto-flush-interactive-streams
@@ -245,10 +252,12 @@
    (+ $ptask_draw-flag $ptask_event-dispatch-flag)))
 
 
+#-wasm32-target
 (defun event-ticks ()
   (let ((task *event-dispatch-task*))
     (when task (ptaskstate.interval (ptask.state task)))))
 
+#-wasm32-target
 (defun set-event-ticks (n)
   (setq n (require-type n '(integer 0 32767)))   ;  Why this weird limit ?
   (let ((task *event-dispatch-task*))
@@ -264,4 +273,3 @@
 
 
 ; end of L1-events.lisp
-

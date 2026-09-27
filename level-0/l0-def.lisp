@@ -44,9 +44,6 @@
 
 
 (defun function-name (fun)
-  #+wasm32-target
-  (when (typep fun 'standard-generic-function)
-    (return-from function-name (%gf-name fun)))
   (or (and (functionp fun) (lfun-name fun))
       (if (compiled-function-p (setq fun (closure-function fun)))
         (lfun-name fun))))
@@ -176,16 +173,19 @@
 
 #+wasm32-target
 (defun lfun-vector-name (fun &optional (new-name nil set-name-p))
-  (if (typep fun 'standard-generic-function)
-    (if set-name-p (%gf-name fun new-name) (%gf-name fun))
-    (let ((old (if *wasm-function-vector-names*
-                 (gethash fun *wasm-function-vector-names* (%wasm-function-name fun))
-                 (%wasm-function-name fun))))
-      (when set-name-p
-        (unless *wasm-function-vector-names*
-          (setq *wasm-function-vector-names* (make-hash-table :test 'eq :weak t :size 16)))
-        (puthash fun *wasm-function-vector-names* new-name))
-      old)))
+  (let ((bits (lfun-bits fun)))
+    (declare (fixnum bits))
+    (if (and (logbitp $lfbits-gfn-bit bits)
+             (not (logbitp $lfbits-method-bit bits)))
+      (if set-name-p (%gf-name fun new-name) (%gf-name fun))
+      (let ((old (if *wasm-function-vector-names*
+                   (gethash fun *wasm-function-vector-names* (%wasm-function-name fun))
+                   (%wasm-function-name fun))))
+        (when set-name-p
+          (unless *wasm-function-vector-names*
+            (setq *wasm-function-vector-names* (make-hash-table :test 'eq :weak t :size 16)))
+          (puthash fun *wasm-function-vector-names* new-name))
+        old))))
 
 #-wasm32-target
 (defun lfun-vector-name (fun &optional (new-name nil set-name-p))

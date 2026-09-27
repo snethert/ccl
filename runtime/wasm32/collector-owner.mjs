@@ -117,10 +117,68 @@ export class CollectorOwner {
   need(!this.#boundary&&!this.#busy,'nested boundary');need(typeof action==='function','boundary callback');
   this.#boundary=true;this.#scalarBoundary.value=1;try{const value=action(this);need(!(value&&typeof value.then==='function'),'synchronous boundary');return value;}finally{this.#boundary=false;this.#scalarBoundary.value=0;}
  }
+ rootCells(values){
+  this.#requireBoundary();
+  need(Array.isArray(values)&&values.every(integer),'root values');
+  const {slots:live}=this.#validate(),region=this.#region('external');
+  const used=new Set(this.#layout.groups.flatMap(g=>g.slots)),slots=[];
+  for(let p=region.start;p<region.end&&slots.length<values.length;p+=4)if(!used.has(p))slots.push(p);
+  const list=this.#region('root-list');
+  need(slots.length===values.length&&live.length+slots.length<=this.#layout.logCapacity&&
+       (live.length+slots.length)*4<=list.end-list.start,'root capacity');
+  const group=this.#layout.groups.find(g=>g.kind==='module-constants');
+  slots.forEach((p,i)=>this.#set(p,values[i]));group.slots.push(...slots);
+  let active=true;
+  return Object.freeze({slots:Object.freeze(slots),
+   values:()=>{need(active,'released roots');return slots.map(p=>this.#get(p));},
+   release:()=>{this.#requireBoundary();need(active,'released roots');
+    const removed=new Set(slots);group.slots=group.slots.filter(p=>!removed.has(p));
+    slots.forEach(p=>this.#set(p,NIL));active=false;}
+  });
+ }
+ heapSnapshot(mask){
+  this.#requireBoundary();need(integer(mask)&&mask<=3,'heap areas');
+  const inventory=()=>{
+   const active=this.#validateLive(),objects=[];
+   const regions=(mask&2?this.#layout.regions.filter(r=>r.role==='image'&&r.enumerable!==false):[]);
+   if(mask&1)regions.push({start:active.start,end:this.#t(48)});
+   for(const region of regions)for(let p=region.start;p<region.end;){
+    const h=this.#get(p),tag=h&255,n=h>>>8;let bytes=8,lowtag=1;
+    if(tag%8===2||tag%8===7){
+     lowtag=6;let raw;
+     if([10,26,42,50,58,66,74,82,90,98,106,114,122,130,234,242,250].includes(tag))raw=n*4;
+     else if([7,15,23,71,79,159,167,175,183,191].includes(tag))raw=n*4;
+     else if([199,207].includes(tag))raw=n;
+     else if([215,223].includes(tag))raw=n*2;
+     else if([231,239].includes(tag))raw=4+n*8;
+     else if(tag===247)raw=4+n*16;
+     else if(tag===255)raw=Math.ceil(n/8);
+     need(raw!==undefined,'heap snapshot kind');bytes=align(4+raw,8);
+    }
+    need(p+bytes<=region.end,'heap snapshot extent');objects.push(p+lowtag);p+=bytes;
+   }
+   return objects;
+  };
+  let objects=inventory();const reserved=align(4+4*objects.length,8);
+  this.ensure(reserved);objects=inventory();
+  const bytes=align(4+4*objects.length,8),base=this.#t(48);
+  need(bytes<=reserved&&base+bytes<=this.#t(52),'heap snapshot capacity');
+  this.#set(base,objects.length*256+250);
+  objects.forEach((word,i)=>this.#set(base+4+i*4,word));
+  if(bytes>4+objects.length*4)this.#set(base+bytes-4,0);
+  this.#set(this.#layout.tcr+48,base+bytes);return base+6;
+ }
  #requireBoundary(){need(this.#boundary&&!this.#busy,'legal owner boundary');}
  #copy(destination){
   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
+  // The collector reserves a worst-case object map and queue from the used
+  // heap extent, even when most of that extent is a single raw vector.
+  const workspace=96+(this.#t(48)-active.start)/8*20+this.#layout.logCapacity*12;
+  if(workspace>scratch.end-scratch.start){
+   const start=this.view.byteLength,end=start+align(Math.max(workspace,2*(scratch.end-scratch.start)),PAGE);
+   this.growMemory(end/PAGE);scratch.start=start;scratch.end=end;
+  }
   const count=this.collectionCount;need(count<536870911,'collection count exhausted');
   this.#busy=true;
   try{

@@ -223,6 +223,8 @@
     (fasload          "ccl:xdump;fasload"        ("ccl:xdump;fasload.lisp"))
     (loop             "ccl:library;loop"         ("ccl:library;loop.lisp"))
     (linux-files      "ccl:l1f;linux-files"      ("ccl:level-1;linux-files.lisp"))
+    (w32-files        "ccl:l1f;w32-files"        ("ccl:level-1;WASM32;w32-files.lisp"))
+    (w32-streams      "ccl:l1f;w32-streams"      ("ccl:level-1;WASM32;w32-streams.lisp"))
     (sockets          "ccl:library;sockets"      ("ccl:library;sockets.lisp"))
     (source-files     "ccl:bin;source-files"     ("ccl:lib;source-files.lisp"))
     (swink            "ccl:bin;swink"            ("ccl:lib;swink.lisp"))

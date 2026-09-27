@@ -149,20 +149,24 @@
                 nil))))
 
 (defun %error (condition args error-pointer)
+  #+wasm32-target (declare (ignore error-pointer))
   (setq *error-reentry-count* 0)
   (setq condition (condition-arg condition args 'simple-error))
   (signal condition)
+  #+wasm32-target (invoke-debugger condition)
+  #-wasm32-target
   (unless *interactive-streams-initialized*
     (bug (format nil "Error during early application initialization:~%
 ~a" condition))
     (#_exit #-windows-target #-android-target #+wasm32-target target::os-ex-software #-wasm32-target #$EX_SOFTWARE #+android-target 70 #+windows-target #$EXIT_FAILURE))
-  (application-error *application* condition error-pointer)
+  #-wasm32-target (application-error *application* condition error-pointer)
+  #-wasm32-target
   (application-error
    *application*
    (condition-arg "~s returned. It shouldn't.~%If it returns again, I'll throw to toplevel."
                   '(application-error) 'simple-error)
    error-pointer)
-  (toplevel))
+  #-wasm32-target (toplevel))
 
 (defun make-sequence-index-type-error (idx sequence)
   (let* ((upper (length sequence)))

@@ -704,7 +704,7 @@
 );#+ppc64-target
 
 
-#+x8632-target
+#+(or x8632-target wasm32-target)
 (progn
 (defparameter *nodeheader-types*
   #(bogus                               ; 0
@@ -780,24 +780,24 @@
 (defun %type-of (thing)
   (let* ((typecode (typecode thing)))
     (declare (fixnum typecode))
-    (if (= typecode x8632::tag-fixnum)
+    (if (= typecode target::tag-fixnum)
       'fixnum
-      (if (= typecode x8632::tag-list)	;a misnomer on x8632...
-	(if (= (fulltag thing) x8632::fulltag-cons)
+      (if (= typecode target::tag-list)	;a misnomer on x8632...
+	(if (= (fulltag thing) target::fulltag-cons)
 	  (if thing 'cons 'null)
 	  'tagged-return-address)
-        (if (= typecode x8632::tag-imm)
+        (if (= typecode target::tag-imm)
           (if (base-char-p thing)
             'base-char
             'immediate)
-	  (if (= typecode x8632::subtag-macptr)
+	  (if (= typecode target::subtag-macptr)
 	    (if (classp thing)
 	      (class-name thing)
 	      'macptr)
-	    (let* ((tag-type (logand typecode x8632::fulltagmask))
-		   (tag-val (ash typecode (- x8632::ntagbits))))
+	    (let* ((tag-type (logand typecode target::fulltagmask))
+		   (tag-val (ash typecode (- target::ntagbits))))
 	      (declare (fixnum tag-type tag-val))
-	      (if (/= tag-type x8632::fulltag-nodeheader)
+	      (if (/= tag-type target::fulltag-nodeheader)
 		(%svref *immheader-types* tag-val)
 		(let ((type (%svref *nodeheader-types* tag-val)))
 		  (if (eq type 'function)
@@ -819,7 +819,7 @@
                           'method-function          
                           'compiled-function)))
 		    (if (eq type 'lock)
-		      (or (uvref thing x8632::lock.kind-cell)
+		      (or (uvref thing target::lock.kind-cell)
 			  type)
 		      type)))))))))))
 

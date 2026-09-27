@@ -40,9 +40,15 @@
         (make-package "COMMON-LISP-USER" :use '("COMMON-LISP" "CCL") :NICKNAMES '("CL-USER")))
 )
 
-(set-periodic-task-interval .33)
-(setq cmain xcmain)
-(setq %err-disp %xerr-disp)
+;; These are native signal callbacks. Wasm uses its explicit error service
+;; and has no periodic-task scheduler in the single-Worker profile.
+;; Keep the outer lists so native source notes still delimit the three
+;; original initialization functions in the FASL.
+(#-wasm32-target set-periodic-task-interval #+wasm32-target progn
+ #-wasm32-target .33)
+(#-wasm32-target setq #+wasm32-target progn
+ #-wasm32-target cmain #-wasm32-target xcmain)
+(#-wasm32-target setq #+wasm32-target progn
+ #-wasm32-target %err-disp #-wasm32-target %xerr-disp)
 
 ;;;end of l1-boot-3.lisp
-

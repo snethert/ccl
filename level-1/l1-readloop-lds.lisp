@@ -346,7 +346,8 @@ commands but aren't")
                 (if (eq form eof-value)
                   (progn
                     (when (> (incf eof-count) *consecutive-eof-limit*)
-                      (#_ _exit 0))
+                      #-wasm32-target (#_ _exit 0)
+                      #+wasm32-target (%wasm-process-request 3 0 nil))
                     (if (and (not *batch-flag*)
                              (not *quit-on-eof*)
                              (stream-eof-transient-p input-stream))
@@ -489,7 +490,8 @@ commands but aren't")
     (write-line (lisp-implementation-version) *debug-io*)
     (force-output *debug-io*)
     (quit -1))
-  (#__exit -1))
+  #-wasm32-target (#__exit -1)
+  #+wasm32-target (%wasm-process-request 3 -1 nil))
 
 ;; Make these available to debugger hook
 (defvar *top-error-frame* nil)
@@ -550,6 +552,7 @@ commands but aren't")
           (t (format *error-output* "Break while interrupt-level less than zero; ignored.")))))
 
 
+#-wasm32-target
 (defun invoke-debugger (condition &aux (*top-error-frame* (%get-frame-ptr)))
   "Enter the debugger."
   (let ((c (require-type condition 'condition))
@@ -561,6 +564,14 @@ commands but aren't")
         (funcall hook c hook)))
     (%break-message msg c)
     (break-loop c)))
+
+#+wasm32-target
+(defun invoke-debugger (condition)
+  (let ((c (require-type condition 'condition)))
+    (when *debugger-hook*
+      (let ((hook *debugger-hook*) (*debugger-hook* nil))
+        (funcall hook c hook)))
+    (%wasm-process-request 4 c nil)))
 
 (defvar *show-condition-context* t
   "The type of conditions which should include the execution context as part of their error-output message.
@@ -664,7 +675,7 @@ commands but aren't")
 ;;; Each of these stack ranges defines the entire range of (control/value/temp)
 ;;; addresses; they can be used to addresses of stack-allocated objects
 ;;; for printing.
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun make-tsp-stack-range (tcr bt-info)
   (list (cons (%catch-tsp (bt.top-catch bt-info))
               (%fixnum-ref (%fixnum-ref tcr target::tcr.ts-area)
@@ -746,6 +757,7 @@ commands but aren't")
 
 
 (defvar %last-continue% nil)
+#-wasm32-target
 (defun break-loop (condition &optional (frame-pointer *top-error-frame*))
   "Never returns"
   (let* ((%handlers% (last %handlers%)) ; firewall

@@ -296,6 +296,7 @@
 	      "Unable to enable process ~s; have been trying for ~s seconds."
 	      p total-wait))))
 
+#-wasm32-target
 (defmethod process-tcr-enable ((process process) tcr)
   (when (and tcr (not (eql 0 tcr)))
     #+(and windows-target x8632-target)
@@ -434,6 +435,7 @@ a given process."
 	   (name (uvref s target::lock.name-cell)))
       (when name
 	(format stream "~s " name))
+      #-wasm32-target
       (if (typep val 'macptr)
         (format stream "[ptr @ #x~x]"
                 (%ptr-to-int val))))))
@@ -611,7 +613,8 @@ some point in the near future, and then return to what it was doing."
 
 (defmethod process-yield ((p process))
   #+windows-target (#_Sleep 0)
-  #-windows-target (#_sched_yield))
+  #-(or windows-target wasm32-target) (#_sched_yield)
+  #+wasm32-target (%nanosleep 0 1000000))
 
 
 (defun %process-reset (kill)
@@ -681,6 +684,7 @@ had invoked abort."
 (defun current-process-allocation-quantum ()
   (process-allocation-quantum *current-process*))
 
+#-wasm32-target
 (defun (setf current-process-allocation-quantum) (new)
   (if (valid-allocation-quantum-p new)
     (with-macptrs (tcrp)
@@ -757,4 +761,3 @@ had invoked abort."
 
 (defun call-in-initial-process (f)
   (call-in-process f *initial-process*))
-

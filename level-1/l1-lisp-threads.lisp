@@ -34,10 +34,13 @@
     #-windows-target
     (max 1000 (#_sysconf #$_SC_CLK_TCK)))
 
+#+wasm32-target
+(defloadvar *ticks-per-second* (%wasm-process-request 2 0 nil))
+
 (defloadvar *ns-per-tick*
     (floor 1000000000 *ticks-per-second*))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun %nanosleep (seconds nanoseconds)
   #+(and darwin-target 64-bit-target)
   (when (> seconds #x3fffffff)          ;over 30 years in seconds
@@ -66,17 +69,26 @@
               (return))))))))
 
 
+#+wasm32-target
+(defun %nanosleep (seconds nanoseconds)
+  ;; The Worker owns a monotonic clock and a synchronous wait capability.
+  (%wasm-process-request 1 seconds (ceiling nanoseconds 1000))
+  nil)
+
+#-wasm32-target
 (defun timeval->ticks (tv)
   (+ (* *ticks-per-second* (pref tv :timeval.tv_sec))
      (round (pref tv :timeval.tv_usec) (floor 1000000 *ticks-per-second*))))
 
 
+#-wasm32-target
 (defun gettimeofday (ptimeval &optional ptz)
   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-gettimeofday)
                     :address ptimeval
                     :address (or ptz (%null-ptr))
                     :int))
 
+#-wasm32-target
 (defloadvar *lisp-start-timeval*
     (progn
       (let* ((r (make-record :timeval)))
@@ -87,6 +99,7 @@
 (defloadvar *internal-real-time-session-seconds* nil)
 
 
+#-wasm32-target
 (defun get-internal-real-time ()
   "Return the real time in the internal time format. (See
   INTERNAL-TIME-UNITS-PER-SECOND.) This is useful for finding elapsed time."
@@ -106,6 +119,13 @@
           (setq *internal-real-time-session-seconds*
                 (pref tv :timeval.tv_sec))
           units)))))
+
+#+wasm32-target
+(defun get-internal-real-time ()
+  (let ((time (vector 0 0)))
+    (%wasm-process-request 0 time nil)
+    (+ (* (svref time 0) internal-time-units-per-second)
+       (floor (* (svref time 1) internal-time-units-per-second) 1000000))))
 
 (defun get-tick-count ()
   (values (floor (get-internal-real-time)
@@ -138,11 +158,13 @@
 
 
 ; The number of bytes in a consing (or stack) area
+#-wasm32-target
 (defun %area-size (area)
   (ash (- (%fixnum-ref area target::area.high)
           (%fixnum-ref area target::area.low))
        target::fixnumshift))
 
+#-wasm32-target
 (defun %stack-area-usable-size (area)
   (ash (- (%fixnum-ref area target::area.high)
 	  (%fixnum-ref area target::area.softlimit))
@@ -188,6 +210,7 @@
         (apply (car initial-function) (cdr initial-function))
 	(cleanup-thread-tcr thread tcr))))
 
+#-wasm32-target
 (defun init-thread-from-tcr (tcr thread)
   (let* ((cs-area nil)
          (vs-area (%fixnum-ref tcr (- target::tcr.vs-area target::tcr-bias)))
@@ -217,7 +240,20 @@
   (thread-change-state thread :exit :reset)
   thread)
 
+#+wasm32-target
+(defun init-thread-from-tcr (tcr thread)
+  (unless (eql tcr (%current-tcr))
+    (error "The TCR is not owned by this Wasm instance."))
+  (setf (lisp-thread.tcr thread) tcr
+        (lisp-thread.cs-size thread) 0
+        (lisp-thread.vs-size thread) (%wasm-area-size 5)
+        (lisp-thread.ts-size thread) 0)
+  thread)
+
 (defun default-allocation-quantum ()
+  ;; The single Worker allocates in Wasm pages; no kernel thread quantum exists.
+  #+wasm32-target (%wasm-process-request 2 1 nil)
+  #-wasm32-target
   (ash 1 (%get-kernel-global 'default-allocation-quantum)))
 
 (defun new-lisp-thread-from-tcr (tcr name)
@@ -261,7 +297,8 @@
 
 
 (def-ccl-pointers listener-stack-sizes ()
-  (let* ((size (%get-kernel-global 'stack-size))) ; set by --thread-stack-size
+  (let* ((size #-wasm32-target (%get-kernel-global 'stack-size)
+               #+wasm32-target (%wasm-process-request 2 3 nil)))
     (declare (fixnum size))
     (when (> size 0)
       (setq *initial-listener-default-control-stack-size* size
@@ -275,10 +312,12 @@
      ,@body))
 
 
+#-wasm32-target
 (defun gc-area.return-sp (area)
   (%fixnum-ref area target::area.gc-count))
 
 
+#-wasm32-target
 (defun (setf gc-area.return-sp) (return-sp area)
   (setf (%fixnum-ref area target::area.gc-count) return-sp))
 
@@ -287,6 +326,7 @@
 (defun shutdown-lisp-threads ()
   )
 
+#-wasm32-target
 (defun %current-xp ()
   (let ((xframe (%fixnum-ref (%current-tcr) (- target::tcr.xframe
 					       target::tcr-bias))))
@@ -295,6 +335,7 @@
     (%fixnum-ref xframe
                  (get-field-offset :xframe-list.this))))
 
+#-wasm32-target
 (defun new-tcr (cs-size vs-size ts-size)
   (let* ((tcr (macptr->fixnum
                (ff-call
@@ -310,6 +351,11 @@
     (if (zerop tcr)
       (error "Can't create thread")
       tcr)))
+
+#+wasm32-target
+(defun new-tcr (cs-size vs-size ts-size)
+  (declare (ignore cs-size vs-size ts-size))
+  (error "This Wasm instance owns one Lisp thread."))
 
 (defun new-thread (name cstack-size vstack-size tstack-size)
   (new-lisp-thread-from-tcr (new-tcr cstack-size vstack-size tstack-size) name))
@@ -334,11 +380,13 @@
 
 
 
+#-wasm32-target
 (defun tcr-flags (tcr)
   (%fixnum-ref tcr (- target::tcr.flags target::tcr-bias)))
 
 
 
+#-wasm32-target
 (defun %tcr-frame-ptr (tcr)
   (with-macptrs (p)
     (%setf-macptr-to-object p tcr)
@@ -346,6 +394,11 @@
      (ff-call (%kernel-import target::kernel-import-tcr-frame-ptr)
               :address p
               :address))))
+
+#+wasm32-target
+(defun %tcr-frame-ptr (tcr)
+  (declare (ignore tcr))
+  (error "Wasm engine frames do not have native frame pointers."))
  
 (defun thread-exhausted-p (thread)
   (or (null thread)
@@ -355,6 +408,7 @@
   (unless (thread-exhausted-p thread)
     nil))
 
+#-wasm32-target
 (defun %tcr-interrupt (tcr)
   ;; The other thread's interrupt-pending flag might get cleared
   ;; right after we look and see it set, but since this is called
@@ -414,6 +468,7 @@
   (setf (lisp-thread.initial-function.args thread)
 	(cons function args)))
 
+#-wasm32-target
 (defun thread-enable (thread termination-semaphore allocation-quantum &optional (timeout (* 60 60 24)))
   (let* ((tcr (or (lisp-thread.tcr thread) (new-tcr-for-thread thread))))
     (with-macptrs (s)
@@ -430,6 +485,7 @@
         thread))))
 			      
 
+#-wasm32-target
 (defun cleanup-thread-tcr (thread tcr)
   (let* ((flags (%fixnum-ref tcr (- target::tcr.flags
 				    target::tcr-bias))))
@@ -450,6 +506,7 @@
 
 ;;; This returns the underlying pthread, whatever that is, as an
 ;;; unsigned integer.
+#-wasm32-target
 (defun lisp-thread-os-thread (thread)
   (with-macptrs (tcrp)
     (%setf-macptr-to-object tcrp (lisp-thread.tcr thread))
@@ -500,6 +557,7 @@
 ;;; This should probably be retired; even if it does something
 ;;; interesting, is the value it returns useful ?
 
+#-wasm32-target
 (defun lisp-thread-native-thread (thread)
   (with-macptrs (tcrp)
     (%setf-macptr-to-object tcrp (lisp-thread.tcr thread))
@@ -511,6 +569,7 @@
       (#+32-bit-target %get-unsigned-long
        #+64-bit-target %%get-unsigned-longlong tcrp target::tcr.native-thread-id))))
 
+#-wasm32-target
 (defun lisp-thread-suspend-count (thread)
   (with-lock-grabbed ((lisp-thread.state-change-lock thread))
     (let* ((tcr (lisp-thread.tcr thread)))
@@ -525,12 +584,14 @@
           (#+32-bit-target %get-unsigned-long
                              #+64-bit-target %%get-unsigned-longlong tcrp target::tcr.suspend-count))))))
 
+#-wasm32-target
 (defun tcr-clear-preset-state (tcr)
   (let* ((flags (%fixnum-ref tcr (- target::tcr.flags target::tcr-bias))))
     (declare (fixnum flags))
     (setf (%fixnum-ref tcr (- target::tcr.flags target::tcr-bias))
 	  (bitclr arch::tcr-flag-bit-awaiting-preset flags))))
 
+#-wasm32-target
 (defun tcr-set-preset-state (tcr)
   (let* ((flags (%fixnum-ref tcr (- target::tcr.flags target::tcr-bias))))
     (declare (fixnum flags))
@@ -538,6 +599,7 @@
 	  (bitset arch::tcr-flag-bit-awaiting-preset flags))))  
 
 ;;; This doesn't quite activate the thread; see PROCESS-TCR-ENABLE.
+#-wasm32-target
 (defun %activate-tcr (tcr termination-semaphore allocation-quantum)
   (declare (ignore termination-semaphore))
   (if (and tcr (not (eql 0 tcr)))
@@ -556,6 +618,7 @@
   '(*canonical-error-value*))
 
 
+#-wasm32-target
 (defun symbol-value-in-tcr (sym tcr)
   (if (eq tcr (%current-tcr))
     (%sym-value sym)
@@ -568,6 +631,7 @@
                (%sym-global-value sym))))
       (%resume-tcr tcr))))
 
+#-wasm32-target
 (defun (setf symbol-value-in-tcr) (value sym tcr)
   (if (eq tcr (%current-tcr))
     (%set-sym-value sym value)
@@ -582,6 +646,18 @@
 
 ;;; Backtrace support
 ;;;
+
+#+wasm32-target
+(defun symbol-value-in-tcr (sym tcr)
+  (unless (eql tcr (%current-tcr))
+    (error "The TCR is not owned by this Wasm instance."))
+  (%sym-value sym))
+
+#+wasm32-target
+(defun (setf symbol-value-in-tcr) (value sym tcr)
+  (unless (eql tcr (%current-tcr))
+    (error "The TCR is not owned by this Wasm instance."))
+  (%set-sym-value sym value))
 
 
 
@@ -601,6 +677,7 @@
 
 
 
+#-wasm32-target
 (defun map-db-links (f)
   (without-interrupts
    (let ((db-link (%current-db-link)))
@@ -609,9 +686,11 @@
        (funcall f db-link (%fixnum-ref db-link (* 1 target::node-size)) (%fixnum-ref db-link (* 2 target::node-size)))
        (setq db-link (%fixnum-ref db-link))))))
 
+#-wasm32-target
 (defun %get-frame-ptr ()
   (%current-frame-ptr))
 
+#-wasm32-target
 (defun %current-exception-frame ()
   #+ppc-target *fake-stack-frames*
   #+x86-target (or (let* ((xcf (%current-xcf)))
@@ -625,6 +704,7 @@
 
 
 
+#-wasm32-target
 (defun next-catch (catch)
   (let ((next-catch (uvref catch target::catch-frame.link-cell)))
     (unless (eql next-catch 0) next-catch)))
@@ -633,6 +713,7 @@
 
 
 ; @@@ this needs to load early so errors can work
+#-wasm32-target
 (defun next-lisp-frame (p context)
   (let ((frame p))
     (loop
@@ -644,6 +725,7 @@
               (return nil))))
         (setq frame parent)))))
 
+#-wasm32-target
 (defun parent-frame (p context)
   (loop
     (let ((parent (next-lisp-frame p context)))
@@ -656,6 +738,7 @@
 
 
 
+#-wasm32-target
 (defun last-frame-ptr (&optional context origin)
   (let* ((current (or origin
                       (if context (bt.current context) (%current-frame-ptr))))
@@ -668,6 +751,7 @@
 
 
 
+#-wasm32-target
 (defun child-frame (p context )
   (let* ((current (if context (bt.current context) (%current-frame-ptr)))
          (last nil))
@@ -683,11 +767,13 @@
 
 
 ; This returns the current head of the db-link chain.
+#-wasm32-target
 (defun db-link (&optional context)
   (if context
     (bt.db-link context)
     (%fixnum-ref (%current-tcr) (- target::tcr.db-link target::tcr-bias))))
 
+#-wasm32-target
 (defun previous-db-link (db-link start )
   (declare (fixnum db-link start))
   (let ((prev nil))
@@ -697,6 +783,7 @@
       (setq prev start
             start (%fixnum-ref start 0)))))
 
+#-wasm32-target
 (defun count-db-links-in-frame (vsp parent-vsp &optional context)
   (declare (fixnum vsp parent-vsp))
   (let ((db (db-link context))
@@ -718,11 +805,13 @@
 ;;; bogus-thing-p support
 ;;;
 
+#-wasm32-target
 (defun %ptr-in-area-p (ptr area)
   (declare (optimize (speed 3) (safety 0)) (fixnum ptr area))           ; lie, maybe
   (and (<= (the fixnum (%fixnum-ref area target::area.low)) ptr)
        (> (the fixnum (%fixnum-ref area target::area.high)) ptr)))
 
+#-wasm32-target
 (defun %active-area (area active)
   (or (do ((a area (%fixnum-ref a target::area.older)))
           ((eql a 0))
@@ -733,15 +822,17 @@
         (when (%ptr-in-area-p active a)
           (return a)))))
 
+#-wasm32-target
 (defun %ptr-to-vstack-p (tcr idx)
   (%ptr-in-area-p idx (%fixnum-ref tcr (- target::tcr.vs-area
 					  target::tcr-bias))))
 
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun %on-tsp-stack (tcr object)
   (%ptr-in-area-p object (%fixnum-ref tcr (- target::tcr.ts-area
 					     target::tcr-bias))))
 
+#-wasm32-target
 (defun %on-csp-stack (tcr object)
   (let ((cs-area #+(and windows-target x8632-target)
 		 (%fixnum-ref (%fixnum-ref tcr (- target::tcr.aux
@@ -768,20 +859,23 @@
     (when (object-in-range-p object r)
       (return t))))
 
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun on-any-tsp-stack (object)
   (or (%on-tsp-stack (%current-tcr) object)
       (object-in-some-range object *aux-tsp-ranges*)))
 
+#-wasm32-target
 (defun on-any-vstack (idx)
   (or (%ptr-to-vstack-p (%current-tcr) idx)
       (object-in-some-range idx *aux-vsp-ranges*)))
 
+#-wasm32-target
 (defun on-any-csp-stack (object)
   (or (%on-csp-stack (%current-tcr) object)
       (object-in-some-range object *aux-csp-ranges*)))
 
 ;;; This MUST return either T or NIL.
+#-wasm32-target
 (defun temporary-cons-p (x)
   (and (consp x)
        (not (null (or (on-any-vstack x)
@@ -796,9 +890,11 @@
 
 
 
+#-wasm32-target
 (defun %value-cell-header-at-p (cur-vsp)
   (eql target::value-cell-header (%fixnum-address-of (%fixnum-ref cur-vsp))))
 
+#-wasm32-target
 (defun count-stack-consed-value-cells-in-frame (vsp parent-vsp)
   (let ((cur-vsp vsp)
         (count 0))
@@ -822,6 +918,7 @@
 ;;; value           ; n+4
 ;;; nil             ; n+8
 
+#-wasm32-target
 (defun in-stack-consed-value-cell-p (arg-vsp vsp parent-vsp)
   (declare (fixnum arg-vsp vsp parent-vsp))
   (if (evenp arg-vsp)
@@ -835,6 +932,7 @@
 
 
 
+#-wasm32-target
 (defun count-values-in-frame (p context &optional child)
   (declare (ignore child))
   (multiple-value-bind (vsp parent-vsp) (vsp-limits p context)
@@ -843,6 +941,7 @@
         vsp
         (* 2 (count-db-links-in-frame vsp parent-vsp context))))))
 
+#-wasm32-target
 (defun nth-value-in-frame-loc (sp n context lfun pc vsp parent-vsp)
   (declare (fixnum sp))
   (setq n (require-type n 'fixnum))
@@ -883,6 +982,7 @@
 
 
 
+#-wasm32-target
 (defun nth-value-in-frame (sp n context &optional lfun pc vsp parent-vsp)
   (multiple-value-bind (loc type name)
                        (nth-value-in-frame-loc sp n context lfun pc vsp parent-vsp)
@@ -893,6 +993,7 @@
 	(setq val (%sym-global-value name)))
       (values val  type name))))
 
+#-wasm32-target
 (defun set-nth-value-in-frame (sp n context new-value &optional vsp parent-vsp)
   (multiple-value-bind (loc type name)
       (nth-value-in-frame-loc sp n context nil nil vsp parent-vsp)
@@ -905,6 +1006,7 @@
 	(%set-sym-global-value name new-value)
 	(setf (%fixnum-ref loc) new-value)))))
 
+#-wasm32-target
 (defun nth-raw-frame (n start-frame context)
   (declare (fixnum n))
   (do* ((p start-frame (parent-frame p context))
@@ -915,6 +1017,7 @@
     (if (= i n)
       (return p))))
 
+#-wasm32-target
 (defun nth-function-frame (n start-frame context)
   (declare (fixnum n))
   (do* ((p start-frame (parent-frame p context))
@@ -928,6 +1031,7 @@
         (return p)))))
 
 ;;; True if the object is in one of the heap areas
+#-wasm32-target
 (defun %in-consing-area-p (x area)
   (declare (optimize (speed 3) (safety 0)) (fixnum x))       ; lie
   (let* ((low (%fixnum-ref area target::area.low))
@@ -938,6 +1042,7 @@
 
 
 
+#-wasm32-target
 (defun in-any-consing-area-p (x)
   (do-consing-areas (area)
     (when (%in-consing-area-p x area)
@@ -1033,22 +1138,26 @@ termination-function object
 |#
 
 
+;; Finalization is excluded from the single-Worker Wasm profile.
+#-wasm32-target
 (defstatic *termination-population*
   (%cons-terminatable-alist))
 
-(defstatic *termination-population-lock* (make-lock))
+#-wasm32-target (defstatic *termination-population-lock* (make-lock))
 
 
-(defvar *enable-automatic-termination* t)
+#-wasm32-target (defvar *enable-automatic-termination* t)
 
-(defstatic  *termination-functions-lock* (make-lock))
-(defstatic *termination-functions* (make-hash-table :test #'eq :lock-free nil))
+#-wasm32-target (defstatic  *termination-functions-lock* (make-lock))
+#-wasm32-target (defstatic *termination-functions* (make-hash-table :test #'eq :lock-free nil))
 
+#-wasm32-target
 (defun register-termination-function (f)
   (with-lock-grabbed (*termination-functions-lock*)
     (without-interrupts
      (incf (gethash f *termination-functions* 0)))))
 
+#-wasm32-target
 (defun deregister-termination-function (f) 
   (with-lock-grabbed (*termination-functions-lock*)
     (without-interrupts
@@ -1058,6 +1167,7 @@ termination-function object
            (remhash f *termination-functions*)
            (setf (gethash f *termination-functions*) count)))))))
 
+#-wasm32-target
 (defun terminate-when-unreachable (object &optional (function 'terminate))
   "The termination mechanism is a way to have the garbage collector run a
 function right before an object is about to become garbage. It is very
@@ -1074,9 +1184,11 @@ no longer being used."
        (atomic-push-uvector-cell population population.data new-cell)))
     function))
 
+#-wasm32-target
 (defmethod terminate ((object t))
   nil)
 
+#-wasm32-target
 (defun drain-termination-queue ()
   (with-lock-grabbed (*termination-population-lock*)
     (let* ((population *termination-population*))
@@ -1089,6 +1201,7 @@ no longer being used."
               (deregister-termination-function f)
               (funcall f (car cell)))))))))
 
+#-wasm32-target
 (defun cancel-terminate-when-unreachable (object &optional (function nil function-p))
   (let* ((found nil))
     (with-lock-grabbed (*termination-population-lock*)
@@ -1115,15 +1228,18 @@ no longer being used."
       found))))
 
 
+#-wasm32-target
 (defun termination-function (object)
   (without-interrupts
    (with-lock-grabbed (*termination-population-lock*)
      (cdr (assq object (population-data *termination-population*))))))
 
+#-wasm32-target
 (defun do-automatic-termination ()
   (when *enable-automatic-termination*
     (drain-termination-queue)))
 
+#-wasm32-target
 (queue-fixup
  (add-gc-hook 'do-automatic-termination :post-gc))
 
@@ -1146,6 +1262,7 @@ no longer being used."
 ;;; "preparation" and "initialization" happen when the foreign
 ;;; thread first tries to call lisp code.  "termination" happens
 ;;; via the pthread thread-local-storage cleanup mechanism.
+#-wasm32-target
 (defcallback %foreign-thread-control (:without-interrupts t :int param :int)
   (declare (fixnum param))
   (cond ((< param 0) (%foreign-thread-prepare))
@@ -1154,12 +1271,14 @@ no longer being used."
 
 
 
+#-wasm32-target
 (defun %foreign-thread-prepare ()
   (let* ((initial-bindings (standard-initial-bindings)))
     (%save-standard-binding-list initial-bindings)
     (* 3 (+ 2 (length initial-bindings)))))
 
 
+#-wasm32-target
 (defun %foreign-thread-initialize ()
   ;; Recover the initial-bindings alist.
   (let* ((bsp (%saved-bindings-address))
@@ -1216,10 +1335,10 @@ no longer being used."
     
 ;;; Remove the foreign thread's lisp-thread and lisp process from
 ;;; the global lists.
+#-wasm32-target
 (defun %foreign-thread-terminate ()
   (let* ((proc *current-process*))
     (when proc
       (remove-from-all-processes proc)
       (let* ((ts (process-termination-semaphore proc)))
         (when ts (signal-semaphore ts))))))
-

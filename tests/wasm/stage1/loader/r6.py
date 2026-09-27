@@ -16,7 +16,7 @@ def accepted():
 def sources():
     return proposal.sources()
 def run(out, source_provider=None, branch_sources=None, compiler_comparator=None,
-        compiler_changes=None):
+        compiler_changes=None, system_additions=(), systems_comparator=None):
     started=time.monotonic();out.mkdir(parents=True,exist_ok=True)
     bodies=(source_provider or sources)();identity={name:hashlib.sha256(body.encode()).hexdigest() for name,body in bodies.items()}
     spec=importlib.util.spec_from_file_location('cross_load_native_driver',HERE.parent/'bootstrap-generic-dispatch/native.py')
@@ -39,6 +39,9 @@ def run(out, source_provider=None, branch_sources=None, compiler_comparator=None
         driver.COMPILER_CHANGES=set(compiler_changes)
     if compiler_comparator is not None:
         driver.compare_compiler=compiler_comparator
+    driver.SYSTEM_ADDITIONS.update(system_additions)
+    if systems_comparator is not None:
+        driver.compare_systems=systems_comparator
     driver.qualify_all=qualify.run
     def prepare(source,destination):
         destination.mkdir(parents=True)

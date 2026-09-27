@@ -22,7 +22,12 @@
 
 (in-package "CCL")
 
+#+wasm32-target
+(declaim (special *wasm-namespace-ccl-root*))
+
 (defun heap-image-name ()
+  #+wasm32-target (%wasm-startup-string 0)
+  #-wasm32-target
   (let* ((p (%null-ptr))
          (string (%get-utf-8-cstring (%get-kernel-global-ptr 'image-name p))))
     (declare (dynamic-extent p))
@@ -33,6 +38,10 @@
 (defloadvar *heap-image-name* (heap-image-name))
 
 (defloadvar *command-line-argument-list*
+  #+wasm32-target
+  (loop for i below (%wasm-process-request 6 nil nil)
+        collect (%wasm-startup-string (+ i 2)))
+  #-wasm32-target
   (let* ((argv (%null-ptr))
 	 (res ()))
     (declare (dynamic-extent argv))
@@ -629,7 +638,9 @@
 (defun user-homedir-pathname (&optional host)
   "Return the home directory of the user as a pathname."
   (declare (ignore host))
-  (let* ((native (get-user-home-dir (getuid)))
+  ;; Without a host user identity, use the existing absolute-root fallback.
+  (let* ((native #+wasm32-target nil
+                #-wasm32-target (get-user-home-dir (getuid)))
 	 (pathname (and native (native-to-directory-pathname native))))
     (if (and pathname (eq :absolute (car (pathname-directory pathname))))
       pathname
@@ -713,4 +724,3 @@
                                     (cons-pathname '(:absolute "cocoa-ide") nil nil "ccl"))
   "Holds a list of pathnames to search for the file that has same name
    as a module somebody is looking for.")
-

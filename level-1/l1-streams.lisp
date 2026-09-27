@@ -5417,6 +5417,8 @@
 
 
 
+;;; Native descriptor sets belong to the excluded POSIX polling interface.
+#-wasm32-target
 (defloadvar *fd-set-size*
     (ff-call (%kernel-import target::kernel-import-fd-setsize-bytes)
              :unsigned-fullword))
@@ -5425,6 +5427,13 @@
   (fd-input-available-p fd 0))
 
 ;;; Read and discard any available unread input.
+#+wasm32-target
+(defun %fd-drain-input (fd)
+  ;; Namespace descriptors are seekable regular files.
+  (fd-lseek fd 0 target::os-seek-end)
+  nil)
+
+#-wasm32-target
 (defun %fd-drain-input (fd)
   (%stack-block ((buf 1024))
     (do* ((avail (unread-data-available-p fd) (unread-data-available-p fd)))
@@ -5471,6 +5480,12 @@
     (process-input-wait fd)
     (- #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT)))
     
+#+wasm32-target
+(defun process-input-wait (fd &optional timeout)
+  (multiple-value-bind (ready errno) (fd-input-available-p fd timeout)
+    (values ready nil (unless ready errno))))
+
+#-wasm32-target
 (defun process-input-wait (fd &optional timeout)
   "Wait until input is available on a given file-descriptor."
   (rlet ((now :timeval))
@@ -5506,6 +5521,12 @@
     (process-output-wait fd)
     (- #+wasm32-target target::os-etimedout #-wasm32-target #$ETIMEDOUT)))
 
+#+wasm32-target
+(defun process-output-wait (fd &optional timeout)
+  (multiple-value-bind (ready errno) (fd-ready-for-output-p fd timeout)
+    (values ready nil (unless ready errno))))
+
+#-wasm32-target
 (defun process-output-wait (fd &optional timeout)
   "Wait until output is possible on a given file descriptor."
   (rlet ((now :timeval))
@@ -5534,6 +5555,7 @@
 
 
 
+#-wasm32-target
 (defun ticks-to-timeval (ticks tv)
   (when ticks
     (let* ((total-us (* ticks (/ 1000000 *ticks-per-second*))))
@@ -5741,6 +5763,12 @@
       (setf (ioblock-device ioblock) nil)
       (if (>= fd 0) (fd-close fd)))))
 
+#+wasm32-target
+(defun fd-stream-force-output (s ioblock count finish-p)
+  (declare (ignore ioblock count finish-p))
+  (stream-io-error s 30 "write"))
+
+#-wasm32-target
 (defun fd-stream-force-output (s ioblock count finish-p)
   (when (or (ioblock-dirty ioblock) finish-p)
     (setf (ioblock-dirty ioblock) nil)

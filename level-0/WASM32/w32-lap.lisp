@@ -23,6 +23,32 @@
 
 (in-package "CCL")
 
+;;; Callable counterpart of the compiler's immediate EQL fast path. Native
+;;; targets supply this in their predicate LAP file. Compare floating words,
+;;; including signed zero, just as the native numeric subprimitive does.
+(defun eql (x y)
+  (or (eq x y)
+      (and (= (the fixnum (typecode x)) (the fixnum (typecode y)))
+           (case (the fixnum (typecode x))
+             (#.target::subtag-bignum
+              (and (= (the fixnum (uvsize x)) (the fixnum (uvsize y)))
+                   (dotimes (i (uvsize x) t)
+                     (multiple-value-bind (xh xl) (%bignum-ref x i)
+                       (multiple-value-bind (yh yl) (%bignum-ref y i)
+                         (unless (and (= xh yh) (= xl yl))
+                           (return nil)))))))
+             (#.target::subtag-single-float
+              (= (%wasm-float-word x 0) (%wasm-float-word y 0)))
+             (#.target::subtag-double-float
+              (and (= (%wasm-float-word x 0) (%wasm-float-word y 0))
+                   (= (%wasm-float-word x 1) (%wasm-float-word y 1))))
+             ((#.target::subtag-ratio #.target::subtag-complex)
+              (and (eql (%svref x 0) (%svref y 0))
+                   (eql (%svref x 1) (%svref y 1))))
+             ((#.target::subtag-complex-single-float #.target::subtag-complex-double-float)
+              (and (eql (realpart x) (realpart y))
+                   (eql (imagpart x) (imagpart y))))))))
+
 (eval-when (:compile-toplevel :execute)
   (require "NUMBER-MACROS"))
 
@@ -57,9 +83,9 @@
 (defun %fixnum-truncate (dividend divisor)
   (declare (fixnum dividend divisor))
   (cond ((eql divisor -1)
-         (if (eql dividend most-negative-fixnum)
-           (values *least-positive-bignum* 0)
-           (values (%i- 0 dividend) 0)))
+         ;; Negation must promote at the target fixnum boundary. Host CL
+         ;; constants are not that boundary in a cross-compiler session.
+         (values (- dividend) 0))
         ((eql divisor 0)
          (error 'division-by-zero :operation 'truncate
                 :operands (list dividend divisor)))
@@ -110,12 +136,12 @@
   (declare (double-float key))
   (logand (logxor (the (unsigned-byte 32) (%wasm-float-word key 0))
                   (the (unsigned-byte 32) (%wasm-float-word key 1)))
-          most-positive-fixnum))
+          target::target-most-positive-fixnum))
 
 (defun %sfloat-hash (key)
   (declare (single-float key))
   (logand (the (unsigned-byte 32) (%wasm-float-word key 0))
-          most-positive-fixnum))
+          target::target-most-positive-fixnum))
 
 ;;;; Conditional stores (x8632-misc.lisp)
 
@@ -338,6 +364,11 @@
 (defun single-float-bits (f)
   (declare (single-float f))
   (%wasm-float-word f 0))
+
+(defun host-single-float-from-unsigned-byte-32 (bits)
+  (let ((f (%make-sfloat)))
+    (%wasm-set-float-word f 0 bits)
+    f))
 
 (defun double-float-bits (f)
   (declare (double-float f))
@@ -609,7 +640,7 @@
                            (the (unsigned-byte 32)
                              (logior (the (unsigned-byte 32) (ash high 16))
                                      (the (unsigned-byte 32) low)))))))
-    (logand hash most-positive-fixnum)))
+    (logand hash target::target-most-positive-fixnum)))
 
 ;;; Single-float counterpart of the native destructive absolute value.
 (defun %%short-float-abs! (n result)

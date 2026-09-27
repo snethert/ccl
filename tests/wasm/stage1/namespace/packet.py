@@ -32,7 +32,7 @@ def binaries(out):
 def retain(out, packet):
     summary = c.read(out / 'summary.json')
     assert summary['status'] == 'PASS'
-    assert summary['implementation'] == c.sha(HERE / 'namespace.mjs')
+    assert summary['implementation'] == c.sha(c.ROOT / 'runtime/wasm32/namespace.mjs')
     assert summary['execution_inputs'] == execution_inputs()
     packet.mkdir()
     for name in (*RECORDS, 'summary.json', 'requests.json'):

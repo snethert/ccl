@@ -3,6 +3,22 @@
 ;;; Like the native LAP entries, these remain callable through function cells.
 (in-package "CCL")
 
+;;; Native XLOAD-NRS initializes this kernel-owned cell to NIL. Wasm has only
+;;; T and NIL in its nil-relative area, so initialize the ordinary symbol here
+;;; before cold functions can encounter a checked error.
+(defvar %handlers% nil)
+
+;;; The runtime supplies these owner leaves before entering Lisp. Generated
+;;; wrappers retain ordinary B frames across calls and suspension.
+(defun %wasm-file-request (operation a b c)
+  (%wasm-host-file-request operation a b c))
+
+(defun %wasm-heap-snapshot (areas)
+  (%wasm-host-heap-snapshot areas))
+
+(defun %wasm-process-request (operation a b)
+  (%wasm-host-process-request operation a b))
+
 (eval-when (:compile-toplevel :execute)
   ;; Class-table accessors below use HASHENV's native field definitions.
   (require "HASHENV" "ccl:xdump;hashenv"))
@@ -483,6 +499,24 @@
 ;;; Applicability and combination are still the original Lisp algorithms.
 ;;; Recomputing from the current method list also avoids a stale dcode after
 ;;; removing the final method. A cache can be added without changing this ABI.
+(defun %wasm-applicable-methods (gf args)
+  ;; Like the native dispatch-table miss path, this entry must work while
+  ;; l1-clos-boot is still building the generic functions. The public MOP
+  ;; applicability functions are defined near the end of that file.
+  (let ((cpls (args-cpls args)) (methods nil))
+    (dolist (method (%gf-methods gf))
+      (when (do ((specializers (%method.specializers method) (cdr specializers))
+                 (arguments args (cdr arguments))
+                 (classes cpls (cdr classes)))
+                ((null specializers) t)
+              (let ((specializer (car specializers)))
+                (unless (if (typep specializer 'eql-specializer)
+                          (eql (car arguments) (eql-specializer-object specializer))
+                          (memq specializer (car classes)))
+                  (return nil))))
+        (push method methods)))
+    (sort-methods methods cpls (%gf-precedence-list gf))))
+
 (defun %wasm-standard-generic-call (gf args)
   (let* ((bits (inner-lfun-bits gf))
          (required (ldb $lfbits-numreq bits))
@@ -494,7 +528,7 @@
                 (logbitp $lfbits-restv-bit bits)
                 (logbitp $lfbits-keys-bit bits))
       (signal-program-error "Too many args to ~s" gf))
-    (let* ((methods (%compute-applicable-methods* gf args))
+    (let* ((methods (%wasm-applicable-methods gf args))
            (combination (%gf-method-combination gf)))
       (unless methods
         (return-from %wasm-standard-generic-call (apply #'no-applicable-method gf args)))
@@ -699,7 +733,7 @@
 (defun %wasm-class-gethash (key table &optional default)
   (when (%wasm-native-hash-table-p table)
     (return-from %wasm-class-gethash
-      (funcall (symbol-function 'gethash) key table default)))
+      (funcall (%function 'gethash) key table default)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (%wasm-eq-table-get (nhash.vector table) key default)
     (%wasm-gethash key table default)))
@@ -707,7 +741,7 @@
 (defun %wasm-class-puthash (key table default &optional (value default))
   (when (%wasm-native-hash-table-p table)
     (return-from %wasm-class-puthash
-      (funcall (symbol-function 'puthash) key table value)))
+      (funcall (%function 'puthash) key table value)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn
       (%wasm-class-writeable table)
@@ -721,7 +755,7 @@
 (defun %wasm-class-remhash (key table)
   (when (%wasm-native-hash-table-p table)
     (return-from %wasm-class-remhash
-      (funcall (symbol-function 'remhash) key table)))
+      (funcall (%function 'remhash) key table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn (%wasm-class-writeable table)
            (%wasm-eq-table-remove (nhash.vector table) key nil))
@@ -730,7 +764,7 @@
 (defun %wasm-class-clrhash (table)
   (when (%wasm-native-hash-table-p table)
     (return-from %wasm-class-clrhash
-      (funcall (symbol-function 'clrhash) table)))
+      (funcall (%function 'clrhash) table)))
   (if (and (hash-table-p table) (eql (nhash.comparef table) 0))
     (progn
       (%wasm-class-writeable table)
@@ -852,7 +886,9 @@
 (defvar *wasm-package-literals* nil)
 
 (defun %wasm-package-literal (name)
-  (or (cdr (assoc (string name) *wasm-package-literals* :test #'string=))
+  (or (if *wasm-package-literals*
+        (cdr (assoc (string name) *wasm-package-literals* :test #'string=))
+        (%find-pkg (string name)))
       (error "Package is absent from the linked symbol set: ~s" name)))
 
 (defun %wasm-intern (name &optional (package *package*))

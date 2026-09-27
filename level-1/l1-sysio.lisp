@@ -322,6 +322,10 @@ is :UNIX.")
 	       ;; specified length, then seek back to where we
 	       ;; were and pretend that nothing happened.
 	       (file-ioblock-seek file-ioblock new-octet-eof)
+	       #+wasm32-target
+	       (fd-write fd (make-array 1 :element-type '(unsigned-byte 8)
+	                               :initial-element 0) 1)
+	       #-wasm32-target
 	       (%stack-block ((buf 1))
 			     (fd-write fd buf 1))
 	       (fd-ftruncate fd new-octet-eof)

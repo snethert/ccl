@@ -1764,6 +1764,11 @@ to replace that class with ~s" name old-class new-class)
   (cond ((null x) #'false)
         ((eq x t) #'true)        
         (t
+         #+wasm32-target
+         (lambda (&rest ignored)
+           (declare (ignore ignored))
+           x)
+         #-wasm32-target
          (let* ((f (%copy-function #'constant-ref)))
            (set-nth-immediate f 1 x)
            f))))
@@ -2627,6 +2632,11 @@ to replace that class with ~s" name old-class new-class)
 (defmethod create-reader-method-function ((class slots-class)
 					  (reader-method-class standard-reader-method)
 					  (dslotd direct-slot-definition))
+  #+wasm32-target
+  (let ((slot-id (ensure-slot-id (%slot-definition-name dslotd))))
+    (lambda (&method context instance)
+      (declare (ignore context))
+      (slot-id-value instance slot-id)))
   #+ppc-target
   (gvector :function
            (uvref *reader-method-function-proto* 0)
@@ -2655,6 +2665,11 @@ to replace that class with ~s" name old-class new-class)
 (defmethod create-writer-method-function ((class slots-class)
 					  (writer-method-class standard-writer-method)
 					  (dslotd direct-slot-definition))
+  #+wasm32-target
+  (let ((slot-id (ensure-slot-id (%slot-definition-name dslotd))))
+    (lambda (&method context new instance)
+      (declare (ignore context))
+      (set-slot-id-value instance slot-id new)))
   #+ppc-target
   (gvector :function
            (uvref *writer-method-function-proto* 0)
