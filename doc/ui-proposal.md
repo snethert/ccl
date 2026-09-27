@@ -90,8 +90,9 @@ A closed set, defined in **one machine-readable spec file** that generates: Lisp
 | controls  | `button toggle field number select checkbox radio-group slider`  |
 | structure | `table tree list tabs disclosure`                                |
 | overlay   | `dialog menu popover tooltip`                                    |
+| menu      | `section item` — legal only inside a `menu` (§10.1)              |
 | feedback  | `spinner progress badge banner`                                  |
-| opaque    | `editor` (§6), `record` (§6.3), `plot`, `svg`                    |
+| opaque    | `editor` (§6), `record` (§6.4), `svg`                            |
 
 Attributes are enumerated per type. Unknown attribute or unknown type → a Lisp condition at construction time, printing the offending node. The JS side never guesses, never falls back, never "does its best": silent visual degradation is the failure mode the author cannot detect and the human has to catch by eye.
 
@@ -188,6 +189,21 @@ Decision: nodes that need it take a per-node enumerated `:role` (`trow :role :ch
 
 A node names a command and carries a handle; the client sends `{window, view, key, command, handle, payload}`; one generic dispatches. Buttons, menu items, keybindings, the command palette, the context menu on a presentation, and the bottom-line partial-command prompt with its argument chips are all *views over the registry*, generated. Adding a feature is one registry entry plus one method: a shape the author executes identically a hundred times.
 
+### 10.1 Menus are structure, not attributes
+
+The context menu on a presentation has sections, items with applicability counts, keybindings, and disabled state. That is a small tree, and an attribute must describe a node, not smuggle in another node tree. So `menu` takes explicit children:
+
+```lisp
+(menu :anchor "form-3/runner"
+  (section "Class"
+    (item :command 'show-subclasses :handle h :count 2)
+    (item :command 'trace-all-methods :handle h :count 7))
+  (section "Package"
+    (item :command 'export-symbol :handle h)))
+```
+
+`item` carries `command`, `handle`, optional `count`, and `enabled`; its label and keybinding come from the registry. The validator, the text backend, replay, and the author can all reason about the menu structurally.
+
 ## 11. Text backend
 
 A second renderer from the same node vocabulary to plain text, built **before** the DOM backend.
@@ -200,13 +216,56 @@ This gives golden-file tests, CI with no browser, and verification of a UI chang
 
 Checked against the mockups: every screen is legible as text except the two opaque things, and those are exactly where the seam is.
 
+### 11.1 The contract
+
+**Text rendering preserves semantic information, not visual equivalence.** The text backend never approximates columns, fonts, or positions. Its obligation is that every semantically meaningful node, state, selection, decoration, action target, and object reference remains inspectable in the output. This rule exists so that nobody later "improves" the text backend into a layout engine.
+
+```
+SOURCE presentations.lisp.14
+
+  17 | (defun scan-buffer (runner &optional (limit [*scan-limit*]¹))
+> 18 |   (loop for record = ([pop-record]² runner)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ current-frame
+
+[1] h:311 → special variable clim-web::*scan-limit*
+[2] h:317 → function clim-web::pop-record · state :matching
+```
+
 ## 12. Record/replay
 
 Every inbound event and outbound view/patch/act, appended to a log, with a headless replay that reconstructs view state deterministically. A bug report is `bug-0042.log`, reproduced in a fresh image with no browser, fonts, or timing. This is the highest-leverage item in the design for an AI collaborator: "it looks wrong on my machine" goes from five speculative rounds to one.
 
-Because editor buffers are Lisp-owned (§6.3) and windows are in the envelope (§7), the log is complete without any browser-side state.
+### 12.1 The log is part of the protocol
 
-`(dump-view id)` prints the current tree as an s-expression; `(describe-handle h)` says what a handle denotes. The debugging loop is entirely textual.
+The log format is specified alongside the messages in §2, not treated as debugging infrastructure. A log is the sequence of protocol messages with direction and ordinal:
+
+```
+184 IN   event  {window w1, view source-1, key form-3/runner, command nil, handle h:317, payload {button :left}}
+185 OUT  patch  source-1 v41→v42 [(set-attr form-3/runner state :selected)]
+186 OUT  act    reveal-range editor-1 (2130 . 2141)
+```
+
+A UI failure is then a program trace. "The source pane stops highlighting the current frame after I select restart 3" becomes "replay this log; at event 184 the `current-frame` decoration disappears; find the transition that violated the protocol."
+
+### 12.2 Replay API
+
+```lisp
+(replay-log "bug-0042.log" :until 183)        ; state just before the suspect event
+(replay-log "bug-0042.log" :from 180 :until 190)
+(diff-views 183 184)                          ; first divergence, as a tree diff
+(dump-view 'source-1)                         ; current tree as an s-expression
+(describe-handle h)                           ; what a handle denotes
+```
+
+The interesting object is almost always the first state transition where two executions diverge, not the final broken tree; `diff-views` exists for that.
+
+### 12.3 The invariant
+
+It is tempting to say "the log is complete because editor buffers are Lisp-owned (§6.3) and windows are in the envelope (§7)". That is an assertion; the property replay actually needs is an invariant, and it is tested:
+
+**Browser state may affect rendering mechanics, but no unlogged browser state may affect a future Lisp-visible result.**
+
+The JS runtime will hold ephemeral state: focus, pointer capture, scroll offsets, IME composition, pending events, measurement results. None of it needs to be authoritative. But the moment any of it determines a Lisp-visible outcome — a scroll offset deciding which source location an event names, a measured width deciding a truncation — it has become semantic state and must enter the protocol (as event payload or a `local` subscription) and therefore the log. The test is mechanical: record a session, replay it headless, and diff the final trees; any difference is a violation, and the fix is always to move state across the wire, never to special-case the replayer.
 
 ## 13. Explicitly out
 
@@ -214,14 +273,23 @@ HTML or CSS strings in Lisp. A template language. Two-way binding. A Lisp class 
 
 ## 14. Build order
 
-1. Spec file + codegen, with the validator on both sides. Inline nodes, `oref` with `doc`/`commands`/`state`, the decoration list, and roles are in the spec from the first commit.
-2. Text backend + golden tests. Prove three real views in the REPL: the **source pane** (inline presentations and decorations, the hard one), the transcript (append op, inline objects, a `record` placeholder), and the debugger (restarts, backtrace with locals, current-frame decoration).
-3. JS runtime: reconciler, event queue, `act` handlers, resync, window management, editor decoration bridge. **Frozen after this.**
-4. Record/replay.
-5. Everything after this is Lisp.
+The log format and the replay model come *before* the JS runtime, so that any protocol operation that cannot be represented deterministically is discovered before there is JS to protect.
 
-## 15. Open questions
+1. Spec file + codegen, with the validator on both sides. Inline nodes, `oref` with `doc`/`commands`/`state`, the decoration list, `menu` structure, and roles are in the spec from the first commit.
+2. Text backend + canonical serialization + log format (§12.1).
+3. Golden tests + headless Lisp replay. Prove three real views in the REPL: the **source pane** (inline presentations and decorations, the hard one), the transcript (append op, inline objects, a `record` placeholder), and the debugger (restarts, backtrace with locals, current-frame decoration). Each proof is a log replayed to a golden tree.
+4. JS runtime: reconciler, event queue, `act` handlers, resync, window management, editor decoration bridge.
+5. Browser event recording + full replay against the JS runtime.
+6. **Freeze JS.** The freeze criterion is not "the feature list is done"; it is that recorded browser sessions replay headless to identical trees (§12.3), demonstrating that JS holds no accidentally authoritative state.
+7. Everything after this is Lisp.
 
-- Whether `plot` is needed at all, or is a special case of `record`.
-- Whether `menu` sections and counts (the context-menu mockup shows grouped items with applicability counts) are `menu` attributes or a `tree`-shaped child list. Leaning attributes: it keeps `menu` a view over the registry.
-- The exact scroll-anchor semantics of `append-children` when the user has scrolled up in a transcript.
+## 15. Resolved and open
+
+Resolved while reviewing:
+
+- `plot` is not in the initial vocabulary. `record` is the opaque seam; an actual plotting requirement must demonstrate that `record` is insufficient before the permanent vocabulary grows.
+- `menu` is explicit structure (§10.1), not attributes.
+
+Open:
+
+- The exact scroll-anchor semantics of `append-children` when the user has scrolled up in a transcript. Note that under §12.3 the *policy* is Lisp's, but whether the user had scrolled up is browser state that affects a Lisp-visible result, so it must arrive as `local` before the policy is applied.
