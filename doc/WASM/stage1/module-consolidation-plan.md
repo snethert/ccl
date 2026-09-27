@@ -1,31 +1,32 @@
 # Module consolidation plan — from 11,938 engine modules at READY to 7
 
 ```
-DOC-ID        MCP-P5 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
+DOC-ID        MCP-P6 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
               its four corrections; P4 folds in Codex's three corrections of P3, after which
               Codex considers the plan valid for implementation; P5 records the
-              user's adoption, the memory measurements F-12 and the direct-call direction A-13)
+              user's adoption, the memory measurements F-12 and the direct-call direction A-13;
+              P6 records completed P-0 and the user's heap/stack sizing amendment)
 STATUS        ADOPTED by the user, 27 September 2026 (U-5: "Yes to all three"), after
               Codex judged P4 valid for implementation; packet contents, sizes and order
               remain Codex's implementation choices; A-13 is a recorded future direction
 AUTHOR        Claude (Fable 5.1), 27 September 2026, after the READY commit ea82d8e7
-READER        Codex, as Stage 1 author; reply per ID only where P4 changed something
+AMENDMENT     Codex, 27 September 2026, user direction U-6; documentation only
+READER        Codex, as Stage 1 author; review amended items by ID
 BASE          wasm2 at ea82d8e7 (READY under decision A2); measured on the retained
               loader-startup-timing-r1 inputs boot-r21 and bundles-r18
-TOUCHES       this document and doc/WASM/tools/module-archive/ (measurement and prototype
-              scripts, not product code); no compiler, runtime, kernel, contract or inventory
-CHANGES       §9 lists every item P2, P3 and P4 changed and the review finding each answers
+TOUCHES       P6: this document and doc/WASM/decisions.md; no implementation change
+CHANGES       §9 records revision history; §10's import qualifications still apply
 ```
 
 ## 0. How to read this
 
-Every item carries an ID; IDs from P1 are kept, amended items are marked
-`(P2)`, `(P3)` or `(P4)`, new items continue the numbering. Reply per ID with `AGREE`,
-`DISAGREE`, `AMEND` or `UNVERIFIED` only where P4 changed something; silence
-on an unchanged item is assent. Facts (F) were measured on this machine today
-with the scripts in `doc/WASM/tools/module-archive/`; each F item names the
-script and the input so Codex can replay it. Diagnosis (D), target (T), archive design (A),
-packets (P), risks (R) and questions (Q) follow. The prototype is a measurement
+Every item carries an ID; IDs from P1 are kept, amended items are marked with
+revision labels such as `(P6)`; new items continue the numbering. Review amended
+items by ID with `AGREE`, `DISAGREE`, `AMEND` or `UNVERIFIED`. Facts (F) name
+their measurements or source evidence. F-13 is the executed P-0 baseline;
+F-14 gives native defaults and the current Wasm growth policy. Diagnosis (D),
+target (T), archive design (A), packets (P), risks (R) and questions (Q) follow.
+The prototype is a measurement
 instrument: it establishes sizes, tool scale and engine cost. It is not a
 proposed implementation and did not execute Lisp.
 
@@ -37,8 +38,8 @@ proposed implementation and did not execute Lisp.
   to a small number. I think 36 might be too high."
 - U-2. Codex's review (relayed by the user) established the architectural
   match with attempt 1 (8,675 table entries in 36 binaries) and stated that it
-  does not establish how much startup time each part consumes. F-6 below
-  confirms that no end-to-end timing exists.
+  does not establish how much startup time each part consumes. At P1 no
+  end-to-end timing existed; F-13 now supplies the instrumented baseline.
 - U-3. Nothing else here is the user's statement.
 - U-4 (P2). Codex's review of P1 (relayed by the user, 27 September, 09:54):
   seven findings, two factual corrections, agreement with two image archives,
@@ -55,6 +56,11 @@ proposed implementation and did not execute Lisp.
   the plan can accommodate a future in which CL-package functions are called
   directly: "the compiler would output code to check for the indirect table,
   as now, but if absent, it would compile a direct call" (A-13).
+- U-6 (P6). User, after the completed P-0 report and Codex's native/Wasm
+  sizing comparison: "update the plan". Incorporate the proposed starting
+  configuration and measurement gates in A-14/A-15 and P-1. These values
+  are defaults to evaluate, not a measured optimum or a READY-time promise.
+  Document revision MCP-P6 is separate from the future direct-call packet P-6.
 ## 2. Facts at ea82d8e7
 
 - F-1. Module counts on the READY path (`stats.mjs` on bundles-r18; boot from
@@ -89,7 +95,7 @@ proposed implementation and did not execute Lisp.
   construction work is about one second. These are construction
   measurements: they do not establish when machine code is generated for
   each function, and no Lisp executed; see R-3.
-- F-5. Admission cost dominates (`cost.mjs`). The production path
+- F-5 (P6). Isolated admission cost (`cost.mjs`). The production path
   `bundle.compile` (validate record, sha256 every binary, `inspect`,
   `entryRanges`, `validateGenerated`, and `materializer.install`, which
   re-derives the template manifest with three sha256 digests and two binary
@@ -103,8 +109,8 @@ proposed implementation and did not execute Lisp.
   holds only `run-1.stderr` (80 `;Loading` lines); `measure.py` never wrote
   `timing.json`, and `same-process.mjs` never ran. The READY reports record
   events and collections (664 at the audit-187 checkpoint) but no durations.
-  Therefore the split between code admission (F-5), FASL transfer and reading,
-  Lisp execution of the 81 loads, and collection is unknown. P-0 measures it.
+  That historical run did not establish a timing breakdown. F-13 now records
+  P-0's split between admission, installation, execution and collection.
 - F-7. Engine limits, V8 `src/wasm/wasm-limits.h` at main (fetched today):
   defined functions 1,000,000; imports 1,000,000; exports 1,000,000; globals
   1,000,000; tags 1,000,000; module size 1 GiB; function body 7,654,321 bytes;
@@ -156,8 +162,8 @@ proposed implementation and did not execute Lisp.
   re-decides it.
 
 - F-12 (P5). Memory and time of the current launch, measured today on the
-  same inputs (`/usr/bin/time -l`, `boot0.mjs` to READY, no census; log and
-  report retained in `doc/WASM/tools/module-archive/measurements.json`):
+  same inputs (`/usr/bin/time -l`, `boot0.mjs` to READY, no census; summary
+  retained in `doc/WASM/tools/module-archive/measurements.json`):
 
   | measurement | result |
   |---|---|
@@ -171,14 +177,35 @@ proposed implementation and did not execute Lisp.
   125,519,920 bytes of JSON manifests beside the 416 MB of module and
   template binaries; `boot0.mjs` reads every bundle on the main thread and
   passes the bytes to the Worker through `workerData`, so the 548 MB exists
-  at least twice during launch. Attribution of the 4.46 GiB: about 2.0 GiB
-  is the v1 admission path (measured), about 1.1 GiB is the doubled bundle
-  bytes (read from code), and the remaining roughly 1.3 GiB is the Worker's
-  Lisp memory, the collector's spaces and the manifests, not measured
-  separately. Projection under the plan, not a promise: the admission path
-  falls to about 0.35 GiB, the doubled bundle bytes to the FASL streams
-  alone, and the remainder is unchanged, so a launch near 1.5 to 2 GiB is
-  expected; P-0 and P-1 measure it (memory added to P-0's breakdown).
+  at least twice during launch. P6 incorporates §10's correction here:
+  admission-only RSS already includes bundle storage, so the former additive
+  attribution and its 1.5–2 GiB launch projection are withdrawn. The archive
+  prototype executes no Lisp. Whole-path memory must be measured (F-13/P-1).
+- F-13 (P6). P-0 completed at `0675ba83`: one fresh process reached READY
+  in 341.087 s, inside its 600 s deadline, with 4.833 GiB peak RSS and
+  4.688 GiB RSS at READY. There were 81 returned nested LOADs and 2,029
+  collections. Exclusive Worker times: root allocation/registration 115.076 s,
+  collection 64.854 s, Lisp plus unmeasured host/observer work 62.639 s,
+  runtime compile/materialization checks 41.974 s, bundle decode at admission
+  13.926 s and Worker namespace decode 13.942 s. Main namespace decode
+  separately took 14.135 s; thread totals must not be added indiscriminately.
+  At READY, linear memory was 119.75 MiB, the current heap-space pair 16 MiB,
+  scratch 32 MiB, and movable live data at the last GC 5.973 MiB. The Worker
+  JS heap figure includes all JS objects, not just JSON manifests. These
+  counters do not partition RSS. See the [report](module-consolidation-p0.md)
+  and [bound evidence index](module-consolidation-p0.json). The user relayed
+  Claude's review that the timing-only baseline is sound; this does not
+  accept the unimplemented archive or sizing changes.
+- F-14 (P6). Native CCL32 uses 1 MiB control, 1 MiB value and 512 KiB
+  temporary-object stacks for ordinary listener/threads, excluding guards
+  ([source](../../../level-1/l1-lisp-threads.lisp)); the initial kernel
+  bootstrap temporary stack is 256 KiB. The native free-heap threshold is
+  16 MiB beyond live/image data, not a fixed total heap size
+  ([kernel defaults](../../../lisp-kernel/pmcl-kernel.c)). In P-0, Wasm
+  started with two 64 KiB spaces, growing to two 8 MiB spaces at READY.
+  The current owner grows only if collection cannot satisfy the next
+  allocation; a nearly full heap can therefore collect repeatedly without
+  gaining useful free space ([owner](../../../runtime/wasm32/collector-owner.mjs)).
 ## 3. Diagnosis
 
 - D-1 (P2). The count is the visible symptom of three multiplicative costs:
@@ -199,10 +226,13 @@ proposed implementation and did not execute Lisp.
   bindings at launch; none of that is reused. The lesson kept is only the
   shape: many logical functions, few engine modules, table entries filled from
   exports.
-- D-4. F-6 means the plan cannot promise a wall-clock number. The measured
-  admission work (F-5) is at least tens of seconds and disappears under A-7;
-  whatever remains after P-0's breakdown is Lisp execution, FASL transfer or
-  collection and needs its own plan.
+- D-4 (P6). F-13 identifies root allocation as the largest measured cost;
+  collection and residual execution are also substantial. A-7 removes
+  repeated per-module admission work, while archive admission still has a
+  cost. A-15 addresses root bookkeeping and A-14 addresses allocation
+  headroom. Neither their savings nor a new READY time is established until
+  P-1 measures them; a reserved root block does not by itself prove that
+  all 115 seconds disappear. Other residual costs remain separate work.
 
 ## 4. Target
 
@@ -409,6 +439,8 @@ proposed implementation and did not execute Lisp.
   install at each step leaving cells, rows and tables unchanged, a failed
   instantiation leaving the owner, `nextCode` and the tables unchanged, and
   a capacity refusal at generation creation.
+  P6: A-15 specifies direct unit slices and registered ranges; its
+  optimization must preserve every reservation and rollback condition here.
 - A-13 (P5). Guarded direct calls, a recorded future direction (U-5 b), not
   part of P-0..P-5. Today a named call loads the symbol's function cell, takes
   the function object's code word, resolves it through the code registry to a
@@ -436,6 +468,60 @@ proposed implementation and did not execute Lisp.
   reachable directly too (that would make the target 6 product modules),
   and measurement of the guard's cost against the saved `call_indirect`
   signature and null checks.
+- A-14 (P6). Heap and stack configuration, included in P-1 under U-6.
+  Use the same initial defaults across supported engines, with explicit
+  configuration and measured adjustment:
+
+  | area / policy | starting value |
+  |---|---|
+  | active allocation space | 32 MiB |
+  | spare copying space | 32 MiB |
+  | free-space target after collection | 16 MiB |
+  | Lisp value stack | 1 MiB |
+  | temporary-object stack | 512 KiB |
+  | explicit Lisp control-stack area | 1 MiB |
+  | initial linear-memory layout budget | approximately 192 MiB |
+
+  Preserve free allocation headroom after GC, growing when live bytes plus
+  the pending allocation and target require a larger space; do not wait
+  until even the next allocation fails. The 16 MiB target is a growth-policy
+  target, not an extra reason to reject an allocation that still fits when
+  growth is unavailable. An unsatisfied actual allocation gets a checked
+  refusal. Preserve collection-inhibition behavior and valid roots/owner
+  state on refusal; memory growth itself cannot be rolled back by shrinking.
+
+  Derive a disjoint, aligned layout before creating the Worker memory. Larger
+  spaces cannot simply replace the fixture's size constants at their old
+  addresses. Size scratch, root lists, update logs, external roots, registry
+  and tables from the configured spaces, manifests and generation count.
+  The current scratch bound is `96 + usedHeapBytes / 8 * 20 + logCapacity * 12`:
+  a full 32 MiB space and today's 262,144-entry log require about 83 MiB.
+  Thus 64 MiB of heap spaces is not the complete memory budget. Recompute
+  this bound when root capacity or collector representation changes.
+  Approximately 192 MiB is an initial default-layout budget to verify,
+  not an RSS prediction, a fixed maximum, or a budget for every sweep size.
+  Retain configurable growth within the admitted ABI/engine bounds and
+  account for superseded heap/scratch extents retained in linear memory.
+
+  Align advertised Lisp stack defaults with the allocated areas and retain
+  checked overflow boundaries. The engine's actual Wasm call stack and the
+  service C stack are separate from these Lisp areas. The browser API has
+  no portable call-stack-size setting; enlarging linear memory cannot raise
+  that limit ([WebAssembly API](https://webassembly.github.io/spec/js-api/)).
+- A-15 (P6). Root registration by published ranges. Reserve each generation's
+  block once and derive a unit's slice directly from its manifest offset;
+  do not repeat a scan of all occupied external cells for each publication.
+  Keep capacity/ownership accounting so publication validates its slice
+  without re-enumerating all prior roots. Preserve A-12's checks and journals.
+  Represent registered sub-ranges explicitly, with a collector range path
+  that avoids constructing one host-side address-list entry per cell.
+  Only published units' ranges are roots; reserved but unpublished gaps must
+  remain excluded. Retain individual-cell support for v1 code and other
+  root owners, with no overlapping allocation or duplicate registration.
+  Rollback removes/restores exactly the affected ranges and values.
+  Ranges reduce bookkeeping; collection still examines their tagged values
+  and updates moved references. Measure allocation, registration and
+  collection costs separately; no complete removal of F-13's costs is assumed.
 ## 6. Packets
 
 - P-0 (P3). Measure (small, first). One bounded, instrumented fresh-process
@@ -449,15 +535,35 @@ proposed implementation and did not execute Lisp.
   retained if READY is not reached. Gate: `timing.json` with the breakdown,
   in a new evidence directory, not a rerun of the cancelled three-run
   experiment. This is the baseline P-1 is judged against and tells whether
-  a Lisp-side plan is needed (D-4).
-- P-1 (P2). Runtime archive (A-1, A-2, A-3, A-4, A-5, A-6, A-7, A-10, A-11,
-  A-12); `target-bundle.mjs`/`target-load-session.mjs` gain the v2 admission
+  a Lisp-side plan is needed (D-4). P6 status: completed at `0675ba83`, F-13;
+  retain that baseline rather than launching another unchanged v1 run.
+- P-1 (P6). Runtime archive (A-1, A-2, A-3, A-4, A-5, A-6, A-7, A-10, A-11,
+  A-12, A-14, A-15); `target-bundle.mjs`/`target-load-session.mjs` gain the v2 admission
   and generations; v1 stays for post-image files. Gates: READY reproduces (81
   nested loads, two post-image loads in two fresh Workers, both refusals,
   Unicode output); A-8 (a) and (b) over all 10,891 functions; A-4 and A-12
   tests; product engine module count at READY = 1,048 (1,042 boot modules
   unchanged, one runtime archive, five services and adapter) with
-  instrumentation reported separately; P-0 rerun with the breakdown.
+  instrumentation reported separately. Repeat P-0's instrumentation on the
+  changed archive path; report its complete time/memory breakdown against F-13.
+  Verify published-range movement and rollback, unpublished gaps, v1/range
+  coexistence and capacity refusals. Verify stack boundaries, disjoint layout,
+  headroom growth before allocation failure, inhibited collection and checked
+  refusal with valid state when growth cannot satisfy an allocation.
+
+  Compare initial space sizes of 16, 32 and 64 MiB per space on the same
+  archive, engine and workload, keeping the 16 MiB free-space policy constant.
+  A 16 MiB initial space may grow to meet that target; record actual sizes
+  rather than treating these as fixed heap caps. Use one fresh process per
+  candidate, a 600 s timeout and retained partial journals, reusing the default
+  run as the 32 MiB candidate. Record READY time, peak/READY RSS, live and
+  allocated heap bytes, space/scratch/linear extents, GC count/time, root
+  allocation/registration time and observable stack usage (label sampled
+  high-water values as lower bounds). Bind the changed configuration and all
+  input hashes. Select the smallest configuration with an acceptable measured
+  time/memory tradeoff; report inconclusive single-run differences as such.
+  Initial sizing evidence is on the P-0 engine; reuse the same defaults for
+  subsequent engine qualification and record untested engines explicitly.
 - P-2. Boot archive: `cross-image.mjs` admits v2; `write.mjs` emits the
   archive and the reference block; heap `codeDigest` is recomputed (the heap
   payload itself must stay byte-equal). Gates: boot identity, READY as P-1,
@@ -514,6 +620,12 @@ proposed implementation and did not execute Lisp.
   requirement, and its code window against the configured registry and
   table capacity (A-4), all sized from the manifests at Worker start, not
   fixed in the driver as today's `capacity = 32768`.
+- R-8 (P6). Larger allocation spaces reduce collection frequency but enlarge
+  the current collector's object-map workspace and may lengthen individual
+  pauses. A-14's scratch/layout accounting and P-1's size comparison must
+  establish the tradeoff. A range is not a single GC reference: every
+  published pointer cell still requires tracing. No engine-specific optimum,
+  elimination of the 115 s root cost, or post-consolidation RSS is promised.
 ## 8. Questions for the user
 
 - Q-A. Adopt the target of 7 engine modules at READY, one archive per image
@@ -595,6 +707,15 @@ Changes in P5: STATUS records the user's adoption (U-5); F-12 adds the
 measured launch time and memory with attribution and a projection; P-0 adds
 memory to its breakdown; A-13 and P-6 record the guarded direct-call
 direction; `decisions.md` gains the adoption entry.
+
+Changes in P6, on user direction U-6: F-13 records completed P-0 and F-14
+records native defaults and the tiny initial Wasm spaces. F-12's overlapping
+attribution/projection is withdrawn in place, as §10 required. D-4 now uses
+the measured root and GC costs. A-14 adds initial sizes, headroom policy and
+complete layout/scratch accounting; A-15 adds published root ranges while
+preserving A-12. P-1 gains correctness gates and the bounded 16/32/64 MiB
+comparison; R-8 records the workspace/latency tradeoff. P-0 is complete and
+its unchanged baseline is reused. Direct calls remain future packet P-6.
 
 ## 10. Codex import review — 27 September 2026
 

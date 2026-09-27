@@ -547,3 +547,21 @@ user also recorded a future direction, guarded direct calls to CL-package
 functions inside the archive (A-13, P-6), outside this plan's packets.
 The entry is made by Claude on the user's instruction, on the plan branch,
 for Codex to import; nothing else in this file changes.
+
+## Module consolidation sizing amendment — 27 September 2026
+
+After P-0 (`0675ba83`) and Codex's comparison with native CCL32 startup
+defaults, the user directed: "update the plan". [MCP-P6](stage1/module-consolidation-plan.md)
+records the proposed starting configuration in A-14: two 32 MiB heap spaces,
+a 16 MiB post-GC free-space target, 1 MiB Lisp value and explicit control
+areas, and a 512 KiB temporary-object stack. The approximately 192 MiB
+initial linear-memory budget includes collector scratch and runtime areas;
+it is subject to layout/capacity checks and is not a process-RSS projection.
+
+P-1 now includes headroom-based heap growth, publication of root ranges under
+the existing generation/rollback contract, and bounded comparisons of
+16/32/64 MiB initial spaces. These are configurations to measure, not proven
+optima. The executed P-0 baseline is retained. Seven product modules, target
+FASL publication order and the future scope of direct calls remain as adopted.
+This entry updates the plan; it does not record implementation or acceptance
+of the archive, collector-range or sizing changes.
