@@ -1,5 +1,12 @@
 # Audit 189 error-path follow-up
 
+**Accepted:** the user accepted `19ff6839` after [audit 190](../../../../doc/WASM/stage0/claude-review.md)
+(`890fde8f`), which found no defect and closed O-134/O-142/O-143/O-145.
+The reviewer independently reran the 26,204-case corpus, native baseline and
+registered suites (164 FASLs restored), and 782 reader comparisons. Both READY
+instances, the dedicated refusal/error run, both startup refusals and nine
+additional error-path probes pass. The provenance and BREAK notes need no action.
+
 Audit 189 (`34b130cd`) is imported on `wasm2`. It independently confirms the
 host generation refusal, closes O-124 and O-137, and withdraws audit 188's
 O-124 finding. Its compiler replay made 26,204 fresh comparisons with zero
@@ -40,7 +47,7 @@ on native CCL during fixture compilation. The old runtime fails this witness.
 The FASL-header checks call the same dispatcher directly; they do not claim a
 new malformed-container admission test.
 
-Only the three changed runtime files and post-image witnesses are compiled
+In the author run, only the three changed runtime files and post-image witnesses are compiled
 for target execution. The other 79 runtime files and the boot image reuse
 pinned compiler products. The runtime archive is relinked once. Native R6/R6a
 passes 21,843 tests and restores all 164 FASLs. The two frame edits, added after
@@ -57,6 +64,6 @@ commands, source identities, original failures and final artifacts. Its
 
 Product Lisp delta: **8 added / 3 removed**. Ordinary READY remains 81 runtime
 loads / 82 compiled files, seven product modules / eleven instances. Originals
-575/535 and ledger 21/12 are unchanged; no criterion credit. O-142/O-143/O-145
-are implemented and awaiting the user's final independent review. This does
-not close unrelated earlier findings such as O-136/O-139.
+575/535 and ledger 21/12 are unchanged; no criterion credit. O-134/O-142/O-143/O-145
+are closed by audit 190 and user acceptance. Unrelated earlier findings such
+as O-136/O-139 remain carried.

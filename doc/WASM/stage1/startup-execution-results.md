@@ -115,6 +115,6 @@ Audit 188 supplies the commit-level adversarial review; the user accepted both
 groups with “Accept all four”. The subsequent
 [refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)
 verifies O-124's existing fix and implements O-134's checked generation-capacity
-refusal; audit 189 independently confirmed the host change. The [Lisp error follow-up](../../../tests/wasm/stage1/loader-target/load-error-followup.md) addresses O-142/O-143/O-145 and awaits final review. O-136 records the cache-clear witness gap,
+refusal; audit 189 independently confirmed the host change. The [Lisp error follow-up](../../../tests/wasm/stage1/loader-target/load-error-followup.md) is accepted after audit 190, closing O-134/O-142/O-143/O-145. O-136 records the cache-clear witness gap,
 and O-139 carries the reader-dispatch marker hazard into future dcode work.
 The standing rules prohibit invoking Claude; review is supplied by the user.

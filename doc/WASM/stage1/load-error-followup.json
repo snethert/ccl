@@ -1,15 +1,15 @@
 {
   "version": 1,
   "status": "PASS",
-  "review_disposition": "IMPLEMENTED_AWAITING_FINAL_REVIEW",
+  "review_disposition": "ACCEPTED_AUDIT_190",
   "parent": "34b130cd8964e8cdfbc90af7286b9520e802272a",
   "issues": {
     "O-124": "CLOSED_AUDIT_189",
     "O-137": "CLOSED_AUDIT_189",
-    "O-134": "HOST_REVIEWED_SOUND; LISP_FIX_AWAITING_FINAL_REVIEW",
-    "O-142": "SIMPLE-FILE-ERROR, pathname and message, twice caught; later LOAD succeeds",
-    "O-143": "NIL native-frame context; dispatch, restarts, debugger hook, package conflicts and no native frame lookup tested",
-    "O-145": "Dedicated refusal file; ordinary READY uses one generation"
+    "O-134": "CLOSED_AUDIT_190",
+    "O-142": "CLOSED_AUDIT_190",
+    "O-143": "CLOSED_AUDIT_190",
+    "O-145": "CLOSED_AUDIT_190"
   },
   "native": {
     "passed": 21843,
@@ -113,5 +113,47 @@
     ],
     "freeBytesBefore": 10260475904,
     "freeBytesAfter": 16503902208
+  },
+  "acceptance": {
+    "implementationCommit": "19ff6839",
+    "auditCommit": "890fde8f7d6ed51e0208cbd77b43b15951127a01",
+    "review": "../stage0/claude-review.md",
+    "userDecision": "Commit 19ff6839 is clean. Accept it. Nothing goes back to Codex from this review.",
+    "disposition": "NO_DEFECT",
+    "nonBlockingNotes": {
+      "O-146": "NO_ACTION",
+      "O-147": "NO_ACTION"
+    },
+    "independentReplay": {
+      "artifacts": {
+        "byteIdentical": 639,
+        "total": 642,
+        "otherDifferences": "workspace paths or stale provenance hash note"
+      },
+      "corpus": {
+        "fresh": 26204,
+        "failures": 0,
+        "inherited": 0,
+        "sampled": 0
+      },
+      "native": {
+        "baseline": "PASS",
+        "registered": "PASS",
+        "enabledTests": 21843,
+        "restoredFasls": 164
+      },
+      "readers": {
+        "comparisons": 782,
+        "files": 46,
+        "profiles": 17
+      },
+      "extraErrorPathProbes": 9,
+      "ready": "PASS",
+      "dedicatedRefusalRun": "PASS",
+      "startupRefusals": "PASS",
+      "preFixFailures": "REPRODUCED"
+    },
+    "acceptanceTestsRerun": false,
+    "slotCredit": false
   }
 }

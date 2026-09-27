@@ -1,3 +1,22 @@
+## 2026-09-27 — Accept error recovery after final audit 190
+
+The user accepted `19ff6839`: no defect and no further producer round.
+Imported audit 190 (`890fde8f`) unchanged from `claude-audit-190` into `wasm2`.
+O-134, O-142, O-143 and O-145 are closed; the provenance note O-146 and documented
+BREAK behaviour O-147 need no action.
+
+The independent fresh-tree replay reproduced 639/642 artifacts, with only
+workspace-path/provenance differences. Both 83-load READY instances retain
+their spare generation; the dedicated 85-load run catches both file errors
+and completes a later LOAD without leaked sessions. Both startup refusals,
+both pre-fix failure witnesses and nine additional error-path probes agree.
+The reviewer reran all 26,204 compiler comparisons, both native suites with
+164 FASLs restored, and 782 reader comparisons across 46 files/17 profiles.
+
+This acceptance changes documentation only; no tests rerun. Reviews are now
+one pass, with only real defects gating acceptance. READY 81/82, originals
+575/535 and ledger 21/12 remain unchanged; no criterion credit.
+
 ## 2026-09-27 — Keep READY 81/82; complete audit 189 error recovery in one follow-up
 
 Imported audit 189 (`34b130cd`) into `wasm2`. The host refusal is independently
