@@ -5048,3 +5048,42 @@ No timing was measured; Codex claims none.
 ### Disposition
 
 The host change is correct: admission runs after complete validation and before any request or TCR change, refusal leaves memory, tables, roots and sessions untouched (read in `reserve`/`createGeneration`: the capacity throw precedes every mutation), only generation exhaustion is translated, and all four remove-one mutants are killed by Codex's own checks. The O-124 verification is correct and my audit-188 finding is withdrawn. The independent corpus replay reproduces Codex's 26,204 exactly. **One defect stands (O-142):** the refusal reaches Lisp as an undefined-function error that masks the cause, and the commit's documentation misdescribes that behaviour as a designed terminal refusal. Recommendation: accept the host change and the O-124 closure; hold the "O-134 fixed" claim and the README/refusal-followup wording until `load`'s errno path is corrected on wasm32 and re-witnessed with a handler-wrapped LOAD. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; corpus 26,204 independently replayed; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
+
+## Hundred-and-ninetieth Claude audit — the Codex commit above audit 189: the LOAD and error-recovery follow-up 19ff6839 (O-142, O-143, O-145), with the compiler corpus and the native suite rerun rather than reused — 27 September 2026
+
+Replayed from a Git-free `git archive 19ff6839` tree on the RAM disk (`/private/tmp/ccl-work/claude/a190`, deleted after the audit). Audit 189 (`34b130cd`) was imported by this commit; its branch is deleted.
+
+### What the commit does
+
+Product Lisp +8/−3 in three files, all under `#+wasm32-target`: `load` (`level-1/l1-files.lisp:1345`) reports a `%fasload` failure through `signal-file-error` with the requested pathname instead of `%err-disp`; `%get-frame-ptr` (`level-1/l1-lisp-threads.lisp:689`) is defined on wasm32 and returns NIL, so every error and restart path that passes a native frame now has a value; `%last-fn-on-stack` (`level-1/l1-error-system.lisp:853`) returns NIL on wasm32, so `%real-err-fn-name` prints "Unknown". The generation-exhaustion witness moves out of `postimage.lisp` into `refusals.lisp`, so ordinary READY keeps its second runtime generation; new `errors.lisp` exercises `%err-disp`/`%errno-disp`, `check-type` with `store-value`, package-name and export-conflict restarts, a muffled warning and the debugger hook; `refusal-check.py` checks the dedicated 85-load run. `qualify.py` adds `l1-files.lisp` to the shared-input list. The README's "checked 4 is an uncatchable refusal" wording is withdrawn.
+
+### Tier 0 — identity
+
+Evidence pack `2026-09-27-audit189-errors-r1` at ccl-evidence commit 8cebb6ab; `summary.json` 593e9cfd… and `index.json` 14c193ad… equal the pinned hashes; all 11 `sourceIdentity` files hash-equal to the tree; the five corpus inputs are unchanged from audit 189. Fresh compilation of the three changed runtime files, the five witnesses and the relinked runtime archive: **639 of 642** inventory entries byte-identical. The three differences: `postimage-final/compile.log` (source path), `postimage-parent.json` (image path) and `changed-files/sources.json`, where Codex's l1-files build recorded the pre-final hashes of `l1-error-system.lisp` and `l1-lisp-threads.lisp` (that build predates the two frame edits; its products are byte-identical to mine, so nothing depends on it — O-146, provenance only). Relinked runtime archive: 10,892 functions, 8,817 units, 39 helpers, 126,230 root cells, 68,965,846 bytes, as documented.
+
+### Tier 2 — replay
+
+| Stage | Codex | Claude |
+|---|---|---|
+| READY a (traced), b | [83, 83], one generation each | `ready-check.py` PASS [83, 83], generations 1/1, heap 973c98eb…, code ca6991d1…; every compared field equal |
+| Dedicated refusal/error run | 85 loads, two generations, two caught `SIMPLE-FILE-ERROR`, no leaked sessions | `refusal-check.py` PASS; fields equal |
+| Omitted bundle / empty namespace | refuse after 1 / 0 loads | equal |
+| Pre-fix runtime with the new witnesses | fails with `UNDEFINED-FUNCTION %GET-FRAME-PTR` | reproduced: refusal run STOPPED checked 15 after printing `(:ERROR UNDEFINED-FUNCTION "Undefined function: %GET-FRAME-PTR")`; `errors.lisp` alone STOPPED at its first assertion |
+| Compiler corpus | reused from audit 189 by identity | **rerun: 26,204 fresh / 0 inherited / 0 sampled, 207.6 s, PASS** |
+| Native R6/R6a | 21,843 passed; frame edits rebound by decoded code (139 / 628 functions) | **rerun from the final tree: baseline and registered runs both "All tests succeeded" over all 21,918 listed tests (21,843 enabled, 75 pre-existing disabled); 164 FASLs restored, 42 byte-identical, 122 decoded-equal; four declared driver functions the only changed native code** |
+| Readers | 782 / 46 files / 17 profiles | 782 / 46 / 17 PASS |
+| Host controls | reused from audit 189 | not rerun; no host file changed (hashes equal) |
+
+### Probes (nine handler-wrapped forms appended to `errors.lisp`, run against the relinked runtime; Worker reached READY with 85 loads)
+
+`ignore-errors` returns; `cerror` continues under a `continue` handler and is caught unhandled; an unmuffled `warn` returns after printing `; Warning: probe warning 7 / While executing: "Unknown"`; `error` inside `restart-case` is caught; an unhandled `signal` returns NIL; `(%err-disp -12 "/y")` signals `SIMPLE-ERROR "Error #-12"`; `check-type` without a handler signals the `TYPE-ERROR`; `break` signals `SIMPLE-ERROR "probe break"` (no interactive debugger in the profile, as documented — O-147, informational). No path reaches an undefined function.
+
+### Observations
+
+- **O-142, O-143, O-145 CLOSED; O-134 CLOSED.** The refusal is a catchable `SIMPLE-FILE-ERROR` with the pathname, a missing file remains one, and the frame-dependent error paths all signal their intended conditions.
+- **O-146** (non-blocking): the provenance note above on `changed-files/sources.json`.
+- **O-147** (informational): `break` on wasm32 is an ordinary error; consistent with the documented absence of a debugger.
+
+### Disposition
+
+**No defect. Accept 19ff6839.** Nothing in this audit requires a producer round: the two non-blocking notes need no action. The corpus and native suite were rerun rather than reused, so no reuse claim remains open. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
