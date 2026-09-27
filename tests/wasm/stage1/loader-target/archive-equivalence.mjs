@@ -30,23 +30,23 @@ async function* forms(file){
  }
  assert.equal(depth,0);
 }
-const sourceRows=new Map(),baselineFiles=kind==='runtime'?read(baseline+'/bundle-manifest.json').files:[];
+const sourceRows=new Map(),baselineFiles=kind==='runtime'&&baseline!=='-'?read(baseline+'/bundle-manifest.json').files:[];
 let currentFile,templates,currentSources;
 const boot=kind==='boot'?new Map(read(source+'/boot/code-set.json').modules.map(m=>[m.name,m])):null;
 function input(f){
  const u=units.get(f.unit);
  if(kind==='boot'){
-  const m=boot.get(f.source_name);return {wat:m.wat,version:4,template:fs.readFileSync(baseline+'/boot/artifacts/'+m.name+'.template.wasm')};
+  const m=boot.get(f.source_name);return {wat:m.wat,version:4,template:baseline==='-'?null:fs.readFileSync(baseline+'/boot/artifacts/'+m.name+'.template.wasm')};
  }
  if(currentFile!==u.file){
   const file=read(source+'/bundles.json').files.find(r=>r.path===u.file),prior=baselineFiles.find(r=>r.path===u.file);
-  currentFile=u.file;templates=decodeTargetBundle(fs.readFileSync(baseline+'/'+prior.bundle),prior.sha256).modules;
+  currentFile=u.file;templates=baseline==='-'?null:decodeTargetBundle(fs.readFileSync(baseline+'/'+prior.bundle),prior.sha256).modules;
   currentSources=new Map();let id=0;
   for(const unit of read(source+'/'+file.stem+'.records.json').units){
    const walk=r=>{currentSources.set('code_'+(++id),r);for(const c of r[8]??[])walk(c);};walk(unit.record);
   }
  }
- const r=currentSources.get(f.source_name);return {wat:r[4],version:r[0],template:templates.get(f.source_name).template};
+ const r=currentSources.get(f.source_name);return {wat:r[4],version:r[0],template:templates?.get(f.source_name).template??null};
 }
 const sharedForms=new Map(),declarations=new Map(),cache=new Set();
 let body,verified=0,symbolSites=0,codeSites=0,bytes=0;
@@ -99,10 +99,18 @@ for await(const text of forms(archiveStem+'.wat')){
  }
  const wat=print(rebuilt);fs.writeFileSync(out+'/reconstructed.wat',wat);
  execFileSync('/usr/local/bin/wat2wasm',['--enable-all',out+'/reconstructed.wat','-o',out+'/reconstructed.wasm']);
- const result=fs.readFileSync(out+'/reconstructed.wasm');assert.deepEqual(result,Buffer.from(original.template),'v1 template '+f.name);
+ const result=fs.readFileSync(out+'/reconstructed.wasm');
+ // Changed compiler products have no retained v1 binary. Assemble the
+ // original unlinked module independently, then compare exact bytes.
+ if(!original.template){
+  fs.writeFileSync(out+'/original.wat',original.wat);
+  execFileSync('/usr/local/bin/wat2wasm',['--enable-all',out+'/original.wat','-o',out+'/original.wasm']);
+  original.template=fs.readFileSync(out+'/original.wasm');
+ }
+ assert.deepEqual(result,Buffer.from(original.template),'v1 template '+f.name);
  verified++;bytes+=result.length;
  if(verified%500===0)fs.writeFileSync(out+'/progress.json',JSON.stringify({verified,symbolSites,codeSites}));
 }
 assert.equal(verified,archive.function_count);
-const result={status:'PASS',functions:verified,symbolSites,codeSites,templateBytes:bytes,archive:archive.binary_sha256};
+const result={status:'PASS',baseline:baseline==='-'?'fresh unlinked compiler WAT':baseline,functions:verified,symbolSites,codeSites,templateBytes:bytes,archive:archive.binary_sha256};
 fs.writeFileSync(out+'/result.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));

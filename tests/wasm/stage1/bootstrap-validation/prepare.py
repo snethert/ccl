@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 import tarfile
 import common as c
@@ -25,14 +26,39 @@ def driver_inputs(out):
             **{'driver/'+name:digest for name,digest in drivers.items()}}
 
 
-def prepare(out):
+def prepare(out, regenerate_probe=False):
     out=Path(out)
     for name in HARNESS:shutil.copyfile(c.HERE/name,out/name)
     # Parent artifacts were bound at session creation. Verify the actual raw
     # collection hook before reusing its instrumented counterpart.
     expected=c.read(c.PARENT/'deterministic.json')
-    assert c.sha(out/'compiled/collector_probe.wat')==expected['compiled/collector_probe.wat']
-    needed={'compiled/collector_probe_hook.wasm','compiled/collector_probe_hook.wat'}
+    needed=set()
+    if regenerate_probe:
+        # Compiler changes require the freshly generated leaf, not a hook
+        # compiled by the parent backend. Insert only the collection import
+        # and its entry call, then bind both products below.
+        raw=(out/'compiled/collector_probe.wat').read_text()
+        start=raw.index('(func $body '); i=start+len('(func $body')
+        while True:
+            while raw[i].isspace(): i+=1
+            if not any(raw.startswith('('+tag+' ',i) for tag in ('export','type','param','result','local')): break
+            depth=1; i+=1
+            while depth:
+                if raw[i]=='(': depth+=1
+                elif raw[i]==')': depth-=1
+                i+=1
+        call='(call $probe_collect) '
+        declaration='(import "probe" "collect" (func $probe_collect)) '
+        hooked=raw[:i]+call+raw[i:]
+        i=hooked.index('(module')+len('(module')
+        hooked=hooked[:i]+declaration+hooked[i:]
+        assert hooked.replace(call,'',1).replace(declaration,'',1)==raw
+        target=out/'compiled/collector_probe_hook.wat'
+        target.write_text(hooked)
+        subprocess.run([c.WABT,'--enable-all',target,'-o',target.with_suffix('.wasm')],check=True)
+    else:
+        assert c.sha(out/'compiled/collector_probe.wat')==expected['compiled/collector_probe.wat']
+        needed.update(('compiled/collector_probe_hook.wasm','compiled/collector_probe_hook.wat'))
     needed.update('owner-check/'+n for n in ('check.mjs','owner.mjs'))
     needed.update(n for n in expected if n.startswith('owner-check/') and n.endswith('.mjs'))
     needed.update(('istruct-check.mjs','population-check.mjs'))
@@ -75,6 +101,9 @@ def prepare(out):
     for name in HARNESS+SERVICES+HELPERS:manifest[name]=c.sha(out/name)
     # Use the declared session inputs, never incidental logs or review files.
     manifest.update(driver_inputs(out))
+    if regenerate_probe:
+        for name in ('collector_probe.wat','collector_probe_hook.wat'):
+            manifest['compiled/'+name]=c.sha(out/'compiled'/name)
     for p in c.files(out/'owner-check'): 
         if p.suffix=='.mjs':manifest[str(p.relative_to(out))]=c.sha(p)
     for name in ('istruct-check.mjs','population-check.mjs'):manifest[name]=c.sha(out/name)

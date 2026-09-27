@@ -855,7 +855,7 @@
         base root (b-load wasm32::tcr.root_head) mv (b-load wasm32::tcr.mv_base)
         owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
       (write-string (b-reserve-runtime (b-wat "(i64.add (i64.const ~d) (i64.extend_i32_u (local.get $result_bytes)))" out-offset)) s)
-      (write-string (b-initialize-roots (b-local base) (+ 2 arg-slots)) s)
+      (write-string (b-initialize-roots (b-local base) (+ 2 n)) s)
       (format s "(i32.store offset=8 (local.get ~a) ~a)" base self)
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 16 (* 4 i)) base code))
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local base) 16)) s)
@@ -868,7 +868,7 @@
                       (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) (i32.const ~d) (local.get $dispatch_slot))" n)) s)
       (write-string "(local.set $count) (local.set $value)" s)
       (write-string (b-ensure-results "(local.get $count)") s)
-      (format s "(memory.copy (local.get $results) (i32.add (local.get ~a) (i32.const ~d)) (i32.mul (local.get $count) (i32.const 4)))" base out-offset)
+      (format s "(if (i32.eq (local.get $count) (i32.const 1)) (then (i32.store (local.get $results) (i32.load (i32.add (local.get ~a) (i32.const ~d))))) (else (memory.copy (local.get $results) (i32.add (local.get ~a) (i32.const ~d)) (i32.mul (local.get $count) (i32.const 4)))))" base out-offset base out-offset)
       (write-string (b-store wasm32::tcr.vsp (b-local vsp)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local mv)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top (b-local owner)) s)
@@ -916,7 +916,7 @@
         owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
       (write-string (b-reserve-runtime (b-wat "(i64.add (i64.const ~d) (i64.extend_i32_u (local.get $result_bytes)))" (+ 48 (* 4 arg-slots)))) s)
       (format s "(local.set ~a (i32.add (local.get ~a) (local.get $result_bytes)))" context base)
-      (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) (b-wat "(i32.const ~d)" arg-slots)) s)
+      (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) (b-wat "(i32.const ~d)" n)) s)
       (format s "(i32.store offset=40 (local.get ~a) ~a)" context self)
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 48 (* 4 i)) context code))
       (format s "(call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
@@ -931,7 +931,7 @@
       (if *b-producer-target*
         (format s "(local.set $results (i32.load offset=8 ~a))" *b-producer-target*)
         (write-string (b-ensure-results "(local.get $count)") s))
-      (format s "(if (i32.eqz (local.get $dynamic_results)) (then (memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))))" base)
+      (format s "(if (i32.eqz (local.get $dynamic_results)) (then (if (i32.eq (local.get $count) (i32.const 1)) (then (i32.store (local.get $results) (i32.load (local.get ~a)))) (else (memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))))))" base base)
       (write-string (b-store wasm32::tcr.vsp (b-local vsp)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local mv)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top (b-local owner)) s)
@@ -1506,7 +1506,7 @@
              (format s "(if ~a (then (if (i32.load offset=20 (i32.load offset=28 (local.get $context))) (then (local.set $root (i32.load offset=24 (i32.load offset=28 (local.get $context)))))) (local.set $output (call $rv_deliver (i32.load offset=28 (local.get $context)) (local.get $results) (local.get $count) (local.get $top)))) (else" delivery-mode)
              (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $output)) (i64.mul (i64.extend_i32_u (local.get $count)) (i64.const 4))) (i64.extend_i32_u (local.get $owner)))" 3) s)
              (write-string "))" s)
-             (format s "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz ~a) (then (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))" delivery-mode)
+             (format s "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz ~a) (then (if (i32.eq (local.get $count) (i32.const 1)) (then (i32.store (local.get $output) (local.get $value))) (else (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))))" delivery-mode)
              (write-string "(if (local.get $dynamic_results) (then (call $rv_release (local.get $frame))))" s)
              (write-string restore s)
              (write-string (b-store wasm32::tcr.mv_count "(local.get $count)") s)
@@ -1721,15 +1721,15 @@
   (func $object_base (param $node i32) (param $bytes i32) (param $header i32) (result i32) (local $p i32)
     (if (i32.ne (i32.and (local.get $node) (i32.const 7)) (i32.const 6)) (then (throw $call_error (i32.const 4))))
     (local.set $p (i32.sub (local.get $node) (i32.const 6)))
-    (call $span (local.get $p) (local.get $bytes))
+    (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $p)) (i64.extend_i32_u (local.get $bytes))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
 ~a    (if (i32.ne (i32.load (local.get $p)) (local.get $header)) (then (throw $call_error (i32.const 4)))) (local.get $p))
   (func $function_value (param $symbol i32) (result i32) (local $node i32)
     (local.set $node (i32.load offset=12 (call $object_base (local.get $symbol) (i32.const 32) (i32.const 1850))))
     (drop (call $object_base (local.get $node) (i32.const 32) (i32.const 1578))) (local.get $node))
   (func $resolve (param $node i32) (result i32 i32) (local $p i32) (local $id i32) (local $row i32) (local $slot i32) (local $cap i32) (local $version i32) (local $wide i64)
     (if (i32.ne (i32.and (local.get $node) (i32.const 7)) (i32.const 6)) (then (throw $call_error (i32.const 4))))
-    (call $span (i32.sub (local.get $node) (i32.const 6)) (i32.const 4))
-    (if (i32.eq (i32.load (i32.sub (local.get $node) (i32.const 6))) (i32.const 1850)) (then (local.set $node (call $function_value (local.get $node)))))
+    (if (i64.gt_u (i64.add (i64.extend_i32_u (i32.sub (local.get $node) (i32.const 6))) (i64.extend_i32_u (i32.const 4))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
+    (if (i32.eq (i32.load (i32.sub (local.get $node) (i32.const 6))) (i32.const 1850)) (then (if (i64.gt_u (i64.add (i64.extend_i32_u (i32.sub (local.get $node) (i32.const 6))) (i64.extend_i32_u (i32.const 32))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4)))) (local.set $node (i32.load offset=6 (local.get $node)))))
     (local.set $p (call $object_base (local.get $node) (i32.const 32) (i32.const 1578)))
     (local.set $id (i32.load offset=4 (local.get $p)))
     (if (i32.or (i32.and (local.get $id) (i32.const 3)) (i32.le_s (local.get $id) (i32.const 0))) (then (throw $call_error (i32.const 4))))
@@ -1737,7 +1737,7 @@
     (local.set $version (i32.load offset=12 (local.get $p)))
     (if (i32.or (i32.and (local.get $version) (i32.const 3)) (i32.le_s (local.get $version) (i32.const 0))) (then (throw $call_error (i32.const 4))))
     (if (i32.and (global.get $code_registry) (i32.const 7)) (then (throw $call_error (i32.const 4))))
-    (call $span (global.get $code_registry) (i32.const 8))
+    (if (i64.gt_u (i64.add (i64.extend_i32_u (global.get $code_registry)) (i64.extend_i32_u (i32.const 8))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
     (local.set $cap (i32.load (global.get $code_registry)))
     (if (i32.or (i32.ge_u (local.get $id) (local.get $cap)) (i32.ne (i32.load offset=4 (global.get $code_registry)) (i32.const 1))) (then (throw $call_error (i32.const 4))))
     (local.set $wide (i64.add (i64.extend_i32_u (global.get $code_registry)) (i64.add (i64.const 8) (i64.mul (i64.extend_i32_u (local.get $id)) (i64.const 16)))))
@@ -1751,7 +1751,7 @@
     (if *bootstrap-front-end*
       "(if (i32.and (i32.eq (local.get $header) (i32.const 1578))
                     (i32.eq (i32.load (local.get $p)) (i32.const 1834)))
-        (then (call $span (local.get $p) (i32.const 32))
+        (then (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $p)) (i64.extend_i32_u (i32.const 32))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
               (drop (call $object_base (i32.load offset=28 (local.get $p)) (i32.const 32) (i32.const 2042)))
               (local.set $header (i32.const 1834))))
 "
@@ -3107,6 +3107,9 @@
  (if (i32.or (i32.and (i32.or (local.get $base) (i32.or (local.get $limit) (local.get $reserve))) (i32.const 15))
              (i32.or (i32.gt_u (local.get $base) (local.get $limit)) (i32.gt_u (local.get $reserve) (i32.sub (local.get $limit) (local.get $base))))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 19)) (then (i32.const 13)) (else (i32.const 2))))))
  (if (i64.gt_u (i64.extend_i32_u (local.get $limit)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 19)) (then (i32.const 13)) (else (i32.const 2))))))
+ (if (i32.and (i64.ge_u (local.get $end) (i64.extend_i32_u (local.get $base)))
+              (i64.le_u (local.get $end) (i64.extend_i32_u (i32.sub (local.get $limit) (local.get $reserve)))))
+  (then (return)))
  (if (i64.gt_u (local.get $end) (i64.extend_i32_u (local.get $limit))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 19)) (then (i32.const 13)) (else (i32.const 2))))))
  (if (i64.lt_u (local.get $end) (i64.extend_i32_u (local.get $base))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 19)) (then (i32.const 13)) (else (i32.const 2))))))
  (local.set $flags (i32.load offset=180 (global.get $tcr)))
@@ -3640,6 +3643,30 @@
             (list 'ccl::lfun-bits (second form)))
           (funcall hook expander form environment)))))
 
+(defun bootstrap-memq-macro (form env)
+  (declare (ignore env))
+  (if (= (length form) 3)
+    (let ((item (gensym)) (list (gensym)) (tail (gensym)))
+      `(let* ((,item ,(second form)) (,list ,(third form)))
+         (do ((,tail ,list (cdr ,tail)))
+             ((not (consp ,tail))
+              (if (null ,tail) nil
+                (locally (declare (notinline ccl::memq)) (ccl::memq ,item ,list))))
+           (when (eq ,item (car ,tail)) (return ,tail)))))
+    form))
+
+(defun bootstrap-length-macro (form env)
+  (declare (ignore env))
+  (if (= (length form) 2)
+    (let ((sequence (gensym)) (tail (gensym)) (count (gensym)))
+      `(let ((,sequence ,(second form)))
+         (do ((,tail ,sequence (cdr ,tail)) (,count 0 (1+ ,count)))
+             ((not (consp ,tail))
+              (if (null ,tail) ,count
+                (locally (declare (notinline length)) (length ,sequence))))
+           (declare (fixnum ,count)))))
+    form))
+
 (defun bootstrap-compiler-macros ()
   ;; These unchanged CCL expansions use target-aware comparisons and preserve
   ;; argument evaluation. Level-0 callers need them before l1-numbers installs
@@ -3647,10 +3674,13 @@
   (let ((table (make-hash-table :test #'eq)))
     (dolist (name '(+ - * / min max make-string make-array nth nthcdr proclaim ccl::assq
                    char= char/= char< char<= char> char>=
-                   ccl::min-2 ccl::max-2 ccl::imin-2 ccl::imax-2))
+                   ccl::min-2 ccl::max-2 ccl::imin-2 ccl::imax-2
+                   listp ccl::fixnump symbolp integerp stringp ccl::base-string-p))
       (let ((expander (compiler-macro-function name)))
         (unless expander (error "Missing bootstrap compiler macro: ~s" name))
         (setf (gethash name table) expander)))
+    (setf (gethash 'ccl::memq table) #'bootstrap-memq-macro
+          (gethash 'length table) #'bootstrap-length-macro)
     table))
 
 (defun bootstrap-alphatizers ()
@@ -6481,6 +6511,42 @@
     (push module *wasm32-fasl-modules*)
     afunc))
 
+(defvar *wasm32-inline-definitions* nil)
+
+(defun wasm32-call-with-inline-definitions (thunk)
+  ;; Use CCL's retained definition environment, including local macros and
+  ;; symbol macros. A raw lambda in *NX-GLOBALLY-INLINE* loses that environment.
+  ;; The producer is single-threaded; both hooks are restored even on refusal.
+  (let* ((ccl::*warn-if-redefine-kernel* nil)
+         (definitions (copy-alist *wasm32-inline-definitions*))
+         (note #'ccl::note-function-info)
+         (lookup #'ccl::retrieve-environment-function-info)
+         (ccl::*nx-proclaimed-inline*
+           (append (mapcar (lambda (entry) (cons (car entry) t)) definitions)
+                   (if (listp ccl::*nx-proclaimed-inline*) ccl::*nx-proclaimed-inline*
+                     (loop for name being the hash-keys of ccl::*nx-proclaimed-inline*
+                           using (hash-value value) collect (cons name value))))))
+    (unwind-protect
+         (progn
+           (setf (fdefinition 'ccl::retrieve-environment-function-info)
+                 (lambda (name env)
+                   (or (funcall lookup name env)
+                       (ccl::assq (ccl::maybe-setf-function-name name) definitions)))
+                 (fdefinition 'ccl::note-function-info)
+                 (lambda (name expression env)
+                   (prog1 (funcall note name expression env)
+                     (let* ((name (ccl::maybe-setf-function-name name))
+                            (info (cdr (funcall lookup name env))))
+                       ;; Redefinitions also remove an earlier expansion.
+                       (setq definitions (delete name definitions :key #'car :test #'eq))
+                       (when (and info (ccl::def-info.lambda info))
+                         (push (cons name info) definitions))))))
+           (multiple-value-bind (path warnings failure) (funcall thunk)
+             (unless failure (setq *wasm32-inline-definitions* definitions))
+             (values path warnings failure)))
+      (setf (fdefinition 'ccl::note-function-info) note
+            (fdefinition 'ccl::retrieve-environment-function-info) lookup))))
+
 (defun wasm32-compile-file (source &rest options &key (target :wasm32) (save-source-locations nil) &allow-other-keys)
   (unless (eq target :wasm32) (error "Not the wasm32 compilation target: ~s" target))
   (call-with-target
@@ -6501,5 +6567,6 @@
            (*macroexpand-hook* (bootstrap-macroexpand-hook))
            (ccl::*nx1-alphatizers* (bootstrap-alphatizers)))
        (multiple-value-bind (path warnings failure)
-           (apply #'compile-file source :target :wasm32 :save-source-locations save-source-locations options)
+           (wasm32-call-with-inline-definitions
+            (lambda () (apply #'compile-file source :target :wasm32 :save-source-locations save-source-locations options)))
          (values path (reverse *wasm32-fasl-modules*) warnings failure))))))

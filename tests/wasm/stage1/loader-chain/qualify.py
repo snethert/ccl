@@ -35,7 +35,7 @@ def run(kind, out, product, native_prelude=""):
     runtime = c.read(out / 'runtime/array-runtime.json')
     def prepare_execution(base):
         from prepare import prepare
-        result = prepare(base)
+        result = prepare(base, regenerate_probe=True)
         product.module('chain_metadata', HERE.parent / 'loader-def/metadata.py').overlay(base)
         shutil.copyfile(out / 'runtime/collector.wasm', base / 'collector.wasm')
         env = c.read(base / 'execution-environment.json')

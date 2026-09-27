@@ -14,6 +14,11 @@ def run(a_path, b_path, omitted_path, empty_path, parent_path):
     parent=read(parent_path)
     for boot,instance,value,result in ((a,'a',111,112),(b,'b',222,223)):
         assert boot['ready'] and boot['status']=='READY' and boot['boot0']
+        assert boot['instrumentation']['modules'] >= 1
+        if instance == 'a':
+            assert boot['instrumentation']['instances'] >= boot['modules']
+        else:
+            assert boot['instrumentation']['instances'] == 3
         assert not boot['level1CrossLoaded']
         assert boot['errorServiceMode']==1
         assert boot['collectionInhibition']==0 and not boot['collectionPending']

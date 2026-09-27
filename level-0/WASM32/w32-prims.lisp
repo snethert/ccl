@@ -530,8 +530,8 @@
 
 ;;; Unlike the native assembly dcode, D1's entry is an ordinary closure.
 ;;; Applicability and combination are still the original Lisp algorithms.
-;;; Recomputing from the current method list also avoids a stale dcode after
-;;; removing the final method. A cache can be added without changing this ABI.
+;;; The dispatch-table cache is invalidated with the native method/class
+;;; update protocol, including removal of the final method.
 (defun %wasm-applicable-methods (gf args)
   ;; Like the native dispatch-table miss path, this entry must work while
   ;; l1-clos-boot is still building the generic functions. The public MOP
@@ -550,6 +550,41 @@
         (push method methods)))
     (sort-methods methods cpls (%gf-precedence-list gf))))
 
+(defun %wasm-compute-combined-method (gf args required optional)
+  (let* ((methods (%wasm-applicable-methods gf args))
+         (combination (%gf-method-combination gf)))
+    (unless methods
+      (return-from %wasm-compute-combined-method
+        (values (lambda (&rest args) (apply #'no-applicable-method gf args)) nil)))
+    (unless (eq combination *standard-method-combination*)
+      (return-from %wasm-compute-combined-method
+        (values (compute-effective-method-function gf combination methods) nil)))
+    (let* ((keywords (compute-allowable-keywords-vector gf methods))
+           (method-list (compute-method-list methods)))
+      (unless method-list
+        (return-from %wasm-compute-combined-method
+          (values (lambda (&rest args)
+                    (declare (ignore args))
+                    (no-applicable-primary-method gf methods)) nil)))
+      (when (atom method-list) (setq method-list (list method-list)))
+      (let* ((key-index (+ required optional))
+             (key-info (when keywords (vector key-index keywords gf)))
+             (context (vector gf methods key-info
+                              (when keywords #'x-%%check-keywords) method-list))
+             (combined (lambda (&rest args)
+                         (%%cnm-with-args-combined-method-dcode context args))))
+        (values (if keywords
+                  (let ((check (vector key-index keywords combined gf)))
+                    (lambda (&rest args) (%%check-keywords check args)))
+                  combined)
+                t)))))
+
+(defun %wasm-gf-eql-specialized-p (gf)
+  (dolist (method (%gf-methods gf) nil)
+    (dolist (specializer (%method.specializers method))
+      (when (typep specializer 'eql-specializer)
+        (return-from %wasm-gf-eql-specialized-p t)))))
+
 (defun %wasm-standard-generic-call (gf args)
   (let* ((bits (inner-lfun-bits gf))
          (required (ldb $lfbits-numreq bits))
@@ -561,27 +596,34 @@
                 (logbitp $lfbits-restv-bit bits)
                 (logbitp $lfbits-keys-bit bits))
       (signal-program-error "Too many args to ~s" gf))
-    (let* ((methods (%wasm-applicable-methods gf args))
-           (combination (%gf-method-combination gf)))
-      (unless methods
-        (return-from %wasm-standard-generic-call (apply #'no-applicable-method gf args)))
-      (unless (eq combination *standard-method-combination*)
+    ;; Some compact/reader dispatch tables have no entry cells. They keep
+    ;; the uncached path; their first-data cell is the end sentinel.
+    ;; Its non-NIL head also distinguishes a cached zero-argument call.
+    ;; Clear/recompute paths clear both cells. Hits allocate no class list.
+    (let* ((dt (%gf-dispatch-table gf))
+           (cachep (>= (the fixnum (%gf-dispatch-table-size dt)) 2))
+           (key (and cachep (%svref dt %gf-dispatch-table-first-data))))
+      (when (and key
+                 (do ((classes (cdr key) (cdr classes))
+                      (arguments args (cdr arguments)))
+                     ((null classes) t)
+                   (let ((class (class-of (car arguments))) (entry (car classes)))
+                     (unless (and (eq (car entry) class)
+                                  (eq (cdr entry) (%class-cpl class)))
+                       (return nil)))))
         (return-from %wasm-standard-generic-call
-          (apply (compute-effective-method-function gf combination methods) args)))
-      (let* ((keywords (compute-allowable-keywords-vector gf methods))
-             (method-list (compute-method-list methods)))
-        (unless method-list
-          (return-from %wasm-standard-generic-call (no-applicable-primary-method gf methods)))
-        (when (atom method-list) (setq method-list (list method-list)))
-        (let* ((key-index (+ required optional))
-               (key-info (when keywords (vector key-index keywords gf)))
-               (context (vector gf methods key-info
-                                (when keywords #'x-%%check-keywords) method-list))
-               (combined (lambda (&rest args)
-                           (%%cnm-with-args-combined-method-dcode context args))))
-          (if keywords
-            (%%check-keywords (vector key-index keywords combined gf) args)
-            (apply combined args)))))))
+          (apply (%svref dt (1+ %gf-dispatch-table-first-data)) args)))
+      (multiple-value-bind (combined cacheable)
+          (%wasm-compute-combined-method gf args required optional)
+        (when (and cachep cacheable (not (%wasm-gf-eql-specialized-p gf)))
+          (let ((classes nil) (arguments args))
+            (dotimes (i required)
+              (let ((class (class-of (car arguments))))
+                (push (cons class (%class-cpl class)) classes))
+              (setq arguments (cdr arguments)))
+            (setf (%svref dt %gf-dispatch-table-first-data) (cons t (nreverse classes))
+                  (%svref dt (1+ %gf-dispatch-table-first-data)) combined)))
+        (apply combined args)))))
 
 (defun compute-dcode (gf &optional dt)
   (setq dt (or dt (%gf-dispatch-table gf)))

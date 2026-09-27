@@ -1046,6 +1046,28 @@
 
 ;;; This should only ever push anything on the list in the cold
 ;;; load (e.g., when running single-threaded.)
+#+wasm32-target
+(defparameter *istruct-cell-cache* nil)
+
+#+wasm32-target
+(defun register-istruct-cell (name)
+  ;; The alist remains authoritative. Its head also invalidates the cache
+  ;; across a new cold-load list or a dynamic binding of *ISTRUCT-CELLS*.
+  (let ((cache (or *istruct-cell-cache*
+                   (setq *istruct-cell-cache* (vector nil nil nil)))))
+    (if (and (eq (%svref cache 0) *istruct-cells*)
+             (eq (%svref cache 1) name)
+             (%svref cache 2))
+      (%svref cache 2)
+      (let ((cell (or (assq name *istruct-cells*)
+                      (let ((pair (cons name nil)))
+                        (push pair *istruct-cells*) pair))))
+        (setf (%svref cache 0) *istruct-cells*
+              (%svref cache 1) name
+              (%svref cache 2) cell)
+        cell))))
+
+#-wasm32-target
 (defun register-istruct-cell (name)
   (or (assq name *istruct-cells*)
       (let* ((pair (cons name nil)))
@@ -1130,4 +1152,3 @@
     (or cell
         (and create?
              (setf (gethash name %find-classes%) (make-class-cell name))))))
-

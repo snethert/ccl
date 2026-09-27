@@ -102,6 +102,105 @@
 #+wasm32-target
 (assert (handler-case (join-process *current-process*)
           (simple-error () t)))
+;; Native CCL serializes the raw lambda for globally inline definitions,
+;; dropping MACROLET's environment. Compare the native function call with
+;; the Wasm producer's retained, lexical cross-file expansion.
+#+wasm32-target (declaim (inline loader-cross-file-inline))
+#-wasm32-target (declaim (notinline loader-cross-file-inline))
+(macrolet ((local-offset (x) `(+ ,x 17)))
+  (defun loader-cross-file-inline (x) (local-offset x)))
+
+;;; Startup execution optimizations: these same assertions run in native
+;;; CCL when the post-image witness is compiled, then through ordinary LOAD.
+(defun loader-predicates (x)
+  (list (not (null (listp x))) (not (null (fixnump x)))
+        (not (null (symbolp x))) (not (null (integerp x)))
+        (not (null (stringp x)))))
+(assert (equal (mapcar #'loader-predicates (list nil t '(1) 7 (ash 1 80) "abc" #() #\A))
+               '((t nil t nil nil) (nil nil t nil nil) (t nil nil nil nil)
+                 (nil t nil t nil) (nil nil nil t nil) (nil nil nil nil t)
+                 (nil nil nil nil nil) (nil nil nil nil nil))))
+(defun loader-length (x) (length x))
+(defun loader-memq (x list) (memq x list))
+(assert (equal (mapcar #'loader-length (list nil '(1 2 3) "abc" #(1 2))) '(0 3 3 2)))
+(let ((v (make-array 5 :fill-pointer 2 :initial-element nil)))
+  (assert (= 2 (loader-length v))))
+(assert (handler-case (loader-length '(1 . 2)) (type-error () t)))
+(let* ((tail (list :found :last)) (list (cons :first tail)) (calls 0))
+  (assert (eq (memq (progn (incf calls) :found) (progn (incf calls) list)) tail))
+  (assert (= calls 2))
+  (assert (null (loader-memq :absent list))))
+(assert (handler-case (loader-memq :absent '(1 . 2)) (type-error () t)))
+
+(defclass loader-cache-parent () ())
+(defclass loader-cache-other () ())
+(defclass loader-cache-child (loader-cache-parent) ())
+(defmethod loader-cache-dispatch ((x loader-cache-parent)) :parent)
+(defmethod loader-cache-dispatch ((x loader-cache-other)) :other)
+(defparameter *loader-cache-object* (make-instance 'loader-cache-child))
+(dotimes (i 3) (assert (eq (loader-cache-dispatch *loader-cache-object*) :parent)))
+(defun loader-redefine-cache-child ()
+  (defclass loader-cache-child (loader-cache-other) ()))
+(loader-redefine-cache-child)
+(dotimes (i 3) (assert (eq (loader-cache-dispatch *loader-cache-object*) :other)))
+(defmethod loader-cache-dispatch ((x loader-cache-child)) (list :child (call-next-method)))
+(dotimes (i 3) (assert (equal (loader-cache-dispatch *loader-cache-object*) '(:child :other))))
+(remove-method #'loader-cache-dispatch
+               (find-method #'loader-cache-dispatch nil (list (find-class 'loader-cache-child))))
+(assert (eq (loader-cache-dispatch *loader-cache-object*) :other))
+(clear-gf-cache #'loader-cache-dispatch)
+(assert (eq (loader-cache-dispatch *loader-cache-object*) :other))
+
+#+wasm32-target
+(let* ((gf #'loader-cache-dispatch) (old (%gf-dispatch-table gf))
+       (compact (%cons-gf-dispatch-table 0)))
+  (dotimes (i %gf-dispatch-table-first-data)
+    (setf (svref compact i) (svref old i)))
+  (unwind-protect
+       (progn
+         (setf (%gf-dispatch-table gf) compact)
+         (compute-dcode gf)
+         (dotimes (i 3)
+           (assert (eq (loader-cache-dispatch *loader-cache-object*) :other)))
+         (assert (eq (svref compact %gf-dispatch-table-first-data) (%unbound-marker))))
+    (setf (%gf-dispatch-table gf) old)
+    (compute-dcode gf)))
+
+(defmethod loader-cache-eql ((x integer)) :integer)
+(defmethod loader-cache-eql ((x (eql 7))) :seven)
+(dotimes (i 3)
+  (assert (eq (loader-cache-eql 7) :seven))
+  (assert (eq (loader-cache-eql 8) :integer)))
+(defmethod loader-cache-zero () :zero)
+(dotimes (i 3) (assert (eq (loader-cache-zero) :zero)))
+(remove-method #'loader-cache-zero (find-method #'loader-cache-zero nil nil))
+(assert (handler-case (loader-cache-zero) (error () t)))
+(defmethod loader-cache-keywords ((x integer) &key value) (list x value))
+(dotimes (i 3)
+  (assert (equal (loader-cache-keywords 1 :value i) (list 1 i)))
+  (assert (handler-case (loader-cache-keywords 1 :invalid i) (error () t))))
+
+#+wasm32-target
+(progn
+  (let* ((name "LOADER-FASL-CACHE") (nickname "LOADER-FASL-NICK")
+         (p (make-package name :nicknames (list nickname) :use nil)))
+    (unwind-protect
+         (progn
+           (assert (eq (%fasl-find-pkg nickname (length nickname)) p))
+           (assert (eq (%fasl-find-pkg nickname (length nickname)) p))
+           (rename-package p name nil)
+           (assert (null (%fasl-find-pkg nickname (length nickname))))
+           (assert (eq (%fasl-find-pkg name (length name)) p))
+           (delete-package p)
+           (assert (null (%fasl-find-pkg name (length name)))))
+      (when (package-name p) (delete-package p))))
+  (let* ((*istruct-cells* nil) (name (gensym))
+         (cell (register-istruct-cell name)))
+    (assert (eq cell (register-istruct-cell name)))
+    (let ((*istruct-cells* nil))
+      (assert (not (eq cell (register-istruct-cell name)))))
+    (assert (eq cell (register-istruct-cell name)))))
+
 (format t "~&LOADER-POSTIMAGE-PASS ~s~%" *loader-postimage-observations*)
 (write-string "stdout λ😀" *standard-output*)
 (terpri *standard-output*)

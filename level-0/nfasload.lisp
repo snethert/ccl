@@ -67,9 +67,12 @@
   val)
 
 #+wasm32-target
+(defconstant $wasm-fasl-buf-len 65536)
+
+#+wasm32-target
 (defun %simple-fasl-read-buffer (s)
   (let* ((buffer (faslstate.iobuffer s))
-         (n (fd-read (faslstate.faslfd s) (svref buffer 0) $fasl-buf-len)))
+         (n (fd-read (faslstate.faslfd s) (svref buffer 0) $wasm-fasl-buf-len)))
     (declare (fixnum n))
     (unless (> n 0)
       (error "Unexpected end of FASL input: ~s" (faslstate.faslfname s)))
@@ -97,9 +100,11 @@
   (when (zerop (the fixnum (faslstate.bufcount s)))
     (%fasl-read-buffer s))
   (let* ((buffer (faslstate.iobuffer s))
+         (bytes (svref buffer 0))
          (index (svref buffer 1)))
-    (declare (fixnum index))
-    (prog1 (aref (svref buffer 0) index)
+    (declare (type (simple-array (unsigned-byte 8) (*)) bytes)
+             (fixnum index))
+    (prog1 (aref bytes index)
       (setf (svref buffer 1) (1+ index))
       (decf (the fixnum (faslstate.bufcount s))))))
 
@@ -118,6 +123,27 @@
            (setf (%get-ptr buffer)
                  (%incf-ptr bufptr))))
         (%fasl-read-buffer s)))))
+
+;;; Keep the stream API fallback. The common buffered path is expanded in
+;;; this file so words, counts and strings do not call Lisp once per byte.
+#+wasm32-target
+(eval-when (:compile-toplevel)
+  (declaim (inline %fasl-read-byte)))
+#+wasm32-target
+(defun %fasl-read-byte (s)
+  (let ((count (faslstate.bufcount s)))
+    (declare (fixnum count))
+    (if (and (> count 0)
+             (eq (faslapi.fasl-read-byte *fasl-api*) #'%simple-fasl-read-byte))
+      (let* ((buffer (faslstate.iobuffer s))
+             (bytes (svref buffer 0))
+             (index (svref buffer 1)))
+        (declare (type (simple-array (unsigned-byte 8) (*)) bytes)
+                 (fixnum index))
+        (setf (svref buffer 1) (the fixnum (1+ index))
+              (faslstate.bufcount s) (the fixnum (1- count)))
+        (aref bytes index))
+      (funcall (faslapi.fasl-read-byte *fasl-api*) s))))
 
 (defun %fasl-read-word (s)
   (the fixnum 
@@ -429,14 +455,39 @@
                      (errorp (%kernel-restart $xnopkg xthing)))))
             (t (report-bad-arg thing 'simple-string))))))
 
+#+wasm32-target
+(defparameter *fasl-package-cache* nil)
+
+#+wasm32-target
+(defun %fasl-find-pkg (str len)
+  (declare (fixnum len) (simple-string str))
+  (let* ((cache (or *fasl-package-cache*
+                    (setq *fasl-package-cache* (cons nil nil))))
+         (name (car cache)) (p (cdr cache)))
+    (if (and p (= len (the fixnum (length name)))
+             (dotimes (i len t)
+               (unless (eq (schar name i) (schar str i)) (return)))
+             (memq p %all-packages%)
+             ;; Names and nicknames can change between FASL expressions.
+             (dolist (n (pkg.names p))
+               (when (and (= len (the fixnum (length n)))
+                          (dotimes (i len t)
+                            (unless (eq (schar n i) (schar name i)) (return))))
+                 (return t))))
+      p
+      (let ((found (%find-pkg str len)))
+        (when found
+          (setf (car cache) (%fasl-copystr str len) (cdr cache) found))
+        found))))
+
 (defun %fasl-vpackage (s)
   (multiple-value-bind (str len new-p) (%fasl-vreadstr s)
-    (let* ((p (%find-pkg str len)))
+    (let* ((p (#-wasm32-target %find-pkg #+wasm32-target %fasl-find-pkg str len)))
       (%epushval s (or p (%kernel-restart $XNOPKG (if new-p str (%fasl-copystr str len))))))))
 
 (defun %fasl-nvpackage (s)
   (multiple-value-bind (str len new-p) (%fasl-nvreadstr s)
-    (let* ((p (%find-pkg str len)))
+    (let* ((p (#-wasm32-target %find-pkg #+wasm32-target %fasl-find-pkg str len)))
       (%epushval s (or p  (%kernel-restart $XNOPKG (if new-p str (%fasl-copystr str len))))))))
 
 (defun %fasl-vlistX (s dotp)
@@ -1065,6 +1116,7 @@
   (funcall (faslapi.fasl-get-file-pos *fasl-api*) s))
 (defun %fasl-read-buffer (s)
   (funcall (faslapi.fasl-read-buffer *fasl-api*) s))
+#-wasm32-target
 (defun %fasl-read-byte (s)
   (funcall (faslapi.fasl-read-byte *fasl-api*) s))
 (defun %fasl-read-n-bytes (s ivector byte-offset n)
@@ -1107,7 +1159,7 @@
     (setf (faslstate.faslversion s) 0)
     (#-wasm32-target %stack-block #+wasm32-target let
         ((buffer #-wasm32-target (+ target::node-size $fasl-buf-len)
-                 #+wasm32-target (vector (make-array $fasl-buf-len
+                 #+wasm32-target (vector (make-array $wasm-fasl-buf-len
                                                     :element-type '(unsigned-byte 8))
                                         0)))
       (setf (faslstate.iobuffer s) buffer)

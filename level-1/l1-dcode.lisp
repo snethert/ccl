@@ -183,6 +183,9 @@
   #-bccl (unless t (typep gf 'standard-generic-function) 
                  (report-bad-arg gf 'standard-generic-function))
   (let ((dt (%gf-dispatch-table gf)))
+    #+wasm32-target
+    (clear-gf-dispatch-table dt)
+    #-wasm32-target
     (unless (< (%gf-dispatch-table-argnum dt) 0) ;reader-method optimization
       (if (eq (%gf-dispatch-table-size dt) *min-gf-dispatch-table-size*)
         (clear-gf-dispatch-table dt)

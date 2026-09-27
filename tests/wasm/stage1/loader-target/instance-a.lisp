@@ -1,4 +1,5 @@
 (in-package "CCL")
+(assert (= (loader-cross-file-inline 25) 42))
 (assert (equal *loader-instance-state* '(:cold 0)))
 (setf (cadr *loader-instance-state*) 111)
 (defun loader-instance-a-result () (1+ (cadr *loader-instance-state*)))
