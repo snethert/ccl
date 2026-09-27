@@ -1,0 +1,212 @@
+{
+ "date": "2026-09-27",
+ "commit": "ea82d8e70bb82cb74e3d046879da340e6df97d1d",
+ "inputs": {
+  "boot": "/private/tmp/ccl-work/codex/loader-startup-timing-r1/boot-r21 (evidence archive boot-r21.tar.gz of 2026-09-26-stage1-loader-completion-r1)",
+  "bundles": "/private/tmp/ccl-work/codex/loader-startup-timing-r1/bundles-r18 (evidence archive bundles-r18.tar.gz of the same pack)"
+ },
+ "engine": {
+  "node": "v25.6.1",
+  "v8": "14.1.146.11-node.19",
+  "platform": "macOS 24.6.0, x86-64"
+ },
+ "wabt": "/usr/local/bin/wat2wasm --enable-all (the pinned validation toolchain)",
+ "stats": {
+  "files": 82,
+  "units": 8816,
+  "modules": 10891,
+  "bundleBytes": 547797092,
+  "moduleBinaryBytes": 208260920,
+  "templateBytes": 208260920,
+  "symbolImports": 136935,
+  "codeImports": 2075,
+  "functionImports": 32673,
+  "rootCellsAllUnits": 125199,
+  "maxSymbolImportsPerModule": 72,
+  "maxImportsPerModule": 85
+ },
+ "helpers": {
+  "entryBodyBytes": 64006013,
+  "helperBodies": 424749,
+  "distinctHelperBodies": 256,
+  "largestFiles": [
+   [
+    "l1-streams.w32fsl",
+    2103,
+    38824082
+   ],
+   [
+    "foreign-types.w32fsl",
+    769,
+    13339982
+   ],
+   [
+    "l1-error-system.w32fsl",
+    566,
+    9501405
+   ]
+  ],
+  "nonEntryFraction": 0.693,
+  "helperBytes": 136453339,
+  "helperByteFraction": 0.655
+ },
+ "boot": {
+  "modules": 1042,
+  "binaryBytes": 23533545,
+  "templateBytes": 23533545,
+  "entryBodyBytes": 9766196,
+  "symbolImports": 14309,
+  "codeImports": 40,
+  "firstCodeId": 16,
+  "heapPayloadBytes": 681048,
+  "nonEntryFraction": 0.585
+ },
+ "v1_admission_cost_ms": {
+  "l1-streams": {
+   "modules": 2103,
+   "bundleBytes": 102247001,
+   "decode": 2670.47,
+   "sha256_all_modules": 802.08,
+   "inspect_all": 90.04,
+   "validate_all": 175.79,
+   "new_Module_all": 154.5,
+   "new_Instance_all": 37.75,
+   "table_set": 3.46,
+   "bundle_compile_full_path": 7614.64
+  },
+  "misc": {
+   "modules": 176,
+   "bundleBytes": 8978831,
+   "decode": 246.06,
+   "sha256_all_modules": 114.49,
+   "inspect_all": 11.7,
+   "validate_all": 15.3,
+   "new_Module_all": 18.69,
+   "new_Instance_all": 4.08,
+   "table_set": 0.34,
+   "bundle_compile_full_path": 690.65
+  }
+ },
+ "prototype_archives": {
+  "misc": {
+   "functions": 176,
+   "helperInstancesBefore": 6864,
+   "distinctHelpers": 39,
+   "watBytes": 9534063,
+   "wasmBytes": 1168420,
+   "wat2wasm": {
+    "seconds": 0.45,
+    "maxRssBytes": 85917696
+   },
+   "engine_ms": {
+    "validate": 2.25,
+    "new_Module": 1.85,
+    "compile_async": 2.84,
+    "new_Instance": 0.91
+   },
+   "exports": 352,
+   "renamedImports": 2368
+  },
+  "boot": {
+   "functions": 1042,
+   "helperInstancesBefore": 40638,
+   "distinctHelpers": 39,
+   "watBytes": 83383417,
+   "wasmBytes": 10248392,
+   "wat2wasm": {
+    "seconds": 3.57,
+    "maxRssBytes": 736030720
+   },
+   "engine_ms": {
+    "validate": 16.85,
+    "new_Module": 13.63,
+    "compile_async": 22.21,
+    "new_Instance": 10.23
+   },
+   "exports": 2084,
+   "renamedImports": 14349
+  },
+  "l1-streams": {
+   "functions": 2103,
+   "helperInstancesBefore": 82017,
+   "distinctHelpers": 39,
+   "watBytes": 96991845,
+   "wasmBytes": 11861596,
+   "wat2wasm": {
+    "seconds": 4.13,
+    "maxRssBytes": 852033536
+   },
+   "engine_ms": {
+    "validate": 18.81,
+    "new_Module": 16.53,
+    "compile_async": 25.92,
+    "new_Instance": 11.52
+   },
+   "exports": 4206,
+   "renamedImports": 25277
+  },
+  "all-82": {
+   "functions": 10891,
+   "helperInstancesBefore": 424749,
+   "distinctHelpers": 39,
+   "watBytes": 560180410,
+   "wasmBytes": 68787697,
+   "mergeSeconds": 443.9,
+   "wat2wasm": {
+    "seconds": 23.76,
+    "maxRssBytes": 4960718848
+   },
+   "engine_ms": {
+    "validate": 124.78,
+    "new_Module": 99.66,
+    "compile_async": 150.75,
+    "new_Instance": 67.35,
+    "table_set_entries": 4.53
+   },
+   "exports": 21782,
+   "renamedImports": 139010,
+   "valid": true
+  },
+  "note": "merge.mjs output is streamed because the whole-runtime WAT exceeds V8's maximum string length; first attempt failed with RangeError: Invalid string length"
+ },
+ "v8_limits_main": {
+  "definedFunctions": 1000000,
+  "imports": 1000000,
+  "exports": 1000000,
+  "globals": 1000000,
+  "tags": 1000000,
+  "moduleBytes": 1073741824,
+  "functionBytes": 7654321,
+  "tableSize": 10000000
+ },
+ "timing_experiment": "ccl-evidence/2026-09-27-loader-startup-timing-r1 contains only run-1.stderr; no timing.json was written",
+ "launch_v1_full": {
+  "wallSeconds": 329.9,
+  "maxRssBytes": 4786270208,
+  "peakFootprintBytes": 3762188288,
+  "runtimeLoads": 81,
+  "collections": 2029,
+  "command": "node tests/wasm/stage1/loader-target/boot0.mjs boot-r21 boot-r21/runtime-binaries --bundles=bundles-r18 --report=ready.json --expect-ready"
+ },
+ "admission_v1_all_bundles": {
+  "seconds": 55.7,
+  "rssAfterReadingBundlesMB": 820,
+  "rssAfterAdmissionMB": 1994,
+  "heapUsedMB": 282,
+  "externalMB": 957,
+  "arrayBuffersMB": 950,
+  "maxRssBytes": 2090655744,
+  "script": "admit-all.mjs"
+ },
+ "archive_engine_process": {
+  "maxRssBytes": 352387072,
+  "wasmBytes": 68787697,
+  "engine_ms": {
+   "validate": 122.27,
+   "new_Module": 96.48,
+   "new_Instance": 68.11
+  }
+ },
+ "bundle_fasl_bytes": 5754020,
+ "bundle_manifest_json_bytes": 125519920
+}

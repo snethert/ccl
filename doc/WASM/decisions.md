@@ -522,3 +522,28 @@ the plan branch folding in Codex's amendments."
 
 The amendment is entered by Claude on the user's instruction, on the plan
 branch, for Codex to import with NSL-P2; nothing else in this file changes.
+
+## Module consolidation — 27 September 2026
+
+After READY at `ea82d8e7`, the user identified the module count as the cause
+of the slow launch and asked for a plan to reduce it "to a small number".
+Claude measured the READY inputs and wrote
+[MCP-P1](stage1/module-consolidation-plan.md); Codex reviewed three rounds
+(P2: seven findings, P3: four corrections, P4: three corrections) and judged
+P4 valid for implementation. The user then answered "Yes to all three":
+
+1. **Target.** Seven product engine modules at READY: the four services, the
+   host-call adapter, one level-0 boot archive and one level-1 runtime
+   archive, with helpers shared once per archive (Q-A).
+2. **Timing of compilation.** An archive is compiled and its first generation
+   instantiated at Worker start; every unit is still published at opcode 72
+   in native load order, so the NSL-P2 install-on-request rule holds for
+   all table, registry and root state (Q-B).
+3. **Sequence.** One bounded, instrumented baseline run to READY precedes
+   implementation, with a timeout and partial results retained (Q-C, P-0).
+
+The plan promises no READY time; the measured facts are its F items. The
+user also recorded a future direction, guarded direct calls to CL-package
+functions inside the archive (A-13, P-6), outside this plan's packets.
+The entry is made by Claude on the user's instruction, on the plan branch,
+for Codex to import; nothing else in this file changes.

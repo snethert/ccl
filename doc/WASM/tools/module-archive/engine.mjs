@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import {performance} from 'node:perf_hooks';
+const [wasmPath]=process.argv.slice(2);
+const bytes=fs.readFileSync(wasmPath);const imports=JSON.parse(fs.readFileSync(wasmPath.replace(/\.wasm$/,'.wat.imports.json')));
+let t=performance.now();const ok=WebAssembly.validate(bytes);const tV=performance.now()-t;
+t=performance.now();const mod=new WebAssembly.Module(bytes);const tM=performance.now()-t;
+t=performance.now();const amod=await WebAssembly.compile(bytes);const tA=performance.now()-t;
+const memory=new WebAssembly.Memory({initial:64,maximum:32769,shared:false});
+const env={memory,tcr:1024,code_registry:4096,table:new WebAssembly.Table({element:'anyfunc',initial:65536}),tail_table:new WebAssembly.Table({element:'anyfunc',initial:65536}),call_error:new WebAssembly.Tag({parameters:['i32']}),type_error:new WebAssembly.Tag({parameters:['i32','i32']}),nonlocal_exit:new WebAssembly.Tag({parameters:['i32']})};
+const io={env,owner:{ensure:()=>{}},integer:{calculate:()=>0},floating:{calculate:()=>0},symbols:{},codes:{},keywords:{}};
+for(const i of imports)io[i.mod][i.field]=i.mod==='codes'?4:8;
+t=performance.now();const inst=new WebAssembly.Instance(mod,io);const tI=performance.now()-t;
+const ex=Object.keys(inst.exports);
+t=performance.now();let n=0;for(const k of ex){if(k.endsWith('.entry')){env.table.set(++n,inst.exports[k]);}}const tT=performance.now()-t;
+console.log(JSON.stringify({wasm:wasmPath,bytes:bytes.length,valid:ok,exports:ex.length,importsRenamed:imports.length,ms:{validate:tV,new_Module:tM,compile_async:tA,new_Instance:tI,table_set_entries:tT}},(k,v)=>typeof v==='number'?Math.round(v*100)/100:v));
