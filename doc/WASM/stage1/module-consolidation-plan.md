@@ -1,28 +1,29 @@
 # Module consolidation plan — from 11,938 engine modules at READY to 7
 
 ```
-DOC-ID        MCP-P7 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
+DOC-ID        MCP-P8 (P1 aea879ee; P2 f22d8756 folded in Codex's seven findings; P3 56273a33
               its four corrections; P4 folds in Codex's three corrections of P3, after which
               Codex considers the plan valid for implementation; P5 records the
               user's adoption, the memory measurements F-12 and the direct-call direction A-13;
               P6 records completed P-0 and the user's heap/stack sizing amendment;
-              P7 adds bounded input ownership and release during loading)
+              P7 adds bounded input ownership and release during loading;
+              P8 incorporates Claude's review 0a7cd736 and separates the work)
 STATUS        ADOPTED by the user, 27 September 2026 (U-5: "Yes to all three"), after
               Codex judged P4 valid for implementation; packet contents, sizes and order
               remain Codex's implementation choices; A-13 is a recorded future direction
 AUTHOR        Claude (Fable 5.1), 27 September 2026, after the READY commit ea82d8e7
-AMENDMENT     Codex, 27 September 2026, user directions U-6/U-7; documentation only
+AMENDMENT     Codex, 27 September 2026, U-6/U-7 and relayed review U-8; documentation only
 READER        Codex, as Stage 1 author; review amended items by ID
 BASE          wasm2 at ea82d8e7 (READY under decision A2); measured on the retained
               loader-startup-timing-r1 inputs boot-r21 and bundles-r18
-TOUCHES       P7: this document and doc/WASM/decisions.md; no implementation change
+TOUCHES       P8: this document and doc/WASM/decisions.md; imported review unchanged
 CHANGES       §9 records revision history; §10's import qualifications still apply
 ```
 
 ## 0. How to read this
 
 Every item carries an ID; IDs from P1 are kept, amended items are marked with
-revision labels such as `(P7)`; new items continue the numbering. Review amended
+revision labels such as `(P8)`; new items continue the numbering. Review amended
 items by ID with `AGREE`, `DISAGREE`, `AMEND` or `UNVERIFIED`. Facts (F) name
 their measurements or source evidence. F-13 is the executed P-0 baseline;
 F-14 gives native defaults and the current Wasm growth policy; F-15 records
@@ -67,6 +68,11 @@ proposed implementation and did not execute Lisp.
   used and derefenced in the JS so the JS collector works alongside?", then
   "update the plan". Add explicit buffer ownership, bounded staging and
   release gates to P-1 (A-16), preserving admission and repeated LOAD.
+- U-8 (P8). The user relayed Claude's committed
+  [review of P6/P7](module-consolidation-review-p7.md), `0a7cd736`: agreement
+  with four amendments on packet scope, GC timing, host slices versus a C
+  range interface, and main-thread FASL ownership. Codex imports that review
+  unchanged and incorporates the amendments below; no new review was invoked.
 
 ## 2. Facts at ea82d8e7
 
@@ -203,13 +209,20 @@ proposed implementation and did not execute Lisp.
   and [bound evidence index](module-consolidation-p0.json). The user relayed
   Claude's review that the timing-only baseline is sound; this does not
   accept the unimplemented archive or sizing changes.
-- F-14 (P6). Native CCL32 uses 1 MiB control, 1 MiB value and 512 KiB
+- F-14 (P8). Native CCL32 uses 1 MiB control, 1 MiB value and 512 KiB
   temporary-object stacks for ordinary listener/threads, excluding guards
   ([source](../../../level-1/l1-lisp-threads.lisp)); the initial kernel
-  bootstrap temporary stack is 256 KiB. The native free-heap threshold is
+  bootstrap temporary stack is 256 KiB: `new_tcr(initial_stack_size,
+  MIN_TSTACK_SIZE)` in the kernel startup path uses `MIN_TSTACK_SIZE = 1<<18`
+  ([area.h](../../../lisp-kernel/area.h)), independently of the 1 MiB
+  `DEFAULT_INITIAL_STACK_SIZE`. This resolves the review's UNVERIFIED item.
+  The native free-heap threshold is
   16 MiB beyond live/image data, not a fixed total heap size
   ([kernel defaults](../../../lisp-kernel/pmcl-kernel.c)). In P-0, Wasm
   started with two 64 KiB spaces, growing to two 8 MiB spaces at READY.
+  Its temporary and explicit control areas are only 16 KiB each
+  ([driver](../../../tests/wasm/stage1/loader-target/boot0.mjs): 196608–212992
+  and 212992–229376), compared with native's 512 KiB and 1 MiB.
   The current owner grows only if collection cannot satisfy the next
   allocation; a nearly full heap can therefore collect repeatedly without
   gaining useful free space ([owner](../../../runtime/wasm32/collector-owner.mjs)).
@@ -246,12 +259,13 @@ proposed implementation and did not execute Lisp.
   bindings at launch; none of that is reused. The lesson kept is only the
   shape: many logical functions, few engine modules, table entries filled from
   exports.
-- D-4 (P6). F-13 identifies root allocation as the largest measured cost;
+- D-4 (P8). F-13 identifies root allocation as the largest measured cost;
   collection and residual execution are also substantial. A-7 removes
   repeated per-module admission work, while archive admission still has a
-  cost. A-15 addresses root bookkeeping and A-14 addresses allocation
-  headroom. Neither their savings nor a new READY time is established until
-  P-1 measures them; a reserved root block does not by itself prove that
+  cost. A-15's host-side slices address root allocation in P-1a; A-14
+  addresses allocation headroom separately in P-1b. A C collector range
+  interface is deferred pending those measurements (P-7). Neither their
+  savings nor a new READY time is established; reservation alone cannot prove
   all 115 seconds disappear. Other residual costs remain separate work.
 
 ## 4. Target
@@ -461,8 +475,8 @@ proposed implementation and did not execute Lisp.
   install at each step leaving cells, rows and tables unchanged, a failed
   instantiation leaving the owner, `nextCode` and the tables unchanged, and
   a capacity refusal at generation creation.
-  P6: A-15 specifies direct unit slices and registered ranges; its
-  optimization must preserve every reservation and rollback condition here.
+  P8: A-15 specifies host-side direct unit slices now, and a possible C range
+  interface later; both preserve every reservation and rollback condition here.
 - A-13 (P5). Guarded direct calls, a recorded future direction (U-5 b), not
   part of P-0..P-5. Today a named call loads the symbol's function cell, takes
   the function object's code word, resolves it through the code registry to a
@@ -490,7 +504,7 @@ proposed implementation and did not execute Lisp.
   reachable directly too (that would make the target 6 product modules),
   and measurement of the guard's cost against the saved `call_indirect`
   signature and null checks.
-- A-14 (P6). Heap and stack configuration, included in P-1 under U-6.
+- A-14 (P8). Heap and stack configuration, isolated in P-1b under U-6.
   Use the same initial defaults across supported engines, with explicit
   configuration and measured adjustment:
 
@@ -525,30 +539,52 @@ proposed implementation and did not execute Lisp.
   Retain configurable growth within the admitted ABI/engine bounds and
   account for superseded heap/scratch extents retained in linear memory.
 
+  Distinguish the costs inside today's `collector.copy` timer. Before every
+  C call, the owner enumerates registered roots and writes their addresses
+  to the root list (`#validate`/`#copyInto`); C then traces those entries.
+  For the same root set this cost recurs independently of heap capacity.
+  Inventory and object-map work depend on used from-space; copying depends
+  on reachable data. Larger spaces are expected to reduce repeated root
+  work by reducing collection frequency. Total inventory work may stay
+  roughly similar for a fixed allocation volume, but survivor recopying,
+  growth and root-set changes mean this is a hypothesis, not a constant.
+  Split observation into host preparation and the C collector call, retaining
+  the enclosing total and reporting residual owner checks separately. Record
+  each collection's root count, used source bytes, live/copied bytes and
+  whether it is a growth relocation. The C timer includes root tracing and
+  inventory as well as copying; do not label all of it copying time or infer
+  a copying speedup from fewer collections. Instrumentation stays off by
+  default and does not change the C collector for this measurement.
+
   Align advertised Lisp stack defaults with the allocated areas and retain
   checked overflow boundaries. The engine's actual Wasm call stack and the
   service C stack are separate from these Lisp areas. The browser API has
   no portable call-stack-size setting; enlarging linear memory cannot raise
   that limit ([WebAssembly API](https://webassembly.github.io/spec/js-api/)).
-- A-15 (P6). Root registration by published ranges. Reserve each generation's
-  block once and derive a unit's slice directly from its manifest offset;
-  do not repeat a scan of all occupied external cells for each publication.
-  Keep capacity/ownership accounting so publication validates its slice
-  without re-enumerating all prior roots. Preserve A-12's checks and journals.
-  Represent registered sub-ranges explicitly, with a collector range path
-  that avoids constructing one host-side address-list entry per cell.
+- A-15 (P8). Separate host root allocation from collector representation.
+  P-1a reserves each generation's block once and derives each unit's slice
+  directly from its manifest offset. Incremental capacity/ownership accounting
+  replaces `rootCells`' repeated validation enumeration and occupied-cell
+  search; that host-side work is F-13's 115 s category. Preserve A-12's checks
+  and journals. Keep the C collector and its existing individual-address
+  root-list ABI unchanged; host slices can still supply that list at GC.
   Only published units' ranges are roots; reserved but unpublished gaps must
   remain excluded. Retain individual-cell support for v1 code and other
   root owners, with no overlapping allocation or duplicate registration.
   Rollback removes/restores exactly the affected ranges and values.
-  Ranges reduce bookkeeping; collection still examines their tagged values
-  and updates moved references. Measure allocation, registration and
-  collection costs separately; no complete removal of F-13's costs is assumed.
-- A-16 (P7). Input ownership and release, included in P-1 under U-7.
+
+  Listing every root again at each collection is a separate cost, measured
+  by A-14's split timers. Removing that list in favor of ranges accepted by
+  `runtime/wasm32/collector.c` is optional P-7, justified by measured residual
+  cost. It requires collector requalification and independent review before
+  acceptance; prior accepted evidence does not cover a new root interface.
+  Every published tagged cell still needs tracing and moving-reference
+  updates. No complete removal of F-13's root or GC costs is assumed.
+- A-16 (P8). Input ownership and release, isolated in P-1c under U-7.
   Stage one archive's admission inputs at a time, release its temporary
   state, then stage the next; retain the compiled modules needed by A-5.
   Declare the bound on in-flight reads and working buffers. Whole-archive
-  authentication/validation may still require a full source buffer; P-1
+  authentication/validation may still require a full source buffer; P-1c
   does not require a streaming hash or browser delivery redesign.
 
   | data | owner and lifetime |
@@ -556,14 +592,17 @@ proposed implementation and did not execute Lisp.
   | raw archive/container bytes, template/patch buffers, decode scratch | admission owner only; release after their last check and compilation completes, or on failure |
   | parsed validation manifest and classification temporaries | admission owner; validate fully, extract compact runtime metadata, then release |
   | compact file/unit/function metadata and digests | retain for namespace lookup, install checks, generation creation and repeated LOAD |
-  | FASL bytes | retaining the approximately 5.8 MB set is allowed; otherwise use a bounded cache with authenticated rereads |
+  | FASL bytes | the approximately 5.8 MB set remains resident in the main-thread read-only namespace, which serves file requests |
   | per-open decode/read buffers and session metadata | release on close or failure, including partial loads; preserve published units under A-4 |
   | compiled modules, live instances, registry/table entries and roots | retain under the generation contract; releasing source bytes does not unload executable code |
 
-  Make the Worker the runtime archive admission/cache owner. The main thread
-  needs file-service data and a compact directory, not its own archive binary
-  and validation-manifest inventory. Read into the owner directly or transfer
-  an exclusively owned `ArrayBuffer` across the thread boundary. Do not clone
+  Make the Worker the archive admission/cache owner. The main thread remains
+  the file host: `serviceRequest` answers Lisp's reads from its namespace, so
+  it retains the FASL bytes and compact directory. Moving the file host or
+  evicting its FASLs is outside P-1c. Archive binaries and validation manifests
+  belong only to the Worker after delivery. Read into that owner directly or
+  transfer an exclusively owned `ArrayBuffer` across the thread boundary.
+  Do not clone
   full archives through `workerData`. Transfer detaches the sender's buffer;
   use standalone buffers, not a pooled Node Buffer's backing store
   ([Node transfer rules](https://nodejs.org/api/worker_threads.html#portpostmessagevalue-transferlist)).
@@ -585,10 +624,10 @@ proposed implementation and did not execute Lisp.
   If bytes are evicted, reread only from the configured read-only backing
   store and authenticate against the pinned directory/manifest digests before
   use or publication. Do not add an arbitrary filesystem/network fallback.
-  Keeping the small FASL set resident is a valid P-1 implementation. Either
-  choice preserves seek/read behavior, repeated/recursive/overlapping LOAD,
-  partial-close reservations and old closures. New generations reuse the
-  admitted module and compact metadata without retaining another raw archive.
+  The resident FASL set preserves seek/read behavior and
+  repeated/recursive/overlapping LOAD, partial-close reservations and old
+  closures. New generations reuse the admitted module and compact metadata
+  without retaining another raw archive.
 
   Cleanup covers success, decode/digest/compile/instantiate refusal and
   teardown, preserving A-12 rollback and other live sessions. Release makes
@@ -614,35 +653,43 @@ proposed implementation and did not execute Lisp.
   experiment. This is the baseline P-1 is judged against and tells whether
   a Lisp-side plan is needed (D-4). P6 status: completed at `0675ba83`, F-13;
   retain that baseline rather than launching another unchanged v1 run.
-- P-1 (P7). Runtime archive (A-1, A-2, A-3, A-4, A-5, A-6, A-7, A-10, A-11,
-  A-12, A-14, A-15, A-16); `target-bundle.mjs`/`target-load-session.mjs` gain v2
-  admission and generations; v1 stays for post-image files. Gates: READY reproduces (81
-  nested loads, two post-image loads in two fresh Workers, both refusals,
-  Unicode output); A-8 (a) and (b) over all 10,891 functions; A-4 and A-12
+- P-1 (P8). Three separately committed and measured steps, P-1a/P-1b/P-1c.
+  Execute P-1a, then P-2 to finish both archive tiers, then P-1b, then P-1c.
+  P-2 depends on P-1a, not on sizing or input-lifetime changes; neither later
+  step blocks landing the adopted consolidation. These are change boundaries
+  in the working checkout, not a return to isolated proposal worktrees.
+  Each step reports P-0's complete time/memory breakdown against F-13 and
+  against the immediately preceding measured configuration. The latter
+  comparison attributes its incremental effect; comparison only with F-13
+  cannot do so. Bind exact code, inputs, configuration and instrumentation;
+  record any necessary coupling rather than crediting all savings to one
+  change. Keep workload/engine constant, use a 600 s deadline per run, retain
+  partial journals, and reuse unchanged results. New split GC timers start
+  in P-1a; F-13 has only the aggregate, which remains the baseline comparison.
+- P-1a (P8). Runtime archive (A-1..A-12 and A-15's host-side slices).
+  `target-bundle.mjs`/`target-load-session.mjs` gain v2 admission and
+  generations; v1 stays for post-image files. Preserve current heap/stack
+  sizes and growth policy, changing only the layout/capacities needed for
+  the archive's root blocks, tables and registry. Do not change `collector.c`
+  or add the A-16 lifetime refactor. Record memory reductions caused by the
+  packaging itself and any unavoidable ownership changes separately.
+  Gates: READY reproduces (81 nested loads, two post-image loads in two fresh
+  Workers, both refusals, Unicode output); A-8 (a) and (b) over all 10,891
+  functions; A-4 and A-12
   tests; product engine module count at READY = 1,048 (1,042 boot modules
   unchanged, one runtime archive, five services and adapter) with
-  instrumentation reported separately. Repeat P-0's instrumentation on the
-  changed archive path; report its complete time/memory breakdown against F-13.
-  Verify published-range movement and rollback, unpublished gaps, v1/range
-  coexistence and capacity refusals. Verify stack boundaries, disjoint layout,
-  headroom growth before allocation failure, inhibited collection and checked
-  refusal with valid state when growth cannot satisfy an allocation.
-
-  Verify A-16 ownership and cleanup: sender detachment on transfer, no retained
-  raw-buffer aliases in the compact cache, release on close and each failure
-  exit, digest mismatch on reread if eviction is implemented, and
-  repeated/overlapping LOAD with old closures intact. Record unique owned
-  backing-buffer bytes and counts by thread/category, including their peak
-  and values at admission start/end, file close and READY, alongside
-  P-0's heap/external/ArrayBuffer/linear-memory/RSS counters. At READY the v2
-  admission buffers and full validation manifests have no application-owned
-  retainers; retained compact metadata and FASLs are itemized. Inspect actual
-  retaining paths as well as counters in a focused fixture. Repeated LOAD
-  must not accumulate raw inputs or closed-session data; report intended
-  generation/root/registry growth separately. A separate forced-GC diagnostic
-  may help distinguish retention from delayed collection, but is not the
-  timed READY run or a correctness dependency. P-1 itemizes remaining v1 boot
-  storage; P-2 applies the same lifetime gates to the boot archive.
+  instrumentation reported separately. Verify published-slice movement and
+  rollback, unpublished gaps, v1/slice coexistence and capacity refusals
+  through the unchanged collector root-list ABI. Add A-14's host-preparation
+  and C-call timers with per-collection counts/bytes and an enclosing total;
+  keep them observational and off by default. Report root allocation and
+  registration separately from per-collection preparation and C execution.
+- P-1b (P8). Heap/stack sizing and growth policy (A-14), on the measured
+  consolidated path. Hold archive and input-ownership code fixed. Verify
+  stack boundaries, disjoint layout, headroom growth before allocation
+  failure, inhibited collection and checked refusal with valid state when
+  growth cannot satisfy an allocation. This includes layout and growth-policy
+  code, not only replacing size constants.
 
   Compare initial space sizes of 16, 32 and 64 MiB per space on the same
   archive, engine and workload, keeping the 16 MiB free-space policy constant.
@@ -650,24 +697,45 @@ proposed implementation and did not execute Lisp.
   rather than treating these as fixed heap caps. Use one fresh process per
   candidate, a 600 s timeout and retained partial journals, reusing the default
   run as the 32 MiB candidate. Record READY time, peak/READY RSS, live and
-  allocated heap bytes, space/scratch/linear extents, GC count/time, root
-  allocation/registration time and observable stack usage (label sampled
+  allocated heap bytes, space/scratch/linear extents, GC count, host-preparation
+  and C-call times, per-collection roots/used/live bytes, root allocation and
+  registration time and observable stack usage (label sampled
   high-water values as lower bounds). Bind the changed configuration and all
   input hashes. Select the smallest configuration with an acceptable measured
   time/memory tradeoff; report inconclusive single-run differences as such.
   Initial sizing evidence is on the P-0 engine; reuse the same defaults for
   subsequent engine qualification and record untested engines explicitly.
-- P-2 (P7). Boot archive: `cross-image.mjs` admits v2; `write.mjs` emits the
-  archive and the reference block; heap `codeDigest` is recomputed (the heap
-  payload itself must stay byte-equal). Gates: boot identity, READY as P-1,
-  product engine module count at READY = 7; A-16 release and retention gates
-  now cover both archive tiers.
-- P-3 (P7). `crypto.subtle` digest, further serialized-manifest slimming,
+  Do not add a speculative v1 sizing sweep: a configuration-only pilot on v1
+  is possible, but would not establish the new growth policy or replace these
+  archive measurements. The chosen order avoids extra baseline runs.
+- P-1c (P8). Input ownership and release (A-16), holding the measured archive
+  and chosen P-1b sizing fixed. Verify sender detachment on transfer, no
+  retained raw-buffer aliases in the compact cache, release on close and each
+  failure exit, digest mismatch on any reread, and repeated/overlapping LOAD
+  with old closures intact. Verify main-thread FASL reads still work after
+  archive delivery/cleanup. Record unique owned backing-buffer bytes and
+  counts by thread/category, including their peak and values at admission
+  start/end, file close and READY, alongside P-0's memory counters. At READY
+  both tiers' v2 admission buffers and full validation manifests have no
+  application-owned retainers; compact metadata and main-thread FASLs are
+  itemized. Inspect actual retaining paths as well as counters in a focused
+  fixture. Repeated LOAD must not accumulate raw inputs or closed-session
+  data; report intended generation/root/registry growth separately. A
+  separate forced-GC diagnostic may distinguish retention from delayed
+  collection, but is not the timed READY run or a correctness dependency.
+- P-2 (P8). Boot archive, after P-1a and before P-1b/P-1c:
+  `cross-image.mjs` admits v2; `write.mjs` emits the archive and the reference
+  block; heap `codeDigest` is recomputed (the heap
+  payload itself must stay byte-equal). Gates: boot identity, READY and
+  generation/root-slice checks as P-1a, product engine module count at READY
+  = 7. Hold heap/stack/growth policy fixed; measure against P-1a and F-13.
+  A-16 release gates for both tiers follow in P-1c, independently of this gate.
+- P-3 (P8). `crypto.subtle` digest, further serialized-manifest slimming,
   streamed WABT classification (A-6), and the browser import/export limit check (F-7) on
   the shipped archive. Gate: import count of the runtime archive under 100
   (fixed imports plus `$roots` and `$code_base`) and P-0 instrumentation rerun
   on the changed path. Compact runtime metadata and temporary-input release
-  are already P-1 requirements, not deferred to this packet.
+  belong to P-1c, not to this later packet.
 - P-4 (P7). Record the LL21-b re-decision only after measuring retention
   (R-4), distinguishing live generations from temporary-input retention
   (A-16): chosen packaging v2, the measurements (F-2..F-8, P-0/P-1 timings,
@@ -682,6 +750,19 @@ proposed implementation and did not execute Lisp.
 - P-6 (P5). Guarded direct calls per A-13, after P-4, as its own proposal
   with the compiler change, the one-module-or-two decision and the
   measurement; not scheduled by this plan.
+- P-7 (P8). Optional collector root-range interface, distinct from document
+  revision MCP-P7. Decide from A-14's measured preparation/C-call costs after
+  P-1b; it is not a consolidation or sizing prerequisite. If justified, change
+  the owner and `runtime/wasm32/collector.c` together in a separate commit,
+  preserving v1 roots, published-only scanning, capacity refusal, moving
+  updates and transactional failure behavior. Requalify affected collector
+  and owner suites, existing refusal/mutation checks, range/list coexistence
+  and forced-collection loader cases against the changed bytes; independent
+  review is required before acceptance. Reuse evidence only for unchanged
+  inputs and report incremental timing/memory against its measured parent.
+  Record deferral explicitly if the measured benefit does not justify it;
+  neither P-4 nor the seven-module target requires this optimization.
+
 ## 7. Risks
 
 - R-1. WABT scale: the whole-runtime WAT is 560 MB and `wat2wasm` needs 24 s
@@ -717,16 +798,17 @@ proposed implementation and did not execute Lisp.
   requirement, and its code window against the configured registry and
   table capacity (A-4), all sized from the manifests at Worker start, not
   fixed in the driver as today's `capacity = 32768`.
-- R-8 (P6). Larger allocation spaces reduce collection frequency but enlarge
+- R-8 (P8). Larger allocation spaces reduce collection frequency but enlarge
   the current collector's object-map workspace and may lengthen individual
-  pauses. A-14's scratch/layout accounting and P-1's size comparison must
-  establish the tradeoff. A range is not a single GC reference: every
+  pauses. A-14's split GC timers, scratch/layout accounting and P-1b's size
+  comparison must establish the tradeoff without attributing root-list work
+  to copying. A range is not a single GC reference: every
   published pointer cell still requires tracing. No engine-specific optimum,
   elimination of the 115 s root cost, or post-consolidation RSS is promised.
-- R-9 (P7). Dropping one reference is insufficient if a namespace cache,
+- R-9 (P8). Dropping one reference is insufficient if a namespace cache,
   captured manifest, view or diagnostic record still owns the data. Logical
   release counters alone do not prove reachability or physical reclamation;
-  A-16/P-1 require retaining-path checks and comparable memory milestones.
+  A-16/P-1c require retaining-path checks and comparable memory milestones.
   Collection timing and engine-internal binary/code retention remain outside
   the loader's control. Keep peak memory, retained inputs and READY RSS as
   separate measurements, without an additive engine-memory estimate.
@@ -832,6 +914,17 @@ work does not defer P-1 release. P-4 separates temporary inputs from generation
 retention, and R-9 records GC/retainer limits. No implementation, benchmark or
 acceptance is recorded by this documentation amendment.
 
+Changes in P8, incorporating review `0a7cd736`: P-1 becomes P-1a (runtime
+archive and host slices), P-1b (sizing/growth) and P-1c (input lifetime), with
+P-2 immediately after P-1a to finish consolidation. Each change has a measured
+parent as well as F-13 for comparison. A-14 splits GC observation and states
+the fixed-per-root versus used/live-data costs; A-15 defers a new C collector
+range interface to optional P-7 and requalification. A-16 keeps FASL bytes in
+the main-thread file host. F-14 adds the current 16 KiB areas and resolves
+the bootstrap temporary-stack question from source. §11 records the response;
+the imported review is unchanged. No runtime implementation or new benchmark
+was performed for this revision.
+
 ## 10. Codex import review — 27 September 2026
 
 Imported from Claude's `7932c3d4` after the user's adoption of Q-A/Q-B/Q-C.
@@ -871,3 +964,30 @@ above remain as reported by their author, not independently rerun results.
   and optimization opportunities must be measured. See the
   [WebAssembly module specification](https://webassembly.github.io/spec/core/syntax/modules.html#indices).
   A-13/P-6 remains future work; consolidation keeps existing dispatch.
+
+## 11. Codex response to the P6/P7 review — 27 September 2026
+
+The [review](module-consolidation-review-p7.md) is imported byte for byte by
+fast-forwarding `0a7cd736520c7006e9c474b47bc74acc65da9a8f`. These are Codex's
+plan amendments in response, not a new independent review of P8 or acceptance
+of implementation.
+
+- A-14: AGREE. Host preparation and the C call have separate timers, per-GC
+  root/used/live counts and the original enclosing total. Roughly constant
+  total inventory work is an expectation to test; the C call also traces
+  roots and recopies surviving objects.
+- A-15: AGREE. Direct host slices land in P-1a through the existing root-list
+  ABI; a C range interface waits for measurements and its own qualification
+  in optional P-7.
+- A-16: AGREE. Main-thread file service retains the FASL set; archive admission
+  and its large temporaries belong to the Worker in P-1c.
+- P-1: AGREE. The three steps have separate commits and measurements; P-2
+  follows P-1a without depending on sizing or release. Compare adjacent
+  measured configurations as well as F-13 to avoid cumulative attribution.
+- F-14 clarification: the 256 KiB bootstrap temporary stack is verified by
+  `MIN_TSTACK_SIZE` and its `new_tcr` call, separate from the initial-stack
+  constant. Current Wasm temp/control areas are 16 KiB each, now stated.
+- Evidence-count clarification: [audit 185](../stage0/claude-review.md)
+  records 123 collector checks and 17 killed mutants, rather than the review's
+  59 checks. P-7 requires the applicable retained qualification suites, not a
+  reduced count. Those historical checks are not rerun for this plan edit.

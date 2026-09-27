@@ -585,3 +585,27 @@ to boot. Making data collectible does not promise immediate GC or RSS return.
 The prior Worker-heap figure is not manifest-only, and the residual after
 subtracting counters from RSS is not measured engine memory. This is a plan
 amendment only; implementation and memory savings remain to be verified.
+
+## Module consolidation review amendments — 27 September 2026
+
+The user relayed [Claude's P6/P7 review](stage1/module-consolidation-review-p7.md),
+committed as `0a7cd736`, for import. Codex imported that commit unchanged and
+incorporated its four amendments in [MCP-P8](stage1/module-consolidation-plan.md).
+This records implementation sequencing within the already adopted scope:
+
+1. P-1a consolidates the runtime archive and adds host-side root slices;
+   P-2 follows to consolidate boot. Heap/stack sizes, growth policy and the
+   C collector's root-list interface stay fixed during those steps.
+2. P-1b implements sizing and growth policy with the bounded 16/32/64 MiB
+   comparison. GC observation separates host preparation from the C call
+   and records root counts and used/live bytes per collection.
+3. P-1c implements input ownership/release on the measured configuration.
+   The main thread remains the file host and retains the approximately
+   5.8 MB FASL set; archive inputs and validation belong to the Worker.
+
+Each step compares with both F-13 and its measured predecessor. Sizing and
+release do not gate consolidation. A collector range interface is optional
+P-7, decided from residual GC measurements and requiring collector/owner
+requalification and independent review before acceptance. The existing P-0
+baseline is reused. This amendment records no runtime changes or new runs;
+the imported review covers P6/P7, while P8 is Codex's response to it.
