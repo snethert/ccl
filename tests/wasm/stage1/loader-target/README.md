@@ -184,6 +184,10 @@ the Node child's exit status, timeout and macOS `wait4` peak RSS. Retain these
 files on persistent storage when finalizing evidence.
 
 The optional `boot0.mjs --timing=PREFIX` switch enables those journals.
+Default startup wraps only the boot functions consumed by the READY report;
+`--trace` still wraps every boot function and newly installed function. Timing
+rows are buffered in batches of 256 and flushed at checkpoints, memory samples
+and finish; a killed Worker can lose up to 255 pending rows.
 Admission, bundle decoding, compilation/materialization, root-cell allocation,
 publication and actual collector copies have separate timers. The host install
 span includes record decoding and installer bookkeeping outside the nested
@@ -208,3 +212,13 @@ timestamp. Static/image objects are additional. Collector `storage` gives
 current heap spaces, scratch and root areas, whose extents describe allocated
 address ranges rather than resident pages. No forced collection changes the
 workload at READY.
+
+The [startup execution result](../../../../doc/WASM/stage1/startup-execution-results.md)
+records the SEP-1 changes, measurements, sample decisions and verification.
+For a compiler change, `archive-equivalence.mjs KIND SOURCE ARCHIVE - OUTPUT`
+assembles each fresh unlinked compiler module as its own comparison baseline.
+For packaging-only changes, pass the retained v1 directory in place of `-`.
+`startup-helpers-check.mjs BEFORE_BOOT AFTER_BOOT OUTPUT` compares the emitted
+hot helpers, including checked refusal and memory preservation. The general
+compiler corpus explicitly regenerates its test-only collection hook from the
+current generated leaf; fixed-parent executions keep their original hash gate.

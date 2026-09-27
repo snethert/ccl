@@ -1,8 +1,16 @@
-# Current status — 2026-09-26
+# Current status — 2026-09-27
 
 Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. The reviewed Stage 1A compiler registration unit is integrated; upstream kernel source remains unchanged. Stage 0 is accepted. Under the user's 26 September workflow decision, Codex implements authorized Stage 1 changes directly in the working checkout; Claude reviews before acceptance. Isolated proposal packets and a separate source-integration step are no longer required. All work is on `wasm2`.
 
-**Target loader review checkpoint: 21 files target-loaded through l1-files; 56 runtime files compiled to bundles. The level-0-only boot reaches target %fasload and builds CLOS. Execution stops in l1-typesys, checked 4 in %extend-vector; compilation stops in foreign-types at %PTR-EQL. Development stopped at the user's request for a review commit. READY and acceptance remain open. Historical cross-loaded count remains 36, but the real boot image contains level-0 only.**
+**The level-0-only boot reaches READY after 81 ordinary target runtime loads;
+82 runtime files compile to bundles. Both fresh post-image instances pass 83
+loads. [Module consolidation](stage1/module-consolidation-results.md) uses two
+archives. [Startup execution remediation](stage1/startup-execution-results.md)
+reduces the measured 32 MiB launch from 50.2 to 27.6 seconds and the complete
+call census from 84.1 to 44.7 million. These are author results; independent
+acceptance remains pending user-supplied review. Claude invocation is prohibited.
+Direct calls remain outside this change. Historical cross-loaded count remains
+36; the boot image contains level-0 only.**
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their

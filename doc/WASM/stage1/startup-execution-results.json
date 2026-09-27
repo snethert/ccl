@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "status": "IMPLEMENTED_AUTHOR_VERIFIED",
+  "review": "Independent acceptance requires user-supplied review; invoking Claude is prohibited.",
+  "plan": "f540ab6d",
+  "parent": "ba65583b",
+  "hostCommit": "d3d122f4",
+  "evidenceRoot": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-startup-execution-r1",
+  "measurements": {
+    "baseline": {
+      "launchToReadyMs": 50203.834228515625,
+      "lispToReadyMs": 44712.6943359375,
+      "peakRssBytes": 1861373952,
+      "rssAtReadyBytes": 1861148672
+    },
+    "host": {
+      "launchToReadyMs": 35491.70068359375,
+      "lispToReadyMs": 32150.466552734375,
+      "peakRssBytes": 1743335424,
+      "rssAtReadyBytes": 1743331328
+    },
+    "census": {
+      "before": 84119399,
+      "after": 44724264
+    },
+    "final": {
+      "launchToReadyMs": 27631.387451171875,
+      "lispToReadyMs": 24213.76025390625,
+      "peakRssBytes": 2219110400,
+      "rssAtReadyBytes": 2219053056
+    },
+    "provisional": {
+      "launchToReadyMs": 26333.517333984375,
+      "lispToReadyMs": 22880.16259765625,
+      "peakRssBytes": 2156298240,
+      "rssAtReadyBytes": 2156240896
+    }
+  },
+  "verification": {
+    "ready": {
+      "status": "PASS",
+      "inputs": {
+        "/private/tmp/ccl-work/codex/startup-execution/ready-a-compact.json": "e43bce6923595c5bb684e2ddc8b421cec0d88938ff1bdbbba86c92a801be07fb",
+        "/private/tmp/ccl-work/codex/startup-execution/ready-b-compact.json": "0e63ce837fc961303a018bc43b3b0fd570c5c4f0749e3bd718feba0f9d6a75f5",
+        "/private/tmp/ccl-work/codex/startup-execution/ready-omitted-compact.json": "355abc7b9e67a2fcad0e9bd74e6ac36fd8111861637d7d4961903c58729143bc",
+        "/private/tmp/ccl-work/codex/startup-execution/ready-empty-compact.json": "a8817a23fb9f2726857dbe3061d25a3d4b8f3453c2c96e13fc1878de3afdb7fd",
+        "/private/tmp/ccl-work/codex/startup-execution/postimage-r8/postimage-parent.json": "c62d7e88b69c0fb1539b433498be03fee591db1e0ac7ad901361381ea3e7fff6"
+      },
+      "heap": "973c98eb06c2f94f92277cab3f1f34cd7d274a7ddb23241d3c4353756c0f2b14",
+      "code": "ca6991d170288cc24edeec699992c8c3eb57f3edb8128b5df6181c6b5542636a",
+      "level0_modules": 1048,
+      "completed_loads": [
+        83,
+        83
+      ],
+      "instances": [
+        {
+          "state": [
+            "COLD",
+            111
+          ],
+          "later_function": 112
+        },
+        {
+          "state": [
+            "COLD",
+            222
+          ],
+          "later_function": 223
+        }
+      ],
+      "observed_lisp_services": [
+        "%ADDRESS-OF",
+        "%INTERNAL-RUN-TIME",
+        "%MKDIR",
+        "%OPEN-DIR",
+        "%READ-DIR",
+        "%RMDIR",
+        "BOGUS-THING-P",
+        "CLOSE-DIR",
+        "GET-TIMEZONE",
+        "GET-UNIVERSAL-TIME",
+        "UNIX-RENAME"
+      ],
+      "assertions": [
+        "real %TOPLEVEL-FUNCTION% handoff",
+        "target-only level-1 loading",
+        "class-mode error service",
+        "post-image LOAD returns in both fresh Workers",
+        "independent mutable state and later installed functions",
+        "Unicode stdout/stderr and flushing",
+        "required bundle omission refuses",
+        "no-load path cannot pass"
+      ],
+      "scope": "One Lisp Worker per fresh instance. This does not claim multi-Worker scheduling or native image saving."
+    },
+    "helpers": 122,
+    "bootEquivalence": {
+      "status": "PASS",
+      "baseline": "fresh unlinked compiler WAT",
+      "functions": 1048,
+      "symbolSites": 37530,
+      "codeSites": 43,
+      "templateBytes": 24417060,
+      "archive": "9ddb0d74c02f87fdbf61b966a37f98d0b1af2b73a09dd429138b3acf6482e1dd"
+    },
+    "runtimeEquivalence": {
+      "status": "PASS",
+      "baseline": "fresh unlinked compiler WAT",
+      "functions": 10891,
+      "symbolSites": 299263,
+      "codeSites": 2075,
+      "templateBytes": 216038176,
+      "archive": "2f713f9142790507c3eb01c9d35e4e9dc45a05229de8b4ab579b7679fbbd6c1d"
+    },
+    "archiveControls": 81,
+    "asyncControls": 11,
+    "nativeTests": 21843,
+    "disabledNativeTests": 75,
+    "nativeFasls": 164,
+    "readerComparisons": 765,
+    "finalNfasloadRebind": {
+      "functions": 219,
+      "readerProfiles": 17
+    },
+    "compilerCorpus": {
+      "execution_seconds": 217.89769141800934,
+      "fresh_comparisons": 26204,
+      "inherited_comparisons": 0,
+      "native_skips": {
+        "CCL::%MAP-AREAS": "Target requires collector-owner enumeration; native heap walk has no matching target operation.",
+        "CCL::%MAP-LFUNS": "Target requires collector-owner enumeration; native heap walk has no matching target operation."
+      },
+      "sampled_comparisons": 0,
+      "status": "PASS",
+      "tier": "full"
+    },
+    "nativeReuse": {
+      "status": "PASS",
+      "snapshot": "89766fdadf90116c28aae15687692732e18916a40ad693b355708d44a616ef45",
+      "existingTargetProfiles": 17,
+      "changedFile": "level-0/WASM32/w32-prims.lisp",
+      "source": "3b92cf3f68c33337faa54a96166ca7e9b6bf51af23ffb0ba4a9c094b83769f63",
+      "scope": "Final compact-table guard changes only a Wasm-specific implementation file excluded from all existing-target module profiles. Shared compiler and existing-target reader inputs retain the native-ready qualification plus native-rebind.",
+      "unchangedTargetSelectionDriver": {
+        "lib/compile-ccl.lisp": "d22bde615981bc447b4c68196ce6297e4319c75ee06be6864f1888bb11879138"
+      }
+    },
+    "retention": {
+      "status": "PASS",
+      "markedObjects": 3922,
+      "reachableMarkedInputObjects": 0,
+      "generations": 3
+    }
+  },
+  "sourceIdentity": {
+    "compiler/WASM32/wasm32-backend.lisp": "040f32461771dbb94966bd69df7a037dae7992e37b1adf09f778cb45f3575aa7",
+    "level-0/WASM32/w32-prims.lisp": "3b92cf3f68c33337faa54a96166ca7e9b6bf51af23ffb0ba4a9c094b83769f63",
+    "level-0/l0-pred.lisp": "cd7097c9a1aae0e115836e5bed62e7c4fa81fb40ae4f765d41252850b1760bcf",
+    "level-0/nfasload.lisp": "45a9a663ef610249d1f45e0398526fab9c6fd2ff1f32fede649094172226c6c7",
+    "level-1/l1-dcode.lisp": "539147e6adf1a97f7acce7fde3b07da75e10b55d55773ed58f85d71ac7ff4434"
+  },
+  "cost": {
+    "productLispAdded": 226,
+    "productLispRemoved": 41
+  },
+  "limits": [
+    "Single timing runs, not a statistical guarantee",
+    "Peak RSS increased",
+    "Plan estimate of 10\u201315 seconds not achieved",
+    "8,128-byte transport caps 64 KiB FASL buffer reads",
+    "Direct calls and constant-callee resolution caching remain outside scope",
+    "Body and separate public/tail table checks retained",
+    "Compiler corpus retains two pre-existing native heap-walk exclusions"
+  ],
+  "implementationCommit": "5446b5abe9ee5dcc69f3c5e3e1c59c8aefaaa5f1",
+  "finalBoot": "boot-r8",
+  "finalRuntime": "bundles-final",
+  "finalPostimage": "postimage-r8",
+  "evidenceIndex": {
+    "file": "final-index.json",
+    "sha256": "1a474fe8bd491ac641bfd4dc8aa5846b264929af4e08a092a93b36eab46a4483"
+  },
+  "artifacts": {
+    "compiled-artifacts.tar.gz": {
+      "bytes": 295005619,
+      "sha256": "632d86109a7385e7fc0596c5e5d0ee1ffdac23044a99f91a4be1b5aa3cd8b3d0"
+    },
+    "compiled-artifacts.json": {
+      "bytes": 108199,
+      "sha256": "68b0f3f723d91fdde94ea901676550b8318c845aa5a8b9ece0123ded292d8a31"
+    },
+    "corpus-inputs.tar.gz": {
+      "bytes": 25995855,
+      "sha256": "e85863878380ecf3a278a1f36046514dc437cb350fcdb2999dc2234672a49522"
+    },
+    "corpus-inputs.json": {
+      "bytes": 437948,
+      "sha256": "97aef972b93798235fa23436a22fadb0f644d3bee43941b1f721a195c0959ae4"
+    },
+    "REPRODUCE.md": {
+      "bytes": 4630,
+      "sha256": "4aab5633e6fdaa54288ac26edb2be2d7f2e3989b927dfb80bfefed4e9d48e014"
+    },
+    "summary.json": {
+      "bytes": 6783,
+      "sha256": "f5b5beaad58ccfa413ffe0cff5559fb9ccee731a4433f1dd8ace3c8c1a56fa00"
+    }
+  }
+}
