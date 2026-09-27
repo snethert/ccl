@@ -52,6 +52,10 @@ function install(name,symbolsOverride){
 session.reserve(LOAD,manifest.units.map(u=>u.name));
 const checked=(f,args)=>{try{return f(args);}catch(e){if(e.is?.(env.call_error))throw Error('checked '+e.getArg(env.call_error,0));if(e.is?.(env.type_error)){const d=e.getArg(env.type_error,0);const lit=[...literal].find(([k,v])=>v===d);const el=i=>{const w=get(d-2+4*i);const l=[...literal].find(([k,v])=>v===w);return l?l[0]:w%8===6?'obj:'+get(w-6).toString(16):w;};throw Error('type_error '+d+' '+e.getArg(env.type_error,1)+' header='+(d%8===6?get(d-6).toString(16):'-')+' elements='+el(0)+','+el(1)+' allocNext='+next);}if(e.is?.(env.nonlocal_exit))throw Error('nonlocal_exit '+e.getArg(env.nonlocal_exit,0));throw e;}};
 const addSeven=install('TARGET-LOADER-ADD-SEVEN');
+assert.deepEqual(session.entries(LOAD,{newOnly:true}).map(e=>e.codeId),
+ unitOf('TARGET-LOADER-ADD-SEVEN').functions.map(i=>16+i));
+assert.deepEqual(session.entries(LOAD,{newOnly:true}),[]);
+assert.equal(session.entries(LOAD).length,unitOf('TARGET-LOADER-ADD-SEVEN').functions.length);
 assert.deepEqual(checked(addSeven,[35]),[42*4,1]);
 const extrema=install('TARGET-LOADER-EXTREMA');
 for(const [args,expected] of read('extrema-native.json')){const [first,count]=checked(extrema,args);assert.equal(count,expected.length);assert.equal(first>>2,expected[0]);assert.deepEqual(expected.map((_,i)=>get(root+8200+4*i)>>2),expected);}
@@ -67,9 +71,11 @@ assert.throws(()=>ordinaryKeys([40,other,9]),e=>e.is?.(env.call_error));keywordR
 assert.deepEqual(keywordResults,read('keyword-native.json'));
 const nested=manifest.units.find(u=>u.functions.length>1);assert(nested,'nested unit');
 const nestedCode=session.install(LOAD,nested.wire,record(nested),functions[nested.wire].symbols.map(s=>encode(s)));
+assert.deepEqual(session.entries(LOAD,{newOnly:true}).map(e=>e.codeId),nested.functions.map(i=>16+i));
 for(const id of nested.functions){const code=16+id;assert.equal(get(registry+8+16*code),code+8);assert.equal(typeof env.table.get(code+8),'function');}
 // Same unit, same values, same session: identity, same code id.
 assert.equal(session.install(LOAD,unitOf('TARGET-LOADER-ADD-SEVEN').wire,record(unitOf('TARGET-LOADER-ADD-SEVEN')),addSeven.imports),addSeven.code);
+assert.deepEqual(session.entries(LOAD,{newOnly:true}),[]);
 assert.throws(()=>session.install(LOAD,unitOf('TARGET-LOADER-ADD-SEVEN').wire,record(unitOf('TARGET-LOADER-ADD-SEVEN')),addSeven.imports.map((v,i)=>i===0?N:v)),/IMPORT_IDENTITY/);
 // A second LOAD of the same file: reservation lands in a fresh generation; new ids; old closure intact.
 const LOAD2='load-2';const g2=session.reserve(LOAD2,manifest.units.map(u=>u.name));assert.equal(session.storage().generations,2);

@@ -11,7 +11,8 @@ export function integerService({memory,tcr,owner,callError,bytes,digest,pinned=[
  const input=131072,inputEnd=147456,output=147456,outputEnd=163840,scratch=163840,scratchEnd=180256,result=180272;
  if(wasm.integer_workspace_bytes()!==scratchEnd-scratch)throw Error('integer workspace');
  const pv=new DataView(privateMemory.buffer),pb=new Uint8Array(privateMemory.buffer);
- const fail=n=>{throw new WebAssembly.Exception(callError,[n]);},view=()=>new DataView(memory.buffer),get=p=>view().getUint32(p,true),set=(p,v)=>view().setUint32(p,v,true);
+ let dv=new DataView(memory.buffer);
+ const fail=n=>{throw new WebAssembly.Exception(callError,[n]);},view=()=>dv.buffer===memory.buffer?dv:(dv=new DataView(memory.buffer)),get=p=>view().getUint32(p,true),set=(p,v)=>view().setUint32(p,v,true);
  const regions=pinned.map(r=>({...r}));for(const r of regions)if(!Number.isSafeInteger(r.start)||!Number.isSafeInteger(r.end)||r.start<0||r.end<r.start||r.end>memory.buffer.byteLength)throw Error('integer pinned extent');
  let busy=false;
  return (op,root)=>{

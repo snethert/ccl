@@ -7,7 +7,7 @@ import {admitHeapImage} from './heap-image.mjs';
 const need=(v,s)=>{if(!v)throw Error('cross image: '+s);};
 export const admitCrossImage=options=>admitImage(options,admitCodeArchive);
 export const admitCrossImageAsync=async options=>admitImage(options,admitCodeArchiveAsync);
-function admitImage({memory,manifest,record,payload,codeSet,regions,env,readBytes,readTemplate,policy,expected,capabilities,owner,onBuffers=()=>{},onManifest=()=>{},start=manifest.heap.start},admitArchive) {
+function admitImage({memory,manifest,record,payload,codeSet,ownedManifest=false,regions,env,readBytes,readTemplate,policy,expected,capabilities,owner,onBuffers=()=>{},onManifest=()=>{},start=manifest.heap.start},admitArchive) {
  const m=structuredClone(manifest),set=codeSet.packaging===ARCHIVE_PACKAGING?
   {...codeSet,modules:structuredClone(codeSet.modules)}:structuredClone(codeSet);
  env={...env};expected=structuredClone(expected);
@@ -30,7 +30,7 @@ function admitImage({memory,manifest,record,payload,codeSet,regions,env,readByte
   const heap=admitHeapImage({memory,record,payload,digest:m.heap.digest,regions,start,limit:start+m.heap.bytes,codeDigest:m.codeDigest,rootSlots:m.roots.slots});
   const values=set.archive.units.map(u=>({name:u.name,record:[4,u.wire],values:u.references.map(r=>heap.reference(r))}));
   const result=admitArchive({bytes:readBytes('boot.archive'),manifest:set.archive,digest:set.archive.binary_sha256,
-   env,capabilities,versions:expected,policy,slotOffset:8,onBuffers,onManifest,
+   env,capabilities,versions:expected,policy,slotOffset:8,onBuffers,onManifest,ownedManifest,
    allocateCode:()=>16,
    reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));journal.push(()=>owner.atSafepoint(()=>block.release()));return block;},
    registerRoots:(block,cells,journal)=>{owner.atSafepoint(()=>block.register(cells));journal.push(()=>owner.atSafepoint(()=>block.unregister(cells)));}});

@@ -11,15 +11,17 @@ const need=(v,s)=>{if(!v)throw Error('code archive: '+s);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const uint=n=>Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff;
 const digest=s=>typeof s==='string'&&/^[0-9a-f]{64}$/.test(s);
-// One validation/publication implementation; only full-module hashing may
-// suspend. The generator keeps ownership cleanup around that suspension.
-function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},versions,policy,
+// One validation/publication implementation; hashing and compilation may
+// suspend. The generator keeps ownership cleanup around every suspension.
+// ownedManifest transfers exclusive ownership of a freshly parsed manifest;
+// the caller must not retain or mutate it. Other callers receive a snapshot.
+function* admission({bytes,manifest,ownedManifest=false,digest:expectedDigest,env,capabilities={},versions,policy,
   allocateCode,reserveRoots,registerRoots,slotOffset=8,maxGenerations=Infinity,onBuffers=()=>{},onManifest=()=>{},measure=(_p,run)=>run()}) {
  try{
  env={...env};capabilities=Object.fromEntries(Object.entries(capabilities).map(([k,v])=>[k,{...v}]));
  policy=structuredClone(policy);
  need(manifest&&typeof manifest==='object','MANIFEST');
- manifest=structuredClone(manifest);onManifest('validation-manifest',manifest);
+ if(!ownedManifest)manifest=structuredClone(manifest);onManifest('validation-manifest',manifest);
  const count=manifest.function_count;
  need(manifest.version===1&&manifest.packaging===ARCHIVE_PACKAGING,'PACKAGING');
  need(same(manifest.abi,versions.abi)&&same(manifest.layout,versions.layout),'VERSIONS');
@@ -81,7 +83,7 @@ function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},ve
  need(bodies.length===manifest.helpers.length+2*count&&Array.isArray(manifest.helper_bodies)&&manifest.helper_bodies.length===manifest.helpers.length,'HELPER_BODIES');
  for(const [i,h] of manifest.helper_bodies.entries()){
   need(h&&h.name===manifest.helpers[i]&&same({index:h.index,start:h.start,end:h.end},bodies[i]),'HELPER_RANGE');
-  need(sha256(bytes.subarray(h.start,h.end))===h.body_sha256,'HELPER_DIGEST');
+  need((yield {hash:bytes.subarray(h.start,h.end)})===h.body_sha256,'HELPER_DIGEST');
  }
  const ranges=new Map(x.exports.map(e=>[e.name,{role:e.name,...byIndex.get(e.index)}])),exportMap=new Map(x.exports.map(e=>[e.name,e]));
  for(const [i,f] of manifest.functions.entries()){
@@ -93,14 +95,15 @@ function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},ve
    need(same(row[role],r),'RANGE');bodies.push(bytes.subarray(r.start,r.end));
   }
   const body=new Uint8Array(bodies[0].length+bodies[1].length);body.set(bodies[0]);body.set(bodies[1],bodies[0].length);
-  onBuffers('body-digest',[body]);need(sha256(body)===row.body_sha256,'BODY_DIGEST');onBuffers('body-digest',[]);
+  onBuffers('body-digest',[body]);need((yield {hash:body})===row.body_sha256,'BODY_DIGEST');onBuffers('body-digest',[]);
  }
- const module=yield [bytes,manifest,policy,x];bytes=null;
+ const module=yield {module:[bytes,manifest,policy,x]};bytes=null;
  // Runtime closures retain only identity/dispatch rows, never validation inputs.
  const functions=manifest.functions.map(f=>({name:f.source_name,unit:f.unit,export:f.export}));
  const rootCount=manifest.root_cells;
  manifest=null;
- const view=()=>new DataView(env.memory.buffer),get=p=>view().getUint32(p,true),put=(p,v)=>view().setUint32(p,v,true);
+ let dv=new DataView(env.memory.buffer);
+ const view=()=>dv.buffer===env.memory.buffer?dv:(dv=new DataView(env.memory.buffer)),get=p=>view().getUint32(p,true),put=(p,v)=>view().setUint32(p,v,true);
  const registry=env.code_registry;
  need(uint(registry)&&registry%8===0&&registry+8<=env.memory.buffer.byteLength,'REGISTRY');
  const capacity=get(registry);need(get(registry+4)===1&&registry+8+16*capacity<=env.memory.buffer.byteLength,'REGISTRY');
@@ -126,6 +129,7 @@ function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},ve
    instance:{exports:{entry:g.instance.exports[f.export+'.entry'],tail_entry:g.instance.exports[f.export+'.tail_entry']}}};});}
  function install(session,name,record,symbolValues){
   const s=sessions.get(session),unit=s?.byWire.get(name);
+  if(s)s.published=[];
   need(unit&&sha256(JSON.stringify(record))===unit.record_sha256,'CODE_RECORD');
   need(Array.isArray(symbolValues)&&symbolValues.length===unit.symbol_count&&symbolValues.every(uint),'SYMBOL_COUNT');
   const g=s.g,u=g.units.get(unit.name);need(u?.session===session,'UNRESERVED_UNIT');
@@ -137,26 +141,27 @@ function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},ve
     need(env.table.get(e.record.slot)===e.instance.exports.entry&&env.tail_table.get(e.record.slot)===e.instance.exports.tail_entry,'TABLE_CHANGED');}
    return g.codeBase+unit.functions[0];
   }
+  const published=entries(g,unit);
   const sharedWrites=new Map();
   for(const [,index,cell] of unit.shared){const p=g.roots.base+4*cell,value=symbolValues[index];
    if(g.sharedFilled.has(cell))need(get(p)===value,'SHARED_IDENTITY');
    else if(sharedWrites.has(cell))need(sharedWrites.get(cell)[1]===value,'SHARED_IDENTITY');
    else sharedWrites.set(cell,[p,value]);
   }
-  for(const e of entries(g,unit)){const p=registry+8+16*e.codeId;
+  for(const e of published){const p=registry+8+16*e.codeId;
    need([0,4,8,12].every(o=>get(p+o)===0)&&env.table.get(e.record.slot)===null&&env.tail_table.get(e.record.slot)===null,'SLOT_OCCUPIED');}
   const journal=[],write=(p,v)=>{const old=get(p);journal.push(()=>put(p,old));put(p,v);};
   try{
    cells.forEach((p,i)=>write(p,symbolValues[i]));
    for(const [cell,[p,value]] of sharedWrites){write(p,value);g.sharedFilled.add(cell);journal.push(()=>g.sharedFilled.delete(cell));}
    measure('bundle.roots',()=>registerRoots(g.roots,[...cells,...[...sharedWrites.values()].map(([p])=>p)],journal));
-   measure('bundle.publish',()=>{for(const e of entries(g,unit)){
+   measure('bundle.publish',()=>{for(const e of published){
     const p=registry+8+16*e.codeId,slot=e.record.slot;
     [slot,4,17,23].forEach((v,i)=>write(p+4*i,v));
     journal.push(()=>{env.table.set(slot,null);env.tail_table.set(slot,null);});
     env.table.set(slot,e.instance.exports.entry);env.tail_table.set(slot,e.instance.exports.tail_entry);
    }});
-   u.state='published';if(transaction)transaction.undo.push(...journal,()=>{u.state='reserved';});return g.codeBase+unit.functions[0];
+   u.state='published';if(transaction)transaction.undo.push(...journal,()=>{u.state='reserved';});s.published=published;return g.codeBase+unit.functions[0];
   }catch(e){for(let i=journal.length-1;i>=0;i--)journal[i]();throw e;}
  }
  const api=Object.freeze({
@@ -183,20 +188,30 @@ function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},ve
    }catch(e){for(let i=tx.undo.length-1;i>=0;i--)tx.undo[i]();sessions.delete(token);throw e;}
    finally{transaction=null;}
   },
-  entries(session){const s=sessions.get(session);return s?[...s.byWire.values()].filter(u=>s.g.units.get(u.name).state==='published').flatMap(u=>entries(s.g,u)):[];},
+  entries(session,{newOnly=false}={}){const s=sessions.get(session);
+   if(newOnly){const rows=s?.published??[];if(s)s.published=[];return rows;}
+   return s?[...s.byWire.values()].filter(u=>s.g.units.get(u.name).state==='published').flatMap(u=>entries(s.g,u)):[];},
   storage:()=>({modules:1,generations:generations.length,reservedRootCells:generations.length*rootCount,
    publishedUnits:generations.reduce((n,g)=>n+[...g.units.values()].filter(u=>u.state==='published').length,0),openSessions:sessions.size})
  });
  return api;
  }finally{onBuffers('archive-work',[]);onBuffers('body-digest',[]);onManifest('validation-manifest',null);}
 }
+// Yield hashes as well as compilation so the asynchronous path uses the
+// engine's native SHA-256 without removing any body/metadata binding checks.
 export function admitCodeArchive(options){
- const iterator=admission(options),step=iterator.next(),measure=options.measure??((_p,run)=>run());
- try{return iterator.next(measure('archive.compile',()=>installArchive(...step.value))).value;}
- catch(error){return iterator.throw(error);}
+ const iterator=admission(options),measure=options.measure??((_p,run)=>run());
+ let step=iterator.next();
+ try{while(!step.done){const job=step.value;
+  step=iterator.next(job.hash?sha256(job.hash):measure('archive.compile',()=>installArchive(...job.module)));
+ }return step.value;}catch(error){return iterator.throw(error);}
 }
 export async function admitCodeArchiveAsync(options){
- const iterator=admission(options),step=iterator.next(),measure=options.measure??((_p,run)=>run());
- try{return iterator.next(await measure('archive.compile',()=>installArchiveAsync(...step.value))).value;}
- catch(error){return iterator.throw(error);}
+ const iterator=admission(options),measure=options.measure??((_p,run)=>run());
+ let step=iterator.next();
+ try{while(!step.done){const job=step.value;
+  const value=job.hash?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',job.hash)),b=>b.toString(16).padStart(2,'0')).join(''):
+   await measure('archive.compile',()=>installArchiveAsync(...job.module));
+  step=iterator.next(value);
+ }return step.value;}catch(error){return iterator.throw(error);}
 }

@@ -1,6 +1,7 @@
 // Call the real bootstrap once. A failure ends this Worker; no initializer is
 // skipped and no definition or binding is filled in by the harness.
 import fs from 'node:fs';
+import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {Worker, isMainThread, parentPort, workerData} from 'node:worker_threads';
@@ -123,11 +124,11 @@ if (isMainThread) {
     inputs.hold('archive-code','archiveBytes',[message.bytes]);inputs.hold('archive-manifest','manifestBytes',[message.metadata]);
     timing?.memory('archive-received',{tier:descriptor.kind,inputOwnership:inputs.snapshot()});
     try{
-      assert.equal(sha256(message.metadata),descriptor.manifestDigest,'archive metadata digest');
+      assert.equal(createHash('sha256').update(new Uint8Array(message.metadata)).digest('hex'),descriptor.manifestDigest,'archive metadata digest');
       const parsed=JSON.parse(new TextDecoder('utf8',{fatal:true}).decode(message.metadata));inputs.holdManifest('source-manifest',parsed);
       const archive=descriptor.kind==='boot'?parsed.archive:parsed;
       assert.equal(archive.function_count,descriptor.function_count);assert.equal(archive.root_cells,descriptor.root_cells);
-      const result={digest:descriptor.digest,bytes:message.bytes,manifest:archive,...(descriptor.kind==='boot'?{codeSet:parsed}:{})};
+      const result={ownedManifest:true,digest:descriptor.digest,bytes:message.bytes,manifest:archive,...(descriptor.kind==='boot'?{codeSet:parsed}:{})};
       message.metadata=null;inputs.release('archive-manifest');return result;
     }catch(e){inputs.release('archive-code');inputs.release('archive-manifest');inputs.releaseManifest('source-manifest');throw e;}
     finally{message=null;}
@@ -195,7 +196,7 @@ if (isMainThread) {
     table_capacity: capacity, reserved_slots: [0, 1, 2, 3, 4, 5, 6, 7, 8], slots: Object.fromEntries(codeSet.modules.map(m => [m.code_id, m.code_id + 8]))};
   let admitted,installed;
   try{
-  admitted = await measure('boot.admit', () => admitCrossImageAsync({memory, owner, onBuffers, onManifest, manifest, record, codeSet, regions, env, policy, expected,
+  admitted = await measure('boot.admit', () => admitCrossImageAsync({ownedManifest:!!bootInput?.ownedManifest, memory, owner, onBuffers, onManifest, manifest, record, codeSet, regions, env, policy, expected,
     payload: fs.readFileSync(artifacts + '/heap.payload.bin'),
     readBytes: name => name==='boot.archive'&&bootInput?bootInput.bytes:fs.readFileSync(artifacts + '/' + name + '.wasm'),
     readTemplate: name => fs.readFileSync(artifacts + '/' + name + '.template.wasm'),
@@ -416,9 +417,19 @@ if (isMainThread) {
       for (const {path, entries} of pendingObservations) observeInstalled(path, entries);
       pendingObservations.length = 0;
     };
+    const codeOf = (pkg, name) => {
+      const row = manifest.symbols.find(s => s.package === pkg && s.name === name);
+      if (!row) return null;
+      const fn = get(resolve(row.reference) + 6);
+      return fn % 8 === 6 && get(fn - 6) === 1578 ? get(fn - 2) >>> 2 : null;
+    };
+    const observedCodes = new Set(workerData.trace ? codeSet.modules.map(m => m.code_id) :
+      [['CCL', '%FASLOAD'], ['CCL', '%WASM-KERNEL-RESTART'], ['CCL', '%WASM-ERROR'], ['COMMON-LISP', 'INVOKE-DEBUGGER']]
+        .map(([p, n]) => codeOf(p, n)).filter(Number.isInteger));
     for (const entry of installed.instances) {
       const {record: row} = entry;
       let {instance} = entry;
+      if (!observedCodes.has(row.code_id) && row.code_id !== workerData.inspectCode) continue;
       if (row.code_id === workerData.inspectCode) {
         const observed = observeChecks({out, row, env, start, regions,
           capabilities: {owner: {ensure: allocationService(owner, env.call_error)},

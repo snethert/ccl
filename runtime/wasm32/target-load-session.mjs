@@ -68,8 +68,10 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
     archive.prepare();admitted.set(a.digest,archive);onAdmission(a.digest);
     }finally{a.bytes=null;a.manifest=null;onInput('admission-end',a);a=null;}
   }
-  const get = p => new DataView(memory.buffer).getUint32(p, true);
-  const put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
+  let dv = new DataView(memory.buffer);
+  const view = () => dv.buffer === memory.buffer ? dv : (dv = new DataView(memory.buffer));
+  const get = p => view().getUint32(p, true);
+  const put = (p, v) => view().setUint32(p, v, true);
   const string = word => {
     need(word % 8 === 6 && word >= 6 && (get(word - 6) & 255) === 191, 'PATH');
     const n = get(word - 6) >>> 8; need(n <= 4096 && word - 2 + 4 * n <= memory.buffer.byteLength, 'PATH');
@@ -98,7 +100,7 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
         if(container&&get(args+8)===0){
           const archive=admitted.get(container.archive_sha256);need(archive,'ARCHIVE_ABSENT');
           const token=Symbol(path);archive.reserve(token,container.units);
-          const session={install:(name,record,symbols)=>archive.install(token,name,record,symbols),entries:()=>archive.entries(token)};
+          const session={install:(name,record,symbols)=>archive.install(token,name,record,symbols),entries:()=>archive.entries(token,{newOnly:true})};
           pending={path,token,archive,session,install:targetCodeService({memory,session})};
         }
         const bundle = source.bundles.get(path);
