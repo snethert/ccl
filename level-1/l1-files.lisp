@@ -1342,7 +1342,8 @@ a host-structure or string."
 		 (restart-case (multiple-value-bind (winp err) 
 				   (%fasload (defaulted-native-namestring file-name))
 				 (if (not winp) 
-				   (%err-disp err)))
+				   #+wasm32-target (signal-file-error err file-name)
+				   #-wasm32-target (%err-disp err)))
 		   (load-source 
 		    ()
 		    :test restart-test

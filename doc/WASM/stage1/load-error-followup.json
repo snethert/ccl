@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "status": "PASS",
+  "review_disposition": "IMPLEMENTED_AWAITING_FINAL_REVIEW",
+  "parent": "34b130cd8964e8cdfbc90af7286b9520e802272a",
+  "issues": {
+    "O-124": "CLOSED_AUDIT_189",
+    "O-137": "CLOSED_AUDIT_189",
+    "O-134": "HOST_REVIEWED_SOUND; LISP_FIX_AWAITING_FINAL_REVIEW",
+    "O-142": "SIMPLE-FILE-ERROR, pathname and message, twice caught; later LOAD succeeds",
+    "O-143": "NIL native-frame context; dispatch, restarts, debugger hook, package conflicts and no native frame lookup tested",
+    "O-145": "Dedicated refusal file; ordinary READY uses one generation"
+  },
+  "native": {
+    "passed": 21843,
+    "failed": 0,
+    "restoredFasls": 164,
+    "profiles": 17,
+    "rebindFunctions": [
+      139,
+      628
+    ],
+    "inputChain": "native-input-chain.json"
+  },
+  "readers": {
+    "files": 46,
+    "profiles": 17,
+    "comparisons": 782
+  },
+  "ready": {
+    "loads": [
+      83,
+      83
+    ],
+    "generations": [
+      1,
+      1
+    ],
+    "refusalRunLoads": 85,
+    "refusalRunGenerations": 2,
+    "refusalRepeats": 2,
+    "startupRefusalLoads": [
+      1,
+      0
+    ],
+    "openSessions": 0,
+    "abandonedSessions": []
+  },
+  "archive": {
+    "functions": 10892,
+    "units": 8817,
+    "rootCells": 126230,
+    "bytes": 68965846
+  },
+  "productLispDelta": {
+    "added": 8,
+    "removed": 3
+  },
+  "counts": {
+    "runtimeLoads": 81,
+    "compiledRuntimeFiles": 82,
+    "productModules": 7,
+    "productInstances": 11,
+    "originals": [
+      575,
+      535
+    ],
+    "stage1": [
+      21,
+      12
+    ],
+    "slotCredit": false
+  },
+  "limitations": [
+    "No native stack walker or interactive debugger",
+    "FASL-header checks dispatch both real error codes directly; no new malformed-container probe",
+    "No new performance or criterion-acceptance claim"
+  ],
+  "evidenceRoot": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit189-errors-r1",
+  "evidenceCommit": "8cebb6ab553e70c7560f9ac89aa82a4ad0fe57ee",
+  "summary": {
+    "file": "summary.json",
+    "sha256": "593e9cfdd6e5df608a168356742b82236d64e47ca6f70a6e4554dce0a3c866d8"
+  },
+  "index": {
+    "file": "index.json",
+    "sha256": "14c193ad8e4a1cdcc4ce68b621aea93ec0b5d2d3f794d7118677d1e510860d75"
+  },
+  "corpusReuse": {
+    "audit": "34b130cd",
+    "fresh": 26204,
+    "failures": 0,
+    "inherited": 0,
+    "sampled": 0,
+    "sources": {
+      "compiler/WASM32/wasm32-backend.lisp": "040f32461771dbb94966bd69df7a037dae7992e37b1adf09f778cb45f3575aa7",
+      "level-0/WASM32/w32-prims.lisp": "3b92cf3f68c33337faa54a96166ca7e9b6bf51af23ffb0ba4a9c094b83769f63",
+      "level-0/nfasload.lisp": "45a9a663ef610249d1f45e0398526fab9c6fd2ff1f32fede649094172226c6c7",
+      "level-0/l0-pred.lisp": "cd7097c9a1aae0e115836e5bed62e7c4fa81fb40ae4f765d41252850b1760bcf",
+      "level-1/l1-dcode.lisp": "539147e6adf1a97f7acce7fde3b07da75e10b55d55773ed58f85d71ac7ff4434"
+    }
+  },
+  "hostReuse": {
+    "file": "host-reuse.json",
+    "sha256": "982908e8a4bcb7790b96e074acb2a91f4ab2e62485a80afa50d865efa13445e1"
+  },
+  "workspaceCleanup": {
+    "status": "COMPLETE",
+    "removed": [
+      "/private/tmp/ccl-work/codex/audit189-load",
+      "/private/tmp/ccl-work/codex/audit189-native",
+      "/private/tmp/ccl-work/codex/audit189-readers"
+    ],
+    "freeBytesBefore": 10260475904,
+    "freeBytesAfter": 16503902208
+  }
+}

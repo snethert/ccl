@@ -255,4 +255,4 @@ and all linked function templates at the final SEP-1 revision, plus the host
 controls and retention diagnostic. The subsequent
 [refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)
 implements O-134's checked file-service refusal and documents the two-generation
-budget; that new work awaits review. This acceptance grants no new criterion credit.
+budget; audit 189 independently confirmed the host change. The [Lisp error follow-up](../../../tests/wasm/stage1/loader-target/load-error-followup.md) addresses O-142/O-143/O-145 and awaits final review. This acceptance grants no new criterion credit.

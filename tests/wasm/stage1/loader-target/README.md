@@ -89,7 +89,11 @@ reviews of the uncommitted tree. The
 records the historical O-124/O-134 findings and the reviewer's corpus reuse
 after ENOSPC. The [refusal follow-up](refusal-followup.md) verifies O-124's
 existing class-mode fix and corrects O-134's generation-capacity boundary,
-with the full corpus explicitly skipped by user direction.
+whose full corpus was independently replayed by audit 189: 26,204 fresh
+comparisons, zero failures. O-124 and O-137 are closed. The
+[audit 189 follow-up](load-error-followup.md) fixes the Lisp-facing refusal and
+shared error context. Generation exhaustion runs in its own `refusals.lisp`
+fixture; ordinary READY preserves the second generation.
 The report field `level1CrossLoaded` is a declarative label, not independent
 proof; the bound level-0 producer and actual target load events establish the
 loading boundary. `firstFailure` can name a handled Lisp signal and must not

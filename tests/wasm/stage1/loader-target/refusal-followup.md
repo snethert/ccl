@@ -8,10 +8,12 @@ argument frame, path and thread state before preparing a load, and preparation
 finishes before publishing a host request. A refused reservation therefore
 opens no host handle and changes no roots, tables, code IDs or session state.
 
-The existing Lisp FASL error path passes negative errno to `%err-disp`, which
-reports `checked 4`. This change removes the uncaught JavaScript exception;
-it does not add a catchable `file-error` to that path. The runtime README now
-documents the budget, its lifetime and this refusal behavior.
+Audit 189 confirmed the host fix but found that LOAD passed the errno to
+`%err-disp`, which called an excluded `%get-frame-ptr`. The resulting
+`UNDEFINED-FUNCTION` was catchable; the retained `checked 4` run was simply
+unhandled at top level. The earlier claim of a designed uncatchable refusal
+was wrong. The [audit 189 follow-up](load-error-followup.md) corrects LOAD to
+signal `SIMPLE-FILE-ERROR` and verifies handler recovery.
 
 O-124 was already fixed by `ea82d8e7` in `bootstrap-class-implicit-runtime`.
 `wasm32-compile-file` binds `*b-cpl-conditions*` to true and `b-implicit-runtime`
@@ -60,6 +62,8 @@ The finalized pack is
 The [result record](../../../../doc/WASM/stage1/refusal-followup.json) pins that
 pack's evidence commit and indexes. Disposable workspaces were removed after
 verifying the retained artifacts.
-The new host change and regression evidence await user-supplied independent
-review. Product Lisp delta is **0 added / 0 removed**; whole-file and acceptance
+Audit 189 independently replayed the host checks and killed four host mutants.
+It also replayed 26,204 fresh compiler comparisons with zero failures, closing
+O-137, and confirmed the O-124 closure. Its review is imported at `34b130cd`.
+The LOAD/error-context follow-up awaits the final user-supplied review. Product Lisp delta is **0 added / 0 removed**; whole-file and acceptance
 counters are unchanged.

@@ -1,3 +1,25 @@
+## 2026-09-27 — Keep READY 81/82; complete audit 189 error recovery in one follow-up
+
+Imported audit 189 (`34b130cd`) into `wasm2`. The host refusal is independently
+confirmed; O-124 and O-137 are closed, with 26,204 fresh compiler comparisons
+and zero failures. Audit 188's O-124 finding is withdrawn by its author.
+
+The [final follow-up](../../../tests/wasm/stage1/loader-target/load-error-followup.md)
+fixes O-142 by signalling SIMPLE-FILE-ERROR from wasm32 LOAD, addresses O-143
+by supplying NIL native-frame context to error paths and returning no native
+stack function, and resolves O-145 by moving exhaustion into its own fixture.
+The earlier statement below that `checked 4` was an uncatchable designed
+refusal was wrong: it was an unhandled undefined-function condition.
+
+The same handler-wrapped LOAD witness fails against the old runtime with
+UNDEFINED-FUNCTION %GET-FRAME-PTR. Native R6/R6a passes 21,843 tests and restores
+164 FASLs; the final frame edits preserve decoded native code and data, and
+782 reader comparisons pass across 17 profiles. Target compilation rebuilds
+three runtime files and the witnesses, reusing the boot image and 79 unchanged
+files. The compiler corpus and host controls reuse audit 189's fresh review.
+One evidence pack and one fix commit await final independent review. Product
+Lisp +8/-3; READY 81/82, originals 575/535 and ledger 21/12 unchanged.
+
 ## 2026-09-27 — Keep READY 81/82; generation exhaustion becomes a checked refusal
 
 The [refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)

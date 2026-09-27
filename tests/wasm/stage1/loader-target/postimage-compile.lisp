@@ -1,7 +1,7 @@
 (in-package "CCL")
 (load "ccl:compiler;WASM32;wasm32-bundle.lisp")
 (let ((out (getenv "LOADER_OUTPUT")) (files nil))
- (dolist (stem '("postimage" "instance-a" "instance-b"))
+ (dolist (stem '("postimage" "instance-a" "instance-b" "refusals" "errors"))
   (let ((source (concatenate 'string "ccl:tests;wasm;stage1;loader-target;" stem ".lisp")))
    (multiple-value-bind (path records warnings modules)
       (wasm32-compiler::wasm32-compile-bundle-records

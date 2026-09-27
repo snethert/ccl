@@ -160,13 +160,14 @@ symbol cells are shared only by compiler-provided identity. Opcode 72 publishes
 units in FASL order. Repeated or overlapping LOAD reserves a fresh generation
 when needed; close releases only unpublished reservations. A live generation
 retains its complete module, code window and root block. There is no generation
-reclamation policy in this change. The runtime generation reserves 10,891 IDs
-and 126,226 root cells (504,904 bytes), independently of publication count.
+reclamation policy in this change. The runtime generation reserves 10,892 IDs
+and 126,230 root cells (504,920 bytes), independently of publication count.
 The default runtime budget is two generations, including the one used during
 bootstrap. When a LOAD needs another generation beyond that budget, file open
-returns `-ENOMEM` (12) through the Lisp file service. The current FASL LOAD
-error path passes that errno to `%err-disp`, which exits with `checked 4`;
-it does not signal a catchable `file-error`. Refusal occurs
+returns `-ENOMEM` (12) through the Lisp file service. Wasm32 LOAD signals
+`SIMPLE-FILE-ERROR` with the requested pathname and the errno message; a Lisp
+`file-error` handler can catch it and continue. An unhandled condition stops
+the top-level run; that is not an uncatchable refusal. Refusal occurs
 after argument validation and before a host file opens or any reservation is
 published. Closing a file releases unpublished unit reservations; published
 generations remain charged. `layout.mjs` and `targetLoadSession` accept an
@@ -258,3 +259,9 @@ word must be zero and the population type must be 0 or 1. Four-field termination
 populations remain refused. Standard method selection runs in compiled CCL
 Lisp; it recomputes applicability per call. Cross-dumped class/global
 installation, custom combinations and the full image/READY join remain separate.
+
+Wasm32 error dispatch uses NIL for native frame context. `%get-frame-ptr`
+therefore returns NIL, and `%last-fn-on-stack` reports no native function.
+Condition signalling, handlers, restarts and `*debugger-hook*` do not require
+a native frame. Native stack walking and an interactive debugger remain outside
+this profile. See the [audit 189 follow-up](../../tests/wasm/stage1/loader-target/load-error-followup.md).

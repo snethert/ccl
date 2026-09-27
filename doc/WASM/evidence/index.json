@@ -4018,8 +4018,18 @@
       "id": "STAGE1-AUDIT188-REFUSALS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit188-refusals-r1/summary.json",
       "sha256": "0667878fb636556472ec13b9f17429313851e8d52b87118a82c0aba964aad6b2",
-      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
-      "scope": "O-134: tagged ENOMEM after file validation and before host open; default two-generation budget documented, ordinary LOAD uses checked 4. O-124 already fixed by ea82d8e7 in the active class emitter; freshly compiled handler-bound check passes in modes 0/2 and restoring the old guard is killed. Eleven generation checks, 57 file-admission groups, 81 archive controls, 11 async checks, 3922 objects/zero retained; READY 83/83, both startup refusals and third LOAD checked without leaked sessions. Native/readers reused against 68 unchanged sources. Full corpus skipped by explicit user direction. Product Lisp +0/-0; no criterion credit.",
+      "review_disposition": "HOST_CHANGE_REVIEWED_SOUND_AUDIT_189",
+      "scope": "O-134: tagged ENOMEM after file validation and before host open; default two-generation budget documented, ordinary LOAD uses checked 4. O-124 already fixed by ea82d8e7 in the active class emitter; freshly compiled handler-bound check passes in modes 0/2 and restoring the old guard is killed. Eleven generation checks, 57 file-admission groups, 81 archive controls, 11 async checks, 3922 objects/zero retained; READY 83/83, both startup refusals and third LOAD checked without leaked sessions. Native/readers reused against 68 unchanged sources. Full corpus skipped by explicit user direction. Product Lisp +0/-0; no criterion credit. Audit 189 independently replayed the corpus (26204 fresh, zero failures), closes O-124/O-137 and confirms the host fix. Correction: the old checked-4 run was an unhandled, catchable UNDEFINED-FUNCTION %GET-FRAME-PTR, not a designed terminal refusal; the audit-189 successor fixes the Lisp path.",
+      "slot_credit": false,
+      "review_commit": "34b130cd"
+    },
+    {
+      "id": "STAGE1-AUDIT189-ERRORS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit189-errors-r1/summary.json",
+      "sha256": "593e9cfdd6e5df608a168356742b82236d64e47ca6f70a6e4554dce0a3c866d8",
+      "evidence_commit": "8cebb6ab553e70c7560f9ac89aa82a4ad0fe57ee",
+      "review_disposition": "IMPLEMENTED_AWAITING_FINAL_REVIEW",
+      "scope": "Audit 189 imported. O-142: LOAD signals catchable SIMPLE-FILE-ERROR with pathname/message. O-143: absent native-frame context supplied to error/restart paths; native stack function lookup returns NIL. O-145: exhaustion isolated from ordinary READY. READY 83/83 at one generation; dedicated 85-load run catches two refusals, passes error/restart probes and later LOAD, no session leaks; both startup refusals pass. Native 21843/0, 164 restored FASLs, final two files decoded-code equal; readers 782 across 17 profiles. Corpus/host controls reused from audit 189 by input identity. Original failures retained, 642 archived artifacts verified, RAM workspaces removed. Product Lisp +8/-3; final independent review pending, no criterion credit.",
       "slot_credit": false
     }
   ],

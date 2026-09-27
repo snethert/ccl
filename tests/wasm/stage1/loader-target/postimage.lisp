@@ -201,17 +201,6 @@
       (assert (not (eq cell (register-istruct-cell name)))))
     (assert (eq cell (register-istruct-cell name)))))
 
-#+wasm32-target
-(let ((path "/ccl/l1-fasls/l1-sort.w32fsl"))
-  ;; Bootstrap used generation one. The first reload publishes into generation
-  ;; two before CCL refuses to redefine a kernel function. Further opens must
-  ;; return ENOMEM through the Lisp file service, without a host exception.
-  (assert (handler-case (progn (load path) nil)
-            (file-error () nil)
-            (error () t)))
-  (dotimes (i 2)
-    (assert (= (fd-open path target::os-o-rdonly) -12)))
-  (format t "~&LOADER-GENERATION-REFUSAL-PASS~%"))
 
 (format t "~&LOADER-POSTIMAGE-PASS ~s~%" *loader-postimage-observations*)
 (write-string "stdout λ😀" *standard-output*)

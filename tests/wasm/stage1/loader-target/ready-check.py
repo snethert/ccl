@@ -31,10 +31,10 @@ def run(a_path, b_path, omitted_path, empty_path, parent_path):
         stdout=''.join(r['text'] for r in boot['outputEvents'] if r['channel']==1)
         stderr=''.join(r['text'] for r in boot['outputEvents'] if r['channel']==2)
         assert 'LOADER-POSTIMAGE-PASS' in stdout and 'stdout λ😀\n' in stdout
-        assert 'LOADER-GENERATION-REFUSAL-PASS' in stdout
+        assert 'LOADER-GENERATION-REFUSAL-PASS' not in stdout
         assert not boot['abandonedSessions'] and not boot['openFiles']
         assert len(boot['archiveStorage'])==1
-        assert boot['archiveStorage'][0]['generations']==2
+        assert boot['archiveStorage'][0]['generations']==1
         assert boot['archiveStorage'][0]['openSessions']==0
         assert 'stderr λ😀\n' in stderr
         assert f'LOADER-INSTANCE-{instance.upper()}-PASS (:COLD {value}) {result}' in stdout
@@ -73,7 +73,7 @@ def run(a_path, b_path, omitted_path, empty_path, parent_path):
         assertions=['real %TOPLEVEL-FUNCTION% handoff', 'target-only level-1 loading',
           'class-mode error service', 'post-image LOAD returns in both fresh Workers',
           'independent mutable state and later installed functions',
-          'Unicode stdout/stderr and flushing', 'generation budget returns errno through Lisp',
+          'Unicode stdout/stderr and flushing', 'ordinary READY preserves the reload generation',
           'required bundle omission refuses',
           'no-load path cannot pass'],
         scope='One Lisp Worker per fresh instance. This does not claim multi-Worker scheduling or native image saving.')

@@ -17,7 +17,7 @@ SHARED = ('compiler/lambda-list.lisp', 'library/loop.lisp', 'library/cover.lisp'
           'level-1/l1-typesys.lisp', 'level-1/l1-lisp-threads.lisp',
           'level-1/l1-application.lisp', 'level-1/l1-processes.lisp',
           'level-1/l1-readloop.lisp', 'level-1/l1-readloop-lds.lisp', 'level-1/l1-events.lisp',
-          'level-1/l1-error-system.lisp', 'level-1/l1-sysio.lisp', 'level-1/l1-pathnames.lisp',
+          'level-1/l1-error-system.lisp', 'level-1/l1-sysio.lisp', 'level-1/l1-pathnames.lisp', 'level-1/l1-files.lisp',
           'level-1/l1-boot-3.lisp', 'level-1/l1-error-signal.lisp', 'level-1/l1-clos.lisp')
 COMPILER_CHANGES = ('CCL::TARGET-COMPILER-MODULES', 'CCL::TARGET-XLOAD-MODULES',
                     'CCL::TARGET-COMPILE-MODULES', 'CCL::TARGET-LEVEL-1-MODULES')

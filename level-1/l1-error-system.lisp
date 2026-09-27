@@ -851,6 +851,9 @@
 
 
 (defun %last-fn-on-stack (&optional (number 0) (s (%get-frame-ptr)))
+  #+wasm32-target (declare (ignore number s))
+  #+wasm32-target nil
+  #-wasm32-target
   (let* ((fn nil))
     (let ((p s))
       (dotimes (i number)

@@ -686,9 +686,10 @@
        (funcall f db-link (%fixnum-ref db-link (* 1 target::node-size)) (%fixnum-ref db-link (* 2 target::node-size)))
        (setq db-link (%fixnum-ref db-link))))))
 
-#-wasm32-target
 (defun %get-frame-ptr ()
-  (%current-frame-ptr))
+  ;; The Wasm profile has no native stack frame; %ERROR ignores this context.
+  #+wasm32-target nil
+  #-wasm32-target (%current-frame-ptr))
 
 #-wasm32-target
 (defun %current-exception-frame ()

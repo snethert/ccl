@@ -63,8 +63,8 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
             c.save(out / 'postimage-parent.json', dict(
                 image=str(postimage), manifest=c.sha(postimage / 'boot/artifacts/manifest.json'),
                 sources={name: c.sha(HERE / name) for name in
-                         ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp')}))
-            for name in ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp'):
+                         ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp', 'refusals.lisp', 'errors.lisp')}))
+            for name in ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp', 'refusals.lisp', 'errors.lisp'):
                 shutil.copyfile(HERE / name, fixture / name)
         env = dict(os.environ, CCL_DEFAULT_DIRECTORY=str(source) + '/', LOADER_OUTPUT=str(out) + '/')
         if modules:
