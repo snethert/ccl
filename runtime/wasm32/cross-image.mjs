@@ -2,10 +2,12 @@
 // manifest and capabilities. No Lisp initializer runs during installation.
 import {sha256} from './sha256.mjs';
 import {compile,publish,PACKAGING} from './bundle.mjs';
-import {admitCodeArchive,ARCHIVE_PACKAGING} from './code-archive.mjs';
+import {admitCodeArchive,admitCodeArchiveAsync,ARCHIVE_PACKAGING} from './code-archive.mjs';
 import {admitHeapImage} from './heap-image.mjs';
 const need=(v,s)=>{if(!v)throw Error('cross image: '+s);};
-export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,env,readBytes,readTemplate,policy,expected,capabilities,owner,onBuffers=()=>{},onManifest=()=>{},start=manifest.heap.start}) {
+export const admitCrossImage=options=>admitImage(options,admitCodeArchive);
+export const admitCrossImageAsync=async options=>admitImage(options,admitCodeArchiveAsync);
+function admitImage({memory,manifest,record,payload,codeSet,regions,env,readBytes,readTemplate,policy,expected,capabilities,owner,onBuffers=()=>{},onManifest=()=>{},start=manifest.heap.start},admitArchive) {
  const m=structuredClone(manifest),set=codeSet.packaging===ARCHIVE_PACKAGING?
   {...codeSet,modules:structuredClone(codeSet.modules)}:structuredClone(codeSet);
  env={...env};expected=structuredClone(expected);
@@ -27,15 +29,16 @@ export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,
   need(set.modules.every((m,i)=>m.code_id===16+i&&m.name===set.archive.functions[i].source_name),'INVENTORY');
   const heap=admitHeapImage({memory,record,payload,digest:m.heap.digest,regions,start,limit:start+m.heap.bytes,codeDigest:m.codeDigest,rootSlots:m.roots.slots});
   const values=set.archive.units.map(u=>({name:u.name,record:[4,u.wire],values:u.references.map(r=>heap.reference(r))}));
-  const archive=admitCodeArchive({bytes:readBytes('boot.archive'),manifest:set.archive,digest:set.archive.binary_sha256,
+  const result=admitArchive({bytes:readBytes('boot.archive'),manifest:set.archive,digest:set.archive.binary_sha256,
    env,capabilities,versions:expected,policy,slotOffset:8,onBuffers,onManifest,
    allocateCode:()=>16,
    reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));journal.push(()=>owner.atSafepoint(()=>block.release()));return block;},
    registerRoots:(block,cells,journal)=>{owner.atSafepoint(()=>block.register(cells));journal.push(()=>owner.atSafepoint(()=>block.unregister(cells)));}});
   set.archive=null;
-  let state='ADMITTED';
+  const finish=archive=>{let state='ADMITTED';
   return Object.freeze({get state(){return state;},objects:heap.objects,
    install(){need(state==='ADMITTED','STATE');const instances=archive.installAll(values,()=>heap.install());state='INSTALLED';return {start,end:start+m.heap.bytes,instances};}});
+  };return result instanceof Promise?result.then(finish):finish(result);
  }
  const names=new Set(),ids=new Set();
  for(const row of set.modules){

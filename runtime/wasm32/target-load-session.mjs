@@ -5,7 +5,7 @@ import {createNamespace} from './namespace.mjs';
 import {admitTargetBundle, decodeTargetBundle, decodeTargetContainer, targetContainerVersion} from './target-bundle.mjs';
 import {targetCodeService} from './target-code-service.mjs';
 import {fileClient} from './file-client.mjs';
-import {admitCodeArchive} from './code-archive.mjs';
+import {admitCodeArchiveAsync} from './code-archive.mjs';
 import {sha256} from './sha256.mjs';
 
 const need = (ok, why) => { if (!ok) throw Error('target load: ' + why); };
@@ -58,7 +58,7 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
     onInput('admission-start',a);
     try{
     need(!admitted.has(a.digest),'DUPLICATE_ARCHIVE');
-    const archive=measure('archive.admit',()=>admitCodeArchive({...a,env,capabilities,versions,policy,slotOffset,maxGenerations:generations,measure,onBuffers,onManifest,
+    const archive=await measure('archive.admit',()=>admitCodeArchiveAsync({...a,env,capabilities,versions,policy,slotOffset,maxGenerations:generations,measure,onBuffers,onManifest,
       allocateCode:(n,journal)=>{const base=nextCode,slot=nextSlot;nextCode+=n;nextSlot+=n;
         journal.push(()=>{nextCode=base;nextSlot=slot;});return base;},
       reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));

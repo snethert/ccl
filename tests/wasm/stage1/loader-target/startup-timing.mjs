@@ -33,15 +33,16 @@ export function startupTiming(prefix, thread) {
     const frame = {id: ++serial, phase, path: detail.path, childMs: 0};
     const parent = stack.at(-1)?.id ?? null, begin = now();
     stack.push(frame);
-    let completed = false;
-    try { const result = run(); completed = true; return result; }
-    finally {
+    const finish=completed=>{
       account(); stack.pop();
       const ms = now() - begin;
       if (stack.length) stack.at(-1).childMs += ms;
       write({kind: 'span', id: frame.id, parent, phase, path: detail.path ?? path(),
         beginEpochMs: begin, ms, selfMs: ms - frame.childMs, completed});
-    }
+    };
+    let result;try{result=run();}catch(error){finish(false);throw error;}
+    if(result instanceof Promise)return result.then(value=>{finish(true);return value;},error=>{finish(false);throw error;});
+    finish(true);return result;
   }
   memory('thread-start', {pid: process.pid, versions: process.versions});
   return {measure, memory, event, checkpoint,

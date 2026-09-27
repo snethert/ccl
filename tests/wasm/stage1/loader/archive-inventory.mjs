@@ -38,8 +38,10 @@ export async function inventoryArchive(stem,policy,versions,archive){
   exports:x.exports.map(e=>({name:e.name,kind:e.kind,index:e.index,signature:x.types[x.functions[e.index]]}))};
  const template=manifest(bytes,abi,classification,policy),full=materialize(bytes,template,abi,classification,policy,'full');
  fs.writeFileSync(stem+'.wasm',full.bytes);
- const ranges=new Map(entryRanges(full.bytes,{ownerRetry:true}).map(r=>[r.role,r]));
+ const bodies=entryRanges(full.bytes,{ownerRetry:true,inspected:x,all:true}),byIndex=new Map(bodies.map(b=>[b.index,b]));
+ const ranges=new Map(x.exports.map(e=>[e.name,{role:e.name,...byIndex.get(e.index)}]));
  return {...archive,...versions,binary_sha256:full.record.binary_sha256,template_sha256:template.template_sha256,
+  helper_bodies:archive.helpers.map((name,i)=>({...bodies[i],name,body_sha256:sha256(full.bytes.subarray(bodies[i].start,bodies[i].end))})),
   d2:{abi,classification,template,outputs:{full:full.record}},entries:archive.functions.map(f=>{
    const entry=ranges.get(f.export+'.entry'),tail_entry=ranges.get(f.export+'.tail_entry');
    return {code_offset:f.code_offset,entry,tail_entry,

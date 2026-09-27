@@ -15,10 +15,16 @@ assert(global.gc,'run with --expose-gc');fs.mkdirSync(out,{recursive:true});
 const read=n=>JSON.parse(fs.readFileSync(fixture+'/'+n)),refs=[],seen=new WeakSet(),inputs=inputInventory();
 const mark=(value,label)=>{if(seen.has(value))return;seen.add(value);
  Object.defineProperty(value,'archiveRetentionMarker',{value:label});refs.push({label,ref:new WeakRef(value)});};
+const markTree=(value,label)=>{if(!value||typeof value!=='object'||seen.has(value))return;
+ mark(value,label);for(const child of Object.values(value))markTree(child,label);};
+const markManifest=(value,label)=>{mark(value,label);
+ for(const name of ['d2','functions','entries','helpers','helper_sets','helper_bodies','shared_symbols'])markTree(value[name],label+':'+name);
+ // Individual unit rows become compact publication metadata; their enclosing
+ // validation array must be released.
+ mark(value.units,label+':units');};
 const onBuffers=(label,values)=>{inputs.release(label);if(values.length){
  values.forEach(v=>mark(v.buffer??v,label));inputs.hold(label,'validation',values);}};
-const onManifest=(label,value)=>{inputs.releaseManifest(label);if(value){mark(value,label);
- for(const name of ['d2','functions','entries'])if(value[name])mark(value[name],label+':'+name);
+const onManifest=(label,value)=>{inputs.releaseManifest(label);if(value){markManifest(value,label);
  inputs.holdManifest(label,value);}};
 const transfer=async bytes=>{const {port1,port2}=new MessageChannel();
  try{const received=new Promise(resolve=>port2.once('message',resolve));port1.postMessage(bytes,[bytes]);
@@ -30,7 +36,7 @@ async function exercise(){
  const source={binaryPath,metadataPath,digest:sha256(fs.readFileSync(binaryPath)),manifestDigest:sha256(fs.readFileSync(metadataPath))};
  let raw=readArchiveSource(source);mark(raw.bytes,'sender');mark(raw.metadata,'metadata');
  let bytes=await transfer(raw.bytes),manifest=JSON.parse(new TextDecoder().decode(raw.metadata));
- mark(bytes,'receiver');mark(manifest,'source-manifest');mark(manifest.d2,'source-d2');raw=null;
+ mark(bytes,'receiver');markManifest(manifest,'source-manifest');raw=null;
  // Authenticate every read, including after a previously successful delivery.
  const fd=fs.openSync(binaryPath,'r+');fs.writeSync(fd,new Uint8Array([1]),0,1,0);fs.closeSync(fd);
  assert.throws(()=>readArchiveSource(source),/BINARY_DIGEST/);fs.copyFileSync(archiveDir+'/smoke.wasm',binaryPath);
@@ -65,7 +71,7 @@ async function exercise(){
   post:({lifetime,generation})=>{if(hostFailure)throw Error('HOST_FAILURE');
    assert(serviceRequest(memory,hostRefusal?{...host,open(){throw Object.assign(Error('missing'),{code:'NOT_FOUND'});}}:host,lifetime,generation));}};
  const rejected={bytes:bytes.slice(0),manifest:structuredClone(manifest),digest:source.digest};
- rejected.manifest.entries[0].body_sha256='0'.repeat(64);mark(rejected.bytes,'failed-input');mark(rejected.manifest,'failed-manifest');
+ rejected.manifest.entries[0].body_sha256='0'.repeat(64);mark(rejected.bytes,'failed-input');markManifest(rejected.manifest,'failed-manifest');
  await assert.rejects(()=>targetLoadSession({...config,archives:[rejected]}),/BODY_DIGEST/);
  assert.equal(rejected.bytes,null);assert.equal(rejected.manifest,null);
  assert.equal(inputs.snapshot().bytes,0);assert.equal(inputs.snapshot().validationManifests,0);
@@ -105,9 +111,10 @@ let edgeOffset=0;const markerOwners=[];
 for(let n=0;n<heap.nodes.length;n+=nodeWidth){
  for(let i=0;i<heap.nodes[n+edgeCount];i++,edgeOffset+=edgeWidth)
   if(meta.edge_types[edgeType][heap.edges[edgeOffset+edgeType]]==='property'&&heap.strings[heap.edges[edgeOffset+edgeName]]==='archiveRetentionMarker')
-   markerOwners.push({id:heap.nodes[n+nf.indexOf('id')],name:heap.strings[heap.nodes[n+nf.indexOf('name')]]});
+   markerOwners.push({id:heap.nodes[n+nf.indexOf('id')],name:heap.strings[heap.nodes[n+nf.indexOf('name')]],
+    marker:heap.strings[heap.nodes[heap.edges[edgeOffset+ef.indexOf('to_node')]+nf.indexOf('name')]]});
 }
-const report={status:retained.length===0&&markerOwners.length===1?'PASS':'FAIL',...alive.report,
+const report={status:retained.length===0&&markerOwners.length===1&&markerOwners[0].marker==='positive-control'?'PASS':'FAIL',...alive.report,
  trackedObjects:refs.length,retained,markerOwners,snapshotSha256:sha256(fs.readFileSync(snapshotPath)),
  checks:['sender detachment','archive reread digest','manifest reread digest','failed admission releases inputs','host throw releases reservation','host refusal releases reservation',
  'overlapping LOAD','partial close and generation reuse','three generations with distinct IDs','terminal session release','main FASL rereads after release',

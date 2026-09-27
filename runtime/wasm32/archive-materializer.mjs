@@ -5,13 +5,14 @@ const need=(v,s)=>{if(!v)throw Error(s);},same=(a,b)=>JSON.stringify(a)===JSON.s
 
 // Archive D2 re-derivation: one template digest, one full digest, one structural
 // parse and one engine module. Input is the caller's private owned snapshot. Only the canonical memory flag may differ.
-export function installArchive(input,archive,policy,parsed){
- const bytes=input,d=archive.d2,fullDigest=sha256(bytes);
+function* installation(input,archive,policy,parsed){
+ const bytes=input,d=archive.d2,fullDigest=yield bytes;
  need(fullDigest===archive.binary_sha256,'INSTALLED_DIGEST');
  need(Number.isInteger(d.template.offset)&&bytes[d.template.offset]===3,'MEMORY_PATCH');
  bytes[d.template.offset]=1;
+ try{
  need(WebAssembly.validate(bytes),'INVALID_WASM');
- const templateDigest=sha256(bytes),m=parsed??inspect(bytes,{ownerRetry:true});
+ const templateDigest=yield bytes,m=parsed??inspect(bytes,{ownerRetry:true});
  const s={...memoryOffset(bytes),imports:m.imports.map(i=>i.kind==='memory'?{...i,flags:1}:i),
   exports:m.exports.map(e=>({name:e.name,kind:e.kind,index:e.index,signature:m.types[m.functions[e.index]]}))};
  need(s.offset===d.template.offset,'MEMORY_PATCH');
@@ -32,4 +33,17 @@ export function installArchive(input,archive,policy,parsed){
   offset:actual.offset,patched_byte:3,limits:{minimum:actual.minimum,maximum:actual.maximum},
   imports:actual.imports.map(i=>i.kind==='memory'?{...i,flags:3}:i),exports:actual.exports,features:actual.features,byte_length:bytes.length};
  need(same(record,d.outputs.full),'INSTALL_RECORD');bytes[s.offset]=3;return new WebAssembly.Module(bytes);
+ }finally{bytes[d.template.offset]=3;}
+}
+export function installArchive(...args){
+ const iterator=installation(...args);let step=iterator.next();
+ try{while(!step.done)step=iterator.next(sha256(step.value));return step.value;}
+ catch(error){return iterator.throw(error);}
+}
+export async function installArchiveAsync(...args){
+ const iterator=installation(...args);let step=iterator.next();
+ try{while(!step.done){
+  const hash=await crypto.subtle.digest('SHA-256',step.value);
+  step=iterator.next(Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join(''));
+ }return step.value;}catch(error){return iterator.throw(error);}
 }

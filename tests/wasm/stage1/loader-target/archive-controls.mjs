@@ -30,6 +30,11 @@ function refuse(name,run,pattern){const before=state();assert.throws(run,pattern
 for(const [name,change,pattern] of [
  ['null-function',m=>m.functions[0]=null,/FUNCTION/],['null-unit',m=>m.units[0]=null,/UNIT/],
  ['count-negative',m=>m.function_count=-1,/COUNTS/],['roots-fractional',m=>m.root_cells=1.5,/COUNTS/],
+ ['helper-sets',m=>m.helper_sets=null,/HELPER_SETS/],['helper-identity',m=>m.helper_sets[0][0]='alien',/HELPER_SETS/],
+ ['helper-set-index',m=>m.functions[0].helper_set=999,/HELPER_SET/],
+ ['arity-shape',m=>m.functions[0].arity=null,/CALLABLE_SHAPE/],['captures-shape',m=>m.functions[0].captures=-1,/CALLABLE_SHAPE/],
+ ['helper-bodies',m=>m.helper_bodies.pop(),/HELPER_BODIES/],['helper-range',m=>m.helper_bodies[0].index++,/HELPER_RANGE/],
+ ['helper-digest',m=>m.helper_bodies[0].body_sha256='0'.repeat(64),/HELPER_DIGEST/],
  ['duplicate-name',m=>m.functions[1].name=m.functions[0].name,/FUNCTION/],
  ['duplicate-export',m=>m.functions[1].export=m.functions[0].export,/FUNCTION/],
  ['duplicate-unit-name',m=>m.units[1].name=m.units[0].name,/UNIT/],

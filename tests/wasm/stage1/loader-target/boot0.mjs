@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {Worker, isMainThread, parentPort, workerData} from 'node:worker_threads';
-import {admitCrossImage} from '../../../../runtime/wasm32/cross-image.mjs';
+import {admitCrossImageAsync} from '../../../../runtime/wasm32/cross-image.mjs';
 import {CollectorOwner} from '../../../../runtime/wasm32/collector-owner.mjs';
 import {allocationService, collectionInhibitionService, heapSnapshotService, objectValidityService} from '../../../../runtime/wasm32/allocation-service.mjs';
 import {integerService} from '../../../../runtime/wasm32/integer-service.mjs';
@@ -195,7 +195,7 @@ if (isMainThread) {
     table_capacity: capacity, reserved_slots: [0, 1, 2, 3, 4, 5, 6, 7, 8], slots: Object.fromEntries(codeSet.modules.map(m => [m.code_id, m.code_id + 8]))};
   let admitted,installed;
   try{
-  admitted = measure('boot.admit', () => admitCrossImage({memory, owner, onBuffers, onManifest, manifest, record, codeSet, regions, env, policy, expected,
+  admitted = await measure('boot.admit', () => admitCrossImageAsync({memory, owner, onBuffers, onManifest, manifest, record, codeSet, regions, env, policy, expected,
     payload: fs.readFileSync(artifacts + '/heap.payload.bin'),
     readBytes: name => name==='boot.archive'&&bootInput?bootInput.bytes:fs.readFileSync(artifacts + '/' + name + '.wasm'),
     readTemplate: name => fs.readFileSync(artifacts + '/' + name + '.template.wasm'),
@@ -279,6 +279,7 @@ if (isMainThread) {
   const callbackByName = new Map(workerData.callbackSelection.callbacks.map(row => [row.name.split('::').at(-1), row]));
   const observedLookups = [];
   const completedLoads = [];
+  const instrumentation={modules:1,instances:0};
   {
     const observer = new WebAssembly.Module(fs.readFileSync(out + '/observe.wasm'));
     const text = word => {
@@ -399,10 +400,12 @@ if (isMainThread) {
             sourceFile: sourceDir + '/' + record.name + '.wat',
             report: observeCheck});
           exports = observed.instance.exports; observation = observed.evidence;
+          instrumentation.modules++;instrumentation.instances++;
         }
         const wrapper = new WebAssembly.Instance(observer, {env, trace: {
           code: codeId, failed: (...args) => { failed(...args); if (firstFailure?.code === codeId) firstFailure.file = path; },
           entered, returned, ...exports}});
+        instrumentation.instances++;
         env.table.set(record.slot, wrapper.exports.entry); env.tail_table.set(record.slot, wrapper.exports.tail_entry);
         observedSlots.add(record.slot);
       }
@@ -422,8 +425,10 @@ if (isMainThread) {
             integer: {calculate: integer}, floating: {calculate: floating}},
           report: observeCheck});
         instance = observed.instance; observation = observed.evidence;
+        instrumentation.modules++;instrumentation.instances++;
       }
       const wrapper = new WebAssembly.Instance(observer, {env, trace: {code: row.code_id, failed, entered, returned, ...instance.exports}});
+      instrumentation.instances++;
       env.table.set(row.slot, wrapper.exports.entry); env.tail_table.set(row.slot, wrapper.exports.tail_entry);
     }
     assert(!workerData.inspectCode || observation || workerData.inspectCode > Math.max(...codeSet.modules.map(r => r.code_id)),
@@ -455,10 +460,11 @@ if (isMainThread) {
   parentPort.postMessage({...result, boot0: handoff, firstFailure, terminalFailureChain, recentFailures, firstCheck, firstCondition, observation, traceFrom: workerData.traceFrom ?? null, loadEvents, entry: '%TOPLEVEL-FUNCTION%', modules: codeSet.modules.length,
     productModules:5+(bootIsArchive?1:codeSet.modules.length)+loader.productCounts().modules,
     productInstances:9+(bootIsArchive?1:codeSet.modules.length)+loader.productCounts().instances,
+    instrumentation,
     abandonedSessions,inputOwnership:inputState(),archiveStorage:loader.archives(),openFiles:loader.openFiles(),
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
     environment: {node: process.version, runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
-      observer: workerData.trace ? sha256(fs.readFileSync(out + '/observe.wasm')) : null,
+      observer: sha256(fs.readFileSync(out + '/observe.wasm')),
       runtime: Object.fromEntries(['collector', 'integer', 'float', 'detector'].map(name => [name, sha256(binary(name))]))},
     level1CrossLoaded: false, targetLoadedFiles: completedLoads.length, completedLoads,
     execution: execution(), classErrorTransition, conditionCalls, outputEvents, callbackEvents,

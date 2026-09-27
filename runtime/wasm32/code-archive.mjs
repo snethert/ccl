@@ -4,17 +4,20 @@ import {sha256} from './sha256.mjs';
 import {snapshotBytes} from './bytes.mjs';
 import {inspect} from './binary.mjs';
 import {entryRanges} from './ranges.mjs';
-import {installArchive} from './archive-materializer.mjs';
+import {installArchive,installArchiveAsync} from './archive-materializer.mjs';
 import {signatures} from './bundle.mjs';
 export const ARCHIVE_PACKAGING='code-archive-v2';
 const need=(v,s)=>{if(!v)throw Error('code archive: '+s);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const uint=n=>Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff;
 const digest=s=>typeof s==='string'&&/^[0-9a-f]{64}$/.test(s);
-export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capabilities={},versions,policy,
+// One validation/publication implementation; only full-module hashing may
+// suspend. The generator keeps ownership cleanup around that suspension.
+function* admission({bytes,manifest,digest:expectedDigest,env,capabilities={},versions,policy,
   allocateCode,reserveRoots,registerRoots,slotOffset=8,maxGenerations=Infinity,onBuffers=()=>{},onManifest=()=>{},measure=(_p,run)=>run()}) {
  try{
  env={...env};capabilities=Object.fromEntries(Object.entries(capabilities).map(([k,v])=>[k,{...v}]));
+ policy=structuredClone(policy);
  need(manifest&&typeof manifest==='object','MANIFEST');
  manifest=structuredClone(manifest);onManifest('validation-manifest',manifest);
  const count=manifest.function_count;
@@ -23,6 +26,8 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
  need(uint(count)&&count>0&&count<=536870911&&uint(manifest.root_cells),'COUNTS');
  need(Array.isArray(manifest.functions)&&manifest.functions.length===count&&Array.isArray(manifest.units)&&
    Array.isArray(manifest.shared_symbols)&&new Set(manifest.shared_symbols).size===manifest.shared_symbols.length,'INVENTORY');
+ need(Array.isArray(manifest.helpers)&&manifest.helpers.every(n=>typeof n==='string')&&new Set(manifest.helpers).size===manifest.helpers.length&&
+  Array.isArray(manifest.helper_sets)&&manifest.helper_sets.every(s=>Array.isArray(s)&&new Set(s).size===s.length&&s.every(n=>manifest.helpers.includes(n))),'HELPER_SETS');
  need(digest(expectedDigest)&&expectedDigest===manifest.binary_sha256&&digest(manifest.template_sha256),'DIGEST');
  need(env.memory instanceof WebAssembly.Memory&&env.table instanceof WebAssembly.Table&&env.tail_table instanceof WebAssembly.Table&&env.table!==env.tail_table&&uint(slotOffset),'CAPABILITIES');
  need(maxGenerations===Infinity||(Number.isSafeInteger(maxGenerations)&&maxGenerations>0),'GENERATION_LIMIT');
@@ -31,6 +36,8 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
  for(const [i,f] of manifest.functions.entries()){
   need(f&&f.code_offset===i&&typeof f.name==='string'&&!names.has(f.name)&&typeof f.export==='string'&&!exports.has(f.export),'FUNCTION');
   names.add(f.name);exports.add(f.export);
+  need(Array.isArray(f.arity)&&f.arity.length===(manifest.boot===true?6:7)&&uint(f.captures),'CALLABLE_SHAPE');
+  need(uint(f.helper_set)&&f.helper_set<manifest.helper_sets.length,'HELPER_SET');
  }
  for(const u of manifest.units){
   need(u&&typeof u.name==='string'&&!units.has(u.name)&&typeof u.wire==='string'&&uint(u.symbol_count)&&u.root_base===nextRoot,'UNIT');
@@ -70,7 +77,13 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
  need(same(sorted(x.imports),sorted(fixed)),'IMPORT_SET');
  need(same(x.imports,manifest.d2.outputs.full.imports),'IMPORT_MANIFEST');
  need(x.exports.length===2*count&&Array.isArray(manifest.entries)&&manifest.entries.length===count,'EXPORT_SET');
- const ranges=new Map(entryRanges(bytes,{ownerRetry:true,inspected:x,validated:true}).map(r=>[r.role,r])),exportMap=new Map(x.exports.map(e=>[e.name,e]));
+ const bodies=entryRanges(bytes,{ownerRetry:true,inspected:x,validated:true,all:true}),byIndex=new Map(bodies.map(b=>[b.index,b]));
+ need(bodies.length===manifest.helpers.length+2*count&&Array.isArray(manifest.helper_bodies)&&manifest.helper_bodies.length===manifest.helpers.length,'HELPER_BODIES');
+ for(const [i,h] of manifest.helper_bodies.entries()){
+  need(h&&h.name===manifest.helpers[i]&&same({index:h.index,start:h.start,end:h.end},bodies[i]),'HELPER_RANGE');
+  need(sha256(bytes.subarray(h.start,h.end))===h.body_sha256,'HELPER_DIGEST');
+ }
+ const ranges=new Map(x.exports.map(e=>[e.name,{role:e.name,...byIndex.get(e.index)}])),exportMap=new Map(x.exports.map(e=>[e.name,e]));
  for(const [i,f] of manifest.functions.entries()){
   const row=manifest.entries[i];need(row&&row.code_offset===i,'ENTRY_OFFSET');
   const bodies=[];
@@ -82,7 +95,7 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
   const body=new Uint8Array(bodies[0].length+bodies[1].length);body.set(bodies[0]);body.set(bodies[1],bodies[0].length);
   onBuffers('body-digest',[body]);need(sha256(body)===row.body_sha256,'BODY_DIGEST');onBuffers('body-digest',[]);
  }
- const module=measure('archive.compile',()=>installArchive(bytes,manifest,policy,x));bytes=null;
+ const module=yield [bytes,manifest,policy,x];bytes=null;
  // Runtime closures retain only identity/dispatch rows, never validation inputs.
  const functions=manifest.functions.map(f=>({name:f.source_name,unit:f.unit,export:f.export}));
  const rootCount=manifest.root_cells;
@@ -176,4 +189,14 @@ export function admitCodeArchive({bytes,manifest,digest:expectedDigest,env,capab
  });
  return api;
  }finally{onBuffers('archive-work',[]);onBuffers('body-digest',[]);onManifest('validation-manifest',null);}
+}
+export function admitCodeArchive(options){
+ const iterator=admission(options),step=iterator.next(),measure=options.measure??((_p,run)=>run());
+ try{return iterator.next(measure('archive.compile',()=>installArchive(...step.value))).value;}
+ catch(error){return iterator.throw(error);}
+}
+export async function admitCodeArchiveAsync(options){
+ const iterator=admission(options),step=iterator.next(),measure=options.measure??((_p,run)=>run());
+ try{return iterator.next(await measure('archive.compile',()=>installArchiveAsync(...step.value))).value;}
+ catch(error){return iterator.throw(error);}
 }

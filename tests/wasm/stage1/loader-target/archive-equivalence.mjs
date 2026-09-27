@@ -56,9 +56,10 @@ for await(const text of forms(archiveStem+'.wat')){
  if(!name.startsWith('$body__f')&&!name.startsWith('$entry__f')){sharedForms.set(name,actual);continue;}
  if(name.startsWith('$body__f')){body=actual;continue;}
  const index=Number(name.slice('$entry__f'.length)),f=archive.functions[index],u=units.get(f.unit),original=input(f),module=parse(original.wat);
+ const helperNames=f.helpers??archive.helper_sets[f.helper_set];
  const helpers=module.filter(x=>Array.isArray(x)&&x[0]==='func'&&typeof x[1]==='string'&&x[1]!=='$body');
- assert.equal(helpers.length,f.helpers.length);
- const renames=new Map(helpers.map((x,i)=>[x[1],'$'+f.helpers[i]]));renames.set('$body','$body__f'+index);
+ assert.equal(helpers.length,helperNames.length);
+ const renames=new Map(helpers.map((x,i)=>[x[1],'$'+helperNames[i]]));renames.set('$body','$body__f'+index);
  const cells=new Map(f.symbols.map(([wire,i])=>[wire,u.shared.find(s=>s[1]===i)?.[2]??u.root_base+i]));
  const codes=new Map(f.codes.map(c=>[c.name,c.code_offset]));
  const isSymbol=x=>Array.isArray(x)&&x.length===2&&x[0]==='global.get'&&x[1].startsWith('$symbol_');
@@ -89,7 +90,7 @@ for await(const text of forms(archiveStem+'.wat')){
    linked=actual;originalForm[1]=name;
    const inverted=inverse(originalForm,linked);inverted[1]=form[1];rebuilt.push(inverted);
   }else{
-   linked=sharedForms.get('$'+f.helpers[helperIndex++]);assert(linked);
+   linked=sharedForms.get('$'+helperNames[helperIndex++]);assert(linked);
    // The same original helper and linked variant have the same root mapping;
    // include that map in the key so offset mutations cannot bypass the walk.
    const key=hash(print(form)+print(linked)+JSON.stringify([...cells]));

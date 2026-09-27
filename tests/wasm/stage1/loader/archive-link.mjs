@@ -1,4 +1,4 @@
-// Build-side archive linker (proposal). Input: per-function WAT as the compiler
+// Build-side archive linker. Input: per-function WAT as the compiler
 // emits it (bundle records.json units or a boot code-set.json). Output: one WAT
 // module per tier plus a manifest. Symbol reads become one load from $roots;
 // code imports become $code_base plus an immediate; helpers are shared by text.
@@ -26,7 +26,7 @@ function rewriteCodes(text,offset){ // $code_registry is the env import, not a c
   need(!/\$code_(?!(registry|base)\b)/.test(text),'CODE_RESIDUE');return text;}
 export function link({units,outWat}){
   // units: [{name, symbol_count, functions:[{name, wat, symbols:[[wire,index]], codes:[name], root:boolean}]}]
-  const types=new Map(),fixed=new Map(),helpers=new Map(),helperCache=new Map(),exportsList=[],manifest={version:1,packaging:'code-archive-v2',units:[],functions:[],helpers:[]};
+  const types=new Map(),fixed=new Map(),helpers=new Map(),helperCache=new Map(),helperSets=new Map(),exportsList=[],manifest={version:1,packaging:'code-archive-v2',units:[],functions:[],helpers:[],helper_sets:[]};
   const bodiesPath=outWat+'.bodies',bodyFd=fs.openSync(bodiesPath,'w');
   const emitBody=t=>fs.writeSync(bodyFd,t+'\n');
   const offsetOf=new Map();let k=0;
@@ -75,7 +75,10 @@ export function link({units,outWat}){
       emitBody(subst(rewrite(body).replace('(export "tail_entry")',''),full).replace(/^\(func \$body__\w+/,'(func $body__'+tag));
       emitBody(subst(rewrite(entry).replace('(export "entry")','$entry__'+tag),full));
       exportsList.push(`(export "${tag}.entry" (func $entry__${tag}))`,`(export "${tag}.tail_entry" (func $body__${tag}))`);
-      manifest.functions.push({name:f.name,source_name:f.source_name??f.name,code_offset:k,unit:u.name,export:tag,symbols:f.symbols,codes:[...codeOffset].map(([name,code_offset])=>({name,code_offset})),helpers:[...map.values()]});
+      const helperNames=[...map.values()],helperKey=JSON.stringify(helperNames);
+      if(!helperSets.has(helperKey)){helperSets.set(helperKey,helperSets.size);manifest.helper_sets.push(helperNames);}
+      manifest.functions.push({name:f.name,source_name:f.source_name??f.name,code_offset:k,unit:u.name,export:tag,arity:f.arity,captures:f.captures,
+        symbols:f.symbols,codes:[...codeOffset].map(([name,code_offset])=>({name,code_offset})),helper_set:helperSets.get(helperKey)});
       unitRow.functions.push(k);k++;
     }
     manifest.units.push(unitRow);rootBase+=u.symbol_count;
@@ -91,7 +94,7 @@ export function unitsFromRecords(records,identities={},file='fixture'){
     const key=name=>JSON.stringify([file,u.name,name]),functions=[];
     const walk=rec=>{
       need([4,5].includes(rec[0])&&rec[7]===null,'RECORD');
-      functions.push({name:key(rec[1]),source_name:'code_'+(++ordinal),wat:rec[4],symbols:rec[5]??[],
+      functions.push({name:key(rec[1]),source_name:'code_'+(++ordinal),arity:rec[2],captures:rec[3],wat:rec[4],symbols:rec[5]??[],
         codes:(rec[6]??[]).map(name=>({name,target:key(name)}))});
       for(const c of rec[8]??[])walk(c);
     };
@@ -103,7 +106,7 @@ export function unitsFromRecords(records,identities={},file='fixture'){
 }
 export function unitsFromCodeSet(codeSet){ // boot code-set.json: each module its own unit; symbols carry addresses
   const byId=new Map(codeSet.modules.map(m=>[m.id,m.name]));
-  return codeSet.modules.map(m=>({name:m.name,wire:m.name,record_version:4,record_sha256:h(JSON.stringify([4,m.name])),symbol_count:(m.symbols??[]).length,functions:[{name:m.name,wat:m.wat,symbols:(m.symbols??[]).map(([w],i)=>[w,i]),codes:(m.codes??[]).map(([n,id])=>({name:n,target:byId.get(id)}))}],
+  return codeSet.modules.map(m=>({name:m.name,wire:m.name,record_version:4,record_sha256:h(JSON.stringify([4,m.name])),symbol_count:(m.symbols??[]).length,functions:[{name:m.name,arity:m.arity,captures:m.captures,wat:m.wat,symbols:(m.symbols??[]).map(([w],i)=>[w,i]),codes:(m.codes??[]).map(([n,id])=>({name:n,target:byId.get(id)}))}],
     identities:(m.symbols??[]).map(([,a])=>String(a)),references:(m.symbols??[]).map(([,a])=>a)})); // boot: identity is the image address
 }
 if(process.argv[1]===new URL(import.meta.url).pathname){

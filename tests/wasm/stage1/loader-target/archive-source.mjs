@@ -1,7 +1,7 @@
 // Main-thread archive file source. Every read is authenticated, including a
 // reread; standalone ArrayBuffers can be transferred without pooled aliases.
 import fs from 'node:fs';
-import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
+import {createHash} from 'node:crypto';
 export function standalone(path){
  const size=fs.statSync(path).size,buffer=new ArrayBuffer(size),fd=fs.openSync(path,'r');
  try{let offset=0;while(offset<size){const n=fs.readSync(fd,new Uint8Array(buffer,offset),0,size-offset,offset);
@@ -10,8 +10,9 @@ export function standalone(path){
 }
 export function readArchiveSource(source){
  const bytes=standalone(source.binaryPath),metadata=standalone(source.metadataPath);
- if(sha256(bytes)!==source.digest)throw Error('archive source: BINARY_DIGEST');
- if(sha256(metadata)!==source.manifestDigest)throw Error('archive source: MANIFEST_DIGEST');
+ const digest=b=>createHash('sha256').update(new Uint8Array(b)).digest('hex');
+ if(digest(bytes)!==source.digest)throw Error('archive source: BINARY_DIGEST');
+ if(digest(metadata)!==source.manifestDigest)throw Error('archive source: MANIFEST_DIGEST');
  return {bytes,metadata};
 }
 export function archiveSource(dir,row,kind='runtime'){
