@@ -87,3 +87,41 @@ the retained focused fixture directory, the smoke archive directory and the
 collector binary; `archive-controls.mjs` uses its first two arguments.
 `root-block-check.mjs` takes the collector binary. Timed runs use
 `startup-baseline.py OUTPUT BOOT BUNDLES --timeout=600`.
+
+## Sizing and headroom (P-1b)
+
+The selected default is **32 MiB per space**, with 16 MiB free headroom,
+a 1 MiB value stack, 1 MiB control area and 512 KiB temporary area. Explicit
+collection and allocation retry both apply the headroom policy. If headroom
+cannot be provided, an allocation that fits still succeeds; a necessary smaller
+growth is attempted before refusing the allocation. Inhibited allocation grows
+without moving objects and the outer unlock performs the deferred collection.
+
+| Initial space | READY | Peak RSS | Final space | Linear memory | Collections | Host preparation | C collector |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 16 MiB | 54.515 s | 2.209 GiB | 32 MiB | 306.312 MiB | 8 | 116.1 ms | 400.0 ms |
+| 32 MiB | 54.512 s | 2.196 GiB | 32 MiB | 158.812 MiB | 6 | 96.4 ms | 370.8 ms |
+| 64 MiB | 54.236 s | 2.272 GiB | 64 MiB | 302.812 MiB | 2 | 33.3 ms | 254.8 ms |
+
+The three times are effectively indistinguishable as single runs. Starting at
+16 MiB grew to 32 MiB and relocated scratch/heap storage, consuming more linear
+memory than starting at 32 MiB. Starting at 64 MiB added memory without a
+meaningful measured time advantage. The archive and input ownership paths were
+held fixed. The measurements use Node v25.6.1 on macOS; they do not qualify
+these defaults on other engines.
+
+`collector.copy` remains the enclosing span. `collector.prepare` covers root
+listing, workspace preparation and list writes; `collector.c` covers the C
+call, including object inventory, maps, roots and copying. Every collection
+records roots, used bytes and live bytes. The raw journals and `stage2.json`
+retain these observations and stack samples, explicitly lower bounds. The
+32 MiB run's observed bounds are 14,864 value-stack bytes, 240 control bytes,
+and zero temporary bytes; zero is not a claim of no temporary-stack use.
+
+Twenty-two new layout/growth checks and the existing 40 owner checks pass.
+They cover aligned, disjoint layouts, invalid extents, explicit collection,
+allocation headroom, fallback without optional headroom, exhausted growth with
+valid live roots, inhibited growth, and stack bounds. The C collector bytes are
+unchanged. P-7's optional C root-range interface is deferred: host preparation
+is below 0.1 seconds total at the selected default, so this workload does not
+justify changing and requalifying that ABI.

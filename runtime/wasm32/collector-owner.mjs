@@ -120,6 +120,7 @@ export class CollectorOwner {
   need(this.#region('scratch').start%16===0&&this.#region('scratch').end-this.#region('scratch').start>=96,'scratch header');
   need(this.#region('c-stack').start===1048576&&this.#region('c-stack').end===1114112,'compiled C stack');
   need(integer(l.logCapacity)&&l.logCapacity>0,'log capacity');
+  need(l.freeTarget===undefined||integer(l.freeTarget),'free target');
   need(this.view.byteLength/PAGE<=l.maximumPages,'memory maximum');
   need(Array.isArray(l.groups)&&l.groups.length===REQUIRED.length&&new Set(l.groups.map(g=>g.kind)).size===REQUIRED.length&&l.groups.every(g=>REQUIRED.includes(g.kind)&&Array.isArray(g.slots)),'root groups');
   const seen=new Set();for(const g of l.groups)for(const p of g.slots){
@@ -322,29 +323,44 @@ export class CollectorOwner {
   return this.#measure?this.#measure('collector.copy',()=>this.#copyInto(destination)):this.#copyInto(destination);
  }
  #copyInto(destination){
-  const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
-  need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
-  // The collector reserves a worst-case object map and queue before copying.
-  this.#workspace();
-  const count=this.collectionCount;need(count<536870911,'collection count exhausted');
-  this.#busy=true;
-  try{
-   // All admission precedes the first scratch write. Mutator/image/root bytes
-   // are committed only by the accepted collector after complete validation.
+  const measure=this.#measure??((_p,run)=>run());
+  const prepared=measure('collector.prepare',()=>{
+   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
+   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
+   this.#workspace();
+   const count=this.collectionCount;need(count<536870911,'collection count exhausted');
    new Uint8Array(this.#memory.buffer,scratch.start,96).fill(0);
    const set=(o,v)=>this.#set(scratch.start+o,v);set(0,this.#layout.tcr);set(16,destination.start);set(20,destination.end);set(68,this.#layout.logCapacity);set(72,list.start);set(76,slots.length);set(80,scratch.end);
    slots.forEach((p,i)=>this.#set(list.start+4*i,p));
-   const status=this.#collector.collect(scratch.start);
-   need(status===0,'collection refused '+status);
-   need(this.collectionCount===count+1,'collection count publication');
-   return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),reclaimed:this.#get(scratch.start+92),rootSlots:slots.length};
+   return {active,slots,scratch,count,usedBytes:this.#t(48)-this.#t(56)};
+  });
+  this.#busy=true;
+  try{
+   const {active,slots,scratch,count,usedBytes}=prepared;
+   const status=measure('collector.c',()=>this.#collector.collect(scratch.start));
+   need(status===0,'collection refused '+status);need(this.collectionCount===count+1,'collection count publication');
+   return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),
+    reclaimed:this.#get(scratch.start+92),rootSlots:slots.length,usedBytes,liveBytes:this.#t(48)-this.#t(56)};
   }finally{this.#busy=false;}
  }
- collect(){
-  this.#requireBoundary();const active=this.#validateLive(),state=this.#inhibitionState();
+ #collectFor(bytes){
+  const active=this.#validateLive(),state=this.#inhibitionState();
   if(state.depth){this.#set(state.region.start+8,1);return {deferred:true};}
-  return this.#copy(this.#spaces.find(r=>r!==active));
+  const collection=this.#copy(this.#spaces.find(r=>r!==active));
+  const live=this.#t(48)-this.#t(56),free=this.#t(52)-this.#t(48),target=this.#layout.freeTarget??0;
+  if(free>=bytes+target)return collection;
+  const capacity=align(Math.max(2*(this.#t(52)-this.#t(56)),live+bytes+target),PAGE);
+  try{return {...collection,grown:true,moved:this.#relocateHeap(capacity)};}
+  catch(error){
+   // Headroom is a policy preference, never a reason to refuse an allocation
+   // that fits. Corrupt roots and collector refusals still propagate.
+   if(!['collector-owner: heap growth maximum','collector-owner: engine growth refusal'].includes(error.message))throw error;
+   if(free>=bytes)return {...collection,headroomRefused:error.message};
+   if(target===0)throw error;
+   return {...collection,grown:true,headroomRefused:error.message,moved:this.#relocateHeap(align(live+bytes,PAGE))};
+  }
  }
+ collect(){this.#requireBoundary();return this.#collectFor(0);}
  growMemory(pages){
   this.#requireBoundary();this.#validate();need(integer(pages)&&pages>=this.view.byteLength/PAGE&&pages<=this.#layout.maximumPages,'growth maximum');
   const previous=this.view.byteLength/PAGE;
@@ -358,9 +374,7 @@ export class CollectorOwner {
   this.#validateLive();
   if(this.#t(52)-this.#t(48)>=bytes)return {collected:false,grown:false};
   if(this.collectionInhibition)return this.#growInhibited(bytes);
-  const collection=this.collect();if(this.#t(52)-this.#t(48)>=bytes)return {collected:true,grown:false,collection};
-  const live=this.#t(48)-this.#t(56),capacity=align(Math.max(2*(this.#t(52)-this.#t(56)),live+bytes),PAGE);
-  const moved=this.#relocateHeap(capacity);
-  return {collected:true,grown:true,collection,moved};
+  const collection=this.#collectFor(bytes);
+  return {collected:true,grown:collection.grown??false,collection,...(collection.moved?{moved:collection.moved}:{})};
  }
 }

@@ -111,14 +111,18 @@ if (isMainThread) {
   const runtimeIdentity = json(runtime + '/array-runtime.json');
   assert.equal(sha256(fs.readFileSync(new URL('../../../../runtime/wasm32/collector.c', import.meta.url))), runtimeIdentity.source);
   assert.equal(sha256(binary('collector')), runtimeIdentity.binary);
-  let lastCollection;
-  const heapState = () => ({linearMemoryBytes: memory.buffer.byteLength,
+  let lastCollection;const stackHighWater={value:0,temp:0,control:0};
+  const heapState = () => {
+    for(const [name,offset,start] of [['value',64,root+8],['temp',76,get(tcr+80)],['control',88,get(tcr+92)]])
+      stackHighWater[name]=Math.max(stackHighWater[name],get(tcr+offset)-start);
+    return ({configuration:layout.configuration,stackHighWaterLowerBounds:{...stackHighWater},linearMemoryBytes: memory.buffer.byteLength,
     allocatedHeapBytes: get(tcr + 48) - get(tcr + 56), activeHeapCapacityBytes: get(tcr + 52) - get(tcr + 56),
-    collections: owner.collectionCount, storage: owner.storage, lastCollection});
+    collections: owner.collectionCount, storage: owner.storage, lastCollection});};
   const owner = CollectorOwner.create(memory, binary('collector'), runtimeIdentity.binary, layout,
     timing ? {measure: (phase, run) => {
       const result = measure(phase, run);
-      lastCollection = {epochMs: performance.timeOrigin + performance.now(),
+      if(phase!=='collector.copy')return result;
+      lastCollection = {...result,epochMs: performance.timeOrigin + performance.now(),
         liveHeapBytes: get(tcr + 48) - get(tcr + 56), collection: owner.collectionCount};
       timing.event('collection', {...lastCollection, linearMemoryBytes: memory.buffer.byteLength});
       return result;

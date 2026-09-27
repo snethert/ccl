@@ -1,8 +1,8 @@
 // Derive all mutable regions from the admitted image and code inventories.
 const PAGE=65536,MiB=1048576;
 const need=(v,s)=>{if(!v)throw Error('layout: '+s);};
-export const DEFAULT_CONFIG=Object.freeze({spaceBytes:PAGE,freeTarget:0,valueStack:MiB,
- tempStack:16384,controlStack:16384,bindings:4096,generations:2,postImageCodes:8192,postImageRoots:65536,slotOffset:8,maximumPages:32769});
+export const DEFAULT_CONFIG=Object.freeze({spaceBytes:32*MiB,freeTarget:16*MiB,valueStack:MiB,
+ tempStack:MiB/2,controlStack:MiB,bindings:16384,generations:2,postImageCodes:8192,postImageRoots:65536,slotOffset:8,maximumPages:32769});
 export function deriveLayout(config,{bootFunctions,bootRootCells=0,runtimeFunctions,runtimeRootCells,image,tcr=1024}){
  const c={...DEFAULT_CONFIG,...config},align=(n,a)=>Math.ceil(n/a)*a;
  for(const [key,value] of Object.entries(c))need(Number.isSafeInteger(value)&&value>=0,'config '+key);
