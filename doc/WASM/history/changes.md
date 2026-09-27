@@ -1,3 +1,50 @@
+## 2026-09-27 — Accept all four product groups after audit 188
+
+The user's “Accept all four” accepts READY completion (`ea82d8e7`), module
+consolidation (`484643be`, `ac813bce`, `5e807214`, `cd0947f1`), host startup
+(`d3d122f4`) and SEP-1 Lisp/compiler changes (`5446b5ab`). Audits 186–188 are
+fast-forwarded from `136b58cb`; each earlier review section is byte-identical
+to its original branch, and the full imported review file matches audit 188.
+The [acceptance record](../stage1/acceptance-audit-188.json) binds the decision
+and evidence without rerunning unchanged code. Audit 188 is READY's first
+commit-level review; the review cited in `ea82d8e7` was of the uncommitted WIP.
+
+The independent replay reproduces the boot heap/code, both archives, every
+FASL, all 11,939 function templates and exactly 44,724,264 Lisp calls. Fresh
+Workers pass 83 loads each and both required refusals. Native R6/R6a passes
+21,843 tests with zero failures twice; 765 reader comparisons, 122 helper
+cases and all host controls pass. Seven mutants die; the cache-clear mutant
+was unexecuted and is only a predicted survivor (O-136). The isolated reviewer
+launch took 25.8 seconds / 2.27 GB peak versus the author's 27.6 seconds.
+
+The reviewer corpus failed at image save with ENOSPC, so its 26,204-comparison
+producer result is reused by exact source identity. Cleared the three stale
+Codex RAM workspaces (`loader-completion`, `consolidation`, `startup-execution`)
+after verifying retained indexes, artifact presence/sizes and startup failure
+copies: about 11.0 GiB removed, with 15.4 GiB free afterward. This resolves
+O-137's storage obstruction; it does not claim an independent corpus replay.
+
+O-123 and O-130 are fixed; O-125 is answered by loading MISC/TIME/PATHNAMES.
+O-124 fault masking is still open despite the earlier WIP claim. It and O-134's
+uncaught generation-capacity exception are next producer work, including a
+checked file-service refusal and documented generation budget. O-138 corrects
+the runtime README to 126,226 root cells (504,904 bytes). O-140 clarifies the
+unexercised fixed-parent gate; O-141 distinguishes the older 57/61 post-image
+module/instance counts from current 98/102. O-135/O-136 remain review notes;
+O-139 carries the latent reader-dispatch marker hazard into dcode work.
+
+Audit 186 recommends the namespace weak-table change and closes O-113/O-116;
+O-118–O-122 remain recorded there. Audit 187's original hold and failed corpus
+remain historical; audit 188 accepts the successor with O-124 carried forward.
+The historical 36/36/0 prefix fixture no longer reproduces from HEAD (O-129).
+After verifying all three headings on `wasm2`, deleted audit branches 186–188
+and left the clean review worktree detached at its existing commit.
+
+Current measure: READY reached, 81 runtime loads, 82 runtime files compiled,
+seven product modules / eleven instances. Originals **575/535** and ledger
+**21/12** unchanged; no criterion credit. Product Lisp delta in this acceptance:
+**0 added / 0 removed**.
+
 ## 2026-09-26 — Namespace weak-table substitutions; whole-file 36/36/0 unchanged
 
 The [follow-up](../../../tests/wasm/stage1/loader-level1/substitutions.md)

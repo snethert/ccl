@@ -161,7 +161,7 @@ units in FASL order. Repeated or overlapping LOAD reserves a fresh generation
 when needed; close releases only unpublished reservations. A live generation
 retains its complete module, code window and root block. There is no generation
 reclamation policy in this change. The runtime generation reserves 10,891 IDs
-and 125,208 root cells (500,832 bytes), independently of publication count.
+and 126,226 root cells (504,904 bytes), independently of publication count.
 
 The main thread retains the FASLs; the Worker retains compact unit/dispatch
 metadata. Raw archive bytes and full D2 validation manifests are temporary.
@@ -169,8 +169,9 @@ metadata. Raw archive bytes and full D2 validation manifests are temporary.
 are 32 MiB per heap space, 16 MiB free headroom, 512 KiB temporary space and
 1 MiB each for control and value stacks. Root slices use the existing collector
 list ABI. See the [measurements and retention diagnostics](../../doc/WASM/stage1/module-consolidation-results.md).
-This LL21-b re-decision is implemented and author-verified, awaiting independent
-review. Ordinary post-image files, `loader.mjs` and `installer.mjs` remain v1;
+The user accepted this LL21-b re-decision after audit 188; see the
+[acceptance record](../../doc/WASM/stage1/acceptance-audit-188.json).
+Ordinary post-image files, `loader.mjs` and `installer.mjs` remain v1;
 the lazy stub path is outside archive bootstrap.
 
 Cross-loaded images: `cross-image.mjs` integrates the P2-0 coordinator accepted

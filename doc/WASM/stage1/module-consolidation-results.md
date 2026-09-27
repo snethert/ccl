@@ -1,7 +1,11 @@
 # Module consolidation implementation
 
 Implementation of MCP-P8, using and extending Claude's proposed code at
-`8b2f1279`. Results below are author verification, not independent acceptance.
+`8b2f1279`. The user accepted the four implementation commits after audit 188;
+see the [acceptance record](acceptance-audit-188.json). Results below retain
+their original measurement revisions. After SEP-1, the runtime archive is
+68,972,499 bytes with 126,226 root cells per generation; its larger post-image
+witnesses report 98 product modules / 102 instances (O-138/O-141).
 The finalized evidence pack is
 `ccl-evidence/2026-09-27-module-consolidation-r1` beside this checkout.
 
@@ -166,7 +170,7 @@ Both fresh post-image Workers pass the existing READY contract: 83 returned
 loads each, independent 111/222 state and 112/223 functions, Unicode stdout and
 stderr, and observed Lisp service adapters. Required-bundle omission and the
 empty namespace both stop without the post-image marker. These results complete
-the deferred end-to-end archive gates; they do not claim independent acceptance.
+the deferred end-to-end archive gates; audit 188 subsequently reviewed them.
 The final report also counts v1 post-image modules and instances when present,
 in addition to the ordinary seven-module, eleven-instance READY path.
 
@@ -246,6 +250,8 @@ P-7's optional C collector range ABI is deferred on the measured evidence.
 
 Implementation commits are `484643be`, `ac813bce`, `5e807214` and `cd0947f1`.
 The [evidence index](module-consolidation-results.json) binds the retained
-results, artifacts and reproduction commands. All execution claims above are
-author verification. Claude's independent adversarial review remains required
-before acceptance; no acceptance record is changed by this report.
+results, artifacts and reproduction commands. Audit 188 reproduced both archives
+and all linked function templates at the final SEP-1 revision, plus the host
+controls and retention diagnostic. O-134 remains open: the default two-generation
+budget must refuse through the file service when exhausted, with the budget
+documented alongside that fix. This acceptance grants no new criterion credit.

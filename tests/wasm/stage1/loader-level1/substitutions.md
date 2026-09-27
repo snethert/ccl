@@ -41,7 +41,11 @@ await builder conversion. O-114 and O-117 remain open.
 Whole-file counts remain **36/36/0 of 167**; next compile stop is
 `:BOOTSTRAP-TYPECHECK` in `l1-streams`. Originals remain **575/535**, ledger
 **21/12**; no target LOAD, full boot or criterion credit. Product Lisp delta:
-**3 added / 16 removed**. This follow-up awaits independent review.
+**3 added / 16 removed**. Audit 186 reproduced these results, found no defect
+and recommended acceptance; O-113/O-116 are closed and O-118–O-122 remain
+recorded in the [review](../../../../doc/WASM/stage0/claude-review.md).
+These counts describe the historical prefix; its fixture no longer reproduces
+from current HEAD (O-129).
 
 ```sh
 python3 tests/wasm/stage1/loader-level1/run.py /private/tmp/ccl-work/codex/namespace-weak-final/execution

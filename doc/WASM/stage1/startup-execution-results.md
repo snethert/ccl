@@ -7,8 +7,11 @@ reach READY in 35.492 seconds. All three runs return from the same 81 runtime
 loads. A separate complete census falls from 84,119,399 to 44,724,264 Lisp calls.
 The plan's 10–15 second estimate and 25–30 million call estimate were not reached.
 
-These are author measurements on macOS, not independent acceptance or a
-statistical performance guarantee. The timed launches use fresh Node processes,
+The user accepted the host and Lisp/compiler changes after audit 188; the
+[acceptance record](acceptance-audit-188.json) binds the supplied review.
+These are author measurements on macOS, not a statistical performance guarantee.
+The reviewer reproduced the exact census and measured 25.8 seconds to READY.
+The timed launches use fresh Node processes,
 the same 32 MiB layout, RAM-backed inputs and timing journals, without the full
 call observer. The final compiler build was paused during the isolated timing.
 A prior revision without the compact-dispatch-table fix measured 26.334 seconds
@@ -90,7 +93,10 @@ and the forced-GC retention diagnostic with no marked reachable input objects.
 
 The compiler/runtime corpus passes **26,204 fresh comparisons**: 6,551 cases
 at two placements, each with and without movement. No comparisons are inherited
-or sampled. Its
+or sampled. Audit 188 reused this record by source identity: the independent
+corpus replay ran out of RAM-volume space at the cold-compiler image save.
+The stale Codex workspaces have since been cleared; this acceptance does not
+claim a new corpus run. Its
 collection probe is regenerated from this compiler's actual leaf; the inserted
 import and collection call are checked to reverse exactly to the original WAT.
 The former fixed-parent hook is still required when regeneration is not
@@ -105,5 +111,8 @@ The final READY and corpus records are distinguished from those failures.
 
 The supplied plans are retained unchanged on `wasm2`; the two plan branches
 were deleted after import, with the clean Claude worktree left detached.
-Independent acceptance remains pending user-supplied review. The standing rules
-now explicitly prohibit invoking Claude; no further reviewer call is authorized.
+Audit 188 supplies the commit-level adversarial review; the user accepted both
+groups with “Accept all four”. O-124 fault masking and O-134 generation-capacity
+refusal remain next producer work; O-136 records the cache-clear witness gap,
+and O-139 carries the reader-dispatch marker hazard into future dcode work.
+The standing rules prohibit invoking Claude; review is supplied by the user.

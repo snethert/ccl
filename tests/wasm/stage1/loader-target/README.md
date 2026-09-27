@@ -81,8 +81,12 @@ passes 765 comparisons across 45 shared files and 17 profiles. Native-r8 binds
 all 67 current proposal source hashes, including `l1-io`, `w32-prims` and the
 backend; corpus-r5 includes the final primitive and fixture changes.
 
-Claude's final review found no acceptance blocker for this decision-A2 loader
-deliverable. The report and remaining evidence notes are retained in the pack.
+The user accepted the READY completion and subsequent consolidation, host and
+SEP-1 changes after audit 188. That is the first commit-level review of READY;
+the reviews cited in `ea82d8e7` and retained in the original pack were WIP
+reviews of the uncommitted tree. The
+[acceptance record](../../../../doc/WASM/stage1/acceptance-audit-188.json)
+records O-124/O-134 as open and the reviewer's corpus reuse after ENOSPC.
 The report field `level1CrossLoaded` is a declarative label, not independent
 proof; the bound level-0 producer and actual target load events establish the
 loading boundary. `firstFailure` can name a handled Lisp signal and must not
@@ -221,4 +225,7 @@ For packaging-only changes, pass the retained v1 directory in place of `-`.
 `startup-helpers-check.mjs BEFORE_BOOT AFTER_BOOT OUTPUT` compares the emitted
 hot helpers, including checked refusal and memory preservation. The general
 compiler corpus explicitly regenerates its test-only collection hook from the
-current generated leaf; fixed-parent executions keep their original hash gate.
+current generated leaf. The lower-level preparation helper retains its
+fixed-parent hash gate when regeneration is not requested, but the current
+qualification driver always requests regeneration and does not exercise that
+gate (audit 188 O-140).

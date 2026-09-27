@@ -4000,8 +4000,18 @@
       "id": "STAGE1-NAMESPACE-WEAK-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-namespace-weak-r1/packet.json",
       "sha256": "44dd3d4267df247083b6787d412258b8b6df255e86642a67fe7021c180188865",
-      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
-      "scope": "Restore weak-value FTD ordinal types and preserve native namespace hash bindings and weak-key function names. Four modes: 1480 modules, 93/97 initializers, 177 observations, 141 controls, 25/299 collections. Native R6/R6a 21843 tests / 164 restored FASLs; 238 readers over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutants reused by exact identity. O-113 host images have a separate inventory and a directed retention check; the immutable R2 inventory has a bound correction. O-116 indirect calls explained. Initial witness missing MAPCAR/EVERY fixed with ordinary loops. One native weak-count oracle difference remains unexplained; three fresh native replays and the final unchanged-image four-mode run agree, original evidence retained. Fixture documentation weakness awaits native-hash migration. Product Lisp +3/-16. Whole-file 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK; originals 575/535, ledger 21/12, no criterion credit.",
+      "review_disposition": "REVIEWED_ACCEPTANCE_RECOMMENDED",
+      "scope": "Restore weak-value FTD ordinal types and preserve native namespace hash bindings and weak-key function names. Four modes: 1480 modules, 93/97 initializers, 177 observations, 141 controls, 25/299 collections. Native R6/R6a 21843 tests / 164 restored FASLs; 238 readers over 17 profiles; 26112 fresh corpus comparisons. Collector 123 checks/17 killed mutants reused by exact identity. O-113 host images have a separate inventory and a directed retention check; the immutable R2 inventory has a bound correction. O-116 indirect calls explained. Initial witness missing MAPCAR/EVERY fixed with ordinary loops. One native weak-count oracle difference remains unexplained; three fresh native replays and the final unchanged-image four-mode run agree, original evidence retained. Fixture documentation weakness awaits native-hash migration. Product Lisp +3/-16. Whole-file 36/36/0; next l1-streams :BOOTSTRAP-TYPECHECK; originals 575/535, ledger 21/12, no criterion credit. Audit 186 reproduced the full record, found no defect and recommended acceptance; O-113/O-116 closed, O-118\u2013O-122 recorded. The rare native weak-count result is consistent with conservative host retention (O-119); bounded recorded retry remains owed. Imported with audits 187/188; the current explicit acceptance decision covers the four audit-188 groups.",
+      "slot_credit": false,
+      "review_commit": "d25c8f5c6f4f1cc6d98d9bbce21e6b1e0396018c"
+    },
+    {
+      "id": "STAGE1-AUDIT-188-ACCEPTANCE",
+      "locator": "doc/WASM/stage1/acceptance-audit-188.json",
+      "sha256": "94d24621b4c93b154ac92e8419445063c9144989d9a3857ca9579e3b8fa2b964",
+      "review_commit": "136b58cb4a80a568dc521eccd2868cdf4568d197",
+      "review_disposition": "ACCEPTED_AUDIT_188",
+      "scope": "Accept the four product groups recommended by audit 188 at the reviewed revision. Existing qualification is reused; no new product execution or Stage 1 criterion credit. Corpus 26204 reused by reviewer source identity after ENOSPC; three stale RAM workspaces cleared, no new corpus run. O-124/O-134 remain open; O-138/O-140/O-141 documentation corrected.",
       "slot_credit": false
     }
   ],

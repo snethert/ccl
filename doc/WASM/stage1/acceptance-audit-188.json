@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "authorization": "User: Accept all four",
+  "date": "2026-09-27",
+  "review_disposition": "ACCEPTED_AUDIT_188",
+  "review_commit": "136b58cb4a80a568dc521eccd2868cdf4568d197",
+  "review_path": "doc/WASM/stage0/claude-review.md",
+  "reviewed_revision": "181bccd3e586ca5816642c08486b59537a6841b6",
+  "scope": "Accept the four product groups recommended by audit 188 at the reviewed revision. Existing qualification is reused; no new product execution or Stage 1 criterion credit.",
+  "groups": [
+    {
+      "name": "READY completion",
+      "commits": [
+        "ea82d8e70bb82cb74e3d046879da340e6df97d1d"
+      ],
+      "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-26-stage1-loader-completion-r1/summary.json"
+    },
+    {
+      "name": "Module consolidation",
+      "commits": [
+        "484643be957d6c9abb758ca361a84594b1e92956",
+        "ac813bcec1a2eb3a4d618351b33bc9c353e6a56a",
+        "5e80721455907affb8d21d91c647d8ad4c90a7ce",
+        "cd0947f1ab690f4c9990ad5010b8bdc9c8dcc8b5"
+      ],
+      "evidence": "doc/WASM/stage1/module-consolidation-results.json"
+    },
+    {
+      "name": "Host startup changes",
+      "commits": [
+        "d3d122f458db65e8fd25f52c9bed4697f1b4ce14"
+      ],
+      "evidence": "doc/WASM/stage1/startup-execution-results.json"
+    },
+    {
+      "name": "SEP-1 Lisp and compiler changes",
+      "commits": [
+        "5446b5abe9ee5dcc69f3c5e3e1c59c8aefaaa5f1"
+      ],
+      "evidence": "doc/WASM/stage1/startup-execution-results.json"
+    }
+  ],
+  "review_provenance": "Audit 188 is the first commit-level READY review. The Independent Claude review cited by ea82d8e7 was a WIP review of the uncommitted tree. The user supplied the review; Codex did not invoke Claude.",
+  "imported_audits": [
+    {
+      "audit": 186,
+      "original_commit": "d25c8f5c6f4f1cc6d98d9bbce21e6b1e0396018c",
+      "imported_commit": "75c8dab3da06562033a5cc455677e54155347003",
+      "identity": "Review section byte-identical",
+      "disposition": "No defect; acceptance recommended. Imported as prior review, outside the four-group decision."
+    },
+    {
+      "audit": 187,
+      "original_commit": "5c614f110875bdecc7710dd6aca77edbb631016a",
+      "imported_commit": "58e79c47e99ef5794998b7d1b785f7b50dacb7f0",
+      "identity": "Review section byte-identical",
+      "disposition": "Historical hold preserved; audit 188 reviews the successor and carries O-124 forward."
+    },
+    {
+      "audit": 188,
+      "original_commit": "136b58cb4a80a568dc521eccd2868cdf4568d197",
+      "identity": "Full review file byte-identical",
+      "disposition": "All four groups accepted by the user"
+    }
+  ],
+  "reviewer_results": {
+    "boot_and_archives": "Byte-identical to producer inputs",
+    "ready_loads_per_instance": [
+      83,
+      83
+    ],
+    "required_refusals": 2,
+    "lisp_calls": 44724264,
+    "launch_to_ready_seconds": 25.83,
+    "peak_rss_bytes": 2268639232,
+    "boot_functions": 1048,
+    "runtime_functions": 10891,
+    "runtime_root_cells_per_generation": 126226,
+    "native_tests_per_run": 21843,
+    "native_failures": 0,
+    "native_runs": 2,
+    "reader_comparisons": 765,
+    "hot_helper_comparisons": 122,
+    "archive_controls": 81,
+    "async_checks": 11,
+    "root_block_checks": 14,
+    "layout_checks": 22,
+    "retention_marked_objects": 3922,
+    "retention_reachable_objects": 0,
+    "killed_mutants": 7,
+    "unexecuted_mutants": [
+      "M1: clear-gf-cache branch removal; predicted survivor by inspection (O-136)"
+    ]
+  },
+  "corpus": {
+    "producer_status": "PASS",
+    "fresh_comparisons": 26204,
+    "inherited_comparisons": 0,
+    "sampled_comparisons": 0,
+    "reviewer_status": "REUSED_BY_SOURCE_IDENTITY",
+    "replay_failure": "ENOSPC at the cold compiler image save while stale Codex workspaces occupied the shared RAM volume.",
+    "native_exclusions": [
+      "CCL::%MAP-AREAS",
+      "CCL::%MAP-LFUNS"
+    ],
+    "acceptance_replay": false
+  },
+  "observations": {
+    "O-123": "Closed by audit 188: corpus fixture initializes *lfun-names*.",
+    "O-124": "OPEN: raw-throw guard is unchanged; preserve the first fault before the error system in the next producer commit.",
+    "O-125": "Answered: MISC, TIME and PATHNAMES load; profile exclusions still apply.",
+    "O-129": "Historical 36/36/0 prefix fixture is retired as boot evidence and does not reproduce from current HEAD; no fresh prefix execution claimed.",
+    "O-130": "Closed by audit 188: regenerate listings on reuse; boot/archive digests reproduce.",
+    "O-134": "OPEN: generation capacity must return a checked file-service refusal; document the default two-generation budget in the next producer commit.",
+    "O-135": "Informational: real runtime reload encounters the native kernel-redefinition cerror.",
+    "O-136": "OPEN fixture-strength note: existing clear-gf-cache witness does not distinguish a no-op; M1 was not executed.",
+    "O-137": "Storage obstruction cleared after retained-evidence checks. Independent compiler corpus replay remains outstanding; acceptance relies on reviewed source identity.",
+    "O-138": "Corrected runtime README to 126,226 cells / 504,904 bytes.",
+    "O-139": "OPEN latent dcode hazard: wasm32 argnum -1 aliases native reader-dispatch-snapped marker; carry to direct-call/dcode work.",
+    "O-140": "Corrected documentation: current driver always regenerates the collection hook; the lower-level fixed-parent gate is unexercised.",
+    "O-141": "Clarified historical 57/61 witness counts versus current 98/102; ordinary READY remains 7/11."
+  },
+  "workspace_cleanup": {
+    "status": "COMPLETE",
+    "removed": [
+      {
+        "path": "/private/tmp/ccl-work/codex/loader-completion",
+        "allocatedBytesBefore": 1883017216
+      },
+      {
+        "path": "/private/tmp/ccl-work/codex/consolidation",
+        "allocatedBytesBefore": 1253961728
+      },
+      {
+        "path": "/private/tmp/ccl-work/codex/startup-execution",
+        "allocatedBytesBefore": 8702570496
+      }
+    ],
+    "freeBytesBefore": 4633182208,
+    "freeBytesAfter": 16504614912,
+    "evidence": "Existing finalized packs retained; both pinned final indexes match; indexed files present at recorded sizes; startup failure directory byte-identical to retained copy.",
+    "corpusReplay": "Not rerun for acceptance; independent audit reused the existing result by source identity."
+  },
+  "exclusions": [
+    "No new execution, integration harness or independent corpus replay.",
+    "No product-source change; O-124 and O-134 are not claimed fixed.",
+    "No new unchanged-original or Stage 1 criterion credit.",
+    "Direct calls, generation reclamation and broader profile capabilities remain outside this decision."
+  ],
+  "counters": {
+    "runtime_loads": 81,
+    "compiled_runtime_files": 82,
+    "ordinary_product_modules": 7,
+    "ordinary_product_instances": 11,
+    "historical_cross_loaded": 36,
+    "originals_executed": 575,
+    "originals_non_nil_witness": 535,
+    "stage1_accepted": 21,
+    "stage1_missing": 12,
+    "slot_credit": false
+  },
+  "acceptance_change": {
+    "product_lisp_added": 0,
+    "product_lisp_removed": 0
+  },
+  "review_sha256": "4f2c7901b003851adaed24e1108806aabbfe5ffcce3efbb5e8918c897cd7088c",
+  "source_identity": {
+    "compiler/WASM32/wasm32-backend.lisp": "040f32461771dbb94966bd69df7a037dae7992e37b1adf09f778cb45f3575aa7",
+    "level-0/WASM32/w32-prims.lisp": "3b92cf3f68c33337faa54a96166ca7e9b6bf51af23ffb0ba4a9c094b83769f63",
+    "level-0/l0-pred.lisp": "cd7097c9a1aae0e115836e5bed62e7c4fa81fb40ae4f765d41252850b1760bcf",
+    "level-0/nfasload.lisp": "45a9a663ef610249d1f45e0398526fab9c6fd2ff1f32fede649094172226c6c7",
+    "level-1/l1-dcode.lisp": "539147e6adf1a97f7acce7fde3b07da75e10b55d55773ed58f85d71ac7ff4434"
+  },
+  "retained_evidence": {
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-26-stage1-loader-completion-r1/summary.json": {
+      "sha256": "d68d9b07db5787e8eae895e7e9d913757abe17b383de89689d565e2d1ba94687"
+    },
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-27-module-consolidation-r1/final-index.json": {
+      "sha256": "6c35b323bc12c770e6ee3a3a87c3664c78a941a74f424753387012c387d503a6"
+    },
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-27-startup-execution-r1/final-index.json": {
+      "sha256": "1a474fe8bd491ac641bfd4dc8aa5846b264929af4e08a092a93b36eab46a4483"
+    }
+  }
+}
