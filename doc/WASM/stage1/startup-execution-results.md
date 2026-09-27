@@ -112,7 +112,9 @@ The final READY and corpus records are distinguished from those failures.
 The supplied plans are retained unchanged on `wasm2`; the two plan branches
 were deleted after import, with the clean Claude worktree left detached.
 Audit 188 supplies the commit-level adversarial review; the user accepted both
-groups with “Accept all four”. O-124 fault masking and O-134 generation-capacity
-refusal remain next producer work; O-136 records the cache-clear witness gap,
+groups with “Accept all four”. The subsequent
+[refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)
+verifies O-124's existing fix and implements O-134's checked generation-capacity
+refusal; that new work awaits review. O-136 records the cache-clear witness gap,
 and O-139 carries the reader-dispatch marker hazard into future dcode work.
 The standing rules prohibit invoking Claude; review is supplied by the user.

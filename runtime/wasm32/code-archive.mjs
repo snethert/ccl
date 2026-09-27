@@ -109,7 +109,8 @@ function* admission({bytes,manifest,ownedManifest=false,digest:expectedDigest,en
  const capacity=get(registry);need(get(registry+4)===1&&registry+8+16*capacity<=env.memory.buffer.byteLength,'REGISTRY');
  const generations=[],sessions=new Map();let transaction=null;
  function createGeneration(){
-  need(generations.length<maxGenerations,'GENERATION_CAPACITY');
+  if(generations.length>=maxGenerations)
+   throw Object.assign(Error('code archive: GENERATION_CAPACITY'),{code:'GENERATION_CAPACITY'});
   const journal=[];
   try{
    const codeBase=allocateCode(count,journal);

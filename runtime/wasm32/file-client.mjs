@@ -34,7 +34,7 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
     if(bytes.length>4096)fail('path bytes');
     return bytes;
   }
-  return function run(args) {
+  return function run(args, prepareOpen) {
     if(active)fail('nested request');
     span(args,16);
     if(args%8 || args<get(tcr+68) || args+16>get(tcr+72))fail('argument frame');
@@ -53,6 +53,15 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
     if(op===2){b=integer(bv);c=integer(cv);if(c<0||c>2)fail('seek origin');}
     if(generation===0xffffffff)fail('generation exhausted');
     span(REQUEST,SIZE);
+    // Loader admission follows all argument/owner checks and precedes the
+    // host open. A bounded resource refusal publishes no request or handle.
+    if(op===0 && prepareOpen) {
+      const error=prepareOpen();
+      if(error!==undefined) {
+        if(!Number.isInteger(error)||error>=0||error< -536870912)fail('open refusal');
+        return (error*4)|0;
+      }
+    }
     const saved=[144,152,156,160,164].map(o=>get(tcr+o));
     const {words:w,pair:p,payload}=views(memory);
     active=true;generation++;

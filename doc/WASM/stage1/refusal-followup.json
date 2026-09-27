@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "status": "PASS",
+  "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+  "evidenceRoot": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit188-refusals-r1",
+  "evidenceCommit": "e823730ce507ef89660ec638912252bc6235fa8f",
+  "summary": {
+    "file": "summary.json",
+    "sha256": "0667878fb636556472ec13b9f17429313851e8d52b87118a82c0aba964aad6b2"
+  },
+  "index": {
+    "file": "index.json",
+    "sha256": "f92a84e13c6f1f34211ef879eab6bd56d03165422de4fead4e660a2efb9392b0"
+  },
+  "O-124": {
+    "status": "ALREADY_FIXED_VERIFIED",
+    "fix_commit": "ea82d8e7",
+    "active_emitter": "bootstrap-class-implicit-runtime",
+    "backend_sha256": "040f32461771dbb94966bd69df7a037dae7992e37b1adf09f778cb45f3575aa7",
+    "errorServiceModes": [
+      0,
+      2
+    ],
+    "checkedCode": 5,
+    "mutantCheckedCode": 11,
+    "mutantStatus": "KILLED",
+    "note": "Audit 188 cited the legacy numeric emitter. The current whole-file compiler selects the corrected class-condition emitter."
+  },
+  "O-134": {
+    "status": "FIXED_AUTHOR_VERIFIED",
+    "errno": 12,
+    "taggedReturn": -48,
+    "defaultGenerations": 2,
+    "LOADRefusal": "STOPPED / checked 4 through existing %err-disp",
+    "catchableFileError": false,
+    "boundaryChecks": 11,
+    "statePreserved": true,
+    "originalFailure": "Uncaught host GENERATION_CAPACITY at c6538d37 with the same final test."
+  },
+  "verification": {
+    "focusedModules": 18,
+    "fileAdmissionControlGroups": 57,
+    "archiveControls": 81,
+    "asyncChecks": 11,
+    "retentionObjects": 3922,
+    "retainedObjects": 0,
+    "readyLoads": [
+      83,
+      83
+    ],
+    "requiredRefusalLoads": [
+      1,
+      0
+    ],
+    "thirdLoadCompletedLoads": 82,
+    "abandonedSessions": []
+  },
+  "fullCompilerCorpus": {
+    "status": "SKIPPED_USER_DIRECTION",
+    "authorization": "fix O-124 and O-134. Dont run the full corpus."
+  },
+  "nativeAndReaders": {
+    "status": "REUSED_UNCHANGED_INPUTS",
+    "binding": "unchanged-shared-inputs.json",
+    "sharedSources": 68
+  },
+  "productLispDelta": {
+    "added": 0,
+    "removed": 0
+  },
+  "counts": {
+    "runtimeLoads": 81,
+    "compiledRuntimeFiles": 82,
+    "historicalCrossLoaded": 36,
+    "originals": [
+      575,
+      535
+    ],
+    "stage1": [
+      21,
+      12
+    ],
+    "slotCredit": false
+  },
+  "workspaceCleanup": {
+    "status": "COMPLETE",
+    "removed": "/private/tmp/ccl-work/codex/audit188-fixes",
+    "allocatedBytesBefore": 3230531584,
+    "freeBytesBefore": 13273153536,
+    "freeBytesAfter": 16504614912,
+    "retention": "Final fixture archive verified against 630 workspace files; results, original failures, source snapshots and prerequisite hashes retained."
+  }
+}

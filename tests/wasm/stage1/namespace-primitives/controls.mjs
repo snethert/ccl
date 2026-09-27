@@ -138,5 +138,21 @@ for (const [result, length] of [[2, 0], [0, 1], [-9, 1], [1, 0]]) {
  assert.equal(request(7,fd,0,0),-30);
  rows.push({name:'host-seek-range-and-read-only',checks:5});
 }
+{
+ const x=setup();x.args(0,x.path+6,0,0);
+ const before=Buffer.from(new Uint8Array(x.memory.buffer));
+ assert.equal(x.client()(ARGS,()=>-12),-48);
+ assert.equal(x.posts(),0);assert.deepEqual(Buffer.from(x.memory.buffer),before);
+ rows.push({name:'open-admission-errno-without-request'});
+ for(const error of [0,1,-0.5,-536870913,NaN]) {
+  assert.throws(()=>x.client()(ARGS,()=>error),/open refusal/);
+  assert.equal(x.posts(),0);assert.deepEqual(Buffer.from(x.memory.buffer),before);
+ }
+ rows.push({name:'invalid-open-admission-result',checks:5});
+ const failure=Error('admission failure');
+ assert.throws(()=>x.client()(ARGS,()=>{throw failure;}),error=>error===failure);
+ assert.equal(x.posts(),0);assert.deepEqual(Buffer.from(x.memory.buffer),before);
+ rows.push({name:'open-admission-throw-before-request'});
+}
 fs.writeFileSync(out+'/controls.json',JSON.stringify({status:'PASS',rows},null,2)+'\n');
 console.log('NAMESPACE-ADMISSION-PASS',rows.length);

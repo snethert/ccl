@@ -5,6 +5,7 @@ import {createNamespace} from './namespace.mjs';
 import {admitTargetBundle, decodeTargetBundle, decodeTargetContainer, targetContainerVersion} from './target-bundle.mjs';
 import {targetCodeService} from './target-code-service.mjs';
 import {fileClient} from './file-client.mjs';
+import {ERRNO} from './file-protocol.mjs';
 import {admitCodeArchiveAsync} from './code-archive.mjs';
 import {sha256} from './sha256.mjs';
 
@@ -91,7 +92,7 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
     file(args) {
       const op = get(args) >> 2, fd = get(args + 4) >> 2;
       let pending;
-      if (op === 0) {
+      const prepareOpen = () => {
         const name = string(get(args + 4));
         // Missing-file errno belongs to the ordinary namespace operation.
         let path;
@@ -99,7 +100,12 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
         const container=source.containers.get(path);
         if(container&&get(args+8)===0){
           const archive=admitted.get(container.archive_sha256);need(archive,'ARCHIVE_ABSENT');
-          const token=Symbol(path);archive.reserve(token,container.units);
+          const token=Symbol(path);
+          try { archive.reserve(token,container.units); }
+          catch (error) {
+            if(error?.code!=='GENERATION_CAPACITY')throw error;
+            return -ERRNO.GENERATION_CAPACITY;
+          }
           const session={install:(name,record,symbols)=>archive.install(token,name,record,symbols),entries:()=>archive.entries(token,{newOnly:true})};
           pending={path,token,archive,session,install:targetCodeService({memory,session})};
         }
@@ -115,9 +121,9 @@ export async function targetLoadSession({files, archives=[], readArchive, onInpu
           onAdmission(path);
           pending = {path, install: targetCodeService({memory, session}), session, code, slot, installed:0};
         }
-      }
+      };
       let result;
-      try{result=client(args);}catch(e){pending?.archive?.release(pending.token);throw e;}
+      try{result=client(args,prepareOpen);}catch(e){pending?.archive?.release(pending.token);throw e;}
       const value=result>>2;
       if(op===0&&value<0)pending?.archive?.release(pending.token);
       if (op === 0 && value >= 0) {

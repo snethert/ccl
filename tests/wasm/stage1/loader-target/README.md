@@ -86,7 +86,10 @@ SEP-1 changes after audit 188. That is the first commit-level review of READY;
 the reviews cited in `ea82d8e7` and retained in the original pack were WIP
 reviews of the uncommitted tree. The
 [acceptance record](../../../../doc/WASM/stage1/acceptance-audit-188.json)
-records O-124/O-134 as open and the reviewer's corpus reuse after ENOSPC.
+records the historical O-124/O-134 findings and the reviewer's corpus reuse
+after ENOSPC. The [refusal follow-up](refusal-followup.md) verifies O-124's
+existing class-mode fix and corrects O-134's generation-capacity boundary,
+with the full corpus explicitly skipped by user direction.
 The report field `level1CrossLoaded` is a declarative label, not independent
 proof; the bound level-0 producer and actual target load events establish the
 loading boundary. `firstFailure` can name a handled Lisp signal and must not

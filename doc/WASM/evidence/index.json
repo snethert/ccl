@@ -4013,6 +4013,14 @@
       "review_disposition": "ACCEPTED_AUDIT_188",
       "scope": "Accept the four product groups recommended by audit 188 at the reviewed revision. Existing qualification is reused; no new product execution or Stage 1 criterion credit. Corpus 26204 reused by reviewer source identity after ENOSPC; three stale RAM workspaces cleared, no new corpus run. O-124/O-134 remain open; O-138/O-140/O-141 documentation corrected.",
       "slot_credit": false
+    },
+    {
+      "id": "STAGE1-AUDIT188-REFUSALS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit188-refusals-r1/summary.json",
+      "sha256": "0667878fb636556472ec13b9f17429313851e8d52b87118a82c0aba964aad6b2",
+      "review_disposition": "IMPLEMENTED_AWAITING_REVIEW",
+      "scope": "O-134: tagged ENOMEM after file validation and before host open; default two-generation budget documented, ordinary LOAD uses checked 4. O-124 already fixed by ea82d8e7 in the active class emitter; freshly compiled handler-bound check passes in modes 0/2 and restoring the old guard is killed. Eleven generation checks, 57 file-admission groups, 81 archive controls, 11 async checks, 3922 objects/zero retained; READY 83/83, both startup refusals and third LOAD checked without leaked sessions. Native/readers reused against 68 unchanged sources. Full corpus skipped by explicit user direction. Product Lisp +0/-0; no criterion credit.",
+      "slot_credit": false
     }
   ],
   "current_runs": [

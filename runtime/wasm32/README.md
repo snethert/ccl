@@ -162,6 +162,17 @@ when needed; close releases only unpublished reservations. A live generation
 retains its complete module, code window and root block. There is no generation
 reclamation policy in this change. The runtime generation reserves 10,891 IDs
 and 126,226 root cells (504,904 bytes), independently of publication count.
+The default runtime budget is two generations, including the one used during
+bootstrap. When a LOAD needs another generation beyond that budget, file open
+returns `-ENOMEM` (12) through the Lisp file service. The current FASL LOAD
+error path passes that errno to `%err-disp`, which exits with `checked 4`;
+it does not signal a catchable `file-error`. Refusal occurs
+after argument validation and before a host file opens or any reservation is
+published. Closing a file releases unpublished unit reservations; published
+generations remain charged. `layout.mjs` and `targetLoadSession` accept an
+explicit `generations` setting; the embedding must provision matching code,
+table and root capacity. The budget is not a promise that runtime definitions
+can be reloaded: CCL still refuses kernel redefinition.
 
 The main thread retains the FASLs; the Worker retains compact unit/dispatch
 metadata. Raw archive bytes and full D2 validation manifests are temporary.

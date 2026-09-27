@@ -295,9 +295,20 @@ for (const [args, expected] of vectorCases) {
 const resetBinding = keywordFunction('TARGET-LOADER-RESET-BINDING');
 const earlyError = keywordFunction('TARGET-LOADER-EARLY-ERROR');
 assert.equal(get(tcr + 192), 0);
-assert.throws(() => earlyError([17]),
-  error => error.is?.(env.call_error) && error.getArg(env.call_error, 0) === 5,
-  'early fault preserved with a handler bound and no Lisp condition system');
+const earlyErrorModes = [0, 2];
+for (const mode of earlyErrorModes) {
+  put(tcr + 192, mode);
+  const before = [64, 112, 128].map(offset => get(tcr + offset));
+  let failure;
+  try { earlyError([17]); }
+  catch (error) { assert(error.is?.(env.call_error), 'checked exception, not host trap'); failure = error.getArg(env.call_error, 0); }
+  assert.equal(failure, 5,
+    'early fault preserved with a handler bound and unavailable error service, mode ' + mode);
+  assert.deepEqual([64, 112, 128].map(offset => get(tcr + offset)), before,
+    'early refusal restores argument, binding and root heads');
+  assert.deepEqual(earlyError([null]), [N, 1], 'valid call still succeeds after the refusal');
+}
+put(tcr + 192, 0);
 const structureInit = keywordFunction('TARGET-LOADER-STRUCTURE-INIT');
 const structureCases = read('structure-init-native.json');
 for (const [args, expected] of structureCases) {
@@ -368,6 +379,7 @@ const report = {status: 'PASS', compiledModules: rows.length, installedUnits: se
   structureInitializationNativeMatches: structureCases.length,
   emptyIstructRefused: true,
   earlyErrorPreserved: true,
+  earlyErrorModes,
   bindingRefusals,
   nestedBindingNativeMatch: resetValues,
   codeId: code, slot: slots[unit.root], controls, targetLoadedFiles: 0, boot0: false,

@@ -2,7 +2,7 @@
 // Descriptor is stable, outside the moving heap; payload contains bytes only.
 export const REQUEST = 1900544, SIZE = 8192, PAYLOAD = 64, CAPACITY = SIZE-PAYLOAD;
 export const PENDING = 0, COMPLETE = 1;
-export const ERRNO = Object.freeze({NOT_FOUND:2, BAD_HANDLE:9, HANDLE:9, RANGE:22, HANDLE_KIND:9,
+export const ERRNO = Object.freeze({NOT_FOUND:2, BAD_HANDLE:9, HANDLE:9, GENERATION_CAPACITY:12, RANGE:22, HANDLE_KIND:9,
   NOT_DIRECTORY:20, IS_DIRECTORY:21, READ_ONLY:30, HANDLE_LIMIT:24,
   HANDLE_EXHAUSTED:24, PATH:22, OFFSET:22, COUNT:22, ORIGIN:22});
 export function views(memory) {

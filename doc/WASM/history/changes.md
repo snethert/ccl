@@ -1,3 +1,41 @@
+## 2026-09-27 — Keep READY 81/82; generation exhaustion becomes a checked refusal
+
+The [refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)
+addresses O-124/O-134 without the full compiler corpus, as the user directed.
+O-134 maps only archive generation exhaustion to tagged `-ENOMEM` after file
+argument/thread validation and before host open. A refused request preserves
+all memory, tables, roots and sessions. The default two-generation budget and
+published-generation lifetime are documented. Ordinary FASL LOAD retains its
+existing `%err-disp` path and returns `STOPPED / checked 4`; it no longer kills
+the Worker with a raw JavaScript exception. A catchable file-error is not added.
+
+O-124's current-startup claim was mistaken: `ea82d8e7` already changed
+`bootstrap-class-implicit-runtime` to gate on error-service readiness alone.
+The audit cited `prior-numeric-b-implicit-runtime`, which the whole-file
+class-mode compiler does not select. Fresh focused compilation preserves
+`checked 5` with a real handler bound in modes 0 and 2, restores the frame
+heads and permits a subsequent valid call. Restoring the old guard in the
+emitted class helper is killed by that check (11 instead of 5). No compiler
+source changed. Original review and acceptance records remain historical.
+
+Eleven generation checks, 57 file-admission control groups, 81 archive controls,
+11 asynchronous checks and the retention diagnostic pass (3,922 objects,
+zero retained). Two fresh Workers reach READY with 83 returned loads each;
+both assert repeated `FD-OPEN` errno after consuming two generations. A separate
+third-LOAD run stops checked after 82 returns, without a third host open or
+abandoned session. Missing-bundle and empty-namespace refusals pass. The
+18-module focused fixture and post-image/native witnesses compile freshly;
+unchanged boot/runtime archives and all 82 container digests are reused.
+
+Native R6/R6a and readers are reused against 68 unchanged shared-source hashes.
+The full compiler corpus is explicitly **SKIPPED_USER_DIRECTION**. The single
+finalized pack is `2026-09-27-audit188-refusals-r1`, retaining the original host
+exception, killed mutant, initial overly strong file-error expectation and
+final results. New work awaits user-supplied independent review; no acceptance
+credit is claimed. Product Lisp **0 added / 0 removed**; READY remains 81 runtime
+loads / 82 compiled files, historical cross-load 36, originals 575/535 and
+Stage 1 ledger 21/12 unchanged.
+
 ## 2026-09-27 — Accept all four product groups after audit 188
 
 The user's “Accept all four” accepts READY completion (`ea82d8e7`), module

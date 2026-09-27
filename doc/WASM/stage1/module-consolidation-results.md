@@ -252,6 +252,7 @@ Implementation commits are `484643be`, `ac813bce`, `5e807214` and `cd0947f1`.
 The [evidence index](module-consolidation-results.json) binds the retained
 results, artifacts and reproduction commands. Audit 188 reproduced both archives
 and all linked function templates at the final SEP-1 revision, plus the host
-controls and retention diagnostic. O-134 remains open: the default two-generation
-budget must refuse through the file service when exhausted, with the budget
-documented alongside that fix. This acceptance grants no new criterion credit.
+controls and retention diagnostic. The subsequent
+[refusal follow-up](../../../tests/wasm/stage1/loader-target/refusal-followup.md)
+implements O-134's checked file-service refusal and documents the two-generation
+budget; that new work awaits review. This acceptance grants no new criterion credit.
