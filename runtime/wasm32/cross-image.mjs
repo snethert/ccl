@@ -2,15 +2,16 @@
 // manifest and capabilities. No Lisp initializer runs during installation.
 import {sha256} from './sha256.mjs';
 import {compile,publish,PACKAGING} from './bundle.mjs';
+import {admitCodeArchive,ARCHIVE_PACKAGING} from './code-archive.mjs';
 import {admitHeapImage} from './heap-image.mjs';
 const need=(v,s)=>{if(!v)throw Error('cross image: '+s);};
-export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,env,readBytes,readTemplate,policy,expected,capabilities,start=manifest.heap.start}) {
+export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,env,readBytes,readTemplate,policy,expected,capabilities,owner,start=manifest.heap.start}) {
  const m=structuredClone(manifest),set=structuredClone(codeSet);
  env={...env};expected=structuredClone(expected);
  need(m.version===1&&m.layout==='D1','MANIFEST');
  need(Number.isInteger(m.heap.bytes)&&m.heap.bytes===payload.length,'HEAP_LENGTH');
  need(sha256(JSON.stringify(set))===m.codeDigest,'CODE_DIGEST');
- need(set.version===1&&set.packaging===PACKAGING&&set.first_code_id===16,'PACKAGING');
+ need(set.version===1&&[PACKAGING,ARCHIVE_PACKAGING].includes(set.packaging)&&set.first_code_id===16,'PACKAGING');
  need(set.modules.length===m.modules,'MODULE_COUNT');
  need(env.memory===memory&&env.table!==env.tail_table,'CAPABILITIES');
  const view=new DataView(memory.buffer),get=p=>view.getUint32(p,true),put=(p,v)=>view.setUint32(p,v,true);
@@ -20,6 +21,20 @@ export function admitCrossImage({memory,manifest,record,payload,codeSet,regions,
  need(get(registry+4)===1&&capacity<=env.table.length&&capacity<=env.tail_table.length&&registry+8+capacity*16<=view.byteLength,'REGISTRY');
  const registryEnd=registry+8+capacity*16;
  need([{start,size:m.heap.bytes},...regions].every(r=>registryEnd<=r.start||r.start+r.size<=registry),'REGISTRY_OVERLAP');
+ if(set.packaging===ARCHIVE_PACKAGING){
+  need(owner&&set.archive?.boot===true&&set.archive.function_count===set.modules.length,'ARCHIVE');
+  need(set.modules.every((m,i)=>m.code_id===16+i&&m.name===set.archive.functions[i].source_name),'INVENTORY');
+  const heap=admitHeapImage({memory,record,payload,digest:m.heap.digest,regions,start,limit:start+m.heap.bytes,codeDigest:m.codeDigest,rootSlots:m.roots.slots});
+  const values=set.archive.units.map(u=>({name:u.name,record:[4,u.wire],values:u.references.map(r=>heap.reference(r))}));
+  const archive=admitCodeArchive({bytes:readBytes('boot.archive'),manifest:set.archive,digest:set.archive.binary_sha256,
+   env,capabilities,versions:expected,policy,slotOffset:8,
+   allocateCode:()=>16,
+   reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));journal.push(()=>owner.atSafepoint(()=>block.release()));return block;},
+   registerRoots:(block,cells,journal)=>{owner.atSafepoint(()=>block.register(cells));journal.push(()=>owner.atSafepoint(()=>block.unregister(cells)));}});
+  let state='ADMITTED';
+  return Object.freeze({get state(){return state;},objects:heap.objects,
+   install(){need(state==='ADMITTED','STATE');const instances=archive.installAll(values,()=>heap.install());state='INSTALLED';return {start,end:start+m.heap.bytes,instances};}});
+ }
  const names=new Set(),ids=new Set();
  for(const row of set.modules){
   need(typeof row.name==='string'&&/^[a-zA-Z0-9_]+$/.test(row.name)&&!names.has(row.name),'NAME');names.add(row.name);

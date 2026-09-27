@@ -8,6 +8,7 @@ function overlaps(a,b){return a.start<b.end&&b.start<a.end;}
 function align(n,a){return Math.ceil(n/a)*a;}
 export class CollectorOwner {
  #roles=new Map();
+ #blocks=[];
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;#measure;
  static create(memory,bytes,digest,layout,{measure}={}){
@@ -98,6 +99,7 @@ export class CollectorOwner {
  // Observation only: current owned extents, not a reachability walk or GC.
  get storage(){return {spaces:this.spaces,scratch:{...this.#region('scratch')},
   rootList:{...this.#region('root-list')},external:{...this.#region('external')},
+  reservedRootCells:this.#blocks.reduce((n,b)=>n+(b.end-b.start)/4,0),
   registeredRootCells:this.#layout.groups.reduce((n,g)=>n+g.slots.length,0)};}
  #get(p){return this.view.getUint32(p,true);}
  #set(p,v){this.view.setUint32(p,v,true);}
@@ -113,7 +115,7 @@ export class CollectorOwner {
   }
   const all=[...l.regions,...l.spaces];for(let i=0;i<all.length;i++)for(let j=0;j<i;j++)need(!overlaps(all[i],all[j]),'regions overlap');
   for(const role of ['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings'])this.#region(role);
-  need(l.regions.every(r=>['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings','image','runtime-globals'].includes(r.role)),'region role');
+  need(l.regions.every(r=>['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings','image','runtime-globals','code-registry'].includes(r.role)),'region role');
   need(integer(l.tcr)&&l.tcr%16===0&&contains(this.#region('tcr'),l.tcr,256),'TCR extent');
   need(this.#region('scratch').start%16===0&&this.#region('scratch').end-this.#region('scratch').start>=96,'scratch header');
   need(this.#region('c-stack').start===1048576&&this.#region('c-stack').end===1114112,'compiled C stack');
@@ -177,7 +179,7 @@ export class CollectorOwner {
  }
  #validate(){
   const active=this.#validateLive();
-  const slots=this.#imageSlots();for(const group of this.#layout.groups)slots.push(...group.slots);
+  const slots=this.#imageSlots();for(const group of this.#layout.groups)for(const p of group.slots)slots.push(p);
   slots.push(this.#layout.tcr+188); // TCR v2 next_method_context: tagged-root.
   const list=this.#region('root-list');need(slots.length*4<=list.end-list.start,'root-list capacity');
   need(slots.length<=this.#layout.logCapacity,'root-update capacity');
@@ -192,10 +194,10 @@ export class CollectorOwner {
   need(Array.isArray(values)&&values.every(integer),'root values');
   const {slots:live}=this.#validate(),region=this.#region('external');
   const used=new Set(this.#layout.groups.flatMap(g=>g.slots)),slots=[];
-  for(let p=region.start;p<region.end&&slots.length<values.length;p+=4)if(!used.has(p))slots.push(p);
+  for(let p=region.start;p<region.end&&slots.length<values.length;p+=4)if(!used.has(p)&&!this.#blocks.some(b=>p>=b.start&&p<b.end))slots.push(p);
   const list=this.#region('root-list');
-  need(slots.length===values.length&&live.length+slots.length<=this.#layout.logCapacity&&
-       (live.length+slots.length)*4<=list.end-list.start,'root capacity');
+  need(slots.length===values.length&&live.length+this.#reservedUnregistered()+slots.length<=this.#layout.logCapacity&&
+       (live.length+this.#reservedUnregistered()+slots.length)*4<=list.end-list.start,'root capacity');
   const group=this.#layout.groups.find(g=>g.kind==='module-constants');
   slots.forEach((p,i)=>this.#set(p,values[i]));group.slots.push(...slots);
   let active=true;
@@ -204,6 +206,38 @@ export class CollectorOwner {
    release:()=>{this.#requireBoundary();need(active,'released roots');
     const removed=new Set(slots);group.slots=group.slots.filter(p=>!removed.has(p));
     slots.forEach(p=>this.#set(p,NIL));active=false;}
+  });
+ }
+ #reservedUnregistered(){return this.#blocks.reduce((n,b)=>n+(b.end-b.start)/4-b.registered.size,0);}
+ reserveRootBlock(count){
+  this.#requireBoundary();need(integer(count)&&count>0,'root block count');
+  const region=this.#region('external'),list=this.#region('root-list');
+  const occupied=[...this.#blocks.map(b=>({start:b.start,end:b.end})),
+   ...this.#layout.groups.flatMap(g=>g.slots.map(p=>({start:p,end:p+4})))].sort((a,b)=>a.start-b.start);
+  let start=region.start;
+  for(const r of occupied){if(start+4*count<=r.start)break;if(r.end>start)start=r.end;}
+  const end=start+4*count,charged=this.#validate().slots.length+this.#reservedUnregistered()+count;
+  need(end<=region.end&&charged<=this.#layout.logCapacity&&4*charged<=list.end-list.start,'root capacity');
+  // Scratch must accommodate the charged root log before the reservation is
+  // published. The C ABI still receives only the registered cells.
+  need(96+this.#layout.logCapacity*12<=this.#region('scratch').end-this.#region('scratch').start,'root scratch capacity');
+  let previous=new Uint8Array(this.#memory.buffer,start,4*count).slice(),active=true;
+  for(let p=start;p<end;p+=4)this.#set(p,NIL);
+  const block={start,end,registered:new Set()};this.#blocks.push(block);
+  const group=this.#layout.groups.find(g=>g.kind==='module-constants');
+  return Object.freeze({base:start,count,
+   commit:()=>{need(active,'released roots');previous=null;},
+   register:cells=>{this.#requireBoundary();need(active&&Array.isArray(cells)&&new Set(cells).size===cells.length,'root slice');
+    for(const p of cells)need(integer(p)&&p>=start&&p<end&&p%4===0&&!block.registered.has(p),'root slice');
+    for(const p of cells){block.registered.add(p);group.slots.push(p);}},
+   unregister:cells=>{this.#requireBoundary();need(active&&new Set(cells).size===cells.length,'root slice');
+    for(const p of cells)need(block.registered.has(p),'root slice');
+    const remove=new Set(cells);for(const p of cells)block.registered.delete(p);
+    group.slots=group.slots.filter(p=>!remove.has(p));},
+   release:()=>{this.#requireBoundary();need(active&&block.registered.size===0,'released roots');
+    if(previous)new Uint8Array(this.#memory.buffer,start,4*count).set(previous);
+    else for(let p=start;p<end;p+=4)this.#set(p,NIL);
+    this.#blocks.splice(this.#blocks.indexOf(block),1);previous=null;active=false;}
   });
  }
  // Printer validity is an ownership query, not a collection or a snapshot:

@@ -26,6 +26,15 @@
          (write-char #\] stream))
         (t (error "Unsupported bundle metadata ~s" value))))
 
+(defun wasm32-unit-symbol-identities (module)
+  (let ((table (make-array 8 :adjustable t :fill-pointer 0)))
+    (wasm32-code-record module table)
+    (map 'vector (lambda (symbol)
+                   (when (and symbol (symbolp symbol) (symbol-package symbol))
+                     (vector (package-name (symbol-package symbol))
+                             (symbol-name symbol))))
+         table)))
+
 (defun wasm32-compile-bundle-records (source fasl records)
   (let ((*wasm32-rooted-imports* t))
    (multiple-value-bind (path modules warnings failure)
@@ -41,6 +50,7 @@
                               (list :object
                                     (cons "name" (getf module :name))
                                     (cons "symbol_count" (getf module :fasl-symbol-count))
+                                    (cons "symbol_identities" (wasm32-unit-symbol-identities module))
                                     (cons "install_record" (wasm32-install-record (getf module :fasl-code-record)))
                                     (cons "record" (getf module :fasl-code-record))))
                             modules)

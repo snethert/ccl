@@ -11,7 +11,7 @@ import {PACKAGING} from './runtime/bundle.mjs';
 import {inventory} from './d2.mjs';
 const need=(v,s)=>{if(!v)throw Error('write: '+s);};
 const RUNTIME_SYMBOLS=['condition_registry','error_message','expected_function'],ROOTS=1190000,ROOT_NAMES=['cold-load-functions','all-packages','toplevel-function','unbound-function'];
-export function write(dir,out,policy,versions,inventoryCode=inventory){
+export function write(dir,out,policy,versions,inventoryCode=inventory,archive=null){
  fs.mkdirSync(out,{recursive:true});
  const image=JSON.parse(fs.readFileSync(path.join(dir,'image.json'))),codeSet=JSON.parse(fs.readFileSync(path.join(dir,'code-set.json')));
  const heap=fs.readFileSync(path.join(dir,'heap.bin')),fixed=fs.readFileSync(path.join(dir,'static.bin'));
@@ -30,7 +30,7 @@ export function write(dir,out,policy,versions,inventoryCode=inventory){
   need(p>=image.static.start&&p<image.static.start+fixed.length,'reference outside the image: '+w);return {region:'static',offset:p-image.static.start,tag};};
  // Code set: assemble every module, record its identity, imports and entries.
  const modules=[];
- for(const m of codeSet.modules){
+ if(!archive)for(const m of codeSet.modules){
   m.symbols??=[];m.codes??=[];m.children??=[];m.arity=m.arity.map((v,i)=>i===5?(v??[]):i>=2?!!v:v); // the Lisp writer prints NIL as null
   const compiled=inventoryCode(m.wat,path.join(out,m.name),policy,versions);
   const imports=compiled.d2.outputs.full.imports;
@@ -41,7 +41,11 @@ export function write(dir,out,policy,versions,inventoryCode=inventory){
   modules.push({name:m.name,code_id:m.id,version:4,signature:17,role:23,arity:m.arity,captures:m.captures,...compiled,
    symbols,codes:m.codes.map(([name,id])=>({name,code_id:id})),children:m.children});
  }
- const bundle={version:1,packaging:PACKAGING,...versions,first_code_id:codeSet['first-code-id'],modules};
+ if(archive){
+  for(const u of archive.units)u.references=u.references.map(reference);
+  for(const m of codeSet.modules)modules.push({name:m.name,code_id:m.id,generation:1});
+ }
+ const bundle={version:1,packaging:archive?'code-archive-v2':PACKAGING,...versions,first_code_id:codeSet['first-code-id'],modules,...(archive?{archive}: {})};
  const codeDigest=sha256(new TextEncoder().encode(JSON.stringify(bundle)));
  // Static NIL/T symbols contain outgoing pointers into the dynamic image.
  // Bind their node fields using the existing root relocation mechanism.

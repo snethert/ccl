@@ -14,6 +14,7 @@ import {observeChecks} from './diagnose.mjs';
 import {bundleNamespace, targetLoadSession} from '../../../../runtime/wasm32/target-load-session.mjs';
 import {serviceRequest} from '../../../../runtime/wasm32/file-host.mjs';
 import {processService, ProcessReady} from '../../../../runtime/wasm32/process-service.mjs';
+import {deriveLayout} from '../../../../runtime/wasm32/layout.mjs';
 import {startupTiming} from './startup-timing.mjs';
 
 const timingPrefix = isMainThread ? process.argv.find(a => a.startsWith('--timing='))?.slice(9) : workerData.timingPrefix;
@@ -31,6 +32,12 @@ if (isMainThread) {
   const inspectCode = Number(process.argv.find(a => a.startsWith('--inspect-code='))?.split('=')[1]);
   const bundleDirs = process.argv.filter(a => a.startsWith('--bundles=')).map(a => a.slice(10));
   const limit = Number(process.argv.find(a => a.startsWith('--bundle-limit='))?.split('=')[1] ?? Infinity);
+  const layoutConfig=JSON.parse(process.argv.find(a=>a.startsWith('--layout='))?.slice(9)??'{}');
+  const archives=bundleDirs.flatMap(dir=>{
+    const a=JSON.parse(fs.readFileSync(dir+'/bundle-manifest.json')).archive;if(!a)return [];
+    const metadata=fs.readFileSync(dir+'/'+a.manifest);assert.equal(sha256(metadata),a.manifest_sha256);
+    return [{digest:a.sha256,bytes:new Uint8Array(fs.readFileSync(dir+'/'+a.file)),manifest:JSON.parse(metadata)}];
+  });
   const selected = new Map();
   for (const dir of bundleDirs) for (const row of JSON.parse(fs.readFileSync(dir + '/bundle-manifest.json')).files)
     selected.set(row.path, {path: row.path, sha256: row.sha256, sourceDir: dir + '/' + row.stem,
@@ -46,7 +53,7 @@ if (isMainThread) {
   const startupLoads = process.argv.filter(a => a.startsWith('--startup-load=')).map(a => a.slice(15));
   const callbackSelection = JSON.parse(fs.readFileSync(new URL('../startup-resets/selection.json', import.meta.url)));
   timing?.event('worker-send', {bundleBytes: files.reduce((n, f) => n + f.bytes.length, 0)});
-  const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode, files, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
+  const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode, files, archives, layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
   const sampling = timing && setInterval(() => timing.memory('periodic'), 1000);
   sampling?.unref();
   let memory;
@@ -77,12 +84,17 @@ if (isMainThread) {
   const json = name => JSON.parse(fs.readFileSync(name));
   const manifest = json(artifacts + '/manifest.json'), record = json(artifacts + '/heap-image.json');
   const codeSet = json(artifacts + '/code-set.json'), policy = json(out + '/policy.json'), versions = json(out + '/versions.json');
-  const N = 77825, tcr = 1024, registry = 22020096, root = 26214392, external = 24117248, bindings = 266240, base = 8388608;
-  // Match the advertised 1 MiB initial value stack. The old 32 KiB fixture
-  // area booted, but ordinary nested generic printer calls exhausted it.
-  const valueStackEnd = root + 8 + 1048576;
-  const capacity = 32768;
-  const memory = new WebAssembly.Memory({initial: 448, maximum: 32769, shared: true});
+  const N=77825,tcr=1024;
+  const imageRegions=[{start:manifest.static.start,end:manifest.static.start+manifest.static.bytes},
+    {start:manifest.heap.start,end:manifest.heap.start+manifest.heap.bytes},
+    {start:manifest.roots.start,end:manifest.roots.start+64,enumerable:false},
+    {start:280000,end:280256}];
+  const layout=deriveLayout(workerData.layoutConfig,{bootFunctions:codeSet.modules.length,
+    bootRootCells:codeSet.archive?.root_cells??0,
+    runtimeFunctions:workerData.archives.reduce((n,a)=>n+a.manifest.function_count,0),
+    runtimeRootCells:workerData.archives.reduce((n,a)=>n+a.manifest.root_cells,0),image:imageRegions});
+  const {registry,root,external,bindings}=layout,capacity=layout.tableCapacity;
+  const memory=new WebAssembly.Memory({initial:layout.initialPages,maximum:32769,shared:true});
   const get = p => new DataView(memory.buffer).getUint32(p, true), put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
   parentPort.postMessage({type: 'memory', memory});
   const start = manifest.heap.start, end = start + manifest.heap.bytes;
@@ -91,26 +103,10 @@ if (isMainThread) {
   new Uint8Array(memory.buffer, manifest.static.start, fixed.length).set(fixed);
   const regions = [{name: 'static', start: manifest.static.start, size: fixed.length, kind: 'objects'},
     {name: 'roots', start: manifest.roots.start, size: 64, kind: 'roots'}];
-  const layoutRegions = [['tcr', tcr, tcr + 256], ['image', manifest.static.start, manifest.static.start + fixed.length],
-    ['image', start, end], ['image', manifest.roots.start, manifest.roots.start + 64],
-    ['vstack', root, valueStackEnd], ['temp', 196608, 212992], ['control', 212992, 229376],
-    ['external', external, external + 1048576], ['bindings', bindings, bindings + 4096],
-    ['image', 280000, 280256],
-    ['runtime-globals', 280256, 280272],
-    ['c-stack', 1048576, 1114112], ['root-list', 4600000, 5648576], ['scratch', 12582912, 20971520]]
-    .map(([role, start, end], i) => ({name: role + '-' + i, role, start, end}));
-  layoutRegions.find(r => r.start === manifest.roots.start).enumerable = false;
-  const layout = {version: 1, collector: 'copying', workers: 1, egc: false, tcr, maximumPages: 32769,
-    logCapacity: 262144, regions: layoutRegions,
-    spaces: [base, base + 65536].map((start, i) => ({name: 'heap-' + i, start, end: start + 65536})),
-    groups: ['module-constants', 'callbacks', 'registry', 'host'].map((kind, i) => ({kind, slots: [external + i * 4]}))};
-  for (let i = 0; i < 4; i++) put(external + i * 4, N);
-  for (const [offset, value] of [[0, 1], [8, 1], [32, 2], [48, base], [52, base + 65536], [56, base],
-    [64, root + 8], [68, root + 8], [72, valueStackEnd], [76, 196608], [80, 196608], [84, 212992],
-    [88, 212992], [92, 212992], [96, 229376], [104, bindings], [108, 0], [116, 0],
-    [120, root + 8200], [124, root + 8264], [128, root], [188, N]]) put(tcr + offset, value);
-  put(root, 0); put(root + 4, 0);
-  put(280256, 1); // runtime-globals.v1: fresh inhibition and pending state.
+  const layoutRegions=layout.regions;
+  for(let i=0;i<4;i++)put(external+i*4,N);
+  for(const [offset,value] of Object.entries({...layout.tcrWords,0:1,8:1,32:2,108:0,116:0,188:N}))put(tcr+Number(offset),value);
+  put(root,0);put(root+4,0);put(layout.runtimeGlobals,1);
   const binary = name => fs.readFileSync(runtime + '/' + name + '.wasm');
   const runtimeIdentity = json(runtime + '/array-runtime.json');
   assert.equal(sha256(fs.readFileSync(new URL('../../../../runtime/wasm32/collector.c', import.meta.url))), runtimeIdentity.source);
@@ -133,7 +129,7 @@ if (isMainThread) {
     tail_table: new WebAssembly.Table({element: 'anyfunc', initial: capacity}),
     call_error: new WebAssembly.Tag({parameters: ['i32']}), type_error: new WebAssembly.Tag({parameters: ['i32', 'i32']}),
     nonlocal_exit: new WebAssembly.Tag({parameters: ['i32']})};
-  put(registry, capacity); put(registry + 4, 1);
+  put(registry, layout.rows); put(registry + 4, 1);
   const pinned = layoutRegions.filter(r => r.role === 'image');
   const numeric = {memory, tcr, owner, callError: env.call_error, pinned};
   const integer = integerService({...numeric, bytes: binary('integer'), digest: sha256(binary('integer'))});
@@ -141,7 +137,7 @@ if (isMainThread) {
     detectorBytes: binary('detector'), detectorDigest: sha256(binary('detector'))});
   const expected = {...versions, modules: codeSet.modules.map(m => [m.name, m.code_id, m.generation]),
     table_capacity: capacity, reserved_slots: [0, 1, 2, 3, 4, 5, 6, 7, 8], slots: Object.fromEntries(codeSet.modules.map(m => [m.code_id, m.code_id + 8]))};
-  const admitted = measure('boot.admit', () => admitCrossImage({memory, manifest, record, codeSet, regions, env, policy, expected,
+  const admitted = measure('boot.admit', () => admitCrossImage({memory, owner, manifest, record, codeSet, regions, env, policy, expected,
     payload: fs.readFileSync(artifacts + '/heap.payload.bin'),
     readBytes: name => fs.readFileSync(artifacts + '/' + name + '.wasm'),
     readTemplate: name => fs.readFileSync(artifacts + '/' + name + '.template.wasm'),
@@ -160,7 +156,7 @@ if (isMainThread) {
   let observeInstalled = () => {}, enableObservation = () => {};
   let traceActive = workerData.trace && !workerData.traceFrom;
   const pendingObservations = [];
-  const loader = targetLoadSession({files: workerData.files, memory, env, owner, versions, policy, capabilities, pinned,
+  const loader = targetLoadSession({files: workerData.files, archives:workerData.archives, generations:layout.configuration.generations, memory, env, owner, versions, policy, capabilities, pinned,
     measure, onAdmission: path => timing?.memory('file-admitted', {path, ...heapState()}),
     nextCode: Math.max(...codeSet.modules.map(m => m.code_id)) + 1,
     nextSlot: Math.max(...Object.values(expected.slots)) + 1,
@@ -184,7 +180,7 @@ if (isMainThread) {
       cclRoot: '/ccl/', arguments: ['--no-init', ...workerData.startupLoads.flatMap(path => ['--load', path])]},
     output: (channel, text) => { outputEvents.push({channel, text}); fs.writeSync(channel, text); },
     configuration: {pageSize: 65536, clockTicks: 1000, cpuCount: 1, stackSize: -1,
-      defaults: [1048576, 1048576, 524288]},
+      defaults: layout.stackDefaults},
     wait: milliseconds => Atomics.wait(waitCell, 0, 0, milliseconds)});
   const heapSnapshot = heapSnapshotService(owner, env.call_error);
   const services = [
@@ -387,6 +383,8 @@ if (isMainThread) {
   timing?.memory(result.ready ? 'READY' : 'STOPPED', heapState());
   timing?.finish();
   parentPort.postMessage({...result, boot0: handoff, firstFailure, terminalFailureChain, recentFailures, firstCheck, firstCondition, observation, traceFrom: workerData.traceFrom ?? null, loadEvents, entry: '%TOPLEVEL-FUNCTION%', modules: codeSet.modules.length,
+    productModules:5+(codeSet.archive?1:codeSet.modules.length)+loader.archives().length,
+    archiveStorage:loader.archives(),openFiles:loader.openFiles(),
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
     environment: {node: process.version, runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
       observer: workerData.trace ? sha256(fs.readFileSync(out + '/observe.wasm')) : null,

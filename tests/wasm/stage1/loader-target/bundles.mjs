@@ -5,7 +5,8 @@ import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
 import {decodeTargetBundle} from '../../../../runtime/wasm32/target-bundle.mjs';
 import {reuseCode} from './reuse.mjs';
 const args = process.argv.slice(2), compact = args.includes('--compact');
-const [out, reuse] = args.filter(a => a !== '--compact');
+const [out, reuse] = args.filter(a => !['--compact','--v1'].includes(a));
+if(!args.includes('--v1')){await import('./archive-build.mjs');}else{
 const read = n => JSON.parse(fs.readFileSync(out + '/' + n));
 const {inventory} = await import(pathToFileURL(out + '/d2.mjs'));
 const manifest = read('bundles.json'), versions = read('versions.json'), policy = read('policy.json');
@@ -67,3 +68,5 @@ for (const file of manifest.files) {
 fs.writeFileSync(out + '/bundle-manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 fs.writeFileSync(out + '/materialization-reuse.json', JSON.stringify({reuse: reuse ?? null, reused, fresh, compact, reusedFiles}, null, 2) + '\n');
 console.log(JSON.stringify(manifest));
+
+}

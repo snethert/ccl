@@ -85,7 +85,7 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
         if compile_only:
             print('Level-1 target compilation recorded:', out)
             return
-        c.command([c.NODE, HERE / 'bundles.mjs', out, *([reuse] if reuse else [])], out / 'materialize.log', timeout=1800)
+        c.command([c.NODE, HERE / 'bundles.mjs', out, *([reuse] if reuse else []), *(['--v1'] if postimage else [])], out / 'materialize.log', timeout=1800)
         print('Level-1 target bundles materialized:', out)
         return
     if boot0:

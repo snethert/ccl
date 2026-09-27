@@ -2,17 +2,19 @@
 // The byte stream exposes the ordinary FASL payload; code is installed only
 // when that stream's opcode 72 requests its exact compiler record.
 import {createNamespace} from './namespace.mjs';
-import {admitTargetBundle, decodeTargetBundle} from './target-bundle.mjs';
+import {admitTargetBundle, decodeTargetBundle, decodeTargetContainer, targetContainerVersion} from './target-bundle.mjs';
 import {targetCodeService} from './target-code-service.mjs';
 import {fileClient} from './file-client.mjs';
+import {admitCodeArchive} from './code-archive.mjs';
 import {sha256} from './sha256.mjs';
 
 const need = (ok, why) => { if (!ok) throw Error('target load: ' + why); };
 export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure = (_phase, run) => run()}) {
-  const entries = new Map([['/', {path: '/', kind: 'directory'}]]), bundles = new Map();
+  const entries = new Map([['/', {path: '/', kind: 'directory'}]]), bundles = new Map(), containers = new Map();
   for (const file of files) {
     need(!entries.has(file.path), 'DUPLICATE_FILE');
-    const decoded = measure('namespace.decode', () => decodeTargetBundle(file.bytes, file.sha256), {path: file.path});
+    const v2=targetContainerVersion(file.bytes)===2;
+    const decoded = measure('namespace.decode', () => (v2?decodeTargetContainer:decodeTargetBundle)(file.bytes, file.sha256), {path: file.path});
     let parent = file.path.slice(0, file.path.lastIndexOf('/')) || '/';
     while (parent !== '/') {
       need(!entries.has(parent) || entries.get(parent).kind === 'directory', 'PARENT');
@@ -20,7 +22,8 @@ export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure 
       parent = parent.slice(0, parent.lastIndexOf('/')) || '/';
     }
     entries.set(file.path, {path: file.path, kind: 'file', bytes: decoded.fasl, sha256: sha256(decoded.fasl)});
-    bundles.set(file.path, {bytes: new Uint8Array(file.bytes), digest: file.sha256,
+    if(v2)containers.set(file.path,{archive_sha256:decoded.manifest.archive_sha256,units:decoded.manifest.units});
+    else bundles.set(file.path, {bytes: new Uint8Array(file.bytes), digest: file.sha256,
       modules: decoded.manifest.codeSet.modules});
   }
   for (const path of [cwd, cclRoot]) if (!entries.has(path)) entries.set(path, {path, kind: 'directory'});
@@ -32,13 +35,25 @@ export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure 
       open: (name, mode) => inner.open(path(name), mode),
       stat: name => inner.stat(path(name)), realpath: name => inner.realpath(path(name))});
   };
-  return Object.freeze({namespace, bundles, session});
+  return Object.freeze({namespace, bundles, containers, session});
 }
 
-export function targetLoadSession({files, memory, env, owner, versions, policy, capabilities,
-  nextCode, nextSlot, post, pinned, onOpen = () => {}, onClose = () => {}, onInstall = () => {},
+export function targetLoadSession({files, archives=[], generations=2, memory, env, owner, versions, policy, capabilities,
+  nextCode, nextSlot, slotOffset=nextSlot-nextCode, post, pinned, onOpen = () => {}, onClose = () => {}, onInstall = () => {},
   measure = (_phase, run) => run(), onAdmission = () => {}}) {
   const source = measure('namespace.create', () => bundleNamespace({files, measure})), paths = source.session(), open = new Map();
+  const admitted=new Map();
+  for(const a of archives){
+    need(!admitted.has(a.digest),'DUPLICATE_ARCHIVE');
+    const archive=measure('archive.admit',()=>admitCodeArchive({...a,env,capabilities,versions,policy,slotOffset,maxGenerations:generations,measure,
+      allocateCode:(n,journal)=>{const base=nextCode,slot=nextSlot;nextCode+=n;nextSlot+=n;
+        journal.push(()=>{nextCode=base;nextSlot=slot;});return base;},
+      reserveRoots:(n,journal)=>{const block=owner.atSafepoint(o=>o.reserveRootBlock(n));
+        journal.push(()=>owner.atSafepoint(()=>block.release()));return block;},
+      registerRoots:(block,cells,journal)=>{owner.atSafepoint(()=>block.register(cells));
+        journal.push(()=>owner.atSafepoint(()=>block.unregister(cells)));}}));
+    archive.prepare();admitted.set(a.digest,archive);onAdmission(a.digest);
+  }
   const get = p => new DataView(memory.buffer).getUint32(p, true);
   const put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
   const string = word => {
@@ -65,6 +80,13 @@ export function targetLoadSession({files, memory, env, owner, versions, policy, 
         // Missing-file errno belongs to the ordinary namespace operation.
         let path;
         try { path = paths.realpath(name); } catch (e) { if (e.code !== 'NOT_FOUND') throw e; }
+        const container=source.containers.get(path);
+        if(container&&get(args+8)===0){
+          const archive=admitted.get(container.archive_sha256);need(archive,'ARCHIVE_ABSENT');
+          const token=Symbol(path);archive.reserve(token,container.units);
+          const session={install:(name,record,symbols)=>archive.install(token,name,record,symbols),entries:()=>archive.entries(token)};
+          pending={path,token,archive,session,install:targetCodeService({memory,session})};
+        }
         const bundle = source.bundles.get(path);
         if (bundle && get(args + 8) === 0) {
           const codeIds = {}, slots = {};
@@ -77,12 +99,15 @@ export function targetLoadSession({files, memory, env, owner, versions, policy, 
           pending = {path, install: targetCodeService({memory, session}), session, code, slot};
         }
       }
-      const result = client(args), value = result >> 2;
+      let result;
+      try{result=client(args);}catch(e){pending?.archive?.release(pending.token);throw e;}
+      const value=result>>2;
+      if(op===0&&value<0)pending?.archive?.release(pending.token);
       if (op === 0 && value >= 0) {
-        need(pending, 'BUNDLE_SESSION'); nextCode = pending.code; nextSlot = pending.slot;
+        need(pending, 'BUNDLE_SESSION'); if(!pending.archive){nextCode = pending.code; nextSlot = pending.slot;}
         open.set(value, pending); onOpen(pending.path, value);
       }
-      if (op === 3 && value >= 0) { const prior = open.get(fd); open.delete(fd); if (prior) onClose(prior.path, fd); }
+      if (op === 3 && value >= 0) { const prior = open.get(fd); open.delete(fd); if (prior) {prior.archive?.release(prior.token);onClose(prior.path, fd);} }
       return result;
     },
     install(args) {
@@ -91,6 +116,7 @@ export function targetLoadSession({files, memory, env, owner, versions, policy, 
       onInstall(file.path, file.session.entries());
       return result;
     },
+    archives:()=>[...admitted.values()].map(a=>a.storage()),
     openFiles: () => [...open.values()].map(row => row.path)
   });
 }

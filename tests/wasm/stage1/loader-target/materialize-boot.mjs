@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
 import {reuseCode} from './reuse.mjs';
-const [out, reuse] = process.argv.slice(2), read = path => JSON.parse(fs.readFileSync(path));
+const [out, reuse] = process.argv.slice(2).filter(a=>a!=='--v1'), read = path => JSON.parse(fs.readFileSync(path));
+if(!process.argv.includes('--v1')){await import('./archive-boot.mjs');}else{
 const {write} = await import(pathToFileURL(out + '/write.mjs'));
 const {inventory} = await import(pathToFileURL(out + '/d2.mjs'));
 const policy = read(out + '/policy.json'), versions = read(out + '/versions.json'), cache = new Map();
@@ -26,3 +27,5 @@ const result = write(out + '/boot', out + '/boot/artifacts', policy, versions, (
 });
 fs.writeFileSync(out + '/materialization-reuse.json', JSON.stringify({reuse: reuse ?? null, reused, fresh}, null, 2) + '\n');
 console.log(JSON.stringify({...result, reused, fresh}));
+
+}

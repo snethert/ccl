@@ -179,3 +179,27 @@ export function admitTargetBundle({bytes, digest, env, capabilities = {}, versio
       ({...entry, codeId: codeIds[entry.record.code_id]})))
   });
 }
+
+// Archive containers carry the original FASL and its ordered unit directory.
+// The archive digest identifies separately authenticated code; no code is inline.
+export function encodeTargetContainer({units,archive_sha256,fasl}) {
+  const data=snapshotBytes(fasl),manifest=utf8(JSON.stringify({version:2,units,archive_sha256,fasl_sha256:sha256(data)}));
+  const size=HEADER+manifest.length+data.length;need(size<=MAX_BYTES,'SIZE');
+  const bytes=new Uint8Array(size),view=new DataView(bytes.buffer);
+  [MAGIC,2,manifest.length,data.length].forEach((v,i)=>view.setUint32(4*i,v,true));
+  bytes.set(manifest,HEADER);bytes.set(data,HEADER+manifest.length);return bytes;
+}
+export function decodeTargetContainer(input,digest) {
+  const bytes=snapshotBytes(input);need(bytes.length>=HEADER&&bytes.length<=MAX_BYTES,'SIZE');
+  need(sha256(bytes)===digest,'DIGEST');const view=new DataView(bytes.buffer);
+  need(view.getUint32(0,true)===MAGIC&&view.getUint32(4,true)===2,'VERSION');
+  const jsonBytes=view.getUint32(8,true),faslBytes=view.getUint32(12,true);
+  need(HEADER+jsonBytes+faslBytes===bytes.length,'LENGTH');
+  const manifest=JSON.parse(new TextDecoder('utf8',{fatal:true}).decode(bytes.subarray(HEADER,HEADER+jsonBytes)));
+  need(manifest.version===2&&/^[0-9a-f]{64}$/.test(manifest.archive_sha256)&&Array.isArray(manifest.units)&&
+    manifest.units.every(n=>typeof n==='string')&&new Set(manifest.units).size===manifest.units.length,'MANIFEST');
+  const fasl=bytes.slice(HEADER+jsonBytes);need(sha256(fasl)===manifest.fasl_sha256,'FASL_DIGEST');return {manifest,fasl};
+}
+export function targetContainerVersion(bytes) {
+  need(bytes.byteLength>=HEADER,'SIZE');return new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(4,true);
+}

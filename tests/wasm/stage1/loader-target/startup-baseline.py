@@ -83,6 +83,8 @@ def main():
     parser.add_argument('boot', type=Path)
     parser.add_argument('bundles', type=Path)
     parser.add_argument('--timeout', type=float, default=600)
+    parser.add_argument('--layout', default=None)
+    parser.add_argument('--space', type=int, choices=(16,32,64))
     args = parser.parse_args()
     assert platform.system() == 'Darwin', 'P-0 baseline reference is macOS'
     assert 0 < args.timeout <= 600, 'bounded baseline must not exceed ten minutes'
@@ -98,6 +100,10 @@ def main():
     command = [node, str(ROOT / 'tests/wasm/stage1/loader-target/boot0.mjs'), str(boot),
         str(boot / 'runtime-binaries'), '--bundles=' + str(bundles),
         '--report=' + str(out / 'ready.json'), '--timing=' + str(out / 'events'), '--expect-ready']
+    if args.layout:
+        command.append('--layout=' + args.layout)
+    if args.space:
+        command.append('--layout=' + json.dumps(dict(spaceBytes=args.space*1048576)))
     sources = [*ROOT.glob('runtime/wasm32/*.mjs'), *Path(__file__).parent.glob('*.mjs'), Path(__file__)]
     write(out / 'inputs.json', dict(command=command, timeoutSeconds=args.timeout,
         commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
