@@ -8,11 +8,11 @@ import {fileClient} from './file-client.mjs';
 import {sha256} from './sha256.mjs';
 
 const need = (ok, why) => { if (!ok) throw Error('target load: ' + why); };
-export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl'}) {
+export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl', measure = (_phase, run) => run()}) {
   const entries = new Map([['/', {path: '/', kind: 'directory'}]]), bundles = new Map();
   for (const file of files) {
     need(!entries.has(file.path), 'DUPLICATE_FILE');
-    const decoded = decodeTargetBundle(file.bytes, file.sha256);
+    const decoded = measure('namespace.decode', () => decodeTargetBundle(file.bytes, file.sha256), {path: file.path});
     let parent = file.path.slice(0, file.path.lastIndexOf('/')) || '/';
     while (parent !== '/') {
       need(!entries.has(parent) || entries.get(parent).kind === 'directory', 'PARENT');
@@ -36,8 +36,9 @@ export function bundleNamespace({files, cwd = '/ccl', cclRoot = '/ccl'}) {
 }
 
 export function targetLoadSession({files, memory, env, owner, versions, policy, capabilities,
-  nextCode, nextSlot, post, pinned, onOpen = () => {}, onClose = () => {}, onInstall = () => {}}) {
-  const source = bundleNamespace({files}), paths = source.session(), open = new Map();
+  nextCode, nextSlot, post, pinned, onOpen = () => {}, onClose = () => {}, onInstall = () => {},
+  measure = (_phase, run) => run(), onAdmission = () => {}}) {
+  const source = measure('namespace.create', () => bundleNamespace({files, measure})), paths = source.session(), open = new Map();
   const get = p => new DataView(memory.buffer).getUint32(p, true);
   const put = (p, v) => new DataView(memory.buffer).setUint32(p, v, true);
   const string = word => {
@@ -69,7 +70,10 @@ export function targetLoadSession({files, memory, env, owner, versions, policy, 
           const codeIds = {}, slots = {};
           let code = nextCode, slot = nextSlot;
           for (const row of bundle.modules) { codeIds[row.code_id] = code++; slots[row.code_id] = slot++; }
-          const session = admitTargetBundle({...bundle, env, capabilities, versions, policy, codeIds, slots, rootCells});
+          const timed = (phase, run) => measure(phase, run, {path});
+          const session = timed('bundle.admit', () => admitTargetBundle({...bundle, env, capabilities, versions, policy,
+            codeIds, slots, rootCells, measure: timed}));
+          onAdmission(path);
           pending = {path, install: targetCodeService({memory, session}), session, code, slot};
         }
       }

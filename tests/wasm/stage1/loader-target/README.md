@@ -149,3 +149,48 @@ observation only when that bundle opens and is diagnostic partial coverage.
 runs retain the original and observed identities and are distinct from the
 run without the call census. `--expect-ready` makes a stopped Worker fail the
 runner's exit status.
+
+## Startup baseline (module consolidation P-0)
+
+`startup-baseline.py` runs one fresh Node process on retained boot and bundle
+artifacts. It verifies RAM-backed work and cache mounts, limits the run to
+600 seconds, kills the process group on timeout, and writes `timing.json` even
+when READY is not reached. It does not rebuild Lisp or add collections.
+
+```sh
+python3 tests/wasm/stage1/loader-target/startup-baseline.py /private/tmp/ccl-work/p0 /private/tmp/ccl-work/boot-r21 /private/tmp/ccl-work/bundles-r18 --timeout=600
+```
+
+The output directory must be new. `inputs.json` pins the command, engine,
+instrumentation sources and input manifests; the normal loader authenticates
+the bundles and boot artifacts. `ready.json` is the unchanged boot result
+format. `events.main.jsonl` and `events.worker.jsonl` retain raw timestamps,
+completed spans, per-file accounting and memory milestones. `run.json` records
+the Node child's exit status, timeout and macOS `wait4` peak RSS. Retain these
+files on persistent storage when finalizing evidence.
+
+The optional `boot0.mjs --timing=PREFIX` switch enables those journals.
+Admission, bundle decoding, compilation/materialization, root-cell allocation,
+publication and actual collector copies have separate timers. The host install
+span includes record decoding and installer bookkeeping outside the nested
+root/publication spans. Per-file accounting follows the innermost open file;
+admission and namespace decoding identify their requested file explicitly.
+Inclusive spans contain their child spans; `exclusiveMs` removes that overlap.
+Main-thread time overlaps Worker time and must not be added to it.
+
+`worker:lisp.run` in the exclusive breakdown means time outside the measured
+services. It includes Lisp execution, unmeasured numeric/allocation fast paths,
+the existing boot observer and measurement overhead. This is an instrumented
+baseline, not a claim of pure Lisp CPU time. The Worker construction and
+send-to-start interval include structured cloning and thread startup.
+
+Memory counters are bytes. RSS is process-wide; each thread's other Node
+counters cover that thread. `arrayBuffers` is already included in `external`.
+Neither these counters nor linear-memory extents are additive RSS components
+([Node memoryUsage documentation](https://nodejs.org/api/process.html#processmemoryusage)).
+`allocatedHeapBytes` includes objects allocated since the last collection;
+`lastCollection.liveHeapBytes` records live movable Lisp data at that earlier
+timestamp. Static/image objects are additional. Collector `storage` gives
+current heap spaces, scratch and root areas, whose extents describe allocated
+address ranges rather than resident pages. No forced collection changes the
+workload at READY.

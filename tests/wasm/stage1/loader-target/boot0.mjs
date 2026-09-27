@@ -14,10 +14,15 @@ import {observeChecks} from './diagnose.mjs';
 import {bundleNamespace, targetLoadSession} from '../../../../runtime/wasm32/target-load-session.mjs';
 import {serviceRequest} from '../../../../runtime/wasm32/file-host.mjs';
 import {processService, ProcessReady} from '../../../../runtime/wasm32/process-service.mjs';
+import {startupTiming} from './startup-timing.mjs';
+
+const timingPrefix = isMainThread ? process.argv.find(a => a.startsWith('--timing='))?.slice(9) : workerData.timingPrefix;
+const timing = startupTiming(timingPrefix, isMainThread ? 'main' : 'worker');
+const measure = timing?.measure ?? ((_phase, run) => run());
 
 if (isMainThread) {
   const runtimeDirectory = new URL('../../../../runtime/wasm32/', import.meta.url);
-  const scripts = Object.fromEntries([new URL(import.meta.url), new URL('./diagnose.mjs', import.meta.url),
+  const scripts = Object.fromEntries([new URL(import.meta.url), new URL('./diagnose.mjs', import.meta.url), new URL('./startup-timing.mjs', import.meta.url),
     ...fs.readdirSync(runtimeDirectory).filter(name => name.endsWith('.mjs')).map(name => new URL(name, runtimeDirectory))]
     .map(url => [url.pathname, sha256(fs.readFileSync(url))]));
   const [out, runtime] = process.argv.slice(2);
@@ -29,23 +34,28 @@ if (isMainThread) {
   const selected = new Map();
   for (const dir of bundleDirs) for (const row of JSON.parse(fs.readFileSync(dir + '/bundle-manifest.json')).files)
     selected.set(row.path, {path: row.path, sha256: row.sha256, sourceDir: dir + '/' + row.stem,
-      bytes: new Uint8Array(fs.readFileSync(dir + '/' + row.bundle))});
+      bytes: measure('bundle.read', () => new Uint8Array(fs.readFileSync(dir + '/' + row.bundle)), {path: row.path})});
   const omittedBundles = process.argv.filter(a => a.startsWith('--omit-bundle=')).map(a => a.slice(14));
   for (const path of omittedBundles) assert(selected.delete(path), 'omitted bundle must exist: ' + path);
   const files = [...selected.values()].slice(0, limit);
-  const namespace = bundleNamespace({files}), session = namespace.session();
+  timing?.memory('bundles-read', {bundleBytes: files.reduce((n, f) => n + f.bytes.length, 0)});
+  const namespace = measure('namespace.create', () => bundleNamespace({files, measure})), session = namespace.session();
+  timing?.memory('namespace-created');
   assert(!inspectCode || trace, '--inspect-code requires --trace');
   const dumpFailure = process.argv.includes('--dump-failure');
   const startupLoads = process.argv.filter(a => a.startsWith('--startup-load=')).map(a => a.slice(15));
   const callbackSelection = JSON.parse(fs.readFileSync(new URL('../startup-resets/selection.json', import.meta.url)));
-  const worker = new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode, files, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts}});
+  timing?.event('worker-send', {bundleBytes: files.reduce((n, f) => n + f.bytes.length, 0)});
+  const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode, files, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
+  const sampling = timing && setInterval(() => timing.memory('periodic'), 1000);
+  sampling?.unref();
   let memory;
   const result = await new Promise((resolve, reject) => {
     worker.on('message', message => {
       try {
         if (message.type === 'memory') { memory = message.memory; return; }
         if (message.type === 'request') {
-          assert(serviceRequest(memory, session, message.lifetime, message.generation)); return;
+          measure('host.request', () => assert(serviceRequest(memory, session, message.lifetime, message.generation))); return;
         }
         if (message.type === 'stderr') { process.stderr.write(message.text); return; }
         if (message.type === 'progress') { console.error(JSON.stringify(message)); return; }
@@ -54,11 +64,14 @@ if (isMainThread) {
     }); worker.once('error', reject);
     worker.once('exit', code => { if (code) reject(Error('boot Worker exit ' + code)); });
   });
+  if (sampling) clearInterval(sampling);
+  timing?.memory('result-received', {status: result.status});
   const report = process.argv.find(a => a.startsWith('--report='))?.slice(9) ??
     out + (inspectCode ? '/boot0-checks.json' : trace ? '/boot0-trace.json' : '/boot0.json');
   fs.writeFileSync(report, JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));
   if (process.argv.includes('--expect-ready') && !result.ready) process.exitCode = 1;
+  timing?.finish();
 } else {
   const {out, runtime} = workerData, artifacts = out + '/boot/artifacts';
   const json = name => JSON.parse(fs.readFileSync(name));
@@ -102,7 +115,19 @@ if (isMainThread) {
   const runtimeIdentity = json(runtime + '/array-runtime.json');
   assert.equal(sha256(fs.readFileSync(new URL('../../../../runtime/wasm32/collector.c', import.meta.url))), runtimeIdentity.source);
   assert.equal(sha256(binary('collector')), runtimeIdentity.binary);
-  const owner = CollectorOwner.create(memory, binary('collector'), runtimeIdentity.binary, layout);
+  let lastCollection;
+  const heapState = () => ({linearMemoryBytes: memory.buffer.byteLength,
+    allocatedHeapBytes: get(tcr + 48) - get(tcr + 56), activeHeapCapacityBytes: get(tcr + 52) - get(tcr + 56),
+    collections: owner.collectionCount, storage: owner.storage, lastCollection});
+  const owner = CollectorOwner.create(memory, binary('collector'), runtimeIdentity.binary, layout,
+    timing ? {measure: (phase, run) => {
+      const result = measure(phase, run);
+      lastCollection = {epochMs: performance.timeOrigin + performance.now(),
+        liveHeapBytes: get(tcr + 48) - get(tcr + 56), collection: owner.collectionCount};
+      timing.event('collection', {...lastCollection, linearMemoryBytes: memory.buffer.byteLength});
+      return result;
+    }} : {});
+  timing?.memory('linear-memory-created', heapState());
   const env = {memory, tcr, code_registry: registry,
     table: new WebAssembly.Table({element: 'anyfunc', initial: capacity}),
     tail_table: new WebAssembly.Table({element: 'anyfunc', initial: capacity}),
@@ -116,12 +141,13 @@ if (isMainThread) {
     detectorBytes: binary('detector'), detectorDigest: sha256(binary('detector'))});
   const expected = {...versions, modules: codeSet.modules.map(m => [m.name, m.code_id, m.generation]),
     table_capacity: capacity, reserved_slots: [0, 1, 2, 3, 4, 5, 6, 7, 8], slots: Object.fromEntries(codeSet.modules.map(m => [m.code_id, m.code_id + 8]))};
-  const admitted = admitCrossImage({memory, manifest, record, codeSet, regions, env, policy, expected,
+  const admitted = measure('boot.admit', () => admitCrossImage({memory, manifest, record, codeSet, regions, env, policy, expected,
     payload: fs.readFileSync(artifacts + '/heap.payload.bin'),
     readBytes: name => fs.readFileSync(artifacts + '/' + name + '.wasm'),
     readTemplate: name => fs.readFileSync(artifacts + '/' + name + '.template.wasm'),
-    capabilities: {owner: {ensure: allocationService(owner, env.call_error)}, integer: {calculate: integer}, floating: {calculate: floating}}});
-  const installed = admitted.install();
+    capabilities: {owner: {ensure: allocationService(owner, env.call_error)}, integer: {calculate: integer}, floating: {calculate: floating}}}));
+  const installed = measure('boot.install', () => admitted.install());
+  timing?.memory('boot-installed', heapState());
   const resolve = r => Object.hasOwn(r, 'heap') ? start + r.heap + r.tag :
     regions.find(x => x.name === r.region).start + r.offset + r.tag;
   const symbol = name => {
@@ -135,11 +161,13 @@ if (isMainThread) {
   let traceActive = workerData.trace && !workerData.traceFrom;
   const pendingObservations = [];
   const loader = targetLoadSession({files: workerData.files, memory, env, owner, versions, policy, capabilities, pinned,
+    measure, onAdmission: path => timing?.memory('file-admitted', {path, ...heapState()}),
     nextCode: Math.max(...codeSet.modules.map(m => m.code_id)) + 1,
     nextSlot: Math.max(...Object.values(expected.slots)) + 1,
     post: request => parentPort.postMessage({type: 'request', ...request}),
-    onOpen: (path, fd) => { loadEvents.push({event: 'open', path, fd}); enableObservation(path); },
-    onClose: (path, fd) => loadEvents.push({event: 'close', path, fd}),
+    onOpen: (path, fd) => { loadEvents.push({event: 'open', path, fd}); timing?.open(path, fd); enableObservation(path); },
+    onClose: (path, fd) => { loadEvents.push({event: 'close', path, fd}); timing?.close(path, fd);
+      timing?.memory('file-closed', {path, ...heapState()}); },
     onInstall: (path, entries) => observeInstalled(path, entries)});
   const adapter = new WebAssembly.Module(fs.readFileSync(out + '/host-call-adapter.wasm'));
   const waitCell = new Int32Array(new SharedArrayBuffer(4));
@@ -171,7 +199,8 @@ if (isMainThread) {
     ['%WASM-HOST-PROCESS-REQUEST', 3, processRequest]
   ];
   services.forEach(([name, arity, run], i) => {
-    const id = i + 1, base = 280000 + i * 32, instance = new WebAssembly.Instance(adapter, {env, host: {arity, run}});
+    const id = i + 1, base = 280000 + i * 32, instance = new WebAssembly.Instance(adapter, {env, host: {arity,
+      run: timing ? args => measure('host.' + name, () => run(args)) : run}});
     [1578, id * 4, N, 4, N, N, N, 0].forEach((v, n) => put(base + 4 * n, v));
     [id, 4, 17, 23].forEach((v, n) => put(registry + 8 + 16 * id + 4 * n, v));
     env.table.set(id, instance.exports.entry); env.tail_table.set(id, instance.exports.tail_entry);
@@ -340,8 +369,9 @@ if (isMainThread) {
   const fn = get(manifest.roots.start + index * 4), id = get(fn - 2) >>> 2;
   assert.equal(get(fn - 6), 1578);
   let result;
+  timing?.memory('lisp-start', heapState());
   try {
-    const values = env.table.get(expected.slots[id])(fn, 0);
+    const values = measure('lisp.run', () => env.table.get(expected.slots[id])(fn, 0));
     result = {status: 'RETURNED', values, boot0: false, reason: 'Bootstrap returned without a qualified handoff marker'};
   } catch (error) {
     const reason = error.is?.(env.call_error) ? 'checked ' + error.getArg(env.call_error, 0) :
@@ -354,6 +384,8 @@ if (isMainThread) {
       fs.writeFileSync(out + '/failure-spaces.json', JSON.stringify(owner.spaces));
     }
   }
+  timing?.memory(result.ready ? 'READY' : 'STOPPED', heapState());
+  timing?.finish();
   parentPort.postMessage({...result, boot0: handoff, firstFailure, terminalFailureChain, recentFailures, firstCheck, firstCondition, observation, traceFrom: workerData.traceFrom ?? null, loadEvents, entry: '%TOPLEVEL-FUNCTION%', modules: codeSet.modules.length,
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
     environment: {node: process.version, runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,

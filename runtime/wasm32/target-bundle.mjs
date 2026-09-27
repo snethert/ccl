@@ -66,10 +66,10 @@ export function decodeTargetBundle(input, digest) {
 // records import stable addresses of collector-owned root cells; their values
 // can move. Older version-4 records require stable tagged imports.
 export function admitTargetBundle({bytes, digest, env, capabilities = {}, versions, policy,
-  slots, codeIds, stableReference, rootCells}) {
+  slots, codeIds, stableReference, rootCells, measure = (_phase, run) => run()}) {
   env = {...env}; slots = {...slots}; codeIds = {...codeIds};
   capabilities = Object.fromEntries(Object.entries(capabilities).map(([name, value]) => [name, {...value}]));
-  const {manifest, fasl, modules} = decodeTargetBundle(bytes, digest);
+  const {manifest, fasl, modules} = measure('bundle.decode', () => decodeTargetBundle(bytes, digest));
   const set = manifest.codeSet, units = new Map(), rows = new Map();
   need(typeof stableReference === 'function' || typeof rootCells === 'function', 'REFERENCE_AUTHORITY');
   need(env.table !== env.tail_table, 'DISTINCT_TABLES');
@@ -120,9 +120,9 @@ export function admitTargetBundle({bytes, digest, env, capabilities = {}, versio
   need(owned.length === rows.size && new Set(owned).size === rows.size, 'COMPLETE_UNITS');
   // Preflight every module, including template materialization and role checks,
   // before a single target function can be published.
-  const compiled = compile(set, {...versions, modules: set.modules.map(m => [m.name, m.code_id, m.generation]),
+  const compiled = measure('bundle.compile', () => compile(set, {...versions, modules: set.modules.map(m => [m.name, m.code_id, m.generation]),
     table_capacity: Math.min(env.table.length, env.tail_table.length), reserved_slots: [0], slots},
-    name => modules.get(name).bytes, name => modules.get(name).template, policy);
+    name => modules.get(name).bytes, name => modules.get(name).template, policy));
   const installed = new Map();
   const empty = row => {
     const id = codeIds[row.code_id], slot = slots[row.code_id];
@@ -153,7 +153,7 @@ export function admitTargetBundle({bytes, digest, env, capabilities = {}, versio
       const wanted = new Set(unit.modules), imports = new Map();
       const group = compiled.filter(m => wanted.has(m.record.code_id));
       for (const {record: row} of group) empty(row);
-      const roots = rooted ? rootCells(values) : null;
+      const roots = rooted ? measure('bundle.roots', () => rootCells(values)) : null;
       const references = roots ? roots.slots : values;
       let instances;
       try {
@@ -164,7 +164,7 @@ export function admitTargetBundle({bytes, digest, env, capabilities = {}, versio
           codes: Object.fromEntries(row.codes.map(c => [c.name, codeIds[c.code_id] * 4]))});
       }
       // publish() instantiates the entire graph before touching paired tables.
-      instances = publish(group, name => imports.get(name), env.table, env.tail_table);
+      instances = measure('bundle.publish', () => publish(group, name => imports.get(name), env.table, env.tail_table));
       } catch (error) { roots?.release(); throw error; }
       for (const {record: row} of group) {
         const p = registry + 8 + 16 * codeIds[row.code_id];

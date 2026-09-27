@@ -9,12 +9,12 @@ function align(n,a){return Math.ceil(n/a)*a;}
 export class CollectorOwner {
  #roles=new Map();
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
- #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;
- static create(memory,bytes,digest,layout){
+ #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;#measure;
+ static create(memory,bytes,digest,layout,{measure}={}){
   need(sha256(bytes)===digest,'collector digest');
   const mod=new WebAssembly.Module(bytes),imports=WebAssembly.Module.imports(mod);
   need(imports.length===1&&imports[0].module==='env'&&imports[0].name==='memory'&&imports[0].kind==='memory','collector imports');
-  const owner=new CollectorOwner();owner.#memory=memory;owner.#layout=structuredClone(layout);owner.#spaces=structuredClone(layout.spaces);
+  const owner=new CollectorOwner();owner.#memory=memory;owner.#layout=structuredClone(layout);owner.#spaces=structuredClone(layout.spaces);owner.#measure=measure;
   owner.#refresh();owner.#admit();
   owner.#collector=new WebAssembly.Instance(mod,{env:{memory}}).exports;
   need(owner.#collector.__stack_pointer.value===owner.#region('c-stack').end,'C stack extent');
@@ -95,6 +95,10 @@ export class CollectorOwner {
  get view(){this.#refresh();return this.#view;}
  get viewEpoch(){this.#refresh();return this.#epoch;}
  get spaces(){return structuredClone(this.#spaces);}
+ // Observation only: current owned extents, not a reachability walk or GC.
+ get storage(){return {spaces:this.spaces,scratch:{...this.#region('scratch')},
+  rootList:{...this.#region('root-list')},external:{...this.#region('external')},
+  registeredRootCells:this.#layout.groups.reduce((n,g)=>n+g.slots.length,0)};}
  #get(p){return this.view.getUint32(p,true);}
  #set(p,v){this.view.setUint32(p,v,true);}
  #t(o){return this.#get(this.#layout.tcr+o);}
@@ -281,6 +285,9 @@ export class CollectorOwner {
  }
  #requireBoundary(){need(this.#boundary&&!this.#busy,'legal owner boundary');}
  #copy(destination){
+  return this.#measure?this.#measure('collector.copy',()=>this.#copyInto(destination)):this.#copyInto(destination);
+ }
+ #copyInto(destination){
   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
   // The collector reserves a worst-case object map and queue before copying.
