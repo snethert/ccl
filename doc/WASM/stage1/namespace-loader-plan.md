@@ -357,8 +357,9 @@ fixes are batched — a stop is not a packet.
   service not yet supplied), `FOREIGN-CALL`, `SCHEDULER` / `THREAD`,
   `INITIALIZER-FAILED`}. `disposition` is one of D-1's fix categories or
   `EXCLUDED` with the decision that excludes it.
-- P5-2. A target branch replacing a level-0/1 definition body counts against
-  the 25-replacement cap (A1 keeps it) and is listed.
+- P5-2. A target branch replacing a level-0/1 definition body is listed
+  separately from executed originals. Decision A3 (26 September 2026) removes
+  the numerical replacement cap; dependency closure and review still apply.
 - P5-3. Forbidden, restated from C-5: name-based heap scans, replacement
   stubs returning plausible values, a `handler-case` that turns a load stop
   into a warning. The `READY-SCHEDULER-FILE-STOP` handler in

@@ -16,20 +16,28 @@ const results=Array(jobs.length);let next=0;
 async function consume(){
   while(next<jobs.length){
     const index=next++,job=jobs[index];
-    results[index]=await new Promise((resolve,reject)=>{
+    results[index]=await new Promise(resolve=>{
       let result,received=false;
+      let failure;
       const worker=new Worker(new URL('./worker.mjs',import.meta.url),{workerData:{dir,...job}});
       worker.on('message',value=>{assert(!received,'multiple worker results');result=value;received=true;});
-      worker.on('error',reject);
-      worker.on('exit',code=>code||!received?reject(Error('worker failed '+code)):resolve({...result,controls:job.controls}));
+      worker.on('error',error=>{failure=String(error);});
+      worker.on('exit',code=>resolve(code||!received ?
+        {base:job.base,rows:[],collections:0,internalCollections:0,controls:job.controls,
+          status:'FAIL',error:failure ?? 'worker failed '+code} : {...result,controls:job.controls}));
     });
   }
 }
 await Promise.all(Array.from({length:Math.min(plan.workers,jobs.length)},consume));
 const rows=results.filter(x=>!x.controls).flatMap(x=>x.rows.map(row=>({...row,base:x.base})));
 rows.sort((a,b)=>a.caseId.localeCompare(b.caseId)||a.base-b.base||Number(a.moved)-Number(b.moved));
-assert.equal(rows.length,plan.indices.length*4);
-assert.equal(new Set(rows.map(r=>[r.caseId,r.base,r.moved].join(':'))).size,rows.length);
-fs.writeFileSync(output,JSON.stringify({status:'PASS',rows,workers:plan.workers,
-  comparisons:rows.length,collections:results.filter(x=>!x.controls).reduce((n,r)=>n+r.collections+r.internalCollections,0),
+const failures=results.flatMap(x=>[
+  ...(x.status==='FAIL' ? [{base:x.base,controls:x.controls,error:x.error}] : []),
+  ...(x.rows ?? []).filter(r=>r.status==='FAIL').map(r=>({...r,base:x.base,controls:x.controls}))]);
+const complete=rows.length===plan.indices.length*4 &&
+  new Set(rows.map(r=>[r.caseId,r.base,r.moved].join(':'))).size===rows.length;
+const status=complete && failures.length===0 ? 'PASS' : 'FAIL';
+fs.writeFileSync(output,JSON.stringify({status,rows,workers:plan.workers,failures,complete,
+  comparisons:rows.filter(r=>r.status!=='FAIL').length,collections:results.filter(x=>!x.controls).reduce((n,r)=>n+r.collections+r.internalCollections,0),
   controls:results.filter(x=>x.controls)},null,2)+'\n');
+if(status!=='PASS')process.exitCode=1;

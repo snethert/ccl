@@ -45,7 +45,9 @@ def run(out, source_provider=None, prelude='', baseline_sources=None):
         # unchanged complete form needs no reread to establish equivalence.
         # Keep its original conditional prefix and replace only that proven
         # identical form on both sides. Every changed form remains intact.
-        for form in top_forms(old, nested=True):
+        # Remove the largest identical form first. Replacing its children
+        # first can leave an unchanged #$ atom stranded in the parent.
+        for form in sorted(top_forms(old, nested=True), key=len, reverse=True):
             if ('#_' in form or '#$' in form) and old.count(form)==body.count(form)>0:
                 digest=__import__('hashlib').sha256(form.encode()).hexdigest()
                 omitted.append(dict(file=name,sha256=digest,bytes=len(form.encode()),occurrences=old.count(form)))

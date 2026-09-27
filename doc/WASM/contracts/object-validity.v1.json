@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "consumer": "CCL::BOGUS-THING-P, called by the ordinary printer",
+  "capability": "process operation 14: object word, NIL -> T or NIL",
+  "owner": "The current single-Worker CollectorOwner; no serialized host address",
+  "accepted": [
+    "D1 fixnums, fulltag-3 immediates and the canonical NIL/T objects",
+    "Exact cons or supported misc-object starts in the active allocated heap or enumerable image regions, with matching lowtag and complete aligned extent",
+    "Complete six-cell callable records within the published live value stack"
+  ],
+  "rejected": [
+    "Other immediate tags, unowned pointers, inactive semispaces, unallocated capacity and image root storage",
+    "Interior addresses, mismatched pointer tags, unsupported object headers and truncated extents"
+  ],
+  "invariants": [
+    "The query does not allocate Lisp objects, collect, move roots or write Lisp memory",
+    "An invalid argument is examined without passing it through a collecting operation",
+    "Invalid owner metadata is a checked 11 failure, distinct from a false validity result",
+    "The query checks object identity, header shape and extent, not transitive field validity, hash-table invariants or native memory ownership"
+  ],
+  "cost": "Linear allocation walk up to the candidate object; repeated printing may repeat that walk. No performance equivalence with native area lookup is claimed.",
+  "native_antecedents": [
+    "level-1/x86-threads-utils.lisp: VALID-HEADER-P and BOGUS-THING-P",
+    "runtime/wasm32/collector.c: D1 allocation spans and stack callable representation"
+  ]
+}

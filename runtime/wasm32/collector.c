@@ -233,6 +233,12 @@ EXPORT U collect(U config) {
     if(n!=3||(W)p+16>s->used||LOAD(p+4)!=0||(LOAD(p+8)!=0&&LOAD(p+8)!=4))return reject(s,BAD_OBJECT);
     scan=3;size=16;
    }
+   else if(tag==98){
+    /* Packages created by the target loader have the same eight tagged
+     * cells as packages in the cold image. Every cell is a strong edge. */
+    if(n!=8)return reject(s,BAD_OBJECT);
+    scan=8;size=36;
+   }
    else if(tag==66){if(n!=6)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(tag==50){if(n!=4&&n!=7)return reject(s,BAD_OBJECT);scan=n;size=4+(W)n*4;}
    else if(tag==82){if(n!=1)return reject(s,BAD_OBJECT);scan=0;size=8;}

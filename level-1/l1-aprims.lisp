@@ -1079,14 +1079,11 @@ terminate the list"
 
 
 
-#+wasm32-target
-(defvar *wasm-toplevel-function* nil)
-
 (defun %set-toplevel (&optional (fun nil fun-p))
   ;(setq fun (require-type fun '(or symbol function)))
   #+wasm32-target
-  (prog1 *wasm-toplevel-function*
-    (when fun-p (setq *wasm-toplevel-function* fun)))
+  (prog1 %toplevel-function%
+    (when fun-p (setq %toplevel-function% fun)))
   #-wasm32-target
   (let* ((tcr (%current-tcr)))
     (prog1 (%tcr-toplevel-function tcr)

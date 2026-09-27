@@ -7,7 +7,7 @@
   },
   "decisions": {
     "image": "READY is reached by cross-loading level-0 into the bootstrap heap and code set and loading level-1 as precompiled bundles through the read-only namespace on the target; CLOS is built on the target by loading l1-clos-boot and l1-clos. The projected image of R1-R13 is qualification scaffolding for the accepted lowerings and source branches and is retired as the boot executes what it covers. (Amended 2026-09-24; original text in amendments[0].)",
-    "coverage": "Measure executed original definitions; enumerate target replacements separately, capped at 25. No 100-percent admission requirement. The selected READY dependency closure must still be complete and installed; missing dependencies cannot be hidden by coverage totals.",
+    "coverage": "Measure executed original definitions; enumerate target replacements separately, without a numerical cap. No 100-percent admission requirement. The selected READY dependency closure must still be complete and installed; missing dependencies cannot be hidden by coverage totals.",
     "conditions": "Class mode is mandatory for the READY profile. The legacy condition-mask path is excluded from Stage 1 READY acceptance; historical evidence remains valid in its original scope.",
     "concurrency": "One Lisp Worker, scheduler disabled. Multi-worker scheduling remains a later profile. POSIX and terminate-when-unreachable remain excluded.",
     "dispatch": "Uncached standard GF dispatch is admitted at READY without a timing claim. Dispatch caching follows READY.",
@@ -15,7 +15,7 @@
     "startup_boundary": "Working host-backed stdout/stderr; startup-ccl runs in the initial process; interactive listener and in-image compiler follow READY."
   },
   "implementation_choices": {
-    "replacement_cap": 25,
+    "replacement_cap": null,
     "coverage_floor": "Retain the currently qualified 550 executed originals (515 with non-NIL witnesses) as a non-regression baseline. This is an author-selected validation floor, not an additional quotation from Steve. READY-selected initialization and callable dependencies require their own actual execution and binding evidence.",
     "projection_limits": "Name the selected classes, methods, globals, closures and modules; preserve identity and reject an unresolved required link. Native caches and native addresses are not transferable state.",
     "pending_review": "class-image at ce865269 remains unreviewed. This decision does not accept or integrate that implementation."
@@ -85,6 +85,29 @@
         "Host-backed output must support ordinary stream operations and flushing.",
         "The initial process runs startup-ccl without creating a listener thread.",
         "Interactive listener and in-image EVAL/COMPILE/COMPILE-FILE are deferred until after READY."
+      ]
+    },
+    {
+      "id": "STAGE1-READY-DECISION-A3",
+      "date": "2026-09-26",
+      "authorization": {
+        "speaker": "Steve",
+        "quote": "The 25 cap is arbitrary. Ignore."
+      },
+      "changed": [
+        "decisions.coverage",
+        "implementation_choices.replacement_cap",
+        "S1-LL15-c",
+        "S1-LL15-d"
+      ],
+      "superseded": {
+        "coverage": "Measure executed original definitions; enumerate target replacements separately, capped at 25. No 100-percent admission requirement. The selected READY dependency closure must still be complete and installed; missing dependencies cannot be hidden by coverage totals.",
+        "replacement_cap": 25
+      },
+      "notes": [
+        "Target replacements remain named and attributed separately from executed originals.",
+        "This removes the numerical replacement cap, not dependency closure, native comparison, refusal evidence or adversarial review requirements.",
+        "The cap statements in A1 and NSL-P2 P5-2 are superseded."
       ]
     }
   ]

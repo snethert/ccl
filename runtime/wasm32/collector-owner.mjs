@@ -29,6 +29,68 @@ export class CollectorOwner {
   return Object.freeze({boundary:this.#scalarBoundary,bounds:Object.freeze(bounds)});
  }
  get collectionCount(){const count=this.#t(204);need(count<=536870911,'collection count');return count;}
+ #inhibitionState(){
+  const region=this.#layout.regions.find(r=>r.role==='runtime-globals');
+  if(!region)return {region:null,depth:0,pending:false};
+  need(this.#get(region.start)===1&&this.#get(region.start+4)<=536870911&&
+       this.#get(region.start+8)<=1&&this.#get(region.start+12)===0&&
+       (this.#get(region.start+4)!==0||this.#get(region.start+8)===0),'inhibition state');
+  return {region,depth:this.#get(region.start+4),pending:this.#get(region.start+8)===1};
+ }
+ get collectionInhibition(){return this.#inhibitionState().depth;}
+ get collectionPending(){return this.#inhibitionState().pending;}
+ inhibitCollection(delta){
+  this.#requireBoundary();need(delta===1||delta===-1,'inhibition operation');
+  const state=this.#inhibitionState();need(state.region,'runtime globals capability');
+  const depth=state.depth+delta;
+  need(depth>=0&&depth<=536870911,'inhibition depth');
+  if(delta===1&&state.depth===0){
+   // A lock can be taken before an allocation in native hash-table rehashing.
+   // Put the heap at the owned tail before inhibition, where it can grow
+   // without moving live objects or overwriting any embedding-owned region.
+   const active=this.#validateLive();
+   if(!this.#tailHeap(active))this.#relocateHeap(active.end-active.start);
+  }
+  this.#set(state.region.start+4,depth);
+  if(depth===0&&state.pending){
+   this.#set(state.region.start+8,0);this.collect();return 0;
+  }
+  return state.pending?-depth:depth;
+ }
+ #tailHeap(active){
+  const other=this.#spaces.find(r=>r!==active),end=this.view.byteLength;
+  return active.end===end||(active.end===other.start&&other.end===end);
+ }
+ #workspace(){
+  const scratch=this.#region('scratch');
+  const bytes=96+(this.#t(48)-this.#t(56))/8*20+this.#layout.logCapacity*12;
+  if(bytes>scratch.end-scratch.start){
+   const start=this.view.byteLength,end=start+align(Math.max(bytes,2*(scratch.end-scratch.start)),PAGE);
+   this.growMemory(end/PAGE);scratch.start=start;scratch.end=end;
+  }
+ }
+ #relocateHeap(capacity){
+  capacity=align(capacity,PAGE);
+  this.#workspace();
+  const start=this.view.byteLength,end=start+2*capacity;
+  need(end<=this.#layout.maximumPages*PAGE&&end<=0xffffffff,'heap growth maximum');
+  this.growMemory(end/PAGE);
+  const pair=[{name:'grown-a',start,end:start+capacity},{name:'grown-b',start:start+capacity,end}];
+  const moved=this.#copy(pair[0]);this.#spaces=pair;return moved;
+ }
+ #growInhibited(bytes){
+  const active=this.#validateLive();need(this.#tailHeap(active),'inhibited heap ownership');
+  const live=this.#t(48)-active.start;
+  const capacity=align(Math.max(2*(active.end-active.start),live+bytes),PAGE);
+  const limit=active.start+capacity,otherStart=Math.max(limit,this.view.byteLength),end=otherStart+capacity;
+  need(end<=this.#layout.maximumPages*PAGE&&end<=0xffffffff,'heap growth maximum');
+  this.growMemory(end/PAGE);
+  active.end=limit;
+  this.#spaces=[active,{name:active.name==='grown-a'?'grown-b':'grown-a',start:otherStart,end}];
+  this.#set(this.#layout.tcr+52,limit);
+  this.#set(this.#inhibitionState().region.start+8,1);
+  return {collected:false,grown:true,deferred:true};
+ }
  get tcr(){return this.#layout.tcr;}
  get view(){this.#refresh();return this.#view;}
  get viewEpoch(){this.#refresh();return this.#epoch;}
@@ -47,7 +109,7 @@ export class CollectorOwner {
   }
   const all=[...l.regions,...l.spaces];for(let i=0;i<all.length;i++)for(let j=0;j<i;j++)need(!overlaps(all[i],all[j]),'regions overlap');
   for(const role of ['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings'])this.#region(role);
-  need(l.regions.every(r=>['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings','image'].includes(r.role)),'region role');
+  need(l.regions.every(r=>['tcr','vstack','temp','control','c-stack','scratch','root-list','external','bindings','image','runtime-globals'].includes(r.role)),'region role');
   need(integer(l.tcr)&&l.tcr%16===0&&contains(this.#region('tcr'),l.tcr,256),'TCR extent');
   need(this.#region('scratch').start%16===0&&this.#region('scratch').end-this.#region('scratch').start>=96,'scratch header');
   need(this.#region('c-stack').start===1048576&&this.#region('c-stack').end===1114112,'compiled C stack');
@@ -57,6 +119,10 @@ export class CollectorOwner {
   const seen=new Set();for(const g of l.groups)for(const p of g.slots){
    need(integer(p)&&p%4===0&&contains(this.#region('external'),p,4)&&!seen.has(p),'external root slot');seen.add(p);
   }
+  const globals=l.regions.filter(r=>r.role==='runtime-globals');
+  need(globals.length<=1&&globals.every(r=>r.start%16===0&&r.end-r.start===16),'runtime globals extent');
+  const inhibition=this.#inhibitionState();
+  need(inhibition.depth===0&&!inhibition.pending,'fresh inhibition state');
   // The real distinguished objects, not just their values, have reserved homes.
   const images=l.regions.filter(r=>r.role==='image');
   need(images.some(r=>contains(r,NIL-1,8))&&images.some(r=>contains(r,T-6,32)),'canonical object ownership');
@@ -136,6 +202,51 @@ export class CollectorOwner {
     slots.forEach(p=>this.#set(p,NIL));active=false;}
   });
  }
+ // Printer validity is an ownership query, not a collection or a snapshot:
+ // even a malformed argument must never enter the collector's root graph.
+ validObject(word){
+  this.#requireBoundary();need(integer(word),'object word');
+  const active=this.#validateLive(),tag=word%8;
+  if(word%4===0||tag===3||word===NIL||word===T)return true;
+  if(tag!==1&&tag!==6)return false;
+  const base=word-tag;
+  const regions=this.#layout.regions.filter(r=>r.role==='image'&&r.enumerable!==false);
+  regions.push({start:active.start,end:this.#t(48)});
+  const region=regions.find(r=>contains(r,base));
+  if(!region){
+   // The emitter also constructs nonescaping callable records on the value
+   // stack. These have the same six-cell shape recognized by collector.c.
+   const v=this.#region('vstack'),top=this.#t(64);
+   need(top>=v.start+8&&top<=v.end,'value-stack frontier');
+   return tag===6&&base>=v.start+8&&base+32<=top&&this.#get(base)===1578;
+  }
+  for(let p=region.start;p<=base;){
+   const h=this.#get(p),kind=h&255,n=h>>>8;let bytes=8,lowtag=1;
+   if(kind%8===2||kind%8===7){
+    lowtag=6;let raw;
+    if([10,26,58,106,114,122,250].includes(kind)||
+       (kind===42&&(n===6||n===7))||(kind===130&&n>=1)||
+       (kind===98&&n===8)||(kind===90&&n===3)||(kind===82&&n===1)||
+       (kind===66&&n===6)||(kind===50&&(n===4||n===7))||
+       (kind===234&&n>=5)||(kind===242&&n===5)||
+       (kind===74&&n>=16&&(n-14)%2===0))raw=n*4;
+    else if((kind===7&&n>0)||(kind===15&&n===1)||
+       ([23,71].includes(kind)&&n===3)||(kind===79&&n===5)||
+       [159,167,175,183,191].includes(kind))raw=n*4;
+    else if([199,207].includes(kind))raw=n;
+    else if([215,223].includes(kind))raw=n*2;
+    else if([231,239].includes(kind))raw=4+n*8;
+    else if(kind===247)raw=4+n*16;
+    else if(kind===255)raw=Math.ceil(n/8);
+    if(raw===undefined)return false;
+    bytes=align(4+raw,8);
+   }
+   if(p+bytes>region.end)return false;
+   if(p===base)return tag===lowtag;
+   p+=bytes;
+  }
+  return false;
+ }
  heapSnapshot(mask){
   this.#requireBoundary();need(integer(mask)&&mask<=3,'heap areas');
   const inventory=()=>{
@@ -172,13 +283,8 @@ export class CollectorOwner {
  #copy(destination){
   const {active,slots}=this.#validate(),scratch=this.#region('scratch'),list=this.#region('root-list');
   need(destination.start!==active.start&&destination.end<=this.view.byteLength,'destination');
-  // The collector reserves a worst-case object map and queue from the used
-  // heap extent, even when most of that extent is a single raw vector.
-  const workspace=96+(this.#t(48)-active.start)/8*20+this.#layout.logCapacity*12;
-  if(workspace>scratch.end-scratch.start){
-   const start=this.view.byteLength,end=start+align(Math.max(workspace,2*(scratch.end-scratch.start)),PAGE);
-   this.growMemory(end/PAGE);scratch.start=start;scratch.end=end;
-  }
+  // The collector reserves a worst-case object map and queue before copying.
+  this.#workspace();
   const count=this.collectionCount;need(count<536870911,'collection count exhausted');
   this.#busy=true;
   try{
@@ -193,7 +299,11 @@ export class CollectorOwner {
    return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),reclaimed:this.#get(scratch.start+92),rootSlots:slots.length};
   }finally{this.#busy=false;}
  }
- collect(){this.#requireBoundary();const active=this.#validateLive();return this.#copy(this.#spaces.find(r=>r!==active));}
+ collect(){
+  this.#requireBoundary();const active=this.#validateLive(),state=this.#inhibitionState();
+  if(state.depth){this.#set(state.region.start+8,1);return {deferred:true};}
+  return this.#copy(this.#spaces.find(r=>r!==active));
+ }
  growMemory(pages){
   this.#requireBoundary();this.#validate();need(integer(pages)&&pages>=this.view.byteLength/PAGE&&pages<=this.#layout.maximumPages,'growth maximum');
   const previous=this.view.byteLength/PAGE;
@@ -206,12 +316,10 @@ export class CollectorOwner {
   // checked before a fast assurance; collection re-inventories the live image.
   this.#validateLive();
   if(this.#t(52)-this.#t(48)>=bytes)return {collected:false,grown:false};
+  if(this.collectionInhibition)return this.#growInhibited(bytes);
   const collection=this.collect();if(this.#t(52)-this.#t(48)>=bytes)return {collected:true,grown:false,collection};
-  const live=this.#t(48)-this.#t(56),capacity=align(Math.max(2*(this.#t(52)-this.#t(56)),live+bytes),PAGE),start=this.view.byteLength;
-  const end=start+2*capacity;need(end<=this.#layout.maximumPages*PAGE&&end<=0xffffffff,'heap growth maximum');
-  this.growMemory(end/PAGE);
-  const pair=[{name:'grown-a',start,end:start+capacity},{name:'grown-b',start:start+capacity,end}];
-  const moved=this.#copy(pair[0]);this.#spaces=pair;
+  const live=this.#t(48)-this.#t(56),capacity=align(Math.max(2*(this.#t(52)-this.#t(56)),live+bytes),PAGE);
+  const moved=this.#relocateHeap(capacity);
   return {collected:true,grown:true,collection,moved};
  }
 }

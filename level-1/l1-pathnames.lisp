@@ -39,8 +39,11 @@
 
 (defloadvar *command-line-argument-list*
   #+wasm32-target
-  (loop for i below (%wasm-process-request 6 nil nil)
-        collect (%wasm-startup-string (+ i 2)))
+  ;; The application parser drops argv[0], as it does on native targets.
+  ;; The admitted image names the program in this embedding.
+  (cons *heap-image-name*
+        (loop for i below (%wasm-process-request 6 nil nil)
+              collect (%wasm-startup-string (+ i 2))))
   #-wasm32-target
   (let* ((argv (%null-ptr))
 	 (res ()))

@@ -14,7 +14,8 @@ export class ProcessReady extends Error {
   constructor() { super('Lisp startup completed'); }
 }
 
-export function processService({memory, configuration, startup, output, now = () => performance.now(), wait}) {
+export function processService({memory, configuration, startup, output, now = () => performance.now(), wait,
+  wallTime = () => Date.now(), calendar, cpuTime, collectionInhibition, objectValidity}) {
   const config = processConfiguration(configuration), origin = now();
   const need = (ok, why) => { if (!ok) throw Error('process service: ' + why); };
   need(Number.isFinite(origin) && typeof wait === 'function', 'CAPABILITIES');
@@ -96,6 +97,48 @@ export function processService({memory, configuration, startup, output, now = ()
         return word;
       }
       case 8: throw new ProcessReady();
+      case 14: {
+        need(typeof objectValidity === 'function', 'OBJECT_CAPABILITY');
+        need(get(args + 8) === 77825, 'OBJECT_ARGUMENTS');
+        const valid = objectValidity(get(args + 4));
+        need(typeof valid === 'boolean', 'OBJECT_RESULT');
+        return valid ? 77838 : 77825;
+      }
+      case 12: case 13: {
+        need(typeof collectionInhibition === 'function', 'COLLECTOR_CAPABILITY');
+        need(get(args + 4) === 77825 && get(args + 8) === 77825, 'COLLECTOR_ARGUMENTS');
+        const depth = collectionInhibition(fixnum(args) === 12 ? 1 : -1);
+        need(Number.isInteger(depth) && depth >= -536870911 && depth <= 536870911, 'COLLECTOR_RESULT');
+        return depth * 4;
+      }
+      case 9: case 10: case 11: {
+        const op = fixnum(args), word = get(args + 4), p = word - 6, count = op === 11 ? 4 : 2;
+        need(word % 8 === 6 && p >= 0 && p + 4 + 4 * count <= memory.buffer.byteLength &&
+          get(p) === count * 256 + 250, 'CLOCK_VECTOR');
+        let values;
+        if (op === 9) {
+          need(typeof wallTime === 'function', 'WALL_CLOCK_CAPABILITY');
+          const seconds = Math.floor(wallTime() / 1000), days = Math.floor(seconds / 86400);
+          need(Number.isSafeInteger(seconds), 'WALL_CLOCK');
+          values = [days, seconds - days * 86400];
+        } else if (op === 10) {
+          need(typeof calendar === 'function', 'CALENDAR_CAPABILITY');
+          const days = fixnum(p + 4), seconds = fixnum(p + 8);
+          need(seconds >= 0 && seconds < 86400, 'CALENDAR_SECONDS');
+          const value = calendar(days * 86400 + seconds);
+          need(value && Number.isInteger(value.minutesWest) && Math.abs(value.minutesWest) <= 1440 &&
+            typeof value.daylight === 'boolean', 'CALENDAR_RESULT');
+          values = [value.minutesWest, Number(value.daylight)];
+        } else {
+          need(typeof cpuTime === 'function', 'CPU_CAPABILITY');
+          const value = cpuTime();
+          need(value && [value.user, value.system].every(n => Number.isSafeInteger(n) && n >= 0), 'CPU_RESULT');
+          values = [value.user, value.system].flatMap(n => [Math.floor(n / 1000000), n % 1000000]);
+        }
+        need(values.every(n => Number.isInteger(n) && n >= -536870912 && n <= 536870911), 'CLOCK_RANGE');
+        values.forEach((n, i) => put(p + 4 + 4 * i, n * 4));
+        return 77825;
+      }
       default: throw Error('process service: OPERATION');
     }
   };

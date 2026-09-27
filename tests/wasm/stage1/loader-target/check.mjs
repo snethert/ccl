@@ -174,12 +174,80 @@ function keywordFunction(name) {
   [1578, code * 4, N, 4, arity, debug, pool, 0].forEach((v, i) => put(fn + i * 4, v));
   const call = args => {
     call.words = args.map(v => encode(v));
-    call.words.forEach((v, i) => put(root + 8 + 4 * i, v));
-    return env.table.get(slots[unit.root])(fn + 6, args.length);
+    return call.raw(call.words);
+  };
+  call.raw = words => {
+    words.forEach((v, i) => put(root + 8 + 4 * i, v));
+    return env.table.get(slots[unit.root])(fn + 6, words.length);
   };
   return call;
 }
 const ordinaryKeys = keywordFunction('TARGET-LOADER-ORDINARY-KEYS');
+const returnValues = keywordFunction('TARGET-LOADER-VALUES');
+const returnList = keywordFunction('TARGET-LOADER-VALUES-LIST');
+const valuesCases = read('values-native.json');
+put(tcr + 124, root + 8328); // A 32-value caller result area.
+for (const [input, result] of valuesCases) {
+  const args = input ?? [], expected = result ?? [];
+  let returned;
+  try { returned = returnValues(args); }
+  catch (e) { throw Error('VALUES with ' + args.length + ' arguments: ' +
+    (e.is?.(env.call_error) ? 'checked ' + e.getArg(env.call_error, 0) : String(e))); }
+  const [first, count] = returned;
+  assert.equal(count, expected.length);
+  const words = expected.map(x => x === null ? N : x * 4);
+  assert.equal(first, words[0] ?? N);
+  assert.deepEqual(words.map((_, i) => get(root + 8200 + i * 4)), words);
+}
+const valuesRefusals = [];
+for (const [name, list] of [['non-list', 68], ['unbacked cons', memory.buffer.byteLength + 1], ['improper tail', encode([1])],
+  ['one-cell cycle', encode([1])], ['three-cell cycle', encode([1, 2, 3])]]) {
+  if (name === 'improper tail') put(list - 1, 68);
+  if (name === 'one-cell cycle') put(list - 1, list);
+  if (name === 'three-cell cycle') put(get(get(list - 1) - 1) - 1, list);
+  const before = new Uint8Array(memory.buffer, root + 8200, 128).slice();
+  assert.throws(() => returnList.raw([list]), e => e.is?.(env.call_error) && e.getArg(env.call_error, 0) === 5);
+  assert.deepEqual(new Uint8Array(memory.buffer, root + 8200, 128), before);
+  valuesRefusals.push(name);
+}
+put(tcr + 124, root + 8264);
+const tooMany = encode(Array.from({length: 32}, (_, i) => i));
+const priorValues = new Uint8Array(memory.buffer, root + 8200, 64).slice();
+assert.throws(() => returnList.raw([tooMany]), e => e.is?.(env.call_error) && e.getArg(env.call_error, 0) === 3);
+assert.deepEqual(new Uint8Array(memory.buffer, root + 8200, 64), priorValues);
+valuesRefusals.push('caller result capacity');
+const assq = keywordFunction('TARGET-LOADER-ASSQ');
+const assqCases = read('assq-native.json');
+for (const [args, expected] of assqCases) {
+  const before = [get(tcr + 48), get(tcr + 52)];
+  if (expected === 'TYPE-ERROR') {
+    assert.throws(() => assq(args), e => e.is?.(env.type_error),
+      'native ASSQ compiler macro uses the type-error channel');
+  } else {
+    const [value, count] = assq(args);
+    assert.equal(count, 1);
+    let cursor = assq.words[1], found = N;
+    while (cursor !== N) {
+      const pair = get(cursor + 3);
+      if (pair !== N && get(pair + 3) === assq.words[0]) { found = pair; break; }
+      cursor = get(cursor - 1);
+    }
+    assert.equal(value, found, 'ASSQ returns the original pair');
+    assert.deepEqual(found === N ? null : [get(found + 3) === N ? null : get(found + 3) >> 2,
+      get(get(found - 1) + 3) >> 2], expected);
+  }
+  assert.deepEqual([get(tcr + 48), get(tcr + 52)], before, 'ASSQ does not allocate');
+}
+const badCons = memory.buffer.byteLength + 1;
+const badPairList = encode([null]);
+put(badPairList + 3, badCons);
+for (const list of [badCons, badPairList]) {
+  const before = [get(tcr + 48), get(tcr + 52), get(badPairList + 3)];
+  assert.throws(() => assq.raw([4, list]),
+    error => error.is?.(env.call_error) && error.getArg(env.call_error, 0) === 4,
+    'ASSQ checks the extent of both the list spine and its pair');
+  assert.deepEqual([get(tcr + 48), get(tcr + 52), get(badPairList + 3)], before);
+}
 const methodKeys = keywordFunction('TARGET-LOADER-METHOD-KEYS');
 const amount = {package: 'KEYWORD', symbol: 'AMOUNT'}, other = {package: 'KEYWORD', symbol: 'OTHER'};
 const keywordResults = [ordinaryKeys([40, amount, 2])[0] >> 2,
@@ -225,10 +293,57 @@ for (const [args, expected] of vectorCases) {
   assert.equal(get(root + 8204), encode(expected[1]));
 }
 const resetBinding = keywordFunction('TARGET-LOADER-RESET-BINDING');
+const earlyError = keywordFunction('TARGET-LOADER-EARLY-ERROR');
+assert.equal(get(tcr + 192), 0);
+assert.throws(() => earlyError([17]),
+  error => error.is?.(env.call_error) && error.getArg(env.call_error, 0) === 5,
+  'early fault preserved with a handler bound and no Lisp condition system');
+const structureInit = keywordFunction('TARGET-LOADER-STRUCTURE-INIT');
+const structureCases = read('structure-init-native.json');
+for (const [args, expected] of structureCases) {
+  const [value, count] = structureInit(args);
+  assert.equal(count, expected.length);
+  assert.equal(value, encode(expected[0]));
+  assert.deepEqual(expected.map((_, i) => get(root + 8200 + i * 4)), expected.map(x => encode(x)));
+}
+const allocationBefore = [get(tcr + 48), get(tcr + 52)];
+assert.throws(() => structureInit([0, null, 1]),
+  error => error.is?.(env.call_error) && error.getArg(env.call_error, 0) === 6,
+  'an istruct requires its type-name slot');
+assert.deepEqual([get(tcr + 48), get(tcr + 52)], allocationBefore,
+  'empty istruct refusal preserves allocation state');
 assert.equal(resetBinding([99])[1], 3);
 const resetValues = [0, 1, 2].map(i => get(root + 8200 + i * 4) >> 2);
 assert.deepEqual(resetValues, read('reset-binding-native.json'));
 assert.equal(get(tcr + 112), 0);
+const resetSymbol = keywordFunction('TARGET-LOADER-RESET-SYMBOL');
+const resetTarget = encode({package: 'CCL', symbol: '*RESET-REFUSAL-TARGET*'});
+put(resetTarget + 22, 4);
+const bindingHead = root + 20008, bindingOlder = bindingHead - 64;
+const bindingRefusals = [];
+for (const [name, corrupt] of [
+  ['unaligned link', () => put(tcr + 112, bindingHead + 4)],
+  ['below stack', () => put(tcr + 112, root - 8)],
+  ['beyond stack', () => put(tcr + 112, root + 32760)],
+  ['unbacked record', () => { put(tcr + 72, memory.buffer.byteLength + 32); put(tcr + 112, memory.buffer.byteLength); }],
+  ['record magic', () => put(bindingHead + 24, 0)],
+  ['self link', () => put(bindingHead, bindingHead)],
+  ['ascending link', () => put(bindingHead, bindingHead + 32)],
+  ['older record invalid before any store', () => put(bindingOlder + 24, 0)]
+]) {
+  for (const [p, next] of [[bindingHead, bindingOlder], [bindingOlder, 0]])
+    [next, 4, 0, 0, 0, 40, 1112425521, 0].forEach((v, i) => put(p + i * 4, v));
+  put(resetTarget + 2, 40); put(tcr + 112, bindingHead);
+  corrupt();
+  const before = {value: get(resetTarget + 2), link: get(tcr + 112), allocation: get(tcr + 48),
+    records: new Uint8Array(memory.buffer, bindingOlder, 96).slice()};
+  assert.throws(() => resetSymbol.raw([resetTarget, 396]),
+    e => e.is?.(env.call_error) && [11, 2].includes(e.getArg(env.call_error, 0)), name);
+  assert.deepEqual({value: get(resetTarget + 2), link: get(tcr + 112), allocation: get(tcr + 48),
+    records: new Uint8Array(memory.buffer, bindingOlder, 96).slice()}, before, name + ' preserves bindings');
+  put(tcr + 112, 0); put(tcr + 72, root + 32776);
+  bindingRefusals.push(name);
+}
 const nested = units.find(u => u.modules.length > 1);
 assert(nested, 'nested code graph');
 const nestedSymbols = Array.from({length: nested.symbol_count}, (_, i) => symbols[i % symbols.length]);
@@ -243,14 +358,23 @@ for (const id of nested.modules) {
 refuses('occupied', () => admitTargetBundle(options), /CODE_OCCUPIED/);
 const report = {status: 'PASS', compiledModules: rows.length, installedUnits: session.installed(),
   result: 42, extremaNativeMatches: extremaCases.length, keywordNativeMatches: keywordResults.length,
+  assqNativeMatches: assqCases.length,
+  valuesNativeMatches: valuesCases.length,
+  valuesRefusals,
+  assqExtentRefusals: 2,
   typeMemberNativeMatches: typeMemberResults.length,
   requireNativeMatches: requireCases.length,
   vectorInitializationNativeMatches: vectorCases.length,
+  structureInitializationNativeMatches: structureCases.length,
+  emptyIstructRefused: true,
+  earlyErrorPreserved: true,
+  bindingRefusals,
   nestedBindingNativeMatch: resetValues,
   codeId: code, slot: slots[unit.root], controls, targetLoadedFiles: 0, boot0: false,
   inputs: {bundle: digest, runner: sha256(fs.readFileSync(new URL(import.meta.url))),
     adapter: sha256(fs.readFileSync(out + '/target-code-adapter.wasm')),
     native: sha256(fs.readFileSync(out + '/extrema-native.json')),
+    valuesNative: sha256(fs.readFileSync(out + '/values-native.json')),
     pools: sha256(fs.readFileSync(out + '/fixture-pools.json'))}};
 fs.writeFileSync(out + '/check.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report));

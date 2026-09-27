@@ -77,23 +77,33 @@ def cold_session(stage):
               phases=[c.read(output/(p+'-phase.json')) for p in ('compile','oracle')]))
 
 
-def build(out,cache,workers=4,cold=False):
+def build(out,cache,workers=4,cold=False,single_copy=False):
     start=time.monotonic();identity=environment();key=c.digest(identity)
-    hit=c.cache_read(cache,'session',key)
-    rebuilt=hit is None or cold
-    if rebuilt:
-        with c.cache_write(cache,'session',key) as stage:
-            cold_session(stage)
-            c.save(stage/'environment.json',identity)
+    if single_copy:
+        if not cold:raise ValueError('single-copy requires a fresh cold build')
+        # A full corpus can occupy several GiB. Its leased workspace already
+        # owns the result; publishing and copying a second session exhausts
+        # the shared RAM disk without providing reuse for this cold run.
+        out=Path(out);out.mkdir();rebuilt=True
+        cold_session(out)
+        c.save(out/'environment.json',identity)
+    else:
         hit=c.cache_read(cache,'session',key)
-    out=Path(out);out.mkdir()
-    shutil.copytree(hit,out,dirs_exist_ok=True)
-    (out/'cache-manifest.json').unlink()
+        rebuilt=hit is None or cold
+        if rebuilt:
+            with c.cache_write(cache,'session',key) as stage:
+                cold_session(stage)
+                c.save(stage/'environment.json',identity)
+            hit=c.cache_read(cache,'session',key)
+        out=Path(out);out.mkdir()
+        shutil.copytree(hit,out,dirs_exist_ok=True)
+        (out/'cache-manifest.json').unlink()
     paths=sorted((out/'compiled').glob('*.wat'))
     with ThreadPoolExecutor(max_workers=workers) as pool:
         assembly=list(pool.map(lambda p:c.assemble(p,cache,cold),paths))
     c.save(out/'assembly.json',dict(workers=workers,rows=assembly))
     c.save(out/'build-invocation.json',dict(status='PASS',key=key,cache_hit=not rebuilt,
+           session_cache_published=not single_copy,
            compiler_processes=int(rebuilt),oracle_processes=int(rebuilt),oracle_rebuilt=rebuilt,
            wabt_processes=sum(r['rebuilt'] for r in assembly),workers=workers,
            seconds=time.monotonic()-start,environment=identity))

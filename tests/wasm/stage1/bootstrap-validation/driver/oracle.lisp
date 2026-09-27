@@ -159,7 +159,9 @@
         (if single fn
             (lambda (&rest args)
               (apply fn (append args (list (ccl::%double-float 0)))))))))
-  (when (member name '(eql ccl::fulltag ccl::lisptag ccl::typecode ccl::assq))
+  ;; Native assembly entries have no Lisp source body to recompile.
+  (when (member name '(eql ccl::fulltag ccl::lisptag ccl::typecode ccl::assq
+                       ccl::%address-of))
     (return-from core-native-function (fdefinition name)))
   (or (gethash name *core-native-functions*)
       (let ((form (gethash name *core-native-forms*)))
@@ -377,4 +379,3 @@
         (assert (= native 8))
         (format s "{\"name\":\"core_node_size\",\"native\":[~d],\"target\":[~d]}" native wasm32::node-size)))
     (frontend-write-owners out)))
-

@@ -36,7 +36,9 @@ def runtime(out, reuse):
            binaries={p.name: c.sha(p) for p in out.glob('*.wasm')}))
 
 
-def run(out, boot0=False, level1=False, reuse=None, modules=None):
+def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None):
+    if compile_only and not level1:
+        raise ValueError('--compile-only requires --level1')
     out.mkdir(parents=True, exist_ok=True)
     kernel = out / 'dx86cl64'
     shutil.copyfile(c.KERNEL, kernel)
@@ -56,6 +58,14 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None):
         fixture = source / HERE.relative_to(c.ROOT)
         fixture.mkdir(parents=True)
         shutil.copyfile(HERE / 'smoke.lisp', fixture / 'smoke.lisp')
+        if postimage:
+            # Bind an already materialized image before compiling this new file.
+            c.save(out / 'postimage-parent.json', dict(
+                image=str(postimage), manifest=c.sha(postimage / 'boot/artifacts/manifest.json'),
+                sources={name: c.sha(HERE / name) for name in
+                         ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp')}))
+            for name in ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp'):
+                shutil.copyfile(HERE / name, fixture / name)
         env = dict(os.environ, CCL_DEFAULT_DIRECTORY=str(source) + '/', LOADER_OUTPUT=str(out) + '/')
         if modules:
             env['LOADER_MODULES'] = '(' + ' '.join(modules.split(',')) + ')'
@@ -64,14 +74,17 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None):
             '(load "ccl:lib;compile-ccl.lisp") (load "ccl:xdump;faslenv.lisp") '
             '(load (compile-file "ccl:lib;nfcomp.lisp" :output-file "' + str(out / 'nfcomp.dx64fsl') + '")))',
             '--load', HERE.parent / 'registration/load.lisp']
-        c.command(prefix + ['--load', HERE / ('bundles.lisp' if level1 else 'boot0.lisp' if boot0 else 'compile.lisp')],
+        c.command(prefix + ['--load', HERE / ('postimage-compile.lisp' if postimage else 'bundles.lisp' if level1 else 'boot0.lisp' if boot0 else 'compile.lisp')],
                   out / 'compile.log', env, cwd=source, timeout=600)
     c.save(out / 'policy.json', c.read(c.STORE / '2026-09-20-stage1-materialization-r1/execution/policy.json'))
     c.save(out / 'versions.json', dict(abi=dict(name='B', version=1),
         layout=dict(version=1, sha256=c.sha(c.ROOT / 'doc/WASM/contracts/wasm32-layout.v1.json'))))
     shutil.copyfile(HERE.parent / 'loader/d2.mjs', out / 'd2.mjs')
     (out / 'runtime').symlink_to(c.ROOT / 'runtime/wasm32', target_is_directory=True)
-    if level1:
+    if level1 or postimage:
+        if compile_only:
+            print('Level-1 target compilation recorded:', out)
+            return
         c.command([c.NODE, HERE / 'bundles.mjs', out, *([reuse] if reuse else [])], out / 'materialize.log', timeout=1800)
         print('Level-1 target bundles materialized:', out)
         return
@@ -95,4 +108,6 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None):
 if __name__ == '__main__':
     reuse = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--reuse=')), None)
     modules = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--modules=')), None)
-    run(Path(sys.argv[1]).resolve(), '--boot0' in sys.argv[2:], '--level1' in sys.argv[2:], reuse, modules)
+    postimage = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[2:] if a.startswith('--postimage=')), None)
+    run(Path(sys.argv[1]).resolve(), '--boot0' in sys.argv[2:], '--level1' in sys.argv[2:], reuse, modules,
+        '--compile-only' in sys.argv[2:], postimage)

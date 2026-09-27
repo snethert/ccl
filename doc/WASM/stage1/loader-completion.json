@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "id": "WASM32-LOADER-COMPLETION",
+  "date": "2026-09-27",
+  "parent": "ffbdb2e7d4bc96131c62184c8c7e689a95869478",
+  "status": "READY",
+  "profile": "STAGE1-READY-DECISION-A2",
+  "evidence_pack": "ccl-evidence/2026-09-26-stage1-loader-completion-r1",
+  "ready_report_sha256": "b979da0f9a6b411c306a2985b2478a23ddc0d13749cdd16c50f12529af08acca",
+  "compiler_corpus_report_sha256": "2ed231426c824cb69092a30e7ebe00b4d84a1061e022fe531f1a91e81ebe27b8",
+  "native_qualification_sha256": "46cde539e26e529f2b33c749e423909a719efdd46e3ad9f4405d06c9d65fbd26",
+  "reader_qualification_sha256": "0a30c7a754a117519e7dc49531b8ecfcdc67f66df6788c5d2e9c981b5fa63b85",
+  "review": {
+    "json_sha256": "1451c39907202f4e61dd7404a48663cf9cfe7323836646c4188ec05a564d89c5",
+    "markdown_sha256": "7ba3f0bf01af3569b0ad349a1e29e890ecb1697e02e900fbbfbd8ea69f48dbce"
+  },
+  "review_disposition": "REVIEWED_NO_BLOCKERS_FOR_DECISION_A2",
+  "runtime_bundles_compiled": 82,
+  "completed_runtime_loads_per_worker": 81,
+  "postimage_loads_per_worker": 2,
+  "fresh_workers": 2,
+  "compiler_comparisons": 26204,
+  "native_tests": 21843,
+  "native_fasl_comparisons": 164,
+  "reader_comparisons": 765,
+  "reader_profiles": 17,
+  "ledger_acceptance": false,
+  "scope": "Review supports this operational one-Worker LOADER/READY deliverable. It does not award broader Stage 1 ledger acceptance or all-callable-path coverage."
+}

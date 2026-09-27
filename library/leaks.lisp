@@ -109,6 +109,8 @@
     res))
 
 ;; Return true if P is heap-consed
+;;; Native area addresses and LFUN layout are outside the Wasm runtime profile.
+#-wasm32-target
 (defun pointer-in-some-dynamic-area-p (p)
  (block found
    (do-gc-areas (a)
@@ -118,6 +120,8 @@
 
 ;; Find all transitive referencers to any object in the list
 ;; Returns a hash table with the references as keys.
+;;; Native area addresses and LFUN layout are outside the Wasm runtime profile.
+#-wasm32-target
 (defun transitive-referencers (list-of-objects &key area (verbose t))
   (let ((found (make-hash-table :test 'eq))
         (objects (if (atom list-of-objects) (list list-of-objects) list-of-objects)))
@@ -424,6 +428,8 @@ int keepcost
 
 ) ;; end of linux-only code
 
+;;; Native area addresses and LFUN layout are outside the Wasm runtime profile.
+#-wasm32-target
 (defun get-allocation-sentinel (&key (gc-first t))
   ;; Return the object with the highest address that can be guaranteed to be at a lower
   ;; address than any newer objects.

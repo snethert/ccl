@@ -85,6 +85,10 @@
 ;File or directory Manipulations
 
 (defun unix-rename (old-name new-name)
+  #+wasm32-target
+  (progn (require-type old-name 'string) (require-type new-name 'string)
+    (values nil (- target::io-error-read-only-filesystem)))
+  #-wasm32-target
   (with-filename-cstrs ((old old-name)
 			(new new-name))
     #+windows-target
@@ -298,7 +302,8 @@
 	    (declare (fixnum result))
 	    (cond ((zerop result)
 		   (setq created-p t))
-		  ((and (= result #.(- #$EEXIST))
+		  ((and (= result #+wasm32-target (- target::io-error-file-exists)
+                                 #-wasm32-target #.(- #$EEXIST))
 			(null parent-kind))
 		   (return (ensure-no-trailing-slash parent-name)))
 		  (t (signal-file-error result parent-name)))))))))
@@ -387,6 +392,13 @@
     (mapcar #'cdr (sort (pairs) #'string< :key #'car))))
 
 (defun %new-directory-p (native-namestring follow-links result)
+  #+wasm32-target
+  (let ((path (%realpath native-namestring)))
+    (when (and path (eq (%unix-file-kind path (not follow-links)) :directory)
+               (not (member path (directory-result-directories-seen result) :test #'string=)))
+      (push path (directory-result-directories-seen result))
+      t))
+  #-wasm32-target
   (multiple-value-bind (win mode size mtime inode uid blocksize rmtime  gid dev)
       (%stat native-namestring (not follow-links))
     (declare (ignore size mtime uid blocksize rmtime gid #+windows-target inode #+windows-target dev))

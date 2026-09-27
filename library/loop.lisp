@@ -878,8 +878,14 @@ a LET-like macro, and a SETQ-like macro, which perform LOOP-style destructuring.
 (defun loop-warn (format-string &rest format-args)
   (warn "~?~%Current LOOP context:~{ ~S~}." format-string format-args (loop-context)))
 
-(pushnew '(loop-error . 0) ccl::*format-arg-functions* :test #'equal)
-(pushnew '(loop-warn . 0) ccl::*format-arg-functions* :test #'equal)
+;; NX's format-argument warnings belong to the in-image compiler. The Wasm
+;; READY profile loads LOOP's runtime definitions without that compiler.
+(#-wasm32-target pushnew #+wasm32-target progn
+ #-wasm32-target '(loop-error . 0) #-wasm32-target ccl::*format-arg-functions*
+ #-wasm32-target :test #-wasm32-target #'equal)
+(#-wasm32-target pushnew #+wasm32-target progn
+ #-wasm32-target '(loop-warn . 0) #-wasm32-target ccl::*format-arg-functions*
+ #-wasm32-target :test #-wasm32-target #'equal)
 
 
 (defun loop-check-data-type (specified-type required-type

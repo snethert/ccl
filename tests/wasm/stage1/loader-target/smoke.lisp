@@ -1,7 +1,23 @@
 (in-package "CCL")
 
+(defun target-loader-values (&rest values)
+  (declare (dynamic-extent values))
+  #+wasm32-target (%wasm-values-list values)
+  #-wasm32-target (values-list values))
+
+(defun target-loader-values-list (list)
+  #+wasm32-target (%wasm-values-list list)
+  #-wasm32-target (values-list list))
+
 (defun target-loader-add-seven (value)
   (+ value 7))
+
+(defun target-loader-assq (item alist)
+  (assq item alist))
+
+(defun target-loader-early-error (value)
+  (handler-case (car value)
+    (type-error () :caught)))
 
 (defun target-loader-extrema (first second)
   (values (min first second) (max first second)))
@@ -18,6 +34,13 @@
                   (3 (make-array size :initial-element 42)))))
     (values (svref vector 0) (svref vector (1- size)))))
 
+(defun target-loader-structure-init (size value kind)
+  (declare (fixnum size))
+  (let* ((tag (if (zerop kind) target::subtag-struct target::subtag-istruct))
+         (record (%alloc-misc size tag value)))
+    (values (%svref record 0) (%svref record (1- size))
+            (= (typecode record) tag))))
+
 (defun target-loader-require (kind value)
   (declare (optimize (safety 3)))
   (ecase kind
@@ -31,6 +54,10 @@
     (15 (require-s64 value)) (16 (require-u64 value))))
 
 (defvar *target-loader-reset-value*)
+(defun target-loader-reset-symbol (symbol new)
+  (#-wasm32-target %reset-outermost-binding
+   #+wasm32-target %wasm-reset-outermost-binding symbol new))
+
 (defun target-loader-reset-binding (new)
   (setq *target-loader-reset-value* 10)
   (let (inner outer)

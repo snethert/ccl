@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 import shutil
+import subprocess
 import time
 import common as c
 from prepare import prepare
@@ -56,7 +57,17 @@ def execute(out,workers=4,tier='full',parent=None,indices=None,reverse=False,con
                          next(i for i,r in enumerate(rows) if r['definition']=='CORE-GENERIC-READER-DISPATCH')]
     plan=dict(workers=workers,indices=selected,controls=controls,controlIndices=control_indices)
     c.save(out/'execution-plan.json',plan)
-    seconds=c.command([c.NODE,out/'parallel.mjs',out,out/'execution-plan.json',out/'parallel-results.json'],out/'execution.log',timeout=1200)
+    try:
+        seconds=c.command([c.NODE,out/'parallel.mjs',out,out/'execution-plan.json',out/'parallel-results.json'],out/'execution.log',timeout=1200)
+    except subprocess.CalledProcessError:
+        # Bind failed comparisons to their inputs too; a partial result can
+        # never be inherited as a passing regression record.
+        if (out/'parallel-results.json').exists():
+            fresh=c.read(out/'parallel-results.json')
+            c.save(out/'execution-failure.json', dict(status='FAIL', environment=env,
+                environment_key=env_key, native=c.sha(out/'compiled/native.json'),
+                ids=c.sha(out/'case-ids.json'), plan=plan, result=fresh))
+        raise
     fresh=c.read(out/'parallel-results.json');by_id={}
     for row in fresh['rows']:by_id.setdefault(row['caseId'],[]).append(row)
     cases=[]

@@ -85,10 +85,10 @@ def measure(base,probe,output):
         classes=startup['values'][0],generic_functions=gfs,
         graph_nodes=len(graph['nodes']),generic_population=startup['values'][1],
         projection='Selected dependency graph of the pinned native image; not all 581 native GFs or all native methods.'),
-      criteria=dict(replacement_cap=25,replacement_census_complete=False,
+      criteria=dict(replacement_cap=c.read(c.ROOT/'doc/WASM/stage1/ready-decision.json')['implementation_choices']['replacement_cap'],replacement_census_complete=False,
         ready_worklist_membership_complete=False,slot_credit=False,
         remaining=['Resolve the missing and indirect edges listed in closure.json.',
-                   'Finish native antecedent/branch attribution in replacements.json before asserting the 25 cap.',
+                   'Finish native antecedent/branch attribution in replacements.json; decision A3 removes the numerical cap.',
                    'Discharge callbacks.json against the completed dependency inventory.',
                    'Qualify the complete selected image interface, including unresolved closure metadata, before LL15 slot credit.']))
     assert result['original_executions']['count']==575

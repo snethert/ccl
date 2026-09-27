@@ -62,11 +62,27 @@
 (core-controls (ccl:getenv "POOL_OUTPUT"))
 (load (merge-pathnames "probes.lisp" *load-pathname*))
 (load (merge-pathnames "arch-probes.lisp" *load-pathname*))
+(defun validation-target-probes (forms)
+  ;; This selected-form fixture has no cold-load phase. FUNCTION-NAME needs
+  ;; L0-DEF's empty name table. Use the fixture's qualified EQ table owner;
+  ;; its selected hash functions do not implement the native weak table ABI.
+  (assert (= 1 (count-if (lambda (form)
+                         (and (eq (car form) 'defun)
+                              (eq (cadr form) 'core-condition-prepare)))
+                       forms)))
+  (mapcar (lambda (form)
+            (if (and (eq (car form) 'defun) (eq (cadr form) 'core-condition-prepare))
+              (append (subseq form 0 3)
+                      '((setq ccl::*lfun-names* (ccl::%wasm-make-class-table 4)))
+                      (cdddr form))
+              form)) forms))
 (let ((native-forms (append (core-probe-forms) (arch-probe-forms))))
   (call-with-target (lambda ()
                       (load (merge-pathnames "probes.lisp" *load-pathname*))
                       (load (merge-pathnames "arch-probes.lisp" *load-pathname*))))
-  (core-add-probes native-forms (cons '(defun core-collect () nil) (append (core-probe-forms) (arch-probe-forms)))))
+  (core-add-probes native-forms (cons '(defun core-collect () nil)
+                                    (validation-target-probes
+                                     (append (core-probe-forms) (arch-probe-forms))))))
 (load (merge-pathnames "os-probes.lisp" *load-pathname*))
 (let ((forms nil))
   (with-open-file (s (merge-pathnames "os-probes.lisp" *load-pathname*))

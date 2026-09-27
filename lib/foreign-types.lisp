@@ -1449,6 +1449,9 @@ result-type-specifer is :VOID or NIL"
   `(load-eep ,(eep.name eep)))
 
 
+;; Native addresses and shared-library containers are outside the Wasm FFI
+;; profile. Its foreign-type descriptors do not create these native objects.
+#-wasm32-target
 (defmethod print-object ((eep external-entry-point) out)
   (print-unreadable-object (eep out :type t :identity t)
     (format out "~s" (eep.name eep))
@@ -1481,6 +1484,7 @@ result-type-specifer is :VOID or NIL"
   (declare (ignore env))
   `(load-fv ,(fv.name fv) ',(fv.type fv)))
 
+#-wasm32-target
 (defmethod print-object ((fv foreign-variable) out)
   (print-unreadable-object (fv out :type t :identity t)
     (format out "~s" (fv.name fv))
@@ -1962,6 +1966,7 @@ result-type-specifer is :VOID or NIL"
     ftd)
   ))
 
+#-wasm32-target
 (defmethod make-load-form ((p macptr) &optional env)
   (declare (ignore env))
   (let* ((value (%ptr-to-int p)))
@@ -1971,7 +1976,5 @@ result-type-specifer is :VOID or NIL"
     (if (zerop value)
       '+null-ptr+
       `(%int-to-ptr ,value))))
-
-
 
 

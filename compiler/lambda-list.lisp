@@ -20,6 +20,7 @@
 
 ;;; Compiler functions needed elsewhere
 
+#-wasm32-target
 (defun %lfun-info-index (fn)
   (and (compiled-function-p fn)
        (let ((bits (lfun-bits fn)))
@@ -28,6 +29,14 @@
                (%i- (uvsize (function-to-function-vector fn))
                               (if (logbitp $lfbits-noname-bit bits) 2 3))))))
 (defun %lfun-info (fn)
+  #+wasm32-target
+  ;; D1 carries callable/debug metadata separately and currently emits no
+  ;; native LFUN information plist (the info bit is clear). Reject a claimed
+  ;; native plist instead of interpreting D1 fields as native immediates.
+  (when (and (compiled-function-p fn)
+             (logbitp $lfbits-info-bit (lfun-bits fn)))
+    (error "Native LFUN information is unavailable for ~s." fn))
+  #-wasm32-target
   (let* ((index (%lfun-info-index fn)))
     (if index (%svref (function-to-function-vector fn) index))))
 

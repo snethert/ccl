@@ -109,6 +109,8 @@
   (%set-toplevel #'(lambda ()
                      (setq *loading-file-source-file* nil
                            *loading-toplevel-location* nil)
-                     (toplevel-loop)))
+                     #-wasm32-target (toplevel-loop)
+                     #+wasm32-target
+                     (toplevel-function *application* (application-init-file *application*))))
   (set-user-environment t)
   (toplevel))

@@ -1,0 +1,7 @@
+(in-package "CCL")
+(assert (equal *loader-instance-state* '(:cold 0)))
+(setf (cadr *loader-instance-state*) 222)
+(defun loader-instance-b-result () (1+ (cadr *loader-instance-state*)))
+(assert (= (loader-instance-b-result) 223))
+(format t "~&LOADER-INSTANCE-B-PASS ~s ~d~%" *loader-instance-state* (loader-instance-b-result))
+(finish-output)

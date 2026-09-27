@@ -78,6 +78,7 @@
                                                   "ccl:compiler;lambda-list.lisp"
                                                   "ccl:compiler;nx-basic.lisp"
                                                   "ccl:compiler;nx1.lisp"))
+    (lambda-list      "ccl:bin;lambda-list"      ("ccl:compiler;lambda-list.lisp"))
     (nxenv            "ccl:bin;nxenv"            ("ccl:compiler;nxenv.lisp"))
     (nx2              "ccl:bin;nx2"              ("ccl:compiler;nx2.lisp"))
     (acode-rewrite    "ccl:bin;acode-rewrite"    ("ccl:compiler;acode-rewrite.lisp"))

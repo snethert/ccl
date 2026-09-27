@@ -3,6 +3,17 @@
 ;;; Like the native LAP entries, these remain callable through function cells.
 (in-package "CCL")
 
+;; Like the native X86 and ARM targets, Wasm has no Lisp nonvolatile
+;; register bank for CALL-CHECK-REGS to inspect. Its locals belong to the VM.
+(defun get-saved-register-values ()
+  (values))
+
+;; The native targets provide a callable VALUES LAP entry in addition to the
+;; compiler's VALUES operator. VALUES-LIST and indirect calls need that cell.
+(defun values (&rest values)
+  (declare (dynamic-extent values))
+  (%wasm-values-list values))
+
 ;;; Native XLOAD-NRS initializes this kernel-owned cell to NIL. Wasm has only
 ;;; T and NIL in its nil-relative area, so initialize the ordinary symbol here
 ;;; before cold functions can encounter a checked error.
@@ -18,6 +29,28 @@
 
 (defun %wasm-process-request (operation a b)
   (%wasm-host-process-request operation a b))
+
+;; Like native BOGUS-THING-P, consult the runtime's object areas before the
+;; printer dereferences an arbitrary word. This owner query cannot allocate.
+(defun bogus-thing-p (object)
+  (not (%wasm-process-request 14 object nil)))
+
+;; Native %ADDRESS-OF leaves fixnums alone and boxes every other raw word.
+;; Capture the address bits before arithmetic can allocate; movement cannot
+;; change the low tag. The result is a diagnostic integer, not a rooted address.
+(defun %address-of (object)
+  (if (fixnump object)
+    object
+    (logior (ash (strip-tag-to-fixnum object) 3) (fulltag object))))
+
+;;; The synchronous collector still must not move address-hashed keys while
+;;; native hash code holds a vector index. Inhibition belongs to this owner;
+;;; it is nested and never serialized as an image/kernel address.
+(defun %lock-gc-lock ()
+  (%wasm-process-request 12 nil nil))
+
+(defun %unlock-gc-lock ()
+  (%wasm-process-request 13 nil nil))
 
 (eval-when (:compile-toplevel :execute)
   ;; Class-table accessors below use HASHENV's native field definitions.

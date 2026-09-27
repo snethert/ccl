@@ -69,7 +69,7 @@ def census(closure):
     assert {r['module'] for r in rows} == {m['module'] for m in closure['modules']}
     assert len(rows) == len(closure['modules'])
     counts = Counter(row['classification'] for row in rows)
-    return dict(version=2, upstream=U1, cap=25, entries=rows,
+    return dict(version=2, upstream=U1, cap=read(ROOT / 'doc/WASM/stage1/ready-decision.json')['implementation_choices']['replacement_cap'], entries=rows,
                 reached_modules=len(rows), named_modules=sum(r['name'] is not None for r in rows),
                 source_unattributed=sum(not r['source'] for r in rows),
                 counts=dict(sorted(counts.items())), enumeration_complete=True,
@@ -78,7 +78,7 @@ def census(closure):
                            'CORE/scan entries. Native name matches identify candidate antecedents, not '
                            'unchanged bodies. Extracted methods, generated accessors, source branches '
                            'and backend substitutions still require form/route attribution before '
-                           'the high-level replacement cap can be decided.')
+                           'replacement attribution is complete (the numerical cap was rescinded).')
 
 
 def controls(closure):

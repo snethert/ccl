@@ -4,7 +4,7 @@ The edited source files intentionally gain Wasm reader branches. They are not
 unchanged-input byte-identity samples. PC/source maps are debugger metadata,
 identified only in the function-info slot selected by the native lfun bits.
 """
-import copy, hashlib, struct, sys
+import copy, hashlib, json, struct, sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/'registration'))
 from fasl import elements, symbol
@@ -12,6 +12,13 @@ from decoder import CompilerFasl
 
 def compare(before, after, source_before, source_after):
     notes=[]; maps=[]; code=[]; empty_info=[]
+    sources={'before':source_before,'after':source_after};active_files={}
+    def source_text(file,source,side):
+        catalog=sources[side]
+        if isinstance(catalog,str):return source
+        key=json.dumps(file,sort_keys=True)
+        assert key in catalog, 'unbound source file '+key
+        return catalog[key]
     def note(v,source,side,path):
         if v.get('subtag')!=54:return False
         x=v['values']
@@ -21,7 +28,8 @@ def compare(before, after, source_before, source_after):
         else:
             assert isinstance(span,dict) and set(span)=={'cons'},'source note encoding'
             start,end=span['cons']
-        assert 0<=start<=end<=len(source),'source note bounds'
+        source=source_text(x[2],source,side)
+        assert 0<=start<=end<=len(source),'source note bounds '+repr(x[2])
         notes.append(dict(side=side,path=path,start=start,end=end,parent=copy.deepcopy(x[1]),file=x[2]))
         x[1]=None
         x[3]={'source-location':True}
@@ -35,11 +43,19 @@ def compare(before, after, source_before, source_after):
             return {'location':None}
         if set(x)=={'function'}:
             f=copy.deepcopy(x['function']);cs=f['constants'];bits=cs[-1]
+            source_file=active_files.get(side)
             assert isinstance(bits,int),'function bits'
             raw=bytes.fromhex(f['code']);code.append(dict(side=side,path=path,bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest()))
             if bits & (1<<23):
                 slot=-2 if bits & (1<<29) else -3
                 props=elements(cs[slot]);assert len(props)%2==0,'function info plist'
+                # A combined compiler FASL contains several source files. The
+                # function's own source note takes precedence over the active
+                # top-level source directive for its PC/source map.
+                for i in range(0,len(props),2):
+                    if props[i]==symbol('CCL::%FUNCTION-SOURCE-NOTE'):
+                        source_file=props[i+1]['vector']['values'][2]
+                        source=source_text(source_file,source,side)
                 kept=[]
                 for i in range(0,len(props),2):
                     key,value=props[i:i+2]
@@ -69,12 +85,24 @@ def compare(before, after, source_before, source_after):
                     del cs[slot]
                     cs[-1]=bits & ~(1<<23)
             f['constants']=walk(cs,source,side,path+['function','constants'])
+            # Keep file attribution even when source extents/debug slots are
+            # normalized. An absent note inherits the active file directive.
+            f['source-file']=source_file
             return {'function':f}
         y={k:walk(v,source,side,path+[k]) for k,v in x.items()}
         if set(y)=={'vector'}:note(y['vector'],source,side,path)
         return y
     a=CompilerFasl(before).decode();b=CompilerFasl(after).decode()
-    na=walk(a,source_before,'before',[]);nb=walk(b,source_after,'after',[])
+    def normalize(rows,source,side):
+        current=None;result=[]
+        for i,row in enumerate(rows):
+            if 'source' in row:
+                active_files[side]=row['source']
+                current=source if isinstance(source,str) else source_text(row['source'],None,side)
+            assert current is not None or set(row)=={'platform'}, 'missing source directive'
+            result.append(walk(row,current if current is not None else '',side,[i]))
+        return result
+    na=normalize(a,source_before,'before');nb=normalize(b,source_after,'after')
     # The reader may omit a repeated top-level location directive after a
     # conditionalized definition loses its source note. Every present directive
     # was validated above; these are loader debugger state, not executable forms.

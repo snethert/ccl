@@ -183,7 +183,10 @@
 				       (wrap-initial-bindings
 					initial-bindings))
              :termination-semaphore (or termination-semaphore
-                                        (make-semaphore))
+                                        ;; The initial Worker has no join or
+                                        ;; termination waiter in this profile.
+                                        #+wasm32-target nil
+                                        #-wasm32-target (make-semaphore))
              :allocation-quantum allocation-quantum
              initargs)))
     (with-slots ((lisp-thread thread)) p
@@ -741,6 +744,8 @@ had invoked abort."
       path)))
 
 (defmethod join-process ((p process) &key default)
+  #+wasm32-target
+  (error "Joining processes is unavailable in the single-Worker profile.")
   (wait-on-semaphore (process-termination-semaphore p) nil "join-process")
   (let ((result (process-result p)))
     (cond ((car result) (values-list (cdr result)))

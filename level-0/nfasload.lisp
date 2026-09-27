@@ -1376,4 +1376,12 @@
                             (when (> idx max)
                               (setq max idx))))))
         (%set-binding-index max))
-      (%fasload *xload-startup-file*)))
+      #-wasm32-target (%fasload *xload-startup-file*)
+      #+wasm32-target
+      (progn
+        ;; Native START_LISP supplies this catch and repeatedly calls the TCR
+        ;; toplevel function (x86-subprims64.s: toplevel_loop). One Wasm Worker
+        ;; owns this Lisp cell; %SET-TOPLEVEL updates it before TOPLEVEL throws.
+        (catch :toplevel (%fasload *xload-startup-file*))
+        (loop while %toplevel-function%
+              do (catch :toplevel (funcall %toplevel-function%))))))

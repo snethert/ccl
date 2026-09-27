@@ -18,6 +18,13 @@ executed Stage 1 tests.
   generator excludes these native offsets and the initial leaf backend cannot
   emit a kernel-global access. This assigns the ownership/addressing model;
   it does not yet implement the complete record or its services.
+  The single-Worker loader implements the inhibition subset in
+  [runtime-globals.v1.json](../contracts/runtime-globals.v1.json): a separate 16-byte scalar region owned
+  by `CollectorOwner`, supplied in its immutable layout. Process service
+  operations 12/13 access it; generated code still has no native kernel-global
+  address access. Before the first inhibitor, the owner places its heap at the
+  growable memory tail. While inhibited it extends that heap without moving
+  objects, then performs any deferred collection on the final release.
 - **Binding-vector growth (S1-LL17-a).** Specify the growing thread's ownership,
   the D1 no-thread-local-binding marker, initialization of every new slot,
   roots while copying, publication of pointer and byte limit, allocation

@@ -85,3 +85,22 @@ process startup boundary in decision A2, then requested development stop and a
 review commit. READY remains unestablished. The handoff enumerates profile
 exclusions, the failing compiler corpus, remaining qualification gaps and the
 final native/reader evidence. Claude review remains outstanding.
+
+## Completion — 27 September 2026
+
+The checkpoint above is superseded by the completed
+[target loader](../../../tests/wasm/stage1/loader-target/README.md). The image
+still contains level-0 only. All 82 selected runtime bundles compile; all 81
+nested runtime loads complete through the target `%fasload`, and the outer
+level-1 file hands off through `:toplevel` to `startup-ccl`. Two ordinary
+post-image `--load` files then return successfully in each of two fresh Workers.
+Both reach READY with Unicode stdout/stderr and independent mutable state.
+Required-bundle omission and an empty namespace stop before the post-image marker.
+
+The final evidence pack is
+`ccl-evidence/2026-09-26-stage1-loader-completion-r1` beside the checkout.
+`checks/ready-r23` binds load order, the retained native callbacks, image and
+code identities, observed module calls, both Workers and both refusal paths.
+The source census enumerates replacements separately; decision A3 removes the
+numerical cap without granting original-definition credit. The interactive
+listener and in-image compiler remain outside decision A2's READY boundary.

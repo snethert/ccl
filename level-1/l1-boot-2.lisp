@@ -276,6 +276,8 @@ present and false otherwise. This variable shouldn't be set by user code.")
       #-wasm32-target (bin-load-provide "ACODE-REWRITE" "acode-rewrite")
      
       #-wasm32-target (l1-load-provide "NX" "nx")
+      ;; Runtime source/argument metadata helpers also belong to native NX.
+      #+wasm32-target (bin-load "lambda-list")
       
       #+ppc-target
       (bin-load "ppc2")
@@ -368,16 +370,18 @@ present and false otherwise. This variable shouldn't be set by user code.")
       ;; no capability in the single-Worker, read-only READY profile.
       #-wasm32-target (bin-load-provide "DB-IO" "db-io")
 
-      (canonicalize-foreign-type-ordinals *host-ftd*)
+      ;; These ordinals include native socket/OS records from DB-IO, which is
+      ;; outside this profile. Portable foreign type descriptions remain loaded.
+      #-wasm32-target (canonicalize-foreign-type-ordinals *host-ftd*)
       
       (bin-load-provide "CASE-ERROR" "case-error")
       (bin-load-provide "ENCAPSULATE" "encapsulate")
       (bin-load-provide "METHOD-COMBINATION" "method-combination")
-      #-wasm32-target (bin-load-provide "MISC" "misc")
+      (bin-load-provide "MISC" "misc")
       (bin-load-provide "PPRINT" "pprint")
       #-wasm32-target (bin-load-provide "DUMPLISP" "dumplisp")
-      #-wasm32-target (bin-load-provide "PATHNAMES" "pathnames")
-      #-wasm32-target (bin-load-provide "TIME" "time")
+      (bin-load-provide "PATHNAMES" "pathnames")
+      (bin-load-provide "TIME" "time")
       #-wasm32-target (bin-load-provide "COMPILE-CCL" "compile-ccl")
       (bin-load-provide "ARGLIST" "arglist")
       ;; Native function-code scanning is part of the deferred debugger.

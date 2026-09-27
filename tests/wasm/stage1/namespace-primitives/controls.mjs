@@ -42,7 +42,7 @@ refused('lifetime-mismatch',x=>{x.put(TCR+8,2);},'thread state');
 refused('lifetime-outside-profile',x=>{x.put(TCR+12,1);},'thread state');
 refused('active-foreign-request',x=>{x.put(TCR+152,REQUEST);},'thread state');
 refused('opcode-not-fixnum',x=>{x.put(ARGS,N);},'fixnum');
-refused('unknown-opcode',x=>{x.args(8);},'operation');
+refused('unknown-opcode',x=>{x.args(11);},'operation');
 refused('descriptor-not-fixnum',x=>{x.put(ARGS+4,N);},'fixnum');
 refused('buffer-not-misc',x=>{x.put(ARGS+8,N);},'object tag');
 refused('buffer-unbacked-header',x=>{x.put(ARGS+8,x.memory.buffer.byteLength+6);},'backed span');
@@ -93,6 +93,40 @@ for(const [name,damage,why] of [
  rows.push({name,refusal:why});
 }
 // Host checks are isolated from client admission, including seek overflow.
+for (const [result, length] of [[2, 0], [0, 1], [-9, 1], [1, 0]]) {
+ const x=setup();x.args(9);
+ const before=new Uint8Array(x.memory.buffer,HEAP,32768).slice();
+ const run=x.client({post:({generation})=>{
+   const {words:w,pair:p}=views(x.memory);w[4]=1;w[5]=result;w[8]=length;
+   Atomics.store(p,0,pair(generation,1));
+ }});
+ assert.throws(()=>run(ARGS),/directory publication/);
+ assert.deepEqual(new Uint8Array(x.memory.buffer,HEAP,32768),before);
+ rows.push({name:'directory-publication-'+result+'-'+length});
+}
+{
+ const x=setup(), session=createNamespace(manifest()).session();
+ let next=HEAP+512;
+ const run=x.client({post:({generation,lifetime})=>{
+   assert(serviceRequest(x.memory,session,lifetime,generation));
+ },allocate:n=>{const p=next;next+=n;return p;}});
+ const call=(op,a)=>{x.args(op,a,N,N);return run(ARGS);};
+ const text=word=>Array.from({length:x.get(word-6)>>>8},(_,i)=>String.fromCodePoint(x.get(word-2+4*i))).join('');
+ x.put(x.path,4*256+191);
+ const fd=call(8,x.path+6);
+ assert(fd>=0);
+ const expected=session.opendir('/ccl'),names=[];
+ for(let word; (word=call(9,fd))!==N;)names.push(text(word));
+ const reference=[];
+ for(let name;(name=session.readdir(expected))!==null;)reference.push(name);
+ assert.deepEqual(names,reference);
+ assert.equal(call(9,fd),N);
+ assert.equal(call(10,fd),0);
+ assert.equal(call(9,fd),-9*4);
+ assert.equal(call(10,fd),-9*4);
+ session.closedir(expected);
+ rows.push({name:'directory-open-enumerate-eof-close',names});
+}
 {
  const x=setup(),s=createNamespace(manifest()).session(),fd=s.open('/ccl/a.bin');
  const {words:w,pair:p}=views(x.memory);

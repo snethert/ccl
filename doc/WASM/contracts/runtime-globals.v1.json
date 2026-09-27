@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "bytes": 16,
+  "alignment": 16,
+  "scope": "Single-Worker copying collector inhibition; other planned runtime globals remain unimplemented.",
+  "owner": "CollectorOwner; base supplied by immutable owner layout, never a NIL-relative address.",
+  "fields": [
+    {
+      "name": "version",
+      "offset": 0,
+      "width": 4,
+      "value": 1
+    },
+    {
+      "name": "gc_inhibit_depth",
+      "offset": 4,
+      "width": 4,
+      "range": [
+        0,
+        536870911
+      ]
+    },
+    {
+      "name": "gc_pending",
+      "offset": 8,
+      "width": 4,
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "reserved",
+      "offset": 12,
+      "width": 4,
+      "value": 0
+    }
+  ],
+  "access": "Synchronous owner boundary. Host service operations 12/13 increment/decrement; final release performs pending collection. Return the signed nesting depth: negative means a collection is pending, positive means none is pending, zero means unlocked.",
+  "budget": "The first inhibitor may relocate the heap to the memory tail while movement is still permitted; this reserves two current-capacity semispaces and can refuse with checked 6. Inhibited allocations grow in place and reserve a replacement inactive space. Abandoned spaces are not reclaimed in this Stage 1 owner. No external capability may grow memory while inhibition is active. This bounded owner does not claim native allocation capacity or timing equivalence.",
+  "failure_state": "A failed first lock leaves Lisp heap, TCR, roots and inhibition cells unchanged; preparatory scratch growth may consume memory. On final-release collection failure the depth and pending cells are zero and the heap remains intact but uncollected. Collector/metadata failures are checked 11; growth limits/refusals are checked 6.",
+  "collector": "All cells are raw unsigned words, excluded from root enumeration. Fresh instances start at depth zero and pending zero."
+}

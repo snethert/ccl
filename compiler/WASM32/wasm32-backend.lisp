@@ -3645,7 +3645,7 @@
   ;; argument evaluation. Level-0 callers need them before l1-numbers installs
   ;; the callable MIN/MAX entries. Do not enable host representation folding.
   (let ((table (make-hash-table :test #'eq)))
-    (dolist (name '(+ - * / min max make-string make-array nth nthcdr proclaim
+    (dolist (name '(+ - * / min max make-string make-array nth nthcdr proclaim ccl::assq
                    char= char/= char< char<= char> char>=
                    ccl::min-2 ccl::max-2 ccl::imin-2 ccl::imax-2))
       (let ((expander (compiler-macro-function name)))
@@ -4269,7 +4269,16 @@
           (b-wat "(if (result i32) (i32.eq ~a (i32.const 1020)) (then ~a) (else ~a))" tag (bootstrap-bit-vector values) (with-output-to-string (s)
             (write-string (b-condition (b-wat "(i32.or (i32.and ~a (i32.const 3)) (i32.gt_u ~a (i32.const 67108860)))" count count) 6) s)
             (format s "(local.set ~a (i32.shr_u ~a (i32.const 2))) (local.set ~a ~a)" n count kind tag)
-            (write-string (b-condition (b-wat "(i32.and (i32.ne ~a (i32.const 424)) (i32.and (i32.ne ~a (i32.const 1000)) (i32.and (i32.ne ~a (i32.const 764)) (i32.ne ~a (i32.const 796)))))" tag tag tag tag) 4) s)
+            ;; COPY-UVECTOR also allocates structures (including ctypes).
+            ;; Their payload consists of the same traced nodes as a vector.
+            (write-string
+             (b-condition
+              (reduce (lambda (code rest)
+                        (b-wat "(i32.and (i32.ne ~a (i32.const ~d)) ~a)" tag code rest))
+                      '(424 488 520 764 796 1000) :from-end t
+                      :initial-value "(i32.const 1)") 4) s)
+            (write-string (b-condition
+              (b-wat "(i32.and (i32.eq ~a (i32.const 520)) (i32.eqz ~a))" tag count) 6) s)
             (when initial
               (format s "(if (i32.eq (local.get ~a) (i32.const 764)) (then ~a)) (if (i32.eq (local.get ~a) (i32.const 796)) (then ~a))"
                       kind (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const 255)) (i32.const 75))" initial) 5)
@@ -4291,11 +4300,11 @@
                          base bytes base n kind i i n kind base i
                          (if initial (b-wat "(i32.shr_u ~a (i32.const 2))" initial) "(i32.const 0)")
                          base i
-                         (b-wat "(if (result i32) (i32.or (i32.eq (local.get ~a) (i32.const 1000)) (i32.eq (local.get ~a) (i32.const 424))) (then ~a) (else ~a))"
+                         (b-wat "(if (result i32) (i32.or (i32.eq (local.get ~a) (i32.const 520)) (i32.or (i32.eq (local.get ~a) (i32.const 488)) (i32.or (i32.eq (local.get ~a) (i32.const 1000)) (i32.eq (local.get ~a) (i32.const 424))))) (then ~a) (else ~a))"
                                 ;; ALLOCATE-TYPED-VECTOR defaults to zero.
                                 ;; MAKE-ARRAY's native compiler macro omits
                                 ;; an explicit zero initializer on that basis.
-                                kind kind (or initial "(i32.const 0)")
+                                kind kind kind kind (or initial "(i32.const 0)")
                                 (if initial (b-wat "(i32.shr_u ~a (i32.const 8))" initial) "(i32.const 0)")) i i)))) s))))))))
 
 (defun bootstrap-make-list (forms)
@@ -5009,6 +5018,9 @@
            (unless (null forms) (refuse :error-service-arity))
            (b-multiple (make-b-raw-code :text
              "(i32.store offset=192 (global.get $tcr) (i32.const 1)) (i32.const 77825)")))
+          ((eq name 'ccl::%wasm-values-list)
+           (unless (= (length forms) 1) (refuse :values-list-arity))
+           (bootstrap-values-list (first forms)))
           ((eq name 'ccl::%wasm-gc-count)
            (unless (null forms) (refuse :gc-count-arity))
            (b-multiple (make-b-raw-code :text
@@ -5235,6 +5247,39 @@
 
 (defun bootstrap-primary (code)
   (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" code))
+
+(defun bootstrap-values-list (form)
+  ;; The callable VALUES primitive supplies its rest list. Keep that list
+  ;; rooted across result-area growth, validate it before publishing values,
+  ;; and use the same proper-list/cycle checks as ordinary APPLY.
+  (let ((cursor (temporary)) (slow (temporary)) (count (temporary))
+        (index (temporary)))
+    (b-frame 1
+      (lambda (root)
+        (with-output-to-string (s)
+          (format s "(i32.store offset=8 ~a ~a) (local.set ~a (i32.load offset=8 ~a))
+                     (local.set ~a (local.get ~a)) (local.set ~a (i32.const 0))"
+                  root (b-scalar form) cursor root slow cursor count)
+          (format s "(block $values_done (loop $values_check
+                     (br_if $values_done (i32.eq (local.get ~a) (i32.const 77825)))
+                     (local.set ~a ~a) (local.set ~a (i32.add (local.get ~a) (i32.const 1)))
+                     (if (i32.eqz (i32.and (local.get ~a) (i32.const 1)))
+                       (then (local.set ~a ~a))) ~a (br $values_check)))"
+                  cursor cursor (b-checked-cdr (b-local cursor) (b-wat "(i32.load offset=8 ~a)" root)) count count
+                  count slow (b-checked-cdr (b-local slow) (b-wat "(i32.load offset=8 ~a)" root))
+                  (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 77825))
+                                       (i32.eq (local.get ~a) (local.get ~a)))"
+                                      cursor cursor slow) 5))
+          (write-string (b-ensure-results (b-local count)) s)
+          (format s "(local.set ~a (i32.load offset=8 ~a)) (local.set ~a (i32.const 0))
+                     (block $values_done (loop $values_copy
+                       (br_if $values_done (i32.eq (local.get ~a) (i32.const 77825)))
+                       (i32.store (i32.add (local.get $results) (i32.shl (local.get ~a) (i32.const 2)))
+                                  (i32.load offset=3 (local.get ~a)))
+                       (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 1))))
+                       (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $values_copy)))
+                     (local.set $count (local.get ~a))"
+                  cursor root index cursor index cursor cursor cursor index index count))))))
 
 (defun bootstrap-integer-division (root)
   ;; B-FLOAT-CALL has evaluated, rooted and checked both operands as integers.
@@ -6095,8 +6140,7 @@
   (pushnew "expected_function" *b-symbols* :test #'equal)
   (let ((*temporary-count* 0) (*b-exception-count* 0)
         (*b-tail-position* nil) (*b-producer-target* nil))
-    (let* ((symbol (b-special-symbol 'ccl::%handlers%))
-           (constructor (bootstrap-predicate-call 'ccl::%wasm-implicit-condition
+    (let* ((constructor (bootstrap-predicate-call 'ccl::%wasm-implicit-condition
                           (list (make-b-raw-code :text "(i32.shl (local.get $kind) (i32.const 2))")
                                 (make-b-raw-code :text "(i32.load offset=8 (local.get $frame))")
                                 (make-b-raw-code :text "(i32.load offset=12 (local.get $frame))"))))
@@ -6112,9 +6156,9 @@
           (local $result_descriptor i32) (local $result_scope i32) (local $condition i32) (local $heap i32)" s)
         (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
         (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
-        ;; With no handlers there is no Lisp continuation to invoke. Preserve
-        ;; the structured fatal code rather than pretending a debugger exists.
-        (format s "(if (i32.and (i32.ne (i32.load offset=192 (global.get $tcr)) (i32.const 1)) (i32.eq (call $special_read ~a) (i32.const 77825))) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))))" symbol)
+        ;; Before the Lisp error system is ready, even an enclosing handler
+        ;; cannot construct a condition. Preserve the first structured fault.
+        (format s "(if (i32.ne (i32.load offset=192 (global.get $tcr)) (i32.const 1)) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))))")
         (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
           (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
         (write-string "(local.set $frame (local.get $top)) (local.set $capacity (i32.const 4)) (local.set $result_bytes (i32.const 16)) (local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)

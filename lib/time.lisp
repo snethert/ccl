@@ -27,6 +27,7 @@
   (defconstant weekday-november-17-1858 2)
 )
 
+#-wasm32-target
 (defun gctime ()
   (let* ((timeval-size (record-length :timeval)))
     (%stack-block ((copy (* timeval-size 5)))
@@ -49,7 +50,7 @@
 ;;; as a signed natural offset from the start of Unix time.
 ;;; For now, if the time won't fit in a :time_t, use an arbitrary time
 ;;; value to get the time zone and assume that DST was -not- in effect.
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun get-timezone (time)
   (let* ((toobig (not (typep time '(signed-byte
                                     #+32-bit-target 32
@@ -67,6 +68,15 @@
                            #+solaris-target #&altzone
                            -60)
                     (unless toobig (not (zerop (pref tm :tm.tm_isdst)))))))))))
+
+#+wasm32-target
+(defun get-timezone (time)
+  (let* ((toobig (not (typep time '(signed-byte 32))))
+         (time (if toobig 0 time)))
+    (multiple-value-bind (days seconds) (floor time 86400)
+      (let ((parts (vector days seconds)))
+        (%wasm-process-request 10 parts nil)
+        (values (svref parts 0) (and (not toobig) (not (zerop (svref parts 1)))))))))
 
 ;; Use #_localtime to determine if DST was in effect for the supplied time
 ;; but use #_GetTimeZoneInformation to get the DST bias as Windows' struct tm
@@ -266,7 +276,14 @@
 
 (defun %internal-run-time ()
   ;; Returns user and system times in internal-time-units as multiple values.
-  #-windows-target
+  #+wasm32-target
+  (let ((parts (vector 0 0 0 0)))
+    (%wasm-process-request 11 parts nil)
+    (values (+ (* (svref parts 0) internal-time-units-per-second)
+               (round (* (svref parts 1) internal-time-units-per-second) 1000000))
+            (+ (* (svref parts 2) internal-time-units-per-second)
+               (round (* (svref parts 3) internal-time-units-per-second) 1000000))))
+  #-(or windows-target wasm32-target)
   (rlet ((usage :rusage))
     (%%rusage usage)
     (let* ((user-seconds (pref usage :rusage.ru_utime.tv_sec))
@@ -298,7 +315,7 @@
   (multiple-value-bind (user sys) (%internal-run-time)
     (+ user sys)))
 
-#-(or darwin-target windows-target)
+#-(or darwin-target windows-target wasm32-target)
 (defloadvar preferred-posix-clock-id
   (rlet ((ts :timespec))
     (if (eql 0 (#_clock_gettime #$CLOCK_MONOTONIC ts))
@@ -306,7 +323,11 @@
       #$CLOCK_REALTIME)))    
 
 (defun current-time-in-nanoseconds ()
-  #-(or darwin-target windows-target)
+  #+wasm32-target
+  (let ((parts (vector 0 0)))
+    (%wasm-process-request 0 parts nil)
+    (+ (* (svref parts 0) 1000000000) (* (svref parts 1) 1000)))
+  #-(or darwin-target windows-target wasm32-target)
   (rlet ((ts :timespec))
     (#_clock_gettime preferred-posix-clock-id ts)
     (+ (* (pref ts :timespec.tv_sec) 1000000000)
@@ -318,4 +339,3 @@
     (* (logior (pref time #>FILETIME.dwLowDateTime)
                (ash (pref time #>FILETIME.dwHighDateTime) 32))
        100)))
-

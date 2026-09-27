@@ -41,10 +41,10 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
     if (get(tcr+64)!==args || get(tcr+32)!==2 || get(tcr+152)!==0 ||
         get(tcr+8)!==lifetime || get(tcr+12)!==0)fail('thread state');
     const op=integer(get(args)),av=get(args+4),bv=get(args+8),cv=get(args+12);
-    if(op<0||op>7)fail('operation');
+    if(op<0||op>10)fail('operation');
     let a=0,b=0,c=0,path=new Uint8Array();
     // Complete argument validation precedes any host action or TCR change.
-    if([0,5,6].includes(op))path=string(av);else a=integer(av);
+    if([0,5,6,8].includes(op))path=string(av);else a=integer(av);
     if(op===0){b=integer(bv);c=integer(cv);}
     if(op===1 || op===7) {
       const buffer=object(bv,[199,207,215,223,167,175,183]);c=integer(cv);
@@ -71,6 +71,7 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
       if(length<0||length>CAPACITY)fail('result extent');
       if(result< -536870912||result>536870911)fail('result range');
       if(op===1 && (result<0 ? length!==0 : result!==length || length>c))fail('read publication');
+      if(op===9 && (result>1 || (result<=0 && length!==0) || (result===1 && length===0)))fail('directory publication');
       const bytes=payload.slice(0,length);
       w[6]=0;w[9]=0; // consumed; no heap pointer was stored here
       Atomics.store(new Int32Array(memory.buffer),(tcr+32)/4,2);
@@ -82,7 +83,8 @@ export function fileClient({memory,tcr,post,collect,allocate,pinned=[],refuse=re
         if(length>buffer.bytes)fail('reloaded buffer');
         new Uint8Array(memory.buffer,buffer.base+4,length).set(bytes);
       }
-      if(op===5) {
+      if(op===9 && result===0)return N;
+      if(op===5 || (op===9 && result===1)) {
         if(result<0)return N;
         const text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
         const codes=Array.from(text,ch=>ch.codePointAt(0));

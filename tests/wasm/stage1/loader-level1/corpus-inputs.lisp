@@ -4,6 +4,10 @@
   (setf (symbol-function 'wasm32-compiler::core-inputs)
         (lambda (name)
           (case name
+            (ccl::%address-of
+             ;; Raw addresses differ by target; the native fixnum exception
+             ;; is portable and the post-image assertions cover D1 object tags.
+             (values '((-536870912) (-1) (0) (1) (536870911)) t))
             (ccl::heap-area-code
              (values '((:void) (:cstack) (:vstack) (:tstack) (:readonly)
                        (:watched) (:managed-static) (:static) (:dynamic)

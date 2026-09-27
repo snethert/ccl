@@ -526,6 +526,7 @@
 (cl:defconstant io-error-file-exists 17)
 (cl:defconstant io-error-system-file-limit 23)
 (cl:defconstant io-error-process-file-limit 24)
+(cl:defconstant io-error-read-only-filesystem 30)
 (cl:defconstant os-eisdir 21)
 (cl:defconstant os-erange 34)
 (cl:defconstant os-etimedout 110)
@@ -609,6 +610,11 @@
 (arch::defarchmacro :wasm32 ccl::function-to-function-vector (function)
   (declare (ignore function))
   (refuse :function-immediate-layout))
+
+;;; Heap enumeration already yields D1 callable objects, without the separate
+;;; native code-vector representation used by some other architectures.
+(arch::defarchmacro :wasm32 ccl::function-vector-to-function (function)
+  function)
 
 ;;; Native kernel globals have no address in the portable owner. Keep this
 ;;; an explicit admission refusal until the corresponding owner entry exists.

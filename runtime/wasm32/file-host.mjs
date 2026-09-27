@@ -23,6 +23,14 @@ export function serviceRequest(memory, session, lifetime, generation) {
       case 5: bytes=new TextEncoder().encode(session.realpath(path()));break;
       case 6: result=session.stat(path()).kind==='file'?1:2;break;
       case 7: result=-30;break;
+      case 8: result=session.opendir(path());break;
+      case 9: {
+        const name=session.readdir(a);
+        result=name===null?0:1;
+        if(name!==null)bytes=new TextEncoder().encode(name);
+        break;
+      }
+      case 10: session.closedir(a);break;
       default: throw new Error('request opcode');
     }
   } catch(e) {

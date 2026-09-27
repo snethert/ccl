@@ -2,18 +2,43 @@
 ;;; A target buffer is a simple octet vector, never a foreign pointer.
 (in-package "CCL")
 
+(defun get-page-size ()
+  (%wasm-process-request 2 1 nil))
 
+(defloadvar *cpu-count* nil)
 
+(defun cpu-count ()
+  (or *cpu-count*
+      (setq *cpu-count* (%wasm-process-request 2 2 nil))))
 
+(defloadvar *host-page-size* (get-page-size))
 
+;; Mutations are refused by the read-only namespace at the native primitive
+;; boundary. Callers retain their ordinary pathname checks and error paths.
+(defun %mkdir (name mode)
+  (require-type name 'string)
+  (require-type mode 'fixnum)
+  (- target::io-error-read-only-filesystem))
 
+(defun %rmdir (name)
+  (require-type name 'string)
+  (- target::io-error-read-only-filesystem))
 
+(defun %open-dir (name)
+  (let ((fd (%wasm-file-request 8 name nil nil)))
+    (unless (minusp fd) fd)))
 
+(defun %read-dir (fd)
+  (let ((name (%wasm-file-request 9 fd nil nil)))
+    (if (integerp name) (error "Directory read failed: ~s" name) name)))
 
+(defun close-dir (fd)
+  (%wasm-file-request 10 fd nil nil))
 
-
-(defun fd-tell (fd)
-  (fd-lseek fd 0 1))
+(defun get-universal-time ()
+  (let ((parts (vector 0 0)))
+    (%wasm-process-request 9 parts nil)
+    (+ 2208988800 (* (svref parts 0) 86400) (svref parts 1))))
 
 (defun %realpath (path)
   (declare (simple-string path))
@@ -49,7 +74,7 @@
 (defun fd-ready-for-output-p (fd &optional timeout)
   (declare (ignore timeout))
   (let ((size (fd-size fd)))
-    (values nil (if (minusp size) size -30))))
+    (values nil (if (minusp size) size (- target::io-error-read-only-filesystem)))))
 
 ;;; The owner passes the admitted manifest's CCL root. The current directory
 ;;; comes from the same namespace session through %REALPATH.

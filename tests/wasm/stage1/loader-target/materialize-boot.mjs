@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
+import {reuseCode} from './reuse.mjs';
 const [out, reuse] = process.argv.slice(2), read = path => JSON.parse(fs.readFileSync(path));
 const {write} = await import(pathToFileURL(out + '/write.mjs'));
 const {inventory} = await import(pathToFileURL(out + '/d2.mjs'));
@@ -19,19 +20,9 @@ if (reuse) {
 const result = write(out + '/boot', out + '/boot/artifacts', policy, versions, (wat, stem, policy, versions) => {
   const prior = cache.get(sha256(wat));
   if (!prior) { fresh++; return inventory(wat, stem, policy, versions); }
-  const {row} = prior, expected = {
-    '.wat': sha256(wat), '.wasm': row.d2.outputs.full.binary_sha256,
-    '.template.wasm': row.d2.classification.binary_sha256,
-    '.sections.txt': row.d2.classification.sections_sha256,
-    '.instructions.txt': row.d2.classification.instructions_sha256};
-  const buffers = Object.entries(expected).map(([suffix, digest]) => {
-    const bytes = fs.readFileSync(prior.stem + suffix);
-    if (sha256(bytes) !== digest) throw Error('Reuse artifact changed: ' + prior.stem + suffix);
-    return [suffix, bytes];
-  });
-  for (const [suffix, bytes] of buffers) fs.writeFileSync(stem + suffix, bytes);
+  const result = reuseCode(prior.row, prior.stem, stem, wat);
   reused++;
-  return Object.fromEntries(['generation', 'abi', 'layout', 'profile', 'd2', 'entries'].map(k => [k, row[k]]));
+  return result;
 });
 fs.writeFileSync(out + '/materialization-reuse.json', JSON.stringify({reuse: reuse ?? null, reused, fresh}, null, 2) + '\n');
 console.log(JSON.stringify({...result, reused, fresh}));

@@ -2633,18 +2633,28 @@ incrementally, just like Lisp functions are.
 defcallback returns the callback pointer, e.g., the value of name."
   (define-callback name arglist body env))
 
-(declare-arch-specific-macro %get-single-float-from-double-ptr)
+;; Architecture macro expanders belong to the deferred in-image compiler.
+;; Keep the native top-level form boundary for its FASL source notes.
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target %get-single-float-from-double-ptr)
 
-(declare-arch-specific-macro lfun-vector)
-(declare-arch-specific-macro lfun-vector-lfun)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target lfun-vector)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target lfun-vector-lfun)
 
-(declare-arch-specific-macro symptr->symvector)
-(declare-arch-specific-macro symvector->symptr)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target symptr->symvector)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target symvector->symptr)
 
-(declare-arch-specific-macro function-to-function-vector)
-(declare-arch-specific-macro function-vector-to-function)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target function-to-function-vector)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target function-vector-to-function)
 
-(declare-arch-specific-macro with-ffcall-results)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target with-ffcall-results)
 
 (defvar *trace-print-functions* nil)
 (defun %trace-print-arg (stream arg val type)
@@ -3059,7 +3069,8 @@ slot-entry. Both setf and setq can be used to set the value of the slot."
   `(%scan-for-instr ,mask ,opcode ,fn ,pc-index ,tries))
 
 
-(declare-arch-specific-macro codevec-header-p)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target codevec-header-p)
 
 #+ppc-target
 (defmacro match-instr (instr mask bits-to-match)
@@ -3671,7 +3682,8 @@ to be at least partially steppable."
     ,@clauses))
 
 (defmacro target-word-size-case (&rest clauses)
-  `(ecase (arch::target-nbits-in-word (backend-target-arch *target-backend*))
+  `(ecase #-wasm32-target (arch::target-nbits-in-word (backend-target-arch *target-backend*))
+          #+wasm32-target 32
     ,@clauses))
 
 (defmacro %get-natural (&body body)
@@ -3686,21 +3698,27 @@ to be at least partially steppable."
    (32 `(%get-signed-long ,@body))
    (64 `(%%get-signed-longlong ,@body))))
 
-(declare-arch-specific-macro %target-kernel-global)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target %target-kernel-global)
 
 ;;; This behaves like a function, but looks up the kernel global
 ;;; at compile time if possible. Probably should be done as a function
 ;;; and a compiler macro, but we can't define compiler macros yet,
 ;;; and I don't want to add it to "ccl:compiler;optimizers.lisp"
-(declare-arch-specific-macro %get-kernel-global)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target %get-kernel-global)
 
-(declare-arch-specific-macro %get-kernel-global-ptr)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target %get-kernel-global-ptr)
 
-(declare-arch-specific-macro area-code)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target area-code)
 
-(declare-arch-specific-macro nth-immediate)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target nth-immediate)
 
-(declare-arch-specific-macro set-nth-immediate)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target set-nth-immediate)
 
 (defsetf nth-immediate set-nth-immediate)
 
@@ -3715,7 +3733,8 @@ to be at least partially steppable."
                  (eql ,code area-dynamic))
          ,@body)))))
 
-(declare-arch-specific-macro area-succ)
+(#-wasm32-target declare-arch-specific-macro #+wasm32-target progn
+ #-wasm32-target area-succ)
 
 
 (defmacro do-gc-areas ((area) &body body)

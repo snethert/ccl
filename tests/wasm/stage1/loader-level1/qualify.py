@@ -6,7 +6,8 @@ import product
 import storage
 
 c, HERE = product.c, product.HERE
-SHARED = ('lib/level-2.lisp', 'lib/prepare-mcl-environment.lisp', 'lib/arglist.lisp', 'level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp',
+SHARED = ('compiler/lambda-list.lisp', 'library/loop.lisp', 'library/cover.lisp', 'library/leaks.lisp', 'lib/macros.lisp', 'level-1/l1-io.lisp', 'lib/misc.lisp', 'lib/time.lisp', 'lib/pathnames.lisp',
+          'lib/level-2.lisp', 'lib/prepare-mcl-environment.lisp', 'lib/arglist.lisp', 'level-1/l1-boot-1.lisp', 'level-1/l1-boot-2.lisp', 'level-1/l1-init.lisp',
           'level-1/l1-utils.lisp', 'level-1/l1-numbers.lisp', 'level-1/l1-aprims.lisp',
           'level-1/l1-clos-boot.lisp', 'level-0/l0-numbers.lisp',
           'level-0/l0-hash.lisp', 'level-0/l0-def.lisp', 'level-0/l0-misc.lisp',
@@ -38,12 +39,14 @@ def run(kind, out):
                 extra_entries=(('CCL::LINUX-FILES', 'w32-files', 'ccl:l1f;w32-files',
                                 'ccl:level-1;WASM32;w32-files.lisp'),
                                ('CCL::W32-FILES', 'w32-streams', 'ccl:l1f;w32-streams',
-                                'ccl:level-1;WASM32;w32-streams.lisp')))
+                                'ccl:level-1;WASM32;w32-streams.lisp'),
+                               ('CCL::NX', 'lambda-list', 'ccl:bin;lambda-list',
+                                'ccl:compiler;lambda-list.lisp')))
         return product.module('level1_r6', HERE.parent / 'loader/r6.py').run(
             out, product.sources, ['lib/compile-ccl.lisp', 'xdump/xfasload.lisp', 'xdump/xwasm32-fasload.lisp',
                                    'level-0/WASM32/w32-prims.lisp', *SHARED],
             compiler_comparator=compiler, compiler_changes=COMPILER_CHANGES,
-            system_additions=('CCL::W32-FILES', 'CCL::W32-STREAMS'), systems_comparator=systems)
+            system_additions=('CCL::W32-FILES', 'CCL::W32-STREAMS', 'CCL::LAMBDA-LIST'), systems_comparator=systems)
     if kind == 'readers':
         bodies = product.sources()
         baseline = c.STORE / 'macos-u1-inputs'

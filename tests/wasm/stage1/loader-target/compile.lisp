@@ -38,8 +38,7 @@
                        :direction :output :if-exists :supersede)
       (wasm32-compiler::wasm32-bundle-json
        (cons :object (loop for module in modules
-                          when (and (null (getf module :children))
-                                    (plusp (svref (svref (getf module :pool) 0) 1)))
+                          when (null (getf module :children))
                           collect (cons (getf module :name)
                                         (target-fixture-literal
                                          (subseq (getf module :pool) 6))))) s)))
@@ -47,6 +46,21 @@
   ;; cannot influence the target compiler's view of this file.
   (load (compile-file "ccl:tests;wasm;stage1;loader-target;smoke.lisp"
           :output-file (concatenate 'string out "smoke.dx64fsl")))
+  (with-open-file (s (concatenate 'string out "values-native.json")
+                     :direction :output :if-exists :supersede)
+    (wasm32-json
+     (loop for count in '(0 1 3 4 16 32)
+           for args = (loop for i below count collect (if (oddp i) nil i))
+           collect (list args (multiple-value-list (apply #'target-loader-values args)))) s))
+  (with-open-file (s (concatenate 'string out "assq-native.json")
+                     :direction :output :if-exists :supersede)
+    (wasm32-json
+     (loop for args in '((1 nil) (1 ((1 10) (2 20)))
+                        (2 (nil (1 10) nil (2 20)))
+                        (3 ((1 10) (2 20))) (nil (nil (nil 30)))
+                        (1 17) (1 (17)))
+           collect (list args (handler-case (apply #'target-loader-assq args)
+                                (type-error () "TYPE-ERROR")))) s))
   (with-open-file (s (concatenate 'string out "extrema-native.json")
                      :direction :output :if-exists :supersede)
     (wasm32-json
@@ -97,6 +111,13 @@
        (list (list 13 kind) (multiple-value-list (target-loader-vector-init 13 kind)))) s))
   (with-open-file (s (concatenate 'string out "reset-binding-native.json")
                      :direction :output :if-exists :supersede)
-    (wasm32-json (multiple-value-list (target-loader-reset-binding 99)) s)))
+    (wasm32-json (multiple-value-list (target-loader-reset-binding 99)) s))
+  (with-open-file (s (concatenate 'string out "structure-init-native.json")
+                     :direction :output :if-exists :supersede)
+    (wasm32-json
+     (loop for kind below 2 append
+       (loop for value in '(0 nil 42) collect
+         (list (list 13 value kind)
+               (multiple-value-list (target-loader-structure-init 13 value kind))))) s)))
 (format t "TARGET-BUNDLE-COMPILED~%")
 (quit)

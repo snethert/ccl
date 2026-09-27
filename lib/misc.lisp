@@ -65,6 +65,7 @@
 are running on, or NIL if we can't find any useful information."
   (or *machine-version*
       (setq *machine-version*
+            #+wasm32-target nil
             #+darwin-target
             (block darwin-machine-version
               (%stack-block ((mib 8))
@@ -414,6 +415,9 @@ are running on, or NIL if we can't find any useful information."
 ;;
 
 
+;; Native process counters and kernel-address introspection are outside
+;; the single-Worker Wasm profile; portable MISC definitions remain.
+#-wasm32-target
 (defun %page-fault-info ()
   #-windows-target
   (rlet ((usage :rusage))
@@ -817,6 +821,7 @@ are running on, or NIL if we can't find any useful information."
 ;;; and to let it get its hands on the list header returned by 
 ;;; disassemble-ppc-function.  Maybe disassemble-ppc-function
 ;;; should take care of "normalizing" the code-vector ?
+#-wasm32-target
 (defun disassemble (thing)
   "Disassemble the compiled code associated with OBJECT, which can be a
   function, a lambda expression, or a symbol with a function definition. If
@@ -827,6 +832,7 @@ are running on, or NIL if we can't find any useful information."
    #+arm-target arm-xdisassemble
    (require-type (function-for-disassembly thing) 'compiled-function)))
 
+#-wasm32-target
 (defun function-for-disassembly (thing)
   (let* ((fun thing))
     ;; CLHS says that DISASSEMBLE should signal a type error if its
@@ -844,6 +850,7 @@ are running on, or NIL if we can't find any useful information."
       (setq fun (compile-named-function fun)))
     fun))
 
+#-wasm32-target
 (%fhave 'df #'disassemble)
 
 (defun string-sans-most-whitespace (string &optional (max-length (length string)))
@@ -1151,6 +1158,7 @@ are running on, or NIL if we can't find any useful information."
                     (aref sizes i)
                     (aref physical-sizes i)))))
 
+#-wasm32-target
 (defun collect-heap-utilization-by-class (gc-first area start)
   (let* ((nconses 0)
          (max-classes (+ 100 (hash-table-count %find-classes%)))
@@ -1427,14 +1435,18 @@ are running on, or NIL if we can't find any useful information."
                      #+32-bit-target 7)))
         (t 0)))
 
+#-wasm32-target
 (defun kernel-global-address (global)
   (check-type global symbol)
   (+ (target-nil-value) (target::%kernel-global global)))
 
+#-wasm32-target
 (defloadvar *static-cons-address* (%int-to-ptr (kernel-global-address 'static-conses)))
 
+#-wasm32-target
 (defloadvar *free-static-cons-address* (%int-to-ptr (kernel-global-address 'free-static-conses)))
 
+#-wasm32-target
 (defun static-cons (car-value cdr-value)
   "Allocates a cons cell that doesn't move on garbage collection,
    and thus doesn't trigger re-hashing when used as a key in a hash
@@ -1455,9 +1467,11 @@ are running on, or NIL if we can't find any useful information."
                (progn
                  (%ensure-static-conses)))))))))
 
+#-wasm32-target
 (defun free-static-conses ()
   (%get-kernel-global free-static-conses))
 
+#-wasm32-target
 (defun reserved-static-conses ()
   (%fixnum-ref-natural (%get-kernel-global static-cons-area) target::area.ndnodes))
 	
@@ -1467,18 +1481,21 @@ are running on, or NIL if we can't find any useful information."
     (:non-circular . 1)))
 
 
+#-wasm32-target
 (defun weak-gc-method ()
   (or (car (rassoc (%get-kernel-global 'weak-gc-method)
                    *weak-gc-method-names*))
       :traditional))
 
 
+#-wasm32-target
 (defun (setf weak-gc-method) (name)
   (setf (%get-kernel-global 'weak-gc-method)
         (or (cdr (assoc name *weak-gc-method-names*))
             0))
   name)
 
+#-wasm32-target
 (defun %lock-whostate-string (string lock)
   (with-standard-io-syntax
       (format nil "~a for ~a ~@[~a ~]@ #x~x"

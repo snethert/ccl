@@ -1,0 +1,27 @@
+(in-package "CCL")
+(load "ccl:compiler;WASM32;wasm32-bundle.lisp")
+(let ((out (getenv "LOADER_OUTPUT")) (files nil))
+ (dolist (stem '("postimage" "instance-a" "instance-b"))
+  (let ((source (concatenate 'string "ccl:tests;wasm;stage1;loader-target;" stem ".lisp")))
+   (multiple-value-bind (path records warnings modules)
+      (wasm32-compiler::wasm32-compile-bundle-records
+       source (concatenate 'string out stem ".w32fsl")
+       (concatenate 'string out stem ".records.json"))
+    (declare (ignore path records warnings))
+    (push (list :object (cons "source" source) (cons "stem" stem)
+                (cons "path" (concatenate 'string "/ccl/bin/loader-" stem ".w32fsl"))
+                (cons "modules" (length modules))) files))
+   ;; Each native instance witness starts from the post-image's initial state.
+   (unless (equal stem "postimage") (setq *loader-instance-state* (list :cold 0)))
+   (load (compile-file source :output-file (concatenate 'string out stem ".dx64fsl")))))
+  (with-open-file (s (concatenate 'string out "bundles.json")
+                       :direction :output :if-exists :supersede)
+      (wasm32-compiler::wasm32-bundle-json
+       (list :object
+             (cons "files" (coerce (nreverse files) 'vector))
+             (cons "compilation_stop" nil)) s))
+  (with-open-file (s (concatenate 'string out "postimage-native.txt")
+                     :direction :output :if-exists :supersede)
+    (let ((*print-readably* t) (*print-pretty* nil))
+      (prin1 *loader-postimage-observations* s) (terpri s))))
+(quit)

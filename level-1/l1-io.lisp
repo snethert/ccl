@@ -18,6 +18,8 @@
 
 (in-package "CCL")
 
+;; Both pointer allocators belong to the native FFI profile.
+#-wasm32-target
 (setf (fdefinition '%new-ptr) (fdefinition '%new-gcable-ptr))
 
 

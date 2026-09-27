@@ -185,14 +185,15 @@ import {sha256} from './runtime/sha256.mjs';
     put(config+76,gen.extraRoots.length);
     gen.extraRoots.forEach((slot,i)=>put(4600000+4*i,slot));
     }
-    resetCase();
-    function globals(){for(let xs=expected.globals;xs;xs=xs[1]){const [symbol,value]=xs[0];put(gen.ownerWords.get(symbol.symbol)+2,encode(value));}}globals();const args=expected.args.map(encode);
-    put(root,0);put(root+4,args.length);args.forEach((x,i)=>put(root+8+4*i,x));
-    // The same untouched definitions run with their arguments in both spaces.
+    function globals(){for(let xs=expected.globals;xs;xs=xs[1]){const [symbol,value]=xs[0];put(gen.ownerWords.get(symbol.symbol)+2,encode(value));}}
+    // Every variant starts from restored state, including after a failure.
     for(const move of [false,true]){
-      if(move){resetCase();for(const row of JSON.parse(fs.readFileSync(dir+'/compiled/symbols.json')))if(row.package===null)put(gen.ownerWords.get(row.id)+2,51);
-        // Start with fresh original arguments; the first call may mutate them.
-        globals();const fresh=expected.args.map(encode);put(root,0);put(root+4,fresh.length);fresh.forEach((x,i)=>put(root+8+4*i,x));
+      try {
+      resetCase();
+      if(move)for(const row of ownerNames)if(row.package===null)put(gen.ownerWords.get(row.id)+2,51);
+      globals();const args=expected.args.map(encode);
+      put(root,0);put(root+4,args.length);args.forEach((x,i)=>put(root+8+4*i,x));
+      if(move){
         const old=get(tcr+56),dest=old===other?base:other;
         put(config+16,dest);put(config+20,dest+size);
         assert.equal(collector.collect(config),0,'collect '+expected.name);
@@ -294,13 +295,17 @@ import {sha256} from './runtime/sha256.mjs';
         put(root+4,1);
       }
       rows.push({caseId:expected.caseId,name:expected.name,moved:move,values,after:recordedAfter,globals:state});
+      } catch(error) {
+        rows.push({caseId:expected.caseId,name:expected.name,moved:move,status:'FAIL',
+          error:String(error),stack:error.stack ?? null});
+      }
     }
   }
   if(!workerData.controls){
     parentPort.postMessage({base,rows,comparisons:rows.length,collections,internalCollections,growthChecks});
   }else if(process.env.CCL_DISPATCH_METADATA){
     const keywordMetadata=checkKeywordMetadata({gen,memory,tcr,root,get,put,encode});
-    parentPort.postMessage({growthChecks,base,comparisons:rows.length,keywordMetadata});
+    parentPort.postMessage({growthChecks,base,comparisons:rows.length,keywordMetadata,rows});
   }else if(process.env.CCL_LIBRARY_CASE){
     parentPort.postMessage({focused:true,base,comparisons:rows.length,collections,internalCollections,growthChecks,rows,...gen.summary()});
   }else{

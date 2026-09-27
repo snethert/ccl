@@ -191,6 +191,8 @@
       (parse-application-arguments a)
     (setq *unprocessed-command-line-arguments* rest-arg)
     (process-application-arguments a error-flag options args)
+    ;; A2's Wasm profile has host-backed output but no terminal stream.
+    #-wasm32-target
     (let* ((encoding (lookup-character-encoding *terminal-character-encoding-name*)))
       (when encoding
          (set-terminal-encoding (character-encoding-name encoding))))))

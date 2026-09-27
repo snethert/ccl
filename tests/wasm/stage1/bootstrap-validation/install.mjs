@@ -69,6 +69,8 @@ export async function install({dir,memory,tcr,get,put,service,collector,config,r
  return {eqTable,classCells,functions,mods,env,symbols,keywords,codes,call_error,imageEnd:cursor,symbolEnd:symbolNext,ownerEnd:7000000+32*owners.length,keywords,ownerWords,wordOwners,extraRoots,
   reset(mat,cpl=false){
    bindMode(cpl);
+   // Class fixtures install their condition system before invoking a case.
+   put(tcr+192,cpl ? 1 : 0);
    put(ownerWords.get(hashName.id)+6,hashFunction);
  put(ownerWords.get(hashSetName.id)+6,hashSetFunction);
  put(ownerWords.get(hashRemoveName.id)+6,hashRemoveFunction);

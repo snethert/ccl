@@ -183,6 +183,8 @@
              (t (setq entered t covered nil)))
         finally (return (and entered (if covered 'full t)))))
 
+;;; Native LFUN code/immediate inspection is outside the Wasm runtime profile.
+#-wasm32-target
 (defun map-function-coverage (lfun fn &optional refs)
   (let ((refs (cons lfun refs))
         (source (function-outermost-entry-source lfun)))
@@ -199,6 +201,8 @@
                         (or (null source) (eq source (function-outermost-entry-source imm))))
               do (map-function-coverage imm fn refs))))
 
+;;; Native LFUN code/immediate inspection is outside the Wasm runtime profile.
+#-wasm32-target
 (defun collect-coverage-subfunctions (lfun refs)
   (let ((refs (cons lfun refs))
         (source (function-outermost-entry-source lfun)))
@@ -226,6 +230,8 @@
     (cons (car data) new-fns)))
 
 
+;;; Native LFUN code/immediate inspection is outside the Wasm runtime profile.
+#-wasm32-target
 (defun decode-file-coverage (data &key (precompute t))
   (let ((file (code-covered-info.file data)))
     (when file
@@ -364,6 +370,8 @@ image."
 
 
 ;; (name . #(i1 i2 ...)) where in is either an index or (index . subfncoverage).
+;;; Native LFUN code/immediate inspection is outside the Wasm runtime profile.
+#-wasm32-target
 (defun save-function-coverage (fn &optional (refs ()))
   (let ((refs (cons fn refs))
         (source (function-outermost-entry-source fn)))
@@ -390,6 +398,8 @@ image."
                                 imm-data))
                   (cdr fn-data)))))
 
+;;; Native LFUN code/immediate inspection is outside the Wasm runtime profile.
+#-wasm32-target
 (defun restore-function-coverage (fn saved-fn-data &optional (refs ()))
   (let* ((refs (cons fn refs))
          (source (function-outermost-entry-source fn))
