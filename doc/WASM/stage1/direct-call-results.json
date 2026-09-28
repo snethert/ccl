@@ -166,8 +166,23 @@
     "productInstances": 11
   },
   "rollback": {
-    "status": "PENDING_AFTER_RECORD_COMMIT",
-    "sourceSnapshot": "rejection/source-snapshot.json"
+    "status": "VERIFIED",
+    "recordCommit": "5cd3e3f586297374a3c4b8fa6e4e3215823d0f62",
+    "restoredTrackedFiles": 20,
+    "removedPrototypeFiles": 26,
+    "productDelta": "None: accepted audit-190 product and harness restored exactly",
+    "sourceIdentity": {
+      "file": "rejection/rollback-source-identity.json",
+      "sha256": "8f9520d7a20fd06903a73f484236716b8c8d1a89c43aa37b713cf8e5b9a15981"
+    },
+    "verification": {
+      "file": "rejection/rollback-verification.json",
+      "sha256": "60acdbbff2b06db75d7a138add28cde133b29dc1561c6833f5d333526d208b8a"
+    },
+    "scratchCleanup": {
+      "file": "rejection/cleanup.json",
+      "sha256": "0b6d6f06efe07893e364545b194a713e4d13f5495e538b6427934a1943a124a9"
+    }
   },
   "retainedScripts": [
     "tests/wasm/stage1/loader-target/direct-call-census.py",
@@ -193,6 +208,6 @@
   },
   "evidenceIndex": {
     "file": "rejection/index.json",
-    "sha256": "355cef9b27aa51af42831c95b4ce740d2d2b63c50d61d0a9b28d25141a46290f"
+    "sha256": "0e0cb4b9c9c2452025580053202fed1b5098e3a5187343bdf0386b70711228cd"
   }
 }

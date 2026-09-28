@@ -11,9 +11,19 @@ all P-6a–d qualifications or ablations were completed. The earlier requirement
 to finish those items is superseded by the rollback instruction. No prototype
 implementation is accepted, and no Claude process was invoked by Codex.
 
-The rejection record and retained analysis scripts are committed before the
-implementation is removed. Rollback verification is recorded separately in
-the [machine-readable result](direct-call-results.json).
+The rejection record and retained analysis scripts were committed first as
+`5cd3e3f5`, after evidence preservation. The selective rollback then restored
+all 20 modified implementation files byte-for-byte to audit 190 and removed
+26 prototype-only files. The experiment's RAM workspace was cleared after
+persistent retention and verification.
+
+A fresh restored-baseline run passes READY: **81 loads, seven modules, eleven
+instances**, four collections, no leaked files/sessions. All **81 archive
+controls** and **11 async checks** pass. The retained analysis scripts reproduce
+their complete census and profile results. The accepted native/reader/corpus
+evidence is reused by exact product-source identity. This smoke run is not a
+new timing series. Details and hashes are in the
+[machine-readable result](direct-call-results.json).
 
 ## Measured end-to-end results
 
