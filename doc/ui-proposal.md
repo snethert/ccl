@@ -57,8 +57,9 @@ Closed. Adding to it is a JS change and must be argued for here first.
 | `close-window`       | window id                                                      |
 | `focus-window`       | window id                                                      |
 | `download`           | bytes + filename                                               |
+| `open-url`           | external URL, new tab                                          |
 
-Nine. `open-window` / `close-window` / `focus-window` are the price of the detached-transcript screen; they are cheap now and expensive to retrofit.
+Ten. `open-window` / `close-window` / `focus-window` are the price of the detached-transcript screen; they are cheap now and expensive to retrofit.
 
 ## 3. Rendering is a pure function
 
@@ -84,15 +85,19 @@ A closed set, defined in **one machine-readable spec file** that generates: Lisp
 
 | group     | types                                                            |
 |-----------|------------------------------------------------------------------|
-| layout    | `stack row grid split scroll spacer`                             |
+| layout    | `stack row grid split scroll spacer toolbar`                     |
 | text      | `text heading code label` — these take **inline children** (§5) |
-| inline    | `span oref kbd` — legal only inside a text-group node            |
-| controls  | `button toggle field number select checkbox radio-group slider`  |
+| inline    | `span oref kbd link` — legal only inside a text-group node       |
+| media     | `image icon media` (§20)                                         |
+| controls  | `button toggle field number select checkbox radio-group slider color` |
 | structure | `table tree list tabs disclosure`                                |
-| overlay   | `dialog menu popover tooltip`                                    |
+| spatial   | `canvas item edge` (§19)                                         |
+| overlay   | `dialog menu popover tooltip menubar`                            |
 | menu      | `section item` — legal only inside a `menu` (§10.1)              |
 | feedback  | `spinner progress badge banner`                                  |
 | opaque    | `editor` (§6), `record` (§6.4), `svg`                            |
+
+Drag-and-drop (§17), gestures (§18), and virtualization (§21) are attributes and events on these nodes, not further node types.
 
 Attributes are enumerated per type. Unknown attribute or unknown type → a Lisp condition at construction time, printing the offending node. The JS side never guesses, never falls back, never "does its best": silent visual degradation is the failure mode the author cannot detect and the human has to catch by eye.
 
@@ -119,7 +124,7 @@ An `oref` carries:
 | `label`     | the text to draw                                                   |
 | `type`      | presentation type, for command applicability                       |
 | `doc`       | the one-line pointer documentation (§5.1)                          |
-| `commands`  | `(default-command modified-command count)` for the doc line        |
+| `commands`  | `(:activate cmd :modified cmd :secondary count)` — per gesture slot (§18), so the client can word the doc line for the input modality it has ("click / ⌘click / right" or "tap / long-press") |
 | `state`     | `:normal :matching :selected` — set by Lisp during argument gathering |
 
 Handles are minted by Lisp, never by the client; `(describe-handle h)` prints what one denotes. Handles are the only thing that crosses the wire in place of an object.
@@ -171,7 +176,7 @@ The target UI detaches a pane into its own OS-level window sharing the same imag
 
 ## 8. Client-local state
 
-Enumerated, and client-side unless subscribed: hover, focus ring, text selection, scroll offset, in-flight keystrokes, drag-in-progress, **split-divider positions**. The last is in the list because "layouts are objects" and ⌘⇧L saves the current arrangement, so Lisp must be able to subscribe to divider geometry with `local`. Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
+Enumerated, and client-side unless subscribed: hover, focus ring, text selection, scroll offset, in-flight keystrokes, drag-in-progress (§17), gesture-in-progress (§18), canvas viewport transform (§19), media playback position (§20), visible range of a virtualized collection (§21), table range selection, window size, **split-divider positions**. The last is in the list because "layouts are objects" and ⌘⇧L saves the current arrangement, so Lisp must be able to subscribe to divider geometry with `local`. Every `local` subscription is throttled by the client and carries the value, never the input that produced it. Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
 
 ## 9. Roles, not colors
 
@@ -269,7 +274,9 @@ The JS runtime will hold ephemeral state: focus, pointer capture, scroll offsets
 
 ## 13. Explicitly out
 
-HTML or CSS strings in Lisp. A template language. Two-way binding. A Lisp class per DOM element. Per-feature JavaScript. An open-ended attribute bag. Editor decoration kinds added outside this document. Any API where the correct call sequence depends on what happened previously.
+HTML or CSS strings in Lisp. A template language. Two-way binding. A Lisp class per DOM element. Per-feature JavaScript. An open-ended attribute bag. Editor decoration kinds added outside this document. Raw pointer or touch events crossing the wire (§18). Any API where the correct call sequence depends on what happened previously.
+
+Also out of the initial vocabulary, with the reason: 3D viewports (three.js-style scene editing) and raw terminal emulators (a pty grid with escape sequences). Both are genuinely opaque components that would each need their own decoration protocol, as `editor` does; neither is needed for the IDE, and each is added only through this document.
 
 ## 14. Build order
 
@@ -278,7 +285,7 @@ The log format and the replay model come *before* the JS runtime, so that any pr
 1. Spec file + codegen, with the validator on both sides. Inline nodes, `oref` with `doc`/`commands`/`state`, the decoration list, `menu` structure, and roles are in the spec from the first commit.
 2. Text backend + canonical serialization + log format (§12.1).
 3. Golden tests + headless Lisp replay. Prove three real views in the REPL: the **source pane** (inline presentations and decorations, the hard one), the transcript (append op, inline objects, a `record` placeholder), and the debugger (restarts, backtrace with locals, current-frame decoration). Each proof is a log replayed to a golden tree.
-4. JS runtime: reconciler, event queue, `act` handlers, resync, window management, editor decoration bridge.
+4. JS runtime: reconciler, event queue, `act` handlers, resync, window management, editor decoration bridge, the gesture recognizer (§18), the drag-and-drop engine (§17), the canvas viewport (§19). A fourth proof in step 3 covers these headlessly: dragging a file presentation onto the Compile command replays from one logged `drop` event.
 5. Browser event recording + full replay against the JS runtime.
 6. **Freeze JS.** The freeze criterion is not "the feature list is done"; it is that recorded browser sessions replay headless to identical trees (§12.3), demonstrating that JS holds no accidentally authoritative state.
 7. Everything after this is Lisp.
@@ -293,3 +300,188 @@ Resolved while reviewing:
 Open:
 
 - The exact scroll-anchor semantics of `append-children` when the user has scrolled up in a transcript. Note that under §12.3 the *policy* is Lisp's, but whether the user had scrolled up is browser state that affects a Lisp-visible result, so it must arrive as `local` before the policy is applied.
+
+---
+
+# Part II — Coverage beyond the IDE
+
+The IDE mockups are one application. To check that the vocabulary is not secretly IDE-shaped, 24 screenshots of other application types were taken in headless Chromium (desktop at 1440×900, mobile as iPhone 13 with touch) and each was read against Part I. The contact sheet is `ui-proposal-survey.png`. Four things were missing: drag and drop, gestures and touch, a spatial canvas, and media. Each gets a section below. Nothing in Part I had to change shape; the additions are attributes and events on existing nodes plus one node family.
+
+## 16. What was surveyed and what it needs
+
+| application type            | seen in                              | needs beyond Part I                                                      |
+|-----------------------------|--------------------------------------|--------------------------------------------------------------------------|
+| spreadsheet / data grid     | Handsontable, AG Grid                | virtualized rows (§21), cells holding any node, column resize/reorder/pin, range selection, "drag here to group" drop zone (§17) |
+| calendar                    | FullCalendar                         | drag events between cells, resize duration, drag from a palette (§17)    |
+| kanban / sortable lists     | (demo sites unreachable; same class as calendar) | reorder within and across containers (§17)                    |
+| diagram / whiteboard        | draw.io, Excalidraw                  | free-position canvas, shape palette drag-in, connectors, marquee select, pinch-zoom, drawing tools (§19, §18) |
+| node editor                 | Rete.js                              | ports and edges (§19)                                                    |
+| gantt / timeline            | DHTMLX                               | canvas with a time axis, bar resize, dependency edges (§19)              |
+| dashboard                   | Grafana                              | panel grid with drag-rearrange and resize (§19 `:grid` space)            |
+| map                         | Leaflet, desktop and mobile          | tiled geographic canvas, markers, popups anchored to items, pan/pinch (§19 `:geo`, §18) |
+| vector / photo editor       | Method Draw, Photopea                | tool palette, rulers, color picker, OS file drop, menubar (§19, §22, §17) |
+| 3D editor                   | three.js editor                      | not covered; declared out (§13)                                          |
+| media                       | Spotify web, m.youtube               | images, horizontal carousels, sticky player, playback state (§20)        |
+| slides                      | reveal.js, desktop and mobile        | swipe navigation, keyboard navigation (§18)                              |
+| PDF / document viewer       | pdf.js                               | paged scroll, pinch-zoom, thumbnail sidebar (§18, §21)                    |
+| rich text editing           | tiptap toolbar                       | `editor :mode :rich` with a Lisp-owned document (§6, one line added)      |
+| terminal                    | xterm.js                             | not covered; declared out (§13)                                          |
+| IDE chrome                  | vscode.dev                           | activity bar, tab strip with drag-reorder, docking (§17 on `tabs`/`split`) |
+| forms / auth                | GitHub sign-in                       | nothing new                                                              |
+| game board                  | 2048, mobile                         | swipe gestures, tile animation as keyed moves (§18, §2.2)                |
+| article reading             | Wikipedia mobile                     | reflowing inline text with images, drawer navigation (§5, §22)           |
+| mobile chrome generally     | YouTube, Excalidraw, 2048 on mobile  | bottom tab bar, floating toolbar, sheets and drawers, no hover (§18, §22) |
+
+Everything in the third column resolves to §17–§22. Nothing required a new opaque node or a JS change per feature.
+
+## 17. Drag and drop
+
+Every drag seen in the survey reduces to the same four parts: a **source** (an object handle presented as a type, or a child being reordered), a **target** (a node that declares what it accepts and how it positions a drop), a **feedback phase** that is entirely client-local, and **one terminal event**. Lisp never sees pointer motion. This is CLIM's drag-and-drop translator table, expressed as data on the tree.
+
+### 17.1 Attributes
+
+| attribute        | on                                   | meaning                                                                 |
+|------------------|--------------------------------------|-------------------------------------------------------------------------|
+| `:drag (type &key handle)` | any node                   | the node is a drag source presenting `handle` as `type`                  |
+| `:accepts ((type command) ...)` | any node              | the node is a drop target; a source of `type` dropped here dispatches `command` with `(source-handle target-handle placement)` |
+| `:sortable t`    | `list stack row grid tabs tree`, `table` rows and columns | children reorder by drag                              |
+| `:sort-group name` | the same                           | children move between containers sharing the group                       |
+| `:resizable (:x :y :both)` | any node                   | edge-drag resizes; also `split` dividers and `table` columns             |
+| `:port (:in\|:out type)` | `item` inside a `canvas`      | a connection endpoint; connecting is a drag whose source type is `port`  |
+
+A shape palette (draw.io, "drag these onto the calendar") is a `list` whose children carry `:drag`; the canvas or calendar cell carries `:accepts`. A kanban board is three `list`s with one `:sort-group`. The AG Grid "drag here to set row groups" bar is a `row` with `:accepts ((column group-by-column))`. Docking a pane is `:drag (pane)` on a tab and `:accepts ((pane dock-pane))` on each `split` region.
+
+### 17.2 Events
+
+Exactly one event ends a drag; a cancelled drag sends nothing.
+
+| event     | payload                                                        |
+|-----------|----------------------------------------------------------------|
+| `drop`    | `source-handle type target-key placement`                       |
+| `reorder` | `key from-index to-index` (within a `:sortable`)                |
+| `move`    | `key from-container to-container to-index` (across a `:sort-group`) |
+| `resize`  | `key size`                                                      |
+
+`placement` is what the target can compute locally and depends on the target's kind: an index in a list, a cell in a grid or calendar, a point in canvas coordinates (§19), a port for connections, or `:into` for a tree node. The terminal event is the only thing logged, so a drag replays (§12) from one line with no pointer trace.
+
+### 17.3 Client-local feedback
+
+Drag image, valid-target highlighting, insertion indicator, autoscroll near edges, and spring-loading a collapsed tree node are all client-side. Target validity needs no round trip: `:drag` types and `:accepts` types are both in the tree, so the client computes applicability the way it computes the doc line. Spring-loading sends the ordinary `expand` event. On touch, a drag begins with a long-press and the same engine runs (§18).
+
+### 17.4 OS file drop
+
+`:accepts ((:files command))` makes a node a drop zone for files from the OS (Photopea's "Drop any files here"). The `drop` event carries names, sizes and types and a handle per file through which Lisp reads the bytes; the bytes themselves never sit in the event.
+
+### 17.5 Text backend
+
+Sources render as `⇄type`, targets as `⇐(types)`, sortable containers as `⇅`. A drop is exercised in a test by constructing the `drop` event directly, which is also how the golden replay for step 3 of §14 is written.
+
+## 18. Gestures and touch
+
+**Input modality never crosses the wire.** Lisp sees gestures from a closed set; the client recognizes them from mouse, touch, pen, or keyboard. Which gestures a node can emit is declared per type in the spec file. Raw pointer or touch events are explicitly out (§13).
+
+### 18.1 The gesture set
+
+| gesture           | mouse                 | touch                    | keyboard          |
+|-------------------|-----------------------|--------------------------|-------------------|
+| `activate`        | click                 | tap                      | Enter / Space     |
+| `modified`        | ⌘/Ctrl-click          | two-finger tap           | ⌘/Ctrl-Enter      |
+| `secondary`       | right-click           | long-press               | Menu / ⇧F10       |
+| `double`          | double-click          | double-tap               | —                 |
+| `select`          | shift/⌘-click, marquee | tap in selection mode   | ⇧-arrows          |
+| `swipe`           | —                     | swipe, with direction    | arrows on the node |
+| `pan`             | drag on empty space / scroll | one-finger drag    | arrows            |
+| `pinch`           | wheel with modifier   | two-finger pinch         | ⌘+/−              |
+| `refresh`         | —                     | pull down past top       | —                 |
+| `dismiss`         | Escape / click outside | swipe down on a sheet, tap outside | Escape |
+| `drag`            | press and move        | long-press and move      | —                 |
+
+`pan` and `pinch` on a `canvas`, `record`, `scroll` or `media` node are absorbed client-side into the viewport transform (§8, §19) and reach Lisp only as a throttled `local` value when subscribed. Everywhere else a gesture is an ordinary `event` with the gesture name in it; a slide deck is a `stack` of keyed pages that emits `swipe :left`, and the 2048 board is a `grid` that emits `swipe` with a direction and gets keyed `move-child` patches back, which the client animates.
+
+### 18.2 What touch changes
+
+- **No hover.** The pointer-documentation line follows the most recently touched presentation, and `oref`'s `commands` attribute names gesture slots, not buttons (§5), so the client can word it as "tap **edit definition** · long-press 11 commands".
+- **Modality in `hello`.** `pointer :fine|:coarse`, `hover t|nil`, `touch t|nil`, plus the viewport and safe-area insets. Window resize is a `local` value. Choosing a one-pane layout below a width, moving `tabs` to the bottom, or turning a `split` into a drawer is a pure function of `hello` and that value; the vocabulary does not change.
+- **Hit targets.** With `pointer :coarse` the theme table (§9) selects larger spacing and target sizes. Lisp does not know or care.
+- **Mobile idioms as placements**, not new nodes: `tabs :placement :bottom` (YouTube's bar), `toolbar :placement :floating` (Excalidraw's tool strip), `dialog :placement :sheet|:side` (bottom sheets, navigation drawers; swiping one away is `dismiss`), `list` rows with `:swipe-commands` revealed by a horizontal swipe.
+- **Virtual keyboard.** `field :input-mode` from a closed set (`:text :numeric :decimal :email :url :search`).
+
+### 18.3 Text backend and replay
+
+Gestures are already abstract, so the text backend lists each node's gesture slots and replay logs the gesture, never the modality. A bug that appears only on touch is by construction a bug in the recognizer (JS, frozen, tested against fixture pointer streams) or a bug in Lisp's handling of a gesture, which replays on a desktop image.
+
+## 19. Spatial canvas
+
+Whiteboards, diagram editors, node editors, dashboards, gantt charts and maps all put nodes at coordinates in a space that the user pans and zooms. `record` (§6.4) covers read-only replay of Lisp-drawn output; it cannot cover editing, because re-rendering SVG per pointer move is a round trip per frame. So there is one interactive spatial node family.
+
+### 19.1 Nodes
+
+```lisp
+(canvas :key "board" :space :pixels :snap 8 :rulers t :tool :select
+  (item :key "n1" :at (120 80) :size (160 60) :handle h1 :drag (node) :resizable :both
+        :ports ((:out "value" number))
+    (stack (heading "Source") (text "…")))
+  (item :key "n2" :at (420 80) :size (160 60) :handle h2 :ports ((:in "x" number))
+    (stack (heading "Sink")))
+  (edge :key "e1" :from ("n1" "value") :to ("n2" "x") :route :curve :handle h3))
+```
+
+| attribute on `canvas` | values                                                                 |
+|-----------------------|------------------------------------------------------------------------|
+| `:space`              | `:pixels`, `(:grid cols rows)` (dashboards; positions snap to cells), `(:time start end)` (gantt; x is a time), `:geo` (maps; positions are lat/lng) |
+| `:tiles`              | a tile URL template, `:geo` only                                       |
+| `:tool`               | what a drag on empty space does: `:select` (marquee), `:pan`, or `(:create type)` |
+| `:snap`, `:rulers`    | client-side conveniences                                               |
+
+An `item` contains any node, including a `record`, so a Lisp-drawn shape sits on an editable canvas. `edge` routes between ports client-side. A popup anchored to a marker is a `popover :anchor "n1"`; anchors already exist (§4).
+
+### 19.2 Events
+
+`move {key at}`, `resize {key size}`, `connect {from to}` (a port-to-port drag, per §17), `select {keys}` (marquee or multi-select), and `create {type at size|points}` for drawing tools, where a freehand stroke arrives as one event with its points, never as motion. Every one is a terminal event; the viewport transform is `local` (§8). A gantt bar's resize is a duration change; a dependency is an `edge`; a dashboard panel move is a `move` in grid coordinates; a map marker drag is a `move` in lat/lng.
+
+### 19.3 Text backend
+
+```
+CANVAS board (pixels, tool select)
+  n1 @120,80 160×60  h1 ⇄node  ports: value→number
+  n2 @420,80 160×60  h2        ports: number→x
+  e1 n1.value → n2.x  (curve)
+```
+
+Editable canvases render as a table of items and edges. This is enough to assert a golden state after a replayed `move` or `connect`, which is the whole point.
+
+## 20. Media, images and links
+
+- `image :src :alt :fit (:cover|:contain) :shape (:rect|:circle)`. Avatars, album art, thumbnails.
+- `icon :name` from an enumerated set in the spec file. Activity bars and tool palettes are `toolbar`s of `button :icon`.
+- `media :kind (:audio|:video) :src :state (:playing|:paused) :position :volume`. The controls are client-local; Lisp drives playback by patching `state` and `position` (declarative, no `act`), and subscribes to `position` as a throttled `local` value if it needs it. A sticky player bar is a `toolbar :placement :bottom` holding a `media`.
+- `link :href`, inline. Activation opens the URL client-side and is not Lisp-visible, which is why it is not an event; Lisp-initiated navigation is the `open-url` act (§2.3).
+- Horizontal carousels (Spotify) are `scroll :axis :x` around a `row`.
+
+## 21. Large collections
+
+A 100 000-row grid cannot ship as a tree. `table`, `list` and `tree` take `:virtual t :count N`, Lisp ships only a window of keyed rows, the client reports the visible range as a subscribed `local` value, and Lisp patches the window with `replace-node`. The row keys keep selection and patches stable across windows. Paged document viewers are the same mechanism with pages as rows.
+
+Column sort, filter, pin, resize and reorder are ordinary events carrying the column key (reorder via `:sortable` on the columns, resize via `:resizable`). Cells hold any node, so a progress bar, a star rating (`radio-group :appearance :rating`), a badge or a checkbox in a cell is nothing new. Range selection is a `local` value `(r1 c1 r2 c2)`; in-cell editing is a `field` in the cell.
+
+## 22. Small additions the survey forced
+
+| addition                                   | seen in                       |
+|--------------------------------------------|-------------------------------|
+| `menubar` — a row of `menu`s                | Photopea, draw.io, three.js   |
+| `toolbar :placement (:top :bottom :floating)` | every editor, mobile bars  |
+| `radio-group :appearance (:list :segmented :toolbar :rating)` | Handsontable, tool palettes |
+| `color` control                            | Method Draw, draw.io          |
+| `dialog :placement (:center :sheet :side)` | mobile                        |
+| `tabs :placement (:top :bottom :side)`     | YouTube, VS Code activity bar |
+| `button :icon`                             | everywhere                    |
+| `editor :mode (:code :rich)`               | tiptap                        |
+| `field :input-mode`                        | mobile                        |
+
+All are attributes on existing nodes except `menubar`, `toolbar` and `color`, which are in the §4 table. None of them is styling: each is a semantic choice the text backend renders differently.
+
+## 23. Still open after the survey
+
+- Spreadsheet fill-handle drag (extend a selection by dragging its corner): probably `:resizable` on the selection rectangle producing a `fill` event, but unproven.
+- Whether `select` in a `canvas` needs a lasso variant or marquee is enough.
+- Whether `:geo` earns its place in the initial vocabulary or waits, as `plot` does, for a real requirement. It is cheap only if the tile layer is a fixed dependency of the frozen runtime; that is a size decision for step 4.
