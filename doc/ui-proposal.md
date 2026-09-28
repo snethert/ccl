@@ -105,6 +105,18 @@ Attributes are enumerated per type. Unknown attribute or unknown type → a Lisp
 
 Overlays (`menu`, `popover`, `tooltip`) take `:anchor <node-key>`. The client owns the geometry; the text backend renders an anchored overlay nested under its anchor.
 
+### 4.1 What the client actually contains
+
+The vocabulary keeps growing in this document; the client does not grow with it per element, and it is worth being exact about why, because "a renderer for every node" is easy to misread as "code and styles for every node".
+
+- **One renderer per type, not per node.** The renderer table has one entry for each of the ~45 types. A node becomes DOM elements (the reconciler's job, exactly as in any virtual-DOM library), but no code and no closure is created per node. The only per-node values written into the DOM are the key, the type, the enumerated attributes as data attributes, and geometry that *is* data (an item's position, a split's sizes) as an inline transform or size.
+- **One stylesheet, generated.** Styling is by class: `(type, role, state, density, pointer)`. The theme table (§9) generates it from the spec file; ~45 types × a few roles × a few states is a few hundred rules, written once. Nothing emits CSS at runtime, and no node carries style.
+- **One event dispatcher, delegated.** The runtime installs a fixed set of listeners at the window root (pointer, keyboard, wheel, drag, touch), walks up from the event target to the nearest keyed node, and reads that node's data attributes to decide what the event means: `:drag` makes it a drag source, `:accepts` a drop target, `:hover-group` a linked highlight, `:pad` a pad host, `:sortable` a reorder container. Attributes are read at event time; they do not install handlers. Adding a node or a thousand nodes adds no listeners.
+- **Mechanisms, keyed by attribute.** Everything that Parts II and III add is one general mechanism in the runtime that switches on an attribute: the gesture recognizer, the drag engine, the reconciler's keyed ops, the canvas viewport and its rulers, the tick policy, lanes, pads, hover groups, readouts, virtualization windows, the editor decoration bridge, the media element. About fifteen. That list is what "freeze" freezes, and it must be complete before step 6 of §14, which is why this document keeps testing it against more application types.
+- **Per-type tables, not per-node payloads.** Where a node would otherwise carry the same data as every other node of its type, the data lives in a table sent once and the node carries a symbol. `:pad task-pad` (§19.5) is the pattern; it applies equally to `oref` (§5): the doc line and gesture-slot commands of a presentation are properties of its *type* and are shipped once as the type's translator table, and a node carries only `handle`, `type`, `label` and `state`, with a per-node override attribute for the rare exception. The tree is small, and the client looks values up rather than storing them per element.
+
+What is genuinely per element is the tree itself and the DOM it reconciles into. That is the same cost every retained-mode toolkit pays, and it is data, which the text backend can print and the log can replay. The concern to guard against is not that cost; it is any mechanism that needs to know which application it is in, and none of the fifteen do.
+
 ## 5. Inline presentations (the addition that matters)
 
 Every pane in the target UI is text whose *substrings are typed objects*: `runner` in a `defclass` is a presentation, `#<HASH-TABLE eql, 14 entries>` in the transcript is one, the examiner states "every symbol below is the object itself", and while a command gathers a `function-name` argument, every matching presentation on screen highlights. A vocabulary whose text nodes take a string cannot express any of that. This is not an edge case; it is the product.
@@ -123,8 +135,8 @@ An `oref` carries:
 | `handle`    | an opaque id into the Lisp-side handle table                       |
 | `label`     | the text to draw                                                   |
 | `type`      | presentation type, for command applicability                       |
-| `doc`       | the one-line pointer documentation (§5.1)                          |
-| `commands`  | `(:activate cmd :modified cmd :secondary count)` — per gesture slot (§18), so the client can word the doc line for the input modality it has ("click / ⌘click / right" or "tap / long-press") |
+| `doc`       | override of the type's one-line pointer documentation (§5.1); usually absent |
+| `commands`  | override of the type's gesture-slot commands `(:activate cmd :modified cmd :secondary count)` (§18); usually absent — the type's translator table, sent once (§4.1), supplies them, and the client words the doc line for its input modality ("click / ⌘click / right" or "tap / long-press") |
 | `state`     | `:normal :matching :selected` — set by Lisp during argument gathering |
 
 Handles are minted by Lisp, never by the client; `(describe-handle h)` prints what one denotes. Handles are the only thing that crosses the wire in place of an object.
@@ -133,7 +145,7 @@ Handles are minted by Lisp, never by the client; `(describe-handle h)` prints wh
 
 The bottom line of every screen ("`pop-record` — function, clim-web · click **edit definition** · ⌘click **describe** · right **11 commands**") depends on server knowledge that changes per object *and* per active command context. If it required a round trip on hover, the design would have the chatty hover channel it set out to avoid.
 
-Decision: the `doc` and `commands` attributes ship *with* the `oref`, so hover is entirely client-local. When the command context changes (a command starts gathering an argument), Lisp patches the affected `oref` nodes' `state`, `doc`, and `commands` — a keyed patch, not a hover protocol.
+Decision: the doc line and command slots are properties of the presentation *type*, shipped once as the type's translator table (§4.1); an `oref` carries its type and the client looks the rest up, so hover is entirely client-local and the tree stays small. `doc` and `commands` on a node are overrides for the exceptions. When the command context changes (a command starts gathering an argument), Lisp patches the affected `oref` nodes' `state`, `doc`, and `commands` — a keyed patch, not a hover protocol.
 
 ### 5.2 Events from inline nodes
 
