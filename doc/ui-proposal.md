@@ -413,7 +413,7 @@ Whiteboards, diagram editors, node editors, dashboards, gantt charts and maps al
 ### 19.1 Nodes
 
 ```lisp
-(canvas :key "board" :space :pixels :snap 8 :rulers t :tool :select
+(canvas :key "board" :space :pixels :unit :mm :snap 8 :rulers t :guides t :tool :select
   (item :key "n1" :at (120 80) :size (160 60) :handle h1 :drag (node) :resizable :both
         :ports ((:out "value" number))
     (stack (heading "Source") (text "…")))
@@ -427,7 +427,10 @@ Whiteboards, diagram editors, node editors, dashboards, gantt charts and maps al
 | `:space`              | `:pixels`, `(:grid cols rows)` (dashboards; positions snap to cells), `(:time start end)` (gantt; x is a time), `:geo` (maps; positions are lat/lng) |
 | `:tiles`              | a tile URL template, `:geo` only                                       |
 | `:tool`               | what a drag on empty space does: `:select` (marquee), `:pan`, or `(:create type)` |
-| `:snap`, `:rulers`    | client-side conveniences                                               |
+| `:unit`               | the display unit of the space: `:px :mm :in :pt` for pixels, `:frames :seconds` for time, degrees for geo; `:auto` lets the ruler step through the unit's family (mm → cm → m) as zoom changes |
+| `:origin`             | the point the rulers count from, in space coordinates                   |
+| `:rulers`, `:guides`  | rulers along both edges (§19.4); `:guides t` makes them drag sources for guide lines |
+| `:snap`               | client-side convenience                                                |
 
 An `item` contains any node, including a `record`, so a Lisp-drawn shape sits on an editable canvas. `edge` routes between ports client-side. A popup anchored to a marker is a `popover :anchor "n1"`; anchors already exist (§4).
 
@@ -445,6 +448,16 @@ CANVAS board (pixels, tool select)
 ```
 
 Editable canvases render as a table of items and edges. This is enough to assert a golden state after a replayed `move` or `connect`, which is the whole point.
+
+### 19.4 Rulers
+
+A ruler is a pure function of three things: the canvas's unit system (Lisp, `:unit`/`:origin`), the viewport transform (client-local, §8), and a tick policy. Zoom never crosses the wire, so the tick policy lives in the frozen runtime, and it is one algorithm parameterized by the unit family: decimal (1, 2, 5 × 10ⁿ for px, mm, pt), imperial (halves, quarters, eighths of an inch), time (frames, seconds, minutes, sexagesimal), and geographic (degrees, minutes, seconds). Major/minor tick spacing and the label unit are chosen from the zoom level so that labels stay legible; with `:unit :auto` the label unit walks the family (mm at 400%, cm at 50%, m at 2%). The pointer position is marked on both rulers from the same client-local value a `readout` (§27) shows. None of this generates traffic: after the `view`, rulers are silent unless the viewport is subscribed.
+
+Guides (Inkscape, GIMP, Method Draw) are the one place a ruler talks to Lisp: with `:guides t` a ruler is a `:drag (guide)` source and the canvas `:accepts ((guide create-guide))`, so dragging out of a ruler ends in one `create {type :guide, axis, at}` event (§17) and the guide becomes an `item :kind :guide` the user can move or drop back onto the ruler to delete. The feedback line during the drag is client-side.
+
+A text document's paragraph ruler (LibreOffice Writer: margins, indents, tab stops) is not a canvas ruler; it is an `editor :mode :rich` decoration whose markers are `:resizable` handles reporting positions in document units. Same tick algorithm, different owner.
+
+The text backend renders a ruler for a stated viewport, since the ruler is meaningless without one: `RULER x 0–1440 px step 100 (zoom 1.0)`. Golden tests of canvases therefore fix the viewport in the test, which they already had to do for anything zoom-dependent.
 
 ## 20. Media, images and links
 
