@@ -8,9 +8,19 @@ sys.path.insert(0,str(HERE.parent/'bootstrap-recipes'))
 import backend
 sys.path.insert(0,str(HERE.parent/'registration'))
 from unit import Unit,sha,save
+sys.path.insert(0,str(HERE.parent/'bootstrap-validation'))
+import checkpoint,storage
 
 def run(out,selected=None):
-    out=out.resolve();out.mkdir()
+    out=out.resolve()
+    with storage.lease([out]):
+        storage.reset_run(out)
+        _run(out,selected)
+        shutil.rmtree(out/'work')
+        save(out/'.run.json',dict(status='PASS'))
+
+def _run(out,selected=None):
+    out=out.resolve();out.mkdir(exist_ok=True)
     work=out/'work';src=work/'ccl';src.mkdir(parents=True)
     save(work/'stage1-disposable.json',{'source':str(src)})
     inputs=EVIDENCE/'macos-u1-inputs';pins=json.loads((inputs/'pins.json').read_text())
@@ -25,8 +35,7 @@ def run(out,selected=None):
     env=dict(PATH='/usr/local/bin:/usr/bin:/bin',LANG='C',LC_ALL='C',CCL_DEFAULT_DIRECTORY=str(src),RECOUNT_OUTPUT=str(out)+'/')
     with Unit(src,out/'proposal'):
         cmd=[str(src/'dx86cl64'),'--no-init','--batch','--eval','(ccl::in-development-mode (load "ccl:lib;systems.lisp") (load "ccl:lib;compile-ccl.lisp"))','--load',str(HERE.parent/'registration/load.lisp'),'--load',str(HERE/'setup.lisp')]
-        with (out/'setup.log').open('w') as log:
-            subprocess.run(cmd,cwd=src,env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=120)
+        checkpoint.prepare(out,src,cmd,env,HERE,pins,kernel,image)
         paths=json.loads((out/'worklist.json').read_text())
         assert len(paths)==57
         if selected:paths=[p for p in paths if Path(p).stem in selected]
@@ -68,4 +77,4 @@ def run(out,selected=None):
     save(out/'inputs.json',dict(kernel=sha(kernel),image=sha(image),source=pins['inputs']['source.tar'],compiler=sha(out/'proposal/files'/backend.BACKEND)))
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('output',type=Path);p.add_argument('--files',nargs='+');a=p.parse_args();run(a.output,a.files)
+    p=argparse.ArgumentParser();p.add_argument('output',type=Path,nargs='?',default=storage.WORK_ROOT/'codex'/HERE.name/'run');p.add_argument('--files',nargs='+');a=p.parse_args();run(a.output,a.files)

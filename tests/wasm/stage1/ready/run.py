@@ -123,7 +123,7 @@ def run(out):
                              out/(name+'.log'),timeout=600)
         if mode=='write':
             # Reach the new image interface before the unchanged regression corpus.
-            times['full_corpus']=execute(out/'base',4,'full')
+            times['full_corpus']=execute(out/'base',4,'full',release=False)
     guard=local('guard_control');guard.execution_prepare=execution_with_pools
     start=time.monotonic();guard.check(out,local('prepare').prepare)
     times['guard_control']=time.monotonic()-start
@@ -131,7 +131,11 @@ def run(out):
     local('thread_local_controls').check(out)
     measurements(out)
     c.save(out/'times.json',times)
-    return summarize(out)
+    result=summarize(out)
+    import artifacts
+    artifacts.release(out/'base')
+    artifacts.release(out/'compiled')
+    return result
 
 def summarize(out):
     assert c.read(out/'pool-controls.json')['status']=='PASS'

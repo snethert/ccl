@@ -10,7 +10,7 @@ from execute import execute, bound_report, sample
 
 
 def clone(base,out):
-    shutil.copytree(base,out,ignore=shutil.ignore_patterns('compiler.image','*.log','execution-report*','parallel-results.json'))
+    c.clone(base,out,ignore=shutil.ignore_patterns('compiler.image','*.log','execution-report*','parallel-results.json'))
 
 
 def retained(out):
@@ -18,6 +18,7 @@ def retained(out):
     with tarfile.open(c.PARENT/'execution.tar.gz') as archive:
         for name in ('compiled/native.json','execution.json'):
             path=out/name
+            if path.is_symlink(): path.unlink()
             path.write_bytes(archive.extractfile(name).read())
             if c.sha(path)!=expected[name]:raise ValueError('retained sequential artifact')
 

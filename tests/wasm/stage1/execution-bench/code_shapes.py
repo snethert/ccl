@@ -6,6 +6,10 @@ from pathlib import Path
 import re
 import sys
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'loader-target'))
+from record_reader import read_records
+
 
 def expressions(wat):
     tokens = re.findall(r'"(?:\\.|[^"\\])*"|;;[^\n]*|[()]|[^\s()]+', wat)
@@ -30,7 +34,7 @@ def expressions(wat):
 def inspect(build, out):
     out.mkdir(parents=True, exist_ok=True)
     names = {r['wire']:r['name'] for r in json.loads((build/'function-names.json').read_text())}
-    units = json.loads((build/'benchmark.records.json').read_text())['units']
+    units = read_records(build/'benchmark.records.json')['units']
     result = []
     for unit in units:
         wat = unit['record'][4]

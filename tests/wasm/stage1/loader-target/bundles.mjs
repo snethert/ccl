@@ -4,7 +4,7 @@ import {materialize} from './materialize.mjs';
 import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
 import {decodeTargetBundle} from '../../../../runtime/wasm32/target-bundle.mjs';
 import {reuseCode} from './reuse.mjs';
-const args = process.argv.slice(2), compact = args.includes('--compact');
+const args = process.argv.slice(2), compact = true;
 const [out, reuse] = args.filter(a => !['--compact','--v1'].includes(a));
 if(!args.includes('--v1')){await import('./archive-build.mjs');}else{
 const read = n => JSON.parse(fs.readFileSync(out + '/' + n));
@@ -23,7 +23,9 @@ for (const file of manifest.files) {
   // products match exactly. Their module names (and listing names) stay fixed.
   if (previous && previous.stem === file.stem &&
       sha256(fs.readFileSync(out + '/' + file.stem + '.records.json')) ===
-        sha256(fs.readFileSync(reuse + '/' + previous.stem + '.records.json')) &&
+        (fs.existsSync(reuse + '/record-summaries.json')
+          ? JSON.parse(fs.readFileSync(reuse + '/record-summaries.json'))[previous.stem + '.records.json'].sha256
+          : sha256(fs.readFileSync(reuse + '/' + previous.stem + '.records.json'))) &&
       sha256(fs.readFileSync(out + '/' + file.stem + '.w32fsl')) ===
         sha256(fs.readFileSync(reuse + '/' + previous.stem + '.w32fsl'))) {
     const bytes = fs.readFileSync(reuse + '/' + previous.bundle);
@@ -43,7 +45,7 @@ for (const file of manifest.files) {
     const prior = decodeTargetBundle(fs.readFileSync(reuse + '/' + previous.bundle), previous.sha256);
     for (const row of prior.manifest.codeSet.modules) {
       const stem = reuse + '/' + previous.stem + '/' + row.name;
-      if (fs.existsSync(stem + '.wat')) cache.set(sha256(fs.readFileSync(stem + '.wat')), {stem, row});
+      if (fs.existsSync(stem + '.wasm') && row.wat_sha256) cache.set(row.wat_sha256, {stem, row});
     }
   }
   const materializeCode = (wat, stem, policy, versions) => {

@@ -1,5 +1,13 @@
 # Target loader
 
+Build output defaults to `/private/tmp/ccl-work/codex/loader-target/PURPOSE`
+and reuses that directory. Completed builds keep record digests/counts and
+discard generated WAT. Record-based diagnostics regenerate checked records;
+for several such diagnostics, use `--diagnostic-records` once and finalize
+after the batch. `--compile-only` leaves intermediate records for materialization.
+Retain sources, result JSON and specific failing inputs with the shared
+validation driver's `finish` command, which enforces the 50 MB pack limit.
+
 This runner starts a coordinated level-0 heap and code set, enters the original
 `%toplevel-function%`, and loads the runtime through CCL's target `%fasload`.
 Level-1 is compiled into bundles and is never host cross-loaded into this image.

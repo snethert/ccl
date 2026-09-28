@@ -3,6 +3,10 @@ import json
 from pathlib import Path
 import sys
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'loader-target'))
+from record_reader import read_records
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / 'execution-bench'))
 from code_shapes import expressions
@@ -15,7 +19,7 @@ def rows(text):
 def bodies(build):
     names = {r['wire']: r['name'] for r in json.loads((build/'function-names.json').read_text())}
     result = {}
-    for unit in json.loads((build/'benchmark.records.json').read_text())['units']:
+    for unit in read_records(build/'benchmark.records.json')['units']:
         tree = expressions(unit['record'][4])
         result[names[unit['name']]] = next(n for n in tree if isinstance(n, list) and n[:2] == ['func', '$body'])
     return result

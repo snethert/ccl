@@ -30,7 +30,7 @@ def run(out, source_provider=None, prepare_execution=None, runtime_identity=None
             argv=argv[:at]+['--eval',native_prelude]+argv[at:]
         return command(argv,*args,**kwargs)
     c.command=preload
-    result=builder.build(out/'base',c.DEFAULT_CACHE,cold=True,single_copy=True)
+    result=builder.build(out/'base',c.DEFAULT_CACHE)
     c.save(out/'cold-compiler.json',result)
     import execute
     if prepare_execution is not None:

@@ -1,0 +1,18 @@
+;;; Diagnostic export from the immutable compiler checkpoint. No compilation.
+(in-package :wasm32-compiler)
+(let ((modules (make-hash-table :test #'equal)))
+  (labels ((remember (module)
+             (setf (gethash (getf module :name) modules) module)
+             (mapc #'remember (getf module :children))))
+    (mapc #'remember (append *core-modules* *condition-cpl-modules*
+                            (mapcar #'second *core-candidates*))))
+  (with-open-file (request (ccl:getenv "WAT_REQUEST"))
+    (let ((*read-eval* nil))
+      (dolist (name (read request))
+        (let ((module (or (gethash name modules)
+                          (error "Missing retained module: ~s" name))))
+          (with-open-file (stream (concatenate 'string (ccl:getenv "WAT_OUTPUT")
+                                               name ".wat")
+                                  :direction :output :if-exists :supersede)
+            (write-string (getf module :wat) stream)))))))
+(ccl:quit)

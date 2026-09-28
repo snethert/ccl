@@ -5,11 +5,22 @@ import json
 import shutil
 import sys
 import tarfile
+import io
 from run import c,storage,run,summarize,HERE,local
+import artifacts
 
 def pack(root,dest,names):
+    references={}
+    failures=artifacts.explicit_failures(root)
     with tarfile.open(dest,'w:gz') as stream:
-        for name in sorted(names):stream.add(root/name,arcname=name,recursive=False)
+        for name in sorted(names):
+            if name not in failures and (artifacts.product(name) or name.endswith('.census-wat')):
+                references[name]=dict(sha256=c.sha(root/name),bytes=(root/name).stat().st_size)
+                if Path(name).name=='native.json':references[name].update(artifacts.shared_oracle(root/name))
+            else:stream.add(root/name,arcname=name,recursive=False)
+        data=c.canonical(references)
+        entry=tarfile.TarInfo('artifact-references.json');entry.size=len(data)
+        stream.addfile(entry,io.BytesIO(data))
 
 def corpus(out):
     from execute import bound_report
@@ -40,6 +51,7 @@ def native_identity(out,native):
                 basis='all proposed compiler and CCL source files byte-identical')
 
 def retain(out,packet,native):
+    artifacts.restore(out/'compiled')
     for submitted,source in (('submitted/probes.lisp','startup.lisp'),
                              ('submitted/inputs.lisp','inputs.lisp'),
                              ('submitted/driver.lisp','../bootstrap-validation/probe.lisp'),
@@ -57,7 +69,7 @@ def retain(out,packet,native):
         'execution-environment.json','case-ids.json','compiled/native.json',
         'build-completion.json','compile.log','oracle.log','execution.log'])
     c.save(packet/'native-reuse.json',reuse)
-    shutil.copytree(out/'stream-readers',packet/'stream-readers')
+    artifacts.snapshot(out/'stream-readers',packet/'stream-readers',oracle_store=c.STORE/'shared-inputs/oracles')
     if reuse['native_rebuilt']:
         shutil.copyfile(native/'proposal-identity.json',packet/'native-proposal-identity.json')
         shutil.copyfile(native/'results/run.json',packet/'native-run.json')
@@ -69,7 +81,8 @@ def retain(out,packet,native):
     for name in (backend,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp','level-1/l1-streams.lisp'):
         target=packet/'proposal'/name;target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(out/'base/compiled/proposal/files'/name,target)
-    for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
+    c.save(packet/'runtime-products.json',{'collector.wasm':c.sha(out/'compiled/collector.wasm')})
+    for name in ('runtime/collector.c','runtime/heap-image.mjs'):
         dest=packet/'runtime-proposal'/name;dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(out/'compiled'/name,dest)
     for name in ('pool-controls.json','pool-shapes.json','thread-local-controls.json','stream-controls.json','stream-shapes.json','registry-controls.json','lock-controls.json','lock-shapes.json','complex-controls.json','complex-shapes.json','summary.json','writer.json','reader.json','coverage.json','times.json','heap-keys.json',
@@ -85,8 +98,8 @@ def retain(out,packet,native):
     names += [str(p.relative_to(compiled)) for pattern in ('*.wat','*.wasm') for p in (compiled/'probe-output').glob(pattern)]
     names += ['compiled/symbols.json','compiled/pools.json']
     names += ['compiled/'+r['name']+'.wasm' for r in c.read(compiled/'probe-output/probe-modules.json')]
-    pack(compiled,packet/'compiled-inputs.tar.gz',names)
-    pack(out/'images',packet/'image.tar.gz',c.inventory(out/'images'))
+    pack(compiled,packet/'probe-results.tar.gz',names)
+    c.save(packet/'image-identities.json',c.inventory(out/'images'))
     logs=[p.name for p in out.glob('*.log')]
     logs += [str(p.relative_to(out)) for p in c.files(out/'development')]
     if (compiled/'probe.log').exists():logs.append('compiled/probe.log')
@@ -116,6 +129,7 @@ def retain(out,packet,native):
     c.save(packet/'packet.json',dict(id='STAGE1-READY-JOIN-R13',files=c.inventory(packet),
                                    review_disposition='NOT_REVIEWED',slot_credit=False))
     c.verify_files(packet,c.read(packet/'packet.json')['files'])
+    artifacts.check_size(packet)
     shutil.rmtree(out)
 
 def verify(packet,out):
@@ -130,12 +144,17 @@ def verify(packet,out):
         assert reuse['native_rebuilt'] and reuse['run_sha256']==c.sha(packet/'native-run.json')
         assert reuse['source_identity']==c.read(packet/'native-proposal-identity.json')
     result=run(out)
+    artifacts.restore(out/'compiled')
     assert corpus(out)==c.read(packet/'full-corpus.json')
     assert c.inventory(out/'base/compiled/proposal/files')==c.read(packet/'native-proposal-identity.json')
     assert c.read(packet/'native-run.json')['status']=='PASS'
     for name in (local('compiler').BACKEND,'level-0/WASM32/w32-lap.lisp','compiler/WASM32/wasm32-arch.lisp','level-0/l0-aprims.lisp','level-0/l0-misc.lisp','level-1/l1-streams.lisp'):
         assert (out/'base/compiled/proposal/files'/name).read_bytes()==(packet/'proposal'/name).read_bytes(),name
-    for name in ('runtime/collector.c','runtime/heap-image.mjs','collector.wasm'):
+    if (packet/'runtime-products.json').exists():
+        c.verify_files(out/'compiled',c.read(packet/'runtime-products.json'))
+        runtime_names=('runtime/collector.c','runtime/heap-image.mjs')
+    else:runtime_names=('runtime/collector.c','runtime/heap-image.mjs','collector.wasm')
+    for name in runtime_names:
         assert (out/'compiled'/name).read_bytes()==(packet/'runtime-proposal'/name).read_bytes(),name
     assert result==c.read(packet/'summary.json')
     assert c.read(out/'coverage.json')==c.read(packet/'coverage.json')

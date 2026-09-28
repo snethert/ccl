@@ -1,6 +1,7 @@
 // Independent S-expression comparison, then reconstruction of each v1 module
 // from the linked bodies. WABT output must equal the retained v1 template.
 import fs from 'node:fs';
+import {readRecords} from './record-reader.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
@@ -42,7 +43,7 @@ function input(f){
   const file=read(source+'/bundles.json').files.find(r=>r.path===u.file),prior=baselineFiles.find(r=>r.path===u.file);
   currentFile=u.file;templates=baseline==='-'?null:decodeTargetBundle(fs.readFileSync(baseline+'/'+prior.bundle),prior.sha256).modules;
   currentSources=new Map();let id=0;
-  for(const unit of read(source+'/'+file.stem+'.records.json').units){
+  for(const unit of readRecords(source+'/'+file.stem+'.records.json').units){
    const walk=r=>{currentSources.set('code_'+(++id),r);for(const c of r[8]??[])walk(c);};walk(unit.record);
   }
  }

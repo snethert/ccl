@@ -1,5 +1,6 @@
 // Qualify metadata-only changes while reusing the full rewrite/byte witness.
 import fs from 'node:fs';
+import {readRecords} from './record-reader.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 const [kind,source,before,after]=process.argv.slice(2),read=p=>JSON.parse(fs.readFileSync(p));
@@ -14,7 +15,7 @@ for(const f of current.functions){
  const unit=units.get(f.unit);
  if(kind==='runtime'&&unit.file!==file){
   file=unit.file;sources.clear();let id=0;
-  const records=read(source+'/'+directory.find(r=>r.path===file).stem+'.records.json');
+  const records=readRecords(source+'/'+directory.find(r=>r.path===file).stem+'.records.json');
   const walk=r=>{sources.set('code_'+(++id),{arity:r[2],captures:r[3]});for(const child of r[8]??[])walk(child);};
   for(const unit of records.units)walk(unit.record);
  }

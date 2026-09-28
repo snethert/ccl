@@ -4,6 +4,10 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'loader-target'))
+from record_reader import read_records
 from check import expressions, nodes
 
 HERE = Path(__file__).resolve().parent
@@ -17,7 +21,7 @@ def mutate(build, out, kind):
         shutil.copyfile(build/name, out/name)
     (out/'runtime').symlink_to((build/'runtime').resolve(), target_is_directory=True)
     names = {r['name']: r['wire'] for r in json.loads((build/'function-names.json').read_text())}
-    records = json.loads((build/'benchmark.records.json').read_text())
+    records = read_records(build/'benchmark.records.json')
     record = next(u['record'] for u in records['units'] if u['name'] == names[KINDS[kind]])
     tree = expressions(record[4])
     body = next(n for n in tree if isinstance(n, list) and n[:2] == ['func', '$body'])

@@ -12,6 +12,8 @@ spec = importlib.util.spec_from_file_location('target_product', HERE.parent / 'l
 product = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(product)
 c = product.c
+import storage
+import artifacts
 
 
 def runtime(out, reuse):
@@ -36,7 +38,30 @@ def runtime(out, reuse):
            binaries={p.name: c.sha(p) for p in out.glob('*.wasm')}))
 
 
-def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None, source_file=None):
+def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None, source_file=None, diagnostic_records=False):
+    out = Path(out).resolve()
+    if any(Path(p).resolve() == out or out in Path(p).resolve().parents
+           for p in (reuse, postimage, source_file) if p):
+        raise ValueError('build output overlaps its input')
+    with storage.lease([out]):
+        storage.reset_run(out)
+        options = dict(boot0=boot0, level1=level1, reuse=str(reuse) if reuse else None,
+                       modules=modules, compile_only=compile_only,
+                       postimage=str(postimage) if postimage else None,
+                       source_file=str(source_file) if source_file else None)
+        c.save(out/'build-recipe.json', dict(version=1, options=options,
+               driver=c.sha(Path(__file__)), source=c.sha(source_file) if source_file else None))
+        _run(out, **options)
+        if not compile_only and not diagnostic_records:
+            artifacts.compact_records(out)
+        # WAT is an intermediate, including archive and individual-module forms.
+        for p in out.rglob('*.wat'):
+            if p.is_file() and not p.is_symlink(): p.unlink()
+        c.save(out/'.run.json', dict(status='BUILT'))
+
+
+def _run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None, source_file=None):
+    postimage = Path(postimage) if postimage else None
     if source_file and not postimage:
         raise ValueError('--source requires --postimage')
     if compile_only and not level1:
@@ -114,9 +139,12 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
 
 
 if __name__ == '__main__':
-    reuse = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--reuse=')), None)
-    modules = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--modules=')), None)
-    postimage = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[2:] if a.startswith('--postimage=')), None)
-    source_file = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[2:] if a.startswith('--source=')), None)
-    run(Path(sys.argv[1]).resolve(), '--boot0' in sys.argv[2:], '--level1' in sys.argv[2:], reuse, modules,
-        '--compile-only' in sys.argv[2:], postimage, source_file)
+    reuse = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--reuse=')), None)
+    modules = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--modules=')), None)
+    postimage = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[1:] if a.startswith('--postimage=')), None)
+    source_file = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[1:] if a.startswith('--source=')), None)
+    arguments = sys.argv[1:]
+    purpose = 'boot' if '--boot0' in arguments else 'level1' if '--level1' in arguments else 'postimage' if postimage else 'smoke'
+    output = Path(arguments[0]) if arguments and not arguments[0].startswith('--') else storage.WORK_ROOT/'codex/loader-target'/purpose
+    run(output.resolve(), '--boot0' in arguments, '--level1' in arguments, reuse, modules,
+        '--compile-only' in arguments, postimage, source_file, '--diagnostic-records' in arguments)

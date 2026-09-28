@@ -1,6 +1,7 @@
 // Focused loader test: real compiler bytes, B entry invocation, and transaction
 // failures. This is not a boot0 or whole-file target-LOAD claim.
 import fs from 'node:fs';
+import {readRecords} from './record-reader.mjs';
 import assert from 'node:assert/strict';
 import {admitTargetBundle, decodeTargetBundle, encodeTargetBundle} from '../../../../runtime/wasm32/target-bundle.mjs';
 import {targetCodeService} from '../../../../runtime/wasm32/target-code-service.mjs';
@@ -10,7 +11,7 @@ const out = process.argv[2], read = name => JSON.parse(fs.readFileSync(out + '/'
 const bytes = fs.readFileSync(out + '/modules.w32bundle'), digest = sha256(bytes);
 const versions = read('versions.json'), policy = read('policy.json');
 const decoded = decodeTargetBundle(bytes, digest), rows = decoded.manifest.codeSet.modules;
-const records = read('records.json');
+const records = readRecords(out + '/records.json');
 const units = decoded.manifest.units.map(u => {
   const compiled = records.units.find(r => r.name === u.name);
   return {...u, record: compiled.install_record ?? compiled.record};

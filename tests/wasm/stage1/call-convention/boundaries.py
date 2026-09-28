@@ -4,6 +4,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'loader-target'))
+from record_reader import read_records
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / 'execution-bench'))
 from code_shapes import expressions
@@ -17,7 +21,7 @@ def build(source, out, mutant=None):
     out.mkdir(parents=True, exist_ok=True)
     names = {r['wire']: r['name'] for r in json.loads((source/'function-names.json').read_text())}
     metadata = {}
-    for unit in json.loads((source/'benchmark.records.json').read_text())['units']:
+    for unit in read_records(source/'benchmark.records.json')['units']:
         name = names[unit['name']]
         if name not in ['CC-ZERO', 'CC-V0', 'CC-V1', 'CC-V4', 'CC-V5', 'CC-V64', 'CC-TAIL', 'CC-DEPTH']:
             continue

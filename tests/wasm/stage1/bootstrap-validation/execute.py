@@ -4,10 +4,36 @@ import json
 import shutil
 import subprocess
 import time
+import traceback
 import common as c
+import artifacts
 from prepare import prepare
 
 SEED=0x42545034
+
+
+def retain_failed_cases(out, fresh, rows, ids):
+    failed_ids={r.get('caseId') for r in fresh.get('failures',[]) if r.get('caseId')}
+    selected=[row for row,case_id in zip(rows,ids) if case_id in failed_ids]
+    target=out/'failure-inputs';target.mkdir(exist_ok=True)
+    c.save(target/'cases.json',selected)
+    names={r['name'] for r in selected}
+    for name in names:
+        if Path(name).name!=name:raise ValueError('invalid failed module name')
+        binary=out/'compiled'/(name+'.wasm')
+        if binary.exists():shutil.copyfile(binary,target/binary.name)
+        text=out/'probe-output'/(name+'.wat')
+        if text.exists():shutil.copyfile(text,target/text.name)
+    missing=[name+'.wat' for name in names if not (target/(name+'.wat')).exists()]
+    if missing:
+        try:
+            entry=(out/'compiled/compiler.image').resolve().parent.parent
+            c.restore_wat(entry,target,missing)
+        except Exception:
+            (target/'regeneration-error.log').write_text(traceback.format_exc())
+    c.save(target/'reproduction.json',dict(case_ids=sorted(failed_ids),
+           unidentified_worker_failure=any(not r.get('caseId') for r in fresh.get('failures',[])),
+           environment=c.sha(out/'execution-environment.json'),plan=c.sha(out/'execution-plan.json')))
 
 
 def row_key(environment,row,case_id):
@@ -30,13 +56,14 @@ def bound_report(path):
     return value,identity
 
 
-def execute(out,workers=4,tier='full',parent=None,indices=None,reverse=False,controls=True):
-    out=Path(out);start=time.monotonic();prepare(out)
+def execute(out,workers=4,tier='full',parent=None,indices=None,reverse=False,controls=True,release=True):
+    out=Path(out);start=time.monotonic();artifacts.restore(out);prepare(out)
+    c.save(out/'.run.json',dict(status='RUNNING'))
     env=c.read(out/'execution-environment.json');env_key=c.digest(env)
     rows=c.read(out/'compiled/native.json');ids=c.read(out/'case-ids.json')
     keys=[row_key(env_key,row,case_id) for row,case_id in zip(rows,ids)]
     old={};parent_id=None
-    if parent and Path(parent).exists() and Path(parent).with_suffix('.identity.json').exists():
+    if parent and c.exists(parent) and c.exists(Path(parent).with_suffix('.identity.json')):
         previous,parent_id=bound_report(parent)
         parent_id={**parent_id,'report':str(Path(parent).resolve())}
         old={r['key']:r for r in previous['cases']}
@@ -67,6 +94,7 @@ def execute(out,workers=4,tier='full',parent=None,indices=None,reverse=False,con
             c.save(out/'execution-failure.json', dict(status='FAIL', environment=env,
                 environment_key=env_key, native=c.sha(out/'compiled/native.json'),
                 ids=c.sha(out/'case-ids.json'), plan=plan, result=fresh))
+            retain_failed_cases(out,fresh,rows,ids)
         raise
     fresh=c.read(out/'parallel-results.json');by_id={}
     for row in fresh['rows']:by_id.setdefault(row['caseId'],[]).append(row)
@@ -98,11 +126,18 @@ def execute(out,workers=4,tier='full',parent=None,indices=None,reverse=False,con
     path=out/'execution-report.json';c.save(path,report)
     c.save(path.with_suffix('.identity.json'),dict(sha256=c.sha(path),environment=env_key,
            parent=parent_id,status='PASS',native=c.sha(out/'compiled/native.json'),ids=c.sha(out/'case-ids.json')))
+    # Every successful row now appears in the bound execution report. Keep the
+    # transport identity and counts instead of a second copy of those rows.
+    c.save(out/'parallel-results.identity.json',dict(sha256=c.sha(out/'parallel-results.json'),
+           report=c.sha(path),**{k:v for k,v in fresh.items() if k not in ('rows','controls')}))
+    (out/'parallel-results.json').unlink()
+    if release: artifacts.release(out)
     return {k:report[k] for k in ('status','tier','fresh_comparisons','sampled_comparisons','inherited_comparisons','execution_seconds')}
 
 
 def identity(out):
     out=Path(out)
+    artifacts.restore(out)
     report,binding=bound_report(out/'execution-report.json')
     c.verify_files(out,report['environment']['files'])
     if c.sha(c.NODE)!=report['environment']['engine']['sha256']:

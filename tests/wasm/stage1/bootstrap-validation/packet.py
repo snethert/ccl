@@ -39,37 +39,34 @@ def retain(base,qualification,probe,controls,warm,cache,out,development):
     original=qualification/'retained';identity(original)
     key=c.read(base/'build-invocation.json')['key'];entry=c.cache_read(cache,'session',key)
     if entry is None:raise ValueError('missing retained session')
-    out.mkdir()
-    pack(entry,out/'session.tar.gz',c.inventory(entry).keys()|{'cache-manifest.json'})
-    session_files=c.read(entry/'cache-manifest.json')['files']
-    changed={n:h for n,h in c.inventory(report).items() if session_files.get(n)!=h}
-    pack(report,out/'review.tar.gz',changed)
-    c.save(out/'review-files.json',changed)
-    evidence={str(p.relative_to(qualification)):c.sha(p) for p in c.files(qualification)
-              if p.suffix in ('.json','.log') and not any(part in ('compiled','driver','runtime','owner-check') for part in p.relative_to(qualification).parts)}
-    pack(qualification,out/'qualification.tar.gz',evidence)
-    c.save(out/'qualification-files.json',evidence)
-    probe_files={n:h for n,h in c.inventory(probe).items() if session_files.get(n)!=h}
-    probe_files.pop('compiled/compiler.image',None)
-    pack(probe,out/'probe.tar.gz',probe_files)
-    c.save(out/'probe-files.json',probe_files)
-    for name,path in [('qualification.json',qualification/'qualification.json'),('controls.json',controls/'controls.json'),
-                      ('probe-controls.json',controls/'probe-controls.json'),('warm.json',warm/'build-invocation.json'),('build.json',base/'build-invocation.json'),
-                      ('probe.json',probe/'probe-completion.json')]:shutil.copyfile(path,out/name)
-    pack(controls,out/'controls.tar.gz',c.inventory(controls))
-    shutil.copytree(c.HERE,out/'source',ignore=shutil.ignore_patterns('__pycache__'))
-    if development:
-        pack(Path(development),out/'development.tar.gz',c.inventory(Path(development)))
-    c.save(out/'provenance.json',dict(parent=str(c.PARENT.name),parent_packet=c.sha(c.PARENT/'packet.json'),
-        native_qualification=dict(status='REUSED',parent_summary=c.sha(c.PARENT/'summary.json'),
-            qualified_proposal=c.inventory(entry/'compiled/proposal'),native_tests=21843,
-            source_change=False,execution_rebuilt=False),
-        compiler_session_key=key,compiler_image=c.sha(entry/'compiled/compiler.image'),
-        author_execution=c.sha(original/'execution-report.json'),execution_rebuilt_during_retention=False,
-        admission_credit=0,original_definition_execution_credit=0,slot_credit=False))
-    c.save(out/'packet.json',dict(id='STAGE1-BOOTSTRAP-VALIDATION-R2',review_disposition='NOT_REVIEWED',
-        slot_credit=False,files=c.inventory(out),tool_sources=c.inventory(c.HERE)))
-    checked(out)
+    import artifacts
+    import tempfile
+    import os
+    if out.exists(): raise ValueError('retained destination exists')
+    out.parent.mkdir(parents=True,exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.retaining-',dir=out.parent) as temporary:
+        stage=Path(temporary)/'packet';stage.mkdir()
+        for label,path in [('build',base),('qualification',qualification),('probe',probe),('controls',controls),('warm',warm)]:
+            artifacts.snapshot(path,stage/label,oracle_store=c.STORE/'shared-inputs/oracles')
+        if development:
+            c.save(stage/'experiments.json',dict(files=c.inventory(development)))
+            failures=artifacts.explicit_failures(Path(development))
+            for name in failures:
+                target=stage/'failure-inputs'/name;target.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copyfile(Path(development)/name,target)
+            for path in c.files(development):
+                if path.suffix in ('.json','.log') and not artifacts.product(path.name):
+                    target=stage/'experiment-results'/path.relative_to(development)
+                    target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,target)
+        shutil.copytree(c.HERE,stage/'source',ignore=shutil.ignore_patterns('__pycache__'))
+        c.save(stage/'provenance.json',dict(parent=str(c.PARENT.name),
+            compiler_session_key=key,compiler_image=c.sha(entry/'compiled/compiler.image'),
+            execution_rebuilt_during_retention=False,review_only=True))
+        c.save(stage/'packet.json',dict(version=3,id='BOOTSTRAP-VALIDATION-RESULTS',
+            review_disposition='NOT_REVIEWED',files=c.inventory(stage),tool_sources=c.inventory(c.HERE)))
+        artifacts.check_size(stage)
+        checked(stage)
+        os.rename(stage,out)
     # Delete only after the complete destination has passed identity validation.
     for path in sorted(set(disposable),key=lambda p:len(p.parts),reverse=True):
         if path.exists():shutil.rmtree(path)
@@ -77,7 +74,12 @@ def retain(base,qualification,probe,controls,warm,cache,out,development):
 
 
 def restore(packet,out,cache):
-    packet,out,cache=map(Path,(packet,out,cache));manifest=checked(packet)
+    packet,out,cache=map(Path,(packet,out,cache))
+    if (packet/'compaction.json').exists():
+        raise ValueError('Compiled artifacts were compacted. Use doc/WASM/tools/read-compacted-evidence.py for review inputs, or rebuild the pinned source to execute.')
+    manifest=checked(packet)
+    if manifest.get('version')==3:
+        raise ValueError('This is review evidence. Rebuild the pinned compiler to execute; compiled artifacts are not retained.')
     key=c.read(packet/'provenance.json')['compiler_session_key']
     entry=c.cache_read(cache,'session',key)
     if entry is None:

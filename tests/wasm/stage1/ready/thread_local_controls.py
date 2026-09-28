@@ -18,7 +18,7 @@ def check(out):
     rows=c.read(root/'probe-output/probe-native.json')
     row=next(r for r in rows if r['definition']=='READY-THREAD-VALUE')
     wat=root/'compiled'/(row['name']+'.wat');wasm=wat.with_suffix('.wasm')
-    original=wat.read_text();binary=wasm.read_bytes()
+    original=(root/'probe-output'/wat.name).read_text();binary=wasm.read_bytes()
     # The actual compiled module has one use of the helper. Let the global
     # fallback through: the unbound and post-unwind observations must change.
     import re
@@ -27,7 +27,8 @@ def check(out):
     changed=re.sub(pattern,lambda m:'(then (i32.load '+m[1]+')) (else (i32.load '+m[1]+'))',original)
     dev=out/'development/thread-local';dev.mkdir(parents=True,exist_ok=True)
     mutant=dev/'global-fallback.wat';mutant.write_text(changed)
-    c.assemble(mutant,c.DEFAULT_CACHE)
+    c.assemble(mutant,c.DEFAULT_CACHE,discard=False)
+    c.save(dev/'failure-inputs.json',['global-fallback.wat','global-fallback.wasm'])
     manifest=root/'class-image-code.json';digest=root/'class-image-code.sha256'
     saved=manifest.read_bytes();saved_digest=digest.read_bytes()
     try:

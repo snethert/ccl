@@ -19,7 +19,7 @@ def compiler_setup():
 def run(out):
     out.mkdir(parents=True,exist_ok=True)
     compiler_setup()
-    result=build.build(out/'base',c.DEFAULT_CACHE,cold=True)
+    result=build.build(out/'base',c.DEFAULT_CACHE)
     c.save(out/'cold-compiler.json',result)
     import execute
     result=execute.execute(out/'base',4,'full')

@@ -6,11 +6,50 @@ import os
 import shutil
 import tempfile
 import time
+import subprocess
+import plistlib
 import common as c
 
 WORK_ROOT = Path('/private/tmp/ccl-work')
 MAX_AGE = 24 * 60 * 60
 WABT_BYTES = 2 * 1024**3
+
+
+def ensure_ram():
+    def mounted():
+        images = plistlib.loads(subprocess.check_output(
+            ['/usr/bin/hdiutil', 'info', '-plist']))['images']
+        for image in images:
+            if image.get('image-path') != 'ram://33554432' or image.get('owner-uid') != os.getuid():
+                continue
+            devices = {e['dev-entry'] for e in image['system-entities']}
+            for path in (WORK_ROOT, c.DEFAULT_CACHE):
+                if not os.path.ismount(path): break
+                info = plistlib.loads(subprocess.check_output(
+                    ['/usr/sbin/diskutil', 'info', '-plist', str(path)]))
+                if info.get('DeviceNode') not in devices or info.get('MountPoint') != str(path): break
+            else: return True
+        return False
+    if mounted(): return
+    helper = Path.home()/'Library/Application Support/CCLBuildRAMDisk/ramdisk.py'
+    subprocess.run(['/usr/bin/python3', str(helper)], check=True,
+                   stdout=subprocess.DEVNULL, timeout=60)
+    if not mounted(): raise ValueError('CCL work and cache must share the 16 GiB RAM image')
+
+
+def reset_run(output, root=WORK_ROOT):
+    """Reuse a purpose's output while the caller holds its workspace lease."""
+    output = Path(output)
+    workspace(output, root)
+    if output.exists() and any(output.iterdir()):
+        marker = output/'.run.json'
+        if not marker.exists() or c.read(marker).get('status') not in ('PASS', 'BUILT'):
+            raise ValueError('retain unfinished run before reusing its directory: '+str(output))
+        if any(c.read(p) for p in output.rglob('failure-inputs.json')):
+            raise ValueError('retain original failure inputs before reusing: '+str(output))
+        shutil.rmtree(output)
+    output.mkdir(parents=True, exist_ok=True)
+    c.save(output/'.run.json', dict(status='RUNNING'))
 
 
 def workspace(path, root=WORK_ROOT):
@@ -51,6 +90,7 @@ def work_lock(path, root=WORK_ROOT):
 @contextmanager
 def lease(paths=(), cache=c.DEFAULT_CACHE, root=WORK_ROOT):
     """Hold for the entire command, including subprocesses and cache copies."""
+    if Path(root) == WORK_ROOT: ensure_ram()
     with ExitStack() as stack:
         stack.enter_context(lock(Path(cache)/'.gc.lock'))
         for work in sorted({workspace(p, root) for p in paths}):
@@ -89,7 +129,7 @@ def gc(cache=c.DEFAULT_CACHE, root=WORK_ROOT, now=None):
     with lock(cache/'.gc.lock', exclusive=True, blocking=False) as acquired:
         if not acquired:
             result['skipped_active'].append(str(cache)); return result
-        for kind in ('session', 'wabt', 'failures'):
+        for kind in ('session', 'compiler', 'wabt', 'binary', 'failures'):
             if (cache/kind).is_symlink():
                 result['skipped_unmanaged'].append(str(cache/kind));continue
             entries = sorted((p for p in (cache/kind).glob('*')
@@ -100,7 +140,7 @@ def gc(cache=c.DEFAULT_CACHE, root=WORK_ROOT, now=None):
                 stale = now - entry.stat().st_mtime >= MAX_AGE
                 if entry.name.startswith('.') or kind == 'failures':
                     remove = stale
-                elif kind == 'session':
+                elif kind in ('session','compiler'):
                     remove = kept >= 2
                     kept += 1
                 else:
@@ -114,11 +154,7 @@ def gc(cache=c.DEFAULT_CACHE, root=WORK_ROOT, now=None):
 
 
 def finish(output, destination, root=WORK_ROOT):
-    """Publish review evidence atomically; then remove the disposable output.
-
-    Keep all text/JSON inputs and logs, plus hashes for regenerable binaries.
-    This is an evidence bundle, not a claim that old restore supports elision.
-    """
+    """Publish verified review evidence before removing the run."""
     output, destination = Path(output).resolve(), Path(destination).resolve()
     work = workspace(output, root)
     if output == work:
@@ -130,25 +166,11 @@ def finish(output, destination, root=WORK_ROOT):
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = Path(tempfile.mkdtemp(prefix='.retaining-', dir=destination.parent))
     try:
-        hashes = c.inventory(output)
-        references = {}
-        for name, digest in hashes.items():
-            p = output/name
-            if p.suffix in ('.wasm', '.image', '.dx64fsl', '.fasl', '.wat'):
-                references[name] = digest
-            else:
-                target = temporary/name; target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(p, target)
-        saved = c.inventory(temporary)
-        c.verify_files(temporary, saved)
-        # Check against the ORIGINAL inventory, not hashes of the copies alone.
-        if any(hashes[name] != digest for name, digest in saved.items()):
-            raise ValueError('retention copy differs')
-        c.save(temporary/'retention.json', dict(version=1, files=saved,
-               rebuildable=references, source=str(output), execution_rebuilt=False))
+        import artifacts
+        result = artifacts.snapshot(output, temporary, oracle_store=c.STORE/'shared-inputs/oracles')
         os.rename(temporary, destination)
     finally:
         if temporary.exists(): shutil.rmtree(temporary)
     shutil.rmtree(output)
     return dict(status='PASS', retained=str(destination), removed=str(output),
-                retained_files=len(saved), referenced_files=len(references))
+                **result)

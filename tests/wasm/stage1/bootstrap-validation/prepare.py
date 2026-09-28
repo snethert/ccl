@@ -37,6 +37,9 @@ def prepare(out, regenerate_probe=False):
         # Compiler changes require the freshly generated leaf, not a hook
         # compiled by the parent backend. Insert only the collection import
         # and its entry call, then bind both products below.
+        if not (out/'compiled/collector_probe.wat').exists():
+            entry=(out/'compiled/compiler.image').resolve().parent.parent
+            c.restore_wat(entry,out/'compiled',['collector_probe.wat'])
         raw=(out/'compiled/collector_probe.wat').read_text()
         start=raw.index('(func $body '); i=start+len('(func $body')
         while True:
@@ -57,8 +60,8 @@ def prepare(out, regenerate_probe=False):
         target.write_text(hooked)
         subprocess.run([c.WABT,'--enable-all',target,'-o',target.with_suffix('.wasm')],check=True)
     else:
-        assert c.sha(out/'compiled/collector_probe.wat')==expected['compiled/collector_probe.wat']
-        needed.update(('compiled/collector_probe_hook.wasm','compiled/collector_probe_hook.wat'))
+        assert c.wat_digest(out,'collector_probe.wat')==expected['compiled/collector_probe.wat']
+        needed.add('compiled/collector_probe_hook.wasm')
     needed.update('owner-check/'+n for n in ('check.mjs','owner.mjs'))
     needed.update(n for n in expected if n.startswith('owner-check/') and n.endswith('.mjs'))
     needed.update(('istruct-check.mjs','population-check.mjs'))
@@ -101,9 +104,8 @@ def prepare(out, regenerate_probe=False):
     for name in HARNESS+SERVICES+HELPERS:manifest[name]=c.sha(out/name)
     # Use the declared session inputs, never incidental logs or review files.
     manifest.update(driver_inputs(out))
-    if regenerate_probe:
-        for name in ('collector_probe.wat','collector_probe_hook.wat'):
-            manifest['compiled/'+name]=c.sha(out/'compiled'/name)
+    probe_sources = {name:c.sha(out/'compiled'/name) for name in
+                     ('collector_probe.wat','collector_probe_hook.wat')} if regenerate_probe else {}
     for p in c.files(out/'owner-check'): 
         if p.suffix=='.mjs':manifest[str(p.relative_to(out))]=c.sha(p)
     for name in ('istruct-check.mjs','population-check.mjs'):manifest[name]=c.sha(out/name)
@@ -114,10 +116,13 @@ def prepare(out, regenerate_probe=False):
         name='compiled/'+('collector_probe_hook' if row['name']=='collector_probe' else row['name'])+'.wasm'
         manifest[name]=c.sha(out/name)
     c.save(out/'execution-environment.json',dict(version=1,files=manifest,
+        probe_sources=probe_sources,
         engine=dict(path=str(c.NODE),sha256=c.sha(c.NODE)),
         tooling={n:c.sha(c.HERE/n) for n in ('prepare.py','execute.py','common.py')},
         placements=[8388608,2146500608],movement=[False,True],fp_control=7,
         layout=c.sha(layout_path),
         reset='complete declared mutable regions; fresh owner/numeric services per case',
         compiler_environment=c.read(out/'environment.json')))
+    if regenerate_probe:
+        for name in probe_sources: (out/'compiled'/name).unlink()
     return len(rows)

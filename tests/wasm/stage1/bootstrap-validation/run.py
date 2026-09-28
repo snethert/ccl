@@ -13,7 +13,7 @@ def main():
     commands=parser.add_subparsers(dest='command',required=True)
     commands.add_parser('gc')
     p=commands.add_parser('finish');p.add_argument('output',type=Path);p.add_argument('destination',type=Path)
-    p=commands.add_parser('build');p.add_argument('output',type=Path);p.add_argument('--cold',action='store_true');p.add_argument('--jobs',type=int,default=4)
+    p=commands.add_parser('build');p.add_argument('output',type=Path,nargs='?',default=storage.WORK_ROOT/'codex/corpus/build');p.add_argument('--cold',action='store_true');p.add_argument('--jobs',type=int,default=4)
     p=commands.add_parser('probe');p.add_argument('base',type=Path);p.add_argument('source',type=Path);p.add_argument('inputs',type=Path);p.add_argument('output',type=Path);p.add_argument('--mode',choices=['class','default'],default='default');p.add_argument('--jobs',type=int,default=4);p.add_argument('--workers',type=int,default=4);p.add_argument('--retain-to',type=Path)
     p=commands.add_parser('verify');p.add_argument('output',type=Path);p.add_argument('--tier',choices=['identity','focused','full'],required=True);p.add_argument('--parent',type=Path);p.add_argument('--workers',type=int,default=4);p.add_argument('--indices',type=Path);p.add_argument('--reverse',action='store_true');p.add_argument('--retain-to',type=Path)
     args=parser.parse_args()

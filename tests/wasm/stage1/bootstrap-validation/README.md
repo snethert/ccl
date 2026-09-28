@@ -1,5 +1,14 @@
 # P4 validation tooling and P5 workspace management
 
+Storage update, 28 September 2026: use stable purpose directories on the RAM
+disk. Compiler checkpoints and native oracles are shared cache references;
+successful generated WAT and execution binaries are discarded. `finish`
+publishes small packs of sources, hashes, compressed results and declared
+failure inputs. New packets contain review evidence; execution requires a
+cache entry or rebuilding pinned sources. Older commands below describe the
+historical P4/P5 format. See `doc/WASM/artifact-retention.md` for migration and
+reading compacted historical packs.
+
 No new original-definition execution or LL15 credit. This tooling packet
 implements the user's P4 plan over the reviewed class-growth sources at
 `78b187ba`, since integrated separately. This revision changes tooling only.

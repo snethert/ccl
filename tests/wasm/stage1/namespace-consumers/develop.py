@@ -81,7 +81,7 @@ def run(out, compiler_key=KEY):
         graph_source=c.sha(HERE.parent/'ready/graph.lisp'),compiler_key=compiler_key,
         new_native_objects_projected=False))
     target=out/'target'
-    if not target.exists():shutil.copytree(entry,target,ignore=shutil.ignore_patterns('compiler.image','*.wat','*.log'))
+    if not target.exists():c.clone(entry,target,ignore=shutil.ignore_patterns('compiler.image','*.wat','*.log'))
     new=c.read(generated/'modules.json');replaced={r[0] for r in c.read(generated/'public-definitions.json')}
     # A later whole-file definition supersedes every older version at its cell.
     keep=[dict(r,poolRoot=i) for i,r in enumerate(modules) if r['function'] not in replaced]
@@ -99,19 +99,21 @@ def run(out, compiler_key=KEY):
     c.save(target/'compiled/pools.json',dict(version=1,objects=basepools['objects']+extra['objects'],roots=basepools['roots']+extra['roots']))
     c.save(target/'compiled/pool-layout.json',dict(globalRoots=[len(modules),len(modules)+1]))
     for name in ('symbols.json','native.json','initializers.json','load-bindings.json','public-definitions.json','setf-bindings.json'):
+        if (target/'compiled'/name).is_symlink(): (target/'compiled'/name).unlink()
         shutil.copyfile(generated/name,target/'compiled'/name)
+    missing=[m['name']+'.wat' for m in allmods if not (generated/(m['name']+'.wat')).exists()]
+    c.restore_wat(entry,target/'compiled',missing)
     c.save(target/'compiled/condition-callers.json',['NAMESPACE-CHECK'])
     for m in allmods:
         name=m['name']+'.wat';p=generated/name
-        if not p.exists():p=entry/'compiled'/name
-        shutil.copyfile(p,target/'compiled'/name)
+        if p.exists():shutil.copyfile(p,target/'compiled'/name)
     import prune
     allmods=prune.select(target,allmods)
     prune.pools(target,allmods)
     c.save(target/'compiled/modules.json',allmods)
-    with ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(lambda m:c.assemble(target/'compiled'/(m['name']+'.wat'),c.DEFAULT_CACHE),allmods))
-    # Preserve the expected source of the parent's collection hook.
-    shutil.copyfile(entry/'compiled/collector_probe.wat',target/'compiled/collector_probe.wat')
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        assembled=list(pool.map(lambda m:c.assemble(target/'compiled'/(m['name']+'.wat'),c.DEFAULT_CACHE),allmods))
+    c.save(target/'assembly.json',dict(workers=4,rows=assembled))
     finish(out,entry,allmods,new)
     return target
 

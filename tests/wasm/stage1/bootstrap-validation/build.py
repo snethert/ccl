@@ -9,6 +9,7 @@ import tempfile
 import time
 import tarfile
 import common as c
+import storage
 
 
 def environment():
@@ -24,7 +25,7 @@ def environment():
                 registration=c.sha(c.ROOT/'tests/wasm/stage1/registration/load.lisp'),
                 implementation={str(p.relative_to(c.HERE)):c.sha(p)
                                 for p in c.files(c.HERE/'driver')},
-                builder={name:c.sha(c.HERE/name) for name in ('build.py','common.py')},
+                builder={name:c.sha(c.HERE/name) for name in ('build.py','common.py','restore-wat.lisp')},
                 modes=['default','class'], environment_order='retained driver/compile.lisp',
                 source_root_policy='pristine U1 with the exact parent proposal')
 
@@ -79,32 +80,32 @@ def cold_session(stage):
 
 def build(out,cache,workers=4,cold=False,single_copy=False):
     start=time.monotonic();identity=environment();key=c.digest(identity)
-    if single_copy:
-        if not cold:raise ValueError('single-copy requires a fresh cold build')
-        # A full corpus can occupy several GiB. Its leased workspace already
-        # owns the result; publishing and copying a second session exhausts
-        # the shared RAM disk without providing reuse for this cold run.
-        out=Path(out);out.mkdir();rebuilt=True
-        cold_session(out)
-        c.save(out/'environment.json',identity)
-    else:
+    # Even cold verification uses a cache staging directory, never a per-run
+    # checkpoint. Serialize publication of the same compiler build.
+    with storage.lock(Path(cache)/'.build-locks'/key, exclusive=True):
         hit=c.cache_read(cache,'session',key)
         rebuilt=hit is None or cold
         if rebuilt:
             with c.cache_write(cache,'session',key) as stage:
-                cold_session(stage)
                 c.save(stage/'environment.json',identity)
+                cold_session(stage)
+                paths=sorted((stage/'compiled').glob('*.wat'))
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    assembly=list(pool.map(lambda p:c.assemble(p,cache,cold),paths))
+                c.save(stage/'assembly.json',dict(workers=workers,rows=assembly))
             hit=c.cache_read(cache,'session',key)
-        out=Path(out);out.mkdir()
-        shutil.copytree(hit,out,dirs_exist_ok=True)
+        else:
+            assembly=[dict(row,rebuilt=False,seconds=0) for row in c.read(hit/'assembly.json')['rows']]
+        out=Path(out)
+        storage.reset_run(out)
+        c.clone(hit,out,dirs_exist_ok=True)
         (out/'cache-manifest.json').unlink()
-    paths=sorted((out/'compiled').glob('*.wat'))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        assembly=list(pool.map(lambda p:c.assemble(p,cache,cold),paths))
     c.save(out/'assembly.json',dict(workers=workers,rows=assembly))
     c.save(out/'build-invocation.json',dict(status='PASS',key=key,cache_hit=not rebuilt,
-           session_cache_published=not single_copy,
+           session_cache_published=True,compiler_reference=str(hit/'compiled/compiler.image'),
+           native_reference=str(hit/'compiled/native.json'),
            compiler_processes=int(rebuilt),oracle_processes=int(rebuilt),oracle_rebuilt=rebuilt,
            wabt_processes=sum(r['rebuilt'] for r in assembly),workers=workers,
            seconds=time.monotonic()-start,environment=identity))
+    c.save(out/'.run.json',dict(status='BUILT'))
     return c.read(out/'build-invocation.json')

@@ -3,6 +3,7 @@ from pathlib import Path
 from contextlib import contextmanager
 import errno
 import hashlib
+import gzip
 import json
 import os
 import shutil
@@ -10,6 +11,9 @@ import subprocess
 import tarfile
 import tempfile
 import time
+import threading
+
+FAILURE_LOCK = threading.Lock()
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
@@ -25,7 +29,9 @@ DEFAULT_CACHE = Path.home() / 'Library/Caches/ccl-wasm-validation'
 
 def sha(path):
     h = hashlib.sha256()
-    with Path(path).open('rb') as stream:
+    path = Path(path)
+    stream = path.open('rb') if path.is_file() else gzip.open(path.with_name(path.name+'.gz'),'rb')
+    with stream:
         for block in iter(lambda: stream.read(1024*1024), b''):
             h.update(block)
     return h.hexdigest()
@@ -40,7 +46,17 @@ def digest(value):
 
 
 def read(path):
-    return json.loads(Path(path).read_text())
+    path = Path(path)
+    if path.suffix == '.gz':
+        with gzip.open(path,'rt') as stream:return json.load(stream)
+    if not path.is_file():
+        with gzip.open(path.with_name(path.name+'.gz'),'rt') as stream:return json.load(stream)
+    return json.loads(path.read_text())
+
+
+def exists(path):
+    path = Path(path)
+    return path.is_file() or path.with_name(path.name+'.gz').is_file()
 
 
 def save(path, value):
@@ -66,6 +82,52 @@ def verify_files(root, hashes):
         path = Path(root) / name
         if not path.is_file() or sha(path) != expected:
             raise ValueError('artifact identity: ' + str(path))
+
+
+def clone(source, destination, **options):
+    """Copy mutable run inputs; reference the two large, immutable inputs."""
+    source = Path(source).resolve()
+    def copy(src, dst):
+        src, dst = Path(src), Path(dst)
+        if src.name in ('compiler.image', 'native.json'):
+            if dst.exists() or dst.is_symlink(): dst.unlink()
+            dst.symlink_to(src.resolve())
+            return str(dst)
+        return shutil.copyfile(src, dst)
+    return shutil.copytree(source, destination, copy_function=copy,
+                           symlinks=True, **options)
+
+
+def wat_digest(out, name):
+    path = Path(out)/'compiled'/name
+    if path.exists(): return sha(path)
+    for row in read(Path(out)/'assembly.json')['rows']:
+        if row['name'] == name: return row['identity']['wat']
+    raise ValueError('missing assembly identity: '+name)
+
+
+def restore_wat(entry, destination, names):
+    """Export exact diagnostic WAT from the shared checkpoint, without compiling."""
+    destination = Path(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    names = sorted(set(names))
+    if any(Path(n).name != n or not n.endswith('.wat') for n in names):
+        raise ValueError('invalid diagnostic module name')
+    request = destination/'wat-request.lisp'
+    request.write_text('('+ ' '.join(json.dumps(n[:-4]) for n in names) +')\n')
+    try:
+        with tempfile.TemporaryDirectory(prefix='wat-export-', dir=destination) as temporary:
+            kernel = Path(temporary)/'dx86cl64'
+            shutil.copyfile(KERNEL, kernel);kernel.chmod(0o755)
+            command([kernel, '-I', Path(entry)/'compiled/compiler.image', '--no-init',
+                     '--batch', '--load', HERE/'restore-wat.lisp'],
+                    destination/'restore-wat.log',
+                    dict(os.environ, CCL_DEFAULT_DIRECTORY=str(ROOT)+'/',
+                         WAT_OUTPUT=str(destination)+'/', WAT_REQUEST=str(request)))
+        expected = {r['name']:r['identity']['wat'] for r in read(Path(entry)/'assembly.json')['rows']}
+        verify_files(destination, {name:expected[name] for name in names})
+    finally:
+        request.unlink(missing_ok=True)
 
 
 def parent_inputs():
@@ -115,6 +177,9 @@ def cache_write(cache, kind, key):
     stage = Path(tempfile.mkdtemp(prefix='.building-', dir=parent))
     try:
         yield stage
+        for path in files(stage):
+            if path.name in ('compiler.image', 'native.json') and not path.is_symlink():
+                path.chmod(0o444)
         save(stage/'cache-manifest.json', dict(kind=kind, key=key, files=inventory(stage)))
         destination = parent/key
         if destination.exists():
@@ -132,7 +197,13 @@ def cache_write(cache, kind, key):
         failure = Path(cache)/'failures'/stage.name
         failure.parent.mkdir(parents=True, exist_ok=True)
         if stage.exists():
-            os.rename(stage, failure)
+            import artifacts
+            try:
+                artifacts.snapshot(stage, failure)
+            except BaseException:
+                # An unclassified failure cannot be silently thrown away.
+                shutil.rmtree(failure, ignore_errors=True)
+                os.rename(stage, failure)
         raise
     finally:
         shutil.rmtree(stage, ignore_errors=True)
@@ -150,14 +221,21 @@ def assembly_key(path):
     return dict(wat=sha(path), tool=sha(WABT), flags=FLAGS)
 
 
-def assemble(path, cache, cold=False):
+def assemble(path, cache, cold=False, discard=True):
     path = Path(path)
     identity = assembly_key(path)
     key = digest(identity)
     hit = cache_read(cache, 'wabt', key)
     if hit is None or cold:
         with cache_write(cache, 'wabt', key) as stage:
-            seconds = command([WABT, *FLAGS, path, '-o', stage/'module.wasm'], stage/'wabt.log')
+            try:
+                seconds = command([WABT, *FLAGS, path, '-o', stage/'module.wasm'], stage/'wabt.log')
+            except BaseException:
+                with FAILURE_LOCK:
+                    marker = path.parent/'failure-inputs.json'
+                    names = read(marker) if marker.exists() else []
+                    save(marker, sorted(set(names+[path.name])))
+                raise
             save(stage/'identity.json', identity)
             if hit and sha(hit/'module.wasm') != sha(stage/'module.wasm'):
                 raise ValueError('non-reproducible WABT output')
@@ -167,4 +245,7 @@ def assemble(path, cache, cold=False):
     else:
         seconds, rebuilt = 0, False
     shutil.copyfile(hit/'module.wasm', path.with_suffix('.wasm'))
-    return dict(name=path.name, key=key, rebuilt=rebuilt, seconds=seconds)
+    result = dict(name=path.name, key=key, identity=identity,
+                  wasm=sha(hit/'module.wasm'), rebuilt=rebuilt, seconds=seconds)
+    if discard: path.unlink()
+    return result

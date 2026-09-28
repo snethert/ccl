@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import time
 import common as c
+import storage
 
 
 def probe(base,source,inputs,out,cache,mode='class',workers=4):
@@ -24,7 +25,9 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
     pinned=c.read(entry/'cache-manifest.json')['files']
     c.verify_files(base,{n:h for n,h in pinned.items()
                         if n.startswith(('compiled/','driver/'))})
-    out.mkdir()
+    if any(out == p or out in p.parents for p in (base, source, inputs)):
+        raise ValueError('probe output overlaps its inputs')
+    storage.reset_run(out)
     generated=out/'probe-output';generated.mkdir()
     submitted=out/'submitted';submitted.mkdir()
     for original,name in ((source,'probes.lisp'),(inputs,'inputs.lisp'),(c.HERE/'probe.lisp','driver.lisp')):
@@ -67,7 +70,7 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
                                '--load',driver],out/'probe.log',env,cwd=src,timeout=120)
     if 'VALIDATION-PROBES-PASS' not in (out/'probe.log').read_text():raise ValueError('incomplete probe')
     # Refused probe compiles need only their inputs/log, not a corpus copy.
-    shutil.copytree(base,out,dirs_exist_ok=True,
+    c.clone(base,out,dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('compiler.image','probe.log'))
     modules=c.read(base/'compiled/modules.json');new=c.read(generated/'probe-modules.json')
     if {m['name'] for m in modules}&{m['name'] for m in new}:raise ValueError('probe module collision')
@@ -91,7 +94,7 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
               next(r for r in old_rows if r['definition']=='CORE-GENERIC-READER-DISPATCH'),
               next(r for r in old_rows if r['definition']=='%ROUND-NEAREST-DOUBLE-FLOAT->FIXNUM'),
               next(r for r in old_rows if r['definition']=='%TRUNCATE-DOUBLE-FLOAT->FIXNUM')]
-    (out/'compiled/native.json').write_bytes(c.canonical(rows+controls)+b'\n')
+    c.save(out/'compiled/native.json',rows+controls)
     callers=c.read(base/'compiled/condition-callers.json')
     if mode=='class':callers+=c.read(generated/'probe-callers.json')
     c.save(out/'compiled/condition-callers.json',callers)
@@ -100,6 +103,8 @@ def probe(base,source,inputs,out,cache,mode='class',workers=4):
         q=out/'compiled'/p.name;shutil.copyfile(p,q);paths.append(q)
     with ThreadPoolExecutor(max_workers=workers) as pool:
         assembly=list(pool.map(lambda p:c.assemble(p,cache),sorted(paths)))
+    previous=c.read(base/'assembly.json')['rows']
+    c.save(out/'assembly.json',dict(workers=workers,rows=previous+assembly))
     report=dict(status='PASS',compiler_processes=1,base_compiler_rebuilt=False,
         compiled_modules=len(paths),new_cases=len(rows),indices=list(range(len(rows))),
         session_key=key,compiler_image=c.sha(entry/'compiled/compiler.image'),

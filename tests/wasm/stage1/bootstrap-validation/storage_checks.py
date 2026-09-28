@@ -56,7 +56,7 @@ def check(output):
         s.finish(run,target,root)
         assert not run.exists()
         record=c.read(target/'retention.json');c.verify_files(target,record['files'])
-        assert record['rebuildable']['module.wasm']==binary_hash
+        assert record['rebuildable']['module.wasm']['sha256']==binary_hash
         assert not (target/'module.wasm').exists()
         assert (target/'failure.log').read_text()=='original failure'
         checks+=['retention-before-deletion','failure-preserved','binary-referenced']

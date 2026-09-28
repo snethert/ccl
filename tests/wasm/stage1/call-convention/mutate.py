@@ -1,6 +1,10 @@
 """Single-fault emitted-code controls, materialized through the normal loader."""
 import json
 from pathlib import Path
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'loader-target'))
+from record_reader import read_records
 import shutil
 import subprocess
 from boundaries import expressions, wat
@@ -21,7 +25,7 @@ def mutate(build, out, kind):
         shutil.copyfile(build/name, out/name)
     (out/'runtime').symlink_to((build/'runtime').resolve(), target_is_directory=True)
     names = {r['wire']: r['name'] for r in json.loads((build/'function-names.json').read_text())}
-    records = json.loads((build/'benchmark.records.json').read_text())
+    records = read_records(build/'benchmark.records.json')
     changes = 0
     for unit in records['units']:
         if kind != 'public-entry' and names[unit['name']] != {'argument-roots': 'CC-MOVING-ARGUMENTS', 'pool-root': 'CC-POOL'}[kind]:

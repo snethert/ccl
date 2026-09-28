@@ -15,7 +15,8 @@ if (reuse) {
       JSON.stringify(read(reuse + '/versions.json')) !== JSON.stringify(versions)) throw Error('Reuse configuration changed');
   for (const row of read(reuse + '/boot/artifacts/code-set.json').modules) {
     const stem = reuse + '/boot/artifacts/' + row.name;
-    cache.set(sha256(fs.readFileSync(stem + '.wat')), {stem, row});
+    const digest = row.wat_sha256 ?? (fs.existsSync(stem + '.wat') ? sha256(fs.readFileSync(stem + '.wat')) : null);
+    if (digest) cache.set(digest, {stem, row});
   }
 }
 const result = write(out + '/boot', out + '/boot/artifacts', policy, versions, (wat, stem, policy, versions) => {

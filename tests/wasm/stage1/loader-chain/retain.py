@@ -8,6 +8,7 @@ import tempfile
 
 
 def retain(c, destination, roots, identity, record, extra=None):
+    import artifacts
     assert not destination.exists()
     stage = Path(tempfile.mkdtemp(prefix='.loader-report-', dir=destination.parent))
     generated, compressed, nondeterministic = {}, {}, {}
@@ -26,7 +27,7 @@ def retain(c, destination, roots, identity, record, extra=None):
                 if path.suffix == '.image':
                     nondeterministic[name] = dict(**row, reason='saved host heap layout')
                     continue
-                if path.suffix in ('.wasm', '.wat', '.bin', '.w32fsl', '.dx64fsl') or path.name == 'dx86cl64':
+                if artifacts.product(name) or path.suffix == '.bin':
                     generated[name] = row; continue
                 target = stage / name; target.parent.mkdir(parents=True, exist_ok=True)
                 if row['bytes'] > 131072:
@@ -47,6 +48,7 @@ def retain(c, destination, roots, identity, record, extra=None):
         c.save(stage / 'non-reproducible.json', nondeterministic)
         c.save(stage / 'packet.json', dict(id=identity, status='PROPOSED', files=c.inventory(stage)))
         c.verify_files(stage, c.read(stage / 'packet.json')['files'])
+        artifacts.check_size(stage)
         os.rename(stage, destination)
     finally:
         if stage.exists(): shutil.rmtree(stage)

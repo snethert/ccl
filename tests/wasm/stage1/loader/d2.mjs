@@ -10,6 +10,7 @@ import {signatures} from './runtime/bundle.mjs';
 import {PROFILE,OWNER_PROFILE,NUMERIC_PROFILE,FLOAT_PROFILE} from './runtime/loader.mjs';
 
 export function inventory(wat,stem,policy,versions){
+ try {
  fs.writeFileSync(stem+'.wat',wat);
  execFileSync('/usr/local/bin/wat2wasm',['--enable-all',stem+'.wat','-o',stem+'.template.wasm']);
  const bytes=fs.readFileSync(stem+'.template.wasm');
@@ -17,7 +18,6 @@ export function inventory(wat,stem,policy,versions){
  const dumpOptions={encoding:'utf8',maxBuffer:64*1024*1024};
  const sections=execFileSync('/usr/local/bin/wasm-objdump',['-x',stem+'.template.wasm'],dumpOptions);
  const instructions=execFileSync('/usr/local/bin/wasm-objdump',['-d',stem+'.template.wasm'],dumpOptions);
- fs.writeFileSync(stem+'.sections.txt',sections);fs.writeFileSync(stem+'.instructions.txt',instructions);
  const ops=[...new Set(instructions.split('\n').filter(l=>l.includes('|')&&l.split('|')[1].trim()).map(l=>l.split('|')[1].trim().split(/\s+/)[0]))].sort();
  const features=[];
  if(/-> \([^)]*,/.test(sections))features.push('multivalue');
@@ -37,7 +37,15 @@ export function inventory(wat,stem,policy,versions){
  const names=new Set(x.imports.map(i=>i.module+'.'+i.name));
  const profile=names.has('floating.calculate')?FLOAT_PROFILE:names.has('integer.calculate')?NUMERIC_PROFILE:names.has('owner.ensure')?OWNER_PROFILE:PROFILE;
  const ranges=entryRanges(full.bytes,{ownerRetry:true});
- return {generation:1,...versions,profile,d2:{abi,classification,template,outputs:{full:full.record}},
+ fs.unlinkSync(stem+'.wat');
+ return {generation:1,...versions,profile,wat_sha256:sha256(wat),d2:{abi,classification,template,outputs:{full:full.record}},
   entries:['entry','tail_entry'].map(role=>({role,export:role,table:role==='entry'?'public':'tail',
    function_index:x.exports.find(e=>e.name===role).index,signature:signatures[role],range:ranges.find(e=>e.role===role)}))};
+ } catch (error) {
+  fs.writeFileSync(stem+'.wat',wat);
+  const split=stem.lastIndexOf('/'), marker=stem.slice(0,split)+'/failure-inputs.json';
+  const names=fs.existsSync(marker)?JSON.parse(fs.readFileSync(marker)):[];
+  fs.writeFileSync(marker,JSON.stringify([...new Set([...names,stem.slice(split+1)+'.wat'])]));
+  throw error;
+ }
 }

@@ -73,7 +73,10 @@ def run(kind, out):
 
 if __name__ == '__main__':
     sys.setrecursionlimit(20000)
-    kind, out = sys.argv[1], Path(sys.argv[2]).resolve()
+    kind = sys.argv[1]
+    out = Path(sys.argv[2]).resolve() if len(sys.argv)>2 else storage.WORK_ROOT/'codex/qualification'/kind
     with storage.lease([out]):
+        storage.reset_run(out)
         run(kind, out)
+        c.save(out/'.run.json',dict(status='PASS'))
     print(kind, 'PASS')
