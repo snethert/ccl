@@ -1,0 +1,1064 @@
+{
+  "version": 1,
+  "status": "ACCEPTED_BASELINE",
+  "acceptance": {
+    "date": "2026-09-28",
+    "reviewer": "Claude",
+    "reviewSource": "User-supplied review",
+    "review": "doc/WASM/stage1/execution-bench-review.md",
+    "disposition": "No defect. Accept it as the baseline record.",
+    "verification": "Completed producer and independent verification reused; unchanged tests not rerun for acceptance.",
+    "evidenceRepositoryCommit": "d75fedc81d7b7eda28b97ed8b34c31f9c3a25c0a",
+    "evidenceInventorySha256": "b328b2bae15d95b666aa699f7ad42799f8de7c142ee90fef8e879ad3dbc9631d",
+    "criterionCredit": false
+  },
+  "date": "2026-09-28",
+  "backendBase": "824f060d310ff634e4cae0fafaa13849858aa07b",
+  "productLispLinesChanged": 0,
+  "correctness": {
+    "nativeProcesses": 3,
+    "targetProcesses": 9,
+    "timedLispSamples": 1728,
+    "handWrittenWasmSamples": 405,
+    "forcedTargetCollections": 36,
+    "ordinaryReadyProcesses": 3
+  },
+  "lisp": [
+    {
+      "mode": "default",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        98.76060485839844,
+        98.99520874023438,
+        99.11918640136719
+      ],
+      "medianNs": 98.99520874023438,
+      "minNs": 98.76060485839844,
+      "maxNs": 99.11918640136719
+    },
+    {
+      "mode": "default",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        77.23712921142578,
+        76.35116577148438,
+        73.88591766357422
+      ],
+      "medianNs": 76.35116577148438,
+      "minNs": 73.88591766357422,
+      "maxNs": 77.23712921142578
+    },
+    {
+      "mode": "default",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        73.08673858642578,
+        73.30036163330078,
+        73.63605499267578
+      ],
+      "medianNs": 73.30036163330078,
+      "minNs": 73.08673858642578,
+      "maxNs": 73.63605499267578
+    },
+    {
+      "mode": "default",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        1833.1298828125,
+        1709.228515625,
+        1726.4404296875
+      ],
+      "medianNs": 1726.4404296875,
+      "minNs": 1709.228515625,
+      "maxNs": 1833.1298828125
+    },
+    {
+      "mode": "default",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        1819.64111328125,
+        1699.310302734375,
+        1725.555419921875
+      ],
+      "medianNs": 1725.555419921875,
+      "minNs": 1699.310302734375,
+      "maxNs": 1819.64111328125
+    },
+    {
+      "mode": "default",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        84.75494384765625,
+        80.40332794189453,
+        80.1544189453125
+      ],
+      "medianNs": 80.40332794189453,
+      "minNs": 80.1544189453125,
+      "maxNs": 84.75494384765625
+    },
+    {
+      "mode": "default",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        59.121131896972656,
+        59.15641784667969,
+        59.561729431152344
+      ],
+      "medianNs": 59.15641784667969,
+      "minNs": 59.121131896972656,
+      "maxNs": 59.561729431152344
+    },
+    {
+      "mode": "default",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        187.6697540283203,
+        188.04168701171875,
+        188.3678436279297
+      ],
+      "medianNs": 188.04168701171875,
+      "minNs": 187.6697540283203,
+      "maxNs": 188.3678436279297
+    },
+    {
+      "mode": "default",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        97.49221801757812,
+        98.01864624023438,
+        99.40147399902344
+      ],
+      "medianNs": 98.01864624023438,
+      "minNs": 97.49221801757812,
+      "maxNs": 99.40147399902344
+    },
+    {
+      "mode": "default",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        41.51725769042969,
+        39.54315185546875,
+        39.7486686706543
+      ],
+      "medianNs": 39.7486686706543,
+      "minNs": 39.54315185546875,
+      "maxNs": 41.51725769042969
+    },
+    {
+      "mode": "default",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        205.30319213867188,
+        203.5369873046875,
+        205.30319213867188
+      ],
+      "medianNs": 205.30319213867188,
+      "minNs": 203.5369873046875,
+      "maxNs": 205.30319213867188
+    },
+    {
+      "mode": "default",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        86.7452621459961,
+        87.0523452758789,
+        91.17317199707031
+      ],
+      "medianNs": 87.0523452758789,
+      "minNs": 86.7452621459961,
+      "maxNs": 91.17317199707031
+    },
+    {
+      "mode": "default",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        364.69268798828125,
+        364.8262023925781,
+        367.0921325683594
+      ],
+      "medianNs": 364.8262023925781,
+      "minNs": 364.69268798828125,
+      "maxNs": 367.0921325683594
+    },
+    {
+      "mode": "default",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        1822.44873046875,
+        1688.690185546875,
+        1716.094970703125
+      ],
+      "medianNs": 1716.094970703125,
+      "minNs": 1688.690185546875,
+      "maxNs": 1822.44873046875
+    },
+    {
+      "mode": "default",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        82.69882202148438,
+        82.5510025024414,
+        82.41939544677734
+      ],
+      "medianNs": 82.5510025024414,
+      "minNs": 82.41939544677734,
+      "maxNs": 82.69882202148438
+    },
+    {
+      "mode": "default",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        82.61680603027344,
+        82.41939544677734,
+        82.51667022705078
+      ],
+      "medianNs": 82.51667022705078,
+      "minNs": 82.41939544677734,
+      "maxNs": 82.61680603027344
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        254.19235229492188,
+        255.67626953125,
+        255.87844848632812
+      ],
+      "medianNs": 255.67626953125,
+      "minNs": 254.19235229492188,
+      "maxNs": 255.87844848632812
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        158.1573486328125,
+        148.79226684570312,
+        147.54676818847656
+      ],
+      "medianNs": 148.79226684570312,
+      "minNs": 147.54676818847656,
+      "maxNs": 158.1573486328125
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        147.92823791503906,
+        148.90480041503906,
+        148.02932739257812
+      ],
+      "medianNs": 148.02932739257812,
+      "minNs": 147.92823791503906,
+      "maxNs": 148.90480041503906
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        1861.785888671875,
+        1877.166748046875,
+        1865.05126953125
+      ],
+      "medianNs": 1865.05126953125,
+      "minNs": 1861.785888671875,
+      "maxNs": 1877.166748046875
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        1855.377197265625,
+        1858.88671875,
+        1880.4931640625
+      ],
+      "medianNs": 1858.88671875,
+      "minNs": 1855.377197265625,
+      "maxNs": 1880.4931640625
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        163.9423370361328,
+        163.543701171875,
+        168.0011749267578
+      ],
+      "medianNs": 163.9423370361328,
+      "minNs": 163.543701171875,
+      "maxNs": 168.0011749267578
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        113.54827880859375,
+        116.10794067382812,
+        113.59214782714844
+      ],
+      "medianNs": 113.59214782714844,
+      "minNs": 113.54827880859375,
+      "maxNs": 116.10794067382812
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        398.78082275390625,
+        403.6102294921875,
+        403.472900390625
+      ],
+      "medianNs": 403.472900390625,
+      "minNs": 398.78082275390625,
+      "maxNs": 403.6102294921875
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        253.99398803710938,
+        254.7149658203125,
+        257.5340270996094
+      ],
+      "medianNs": 254.7149658203125,
+      "minNs": 253.99398803710938,
+      "maxNs": 257.5340270996094
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        81.33220672607422,
+        77.64530181884766,
+        76.82991027832031
+      ],
+      "medianNs": 77.64530181884766,
+      "minNs": 76.82991027832031,
+      "maxNs": 81.33220672607422
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        406.95953369140625,
+        409.90447998046875,
+        409.35516357421875
+      ],
+      "medianNs": 409.35516357421875,
+      "minNs": 406.95953369140625,
+      "maxNs": 409.90447998046875
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        234.69161987304688,
+        236.51504516601562,
+        237.42294311523438
+      ],
+      "medianNs": 236.51504516601562,
+      "minNs": 234.69161987304688,
+      "maxNs": 237.42294311523438
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        769.4549560546875,
+        774.9786376953125,
+        773.7579345703125
+      ],
+      "medianNs": 773.7579345703125,
+      "minNs": 769.4549560546875,
+      "maxNs": 774.9786376953125
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        1873.077392578125,
+        1842.1630859375,
+        1835.693359375
+      ],
+      "medianNs": 1842.1630859375,
+      "minNs": 1835.693359375,
+      "maxNs": 1873.077392578125
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        161.79275512695312,
+        163.116455078125,
+        162.93907165527344
+      ],
+      "medianNs": 162.93907165527344,
+      "minNs": 161.79275512695312,
+      "maxNs": 163.116455078125
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        162.5232696533203,
+        166.84341430664062,
+        162.31536865234375
+      ],
+      "medianNs": 162.5232696533203,
+      "minNs": 162.31536865234375,
+      "maxNs": 166.84341430664062
+    },
+    {
+      "mode": "native",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        2.4971961975097656,
+        2.510547637939453,
+        2.5098323822021484
+      ],
+      "medianNs": 2.5098323822021484,
+      "minNs": 2.4971961975097656,
+      "maxNs": 2.510547637939453
+    },
+    {
+      "mode": "native",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        2.709627151489258,
+        2.7353763580322266,
+        2.7256011962890625
+      ],
+      "medianNs": 2.7256011962890625,
+      "minNs": 2.709627151489258,
+      "maxNs": 2.7353763580322266
+    },
+    {
+      "mode": "native",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        2.3775100708007812,
+        2.390623092651367,
+        2.390146255493164
+      ],
+      "medianNs": 2.390146255493164,
+      "minNs": 2.3775100708007812,
+      "maxNs": 2.390623092651367
+    },
+    {
+      "mode": "native",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        16.617774963378906,
+        16.675949096679688,
+        16.617536544799805
+      ],
+      "medianNs": 16.617774963378906,
+      "minNs": 16.617536544799805,
+      "maxNs": 16.675949096679688
+    },
+    {
+      "mode": "native",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        2.5327205657958984,
+        2.537250518798828,
+        2.5582313537597656
+      ],
+      "medianNs": 2.537250518798828,
+      "minNs": 2.5327205657958984,
+      "maxNs": 2.5582313537597656
+    },
+    {
+      "mode": "native",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        2.2542476654052734,
+        2.243518829345703,
+        2.2644996643066406
+      ],
+      "medianNs": 2.2542476654052734,
+      "minNs": 2.243518829345703,
+      "maxNs": 2.2644996643066406
+    },
+    {
+      "mode": "native",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        2.120494842529297,
+        2.146482467651367,
+        2.0949840545654297
+      ],
+      "medianNs": 2.120494842529297,
+      "minNs": 2.0949840545654297,
+      "maxNs": 2.146482467651367
+    },
+    {
+      "mode": "native",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        10.812997817993164,
+        10.961532592773438,
+        10.854482650756836
+      ],
+      "medianNs": 10.854482650756836,
+      "minNs": 10.812997817993164,
+      "maxNs": 10.961532592773438
+    },
+    {
+      "mode": "native",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        2.414703369140625,
+        2.436399459838867,
+        2.4187564849853516
+      ],
+      "medianNs": 2.4187564849853516,
+      "minNs": 2.414703369140625,
+      "maxNs": 2.436399459838867
+    },
+    {
+      "mode": "native",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        2.1550655364990234,
+        2.2919178009033203,
+        2.2737979888916016
+      ],
+      "medianNs": 2.2737979888916016,
+      "minNs": 2.1550655364990234,
+      "maxNs": 2.2919178009033203
+    },
+    {
+      "mode": "native",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        5.121946334838867,
+        5.179882049560547,
+        5.148410797119141
+      ],
+      "medianNs": 5.148410797119141,
+      "minNs": 5.121946334838867,
+      "maxNs": 5.179882049560547
+    },
+    {
+      "mode": "native",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        2.133607864379883,
+        2.162456512451172,
+        2.150297164916992
+      ],
+      "medianNs": 2.150297164916992,
+      "minNs": 2.133607864379883,
+      "maxNs": 2.162456512451172
+    },
+    {
+      "mode": "native",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        42.04845428466797,
+        41.753292083740234,
+        42.02890396118164
+      ],
+      "medianNs": 42.02890396118164,
+      "minNs": 41.753292083740234,
+      "maxNs": 42.04845428466797
+    },
+    {
+      "mode": "native",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        2.738475799560547,
+        2.7549266815185547,
+        2.7663707733154297
+      ],
+      "medianNs": 2.7549266815185547,
+      "minNs": 2.738475799560547,
+      "maxNs": 2.7663707733154297
+    },
+    {
+      "mode": "native",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        2.9871463775634766,
+        3.0100345611572266,
+        3.011465072631836
+      ],
+      "medianNs": 3.0100345611572266,
+      "minNs": 2.9871463775634766,
+      "maxNs": 3.011465072631836
+    },
+    {
+      "mode": "native",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        3.0045509338378906,
+        3.0221939086914062,
+        3.0035972595214844
+      ],
+      "medianNs": 3.0045509338378906,
+      "minNs": 3.0035972595214844,
+      "maxNs": 3.0221939086914062
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        113.739013671875,
+        113.70086669921875,
+        115.00358581542969
+      ],
+      "medianNs": 113.739013671875,
+      "minNs": 113.70086669921875,
+      "maxNs": 115.00358581542969
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        81.74705505371094,
+        82.61775970458984,
+        82.74364471435547
+      ],
+      "medianNs": 82.61775970458984,
+      "minNs": 81.74705505371094,
+      "maxNs": 82.74364471435547
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        82.13520050048828,
+        82.10563659667969,
+        84.47933197021484
+      ],
+      "medianNs": 82.13520050048828,
+      "minNs": 82.10563659667969,
+      "maxNs": 84.47933197021484
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        1689.788818359375,
+        1748.321533203125,
+        1726.715087890625
+      ],
+      "medianNs": 1726.715087890625,
+      "minNs": 1689.788818359375,
+      "maxNs": 1748.321533203125
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        1705.078125,
+        1745.78857421875,
+        1735.41259765625
+      ],
+      "medianNs": 1735.41259765625,
+      "minNs": 1705.078125,
+      "maxNs": 1745.78857421875
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        93.82915496826172,
+        94.13433074951172,
+        94.65885162353516
+      ],
+      "medianNs": 94.13433074951172,
+      "minNs": 93.82915496826172,
+      "maxNs": 94.65885162353516
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        67.52300262451172,
+        67.77763366699219,
+        67.9922103881836
+      ],
+      "medianNs": 67.77763366699219,
+      "minNs": 67.52300262451172,
+      "maxNs": 67.9922103881836
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        193.8934326171875,
+        194.56863403320312,
+        195.45364379882812
+      ],
+      "medianNs": 194.56863403320312,
+      "minNs": 193.8934326171875,
+      "maxNs": 195.45364379882812
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        109.466552734375,
+        110.92948913574219,
+        110.60523986816406
+      ],
+      "medianNs": 110.60523986816406,
+      "minNs": 109.466552734375,
+      "maxNs": 110.92948913574219
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        44.02017593383789,
+        44.399261474609375,
+        44.23332214355469
+      ],
+      "medianNs": 44.23332214355469,
+      "minNs": 44.02017593383789,
+      "maxNs": 44.399261474609375
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        206.35223388671875,
+        207.37838745117188,
+        214.34783935546875
+      ],
+      "medianNs": 207.37838745117188,
+      "minNs": 206.35223388671875,
+      "maxNs": 214.34783935546875
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        103.72734069824219,
+        103.47175598144531,
+        104.09355163574219
+      ],
+      "medianNs": 103.72734069824219,
+      "minNs": 103.47175598144531,
+      "maxNs": 104.09355163574219
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        390.594482421875,
+        393.28765869140625,
+        394.23370361328125
+      ],
+      "medianNs": 393.28765869140625,
+      "minNs": 390.594482421875,
+      "maxNs": 394.23370361328125
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        1692.962646484375,
+        1748.291015625,
+        1716.583251953125
+      ],
+      "medianNs": 1716.583251953125,
+      "minNs": 1692.962646484375,
+      "maxNs": 1748.291015625
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        92.20027923583984,
+        92.87071228027344,
+        104.35676574707031
+      ],
+      "medianNs": 92.87071228027344,
+      "minNs": 92.20027923583984,
+      "maxNs": 104.35676574707031
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        92.42534637451172,
+        92.36526489257812,
+        92.91458129882812
+      ],
+      "medianNs": 92.42534637451172,
+      "minNs": 92.36526489257812,
+      "maxNs": 92.91458129882812
+    }
+  ],
+  "reference": [
+    {
+      "mode": "default",
+      "name": "call",
+      "processMediansNs": [
+        0.37102623419327874,
+        0.374989263713363,
+        0.3727066589124275
+      ],
+      "medianNs": 0.3727066589124275
+    },
+    {
+      "mode": "default",
+      "name": "f32",
+      "processMediansNs": [
+        0.9952467878659582,
+        0.9977516730626466,
+        0.9988527894020037
+      ],
+      "medianNs": 0.9977516730626466
+    },
+    {
+      "mode": "default",
+      "name": "f64",
+      "processMediansNs": [
+        0.9937007625897699,
+        0.9975813428560921,
+        0.9911881410158536
+      ],
+      "medianNs": 0.9937007625897699
+    },
+    {
+      "mode": "default",
+      "name": "i32",
+      "processMediansNs": [
+        0.29204580260486135,
+        0.2945017058674881,
+        0.29207361035230667
+      ],
+      "medianNs": 0.29207361035230667
+    },
+    {
+      "mode": "default",
+      "name": "svref",
+      "processMediansNs": [
+        0.4888818931579565,
+        0.4913339233398456,
+        0.4897478103637709
+      ],
+      "medianNs": 0.4897478103637709
+    },
+    {
+      "mode": "liftoff",
+      "name": "call",
+      "processMediansNs": [
+        7.479528903961223,
+        7.435455799102751,
+        7.42621207237246
+      ],
+      "medianNs": 7.435455799102751
+    },
+    {
+      "mode": "liftoff",
+      "name": "f32",
+      "processMediansNs": [
+        2.254874070485424,
+        2.2545386552810784,
+        2.2774955034255995
+      ],
+      "medianNs": 2.254874070485424
+    },
+    {
+      "mode": "liftoff",
+      "name": "f64",
+      "processMediansNs": [
+        2.311176776885984,
+        2.274259010950734,
+        2.311300158500678
+      ],
+      "medianNs": 2.311176776885984
+    },
+    {
+      "mode": "liftoff",
+      "name": "i32",
+      "processMediansNs": [
+        1.5581668317317936,
+        1.552470147609715,
+        1.5673948526382369
+      ],
+      "medianNs": 1.5581668317317936
+    },
+    {
+      "mode": "liftoff",
+      "name": "svref",
+      "processMediansNs": [
+        1.8204939705984926,
+        1.828496047428677,
+        1.8328663281032043
+      ],
+      "medianNs": 1.828496047428677
+    },
+    {
+      "mode": "turbofan",
+      "name": "call",
+      "processMediansNs": [
+        2.390426111221317,
+        2.372013449668875,
+        2.3597280184427945
+      ],
+      "medianNs": 2.372013449668875
+    },
+    {
+      "mode": "turbofan",
+      "name": "f32",
+      "processMediansNs": [
+        0.9978869954744966,
+        0.9994814395904594,
+        0.9997591773668856
+      ],
+      "medianNs": 0.9994814395904594
+    },
+    {
+      "mode": "turbofan",
+      "name": "f64",
+      "processMediansNs": [
+        1.0050349632898985,
+        0.9980093042055741,
+        1.004565417766577
+      ],
+      "medianNs": 1.004565417766577
+    },
+    {
+      "mode": "turbofan",
+      "name": "i32",
+      "processMediansNs": [
+        0.2968794020210846,
+        0.29544525030182656,
+        0.294295648249184
+      ],
+      "medianNs": 0.29544525030182656
+    },
+    {
+      "mode": "turbofan",
+      "name": "svref",
+      "processMediansNs": [
+        0.495894765853884,
+        0.4908107566833474,
+        0.4949288654327406
+      ],
+      "medianNs": 0.4949288654327406
+    }
+  ],
+  "incrementalCallWorkload": [
+    {
+      "mode": "default",
+      "processMediansNs": [
+        57.23762512207031,
+        59.37004089355469,
+        59.52739715576172
+      ],
+      "medianNs": 59.37004089355469
+    },
+    {
+      "mode": "liftoff",
+      "processMediansNs": [
+        173.08712005615234,
+        177.67047882080078,
+        179.09717559814453
+      ],
+      "medianNs": 177.67047882080078
+    },
+    {
+      "mode": "native",
+      "processMediansNs": [
+        0.3132820129394531,
+        0.2512931823730469,
+        0.22864341735839844
+      ],
+      "medianNs": 0.2512931823730469
+    },
+    {
+      "mode": "turbofan",
+      "processMediansNs": [
+        69.49472427368164,
+        69.43178176879883,
+        70.59431076049805
+      ],
+      "medianNs": 69.49472427368164
+    }
+  ],
+  "defaultBracketAllocationBytesPerIteration": {
+    "EB-LOOP": 0.0050048828125,
+    "EB-CALL": 0.0197906494140625,
+    "EB-REFERENCE-CALL": 0.0104827880859375,
+    "EB-LIVE-REFERENCE": 0.02215576171875,
+    "EB-OPTIONAL-LOOP": 0.043853759765625,
+    "EB-REST-LOOP": 24.041961669921875,
+    "EB-KEYWORD-LOOP": 0.0216827392578125,
+    "EB-CAR": 0.00989532470703125,
+    "EB-CAR-TYPED": 0.0106048583984375,
+    "EB-SVREF": 0.0101318359375,
+    "EB-SVREF-TYPED": 0.01084136962890625,
+    "EB-EQ": 0.00977325439453125,
+    "EB-FIXNUM-GENERIC": 0.01119232177734375,
+    "EB-DOUBLE-GENERIC": 16.344482421875,
+    "EB-DOUBLE-TYPED": 16.3369140625,
+    "EB-SINGLE-TYPED": 8.336181640625
+  },
+  "ready": [
+    {
+      "launchMs": 26163.873046875,
+      "lispMs": 22816.46240234375,
+      "rssBytes": 2244411392,
+      "collections": 4
+    },
+    {
+      "launchMs": 26024.528076171875,
+      "lispMs": 22709.826904296875,
+      "rssBytes": 2164264960,
+      "collections": 4
+    },
+    {
+      "launchMs": 26391.094970703125,
+      "lispMs": 23093.89892578125,
+      "rssBytes": 2298245120,
+      "collections": 4
+    }
+  ],
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-execution-bench-r1",
+  "controls": {
+    "status": "PASS",
+    "rejected": [
+      "wrong-answer",
+      "missing-sample",
+      "duplicate-sample",
+      "missing-completion",
+      "missing-gc-witness",
+      "zero-duration"
+    ]
+  },
+  "observerControls": {
+    "status": "PASS",
+    "checks": [
+      "split-output",
+      "allocation-excludes-copy",
+      "collection-count",
+      "missing-collection-refused",
+      "orphan-end-refused"
+    ]
+  },
+  "limitations": [
+    "No compiler or production ABI change; no acceptance credit.",
+    "Three process medians per configuration; ranges are not confidence intervals.",
+    "Incremental call workload contrast is not an isolated ABI cycle count or additive READY attribution.",
+    "Allocation markers enclose untimed output/timer/checking work as well as timed loops.",
+    "Hand-written Wasm lacks Lisp GC, boxing and general error semantics; engine may inline calls.",
+    "No speedup from hypothetical unchecked paths or unboxing is established."
+  ],
+  "postMeasurementTooling": [
+    {
+      "path": "tests/wasm/stage1/execution-bench/code_shapes.py",
+      "measuredSha256": "940aa1fec7c6226e8b72b04df9bab3aa3aec20aeb69679ed02d14fe33bf3e6a2",
+      "finalSha256": "e1400521d763b7edf6d7b5cc4cb900d6866c5ff5c05cf920f5dd2f8fb8c568fe",
+      "change": "Remove assertions requiring old call_indirect/resolve_lisp/float_slow protocol; preserve counting.",
+      "validation": "Reinspection of the same emitted WAT produces byte-identical code-shapes.json.",
+      "reportSha256": "cc496b73063287389a7f88d100086412cf959f47c5d8daaa8c5d68dcc2de1b2d"
+    }
+  ]
+}

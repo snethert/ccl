@@ -1,3 +1,35 @@
+## 2026-09-28 — Accept the execution benchmark baseline
+
+The [user-supplied Claude review](../stage1/execution-bench-review.md) finds no
+defect and accepts the set as the baseline record. All 198 evidence files match
+their inventory hashes; raw samples reproduce the results. The review confirms
+the native code shapes, unchanged typed/untyped target bodies, six corruption
+controls, five observer checks, 36 moving collections and ordinary READY.
+The disclosed post-measurement inspector change preserves its report.
+
+Record acceptance using the completed producer and independent verification;
+no unchanged tests rerun. The review recommends declared unboxed numerics first,
+declared accessors second and the call convention third, rerunning this set for
+each change. Product Lisp lines changed: 0; accepted counts and criterion credit
+remain unchanged.
+
+## 2026-09-28 — Measure calls, access, numerics and engine tiers
+
+At the user's direction, add the [execution benchmark set](../stage1/execution-bench-results.md)
+against the accepted audit-190 backend. The same sixteen Lisp workload forms
+run in native CCL and the target after real startup, with separate hand-written
+Wasm references and ordinary READY measurements. Three processes per setting
+pass 1,728 timed Lisp samples, 405 Wasm reference samples and 36 forced target
+collections. Typed/untyped access and double-add bodies remain identical;
+default scalar-call iterations are 99.00 ns versus native 2.51 ns, and typed
+double addition is 1,725.56 ns versus 2.54 ns. READY median is 26.164 s.
+
+One evidence pack retains raw samples, code, disassemblies, source/tool identities,
+controls and original development failures. This is a baseline, with no compiler
+optimization or policy withdrawal. Product Lisp lines changed: 0. Independent
+review was pending at measurement; acceptance is recorded above. Accepted counts
+and criterion credit remain unchanged.
+
 ## 2026-09-27 — Accept error recovery after final audit 190
 
 The user accepted `19ff6839`: no defect and no further producer round.

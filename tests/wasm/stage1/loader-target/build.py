@@ -36,7 +36,9 @@ def runtime(out, reuse):
            binaries={p.name: c.sha(p) for p in out.glob('*.wasm')}))
 
 
-def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None):
+def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=False, postimage=None, source_file=None):
+    if source_file and not postimage:
+        raise ValueError('--source requires --postimage')
     if compile_only and not level1:
         raise ValueError('--compile-only requires --level1')
     out.mkdir(parents=True, exist_ok=True)
@@ -58,7 +60,7 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
         fixture = source / HERE.relative_to(c.ROOT)
         fixture.mkdir(parents=True)
         shutil.copyfile(HERE / 'smoke.lisp', fixture / 'smoke.lisp')
-        if postimage:
+        if postimage and not source_file:
             # Bind an already materialized image before compiling this new file.
             c.save(out / 'postimage-parent.json', dict(
                 image=str(postimage), manifest=c.sha(postimage / 'boot/artifacts/manifest.json'),
@@ -66,6 +68,12 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
                          ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp', 'refusals.lisp', 'errors.lisp')}))
             for name in ('postimage.lisp', 'instance-a.lisp', 'instance-b.lisp', 'refusals.lisp', 'errors.lisp'):
                 shutil.copyfile(HERE / name, fixture / name)
+        if source_file:
+            source_file = Path(source_file).resolve()
+            shutil.copyfile(source_file, fixture / 'benchmark.lisp')
+            c.save(out / 'postimage-parent.json', dict(
+                image=str(postimage), manifest=c.sha(postimage / 'boot/artifacts/manifest.json'),
+                source=str(source_file), source_sha256=c.sha(source_file)))
         env = dict(os.environ, CCL_DEFAULT_DIRECTORY=str(source) + '/', LOADER_OUTPUT=str(out) + '/')
         if modules:
             env['LOADER_MODULES'] = '(' + ' '.join(modules.split(',')) + ')'
@@ -74,7 +82,7 @@ def run(out, boot0=False, level1=False, reuse=None, modules=None, compile_only=F
             '(load "ccl:lib;compile-ccl.lisp") (load "ccl:xdump;faslenv.lisp") '
             '(load (compile-file "ccl:lib;nfcomp.lisp" :output-file "' + str(out / 'nfcomp.dx64fsl') + '")))',
             '--load', HERE.parent / 'registration/load.lisp']
-        c.command(prefix + ['--load', HERE / ('postimage-compile.lisp' if postimage else 'bundles.lisp' if level1 else 'boot0.lisp' if boot0 else 'compile.lisp')],
+        c.command(prefix + ['--load', HERE / ('source-compile.lisp' if source_file else 'postimage-compile.lisp' if postimage else 'bundles.lisp' if level1 else 'boot0.lisp' if boot0 else 'compile.lisp')],
                   out / 'compile.log', env, cwd=source, timeout=600)
     c.save(out / 'policy.json', c.read(c.STORE / '2026-09-20-stage1-materialization-r1/execution/policy.json'))
     c.save(out / 'versions.json', dict(abi=dict(name='B', version=1),
@@ -109,5 +117,6 @@ if __name__ == '__main__':
     reuse = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--reuse=')), None)
     modules = next((a.split('=', 1)[1] for a in sys.argv[2:] if a.startswith('--modules=')), None)
     postimage = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[2:] if a.startswith('--postimage=')), None)
+    source_file = next((Path(a.split('=', 1)[1]).resolve() for a in sys.argv[2:] if a.startswith('--source=')), None)
     run(Path(sys.argv[1]).resolve(), '--boot0' in sys.argv[2:], '--level1' in sys.argv[2:], reuse, modules,
-        '--compile-only' in sys.argv[2:], postimage)
+        '--compile-only' in sys.argv[2:], postimage, source_file)

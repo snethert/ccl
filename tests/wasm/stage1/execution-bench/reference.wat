@@ -1,0 +1,45 @@
+;; Hand-written engine references. These have no Lisp ABI, GC or error paths.
+;; Only the exact, bounded inputs used by reference.mjs are claimed.
+(module
+  (memory (export "memory") 1)
+  (type $binary (func (param i32 i32) (result i32)))
+  (func $add (type $binary) (param i32 i32) (result i32)
+    (i32.add (local.get 0) (local.get 1)))
+  (table 1 funcref)
+  (elem (i32.const 0) $add)
+  (func (export "i32") (param $n i32) (param $x i32) (result i32)
+    (local $i i32) (local $sum i32)
+    (block $done (loop $loop
+      (br_if $done (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $sum (i32.add (local.get $sum) (local.get $x)))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $loop)))
+    (local.get $sum))
+  (func (export "call") (param $n i32) (param $x i32) (result i32)
+    (local $i i32) (local $sum i32)
+    (block $done (loop $loop
+      (br_if $done (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $sum (call_indirect (type $binary) (local.get $sum) (local.get $x) (i32.const 0)))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $loop)))
+    (local.get $sum))
+  (func (export "svref") (param $n i32) (param $unused i32) (result i32)
+    (local $i i32) (local $sum i32)
+    (block $done (loop $loop
+      (br_if $done (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $sum (i32.add (local.get $sum)
+        (i32.load (i32.shl (i32.and (local.get $i) (i32.const 3)) (i32.const 2)))))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $loop)))
+    (local.get $sum))
+  (func (export "f64") (param $n i32) (param $x f64) (result f64)
+    (local $i i32) (local $sum f64)
+    (block $done (loop $loop
+      (br_if $done (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $sum (f64.add (local.get $sum) (local.get $x)))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $loop)))
+    (local.get $sum))
+  (func (export "f32") (param $n i32) (param $x f32) (result f32)
+    (local $i i32) (local $sum f32)
+    (block $done (loop $loop
+      (br_if $done (i32.ge_u (local.get $i) (local.get $n)))
+      (local.set $sum (f32.add (local.get $sum) (local.get $x)))
+      (local.set $i (i32.add (local.get $i) (i32.const 1))) (br $loop)))
+    (local.get $sum)))

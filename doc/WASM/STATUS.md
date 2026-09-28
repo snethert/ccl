@@ -1,4 +1,4 @@
-# Current status — 2026-09-27
+# Current status — 2026-09-28
 
 Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. The reviewed Stage 1A compiler registration unit is integrated; upstream kernel source remains unchanged. Stage 0 is accepted. Under the user's 26 September workflow decision, Codex implements authorized Stage 1 changes directly in the working checkout; Claude reviews before acceptance. Isolated proposal packets and a separate source-integration step are no longer required. All work is on `wasm2`.
 
@@ -26,6 +26,18 @@ guarded dispatch 26.384 → 27.205 s (+3.1%), specialized entries
 Keep the accepted split/indirect implementation. Raw timings, failure evidence
 and the census/profile scripts are retained; incomplete P-6 qualifications
 are cancelled, not counted as completed or accepted.
+
+The [execution benchmark baseline](stage1/execution-bench-results.md) is
+**accepted** after the [user-supplied Claude review](stage1/execution-bench-review.md)
+found no defect. Sixteen workloads run natively
+and under default, Liftoff-only and TurboFan-only V8, three processes each.
+Default scalar-call iterations measure 99.00 ns versus 2.51 ns native; typed
+double addition measures 1,725.56 ns versus 2.54 ns. Typed/untyped CAR, SVREF
+and double-add bodies are identical. All 36 forced moving collections pass;
+three separate ordinary READY runs have a 26.164 s median. Benchmark/tooling
+changes only, zero product Lisp lines, no criterion credit. The review recommends
+unboxed declared numerics, then declared accessors, then the call convention,
+with this set rerun for each substantive change.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their

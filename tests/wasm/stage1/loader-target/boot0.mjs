@@ -19,6 +19,7 @@ import {deriveLayout} from '../../../../runtime/wasm32/layout.mjs';
 import {inputInventory} from '../../../../runtime/wasm32/input-inventory.mjs';
 import {archiveSource,readArchiveSource} from './archive-source.mjs';
 import {startupTiming} from './startup-timing.mjs';
+import {benchmarkObserver} from '../execution-bench/observe.mjs';
 
 const timingPrefix = isMainThread ? process.argv.find(a => a.startsWith('--timing='))?.slice(9) : workerData.timingPrefix;
 const timing = startupTiming(timingPrefix, isMainThread ? 'main' : 'worker');
@@ -30,6 +31,7 @@ const onManifest=(label,value)=>value?inputs.holdManifest(label,value):inputs.re
 if (isMainThread) {
   const runtimeDirectory = new URL('../../../../runtime/wasm32/', import.meta.url);
   const scripts = Object.fromEntries([new URL(import.meta.url), new URL('./diagnose.mjs', import.meta.url), new URL('./startup-timing.mjs', import.meta.url),
+    new URL('../execution-bench/observe.mjs', import.meta.url),
     ...fs.readdirSync(runtimeDirectory).filter(name => name.endsWith('.mjs')).map(name => new URL(name, runtimeDirectory))]
     .map(url => [url.pathname, sha256(fs.readFileSync(url))]));
   const [out, runtime] = process.argv.slice(2);
@@ -67,13 +69,14 @@ if (isMainThread) {
   assert(!inspectCode || trace, '--inspect-code requires --trace');
   const dumpFailure = process.argv.includes('--dump-failure');
   const startupLoads = process.argv.filter(a => a.startsWith('--startup-load=')).map(a => a.slice(15));
+  const benchmarkEvents = process.argv.includes('--benchmark-events');
   const callbackSelection = JSON.parse(fs.readFileSync(new URL('../startup-resets/selection.json', import.meta.url)));
   const workerFiles=files.map(({path,sha256,sourceDir,bytes})=>{const container=namespace.containers.get(path);
     return {path,sha256,sourceDir,...(container?{container}:{bytes})};});
   timing?.event('worker-send',{inputOwnership:ownedInputs()});
   const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode,
     files:workerFiles,archives:archives.map(directory),bootArchive:bootArchive?directory(bootArchive):null,
-    layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix}}));
+    layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix, benchmarkEvents}}));
   selected.clear();files.length=0;workerFiles.length=0;inputs.release('containers');
   timing?.memory('directory-delivered',{inputOwnership:ownedInputs()});
   const sampling = timing && setInterval(() => timing.memory('periodic',{inputOwnership:ownedInputs()}), 1000);
@@ -171,15 +174,19 @@ if (isMainThread) {
     return ({inputOwnership:inputState(),configuration:layout.configuration,stackHighWaterLowerBounds:{...stackHighWater},linearMemoryBytes: memory.buffer.byteLength,
     allocatedHeapBytes: get(tcr + 48) - get(tcr + 56), activeHeapCapacityBytes: get(tcr + 52) - get(tcr + 56),
     collections: owner.collectionCount, storage: owner.storage, lastCollection});};
+  let benchmark;
   const owner = CollectorOwner.create(memory, binary('collector'), runtimeIdentity.binary, layout,
-    timing ? {measure: (phase, run) => {
+    timing || workerData.benchmarkEvents ? {measure: (phase, run) => {
+      if(phase==='collector.copy')benchmark?.beforeCollection();
       const result = measure(phase, run);
       if(phase!=='collector.copy')return result;
+      benchmark?.afterCollection();
       lastCollection = {...result,epochMs: performance.timeOrigin + performance.now(),
         liveHeapBytes: get(tcr + 48) - get(tcr + 56), collection: owner.collectionCount};
-      timing.event('collection', {...lastCollection, linearMemoryBytes: memory.buffer.byteLength});
+      timing?.event('collection', {...lastCollection, linearMemoryBytes: memory.buffer.byteLength});
       return result;
     }} : {});
+  if(workerData.benchmarkEvents)benchmark=benchmarkObserver(memory,tcr,owner);
   timing?.memory('linear-memory-created', heapState());
   const env = {memory, tcr, code_registry: registry,
     table: new WebAssembly.Table({element: 'anyfunc', initial: capacity}),
@@ -247,7 +254,7 @@ if (isMainThread) {
     cpuTime: () => process.cpuUsage(),
     startup: {imageName: '/ccl/boot/' + manifest.heap.digest + '.image',
       cclRoot: '/ccl/', arguments: ['--no-init', ...workerData.startupLoads.flatMap(path => ['--load', path])]},
-    output: (channel, text) => { outputEvents.push({channel, text}); fs.writeSync(channel, text); },
+    output: (channel, text) => { outputEvents.push({channel, text}); fs.writeSync(channel, text); benchmark?.output(channel,text); },
     configuration: {pageSize: 65536, clockTicks: 1000, cpuCount: 1, stackSize: -1,
       defaults: layout.stackDefaults},
     wait: milliseconds => Atomics.wait(waitCell, 0, 0, milliseconds)});
@@ -261,7 +268,7 @@ if (isMainThread) {
       const text = Array.from({length: get(word - 6) >>> 8}, (_, i) => String.fromCodePoint(get(word - 2 + 4 * i))).join('');
       parentPort.postMessage({type: 'stderr', text}); return new TextEncoder().encode(text).length * 4;
     }],
-    ['%WASM-HOST-PROCESS-REQUEST', 3, processRequest]
+    ['%WASM-HOST-PROCESS-REQUEST', 3, benchmark ? args=>benchmark.request(()=>processRequest(args)) : processRequest]
   ];
   services.forEach(([name, arity, run], i) => {
     const id = i + 1, base = 280000 + i * 32, instance = new WebAssembly.Instance(adapter, {env, host: {arity,
@@ -474,7 +481,10 @@ if (isMainThread) {
     instrumentation,
     abandonedSessions,inputOwnership:inputState(),archiveStorage:loader.archives(),openFiles:loader.openFiles(),
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
-    environment: {node: process.version, runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
+    ...(benchmark?{benchmark:benchmark.result()}:{}),
+    environment: {node: process.version, v8:process.versions.v8, execArgv:process.execArgv,
+      floatingBinding:'JavaScript floatService (private service memory)',
+      runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
       observer: sha256(fs.readFileSync(out + '/observe.wasm')),
       runtime: Object.fromEntries(['collector', 'integer', 'float', 'detector'].map(name => [name, sha256(binary(name))]))},
     level1CrossLoaded: false, targetLoadedFiles: completedLoads.length, completedLoads,
