@@ -14,7 +14,7 @@ The target UI (the CLIM-style IDE mockups: source pane, transcript, examiner, de
 
 ## 2. Wire protocol
 
-Four message kinds each direction. Not five.
+Five message kinds each direction, and the fifth exists only because of §38: Lisp never holds a live copy of client-owned state, it asks for a snapshot when it needs one.
 
 **Lisp → client**
 
@@ -24,6 +24,7 @@ Four message kinds each direction. Not five.
 | `patch` | keyed ops against `(view-id, base-version → new-version)`       |
 | `act`   | one of the closed list of imperative acts (§2.2)                 |
 | `error` | a condition Lisp wants the client to show without a view         |
+| `query` | ask for a snapshot of one enumerated client-owned value (§38)      |
 
 **Client → Lisp**
 
@@ -32,7 +33,7 @@ Four message kinds each direction. Not five.
 | `event`  | `{window, view, key, command, handle, payload}`                 |
 | `resync` | client asks for a full `view`                                   |
 | `hello`  | window id, viewport, DPR, locale, capabilities                  |
-| `local`  | client-local state Lisp explicitly subscribed to (§8)           |
+| `snapshot` | the reply to a `query`: one value, once (§38)                  |
 
 ### 2.1 Versions and resync
 
@@ -169,9 +170,9 @@ where `kind` is a closed set: `:presentation :hunk-added :hunk-removed :hunk-cha
 
 `hover`, `click`, `context-menu`, and `selection` events carry a buffer range and, when over a decoration, its key and handle. Keystrokes are client-local (§8) and reach Lisp as buffer text patches, not per key.
 
-### 6.3 Buffer text is Lisp-owned
+### 6.3 Buffer ownership: the client is authoritative while editing
 
-The editor's text is state Lisp owns, shipped as a `view` and updated by text patches in both directions, so that record/replay (§12) captures it. An editor whose buffer lives only in the browser breaks replay determinism.
+An earlier draft said the buffer text is Lisp-owned and synced by "text patches in both directions". That describes a concurrent-editing problem without solving it: the user types while Lisp inserts a REPL result or reformats a defun, each against a base version, and §2.1's rule — resync on a stale base — would drop keystrokes. The resolution is in §33: the client is authoritative for a buffer's text, Lisp keeps a mirror, and Lisp edits are proposals the client rebases. Replay stays deterministic because both the user's edits (as events) and Lisp's proposals (as patches) are logged in order.
 
 ### 6.4 Output records are SVG plus a region list
 
@@ -185,7 +186,7 @@ Hit-testing is not solved by SVG renderers — most rasterize to an image and kn
 
 There are two line coordinates and only one crosses the wire. **Logical lines** are a property of the buffer text, which Lisp owns (§6.3). **Visual lines** are a product of wrapping, which depends on the pane width and font metrics the client has and Lisp does not. So everything in the protocol — decoration ranges (§6.1), buffer events (§6.2), `reveal-range`, cursor positions in a `readout` (§27) — is in logical coordinates (offset, or line and column), and the client maps to visual lines when it draws. Lisp sets the wrapping policy as an attribute, `editor :wrap (:none | :word | (:column n))`, and never learns where the wraps fell.
 
-The gutter is therefore drawn by the client from the text it already holds: a number on the first visual line of each logical line, nothing (or a wrap marker) on continuation lines. Which gutter columns exist is Lisp's, from a closed set: `editor :gutter (:line-numbers :relative-numbers :folds :marks)`. Relative numbers are computed from the cursor position, which is client-local. Marks (breakpoints, diff hunks, the current frame, errors) are the §6.1 decorations, keyed by logical range, so they attach to the first visual line of their range; clicking a mark is a buffer event carrying the logical line. Fold *markers* come from Lisp as decorations of kind `:foldable` over a logical range, because knowing where an s-expression ends is Lisp's job; fold *state* is client-local like scroll offset, subscribable through `local` when a layout is saved.
+The gutter is therefore drawn by the client from the text it already holds: a number on the first visual line of each logical line, nothing (or a wrap marker) on continuation lines. Which gutter columns exist is Lisp's, from a closed set: `editor :gutter (:line-numbers :relative-numbers :folds :marks)`. Relative numbers are computed from the cursor position, which is client-local. Marks (breakpoints, diff hunks, the current frame, errors) are the §6.1 decorations, keyed by logical range, so they attach to the first visual line of their range; clicking a mark is a buffer event carrying the logical line. Fold *markers* come from Lisp as decorations of kind `:foldable` over a logical range, because knowing where an s-expression ends is Lisp's job; fold *state* is client-owned like scroll offset, read by a `query` when a layout is saved (§38).
 
 `code` blocks outside the editor (a transcript, a diff pane) take `:numbered t` and follow the same rule: numbers count newlines in the node's content, wrapping is the client's.
 
@@ -200,9 +201,13 @@ The target UI detaches a pane into its own OS-level window sharing the same imag
 - `open-window`, `close-window`, `focus-window` are acts (§2.2).
 - All windows share one socket and one event queue.
 
-## 8. Client-local state
+## 8. Client-owned state
 
-Enumerated, and client-side unless subscribed: hover, focus ring, text selection, scroll offset, in-flight keystrokes, drag-in-progress (§17), gesture-in-progress (§18), canvas viewport transform (§19), force-layout positions (§28), media playback position (§20), visible range of a virtualized collection (§21), table range selection, window size, **split-divider positions**. The last is in the list because "layouts are objects" and ⌘⇧L saves the current arrangement, so Lisp must be able to subscribe to divider geometry with `local`. Every `local` subscription is throttled by the client and carries the value, never the input that produced it. Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
+Enumerated, and owned by the client outright: hover, focus and the focus ring, text selection, scroll offset, in-flight keystrokes and the focused buffer's text (§6.3, §33), drag-in-progress (§17), gesture-in-progress (§18), canvas viewport transform (§19), force-layout positions (§28), media playback position (§20), visible range of a virtualized collection (§21), table range selection, window size, split-divider positions, fold state.
+
+An earlier draft let Lisp *subscribe* to these. That reintroduced the ambiguity the design exists to remove: once subscribed, Lisp holds a copy that can be stale, and who owns a divider position depended on whether a subscription existed. §38 replaces subscriptions with two narrower things: Lisp **queries** a value when it needs one (saving a layout asks for the divider positions and the viewport, once), and the client **raises an event** when its own state means Lisp has something to do (`need-rows` for a virtualized window, `resized` for a window, `scrolled-away` for a transcript's stick policy). Lisp never holds a live copy of anything the client owns. Displays of client-owned values that must update continuously use `readout` (§27), which never crosses the wire.
+
+Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
 
 ## 9. Roles, not colors
 
@@ -262,9 +267,13 @@ SOURCE presentations.lisp.14
 [2] h:317 → function clim-web::pop-record · state :matching
 ```
 
+### 11.2 The box oracle
+
+The text backend deliberately ignores layout (§11.1), and layout is where the bugs a human notices live: overflow, a clipped overlay, a split collapsed to zero, a truncated label, wrapping gone wrong. §35 adds the third renderer: the real client, run headless, dumping every keyed node's computed rectangle, clipping and visibility as text in the text backend's node order. Layout has an assertable form, and a golden test can say "no keyed node is clipped except inside a `scroll`".
+
 ## 12. Record/replay
 
-Every inbound event and outbound view/patch/act, appended to a log, with a headless replay that reconstructs view state deterministically. A bug report is `bug-0042.log`, reproduced in a fresh image with no browser, fonts, or timing. This is the highest-leverage item in the design for an AI collaborator: "it looks wrong on my machine" goes from five speculative rounds to one.
+Every inbound event and outbound view/patch/act, appended to a log, with a headless replay that reconstructs view state deterministically. A bug report is `bug-0042.log`. This is the highest-leverage item in the design for an AI collaborator: "it looks wrong on my machine" goes from five speculative rounds to one. There are two replays, not one, and §34 says which is which: replaying the log through the client reproduces what the client showed and needs no Lisp state; re-executing the Lisp side needs the image the log was recorded against.
 
 ### 12.1 The log is part of the protocol
 
@@ -296,7 +305,7 @@ It is tempting to say "the log is complete because editor buffers are Lisp-owned
 
 **Browser state may affect rendering mechanics, but no unlogged browser state may affect a future Lisp-visible result.**
 
-The JS runtime will hold ephemeral state: focus, pointer capture, scroll offsets, IME composition, pending events, measurement results. None of it needs to be authoritative. But the moment any of it determines a Lisp-visible outcome — a scroll offset deciding which source location an event names, a measured width deciding a truncation — it has become semantic state and must enter the protocol (as event payload or a `local` subscription) and therefore the log. The test is mechanical: record a session, replay it headless, and diff the final trees; any difference is a violation, and the fix is always to move state across the wire, never to special-case the replayer.
+The JS runtime will hold ephemeral state: focus, pointer capture, scroll offsets, IME composition, pending events, measurement results. None of it needs to be authoritative. But the moment any of it determines a Lisp-visible outcome — a scroll offset deciding which source location an event names, a measured width deciding a truncation — it has become semantic state and must enter the protocol (as event payload or a queried snapshot, §38) and therefore the log. The test is mechanical: record a session, replay it headless, and diff the final trees; any difference is a violation, and the fix is always to move state across the wire, never to special-case the replayer.
 
 ## 13. Explicitly out
 
@@ -314,7 +323,9 @@ The log format and the replay model come *before* the JS runtime, so that any pr
 4. JS runtime: reconciler, event queue, `act` handlers, resync, window management, editor decoration bridge, the gesture recognizer (§18), the drag-and-drop engine (§17), the canvas viewport (§19). A fourth proof in step 3 covers these headlessly: dragging a file presentation onto the Compile command replays from one logged `drop` event.
 5. Browser event recording + full replay against the JS runtime.
 6. **Freeze JS.** The freeze criterion is not "the feature list is done"; it is that recorded browser sessions replay headless to identical trees (§12.3), demonstrating that JS holds no accidentally authoritative state.
-7. Everything after this is Lisp.
+7. Everything after this is Lisp — and the IDE ships on the web backend before any native backend is started (§37).
+
+Steps 2–3 also carry the box oracle (§35) and the theme gallery (§42); step 1 carries the buffer model (§33), keymap tables (§39) and the mechanism registry (§37) in the spec file.
 
 ## 15. Resolved and open
 
@@ -325,7 +336,7 @@ Resolved while reviewing:
 
 Open:
 
-- The exact scroll-anchor semantics of `append-children` when the user has scrolled up in a transcript. Note that under §12.3 the *policy* is Lisp's, but whether the user had scrolled up is browser state that affects a Lisp-visible result, so it must arrive as `local` before the policy is applied.
+- The exact scroll-anchor semantics of `append-children` when the user has scrolled up in a transcript. Note that under §12.3 the *policy* is Lisp's, but whether the user had scrolled up is browser state that affects a Lisp-visible result, so the client raises `scrolled-away` / `scrolled-to-end` events and the policy reads that state (§38).
 
 ---
 
@@ -418,12 +429,12 @@ Sources render as `⇄type`, targets as `⇐(types)`, sortable containers as `�
 | `dismiss`         | Escape / click outside | swipe down on a sheet, tap outside | Escape |
 | `drag`            | press and move        | long-press and move      | —                 |
 
-`pan` and `pinch` on a `canvas`, `record`, `scroll` or `media` node are absorbed client-side into the viewport transform (§8, §19) and reach Lisp only as a throttled `local` value when subscribed. Everywhere else a gesture is an ordinary `event` with the gesture name in it; a slide deck is a `stack` of keyed pages that emits `swipe :left`, and the 2048 board is a `grid` that emits `swipe` with a direction and gets keyed `move-child` patches back, which the client animates.
+`pan` and `pinch` on a `canvas`, `record`, `scroll` or `media` node are absorbed client-side into the viewport transform (§8, §19) and reach Lisp only if it queries them (§38). Everywhere else a gesture is an ordinary `event` with the gesture name in it; a slide deck is a `stack` of keyed pages that emits `swipe :left`, and the 2048 board is a `grid` that emits `swipe` with a direction and gets keyed `move-child` patches back, which the client animates.
 
 ### 18.2 What touch changes
 
 - **No hover.** The pointer-documentation line follows the most recently touched presentation, and `oref`'s `commands` attribute names gesture slots, not buttons (§5), so the client can word it as "tap **edit definition** · long-press 11 commands".
-- **Modality in `hello`.** `pointer :fine|:coarse`, `hover t|nil`, `touch t|nil`, plus the viewport and safe-area insets. Window resize is a `local` value. Choosing a one-pane layout below a width, moving `tabs` to the bottom, or turning a `split` into a drawer is a pure function of `hello` and that value; the vocabulary does not change.
+- **Modality in `hello`.** `pointer :fine|:coarse`, `hover t|nil`, `touch t|nil`, plus the viewport and safe-area insets. Window resize is a `resized` event (§38). Choosing a one-pane layout below a width, moving `tabs` to the bottom, or turning a `split` into a drawer is a pure function of `hello` and that value; the vocabulary does not change.
 - **Hit targets.** With `pointer :coarse` the theme table (§9) selects larger spacing and target sizes. Lisp does not know or care.
 - **Mobile idioms as placements**, not new nodes: `tabs :placement :bottom` (YouTube's bar), `toolbar :placement :floating` (Excalidraw's tool strip), `dialog :placement :sheet|:side` (bottom sheets, navigation drawers; swiping one away is `dismiss`), `list` rows with `:swipe-commands` revealed by a horizontal swipe.
 - **Virtual keyboard.** `field :input-mode` from a closed set (`:text :numeric :decimal :email :url :search`).
@@ -462,7 +473,7 @@ An `item` contains any node, including a `record`, so a Lisp-drawn shape sits on
 
 ### 19.2 Events
 
-`move {key at}`, `resize {key size}`, `connect {from to}` (a port-to-port drag, per §17), `select {keys}` (marquee or multi-select), and `create {type at size|points}` for drawing tools, where a freehand stroke arrives as one event with its points, never as motion. Every one is a terminal event; the viewport transform is `local` (§8). A gantt bar's resize is a duration change; a dependency is an `edge`; a dashboard panel move is a `move` in grid coordinates; a map marker drag is a `move` in lat/lng.
+`move {key at}`, `resize {key size}`, `connect {from to}` (a port-to-port drag, per §17), `select {keys}` (marquee or multi-select), and `create {type at size|points}` for drawing tools, where a freehand stroke arrives as one event with its points, never as motion. Every one is a terminal event; the viewport transform is client-owned (§8). A gantt bar's resize is a duration change; a dependency is an `edge`; a dashboard panel move is a `move` in grid coordinates; a map marker drag is a `move` in lat/lng.
 
 ### 19.3 Text backend
 
@@ -513,15 +524,15 @@ Nothing here is a new mechanism: lanes are a partition attribute, palettes and c
 
 - `image :src :alt :fit (:cover|:contain) :shape (:rect|:circle)`. Avatars, album art, thumbnails.
 - `icon :name` from an enumerated set in the spec file. Activity bars and tool palettes are `toolbar`s of `button :icon`.
-- `media :kind (:audio|:video) :src :state (:playing|:paused) :position :volume`. The controls are client-local; Lisp drives playback by patching `state` and `position` (declarative, no `act`), and subscribes to `position` as a throttled `local` value if it needs it. A sticky player bar is a `toolbar :placement :bottom` holding a `media`.
+- `media :kind (:audio|:video) :src :state (:playing|:paused) :position :volume`. The controls are client-local; Lisp drives playback by patching `state` and `position` (declarative, no `act`), and queries `position` if it ever needs it (§38); a `readout` shows it without asking. A sticky player bar is a `toolbar :placement :bottom` holding a `media`.
 - `link :href`, inline. Activation opens the URL client-side and is not Lisp-visible, which is why it is not an event; Lisp-initiated navigation is the `open-url` act (§2.3).
 - Horizontal carousels (Spotify) are `scroll :axis :x` around a `row`.
 
 ## 21. Large collections
 
-A 100 000-row grid cannot ship as a tree. `table`, `list` and `tree` take `:virtual t :count N`, Lisp ships only a window of keyed rows, the client reports the visible range as a subscribed `local` value, and Lisp patches the window with `replace-node`. The row keys keep selection and patches stable across windows. Paged document viewers are the same mechanism with pages as rows.
+A 100 000-row grid cannot ship as a tree. `table`, `list` and `tree` take `:virtual t :count N`, Lisp ships only a window of keyed rows, the client raises a `need-rows {from to}` event when its visible range leaves the window it holds (§38), and Lisp patches the window with `replace-node`. The row keys keep selection and patches stable across windows. Paged document viewers are the same mechanism with pages as rows.
 
-Column sort, filter, pin, resize and reorder are ordinary events carrying the column key (reorder via `:sortable` on the columns, resize via `:resizable`). Cells hold any node, so a progress bar, a star rating (`radio-group :appearance :rating`), a badge or a checkbox in a cell is nothing new. Range selection is a `local` value `(r1 c1 r2 c2)`; in-cell editing is a `field` in the cell.
+Column sort, filter, pin, resize and reorder are ordinary events carrying the column key (reorder via `:sortable` on the columns, resize via `:resizable`). Cells hold any node, so a progress bar, a star rating (`radio-group :appearance :rating`), a badge or a checkbox in a cell is nothing new. Range selection is client-owned, queried as `(r1 c1 r2 c2)` when a command needs it; in-cell editing is a `field` in the cell.
 
 ## 22. Small additions the survey forced
 
@@ -587,7 +598,7 @@ An outliner (Blender), an accounts ledger (GnuCash), a layer list (KiCad, GIMP),
 
 Every professional tool has a status bar of values that change with the pointer: cursor position in canvas coordinates (KiCad's X/Y/dx/dy, Blender, Inkscape, QGIS), zoom percentage, timecode under the playhead, selection counts, RA/Dec under the cursor in KStars. A round trip per pointer move is not acceptable and never was. These are pure functions of client-local state that §8 already enumerates.
 
-`readout` is a feedback node bound to **one enumerated client-local value**: `:pointer` (in the coordinate space of a named canvas), `:zoom`, `:scroll`, `:selection-range`, `:media-position`, `:drag-delta`. It takes a `:format` from a closed set (units, precision). This is a one-way display of a value the client already owns; it is not the two-way binding §13 prohibits, and it cannot reach Lisp state. The text backend renders it as `⟨pointer canvas-1⟩`. Anything not on that list goes through `local` subscription and an ordinary patched `label`, which is fine for values that change on the order of once a second.
+`readout` is a feedback node bound to **one enumerated client-local value**: `:pointer` (in the coordinate space of a named canvas), `:zoom`, `:scroll`, `:selection-range`, `:media-position`, `:drag-delta`. It takes a `:format` from a closed set (units, precision). This is a one-way display of a value the client already owns; it is not the two-way binding §13 prohibits, and it cannot reach Lisp state. The text backend renders it as `⟨pointer canvas-1⟩`. Anything not on that list is client state Lisp has no business displaying live; if a command needs it, it queries it (§38).
 
 ## 28. Timelines and live meters
 
@@ -597,7 +608,7 @@ The playhead is `canvas :cursor :media-position` — the same client-local value
 
 Audio meters (OBS, Kdenlive, Ardour) update at frame rate. `progress :role :meter` is the node; its value arrives as ordinary `set-attr` patches. The protocol has to tolerate a few dozen small patches per second on a handful of keys, and the reconciler should coalesce patches to the same attribute within a frame. That is a runtime requirement, stated here so it is in the frozen JS from step 4 of §14, not a vocabulary change.
 
-Obsidian's graph view is a `canvas :layout :force`: the client runs the layout, positions are `local` (subscribable, pinnable by a `move`), and Lisp owns only the nodes and edges. It is the one case where item positions are not Lisp-owned, and it is opt-in per canvas.
+Obsidian's graph view is a `canvas :layout :force`: the client runs the layout, positions are client-owned (queried when saving, pinnable by a `move`), and Lisp owns only the nodes and edges. It is the one case where item positions are not Lisp-owned, and it is opt-in per canvas.
 
 ## 29. Hover groups
 
@@ -609,11 +620,11 @@ Three things the "no styling" rule (§4, §9) has to be precise about after seei
 
 - **Content colour is data.** A spreadsheet cell's fill, a calendar event's colour, a darktable colour label, a Trello label, a Blender collection colour are chosen by the user and stored with the document. They are not theme decisions. `cell`, `item`, `span` and `trow` take `:color` holding a colour *value* (the same datum a `color` control produces), rendered as-is; the theme still owns everything else. The validator allows `:color` only on content nodes, never on chrome.
 - **Spans.** `cell :span (rows cols)` for merged cells; nothing else is needed for the Calc screenshot.
-- **Density is a window setting.** Blender and KiCad are roughly twice as dense as the IDE mockups. The theme table (§9) is generated for two densities, `:comfortable` and `:dense`, and the choice is per window in `hello`/`local`, never per node. Combined with `pointer :coarse` (§18) that gives four generated tables and no per-node sizing.
+- **Density is a window setting.** Blender and KiCad are roughly twice as dense as the IDE mockups. The theme table (§9) is generated for two densities, `:comfortable` and `:dense`, and the choice is per window in `hello`, never per node. Combined with `pointer :coarse` (§18) that gives four generated tables and no per-node sizing.
 
 One observation rather than an addition: five of the surveyed desktop tools are built around a 3D viewport. It stays out of the vocabulary (§13), but it is the single largest class the design declines, and if CAD or 3D ever becomes a target it will need an opaque node with its own decoration protocol, designed the way `editor` was.
 
-## 32. Backends: web, native, text
+## 31. Backends: web, native, text
 
 Nothing above names a browser except by example, and the text backend (§11) is the proof: a tree that renders to plain text is not bound to the DOM. A native client — Cocoa, Qt, GTK, SwiftUI, Compose — is a third backend built the same way as the web one, and it is worth listing exactly what each backend has to supply, because that list is the portable surface and everything else is shared:
 
@@ -636,7 +647,111 @@ Two consequences. First, the freeze rule applies to each backend, and the §12.3
 
 What was web-specific in earlier drafts and has been removed: the raw `svg` node (hand-authored markup) and the `download` act (now `save-file`). `record` keeps SVG as its drawing payload because every toolkit rasterizes SVG; what it does not assume is element hit-testing, which is why it ships its own region list (§6.4). What remains web-flavoured is vocabulary, not design: "CSS" in §4.1 and §9 should be read as "the generated theme", and `link` opens the platform browser through `open-url`.
 
-## 31. Still open after the survey
+---
+
+# Part IV — Weaknesses and their resolutions
+
+A review of Parts I–III found ten weaknesses. Each is stated here with the decision that resolves it and the section it changes; where a weakness cannot be fixed, it says what the mitigation is. The four that were gaps in the specification (§33, §34, §36, §39) are closed before step 1 of §14.
+
+## 33. The buffer model
+
+**Weakness.** §6.3 described concurrent editing without a concurrency model.
+
+**Resolution.** A buffer with an `editor` on it is **client-authoritative**. The client holds the text and a version counter it alone increments; every user edit is sent to Lisp as an event `{buffer, version, ops}` where ops are insert/delete at offsets, and Lisp applies them to a mirror. Lisp never edits a buffer directly; it sends a **proposal** `{buffer, base-version, ops}`. If the client's version equals the base, it applies the ops; if the user has typed since, the client rebases the proposal's offsets through its own later edits (one-sided transformation: there are exactly two writers and only one of them ever has to yield, so this is the simple case of operational transformation), applies the result, and reports the applied ops back as an ordinary edit event, so the mirror converges. A focused buffer is never resynced; an unfocused one may be replaced wholesale by a `view`.
+
+IME composition text is not in the buffer until committed; proposals arriving mid-composition queue until commit. The buffer's undo stack is the client's, at typing granularity; an applied proposal enters that stack as one step, so undoing a reformat is one keystroke and needs no Lisp round trip (§41).
+
+Replay is unaffected: user edits are events and proposals are patches, both logged in order, and the rebase is deterministic.
+
+## 34. Two replays
+
+**Weakness.** §12 promised that a log reproduces a bug "in a fresh image". The log holds events and patches; it does not hold the objects the handles name.
+
+**Resolution.** Name the two things separately and make the log serve both.
+
+- **Client replay** runs the log through the runtime (or the text backend) and reproduces what the client showed. It needs no Lisp state and is always available. So that it can still print, every handle is logged at mint time with its `describe-handle` line, and the text backend uses the log's copy.
+- **Lisp replay** re-executes commands and needs the state they ran against. The log header records the image it was recorded in (path, build, and a checksum), and Lisp replay requires loading that image — CCL is image-based, so a saved image is the natural state anchor, and a bug report is "this log against this image". For tests, the proof views (§14) run against scripted fixtures instead of a saved image.
+
+`replay-log` takes `:mode (:client | :lisp)`; the doc's earlier claim holds for `:client` unconditionally and for `:lisp` given the image.
+
+## 35. The box oracle
+
+**Weakness.** The text backend cannot see layout, which is where visible bugs live, and the author cannot see the screen.
+
+**Resolution.** A third renderer, supplied by each backend (§31): the real client run headless, with a `dump-boxes` command that prints, for every keyed node in text-backend order, its computed rectangle, whether it is clipped, whether it overflows its parent, and whether it is visible. It is text, so it is a golden file, and it is asserted at two or three fixed viewports per view. Standing assertions in the client's test suite: no keyed node clipped except inside a `scroll`; no overlay outside its window; no `split` region below its minimum; no `label` truncated unless `:truncate t`. A screenshot is saved next to each box golden for human review, but the screenshot is evidence, not the oracle.
+
+## 36. Incremental rendering
+
+**Weakness.** "State → tree" left out how patches are computed. Diffing a whole regenerated tree per event is O(tree), with structural equality on Lisp data, and would run for every divider drag.
+
+**Resolution.** Three rules.
+
+- **Views memoize.** `define-view` caches its result keyed on its arguments plus each argument's *version*, a modification counter on Lisp objects that views observe (a mixin, or explicit `(touch obj)` at the mutation sites the IDE already controls). A re-render re-evaluates only the sub-views whose inputs changed and the differ walks only regenerated subtrees; unchanged subtrees are shared by identity and skipped in O(1).
+- **Views declare their inputs.** A view depends on Lisp objects, never on client state (§38), so nothing the client does can force a re-render except through an event Lisp chose to handle.
+- **Streams are incremental by construction.** A view may return a patch instead of a tree — `(append-children …)` for a transcript, `(set-attr …)` for a meter — validated against the model exactly as a full tree would be. Pure-by-default, explicit patches where the shape is a stream. The transcript is the proof case: appending a form never touches the earlier forms.
+
+## 37. Making the freeze a mechanism
+
+**Weakness.** "Frozen" was a hope. The mechanism list grew with every application class surveyed, and the build order risks producing a toolkit rather than an IDE.
+
+**Resolution.**
+
+- **A mechanism registry.** The mechanisms are enumerated in the spec file, each with a conformance test, a text-backend rendering and an entry for every backend. Adding one requires all four and an amendment to this document; the cost is the brake.
+- **Sanctioned fallbacks that are not code.** When the vocabulary lacks something, the answers are, in order: compose it from existing nodes; draw it as a `record`; declare it out. Never a mechanism for one feature.
+- **Versioned vocabulary.** The client states its vocabulary version in `hello`; the Lisp-side validator checks views against the client's version, so a newer Lisp degrades to what an older client renders rather than sending it something it will refuse.
+- **Product before toolkit.** The IDE ships on the web backend before any native backend starts; steps 1–5 are time-boxed to the IDE's first milestone and the freeze happens at the end of it, whatever the mechanism count is. The count is currently sixteen (fifteen plus the box oracle).
+
+## 38. Queries and events instead of subscriptions
+
+**Weakness.** `local` subscriptions gave Lisp a live copy of client-owned state and made ownership depend on whether a subscription existed.
+
+**Resolution.** Remove `local`. Client-owned state (§8) reaches Lisp in exactly two ways:
+
+- **Query.** Lisp sends `query {window, view, value}` for one enumerated value — viewport, divider positions, fold state, selection range, media position, force-layout positions — and gets one `snapshot` back. It is a request, made when a command needs the value (saving a layout, "copy selection"), and the reply is not retained.
+- **Event.** The client raises an event when its own state means Lisp has something to do: `need-rows {from to}` when a virtualized view scrolls outside the rows it holds, `resized {window size}`, `scrolled-away` / `scrolled-to-end` for a stick-to-end policy, `focus-changed` for nodes marked `:track-focus t`. These are requests for work, not state transfer; Lisp acts and forgets.
+
+Displays that must follow client state continuously use `readout` (§27), which the client draws without asking. Nothing else is needed; every former subscription in Parts II–III has been rewritten to one of the three.
+
+## 39. The interactor and key routing
+
+**Weakness.** Argument gathering — the heart of CLIM and the mockups' most distinctive behaviour — was described as "views over the registry" with no protocol; key routing was unspecified.
+
+**Resolution.**
+
+- **The interactor is a Lisp state machine rendered as a view.** A command in progress is an object (`interaction`: command, arguments accepted so far, the argument now being gathered and its presentation type, the partial text). The command line is `(view 'command-line *interaction*)`, a pure function of that object; the chips are its accepted arguments. Input reaches it as events: `activate` on a presentation whose type matches the current argument, a `change` on the command-line field, `Escape` (cancel), `Enter` (default or commit). Because the current argument's type is in the object, Lisp patches `state :matching` on every visible `oref` of that type when gathering starts and clears it when it ends (§5.1 already) — one patch, not a hover protocol.
+- **Completion round-trips per keystroke, and that is accepted.** The command-line field is `field :live t`; each change event returns a patched completion list. It is the one surface where a per-keystroke round trip is the design, as in every REPL, and it is fine on the local and in-process transports the design targets.
+- **Keymaps are per-type tables (§4.1).** Global bindings from the registry, a per-view keymap, and the editor's own bindings are sent once as tables. The client resolves a chord locally — including prefix keys, with a `readout :of :pending-keys` echo — and sends `{command handle}`; anything unresolved goes to the focused editor or field. Priority is fixed and documented: bindings the focused editor declares reserved (movement, insertion), then the view keymap, then the global keymap. The registry validator rejects a global binding that collides with a reserved editor binding at definition time, which is the only place a human ever sees the conflict.
+
+## 40. Latency policy
+
+**Weakness.** Every semantic interaction is a round trip; over a network it shows, and each time it bites the temptation is another client-local exception.
+
+**Resolution.** Say the policy once and make the client enforce the feedback half.
+
+- **Three interaction classes.** *Local, always*: hover, drag feedback, scroll, typing, scrubbing, pan and zoom — client-owned by §8, never a round trip. *Round trip, budgeted*: activate, select, commit, open a menu — the design accepts one RTT, and the target transports (local socket, in-process) make it invisible. *Commands*: arbitrary duration.
+- **Pending feedback is client mechanism.** When an event is sent and no patch has arrived after 150 ms, the originating node shows a pending state (a spinner or a dimmed button) until the next patch or an `error`. No optimistic updates — the client never guesses — but nobody ever waits without a sign.
+- **Remote is a supported degradation, not a target.** `hello` carries a measured RTT; above a threshold the client lengthens its throttles and shows pending state sooner. Nothing else changes, and no mechanism is added for it.
+
+## 41. Focus, undo, accessibility, security
+
+Four things the earlier drafts did not address at all.
+
+- **Focus and keyboard navigation.** Focus is client-owned. Every container type defines its traversal in the spec file — `tabs` and `radio-group` by arrows, `list`/`tree`/`table` by arrows with type-ahead, `menu` by arrows and mnemonics, `split` by a fixed chord between regions, `dialog` trapping focus until dismissed. The `focus` act moves it; `focus-changed` is raised only for nodes marked `:track-focus t` (§38). The text backend marks the focused node.
+- **Undo.** Two stacks with a rule. Uncommitted client state (the focused buffer's text, an uncommitted `field`) is undone by the client (§33). Everything else is a Lisp command's effect and is undone by the registry's `undo` command, which requires commands that change image state to declare an `:undo` method; a command without one is not undoable and the palette says so. The two stacks never interleave because a commit is the boundary between them.
+- **Accessibility.** Roles come from types for free — every backend maps `button`, `tabs`, `table`, `dialog` to its accessibility tree — and names come from content. Two attributes are added to every node for the cases where content is not enough: `:label` (an accessible name) and `:description`. `banner` is a live region. The useful equivalence: the text backend's output is very close to what a screen reader receives, so "does it read well as text?" (§11) answers "is it accessible?" for most views.
+- **Security.** A handle plus a command from the socket is a Lisp shell. The transport binds to a Unix socket or localhost by default, `hello` carries a session token, remote use requires TLS, and Lisp validates every `{command handle}` against the type's translator table server-side rather than trusting the client's claim of applicability. This is an IDE for its owner; the design does not attempt multi-tenant isolation and says so.
+
+## 42. The theme
+
+**Weakness.** Roles-not-colours guarantees coherence, not quality; the theme is the one piece of design work, and the author cannot see it.
+
+**Resolution.**
+
+- **Measured, not invented.** The theme table's initial values are extracted from the mockups — their colours, spacing, type scale, corner radii, chip and row treatments — so the system starts from a look a human already approved.
+- **A theme gallery view.** `(view 'theme-gallery)` renders every type × role × state × density on one screen, in both pointer modes. A human reviews the whole system once, in one place, and adjustments are edits to the token table. The gallery is also the box oracle's (§35) largest golden, so a theme change that breaks layout fails a test.
+- **Human in the loop, once.** Theme review is the one step in §14 that a person does with their eyes. Everything downstream inherits it by construction.
+
+## 43. Still open
 
 - Spreadsheet fill-handle drag (extend a selection by dragging its corner): probably `:resizable` on the selection rectangle producing a `fill` event, but unproven.
 - Whether `select` in a `canvas` needs a lasso variant or marquee is enough.
