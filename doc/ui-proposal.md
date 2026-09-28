@@ -165,6 +165,16 @@ The editor's text is state Lisp owns, shipped as a `view` and updated by text pa
 
 The transcript replays a CLIM output record at 1:3 scale, with "⌘click **replay full size**", and records contain presentations. A canvas with server-side hit testing would mean round trips and JS. Decision: a `record` node is server-rendered SVG in which presentation regions are `<g>` elements tagged with handle and type. The client's inline-node event path handles them unchanged. The text backend prints a placeholder line (`[record text-2193, 840×276, 3 presentations]`).
 
+### 6.5 Gutters, wrapping and the two line coordinates
+
+There are two line coordinates and only one crosses the wire. **Logical lines** are a property of the buffer text, which Lisp owns (§6.3). **Visual lines** are a product of wrapping, which depends on the pane width and font metrics the client has and Lisp does not. So everything in the protocol — decoration ranges (§6.1), buffer events (§6.2), `reveal-range`, cursor positions in a `readout` (§27) — is in logical coordinates (offset, or line and column), and the client maps to visual lines when it draws. Lisp sets the wrapping policy as an attribute, `editor :wrap (:none | :word | (:column n))`, and never learns where the wraps fell.
+
+The gutter is therefore drawn by the client from the text it already holds: a number on the first visual line of each logical line, nothing (or a wrap marker) on continuation lines. Which gutter columns exist is Lisp's, from a closed set: `editor :gutter (:line-numbers :relative-numbers :folds :marks)`. Relative numbers are computed from the cursor position, which is client-local. Marks (breakpoints, diff hunks, the current frame, errors) are the §6.1 decorations, keyed by logical range, so they attach to the first visual line of their range; clicking a mark is a buffer event carrying the logical line. Fold *markers* come from Lisp as decorations of kind `:foldable` over a logical range, because knowing where an s-expression ends is Lisp's job; fold *state* is client-local like scroll offset, subscribable through `local` when a layout is saved.
+
+`code` blocks outside the editor (a transcript, a diff pane) take `:numbered t` and follow the same rule: numbers count newlines in the node's content, wrapping is the client's.
+
+The text backend prints logical line numbers and ignores wrapping, per §11.1; a golden test that needs visual lines states a column width, as a canvas golden test states a viewport (§19.4). A bug that shows only with wrapping is by construction in the client's logical-to-visual mapping — frozen, unit-tested code — never in Lisp.
+
 ## 7. Windows
 
 The target UI detaches a pane into its own OS-level window sharing the same image ("same image, same objects · ⌘⇧T to re-dock"). The protocol therefore has windows, not just views:
