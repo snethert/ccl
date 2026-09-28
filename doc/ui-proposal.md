@@ -95,7 +95,7 @@ A closed set, defined in **one machine-readable spec file** that generates: Lisp
 | overlay   | `dialog menu popover tooltip menubar`                            |
 | menu      | `section item` — inside a `menu` (§10.1); `section prop` inside `properties` (§25) |
 | feedback  | `spinner progress badge banner readout` (§27)                    |
-| opaque    | `editor` (§6), `record` (§6.4)                                   |
+| opaque    | `editor` (§6), `record` (§6.4, SVG + regions)                    |
 
 Drag-and-drop (§17), gestures (§18), virtualization (§21), hover groups (§29) and content colour (§30) are attributes and events on these nodes, not further node types.
 
@@ -173,9 +173,13 @@ where `kind` is a closed set: `:presentation :hunk-added :hunk-removed :hunk-cha
 
 The editor's text is state Lisp owns, shipped as a `view` and updated by text patches in both directions, so that record/replay (§12) captures it. An editor whose buffer lives only in the browser breaks replay determinism.
 
-### 6.4 Output records are drawing ops with tagged groups
+### 6.4 Output records are SVG plus a region list
 
-The transcript replays a CLIM output record at 1:3 scale, with "⌘click **replay full size**", and records contain presentations. A canvas with server-side hit testing would mean round trips and client code. Decision: a `record` node's children are a closed set of drawing ops — `path`, `rect`, `ellipse`, `text`, `image`, `group` — with `group :handle h :type t` marking a presentation region; the web backend serializes them to SVG, a native backend draws them, and the text backend prints a placeholder line (`[record text-2193, 840×276, 3 presentations]`). The client's inline-node event path handles a tagged group unchanged. The ops are part of the spec file like every other node, so there is no drawing format string in the vocabulary (§13); SVG is one backend's output, not the protocol.
+The transcript replays a CLIM output record at 1:3 scale, with "⌘click **replay full size**", and records contain presentations. Two things are needed: drawing the record, and hit-testing the presentations inside it.
+
+Drawing is a solved problem in every backend: browsers render SVG natively, and Qt, GTK (librsvg), Android and Cocoa all rasterize it. So a `record` carries SVG that Lisp generates from the output record. This is not the format-string hazard §13 bans: that ban is on *authoring* markup in view code, where a code generator would produce four thousand lines of bespoke styling; here the SVG is emitted by one renderer from a data structure, the way the text backend emits text, and no view function ever writes it. A raw `svg` node for hand-authored markup stays out.
+
+Hit-testing is not solved by SVG renderers — most rasterize to an image and know nothing of the elements — so the record does not rely on it. Lisp already knows every presentation's bounding rectangle from the output record tree, and ships them: `record :svg … :regions ((handle type (x y w h)) …)`. The client hit-tests the region list itself, in record coordinates through the record's scale, and a tagged region behaves exactly like an inline `oref` for gestures, the doc line and pads. A backend whose SVG renderer does expose elements gains nothing it needs. The text backend prints the region list, which is the semantically meaningful part: `[record text-2193, 840×276: h:41 runner @(12,8 120×20), h:42 …]`.
 
 ### 6.5 Gutters, wrapping and the two line coordinates
 
@@ -316,7 +320,7 @@ The log format and the replay model come *before* the JS runtime, so that any pr
 
 Resolved while reviewing:
 
-- `plot` and a raw `svg` node are not in the initial vocabulary. `record` (drawing ops, §6.4) is the opaque seam; an actual plotting requirement must demonstrate that `record` is insufficient before the permanent vocabulary grows.
+- `plot` and a raw `svg` node are not in the initial vocabulary. `record` (Lisp-generated SVG plus regions, §6.4) is the opaque seam; an actual plotting requirement must demonstrate that `record` is insufficient before the permanent vocabulary grows.
 - `menu` is explicit structure (§10.1), not attributes.
 
 Open:
@@ -620,7 +624,7 @@ Nothing above names a browser except by example, and the text backend (§11) is 
 | the delegated dispatcher and gesture recognizer (§18) | pointer/touch/key events     | the toolkit's events                     |
 | the fifteen mechanisms (§4.1)               | one implementation each                | one implementation each                  |
 | an `editor` satisfying §6.1–6.3, 6.5        | a CodeMirror-class component           | Scintilla, KTextEditor, NSTextView…      |
-| a `record` painter (§6.4)                   | SVG serialization                      | direct drawing                           |
+| a `record` painter (§6.4)                   | inline SVG                             | the toolkit's SVG rasterizer             |
 | a `media` element (§20)                     | HTML media                             | the platform player                      |
 | `:geo` tiles (§19)                          | a tile layer                           | a tile layer                             |
 | windows (§7) and `hello`                    | tabs/`window.open`, shared socket      | real windows                             |
@@ -630,7 +634,7 @@ Everything else — the protocol, the vocabulary, keys and patches, commands, th
 
 Two consequences. First, the freeze rule applies to each backend, and the §12.3 invariant is what makes a second backend safe: if no unlogged client state can affect a Lisp-visible result, a log recorded against the web client replays identically against the native one, which is the cross-backend conformance test. Second, the transport is not part of the design; with Lisp and a native client in one process, the wire becomes a function-call boundary and the protocol still pays for itself, because the tree is still a value, the events are still data, and the log is still replayable.
 
-What was web-specific in earlier drafts and has been removed: the `svg` node and `record`-as-SVG (a format string; now drawing ops, §6.4), and the `download` act (now `save-file`). What remains web-flavoured is vocabulary, not design: "CSS" in §4.1 and §9 should be read as "the generated theme", and `link` opens the platform browser through `open-url`.
+What was web-specific in earlier drafts and has been removed: the raw `svg` node (hand-authored markup) and the `download` act (now `save-file`). `record` keeps SVG as its drawing payload because every toolkit rasterizes SVG; what it does not assume is element hit-testing, which is why it ships its own region list (§6.4). What remains web-flavoured is vocabulary, not design: "CSS" in §4.1 and §9 should be read as "the generated theme", and `link` opens the platform browser through `open-url`.
 
 ## 31. Still open after the survey
 
