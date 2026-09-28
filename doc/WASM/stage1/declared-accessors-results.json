@@ -11,7 +11,8 @@
     "reviewCommit": "1d4648ad6263746a1eef1c0767dcaedcaa70daf3",
     "implementationCommit": "c716d9f4147c76b336aa2d8ca84b2ca79f203bd6",
     "disposition": "No defect. Accept c716d9f4.",
-    "scope": "Declared CAR/CDR and SVREF only. Audit 191 explicitly excludes arithmetic parents 047df094 and f38261de; both remain awaiting independent review.",
+    "parentReviewCommit": "2bb3ae55021065b51b230beebb4a9ff633907d5a",
+    "scope": "Declared CAR/CDR and SVREF accepted after audit 191. Arithmetic parents 047df094 and f38261de subsequently reviewed by audit 192 and accepted; the full stack is now accepted.",
     "verification": "Completed producer and independent verification reused; unchanged tests not rerun for acceptance.",
     "evidenceRepositoryCommit": "031491ee04d799f998ad6419607ce51a7bf617eb",
     "evidenceInventorySha256": "dad393e84ef59591c2d2d0e55cfe69ffd48eedba87fd6b645e43bbff76bf9bbb",
@@ -1510,7 +1511,7 @@
     }
   },
   "limitations": [
-    "Accessor change accepted after audit 191; arithmetic parents 047df094 and f38261de remain awaiting independent review. No criterion credit.",
+    "Accessor change accepted after audit 191; arithmetic parents 047df094 and f38261de accepted after audit 192. No criterion credit.",
     "Only reads are specialized; stores and the call convention are unchanged.",
     "Unproved vector bounds remain checked. False declarations under trusted policy have no added validation contract.",
     "The initial ratio literal fails in the unchanged core $FASL-RATIO; retained trace, no ratio-index execution claim.",

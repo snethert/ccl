@@ -1,6 +1,8 @@
 # Declared float unboxing — producer results
 
-Producer verification completed 28 September 2026; **independent review pending**. Whole-file counts stay at 82 compiled runtime files and 81 ordinary target loads; seven product modules / eleven instances. Historical originals 575/535 and ledger 21/12 are unchanged; no criterion credit.
+**Accepted 28 September 2026** at the user's direction after [Claude audit 192](../stage0/claude-review.md), supplied at `2bb3ae55`, found no defect in `047df094`. With audit 191, the full float/fixnum/accessor stack is reviewed and accepted. Whole-file counts stay at 82 compiled runtime files and 81 ordinary target loads; seven product modules / eleven instances. Historical originals 575/535 and ledger 21/12 are unchanged; no criterion credit.
+
+The reviewer matched the producer inventory and backend to the commit, rebuilt the float fixture from the final tree, matched all 83 rows and four forced collections, and killed all four producer controls. Three source mutants removing captured-variable exclusion, escape analysis and the unboxing type check were killed. Audit 191's final-tree native suite, corpus and benchmark smoke cover the inherited code and are reused. O-151 records the adopted float-safety policy: unchecked safety-1 arithmetic may yield infinities/NaNs where native signals, with the fixture masking native FP exceptions for comparison. O-152 records stricter invalid-declaration refusals; O-153 records whole-function escape analysis and identifies the functions that actually exercise unboxed paths. All are informational. Completed verification is reused; unchanged tests were not rerun for acceptance.
 
 Typed double addition falls from **1,725.56 to 32.93 ns/iteration** (52.4× faster); typed single falls from **1,716.09 to 33.14 ns** (51.8×). These are complete loop costs under default V8. The remaining loop, fixnum and call protocol stays in place.
 
@@ -73,4 +75,4 @@ The original corpus run produced 348 failures in destructive float operations. T
 
 [Fixture, scope and commands](../../../tests/wasm/stage1/float-unboxing/README.md). One pack, `ccl-evidence/2026-09-28-stage1-float-unboxing-r1`, contains raw final measurements, code shapes, newly built bundles, source/tool hashes, focused checks, mutants, complete compressed corpus observations and native comparisons, plus original failures. `inventory.json` authenticates the pack. Existing boot images, runtime archives and pristine native baseline artifacts are referenced by their accepted identities rather than duplicated.
 
-Next: user-supplied independent review of this change. After acceptance, continue declared accessor specialization before reopening the call convention. No reviewer was invoked by the producer.
+Supplied audit 192 completes this review; fixnum and accessor specialization are also accepted. The call convention remains the next benchmark-guided optimization, outside this acceptance. No reviewer was invoked by the producer.

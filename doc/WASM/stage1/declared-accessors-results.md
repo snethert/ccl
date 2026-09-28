@@ -1,6 +1,6 @@
 # Trusted declarations for accessors — producer results
 
-**Accepted 28 September 2026** at the user's direction after [Claude audit 191](../stage0/claude-review.md), supplied at `1d4648ad`, found no defect in `c716d9f4`. The review explicitly excludes arithmetic parents `047df094` and `f38261de`, which remain producer-verified and awaiting independent review. Whole-file counts remain 82 compiled runtime files and 81 ordinary target loads; originals 575/535 and ledger 21/12 are unchanged. No criterion credit.
+**Accepted 28 September 2026** at the user's direction after [Claude audit 191](../stage0/claude-review.md), supplied at `1d4648ad`, found no defect in `c716d9f4`. Audit 192 (`2bb3ae55`) subsequently reviewed arithmetic parents `047df094` and `f38261de` with no defect; the user accepted both, completing acceptance of the three-commit stack. Whole-file counts remain 82 compiled runtime files and 81 ordinary target loads; originals 575/535 and ledger 21/12 are unchanged. No criterion credit.
 
 The reviewer reproduced the focused, arithmetic-dependency and benchmark build products byte-for-byte, reran all 26,204 corpus comparisons and 21,843 eligible native tests with R6/R6a, and matched the 71 focused rows and both dependency fixtures. All five producer controls and four of five source-level mutants were killed; omitting the LIST NIL branch is equivalent under the current layout (O-148). Nine extra probes matched native execution. A one-replica benchmark smoke measured typed CAR at 8.51 ns and typed SVREF at 15.41 ns; the full timing series was not replayed. O-149 carries the pre-existing ratio-literal loader failure, and O-150 records the trusted-declaration contract. These notes require no producer round for accessor acceptance. Completed verification is reused; unchanged tests were not rerun to record acceptance.
 
@@ -65,4 +65,4 @@ The initial non-fixnum index literal `1/2` failed before fixture execution in th
 
 [Fixture and reproduction](../../../tests/wasm/stage1/declared-accessors/README.md). One finalized pack, `ccl-evidence/2026-09-28-stage1-declared-accessors-r1`, retains measurements, emitted bundles, focused and mutation results, compressed compiler/native qualifications, original failures and tool/source identities. `inventory.json` authenticates every artifact. Prior input trees are referenced rather than duplicated.
 
-No reviewer was invoked. Supplied independent review remains required before acceptance.
+No reviewer was invoked by the producer. Supplied audits 191 and 192 complete independent review of the accepted stack.

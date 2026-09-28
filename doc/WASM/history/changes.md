@@ -1,3 +1,32 @@
+## 2026-09-28 — Accept both numeric parents and complete stack acceptance
+
+The user supplied [Claude audit 192](../stage0/claude-review.md) and explicitly
+accepted `047df094`, `f38261de` and `c716d9f4`: no defect in any of the three.
+Imported `2bb3ae55` unchanged from `claude-audit-191`, preserving the already
+imported audit 191 and accessor acceptance. The [float](../stage1/float-unboxing-results.json)
+and [fixnum](../stage1/fixnum-loops-results.json) records now bind acceptance
+to the reviewed implementation, producer evidence and both audits. Historical
+producer measurements and captured parent-status snapshots are preserved.
+
+Audit 192 verifies both pack inventories and their commit-specific backend
+hashes, reruns the final-tree float 83/4 and fixnum 125/6 rows/collections,
+and kills all eight producer controls and six source-level mutants. It reviews
+bindings, reads, boxing and roots across collecting operands. Audit 191's
+final-tree native suite (21,843/0), corpus (26,204 fresh) and benchmark smoke
+already cover the parents and were reused, not repeated by audit 192.
+
+O-151 (adopted float-safety policy), O-152 (stricter invalid-declaration boundary
+refusals) and O-153 (whole-function float escape analysis) are informational
+and require no producer round. O-149 remains a pre-existing ratio-literal
+loader issue outside this acceptance. Small reviewer logs remain locally
+retained, untracked, in `ccl-evidence/2026-09-28-claude-audit-191` and
+`ccl-evidence/2026-09-28-claude-audit-192`; the reviews themselves are committed.
+
+The entire declaration/loop stack is now reviewed and accepted. This acceptance
+changes documentation only; unchanged tests were not rerun. READY 81/82,
+seven product modules / eleven instances, originals 575/535 and ledger 21/12
+remain unchanged; no criterion credit.
+
 ## 2026-09-28 — Accept reviewed declared CAR/CDR and SVREF accessors
 
 At the user's direction to accept the reviewed fixnum/float/CAR/SVREF work,

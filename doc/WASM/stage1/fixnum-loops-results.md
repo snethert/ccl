@@ -1,6 +1,8 @@
 # Fixnum locals and loop arithmetic — producer results
 
-Producer verification completed 28 September 2026; **independent review pending** for this change and its declared-float parent `047df094`. Whole-file counts remain 82 compiled runtime files and 81 ordinary target loads, seven product modules and eleven instances. Historical originals 575/535 and ledger 21/12 are unchanged; no criterion credit.
+**Accepted 28 September 2026** at the user's direction after [Claude audit 192](../stage0/claude-review.md), supplied at `2bb3ae55`, found no defect in `f38261de` or its declared-float parent `047df094`. With audit 191, the full float/fixnum/accessor stack is reviewed and accepted. Whole-file counts remain 82 compiled runtime files and 81 ordinary target loads, seven product modules and eleven instances. Historical originals 575/535 and ledger 21/12 are unchanged; no criterion credit.
+
+The reviewer matched the producer inventory and backend to the commit, matched all 125 final-tree fixture rows and six forced collections, and killed all four producer controls. Three source mutants removing the fixnum binding check, captured-variable exclusion and operand-staging guard were killed. Code inspection confirms bindings and reads use the helpers that handle local representations; captured-cell initialization is excluded from local promotion. Audit 191's final-tree native suite, corpus and benchmark smoke are reused. O-152 records stricter invalid-declaration refusals; O-151/O-153 concern the float parent. These informational notes require no producer round. Completed verification is reused; unchanged tests were not rerun for acceptance.
 
 Inline fixnum addition falls from **39.67 to 3.02 ns/iteration** (13.1× faster than the float-optimization parent). Typed double falls again, **32.93 → 2.78 ns**, through the loop changes. These are complete loop timings, not isolated instruction costs.
 
@@ -67,4 +69,4 @@ The first focused fixture completed its integer rows but stopped while FORMAT at
 
 [Fixture and reproduction commands](../../../tests/wasm/stage1/fixnum-loops/README.md). One finalized pack, `ccl-evidence/2026-09-28-stage1-fixnum-loops-r1`, retains raw measurements, emitted code, new bundles, focused/mutation observations, compressed full corpus and native comparisons, original failure evidence and source/tool identities. `inventory.json` authenticates every artifact. Existing prerequisite trees are referenced by committed identity rather than duplicated.
 
-Next: supplied independent review, then declared accessor specialization before changing the call convention. No reviewer was invoked.
+Supplied audit 192 completes the numeric review; declared accessor specialization is already accepted after audit 191. The call convention remains the next benchmark-guided optimization, outside this acceptance. No reviewer was invoked.

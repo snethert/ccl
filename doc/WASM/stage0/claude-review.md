@@ -5136,3 +5136,50 @@ A closure with no declarations of its own inherits the trusted policy (direct CA
 ### Disposition
 
 **No defect. Accept c716d9f4** as a producer-verified change whose every claim I could replay reproduces: byte-identical products, 71/8 focused rows, five controls and five source-level mutants killed (one equivalent), both dependency fixtures, the corpus and the native suite. Acceptance of this commit does not review its parents 047df094 and f38261de, which remain awaiting review. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
+
+## Hundred-and-ninety-second Claude audit — the two arithmetic parents of audit 191: declared float unboxing 047df094 and fixnum locals with loop staging f38261de, reviewed as they stand in the accepted tree c716d9f4 — 28 September 2026
+
+Audit 191 accepted c716d9f4 while leaving its two parents unreviewed; this audit closes that gap so the three-commit stack can be recorded together. Both parents' code was already exercised by audit 191's from-scratch replay of the final tree (native suite 21,843 / 0, corpus 26,204 fresh, float 83 / 4 and fixnum 125 / 6 rows, benchmark smoke), so this audit adds what audit 191 did not do for them: their own mutant controls, source-level mutants against their own clauses, a reading of each diff, and attribution of their packs. Replayed from a Git-free `git archive c716d9f4` tree (`/private/tmp/ccl-work/claude/audit-192`, deleted after the audit) against Codex's audit-189-verified startup inputs.
+
+### Tier 0 — identity
+
+`2026-09-28-stage1-float-unboxing-r1` (ccl-evidence 17bf3830): `inventory.json` 59e3ba17… equals the commit's pinned hash; its `sourceIdentity` backend 407a98ae… equals the blob at 047df094. `2026-09-28-stage1-fixnum-loops-r1` (3aa27c2d): inventory 81cd13cb… equal; backend 4619480d… equals the blob at f38261de. Numstat: 047df094 is +194/−6 backend Lisp plus the layout word 200 = 7 and its layout check; f38261de is +114/−9 backend only, as both messages claim. My native logs for both fixtures are hash-equal to the packs' `focused/native.log` (dc2dcef6…, 84831a7e…), and the fixtures rebuilt from the final tree are byte-identical to the declared-accessors pack's dependency builds (audit 191).
+
+### What the float commit does, and what I checked in the code
+
+Variables declared SINGLE-FLOAT or DOUBLE-FLOAT that are neither special nor captured are planned as f32/f64 Wasm locals for the whole function, but only when `b-float-locals-safe-p` finds no candidate reference escaping to an operation outside a closed list (arithmetic, LET/SETQ among candidates, TYPED-FORM, VALUES, PROGN, IF, block/tagbody control); any escape, including a comparison or a call taking a candidate, keeps the whole function boxed, which is why `fu-mutating-call`'s `%setf-double-float` still sees the real box. Every binding site routes through `b-bind-value` (LET, LET*, M-V-BIND, optional/keyword/rest binding, entry, lexpr rest, closure binding) and every read through `b-read-variable`, which I checked by enumerating the callers of `b-variable-address`/`b-bound-address`; the only direct `b-bound-address` writer is cell initialisation for captured variables, which are excluded. Unboxing at a binding runs `$real_operand` (a non-allocating Wasm helper that spans and reads the header) and refuses a non-float with a type error, so an invalid declaration is caught at the boundary, stricter than native. Boxing stores the raw bits in an f-local before allocating (`b-heap-block`), so a collection during allocation cannot lose them; the 271/791 headers and the −2/+2 payload offsets agree with `$real_operand` and the host services. Direct `f64.add` etc. are emitted only when NX1's `$decl_float_safety`/`$decl_full_safety` bits are clear; a left operand already on the Wasm value stack is a raw float, so a collecting right operand is harmless (`fu-moving`). `b-discard` avoids boxing SETQ results in statement position. Layout word 200 = 7 seeds the checked service's FP mask (invalid, division by zero, overflow) and is asserted by `layout-check.mjs`.
+
+### What the fixnum commit does, and what I checked
+
+Variables whose declared type is a fixnum subtype, not special and not captured, live in tagged i32 locals; every binding (`b-bind-value`) tag-checks the value first, so the local always holds a fixnum and a wrong declaration is refused, which the fixture asserts on wasm32. Fixnums are immediates, so no escape analysis is needed and a local survives collections. `bootstrap-scalar-number` handles `+ − * < <= = /= >= > eql` (and `1+`/`1−`) on two operands when all are known fixnums or all are non-collecting (`b-simple-node-p`): known operands are staged with `b-check-fixnum` into locals, so the first operand is a verified immediate before a later operand's call can collect (`fx-moving`); other simple operands are staged unchecked and dispatched at run time on their tags to the widened i64 path or to the existing float/integer service calls, which root their operands in a frame before calling. Overflow detection widens to i64 and compares the wrapped result; multiplication untags one operand first; comparisons are signed. The `call`/`builtin-call` intercept applies only to the standard arithmetic names with two positional arguments and returns NIL otherwise, so the generic path is unchanged. `b-discard` now applies to every function and drops IF/PROGN results without publishing them; the last form of a body still publishes.
+
+### Tier 2 — replay from the final tree
+
+| Stage | Codex | Claude |
+|---|---|---|
+| Float fixture | 83 rows / 4 collections, 4 controls | `check.py` PASS 83 / 4; `controls.py` PASS: arithmetic, rounding, safety, type KILLED |
+| Fixnum fixture | 125 rows / 6 collections, 4 controls | `check.py` PASS 125 / 6; `controls.py` PASS: arithmetic, overflow, signed, type KILLED |
+| Corpus, native suite, benchmark | per pack | covered by audit 191's reruns of the final tree (26,204 fresh; 21,843 / 0; typed double 2.72 ns, fixnum loop 2.95 ns) |
+
+### Source-level remove-one-check mutants (patched copies of the tree)
+
+| Mutant | Clause removed | Result |
+|---|---|---|
+| f1 | captured-variable exclusion in `b-plan-float-locals` | KILLED: STOPPED `checked 5` after 76 rows — the closure in `fu-captured` updates a cell the outer local never sees |
+| f2 | escape analysis (`b-float-locals-safe-p` always true) | KILLED: `MUTATING-CALL` row shows `%setf-double-float` acting on a boxed copy (2.0d0 instead of 1.5d0) |
+| f3 | `$real_operand` type check at the unboxing boundary | KILLED: STOPPED `checked 15` after 82 rows at the fixture's wasm32-only invalid-declaration assertion (a first, malformed patch of this clause failed WAT materialization and was redone) |
+| x1 | `b-check-fixnum` at fixnum-local binding | KILLED: STOPPED `checked 15` after 124 rows at the `fx-identity :bad` assertion |
+| x2 | captured-variable exclusion in `b-plan-fixnum-locals` | KILLED: STOPPED `checked 5` after 109 rows (`fx-captured`) |
+| x3 | staging guard in `bootstrap-scalar-number` (stage every operand pair in locals) | KILLED: STOPPED `checked 42` after 122 rows — a boxed operand held in a Wasm local across the collecting call in `fx-moving-generic` |
+
+Codex's own eight emitted-code controls (float: arithmetic, rounding, safety, type; fixnum: arithmetic, overflow, signed, type) were also rerun and all killed.
+
+### Observations
+
+- **O-151** (informational, policy, not a defect): at safety 1 the direct Wasm arithmetic returns infinities and NaNs where native x86-64 CCL would signal DIVISION-BY-ZERO, FLOATING-POINT-INVALID-OPERATION or FLOATING-POINT-OVERFLOW with its default FPU mode; the fixture masks the native FPU to compare. This follows upstream's `nx-float-safety` hook (safety 3 or the ARM `:detect-floating-point-exception` policy), which the port adopted; checked scopes keep the conditions, as `fu-safe` and `fu-safe-local` witness.
+- **O-152** (informational): both commits refuse an invalid low-safety declaration with a type error at the unboxing or fixnum-binding boundary, where native silently misbehaves. The fixtures assert this on wasm32 only, and the READMEs say so.
+- **O-153** (informational): the float escape analysis is whole-function; `fu-bindings`, `fu-assign` and `fu-captured` in the fixture therefore run boxed. Correct, but the fixture's declared-float coverage of the *unboxed* path rests on the eight arithmetic bodies, `fu-moving`, `fu-order` and the rounding functions.
+
+### Disposition
+
+**No defect. Accept 047df094 and f38261de.** With audit 191, the three-commit declaration/loop stack is reviewed. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; originals 575/535; ledger 21/12; no criterion credit. STATUS rows and history entries owed at merge.

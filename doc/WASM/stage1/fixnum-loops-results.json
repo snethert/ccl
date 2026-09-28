@@ -1,7 +1,27 @@
 {
   "version": 1,
   "date": "2026-09-28",
-  "status": "EXECUTED_PENDING_INDEPENDENT_REVIEW",
+  "status": "ACCEPTED",
+  "acceptance": {
+    "date": "2026-09-28",
+    "authorization": "User: No defect in any of the three. Accept 047df094, f38261de and c716d9f4.",
+    "reviewer": "Claude",
+    "reviewSource": "User-supplied audit 192 on claude-audit-191",
+    "review": "doc/WASM/stage0/claude-review.md",
+    "reviewCommit": "2bb3ae55021065b51b230beebb4a9ff633907d5a",
+    "implementationCommit": "f38261de275ad7bb9bee1ee30e8e4f11b301df61",
+    "reviewedTreeCommit": "c716d9f4147c76b336aa2d8ca84b2ca79f203bd6",
+    "finalTreeReplayReviewCommit": "1d4648ad6263746a1eef1c0767dcaedcaa70daf3",
+    "disposition": "No defect. Accept 047df094 and f38261de.",
+    "scope": "Audit 192 reviews both numeric parents as they stand in c716d9f4. With audit 191, the full three-commit stack is reviewed and accepted.",
+    "verification": "Audit 192 reruns both focused fixtures and eight producer controls, kills six source mutants, and reuses audit 191 final-tree native, corpus and benchmark verification. Unchanged tests not rerun for acceptance.",
+    "evidenceRepositoryCommit": "3aa27c2d9e00ccdb6d913c93a324e543add3030a",
+    "evidenceInventorySha256": "81cd13cb8f1c1f63f1bb1b7acb1db08ee352ba717aa99d586e36c31273579500",
+    "observations": {
+      "O-152": "Informational: invalid declarations are refused at the fixnum-binding boundary, stricter than native low-safety behavior."
+    },
+    "criterionCredit": false
+  },
   "parentCommit": "047df094",
   "productLispLinesChanged": {
     "added": 114,
@@ -1451,7 +1471,7 @@
     }
   },
   "limitations": [
-    "This change and its float-optimization parent await independent review; no criterion credit.",
+    "Accepted after audit 192; the full float/fixnum/accessor stack is reviewed and accepted. No criterion credit.",
     "Untyped DOTIMES indices retain runtime tag and overflow guards; no induction-range proof is claimed.",
     "Captured/special bindings and operands that may collect retain their existing roots.",
     "Static body counts include cold fallback/error code, not dynamic hot-path instruction counts.",

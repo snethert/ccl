@@ -1,7 +1,29 @@
 {
   "version": 1,
   "date": "2026-09-28",
-  "status": "EXECUTED_PENDING_INDEPENDENT_REVIEW",
+  "status": "ACCEPTED",
+  "acceptance": {
+    "date": "2026-09-28",
+    "authorization": "User: No defect in any of the three. Accept 047df094, f38261de and c716d9f4.",
+    "reviewer": "Claude",
+    "reviewSource": "User-supplied audit 192 on claude-audit-191",
+    "review": "doc/WASM/stage0/claude-review.md",
+    "reviewCommit": "2bb3ae55021065b51b230beebb4a9ff633907d5a",
+    "implementationCommit": "047df094344783684c465fa5dc2caf29732902ce",
+    "reviewedTreeCommit": "c716d9f4147c76b336aa2d8ca84b2ca79f203bd6",
+    "finalTreeReplayReviewCommit": "1d4648ad6263746a1eef1c0767dcaedcaa70daf3",
+    "disposition": "No defect. Accept 047df094 and f38261de.",
+    "scope": "Audit 192 reviews both numeric parents as they stand in c716d9f4. With audit 191, the full three-commit stack is reviewed and accepted.",
+    "verification": "Audit 192 reruns both focused fixtures and eight producer controls, kills six source mutants, and reuses audit 191 final-tree native, corpus and benchmark verification. Unchanged tests not rerun for acceptance.",
+    "evidenceRepositoryCommit": "17bf3830dea1d08e0cff994082eb8cb551fa8f39",
+    "evidenceInventorySha256": "59e3ba170a8e9a77c8aa108fbf648c5f8811cf14779554b879e782d2d4dabf3e",
+    "observations": {
+      "O-151": "Informational: unchecked safety-1 arithmetic follows the adopted upstream float-safety hook; native FP exceptions are masked for those fixture comparisons. Checked scopes retain conditions.",
+      "O-152": "Informational: invalid declarations are refused at the unboxing boundary, stricter than native low-safety behavior.",
+      "O-153": "Informational: escape analysis is whole-function; some fixture functions remain boxed. The audit identifies the unboxed-path witnesses."
+    },
+    "criterionCredit": false
+  },
   "parentCommit": "c7ac1376",
   "productLispLinesChanged": {
     "added": 194,
@@ -1396,7 +1418,7 @@
     ]
   },
   "limitations": [
-    "Independent review pending; no new criterion credit.",
+    "Accepted after audit 192; the full float/fixnum/accessor stack is reviewed and accepted. No criterion credit.",
     "Register promotion is disabled if a candidate escapes an understood numeric/control-flow operation.",
     "Checked FP scopes still use the qualified service; generic/mixed arithmetic and conversions unchanged.",
     "Core READY archives are reused from audit 190; only benchmark/focused bundles are newly compiled.",
