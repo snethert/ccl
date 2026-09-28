@@ -139,11 +139,22 @@ export function check(binaries,{only}={}) {
     const f=make(which,o=>{if(which==='import-duplicate')o.declaration.imports.push({...o.declaration.imports[0]});});
     throws(f.open,pattern);equal(f.entries(),0,'no publication');balanced(f);
   });
-  for(const [name,args,pattern] of [['absent',[],/UNDECLARED_EXPORT/],['i32',[],/ARITY/],['i32',[1,2],/ARITY/],
+  test('duplicate-binary-import-with-phantom-declaration',()=>{
+    const f=make('import-duplicate',o=>o.declaration.imports.push(
+      {module:'host',name:'phantom',params:['i32'],results:[]}));
+    throws(f.open,/IMPORT_DECLARATION/);equal(f.entries(),0,'no publication');balanced(f);
+  });
+  test('void-import-promise',()=>{
+    const f=make('library',o=>o.imports.host.probe=()=>Promise.resolve());
+    const info=catchable(f,f.open,'host');
+    assert(/ASYNC_IMPORT/.test(info.cause),'void Promise refused');
+    equal(info.retired,true,'failed initialization never publishes');
+  });
+  for(const [index,[name,args,pattern]] of [['absent',[],/UNDECLARED_EXPORT/],['i32',[],/ARITY/],['i32',[1,2],/ARITY/],
     ['i32',new Array(1),/I32/],['i32',{},/ARITY/],
     ['i32',[1.5],/I32/],['i32',[2147483648],/I32/],['i32',[-2147483649],/I32/],['i32',[NaN],/I32/],
     ['i32',[1n],/I32/],['i64',[1],/I64/],['i64',[1n<<63n],/I64/],['i64',[-(1n<<63n)-1n],/I64/],
-    ['f32',['1'],/FLOAT/],['f64',[1n],/FLOAT/]])test('call-refusal-'+rows.length,()=>{
+    ['f32',['1'],/FLOAT/],['f64',[1n],/FLOAT/]].entries())test('call-refusal-'+index,()=>{
     const f=make(),lib=f.open(),before=f.entries();throws(()=>lib.call(name,args),pattern);
     equal(f.entries(),before,'refusal before entry');equal(lib.state,'ready','state preserved');balanced(f);
   });

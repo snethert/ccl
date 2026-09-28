@@ -15,6 +15,8 @@ import storage
 
 RUNTIME = ['foreign-binary.mjs', 'foreign-module.mjs', 'bytes.mjs', 'sha256.mjs']
 MUTANTS = [
+    ('duplicate-import-name', '!importNames.has(name)', 'true', 'duplicate-binary-import-with-phantom-declaration'),
+    ('void-import-promise', "!result||typeof result.then!=='function'", 'true', 'void-import-promise'),
     ('digest', 'sha256(source)===d.sha256', 'true', 'admission-digest'),
     ('memory', 'm.memories[0].maximum===d.memory.maximum', 'true', 'admission-memory-max'),
     ('table', 'table.maximum===d.tables[i]?.maximum', 'true', 'admission-table-limits'),

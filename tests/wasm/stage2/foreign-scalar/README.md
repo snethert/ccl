@@ -4,13 +4,19 @@ First Stage 2 implementation unit for HOSTFM FM-1–FM-5, FM-7, FM-9 and FM-11.
 Accepted at its retained scope after user-supplied Claude audit 194, imported
 as `8d2aee38`. This does not complete any FMT or LL slot.
 
-Final qualification: **124 checks per engine** (Node, Chromium, Firefox and
+Original accepted qualification at `0bfbab7d`: **124 checks per engine** (Node, Chromium, Firefox and
 WebKit), **14 killed source mutants**, no skips. The
 [result binding](../../../../doc/WASM/stage2/foreign-scalar-results.json) identifies
 sources, tools and retained evidence. The pack keeps the initial browser
 executable-discovery failure, mismatched automation driver and WebKit's different
 multi-memory compile refusal. Interface admission now precedes engine compilation,
 so all engines issue the same checked extra-memory refusal before any entry.
+
+The [single-Worker owner continuation](../foreign-runtime/README.md) expands
+this suite to **126 checks per engine and 16 killed mutants**. It adds O-159's
+phantom import declaration and O-160's void Promise refusal, and stabilizes
+call-refusal IDs. Those new tests belong to the continuation's pending review;
+the original result binding and retained pack remain historical identities.
 
 ## Interface and admitted profile
 
@@ -51,6 +57,9 @@ Enter publishes roots/FOREIGN and returns a token; if it throws, it must do so
 without leaving partial publication. Leave performs admission and root reload
 before returning. Neither hook may suspend by returning a Promise. This unit
 tests hook sequencing; it does not implement the production D5 protocol.
+An asynchronous `enter` is fatal for the owner too: the library retires without
+calling `leave`, because a Promise is not an admission token and publication
+may still be in progress. The embedding must not resume Lisp in that owner.
 Re-entry and closing an active instance refuse. Instantiation itself is always
 bracketed, even without a start section. An explicit initializer uses a second
 bracket, and no public library is returned until initialization succeeds.

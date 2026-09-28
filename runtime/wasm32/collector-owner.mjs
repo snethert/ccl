@@ -10,6 +10,7 @@ export class CollectorOwner {
  #roles=new Map();
  #blocks=[];
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
+ #foreign=null;
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;#measure;
  static create(memory,bytes,digest,layout,{measure}={}){
   need(sha256(bytes)===digest,'collector digest');
@@ -30,6 +31,50 @@ export class CollectorOwner {
   return Object.freeze({boundary:this.#scalarBoundary,bounds:Object.freeze(bounds)});
  }
  get collectionCount(){const count=this.#t(204);need(count<=536870911,'collection count');return count;}
+ // The admitted collector profile has exactly one Lisp Worker. Its only GC
+ // while FOREIGN is the synchronous collector capability below, on that same
+ // Worker. This is not the multi-Worker gc_gen admission protocol.
+ get foreignBoundary(){return Object.freeze({
+  enter:operation=>{
+   need(!this.#foreign&&!this.#boundary&&!this.#busy,'foreign reentry');
+   need(typeof operation==='string','foreign operation');
+   const words=new Int32Array(this.#memory.buffer),state=(this.tcr+32)/4;
+   need(Atomics.load(words,state)===2&&this.#t(8)>0&&this.#t(12)===0&&this.#t(16)===0,'foreign thread');
+   need(this.#t(144)===0&&Atomics.load(words,(this.tcr+152)/4)===0,'foreign descriptor');
+   this.#validateLive();
+   // B publishes its callable, scratch and arguments before the service call.
+   // Keep that chain in place; never save tagged values in an untraced JS local.
+   const head=this.#t(128),v=this.#region('vstack');
+   need(head%8===0&&contains(v,head,16)&&head+16===this.#t(64),'foreign root head');
+   const count=this.#get(head+4);
+   need(count>=2&&contains(v,head,8+4*count),'foreign root extent');
+   const offsets=[8,12,16,64,76,88,116,120,124,128,132,140,148,152,156,160,164,168];
+   const token=Object.freeze({operation});
+   this.#foreign={token,head,offsets,values:offsets.map(o=>this.#t(o))};
+   this.#set(this.tcr+144,head);
+   Atomics.store(words,state,3);
+   return token;
+  },
+  leave:token=>{
+   const frame=this.#foreign;
+   need(frame&&token===frame.token,'foreign token');
+   need(!this.#boundary&&!this.#busy,'foreign collecting');
+   const words=new Int32Array(this.#memory.buffer);
+   need(Atomics.load(words,(this.tcr+32)/4)===3&&this.#t(144)===frame.head,'foreign publication');
+   need(frame.offsets.every((o,i)=>this.#t(o)===frame.values[i]),'foreign checkpoint');
+   this.#validateLive();
+   // Allocation bounds, moved binding-vector pointers and tagged roots belong
+   // to the collector. Do not restore their stale pre-entry values.
+   this.#set(this.tcr+144,0);
+   Atomics.store(words,(this.tcr+32)/4,2);
+   this.#foreign=null;
+  }
+ });}
+ collectForeign(){
+  need(this.#foreign&&Atomics.load(new Int32Array(this.#memory.buffer),(this.tcr+32)/4)===3,
+       'foreign collection');
+  return this.atSafepoint(o=>o.collect());
+ }
  #inhibitionState(){
   const region=this.#layout.regions.find(r=>r.role==='runtime-globals');
   if(!region)return {region:null,depth:0,pending:false};

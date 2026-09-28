@@ -1,3 +1,26 @@
+## 2026-09-28 — Connect generated roots to the single-Worker foreign owner
+
+[Stage 2's second unit](../stage2/README.md) adds synchronous FOREIGN entry and
+return to `CollectorOwner`, retaining the generated B root chain and preserving
+collector-updated addresses. Instantiation, initialization and calls use the
+same owner. A declared collector import moves roots while foreign code remains
+active. The foreign module receives scalars only.
+
+The focused owner suite passes 33 checks on Node and three browser engines,
+with 19 semantic mutants killed. The existing boot driver gains declared host
+service and post-READY target-load extension points. Ordinary `%FASLOAD` loads
+the generated Lisp witness after READY: 12 native-matched observations, 20
+foreign entries, 13 moving collections, retired-space poisoning and one-time
+cleanup. A preliminary public symbol-lookup probe failed with checked 4 and
+remains retained and unresolved; it is outside the qualified `%FASLOAD` path.
+
+O-159/O-160 now have directed refusals and killed controls; the scalar suite
+passes 126 checks per engine / 16 mutants. O-162 is documented, O-164 IDs are
+stable. Independent review is pending. No corpus replay by user direction,
+no FMT/LL or whole-file credit, product Lisp lines changed zero. Shared compiler
+and upstream kernel are unchanged. Copies, ownership, callbacks, finalization,
+browser Lisp integration and multi-Worker D5 remain open.
+
 ## 2026-09-28 — Accept audit 194 and continue Stage 2
 
 Imported the supplied [audit 194](../stage0/claude-review.md) from `949ae5d8`

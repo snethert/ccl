@@ -29,9 +29,35 @@ product Lisp or upstream kernel source changes are part of this unit.
 
 The compiler corpus is deferred by user direction until the whole foreign-function
 layer is complete, then replayed once. Focused verification continues for each
-changed unit. O-159/O-160 directed refusals accompany the next substantive unit;
-O-162 requires documenting that an asynchronous owner hook is a fatal contract
-violation for the owner too.
+changed unit.
+
+## Second delivery: single-Worker roots across FOREIGN
+
+[Implementation and reproduction](../../../tests/wasm/stage2/foreign-runtime/README.md).
+`CollectorOwner.foreignBoundary` retains the generated B argument-root chain,
+publishes the TCR's FOREIGN state and descriptor, checks stable checkpoints on
+return, and preserves collector-updated roots and allocation bounds. Its
+`collectForeign()` capability permits synchronous collection on the owning
+Worker while foreign code is active. This extends the admitted one-Worker
+collector; it is not multi-Worker D5 admission or a Lisp callback.
+
+The owner suite passes **33 checks in Node and Chromium/Firefox/WebKit**, with
+**19 semantic source mutants killed**. After READY, the ordinary compiled
+`%FASLOAD` loads the Lisp fixture. Its **12 native-matched observations** include
+**20 foreign entries and 13 moving collections**, with retired-space poisoning,
+lexical/closure roots, bindings, multiple values, one-time Lisp cleanup and
+trap retirement. A fixture host-service transport converts the private failure
+tag to ordinary Lisp ERROR; the final Lisp foreign API remains owed.
+
+The scalar regression now passes **126 checks per engine and 16 killed
+mutants**, including O-159/O-160. O-162's fatal asynchronous-owner rule is
+explicit, and O-164's refusal row names are stable. The result binding is
+[foreign-runtime-results.json](foreign-runtime-results.json). **Executed;
+independent review pending. No FMT or LL credit.**
+
+The first direct public `%WASM-FIND-SYMBOL` probe after READY signalled checked 4
+before the fixture; it is retained and unresolved. The qualified path uses the
+existing `%FASLOAD` directly, not the COMMON-LISP:LOAD frontend.
 
 ## Next foreign work
 
@@ -40,19 +66,21 @@ remains the architecture; FMT-1–FMT-9 remain its proof obligations.
 
 | Obligation | Current position / next implementation |
 | --- | --- |
-| FMT-1, scalar calls | Four scalar types, multiple results, signed zero and numeric boundaries execute in the owner unit. Generated-Lisp calls and both Lisp-memory placements remain. |
+| FMT-1, scalar calls | Four scalar types, multiple results, signed zero and numeric boundaries execute in the owner unit. A generated fixnum call now executes through the owner; full generated scalar coverage and both Lisp-memory placements remain. |
 | FMT-2, bytes and encoding | Add explicit copy ranges and declared encodings, with views reacquired after memory growth. No Lisp memory or addresses may enter the foreign module. |
-| FMT-3, moving collection | Connect published roots and reloads to the production owner, then force collection while foreign code is active. Poison retired space. |
-| FMT-4, failures and releases | Scalar exception/trap conversion and instance retirement execute. Add actual Lisp conditions/cleanups, full TCR restoration, allocation releases, callback retirement and destructor-trap ordering. |
+| FMT-3, moving collection | One-Worker owner roots and reloads execute with collection in an active foreign import and retired-space poisoning. Copied Lisp source ranges, Lisp callbacks and other-Worker collection remain. |
+| FMT-4, failures and releases | Generated Lisp conditions/cleanups execute through the fixture transport; 64 TCR words are checked, with six collector-owned words retaining updated values. Product condition transport, allocation releases, callback retirement and destructor-trap ordering remain. |
 | FMT-5/6, callbacks | Add typed table trampolines, collector-visible callback roots, callback admission during pending GC, and containment of Lisp nonlocal exits. The first unit refuses re-entry. |
 | FMT-7, admission | Binary/declaration/digest controls execute, including start/initializer failure and source mutation. Add named-namespace loading and the larger pointer/ownership declaration contract. |
 | FMT-8, Workers | The scalar profile chooses per-Worker instances. Production thread ownership, two-Worker schedules and interruptible funnelled calls remain. |
 | FMT-9, lifetime | Whole-instance retirement executes. Add allocation generations, explicit free, finalizer suppression, callback deregistration and owner-queued finalization. |
 
-The next integration must run through an ordinary post-READY load using the
-accepted level-0 image and target-loaded runtime. It must supply real root
-publication and admission rather than infer D5 correctness from paired hooks.
-Native R6/R6a applies if that step changes shared compiler source.
+The Node integration now uses ordinary post-READY `%FASLOAD` with the accepted
+level-0 image and target-loaded runtime. Next work is a reusable Lisp-facing
+scalar/copy service with declared byte ranges, encoding and ownership, followed
+by namespace-provider loading and callback/finalization obligations. Browser
+provider integration and full D5 must be qualified at their actual scope.
+Native R6/R6a applies if a later step changes shared compiler source.
 
 ## Weak-table starting point
 

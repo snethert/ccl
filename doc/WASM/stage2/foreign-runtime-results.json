@@ -1,0 +1,141 @@
+{
+  "criterion_credit": false,
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-runtime-r1",
+  "inventory_sha256": "5bc59a066f5ec49de7a7a1ada48ec6bc02359f19d15a4ba87438a610dcca6f9d",
+  "next": "Reusable Lisp-facing scalar/copy and ownership service, named namespace loading, callbacks and finalization; qualify browser Lisp and multi-Worker D5 separately.",
+  "owner_regression_checks": 59,
+  "packet_sha256": "bba57d4d08b82958347e54c25a4a14a008db068408c930c077ef1eea6bf4754f",
+  "results": {
+    "owner": {
+      "browser.json": {
+        "path": "final/owner/browser.json",
+        "sha256": "595fd2d98f097866e1c8b16ea2e984a3c0b2c06b3de6fa5a7e3d1b49d32518b8"
+      },
+      "mutants.json": {
+        "path": "final/owner/mutants.json",
+        "sha256": "737f84f98b6152eea8a88f1ceb6a267575950d75993390bd5abdfa174a271d8b"
+      },
+      "node.json": {
+        "path": "final/owner/node.json",
+        "sha256": "4f272e061bc9571ef7974bd4ea8b1f1a3164193f91b3cc795f80b903c9373ce7"
+      },
+      "sources.json": {
+        "path": "final/owner/sources.json",
+        "sha256": "07e3a238ee0cf6dbadffddfcea51add69a36b7c9a4ae78642dc236f2c5a88cc8"
+      },
+      "summary.json": {
+        "path": "final/owner/summary.json",
+        "sha256": "1c18d4d968e90916a1739a1d009e5b44b7da50bcad37ba241ecf74d60b00ff1e"
+      }
+    },
+    "scalar": {
+      "browser.json": {
+        "path": "final/scalar/browser.json",
+        "sha256": "14d540be65155fe64cfcec2da0175a1a91aa9d32d6dc9990eb80d179e8f481f2"
+      },
+      "mutants.json": {
+        "path": "final/scalar/mutants.json",
+        "sha256": "c95afa66c8d6294821e74614002cd6597ee8a2330ec406a4fbf02ffa4115c74a"
+      },
+      "node.json": {
+        "path": "final/scalar/node.json",
+        "sha256": "2f3f54a38115da85ccd786c42409c47289ee6054fb5124c629915f54e239fdae"
+      },
+      "sources.json": {
+        "path": "final/scalar/sources.json",
+        "sha256": "e4ffd168adb99c3be4e7abde8fc268ce55d679e1da5f4d623219ff3066066424"
+      },
+      "summary.json": {
+        "path": "final/scalar/summary.json",
+        "sha256": "ecbbcaf656a7f16dae78742c3919f68abde010c3b76d342ad64407c345206880"
+      }
+    }
+  },
+  "retained_bytes": 1144722,
+  "review": "NOT_REVIEWED",
+  "scalar_summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 126,
+    "criterion_credit": false,
+    "mutants": 16,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [],
+    "status": "PASS"
+  },
+  "source_files": {
+    "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
+    "runtime/wasm32/collector-owner.mjs": "7272a96fc9a5ceb8de4982d5d347ba56332e53f5e801d0b7c22345b479d4af19",
+    "runtime/wasm32/collector.c": "062a015e26718338d77db7034bd7b1eb27fc31b6fea0239799679cc581469a30",
+    "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
+    "runtime/wasm32/foreign-module.mjs": "e6b6773d8409d01ecd2659ecd43c634da64225b19e01fb6db81c7b7b415c38c4",
+    "runtime/wasm32/host-call-adapter.wat": "c4b64dfc15055eecb438a1e9774f72bbe62291f3a38bcfd314e4cc0d9f844009",
+    "runtime/wasm32/layout.mjs": "a177be94f14bbd52b04b6ed9a3e07ac2236a11140f49e5fe7549f553dc6e3065",
+    "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907",
+    "tests/wasm/stage1/bootstrap-validation/common.py": "b162605e2af93d4b7972c1d04cc66984154ccee8926db9a645a75fed02049786",
+    "tests/wasm/stage1/bootstrap-validation/storage.py": "c071fa1aee15d5dcc3b6922ca2258f51c3a713feff01b19a58fa0d3e8b467ebc",
+    "tests/wasm/stage1/loader-target/boot0.mjs": "ed7e14d94af5bfedc4b5fc90d9e5095769504a747224871b84b0c7e982e28e30",
+    "tests/wasm/stage1/loader-target/build.py": "632daaf0523bceddce349cf86ecbaa424e85e37191a73c6120bb4ab59c3b1dc2",
+    "tests/wasm/stage1/loader-target/source-compile.lisp": "f27dfedff6c721b30245e0e4ac0f376df19e76a635c71d882c6610b2a3972624",
+    "tests/wasm/stage2/foreign-runtime/checks.lisp": "9a5dc04264af3eef4dcd12361e4ec2e401659c5d58c2ba6e5c0261ba90c73120",
+    "tests/wasm/stage2/foreign-runtime/extension.mjs": "78ca7cac0e804d1be689751496d919b2d09fb774efb1d0bd6de3781e1bd4b7f8",
+    "tests/wasm/stage2/foreign-runtime/library.wat": "b05ade674b4a14c8c3abbf6670c61f4ce154b34b3cf09a71ffac8eb17b84b4b9",
+    "tests/wasm/stage2/foreign-runtime/owner-check.mjs": "10500edcc4373d0d2dfeaf62b35cab45b19c4bc7605331cff0ba28166e1b5693",
+    "tests/wasm/stage2/foreign-runtime/run.py": "86d67e2d4957bea1cbe0f1a6efe2e902b8974e63b80b92ed14eebbbe959c06f2",
+    "tests/wasm/stage2/foreign-scalar/browser.mjs": "23d7214cfe79bf6e581ae5d2cf20670311c391caeb7b501023f7d4bcc10189e8",
+    "tests/wasm/stage2/foreign-scalar/caller.wat": "2f2c6e482050ce9535282ee6423eb6681c95f9d40a74ff8a9866d136c69a6a38",
+    "tests/wasm/stage2/foreign-scalar/check.mjs": "85be34371a94180769cd52a002cccdb1ff9fbf7ff1eacc447d643dd04b1661c9",
+    "tests/wasm/stage2/foreign-scalar/library.wat": "4656785ca11346bbd08acab60493e7699c5b66589c9e7eda637f25e9e320540f",
+    "tests/wasm/stage2/foreign-scalar/node.mjs": "b64d5f36c5ee3371715a1b72a58c8d7bba2a0c72f7642d8042f492e51d95e87e",
+    "tests/wasm/stage2/foreign-scalar/run.py": "076c2bf8221300c5ff307ebc92a0655f2270b1d8d7008a2bebb0fc21f464c735",
+    "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147"
+  },
+  "status": "EXECUTED_REVIEW_PENDING",
+  "summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "criterion_credit": false,
+    "lisp": {
+      "foreign_entries": 20,
+      "moving_collections": 13,
+      "native_matched_rows": 12,
+      "rows": [
+        "FR-ROW INITIALIZATION-AND-SCALAR (42 T T T (35 19) (71 72))",
+        "FR-ROW MOVING-LIVE-FOREIGN-CALL (42 T T T (35 19) (71 72))",
+        "FR-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+        "FR-ROW BINDING-AFTER-SUCCESS :OUTSIDE",
+        "FR-ROW 2 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW 3 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW RETIRED :REFUSED",
+        "FR-ROW 4 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW RETIRED :REFUSED",
+        "FR-ROW 5 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW REOPENED (42 T T T (35 19) (71 72))",
+        "FR-ROW BINDING-AFTER-FAILURES :OUTSIDE"
+      ],
+      "scope": "Lisp semantics against native reference; foreign answers/failure policy from fixture declaration",
+      "status": "PASS"
+    },
+    "owner_checks": 33,
+    "owner_mutants": 19,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "compiler corpus deferred until whole FFI layer is complete",
+      "generated Lisp execution in browser providers",
+      "multi-Worker D5 admission and callback reentry"
+    ],
+    "status": "PASS"
+  },
+  "unresolved": [
+    "Direct public %WASM-FIND-SYMBOL call after READY signalled checked 4 before the fixture; retained probe."
+  ],
+  "version": 1
+}

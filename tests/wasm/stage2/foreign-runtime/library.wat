@@ -1,0 +1,13 @@
+(module
+ (import "host" "collect" (func $collect))
+ (import "host" "fail" (func $fail))
+ (memory (export "memory") 1 2)
+ (tag $failure (param i32))
+ (func (export "initialize") (call $collect))
+ (func (export "run") (param $mode i32) (param $value i32) (result i32)
+  (if (local.get $mode) (then (call $collect)))
+  (if (i32.eq (local.get $mode) (i32.const 2)) (then (throw $failure (i32.const 42))))
+  (if (i32.eq (local.get $mode) (i32.const 3)) (then unreachable))
+  (if (i32.eq (local.get $mode) (i32.const 4)) (then (drop (i32.load (i32.const -1)))))
+  (if (i32.eq (local.get $mode) (i32.const 5)) (then (call $fail)))
+  (i32.add (local.get $value) (i32.const 7))))

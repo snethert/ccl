@@ -8,6 +8,8 @@ const executables=config?JSON.parse(fs.readFileSync(config)):{};
 const sha=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const server=http.createServer((req,res)=>{
   try {
+    res.setHeader('Cross-Origin-Opener-Policy','same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy','require-corp');
     const relative=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1);
     if(!relative){res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Foreign scalar qualification</title>');return;}
     const file=path.resolve(dir,relative);if(!file.startsWith(path.resolve(dir)+path.sep))throw Error('path');

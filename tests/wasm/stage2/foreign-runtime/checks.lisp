@@ -1,0 +1,63 @@
+;;; Ordinary post-boot LOAD, using a fixture binding of the host-service entry.
+;;; The native side is the reference for Lisp root/cleanup/binding semantics;
+;;; the foreign arithmetic and failure expectations are declared by library.wat.
+(in-package "CCL")
+(eval-when (:compile-toplevel)
+  (proclaim '(optimize (speed 3) (safety 1) (debug 0)))
+  (proclaim '(notinline fr-request fr-call fr-success fr-failure)))
+(defvar *fr-binding* :outside)
+(defvar *fr-retired* nil)
+(defun fr-request (mode payload)
+  #+wasm32-target (%wasm-host-process-request 100 mode payload)
+  #-wasm32-target
+  (case mode
+    ((0 1) (if *fr-retired* -4 (+ 7 (car payload))))
+    ((2 3 4 5) (setq *fr-retired* (member mode '(3 4))) -1)
+    (10 (setq *fr-retired* nil) 0)
+    (11 (if *fr-retired* 1 0))))
+(defun fr-call (mode payload)
+  (let ((result (fr-request mode payload)))
+    (if (minusp result) (error "Foreign fixture failure ~D" result) result)))
+(defun fr-row (name value)
+  (format t "FR-ROW ~A ~S~%" name value))
+(defun fr-success (mode)
+  (let* ((pair (list 35 19))
+         (alias (cons pair pair))
+         (*fr-binding* (list 71 72))
+         (closure (lambda () pair)))
+    (list (fr-call mode pair)
+          (eq (car alias) pair) (eq (cdr alias) pair) (eq (funcall closure) pair)
+          pair *fr-binding*)))
+(defun fr-failure (mode)
+  (let ((held (list 31 32)) (cleanups 0) (copied nil) (caught nil))
+    (let ((*fr-binding* held))
+      (setq caught
+            (handler-case
+                (unwind-protect (fr-call mode (list 35 19))
+                  (setq copied (copy-list *fr-binding*))
+                  (incf cleanups))
+              (error () :caught)))
+      (assert (eq held *fr-binding*)))
+    (list caught cleanups (equal held copied) *fr-binding*)))
+(fr-request 10 nil)
+(fr-row 'initialization-and-scalar (fr-success 0))
+(fr-row 'moving-live-foreign-call (fr-success 1))
+(fr-row 'multiple-values
+        (multiple-value-list
+         (multiple-value-prog1 (values (list 11 12) 13 nil)
+           (fr-call 1 (list 35 19)))))
+(fr-row 'binding-after-success *fr-binding*)
+(dolist (mode '(2 3 4 5))
+  (fr-request 10 nil)
+  (let ((result (fr-failure mode)))
+    (assert (equal result '(:caught 1 t :outside)))
+    (fr-row mode result))
+  #+wasm32-target
+  (assert (= (fr-request 11 nil) (if (member mode '(3 4)) 1 0)))
+  (when (member mode '(3 4))
+    (fr-row 'retired
+            (handler-case (fr-call 0 (list 35 19)) (error () :refused)))))
+(fr-request 10 nil)
+(fr-row 'reopened (fr-success 1))
+(fr-row 'binding-after-failures *fr-binding*)
+(write-line "FR-PASS")

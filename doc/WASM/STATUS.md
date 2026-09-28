@@ -27,6 +27,17 @@ shared compiler change or product Lisp lines. The compiler corpus waits until th
 then replays once, per user direction. Runtime-created weak tables reuse
 their reviewed implementation; image-built tables and broader GC work remain.
 
+The [second Stage 2 unit](stage2/README.md#second-delivery-single-worker-roots-across-foreign)
+is **implemented and executed; independent review pending**. The one-Worker
+collector owner brackets real generated roots across FOREIGN. Its focused suite
+passes 33 checks in all four engines with 19 killed mutants. An ordinary
+post-READY `%FASLOAD` runs 12 native-matched Lisp observations, 20 foreign entries
+and 13 moving collections with retired-space poisoning. The scalar regression
+passes 126 checks per engine / 16 mutants, closing O-159/O-160's directed gaps.
+No FMT/LL credit; browser Lisp integration, full D5, copies/ownership, callbacks
+and finalization remain. A direct public symbol-lookup probe after READY remains
+an explicit checked-4 failure; the qualified load uses `%FASLOAD` directly.
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

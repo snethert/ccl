@@ -20,6 +20,7 @@ import {inputInventory} from '../../../../runtime/wasm32/input-inventory.mjs';
 import {archiveSource,readArchiveSource} from './archive-source.mjs';
 import {startupTiming} from './startup-timing.mjs';
 import {benchmarkObserver} from '../execution-bench/observe.mjs';
+import {pathToFileURL} from 'node:url';
 
 const timingPrefix = isMainThread ? process.argv.find(a => a.startsWith('--timing='))?.slice(9) : workerData.timingPrefix;
 const timing = startupTiming(timingPrefix, isMainThread ? 'main' : 'worker');
@@ -69,14 +70,21 @@ if (isMainThread) {
   assert(!inspectCode || trace, '--inspect-code requires --trace');
   const dumpFailure = process.argv.includes('--dump-failure');
   const startupLoads = process.argv.filter(a => a.startsWith('--startup-load=')).map(a => a.slice(15));
+  const postReadyLoads = process.argv.filter(a => a.startsWith('--post-ready-load=')).map(a => a.slice(18));
   const benchmarkEvents = process.argv.includes('--benchmark-events');
+  // Optional fixture capability, shared by later runtime units. It wraps the
+  // declared process-service entry without rewriting generated code or this
+  // driver. Its module and configuration are bound in the report.
+  const hostExtension=process.argv.find(a=>a.startsWith('--host-extension='))?.slice(17);
+  const extensionConfig=JSON.parse(process.argv.find(a=>a.startsWith('--extension-config='))?.slice(19)??'{}');
+  if(hostExtension)scripts[hostExtension]=sha256(fs.readFileSync(hostExtension));
   const callbackSelection = JSON.parse(fs.readFileSync(new URL('../startup-resets/selection.json', import.meta.url)));
   const workerFiles=files.map(({path,sha256,sourceDir,bytes})=>{const container=namespace.containers.get(path);
     return {path,sha256,sourceDir,...(container?{container}:{bytes})};});
   timing?.event('worker-send',{inputOwnership:ownedInputs()});
   const worker = measure('worker.construct', () => new Worker(new URL(import.meta.url), {workerData: {out, runtime, trace, traceFrom, inspectCode,
     files:workerFiles,archives:archives.map(directory),bootArchive:bootArchive?directory(bootArchive):null,
-    layoutConfig, dumpFailure, startupLoads, omittedBundles, callbackSelection, scripts, timingPrefix, benchmarkEvents}}));
+    layoutConfig, dumpFailure, startupLoads, postReadyLoads, omittedBundles, callbackSelection, scripts, timingPrefix, benchmarkEvents, hostExtension, extensionConfig}}));
   selected.clear();files.length=0;workerFiles.length=0;inputs.release('containers');
   timing?.memory('directory-delivered',{inputOwnership:ownedInputs()});
   const sampling = timing && setInterval(() => timing.memory('periodic',{inputOwnership:ownedInputs()}), 1000);
@@ -221,6 +229,8 @@ if (isMainThread) {
     const row = manifest.symbols.find(s => s.package === 'CCL' && s.name === name);
     assert(row, 'missing runtime import ' + name); return resolve(row.reference);
   };
+  const postReadyLoaderRoot=workerData.postReadyLoads.length?
+    owner.atSafepoint(o=>o.rootCells([symbol('%FASLOAD')])):null;
   const capabilities = {owner: {ensure: allocationService(owner, env.call_error)},
     integer: {calculate: integer}, floating: {calculate: floating}};
   const loadEvents = [], outputEvents = [];
@@ -243,7 +253,7 @@ if (isMainThread) {
   workerData.archives=null;workerData.bootArchive=null;
   const adapter = new WebAssembly.Module(fs.readFileSync(out + '/host-call-adapter.wasm'));
   const waitCell = new Int32Array(new SharedArrayBuffer(4));
-  const processRequest = processService({memory,
+  const baseProcessRequest = processService({memory,
     objectValidity: objectValidityService(owner, env.call_error),
     collectionInhibition: collectionInhibitionService(owner, env.call_error),
     // macOS supplies timezone history/DST; it is an embedding capability,
@@ -258,6 +268,9 @@ if (isMainThread) {
     configuration: {pageSize: 65536, clockTicks: 1000, cpuCount: 1, stackSize: -1,
       defaults: layout.stackDefaults},
     wait: milliseconds => Atomics.wait(waitCell, 0, 0, milliseconds)});
+  const extension=workerData.hostExtension?await (await import(pathToFileURL(workerData.hostExtension))).create(
+    {memory,tcr,owner,env,layout,config:workerData.extensionConfig}):null;
+  const processRequest=extension?args=>extension.processRequest(args,baseProcessRequest):baseProcessRequest;
   const heapSnapshot = heapSnapshotService(owner, env.call_error);
   const services = [
     ['%WASM-HOST-FILE-REQUEST', 4, loader.file],
@@ -472,6 +485,43 @@ if (isMainThread) {
       fs.writeFileSync(out + '/failure-spaces.json', JSON.stringify(owner.spaces));
     }
   }
+  const postReadyLoads=[];
+  if(result.ready&&postReadyLoaderRoot){
+    // Re-enter the ordinary target FASL loader after READY. Its public B entry
+    // supplies normal root/checkpoint handling; namespace admission and code
+    // installation are the same as in the runtime's initial load sequence.
+    const strings=texts=>owner.atSafepoint(o=>{
+      const values=texts.map(text=>Array.from(text,ch=>ch.codePointAt(0)));
+      const sizes=values.map(chars=>(4+chars.length*4+7)&~7);
+      o.ensure(sizes.reduce((a,b)=>a+b,0));let base=get(tcr+48);
+      const words=values.map((chars,i)=>{
+        const word=base+6;put(base,chars.length*256+191);
+        chars.forEach((ch,j)=>put(base+4+j*4,ch));base+=sizes[i];return word;
+      });put(tcr+48,base);return words;
+    });
+    const call=(symbolWord,args)=>{
+      assert.equal(get(tcr+32),2,'post-READY single-Worker admission');
+      const fn=get(symbolWord+6),id=get(fn-2)>>>2,slot=get(registry+8+id*16);
+      put(root,0);put(root+4,args.length);args.forEach((word,i)=>put(root+8+i*4,word));
+      put(tcr+64,root+8);put(tcr+128,root);put(tcr+116,0);
+      put(tcr+120,root+8200);put(tcr+124,root+8264);
+      return env.table.get(slot)(fn,args.length);
+    };
+    let postReadyPhase;
+    try{
+      for(const path of workerData.postReadyLoads){
+        postReadyPhase='%FASLOAD '+path;
+        const args=strings([path]),[value,count]=call(postReadyLoaderRoot.values()[0],args);
+        assert.equal(value,77838,'post-READY %FASLOAD result');assert.equal(count,2);
+        assert.equal(get(get(tcr+120)+4),N,'post-READY %FASLOAD error value');
+        postReadyLoads.push({path,readyBefore:true,value:true});
+      }
+    }catch(error){result={...result,status:'STOPPED',ready:false,reason:postReadyPhase+': '+
+      (error.is?.(env.call_error)?'checked '+error.getArg(env.call_error,0):
+       error.is?.(env.type_error)?'type_error '+error.getArg(env.type_error,0)+' '+error.getArg(env.type_error,1):String(error)),
+      stack:error.stack??null};}
+    finally{owner.atSafepoint(()=>{postReadyLoaderRoot.release();});}
+  }
   const abandonedSessions=loader.closeSessions();
   timing?.memory(result.ready ? 'READY' : 'STOPPED', heapState());
   timing?.finish();
@@ -482,6 +532,7 @@ if (isMainThread) {
     abandonedSessions,inputOwnership:inputState(),archiveStorage:loader.archives(),openFiles:loader.openFiles(),
     heapDigest: manifest.heap.digest, codeDigest: manifest.codeDigest, collections: owner.collectionCount,
     ...(benchmark?{benchmark:benchmark.result()}:{}),
+    ...(extension?{hostExtension:{source:workerData.hostExtension,config:workerData.extensionConfig,result:extension.result()}}:{}),
     environment: {node: process.version, v8:process.versions.v8, execArgv:process.execArgv,
       floatingBinding:'JavaScript floatService (private service memory)',
       runner: workerData.scripts[new URL(import.meta.url).pathname], scripts: workerData.scripts,
@@ -491,6 +542,6 @@ if (isMainThread) {
     execution: execution(), classErrorTransition, conditionCalls, outputEvents, callbackEvents,
     errorServiceMode: get(tcr + 192), collectionInhibition: owner.collectionInhibition,
     collectionPending: owner.collectionPending,
-    startupLoads: workerData.startupLoads, omittedBundles: workerData.omittedBundles,
+    startupLoads: workerData.startupLoads, postReadyLoads, omittedBundles: workerData.omittedBundles,
     bundleInputs: workerData.files.map(({path, sha256}) => ({path, sha256}))});
 }
