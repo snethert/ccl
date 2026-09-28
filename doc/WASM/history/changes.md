@@ -1,3 +1,28 @@
+## 2026-09-28 — Accept reviewed declared CAR/CDR and SVREF accessors
+
+At the user's direction to accept the reviewed fixnum/float/CAR/SVREF work,
+imported [Claude audit 191](../stage0/claude-review.md) byte-identically from
+`claude-audit-191` (`1d4648ad`) and accepted `c716d9f4`. The supplied audit
+explicitly excludes float `047df094` and fixnum `f38261de`; those parents remain
+producer-verified and awaiting their independent review. Replaying their
+dependency fixtures does not establish review of the parent changes.
+
+The reviewer reproduced the focused, dependency and benchmark build products
+byte-for-byte, reran 26,204 fresh corpus comparisons and 21,843 eligible native
+tests with R6/R6a, and matched 71 focused rows, float 83/4 and fixnum 125/6
+rows/collections, and all nine additional probes. All five producer controls
+and four source-level mutants were killed; one source mutant was equivalent.
+The benchmark smoke measured typed CAR at 8.51 ns and typed SVREF at 15.41 ns,
+corroborating the producer medians without replaying the full timing series.
+
+O-148 (redundant LIST NIL branch) and O-150 (trusted-declaration contract) are
+informational. O-149 (pre-existing ratio-literal loading failure) stays open
+outside this accessor acceptance. No note requires another producer round.
+The [accessor record](../stage1/declared-accessors-results.json) binds the
+review, implementation and evidence identities. This acceptance changes
+documentation only; unchanged tests were not rerun. READY 81/82, originals
+575/535 and ledger 21/12 remain unchanged; no criterion credit.
+
 ## 2026-09-28 — Trust declarations for cons and simple-vector reads
 
 At the user's direction, continue from the float/fixnum work into declared

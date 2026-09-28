@@ -68,7 +68,8 @@ READY is 26.738 s using the unchanged core archives. Product Lisp **114 added /
 fast-loop sample intervals and scalar-call process variation.
 
 The [declared accessor optimization](stage1/declared-accessors-results.md) is
-**producer-verified, awaiting independent review** with the arithmetic stack.
+**accepted** after [audit 191](stage0/claude-review.md), supplied on
+`claude-audit-191` at `1d4648ad`, found no defect in `c716d9f4`.
 CCL's lexical trust-declarations policy now selects direct CAR/CDR and SVREF
 loads. LIST keeps NIL handling; vector bounds remain checked unless the length
 and index type prove the access. Checked policies and THE assertions remain
@@ -83,7 +84,14 @@ collections. Ordinary READY is 26.510 s using unchanged core archives.
 The retained ratio-literal loader failure is outside this accessor result;
 the same non-fixnum index clause is tested with a boxed double.
 Product Lisp **106 added / 10 removed**; counts and criterion credit unchanged.
-Next: supplied independent review of the declaration/loop stack.
+The reviewer reproduced the focused, dependency and benchmark builds byte-for-byte,
+reran the corpus and native suite, and matched all nine additional probes. Four
+source-level mutants were killed; removing the LIST NIL branch was equivalent
+under this layout (O-148). The ratio-literal loader failure remains a pre-existing
+issue (O-149); O-150 records the existing trusted-declaration contract. None gates
+accessor acceptance. Audit 191 explicitly excludes the float and fixnum parents;
+their dependency-fixture replays do not replace review of those changes.
+Next: supplied independent review of `047df094` and `f38261de`.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their
@@ -103,6 +111,7 @@ comparable admission: **2,050/2,231** (not recounted here). Original execution:
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
+| Audit 191 / declared CAR/CDR and SVREF | ACCEPTED — `c716d9f4`, no defect | [Results](stage1/declared-accessors-results.md): review `1d4648ad` imported unchanged. Byte-identical focused/dependency/benchmark products; 71 focused rows / 8 moving collections, five producer controls, float 83/4 and fixnum 125/6, fresh corpus 26,204/0 and native 21,843/0 with R6/R6a. Four source mutants killed, one equivalent; nine extra native-matched probes. Benchmark smoke corroborates the producer timings; full timing series not replayed. O-148/O-150 informational; O-149 pre-existing ratio loading remains open. Arithmetic parents `047df094` and `f38261de` remain unreviewed. No criterion credit. |
 | Audit 188 / four product groups | ACCEPTED — user: “Accept all four” | [Acceptance](stage1/acceptance-audit-188.json); audits 186–188 imported byte-identically from `136b58cb`. Boot image, both archives and every FASL reproduce; 11,939 function templates match. Two fresh instances pass 83 loads and both refusals. Native 21,843/0 twice, readers 765, helpers 122, all host controls pass; seven mutants killed, one unexecuted predicted survivor (O-136). Corpus 26,204 reused by identity after reviewer ENOSPC. Originals 575/535 and ledger 21/12 unchanged; no criterion credit. |
 | Target loader / READY completion | ACCEPTED — `ea82d8e7`, audit 188 | [Implementation and profile](../../tests/wasm/stage1/loader-target/README.md): level-0-only image, 81 returning target runtime loads, 82 compiled runtime files, host output and initial-process startup reached. Audit 188 is the first commit-level READY review; the earlier commit-message review was WIP. O-123 corpus fixture and O-130 listing identity fixed; MISC/TIME/PATHNAMES load (O-125). O-124 is corrected by the focused follow-up below: the active emitter was already fixed. |
 | Module consolidation | ACCEPTED — `484643be`, `ac813bce`, `5e807214`, `cd0947f1` | [Results](stage1/module-consolidation-results.md): two archives, seven ordinary product modules / eleven instances, derived layout, generation ownership and input release. Audit 189 confirms O-134 at the host boundary; the Lisp error-path follow-up below completes handler recovery. |

@@ -1,7 +1,27 @@
 {
   "version": 1,
   "date": "2026-09-28",
-  "status": "EXECUTED_PENDING_INDEPENDENT_REVIEW",
+  "status": "ACCEPTED",
+  "acceptance": {
+    "date": "2026-09-28",
+    "authorization": "User: Accept the reviewed work in the CCL repo (fixnum/float/CAR/SVREF)",
+    "reviewer": "Claude",
+    "reviewSource": "User-supplied claude-audit-191 branch",
+    "review": "doc/WASM/stage0/claude-review.md",
+    "reviewCommit": "1d4648ad6263746a1eef1c0767dcaedcaa70daf3",
+    "implementationCommit": "c716d9f4147c76b336aa2d8ca84b2ca79f203bd6",
+    "disposition": "No defect. Accept c716d9f4.",
+    "scope": "Declared CAR/CDR and SVREF only. Audit 191 explicitly excludes arithmetic parents 047df094 and f38261de; both remain awaiting independent review.",
+    "verification": "Completed producer and independent verification reused; unchanged tests not rerun for acceptance.",
+    "evidenceRepositoryCommit": "031491ee04d799f998ad6419607ce51a7bf617eb",
+    "evidenceInventorySha256": "dad393e84ef59591c2d2d0e55cfe69ffd48eedba87fd6b645e43bbff76bf9bbb",
+    "observations": {
+      "O-148": "Informational: removing the LIST NIL branch is equivalent under the current layout; no acceptance action required.",
+      "O-149": "Pre-existing ratio-literal loader failure remains open outside this accessor change.",
+      "O-150": "Informational: invalid trusted declarations have no additional runtime validation contract."
+    },
+    "criterionCredit": false
+  },
   "parentCommit": "f38261de",
   "productLispLinesChanged": {
     "added": 106,
@@ -1490,7 +1510,7 @@
     }
   },
   "limitations": [
-    "Independent review pending for this change and the two arithmetic parents; no criterion credit.",
+    "Accessor change accepted after audit 191; arithmetic parents 047df094 and f38261de remain awaiting independent review. No criterion credit.",
     "Only reads are specialized; stores and the call convention are unchanged.",
     "Unproved vector bounds remain checked. False declarations under trusted policy have no added validation contract.",
     "The initial ratio literal fails in the unchanged core $FASL-RATIO; retained trace, no ratio-index execution claim.",
