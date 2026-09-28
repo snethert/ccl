@@ -5356,3 +5356,48 @@ Two commits sit above 8d2aee38. 51fc2d03 is records only: it imports audit 194, 
 ### Disposition
 
 **No defect. Accept a61fab68 as an executed single-Worker unit with no FMT or LL credit, exactly as Codex records it. 51fc2d03 is consistent.** Every count and hash reproduces from the tree byte for byte on all four engines and in the post-READY Lisp run, and the driver's flag-free path is unchanged. The probes show that post-READY `%FASLOAD` runs in a clean dynamic environment. O-159 and O-160 are closed. The checked-4 `%WASM-FIND-SYMBOL` probe stays open as Codex recorded it. Measure unchanged: READY 81 loads / 82 files; Stage 1 ledger 33/33 closed; Stage 2 has no slots adopted; no criterion credit.
+
+## Hundred-and-ninety-sixth Claude audit — the two Codex commits above audit 195: acceptance records ab920d62 and the third Stage 2 unit, owned foreign byte ranges with explicit release 4316cfa5 — 28 September 2026
+
+Two commits sit above ec1f2532. ab920d62 is records only: it imports audit 195 and records acceptance. Its text matches the audit, including that O-165 carries into the next unit and that O-167 must be fixed before multi-Worker admission, so it needs no replay. 4316cfa5 changes the runtime (`foreign-module.mjs`) and the owner test driver, so it was replayed in full from `git archive 4316cfa5`, extracted under `/private/tmp/ccl-work/claude/audit-196`. The RAM mounts were verified, and the `ccl-evidence` symlink sat beside the tree. The compiler corpus was not rerun, by the user's direction. Claude's retained pack is `ccl-evidence/2026-09-28-claude-audit-196` (5 files, 10,240 bytes).
+
+### 4316cfa5 — owned byte ranges, allocation identities and explicit release
+
+**Scope.** `openForeignModule` gains an optional `buffers` declaration (allocator `(i32)->i32`, release `(i32)->()`, a per-allocation byte limit) and per-export `ranges` (pointer/length argument pairs, access and encoding). Callers get opaque, frozen handle and range objects. The foreign offset and the foreign Memory are never exposed, and the Lisp Memory never reaches the foreign module. Allocation, principal calls and release all enter through the existing FOREIGN bracket. The owner suite gains O-165's directed cases and O-168's inhibition case. No product Lisp, shared compiler or kernel source changes, so R6/R6a do not apply.
+
+**Code review.** Declaration checks run before instantiation, on the structured clone that is later frozen. `EXPORT_SET` already requires every binary function export to be declared, so the new alias-equality check cannot reject a scalar-only module. Managed names are expanded over binary aliases, so no alias of the allocator or destructor is reachable through `call`. In `call`, every range is resolved and bounds-checked (`length <= size - offset` with both non-negative safe integers), and input UTF-8 is validated before any entry. Arity and scalar types are checked after the pointer substitution, still before entry. Output UTF-8 is checked after a successful return. `allocate` refuses a null, out-of-memory (including `>>>0` wrap of a negative return) or overlapping result by retiring the instance without calling the destructor. `release` invalidates before the destructor runs, so an uncertain free is never retried. `retire()` now replaces every `instance=null`, so a trap, an admission failure or `close` deactivates all live handles. Every access re-reads `memory().buffer`, so growth never leaves a stale view. Shared foreign memories are refused at admission, so `TextDecoder` never receives a SharedArrayBuffer view in a browser.
+
+**Identity.** The rebuilt boot, level-1, buffer-fixture and owner-fixture builds have `sources`, `policy`, `versions`, `bundle-manifest` and `record-summaries` files byte-identical to the pack's `builds/`. `build-recipe.json` and `postimage-parent.json` differ only in absolute paths. The collector and library binary hashes in `artifacts.json` are equal.
+
+**Replay.** Pinned Playwright and the pack's `browser-config.json`, as in audit 195.
+
+- `foreign-buffers/run.py` (portable, then with `--level1 --checks`): **PASS**. It ran 64 checks in Node, Chromium, Firefox and WebKit, killed 26 mutants, and matched 7 native Lisp rows with 38 foreign entries and 26 moving collections. `node.json`, `browser.json`, `mutants.json`, `sources.json`, `summary.json`, `lisp-check.json` and `artifacts.json` are byte-identical to the pack. The host extension's result in `lisp.json` (entries, collections and all six cases) is equal. The rest differs only in absolute paths.
+- `foreign-runtime/run.py`: **PASS** with 53 owner checks per engine, 38 mutants killed, the 59-check owner regression and all 12 original Lisp rows. The same file set is byte-identical, plus `owner-regression.json`. Every one of the 17 new checkpoint mutants dies on its own named case, so O-165 is closed. O-168's deferred-collection case runs, with no mutant, as Codex states.
+- `foreign-scalar/run.py`: **PASS**, 126 checks per engine and 16 mutants, with all five result files byte-identical.
+
+The counts are consistent with the sources: 64 = 18 behaviour cases + 22 declaration refusals + 16 call/copy refusals + 8 profile/UTF-8/reentry cases. 53 = 33 + 2 `validateLive` sites + 17 checkpoint words + 1 inhibition case. 38 = 19 + 2 + 17.
+
+**Claude's source-level mutants** (26, applied to the replay copy of `foreign-module.mjs`, full buffer suite each, in `claude-mutants.txt`):
+
+| Result | Mutants |
+|---|---|
+| KILLED (19) | `uint` on the byte limit, allocation size, extent offset and extent length; `buffers&&` and managed-name clauses of RANGE_EXPORT; range length type; range pointer `uint`; alias expansion of managed names; call ignoring the length; `live.delete` on release; no retirement on a bad allocator result; signed pointer conversion; overlap test counting adjacency; input check applied to write-only ranges; `idle()` in `read`, `write` and `range`; `close` without deactivating handles |
+| SURVIVED, equivalent (5) | `buffers&&` in BUFFER_LIMIT (`uint(null?.x)` refuses the same input); output check on read-only ranges (only a library breaking its declared ABI could differ); `ignoreBOM` (validity is unchanged); `idle()` in `call` (`invoke` refuses the same REENTRY/RETIRED states); the `state==='ready'` gate in `release` (retirement deactivates every handle first, as the README says) |
+| SURVIVED, undirected (2) | the `!busy` check at the top of `release`, see O-171; `retire()` on an entry-hook ASYNC_BOUNDARY refusal, see O-172 |
+
+**Probes** (`probe.mjs`, a stub boundary, the fixture library; `probes.json`):
+
+- **P1: owner refuses the destructor's entry.** `release` throws the owner's refusal. The handle is already retired: a retry returns `false`, the destructor ran zero times, and the library stays `ready`. See O-170.
+- **P2: reentrant release** from inside an import refuses REENTRY, and the handle is still releasable afterwards.
+- **P3–P7:** a range at offset 8 admits length 8 and refuses 9. A successful call whose output is invalid UTF-8 refuses UTF8, drops the result and leaves the library ready. After a destructor exception the next allocation does not reuse the uncertain offset in this fixture. `write` accepts any ArrayBufferView as bytes and refuses a string with a TypeError. BigInt and NaN lengths refuse BUFFER_RANGE.
+
+### Observations
+
+- **O-170** (non-blocking, lifetime): the README justifies retiring a handle before the destructor runs by saying that "retrying an uncertain destructor could free twice". When the owner refuses at `enter`, the destructor certainly did not run, yet the handle is retired anyway. The allocation cannot be reclaimed until instance retirement, and that refusal does not preserve state. This is the safe direction, a leak and not a double free. Either restore the handle when `enter` throws before `run`, or record this case in the release policy.
+- **O-171** (non-blocking, admission): the actual code preserves the handle on reentrant release (P2). But removing `release`'s own `!busy` check survives: `invoke` still refuses REENTRY, but only after the handle has been retired. `reentry-copies-release` should assert that the handle is still releasable after the refusal.
+- **O-172** (informational): the ASYNC_BOUNDARY refusal from the entry hook now calls `retire()`, but no case holds a live handle at that point. With the mutant, a later `release` returns `true` without foreign work instead of `false`.
+- **O-173** (informational): an output UTF-8 refusal after a successful call discards the result and leaves the invalid bytes in the buffer. That is consistent with "encoding checks", but the README does not say it.
+
+### Disposition
+
+**No defect. Accept 4316cfa5 as an executed single-Worker unit with no FMT or LL credit, exactly as Codex records it. ab920d62 is consistent.** Every count and every non-path byte reproduces from the tree on all four engines and in both post-READY Lisp runs. O-165 is closed and O-168 is exercised. O-167 stays open for multi-Worker D5. O-170 and O-171 carry into the next substantive unit; the others are informational. Compiler corpus still deferred until the FFI layer is complete. Measure unchanged: READY 81 loads / 82 files; Stage 1 ledger 33/33 closed; Stage 2 has no slots adopted; no criterion credit.
