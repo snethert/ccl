@@ -51,7 +51,22 @@ benchmark rerun puts typed double at **32.93 ns (52.4× faster)** and typed sing
 at **33.14 ns (51.8× faster)**; ordinary READY is 26.203 s. Exact results and
 limits are in the linked record.
 Product Lisp **194 added / 6 removed**; counts and criterion credit unchanged.
-Next: supplied independent review, then declared accessor specialization.
+
+The subsequent [fixnum and loop optimization](stage1/fixnum-loops-results.md),
+authorized by the user ahead of accessors, is also **producer-verified, awaiting
+independent review**. Checked fixnums stay in locals; scalar arithmetic avoids
+operand root frames on its fast path and retains bignum overflow handling.
+Discarded loop results avoid multiple-value publication. Default fixnum loops
+fall **39.67 → 3.02 ns (13.1×)**; typed double loops fall **32.93 → 2.78 ns**.
+Scalar-call and SVREF loops measure 54.77 and 21.83 ns through faster surrounding
+arithmetic; their call/accessor protocols are not redesigned. Final qualification
+passes 26,204 fresh corpus comparisons, 21,843 registered native tests, 125 focused
+rows, the rebuilt 83-row float fixture and four killed mutants. All 46 forced
+moving collections across the two fixtures and final benchmark pass. Ordinary
+READY is 26.738 s using the unchanged core archives. Product Lisp **114 added /
+9 removed**; counts and criterion credit unchanged. The record retains the shorter
+fast-loop sample intervals and scalar-call process variation.
+Next: supplied independent review of this stack, then declared accessor specialization.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their

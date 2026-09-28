@@ -1,3 +1,32 @@
+## 2026-09-28 — Keep fixnums in locals and simplify scalar loop arithmetic
+
+At the user's direction, move fixnum/loop work ahead of declared accessors.
+The Wasm backend retains checked immediate values in locals and stages eligible
+arithmetic operands without root frames. General arithmetic widens before
+testing overflow and keeps the existing bignum fallback. Untyped loop indices
+retain tag/overflow guards; IF/PROGN used for effect avoid publishing discarded
+multiple values. Captured/special variables, checked assertions, accessors and
+call dispatch keep their existing semantics. Product Lisp **114 added / 9 removed**.
+
+The [producer record](../stage1/fixnum-loops-results.md) reruns all sixteen
+unchanged benchmark workloads. Default fixnum loops fall 39.67 → 3.02 ns (13.1×),
+typed double loops 32.93 → 2.78 ns, scalar calls 98.87 → 54.77 ns and SVREF
+82.47 → 21.83 ns. Three ordinary READY controls have a 26.738 s median using
+the unchanged core archives; no startup optimization is claimed. The record
+discloses shorter sample intervals at the existing iteration cap and the wider
+scalar-call process range.
+
+All 26,204 fresh compiler corpus comparisons, 21,843 eligible native tests with
+R6/R6a, 125 focused observations and the rebuilt 83-row float fixture pass.
+Four independent mutants are killed; 46 forced moving collections pass across
+the focused fixtures and final benchmark. Reader/observer qualifications are
+reused by exact source identity. The original fixture's float-printing failure
+is retained before its change to exact bit observations.
+
+This change and its float-optimization parent remain pending independent review;
+no reviewer was invoked. Whole-file counts, originals 575/535 and ledger 21/12
+remain unchanged. No criterion credit. Declared accessor specialization is next.
+
 ## 2026-09-28 — Lower declared float arithmetic and preserve unboxed loop values
 
 Following the accepted execution benchmark's priority order, the Wasm backend

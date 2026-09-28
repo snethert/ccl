@@ -26,6 +26,7 @@
 (defvar *b-direct-float-safety* t)
 (defvar *b-float-locals* nil)
 (defvar *b-float-temporaries* nil)
+(defvar *b-fixnum-locals* nil)
 (defvar *b-call-mode* nil)
 (defvar *wasm32-fasl-publication* nil)
 (defvar *wasm32-fasl-functions* nil)
@@ -727,6 +728,10 @@
     (unless n (refuse :b-bound-variable))
     (b-wat "(i32.add (local.get $bindings) (i32.const ~d))" (+ 0 (* 4 n)))))
 (defun b-bind-value (var value)
+  (let ((fixnum (and var (b-fixnum-local var))))
+    (when fixnum
+      (return-from b-bind-value
+        (b-wat "(local.set ~a ~a)" (cdr fixnum) (b-check-fixnum value)))))
   (let ((float (and var (b-float-local var))))
     (when float
       (return-from b-bind-value
@@ -1447,6 +1452,7 @@
            (*b-float-temporaries* nil)
            (*b-direct-float-safety* (b-float-policy ir))
            (*b-float-locals* (b-plan-float-locals ir))
+           (*b-fixnum-locals* (b-plan-fixnum-locals ir))
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
            (opt (second args)) (keys (fourth args)) (lexpr (consp (third args))) (rest (if lexpr (car (third args)) (third args))) (aux (fifth args))
            (*b-bound-vars* (remove-duplicates
@@ -1462,7 +1468,7 @@
                                       (logbitp ccl::$fbitmethodp (ccl::afunc-bits afunc))) "")))
                    (flet ((emit-body () (concatenate 'string
                       (with-output-to-string (s)
-                        (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (b-float-local v) (member v *b-bound-vars* :test #'eq)) do
+                        (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (b-float-local v) (b-fixnum-local v) (member v *b-bound-vars* :test #'eq)) do
                           (write-string (b-bind-value v (b-wat "(i32.load offset=~d (local.get $incoming))" (* 4 i))) s)))
                       (b-binding-code arity opt keys (unless lexpr rest))
                       (with-output-to-string (s)
@@ -1810,6 +1816,8 @@
           (n (b-at "(local.get $incoming)" (* 4 n)))
           (t (refuse :b-variable-identity)))))
 (defun b-read-variable (var)
+  (let ((fixnum (b-fixnum-local var)))
+    (when fixnum (return-from b-read-variable (b-local (cdr fixnum)))))
   (let ((float (b-float-local var)))
     (if float (b-box-float (b-local (third float)) (second float))
       (b-wat "(i32.load ~a)" (b-variable-address var)))))
@@ -3524,6 +3532,53 @@
 (defun b-float-local (var)
   (assoc (ccl::nx-root-var var) *b-float-locals* :test #'eq))
 
+;;; A checked tagged fixnum is an immediate value, even across a collecting
+;;; call. Captured and special variables still use their shared node storage.
+(defun b-fixnum-local (var)
+  (assoc (ccl::nx-root-var var) *b-fixnum-locals* :test #'eq))
+
+(defun b-plan-fixnum-locals (ir)
+  (when *bootstrap-front-end*
+    (loop for var in (remove-duplicates
+                     (append *required-vars* (b-local-variables ir)) :test #'eq)
+          for type = (ccl::acode-var-type var t)
+          when (and type (not (eq type '*))
+                    (subtypep (ccl::nx-target-type type) (ccl::nx-target-type 'fixnum))
+                    (not (b-special-p var)) (not (b-captured-p var)))
+          collect (cons var (temporary)))))
+
+(defun b-check-fixnum (value)
+  (let ((node (temporary)))
+    (b-wat "(block (result i32) (local.set ~a ~a) (if (i32.and (local.get ~a) (i32.const 3)) (then ~a)) (local.get ~a))"
+      node value node (b-type-failure (b-local node) 'fixnum) node)))
+
+(defun b-known-fixnum-p (form)
+  (and (ccl::acode-p form)
+       (or (and (eq (ccl::acode-operator-name (ccl::acode-operator form)) 'ccl::lexical-reference)
+                (b-fixnum-local (first (ccl::acode-operands form))))
+           (ccl::acode-form-typep form 'fixnum t))))
+
+(defun b-simple-node-p (form)
+  ;; These exact emitters cannot allocate or poll. In particular a promoted
+  ;; float reference boxes, and a checked TYPED-FORM may call Lisp.
+  (and (ccl::acode-p form)
+       (let ((args (ccl::acode-operands form)))
+         (case (ccl::acode-operator-name (ccl::acode-operator form))
+           (ccl::fixnum t)
+           (ccl::lexical-reference (not (b-float-local (first args))))
+           (ccl::typed-form (and (not (third args)) (b-simple-node-p (second args))))))))
+
+(defun b-local-operands (forms function &optional fixnums)
+  ;; Call only for checked immediates or operands whose evaluation cannot
+  ;; collect. The consumer roots general nodes before its first safepoint.
+  (let ((locals (mapcar (lambda (form) (declare (ignore form)) (temporary)) forms)))
+    (b-wat "(block (result i32) ~a ~a)"
+      (with-output-to-string (s)
+        (loop for form in forms for local in locals do
+          (format s "(local.set ~a ~a)" local
+            (if fixnums (b-check-fixnum (b-scalar form)) (b-scalar form)))))
+      (funcall function (mapcar #'b-local locals)))))
+
 (defun b-plan-float-locals (ir)
   (when (and *bootstrap-front-end* *b-float-service*)
     (let ((vars (remove-if-not
@@ -3652,7 +3707,7 @@
 (defun b-discard (ir)
   ;; A SETQ used for effect must not box its otherwise unused result each trip
   ;; through a numeric loop. Preserve lexical policy in statement subforms.
-  (when (and *bootstrap-front-end* *b-float-locals* (ccl::acode-p ir))
+  (when (and *bootstrap-front-end* (ccl::acode-p ir))
     (setf (gethash ir *bootstrap-emitted*) t)
     (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
            (args (ccl::acode-operands ir))
@@ -4022,7 +4077,10 @@
                                   (format s "(i32.store offset=~d ~a (i32.const 0))" (* 4 (1+ n)) base))))))))))
 
 (defun bootstrap-fixnum-operator (op forms &optional condition)
-  (bootstrap-operands
+  (funcall (if (or (every #'b-known-fixnum-p forms) (every #'b-simple-node-p forms))
+             (lambda (forms function)
+               (b-local-operands forms function (every #'b-known-fixnum-p forms)))
+             #'bootstrap-operands)
    forms
    (lambda (values)
      (let ((a (first values)) (b (second values)))
@@ -4892,6 +4950,16 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
         (args (ccl::acode-operands ir)))
     (case op
+      ((ccl::call ccl::builtin-call)
+       (let* ((callee (first args))
+              (name (if (eq op 'ccl::builtin-call)
+                      (let ((index (ccl::acode-fixnum-form-p callee)))
+                        (when (and index (<= 0 index) (< index (length ccl::%builtin-functions%)))
+                          (elt ccl::%builtin-functions% index)))
+                      (when (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)
+                        (first (ccl::acode-operands callee))))))
+         (when (and (null (third args)) (null (second (second args))))
+           (bootstrap-scalar-number name (first (second args))))))
       ((ccl::require-fixnum ccl::require-symbol ccl::require-list ccl::require-real
         ccl::require-simple-string ccl::require-simple-vector ccl::require-character
         ccl::require-number ccl::require-integer ccl::require-s8 ccl::require-u8
@@ -5016,7 +5084,7 @@
            (bootstrap-boolean (b-wat "(i32.eq ~a ~a)" (first values) (second values))
                               (ccl::acode-immediate-operand (car args))))))
       ((ccl::int>0-p ccl::%izerop)
-       (bootstrap-operands (cdr args)
+       (funcall (if (b-simple-node-p (second args)) #'b-local-operands #'bootstrap-operands) (cdr args)
          (lambda (values)
            (b-wat "~a ~a"
                   (b-condition (b-wat "(i32.and ~a (i32.const 3))" (car values)) 5)
@@ -5027,11 +5095,11 @@
                      (ccl::acode-immediate-operand (car args)) :eq))))))
       ((ccl::add2 ccl::sub2 ccl::mul2 ccl::div2
         ccl::fixnum-add-overflow ccl::fixnum-sub-overflow)
-       (bootstrap-primary
-        (bootstrap-numeric-call
-         (ecase op ((ccl::add2 ccl::fixnum-add-overflow) '+)
-                   ((ccl::sub2 ccl::fixnum-sub-overflow) '-)
-                   (ccl::mul2 '*) (ccl::div2 '/)) args)))
+       (let ((name (ecase op ((ccl::add2 ccl::fixnum-add-overflow) '+)
+                            ((ccl::sub2 ccl::fixnum-sub-overflow) '-)
+                            (ccl::mul2 '*) (ccl::div2 '/))))
+         (or (bootstrap-scalar-number name args)
+             (bootstrap-primary (bootstrap-numeric-call name args)))))
       (ccl::%ineg
        (bootstrap-primary
         (b-integer-call '%integer-sub (list (bootstrap-constant 0) (first args)))))
@@ -5190,7 +5258,44 @@
                   (list (mapcar (lambda (value) (make-b-raw-code :text value)) values) nil)
                   nil)))))))))
 
+(defun bootstrap-scalar-number (name forms)
+  (when (and (member name '(1+ 1-)) (= (length forms) 1))
+    (setq name (if (eq name '1+) '+ '-)
+          forms (append forms (list (bootstrap-constant 1)))))
+  (when (and (member name '(+ - * < <= = /= >= > eql)) (= (length forms) 2)
+             (or (every #'b-known-fixnum-p forms) (every #'b-simple-node-p forms)))
+    (let ((fixnums (every #'b-known-fixnum-p forms)))
+      (b-local-operands forms
+        (lambda (values)
+          (destructuring-bind (a b) values
+            (let* ((raw (mapcar (lambda (value) (make-b-raw-code :text value)) values))
+                   (arithmetic (member name '(+ - *)))
+                   (slow (bootstrap-primary
+                          (if (eq name 'eql) (bootstrap-eql-call raw)
+                            (b-float-call
+                             (ecase name (+ '%float-add) (- '%float-sub) (* '%float-mul)
+                               (< '%float-lt) (<= '%float-le) (= '%float-eq)
+                               (/= '%float-ne) (>= '%float-ge) (> '%float-gt)) raw))))
+                   (fast
+                    (if arithmetic
+                      ;; Tagged operands have two zero low bits. Widen before
+                      ;; operating; overflow must enter the bignum path.
+                      (b-wat "(block (result i32) (local.set $wide (i64.~a (i64.extend_i32_s ~a) (i64.extend_i32_s ~a))) (if (result i32) (i64.eq (local.get $wide) (i64.extend_i32_s (i32.wrap_i64 (local.get $wide)))) (then (i32.wrap_i64 (local.get $wide))) (else ~a)))"
+                        (ecase name (+ "add") (- "sub") (* "mul"))
+                        (if (eq name '*) (b-wat "(i32.shr_s ~a (i32.const 2))" a) a) b
+                        (bootstrap-primary
+                         (b-integer-call (ecase name (+ '%integer-add) (- '%integer-sub) (* '%integer-mul)) raw)))
+                      (bootstrap-boolean
+                       (b-wat "(i32.~a ~a ~a)"
+                         (ecase name (< "lt_s") (<= "le_s") ((= eql) "eq")
+                           (/= "ne") (>= "ge_s") (> "gt_s")) a b)))))
+              (if fixnums fast
+                (b-wat "(if (result i32) (i32.eqz (i32.and (i32.or ~a ~a) (i32.const 3))) (then ~a) (else ~a))"
+                  a b fast slow))))) fixnums))))
+
 (defun bootstrap-numeric-call (name forms)
+  (let ((scalar (bootstrap-scalar-number name forms)))
+    (when scalar (return-from bootstrap-numeric-call (b-multiple (make-b-raw-code :text scalar)))))
   (let ((entry (assoc name '((+ . %float-add) (- . %float-sub) (* . %float-mul)
                              (/ . %float-div) (< . %float-lt) (<= . %float-le)
                              (= . %float-eq) (/= . %float-ne) (>= . %float-ge)
