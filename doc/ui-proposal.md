@@ -56,7 +56,7 @@ Closed. Adding to it is a JS change and must be argued for here first.
 | `open-window`        | window id, initial view id, size hint (§7)                     |
 | `close-window`       | window id                                                      |
 | `focus-window`       | window id                                                      |
-| `download`           | bytes + filename                                               |
+| `save-file`          | bytes + filename (a download on the web, a save dialog natively) |
 | `open-url`           | external URL, new tab                                          |
 
 Ten. `open-window` / `close-window` / `focus-window` are the price of the detached-transcript screen; they are cheap now and expensive to retrofit.
@@ -95,7 +95,7 @@ A closed set, defined in **one machine-readable spec file** that generates: Lisp
 | overlay   | `dialog menu popover tooltip menubar`                            |
 | menu      | `section item` — inside a `menu` (§10.1); `section prop` inside `properties` (§25) |
 | feedback  | `spinner progress badge banner readout` (§27)                    |
-| opaque    | `editor` (§6), `record` (§6.4), `svg`                            |
+| opaque    | `editor` (§6), `record` (§6.4)                                   |
 
 Drag-and-drop (§17), gestures (§18), virtualization (§21), hover groups (§29) and content colour (§30) are attributes and events on these nodes, not further node types.
 
@@ -110,7 +110,7 @@ Overlays (`menu`, `popover`, `tooltip`) take `:anchor <node-key>`. The client ow
 The vocabulary keeps growing in this document; the client does not grow with it per element, and it is worth being exact about why, because "a renderer for every node" is easy to misread as "code and styles for every node".
 
 - **One renderer per type, not per node.** The renderer table has one entry for each of the ~45 types. A node becomes DOM elements (the reconciler's job, exactly as in any virtual-DOM library), but no code and no closure is created per node. The only per-node values written into the DOM are the key, the type, the enumerated attributes as data attributes, and geometry that *is* data (an item's position, a split's sizes) as an inline transform or size.
-- **One stylesheet, generated.** Styling is by class: `(type, role, state, density, pointer)`. The theme table (§9) generates it from the spec file; ~45 types × a few roles × a few states is a few hundred rules, written once. Nothing emits CSS at runtime, and no node carries style.
+- **One stylesheet, generated.** Styling is by class: `(type, role, state, density, pointer)`. The theme table (§9) generates it from the spec file — CSS for the web backend, a QSS/GTK stylesheet or programmatic palette for a native one; ~45 types × a few roles × a few states is a few hundred rules, written once. Nothing emits style at runtime, and no node carries style.
 - **One event dispatcher, delegated.** The runtime installs a fixed set of listeners at the window root (pointer, keyboard, wheel, drag, touch), walks up from the event target to the nearest keyed node, and reads that node's data attributes to decide what the event means: `:drag` makes it a drag source, `:accepts` a drop target, `:hover-group` a linked highlight, `:pad` a pad host, `:sortable` a reorder container. Attributes are read at event time; they do not install handlers. Adding a node or a thousand nodes adds no listeners.
 - **Mechanisms, keyed by attribute.** Everything that Parts II and III add is one general mechanism in the runtime that switches on an attribute: the gesture recognizer, the drag engine, the reconciler's keyed ops, the canvas viewport and its rulers, the tick policy, lanes, pads, hover groups, readouts, virtualization windows, the editor decoration bridge, the media element. About fifteen. That list is what "freeze" freezes, and it must be complete before step 6 of §14, which is why this document keeps testing it against more application types.
 - **Per-type tables, not per-node payloads.** Where a node would otherwise carry the same data as every other node of its type, the data lives in a table sent once and the node carries a symbol. `:pad task-pad` (§19.5) is the pattern; it applies equally to `oref` (§5): the doc line and gesture-slot commands of a presentation are properties of its *type* and are shipped once as the type's translator table, and a node carries only `handle`, `type`, `label` and `state`, with a per-node override attribute for the rare exception. The tree is small, and the client looks values up rather than storing them per element.
@@ -173,9 +173,9 @@ where `kind` is a closed set: `:presentation :hunk-added :hunk-removed :hunk-cha
 
 The editor's text is state Lisp owns, shipped as a `view` and updated by text patches in both directions, so that record/replay (§12) captures it. An editor whose buffer lives only in the browser breaks replay determinism.
 
-### 6.4 Output records are SVG with tagged groups
+### 6.4 Output records are drawing ops with tagged groups
 
-The transcript replays a CLIM output record at 1:3 scale, with "⌘click **replay full size**", and records contain presentations. A canvas with server-side hit testing would mean round trips and JS. Decision: a `record` node is server-rendered SVG in which presentation regions are `<g>` elements tagged with handle and type. The client's inline-node event path handles them unchanged. The text backend prints a placeholder line (`[record text-2193, 840×276, 3 presentations]`).
+The transcript replays a CLIM output record at 1:3 scale, with "⌘click **replay full size**", and records contain presentations. A canvas with server-side hit testing would mean round trips and client code. Decision: a `record` node's children are a closed set of drawing ops — `path`, `rect`, `ellipse`, `text`, `image`, `group` — with `group :handle h :type t` marking a presentation region; the web backend serializes them to SVG, a native backend draws them, and the text backend prints a placeholder line (`[record text-2193, 840×276, 3 presentations]`). The client's inline-node event path handles a tagged group unchanged. The ops are part of the spec file like every other node, so there is no drawing format string in the vocabulary (§13); SVG is one backend's output, not the protocol.
 
 ### 6.5 Gutters, wrapping and the two line coordinates
 
@@ -316,7 +316,7 @@ The log format and the replay model come *before* the JS runtime, so that any pr
 
 Resolved while reviewing:
 
-- `plot` is not in the initial vocabulary. `record` is the opaque seam; an actual plotting requirement must demonstrate that `record` is insufficient before the permanent vocabulary grows.
+- `plot` and a raw `svg` node are not in the initial vocabulary. `record` (drawing ops, §6.4) is the opaque seam; an actual plotting requirement must demonstrate that `record` is insufficient before the permanent vocabulary grows.
 - `menu` is explicit structure (§10.1), not attributes.
 
 Open:
@@ -343,7 +343,7 @@ Four things were missing from Part I and are added in §17–§21: drag and drop
 | calendar / kanban / planning| GNOME Calendar, FullCalendar, Trello, Jira                           | drag between cells and columns, resize duration (§17); labels, avatars, badges on cards |
 | mail / chat / messaging     | Thunderbird, Evolution, K-9, Slack, Discord, Telegram, Signal, Element | threaded lists, reactions as chips (§25), reply quotes, composer with rich toolbar (§6), unread badges, presence dots |
 | libraries / browsers        | Calibre, Zotero, darktable, Dolphin, Steam, Spotify, DaVinci projects | tree-table (§26), thumbnail grids with zoom slider (§21), hero + horizontal carousels (§20), sidebar trees |
-| maps / sky                  | GNOME Maps, Organic Maps, Leaflet, KStars                            | `:geo` canvas, place cards as bottom sheets (§18), route polyline and elevation profile (§19, `svg`), object markers |
+| maps / sky                  | GNOME Maps, Organic Maps, Leaflet, KStars                            | `:geo` canvas, place cards as bottom sheets (§18), route polyline and elevation profile (§19, `record`), object markers |
 | analysis / diagnostics      | Wireshark, JupyterLab, Grafana                                       | three-pane linked selection, hex dump as `code` with spans and hover-group (§29), notebook cells as `list` of `editor`+output |
 | code / text editing         | VS Code, Kate, Magit, Obsidian, LibreOffice Writer, xterm             | Part I covers editors; Magit-style transient menus need toggles in menus (§25); force-directed graph (§19); paged documents (§6); terminal out (§13) |
 | block programming / games   | Scratch, Luanti                                                      | Scratch blocks are a canvas with snap-to-port drops (§17, §19); the in-game 3D view is out |
@@ -608,6 +608,29 @@ Three things the "no styling" rule (§4, §9) has to be precise about after seei
 - **Density is a window setting.** Blender and KiCad are roughly twice as dense as the IDE mockups. The theme table (§9) is generated for two densities, `:comfortable` and `:dense`, and the choice is per window in `hello`/`local`, never per node. Combined with `pointer :coarse` (§18) that gives four generated tables and no per-node sizing.
 
 One observation rather than an addition: five of the surveyed desktop tools are built around a 3D viewport. It stays out of the vocabulary (§13), but it is the single largest class the design declines, and if CAD or 3D ever becomes a target it will need an opaque node with its own decoration protocol, designed the way `editor` was.
+
+## 32. Backends: web, native, text
+
+Nothing above names a browser except by example, and the text backend (§11) is the proof: a tree that renders to plain text is not bound to the DOM. A native client — Cocoa, Qt, GTK, SwiftUI, Compose — is a third backend built the same way as the web one, and it is worth listing exactly what each backend has to supply, because that list is the portable surface and everything else is shared:
+
+| a backend supplies                          | web                                    | native                                   |
+|---------------------------------------------|----------------------------------------|------------------------------------------|
+| a renderer per type (§4.1)                  | DOM elements                           | widgets, or one custom-drawn surface     |
+| the generated theme (§9)                    | CSS                                    | stylesheet or palette                    |
+| the delegated dispatcher and gesture recognizer (§18) | pointer/touch/key events     | the toolkit's events                     |
+| the fifteen mechanisms (§4.1)               | one implementation each                | one implementation each                  |
+| an `editor` satisfying §6.1–6.3, 6.5        | a CodeMirror-class component           | Scintilla, KTextEditor, NSTextView…      |
+| a `record` painter (§6.4)                   | SVG serialization                      | direct drawing                           |
+| a `media` element (§20)                     | HTML media                             | the platform player                      |
+| `:geo` tiles (§19)                          | a tile layer                           | a tile layer                             |
+| windows (§7) and `hello`                    | tabs/`window.open`, shared socket      | real windows                             |
+| the transport                               | WebSocket                              | socket, pipe, or in-process              |
+
+Everything else — the protocol, the vocabulary, keys and patches, commands, the translator tables, the log format, replay, the text backend and its golden tests — is shared, and a Lisp view function does not know which backend is drawing it.
+
+Two consequences. First, the freeze rule applies to each backend, and the §12.3 invariant is what makes a second backend safe: if no unlogged client state can affect a Lisp-visible result, a log recorded against the web client replays identically against the native one, which is the cross-backend conformance test. Second, the transport is not part of the design; with Lisp and a native client in one process, the wire becomes a function-call boundary and the protocol still pays for itself, because the tree is still a value, the events are still data, and the log is still replayable.
+
+What was web-specific in earlier drafts and has been removed: the `svg` node and `record`-as-SVG (a format string; now drawing ops, §6.4), and the `download` act (now `save-file`). What remains web-flavoured is vocabulary, not design: "CSS" in §4.1 and §9 should be read as "the generated theme", and `link` opens the platform browser through `open-url`.
 
 ## 31. Still open after the survey
 
