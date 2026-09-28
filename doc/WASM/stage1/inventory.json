@@ -13,7 +13,7 @@
     "host-compiler",
     "options"
   ],
-  "acceptance_note": "All listed variants are required for Stage 1. Generated tests additionally require the complete build set (source, compiler, ABI, template, module, installed binary) and image tests require the image, per stage0/artifact-policy.md. Hand-built Stage 0 evidence cannot discharge any S1 ID. S1-LL11-b and S1-LL18-b are proposed from Stage 0 findings (the U1 stale-dcode defect and plan item 3) and need the same adoption decision as the rest. Extended on 2026-09-21 by the user: \"I accept BT-0\"; two required compiler-coverage variants, without changing the earlier 31 tests.",
+  "acceptance_note": "Stage 1 closed by S1-CLOSE-2026-09-28 in decisions.md and stage1/closure.json, at retained evidence scopes with explicit deferrals and no new execution or review, per user direction. All 33 slots are accounted for: the original 21 acceptances retain their exact records; the other 12 are bound in closure.json. Assertions below preserve their historical wording; operational review statements embedded there are superseded by this closure. Deferred assertion portions are not PASS. Hand-built Stage 0 evidence does not acquire generated Stage 1 credit.",
   "tests": [
     {
       "id": "S1-LL08-a",
@@ -32,7 +32,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/registration/qualify.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "host-compiler",
@@ -60,7 +60,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/build/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "image"
       ],
@@ -85,7 +85,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/build/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -115,7 +115,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/representation/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -145,7 +145,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/conversions/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -175,7 +175,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/b-call-errors/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -205,7 +205,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/b-call-errors/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -235,7 +235,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/constants/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -265,7 +265,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/control/qualify.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -295,7 +295,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/binding-vector/qualify.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -325,7 +325,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/collector-qualification/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -355,7 +355,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/hash-tables/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -386,7 +386,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/temporaries/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -416,7 +416,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/callable-metadata/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -446,7 +446,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/binding-installation/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -476,7 +476,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/generic-dispatch/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -506,7 +506,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/numeric-qualification/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -536,7 +536,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/materialization/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -566,7 +566,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/granularity/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -596,7 +596,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/symbols/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -626,7 +626,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/loader-target/ready-check.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -659,7 +659,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/initialization/run.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -693,7 +693,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/loader-target/ready-check.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -725,9 +725,9 @@
           "description": "The read-only file namespace serves named byte sources with stat, open, positioned read and close through the mailbox in the full profile and a promise in the JSPI profile, enough for the loader manifests and LOAD of source and precompiled bundles; realpath is a pure function over the virtual namespace with no symlinks; probe-file and truename resolve against it only; foreign-types initialization needs no interface database."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -758,7 +758,7 @@
       ],
       "status": "EXECUTED",
       "runner": "tests/wasm/stage1/loader-target/ready-check.py",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -790,9 +790,9 @@
           "description": "The production build and gate fail an early, a middle and a late closure initializer separately, an omitted required module, a failed child command and a timeout, with a non-passing aggregate, precise diagnostics and no accepted partial image; diagnostic continuation stays ineligible."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "image"
       ],
@@ -815,9 +815,9 @@
           "description": "Omitting one required Stage 1 test ID from the production results leaves the gate BLOCKED; a mutated returned value, capture or cleanup effect in a generated test is detected and its artifacts quarantined."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [],
       "origin": "acceptance.md"
     },
@@ -836,9 +836,9 @@
           "description": "A hand-built or synthetic record offered for compiler-generated acceptance is rejected; candidate, profile, substitution and exact artifacts are labeled independently of pass or fail."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [],
       "origin": "acceptance.md"
     },
@@ -857,9 +857,9 @@
           "description": "Every Stage 1 record binds implementation, test, ABI schema, templates, materialized bytes, compiler, image and options to hashes; mixed builds and stale evidence are rejected."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "image"
       ],
@@ -880,9 +880,9 @@
           "description": "One current Stage 1 ledger and a separate history; criterion changes carry explicit authorization; earlier accepted evidence scopes are preserved and delivery claims link to identified artifacts."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "DOCUMENTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [],
       "origin": "acceptance.md"
     },
@@ -908,9 +908,9 @@
           "description": "The object, allocation, root and TCR contracts (contracts/wasm32-layout.v1.json, contracts/tcr.v1.json, contracts/debug-frames.md, abi/dynamic-call.v0.md as confirmed by generated B) are finalized and every row is joined to a generated-code fixture that executed it; the materialization contract is confirmed on the production path."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "DOCUMENTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [],
       "origin": "outline Stage 1 exit"
     },
@@ -931,9 +931,9 @@
           "description": "For the hash-bound projected-image READY worklist, retain the emitted acode operator census, including operand/flag forms and nested functions. Qualify each operator used by the executed READY dependency closure, with moving-root and unwind/restoration witnesses for allocating and nonlocal forms. Report emitted coverage and unsupported forms without counting unknowns as covered. Broader source-inventory admission need not reach 100 percent; the selected READY closure must have no unresolved operator dependency. Report native-matched original executions separately from named target replacements; execution evidence, not textual handler presence, establishes coverage."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",
@@ -961,9 +961,9 @@
           "description": "For the hash-bound projected-image READY worklist, retain original source/function identities, generated modules, dependency bindings and every admission outcome. Measure executed native-matched original definitions, with and without non-NIL witnesses, separately from compilation and from named target replacements (no numerical cap, decision A3). There is no 100-percent admission requirement for the broader source inventory. No consumer-source rewriting or silent replacement is permitted. Every selected READY dependency must be installed and exercised; refused, unresolved, excluded and target-replaced definitions remain explicit. Preserve the 550-original/515-non-NIL execution baseline or explain and review each regression. Counts do not discharge LL15-a initialization and READY execution."
         }
       ],
-      "status": "NOT_RUN",
+      "status": "EXECUTED",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED",
       "required_record_roles": [
         "source",
         "compiler",

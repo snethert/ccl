@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "operation": "RECORD_IDENTITY_AND_DOCUMENT_CONSISTENCY_ONLY",
+  "status": "PASS",
+  "date": "2026-09-28",
+  "closure_sha256": "6aebd8e805503afe2ef98a4ed0b849e60ae75a8e12f32282ec0a24bdd4f794d7",
+  "ledger_sha256": "a165886097dd15b332f0ef6dda57a4d6564a4c66f1668160a873cc18926fec14",
+  "inventory_sha256": "4b1d1aeed6e8dccda8179398cb73f705dbae2a7e5e8754915f6b705fb719a051",
+  "retained_references_verified": 44,
+  "compacted_reference_original_digests_verified": 4,
+  "prior_accepted_records_preserved": 21,
+  "newly_bound_slots": 12,
+  "required_slots": 33,
+  "assertion_text_and_prerequisites_unchanged": true,
+  "product_tests_run": 0,
+  "compiler_runs": 0,
+  "review_runs": 0,
+  "stage2": "OPEN",
+  "checks": [
+    "Referenced retained files and compacted original bytes match their pins.",
+    "Ledger closure/inventory hashes and preserved prior ledger identity match.",
+    "Prior accepted aggregate is byte-identical; its historical contract bindings are not rewritten.",
+    "All 33 IDs/variants are accounted for exactly once; no extra or missing slots.",
+    "Inventory assertion text, prerequisites and runners are unchanged.",
+    "Each deferred assertion portion cites the explicit closure decision.",
+    "Coverage denominators remain scoped; unknown READY operator coverage remains deferred.",
+    "Status, plan, checklist and decisions agree on closure and Stage 2 order."
+  ]
+}

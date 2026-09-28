@@ -8,6 +8,44 @@ Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligat
 
 R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
+## 28 September 2026 — Stage 1 closure
+
+Decision **S1-CLOSE-2026-09-28**. The user ordered a single records-only closure:
+bind the twelve open slots to retained evidence, reconcile the inventory,
+headline, exit checklist and Stage 1 map, and defer any unretained obligation
+with its decision rather than rerun it. The user then removed the proposed
+review: **“just close it. we dont need a review.”** This waives a new review
+for this closure; the standing review policy for future implementation remains.
+
+Stage 1 is **CLOSED at retained evidence scopes, with explicit deferrals**.
+The [ledger](evidence/current-stage1-gate-result.json) now accounts for all
+33 slots: the original 21 accepted records remain unchanged, and the other
+12 are bound in [closure.json](stage1/closure.json). No product tests are rerun.
+Audits 188, 190 and 193 supply the existing READY, error-recovery and retained
+calling-convention evidence. The [exit checklist and map](stage1/exit-criteria-review.md)
+state each slot's scope and the portions deferred by this decision.
+
+The retained loader records establish 82/82 selected runtime files compiled,
+81 returning runtime loads, and 5,028 executed logical functions, all joined
+to installed identities. These counts do not become a complete READY operator
+or native-matched original-body census. Unretained operator/operand joins,
+broader original attribution, the additional 1F gate-control matrix and the
+exhaustive new contract-row join are **deferred**, not passed. Current contract
+versions are pinned; the 575/535 accepted original-body floor is preserved.
+The historical v2 result aggregate keeps its original contract bindings; the
+new closure ledger reports this authorized scoped disposition explicitly.
+
+Artifact retention lands **before closure**: the checkout was already clean
+at `45682a833d680eef4912053e92176ae8b6c9845e`, which committed that change.
+Closure references the retained records and compaction provenance without
+rebuilding removed artifacts or introducing another retention commit.
+
+**Stage 2 is OPEN on the foreign-function lower layer and weak hash tables**,
+as ordered on 26 September and reiterated by the user here. HOSTFM P2's
+FMT-1–FMT-9 govern the foreign boundary; weak-table work continues the reviewed
+weak-key/value implementation and moving-GC obligations. Existing exclusions,
+the named closure deferrals and O-136/O-139/O-149 retain their scopes.
+
 ## 25 September 2026 — HOSTFM P2 adopted with amendments
 
 The user decided: "I accept the plan with your amendments. Proceed with loader

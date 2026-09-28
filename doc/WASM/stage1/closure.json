@@ -1,0 +1,707 @@
+{
+  "version": 1,
+  "id": "S1-CLOSE-2026-09-28",
+  "operation": "STAGE_CLOSURE_NO_EXECUTION",
+  "date": "2026-09-28",
+  "parent": "45682a833d680eef4912053e92176ae8b6c9845e",
+  "status": "CLOSED_WITH_EXPLICIT_DEFERRALS",
+  "authorization": [
+    "User: Bind each of the 12 open slots to existing evidence; any slot with no retained evidence is recorded as deferred with the decision that defers it, not rerun.",
+    "User: just close it. we dont need a review.",
+    "User: This thing is tested so many times."
+  ],
+  "review": {
+    "disposition": "WAIVED_BY_USER_FOR_THIS_RECORDS_ONLY_CLOSURE",
+    "new_review": false,
+    "prior_audits": [
+      188,
+      190,
+      193
+    ]
+  },
+  "scope": "Close the selected Stage 1 A2 bootstrap at retained evidence scopes. Outstanding assertion portions are explicitly deferred, not passed or erased. This closure supersedes the old missing-slot accounting, not historical execution records.",
+  "artifact_retention": {
+    "order": "BEFORE_CLOSURE",
+    "commit": "45682a833d680eef4912053e92176ae8b6c9845e",
+    "working_tree_at_start": "clean",
+    "note": "The retention change was already committed as 45682a83 when this task began; no additional retention commit is needed."
+  },
+  "baseline": {
+    "reference": "accepted-21",
+    "accepted_records": 21,
+    "records_unchanged": true
+  },
+  "counts": {
+    "required": 33,
+    "accepted_at_retained_scope": 33,
+    "missing": 0,
+    "unreviewed": 0,
+    "whole_slots_deferred": 0
+  },
+  "coverage": {
+    "compiled_runtime_files": {
+      "numerator": 82,
+      "denominator": 82,
+      "denominator_scope": "Selected runtime file worklist in boot-order-r23; not the broader 167-unit native reference."
+    },
+    "returning_runtime_loads": 81,
+    "postimage_loads_per_worker": 2,
+    "observed_logical_functions": 5028,
+    "installed_identity_joins": {
+      "numerator": 5028,
+      "denominator": 5028,
+      "denominator_scope": "Observed startup logical functions, not all compiled or callable functions."
+    },
+    "ready_operator_coverage": {
+      "numerator": null,
+      "denominator": null,
+      "disposition": "DEFERRED",
+      "decision": "S1-CLOSE-2026-09-28"
+    },
+    "corpus_operator_census": {
+      "definition_rows": 877,
+      "distinct_operators": 126,
+      "operators": [
+        "%%INEG",
+        "%BADARG2",
+        "%CAR",
+        "%CDR",
+        "%CHAR-CODE",
+        "%DECLS-BODY",
+        "%DOUBLE-FLOAT",
+        "%DOUBLE-FLOAT*-2",
+        "%DOUBLE-FLOAT+-2",
+        "%DOUBLE-FLOAT--2",
+        "%DOUBLE-FLOAT/-2",
+        "%ERR-DISP",
+        "%FUNCTION",
+        "%GVECTOR",
+        "%I<>",
+        "%IASR",
+        "%ILOGBITP",
+        "%ILOGNOT",
+        "%ILSL",
+        "%ILSR",
+        "%INEG",
+        "%IZEROP",
+        "%LISP-WORD-REF",
+        "%MAKE-UVECTOR",
+        "%RPLACA",
+        "%RPLACD",
+        "%SBCHAR",
+        "%SCHARCODE",
+        "%SET-SBCHAR",
+        "%SET-SCHARCODE",
+        "%SETF-DOUBLE-FLOAT",
+        "%SETF-SHORT-FLOAT",
+        "%SINGLE-FLOAT",
+        "%SLOT-REF",
+        "%SLOT-UNBOUND-MARKER",
+        "%SVREF",
+        "%SVSET",
+        "%SYMBOL->SYMPTR",
+        "%TYPED-UVREF",
+        "%TYPED-UVSET",
+        "%UNBOUND-MARKER",
+        "%VALID-CODE-CHAR",
+        "ADD2",
+        "ASH",
+        "BASE-CHAR-P",
+        "BOUND-SPECIAL-REF",
+        "BUILTIN-CALL",
+        "CALL",
+        "CAR",
+        "CATCH",
+        "CDR",
+        "CHAR-CODE",
+        "CHARACTERP",
+        "CLOSED-FUNCTION",
+        "CODE-CHAR",
+        "CONS",
+        "CONSP",
+        "DIV2",
+        "ENDP",
+        "EQ",
+        "FIXNUM",
+        "FIXNUM-ADD-NO-OVERFLOW",
+        "FIXNUM-ADD-OVERFLOW",
+        "FIXNUM-SUB-NO-OVERFLOW",
+        "FIXNUM-SUB-OVERFLOW",
+        "FLET",
+        "FULLTAG",
+        "GLOBAL-REF",
+        "GLOBAL-SETQ",
+        "GVECTOR-TYPECODE-P",
+        "IF",
+        "IMMEDIATE",
+        "INT>0-P",
+        "ISTRUCT-TYPEP",
+        "IVECTOR-TYPECODE-P",
+        "LAMBDA-BIND",
+        "LET",
+        "LET*",
+        "LEXICAL-FUNCTION-CALL",
+        "LEXICAL-REFERENCE",
+        "LISPTAG",
+        "LIST",
+        "LIST*",
+        "LOCAL-BLOCK",
+        "LOCAL-GO",
+        "LOCAL-RETURN-FROM",
+        "LOCAL-TAGBODY",
+        "LOGBITP",
+        "MAKE-LIST",
+        "MINUS1",
+        "MUL2",
+        "MULTIPLE-VALUE-BIND",
+        "MULTIPLE-VALUE-LIST",
+        "NATURAL-SHIFT-LEFT",
+        "NATURAL-SHIFT-RIGHT",
+        "NEQ",
+        "NIL",
+        "NOT",
+        "NTH-VALUE",
+        "NUMCMP",
+        "OR",
+        "PROG1",
+        "PROGN",
+        "PROGV",
+        "RPLACD",
+        "SELF-CALL",
+        "SET-CDR",
+        "SETQ-LEXICAL",
+        "SETQ-SPECIAL",
+        "SIMPLE-FUNCTION",
+        "SPECIAL-REF",
+        "STRUCT-REF",
+        "STRUCT-SET",
+        "SUB2",
+        "SVREF",
+        "SVSET",
+        "T",
+        "THROW",
+        "TYPECODE",
+        "TYPED-FORM",
+        "UNWIND-PROTECT",
+        "UVREF",
+        "UVSET",
+        "UVSIZE",
+        "VALUES",
+        "VECTOR"
+      ],
+      "scope": "Retained corpus census only; not READY acode coverage."
+    },
+    "originals_executed": 575,
+    "originals_non_nil_witness": 535,
+    "additional_original_credit": 0
+  },
+  "references": {
+    "accepted-21": {
+      "root": "evidence_repository",
+      "locator": "2026-09-20-stage1-through-ll13a-accepted-results.json",
+      "sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79"
+    },
+    "audits": {
+      "root": "repository",
+      "locator": "doc/WASM/stage0/claude-review.md",
+      "sha256": "41d86162272439cfee9ec237cb4fb93e836d4e1c3a1334d2c0e0c54a0837d808",
+      "scope": "Audits 188, 190 and 193; their original execution and review limits remain unchanged."
+    },
+    "acceptance-188": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/acceptance-audit-188.json",
+      "sha256": "94d24621b4c93b154ac92e8419445063c9144989d9a3857ca9579e3b8fa2b964"
+    },
+    "errors-190": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/load-error-followup.json",
+      "sha256": "05c7746ce836c0dfea5afe8eb62ae204c72d4b43d290cb18dfed14d684532da7"
+    },
+    "phase1-193": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/call-convention-results.json",
+      "sha256": "f7f8a0cce4824478ee1c8a187948da05d67717523d19263e580491798f3d7112"
+    },
+    "consolidation": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/module-consolidation-results.json",
+      "sha256": "3fa8ceb9e9b93fd9e23029951fd1cbf5f8bd706278d48ca3b782fffd6d4cea34"
+    },
+    "ready-summary": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/summary.json",
+      "sha256": "d68d9b07db5787e8eae895e7e9d913757abe17b383de89689d565e2d1ba94687"
+    },
+    "ready": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/ready-r23.json",
+      "sha256": "b979da0f9a6b411c306a2985b2478a23ddc0d13749cdd16c50f12529af08acca"
+    },
+    "boot-a": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/boot-r23-a.json",
+      "sha256": "692fde52d5c841005c64e24cc7cb80384f699c905d5107fd8bc2216f45ae02db"
+    },
+    "boot-b": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/boot-r23-b.json",
+      "sha256": "26d6dbb63c04af32cba6963dfbdc052c6ee65def8be976bab6ad51b587fe6bfa"
+    },
+    "load-order": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/boot-order-r23.json",
+      "sha256": "86805cf07f24c58d96585e97eacbfba9338bfbb4226951145a01e39fbeaa8ea2"
+    },
+    "execution": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/execution-inventory-summary.json",
+      "sha256": "b822c448c28fd26a044b4c7ca2de4acbcdddd0e12835c75be0b737441caa7ef9"
+    },
+    "execution-entries": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/execution-inventory-r23.json.gz",
+      "sha256": "b5c5ee322d8ced13be66263a7965a27a1b37961d465ea4216afc6e004467f773"
+    },
+    "source-branches": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/source-inventory-r3.json",
+      "sha256": "62fd949fdac2f547ae4608136ead8b210e033297a00837ccf64c075ba8cef067"
+    },
+    "callbacks": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/ready-r23/callbacks-r23.json",
+      "sha256": "2a053d79e635e9c47d8d207aa1aa7597f35414149da892f9c8397f9c3391f0dc"
+    },
+    "owner": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/owner-r9.json",
+      "sha256": "af24fa5d85fd41ba061635a511c353265fcb70aa4d2f66e053a904bc9d0a61da"
+    },
+    "reuse": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/reuse-check.json",
+      "sha256": "d49783a544f717a29d3ad35163177ea402a4bd08bec25ddec9c09083784668f4"
+    },
+    "fresh-build-refusal": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/checks/single-copy-refusal.json",
+      "sha256": "be9b5dd69b980ed913a99e87f29f32ada8b3384848f034e6ab1454b1318d0501"
+    },
+    "compaction": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/compaction.json",
+      "sha256": "8437221536bf1f978b48381adbbe2160b094eda4ea66de7b7aabfdaaf99995e5"
+    },
+    "archive-controls": {
+      "root": "evidence_repository",
+      "locator": "2026-09-27-module-consolidation-r1/archive-controls-final.json",
+      "sha256": "d332d053c131dd5e75348952a305b89e45fa2b426fed9ddfafd520f9e2059f0d"
+    },
+    "async-controls": {
+      "root": "evidence_repository",
+      "locator": "2026-09-27-module-consolidation-r1/archive-async.json",
+      "sha256": "4dd625051266a07a5293ea2fb3bdb48f198641cef5fbc52bf04ef4d6d8f945fb"
+    },
+    "layout-check": {
+      "root": "evidence_repository",
+      "locator": "2026-09-27-module-consolidation-r1/layout-check.json",
+      "sha256": "b8de3959774c192fff461cb6c2cbbd9d2bb98224dc0501d16500d67ca0ceeafc"
+    },
+    "archive-ready": {
+      "root": "evidence_repository",
+      "locator": "2026-09-27-module-consolidation-r1/ready-final/result.json",
+      "sha256": "f8ad4fcf713763c09f7f6e2bff7b5d6f1c6c288b47604b85932bba4162237613"
+    },
+    "error-summary": {
+      "root": "evidence_repository",
+      "locator": "2026-09-27-audit189-errors-r1/summary.json",
+      "sha256": "593e9cfdd6e5df608a168356742b82236d64e47ca6f70a6e4554dce0a3c866d8"
+    },
+    "phase1-ready": {
+      "root": "evidence_repository",
+      "locator": "2026-09-28-call-convention-r1/phase1/checks-qualified-ready.json",
+      "sha256": "5e37709ac6e4490f944857e4378423a894c7b9b3c346115b300f6b6806ab1b53"
+    },
+    "runtime-bundles": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/compacted/files/a14f572a9314e9616b24d979004f93a8d4e38ce74a13fd98409f772f1ff980dc.json",
+      "sha256": "a14f572a9314e9616b24d979004f93a8d4e38ce74a13fd98409f772f1ff980dc",
+      "original_archive": "artifacts/bundles-r18.tar.gz",
+      "original_member": "bundles-r18/bundle-manifest.json",
+      "original_sha256": "a14f572a9314e9616b24d979004f93a8d4e38ce74a13fd98409f772f1ff980dc",
+      "encoding": "identity"
+    },
+    "compiled-files": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/compacted/files/77fb9c7803da93462079c29b2e5129acc06689150d2e30d463f5f105f34c4dee.json",
+      "sha256": "77fb9c7803da93462079c29b2e5129acc06689150d2e30d463f5f105f34c4dee",
+      "original_archive": "artifacts/bundles-r18.tar.gz",
+      "original_member": "bundles-r18/bundles.json",
+      "original_sha256": "77fb9c7803da93462079c29b2e5129acc06689150d2e30d463f5f105f34c4dee",
+      "encoding": "identity"
+    },
+    "postimage-bundles": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/compacted/files/059fdda180f7298bd218a8d9226d4e86ed3b1a86673cbdd296e17bffd62a79ab.json",
+      "sha256": "059fdda180f7298bd218a8d9226d4e86ed3b1a86673cbdd296e17bffd62a79ab",
+      "original_archive": "artifacts/postimage-r23.tar.gz",
+      "original_member": "postimage-r23/bundle-manifest.json",
+      "original_sha256": "059fdda180f7298bd218a8d9226d4e86ed3b1a86673cbdd296e17bffd62a79ab",
+      "encoding": "identity"
+    },
+    "corpus-operators": {
+      "root": "evidence_repository",
+      "locator": "2026-09-26-stage1-loader-completion-r1/compacted/files/50fbc86576d84ba753a646f21c3c787fb238f60eff2239d780ce24b3be40f5e4.json.gz",
+      "sha256": "fc5f2eb108f9ba462da17dc58fc819d87d9783e737e94f567fb2b9f600863c17",
+      "original_archive": "artifacts/corpus-r5.tar.gz",
+      "original_member": "corpus-r5/base/compiled/executed-operators.json",
+      "original_sha256": "50fbc86576d84ba753a646f21c3c787fb238f60eff2239d780ce24b3be40f5e4",
+      "encoding": "gzip"
+    },
+    "contract:contracts/wasm32-layout.v1.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/wasm32-layout.v1.json",
+      "sha256": "216237406b2907e5e1791746bb5677ad78f1d8a09b0988577abd6441e50a8daa"
+    },
+    "contract:contracts/wasm32-layout.v1.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/wasm32-layout.v1.md",
+      "sha256": "0ac320557b3bb10cc45356a7dea09bfd72bccbf8337201957438414ff1cd1ffc"
+    },
+    "contract:contracts/tcr.v1.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/tcr.v1.json",
+      "sha256": "ef3c2b85c963fb5750553bd0f8e05913b32414ad5fe7f1168662d56efa41ef59"
+    },
+    "contract:contracts/tcr.v2.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/tcr.v2.json",
+      "sha256": "42d50182a2d26fcd0a84c8f6da625db7f33fd7608547a45af082dfe6f539f107"
+    },
+    "contract:contracts/tcr.v2.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/tcr.v2.md",
+      "sha256": "0ae1ed46d78e3e5bb739ab4ddc6e7ea7771aafd875ccd82cfd8d0e58f72df627"
+    },
+    "contract:contracts/debug-frames.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/debug-frames.md",
+      "sha256": "a7e3b61d840baea1cee0226afb088d2713dd6a89bee05448276da8d2163d1cec"
+    },
+    "contract:contracts/runtime-contracts.v1.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/runtime-contracts.v1.json",
+      "sha256": "90c5bd38e80a26cb560c27f2c8f43a0b5c8e9c1b68749ba57343dedbfb43cb54"
+    },
+    "contract:contracts/runtime-globals.v1.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/runtime-globals.v1.json",
+      "sha256": "23aa714bfbfe31952752664b94be68a8cbdb0da913569de7baee97ca4ece079a"
+    },
+    "contract:contracts/object-validity.v1.json": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/object-validity.v1.json",
+      "sha256": "8972c0b29bd748583ec50626ec2731cb611f5289a8cee7848870e8fc5296ff8a"
+    },
+    "contract:contracts/cross-image-owner.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/cross-image-owner.md",
+      "sha256": "3c1f809a7df125e8523c2a9f8385986311e308cf29f5ccfcd6a77cc66411511d"
+    },
+    "contract:contracts/read-only-file-host.v1.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/read-only-file-host.v1.md",
+      "sha256": "caade3148c5623b4d87aa26a6e01f2f87e17547b6343f79500e4677c1c6fc05a"
+    },
+    "contract:contracts/floating-point.v1.md": {
+      "root": "repository",
+      "locator": "doc/WASM/contracts/floating-point.v1.md",
+      "sha256": "b434165cd4bbf60f3ae52e1c7920a485c5b1fca126cd64e8d063d8971404e62d"
+    },
+    "contract:abi/dynamic-call.v0.md": {
+      "root": "repository",
+      "locator": "doc/WASM/abi/dynamic-call.v0.md",
+      "sha256": "31bd6adab6c9200e9cc2e138a7de5414162ef9d89578801315e15a3c0284643d"
+    },
+    "contract:stage1/b-call-core.md": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/b-call-core.md",
+      "sha256": "bc26fc6b1984b88fe75b84ad204476892be43ab0a042bbae0b36d75d68bf8b5a"
+    },
+    "contract:stage1/b-result-scratch.md": {
+      "root": "repository",
+      "locator": "doc/WASM/stage1/b-result-scratch.md",
+      "sha256": "4e6924275ff1aa4e776bc11fa6e3324528282bc0ec1eea01084e08490ff1861c"
+    }
+  },
+  "contracts": [
+    "contract:contracts/wasm32-layout.v1.json",
+    "contract:contracts/wasm32-layout.v1.md",
+    "contract:contracts/tcr.v1.json",
+    "contract:contracts/tcr.v2.json",
+    "contract:contracts/tcr.v2.md",
+    "contract:contracts/debug-frames.md",
+    "contract:contracts/runtime-contracts.v1.json",
+    "contract:contracts/runtime-globals.v1.json",
+    "contract:contracts/object-validity.v1.json",
+    "contract:contracts/cross-image-owner.md",
+    "contract:contracts/read-only-file-host.v1.md",
+    "contract:contracts/floating-point.v1.md",
+    "contract:abi/dynamic-call.v0.md",
+    "contract:stage1/b-call-core.md",
+    "contract:stage1/b-result-scratch.md"
+  ],
+  "records": [
+    {
+      "id": "S1-LL15-a",
+      "variant": "closure",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "ready",
+        "load-order",
+        "callbacks",
+        "acceptance-188",
+        "errors-190",
+        "phase1-193"
+      ],
+      "scope": "Selected A2 startup completes through real %TOPLEVEL-FUNCTION%, level-0-only image and target %fasload; 81 returning runtime loads, two post-image loads per fresh Worker, required-bundle omission and empty namespace refused.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "Native scheduler, interactive listener, in-image compiler and the 13 excluded callbacks remain outside A2; no all-callable-path closure claim."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL14-a",
+      "variant": "cross-dump",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "ready",
+        "boot-a",
+        "boot-b",
+        "archive-ready",
+        "audits"
+      ],
+      "scope": "Two fresh instances load the coordinated image/code identity without builder repair, diverge to 111/222 and later functions return 112/223. Audit 188 reproduced the artifacts; audits 190/193 reviewed successors.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "Application save/restore remains Stage 5; the O-129 historical host-cross-loaded prefix is not revived."
+        }
+      ]
+    },
+    {
+      "id": "S1-LOADER-a",
+      "variant": "one-worker",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "ready",
+        "load-order",
+        "errors-190",
+        "phase1-ready",
+        "audits"
+      ],
+      "scope": "One-Worker READY with canonical runtime state, class error-service transition, identified heap/code and later LOAD; audit 190 adds catchable exhaustion and successful recovery.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "Multi-Worker scheduling and browser READY remain outside this selected Node/full-profile result."
+        }
+      ]
+    },
+    {
+      "id": "S1-NAMESPACE-a",
+      "variant": "read-only",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "ready",
+        "load-order",
+        "error-summary",
+        "errors-190",
+        "audits"
+      ],
+      "scope": "Production read-only namespace serves all 82 selected runtime bundles and post-image LOAD; file errors are catchable and later LOAD works without leaked sessions. Foreign types initializes without an interface database.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "JSPI was deferred at Stage 1 entry on 16 September. Source LOAD/in-image compilation, full stream/stdio qualification and provider breadth follow Stage 2/3 consumers."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL01-a",
+      "variant": "production-gate",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "ready",
+        "archive-controls",
+        "owner",
+        "error-summary",
+        "audits"
+      ],
+      "scope": "Production missing-input/no-load refusals; archive reservation, instantiation and publication rollback; owner admission refusals; catchable generation exhaustion with state recovery.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "No retained Stage 1 end-to-end early/middle/late initializer, failed-child and timeout matrix is bound here. That extra matrix is deferred by S1-CLOSE-2026-09-28; existing refusals retain their exact scopes."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL02-a",
+      "variant": "production-gate",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "archive-controls",
+        "owner",
+        "accepted-21",
+        "audits"
+      ],
+      "scope": "Missing entry/count, record substitution, invalid-word and publication controls detect invalid production inputs; accepted generated fixtures retain their behavioral mutants.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "A Stage 1 required-result-ID omission plus quarantine demonstration is not established by archive controls. Deferred by S1-CLOSE-2026-09-28."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL03-a",
+      "variant": "control",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "archive-controls",
+        "reuse",
+        "acceptance-188",
+        "audits"
+      ],
+      "scope": "Production classification, materializer, template and installation-record controls reject mismatched code evidence; runtime and fixture evidence remain separately labeled.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "A literal hand-built-for-generated Stage 1 result-envelope substitution is not the archive classification control. That unretained extension is deferred by S1-CLOSE-2026-09-28."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL22-a",
+      "variant": "control",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "archive-controls",
+        "reuse",
+        "fresh-build-refusal",
+        "compaction",
+        "audits"
+      ],
+      "scope": "Digest, body-digest, helper identity, shared identity, registry/table identity and container checks reject stale or mixed production inputs. Closure references bind retained results and compaction provenance by SHA-256.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "The old v2 aggregate remains accepted at its original contract snapshots; it is not silently rebound to later criteria. Exhaustive current-envelope requalification is deferred by S1-CLOSE-2026-09-28."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL24-a",
+      "variant": "control",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "accepted-21",
+        "acceptance-188",
+        "errors-190",
+        "phase1-193"
+      ],
+      "scope": "One current closure ledger, separate dated history, immutable prior acceptance reference, exact retained evidence and explicit user-authorized deferrals. This records-only closure is authorized without another review.",
+      "deferred": []
+    },
+    {
+      "id": "S1-CONTRACTS-a",
+      "variant": "complete-report",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "contract:contracts/wasm32-layout.v1.json",
+        "contract:contracts/wasm32-layout.v1.md",
+        "contract:contracts/tcr.v1.json",
+        "contract:contracts/tcr.v2.json",
+        "contract:contracts/tcr.v2.md",
+        "contract:contracts/debug-frames.md",
+        "contract:contracts/runtime-contracts.v1.json",
+        "contract:contracts/runtime-globals.v1.json",
+        "contract:contracts/object-validity.v1.json",
+        "contract:contracts/cross-image-owner.md",
+        "contract:contracts/read-only-file-host.v1.md",
+        "contract:contracts/floating-point.v1.md",
+        "contract:abi/dynamic-call.v0.md",
+        "contract:stage1/b-call-core.md",
+        "contract:stage1/b-result-scratch.md",
+        "accepted-21",
+        "layout-check",
+        "phase1-193"
+      ],
+      "scope": "Contract files are frozen at the listed current hashes: object layout v1, production TCR v2 (v1 retained as historical), generated B ABI version 1 and current ownership/materialization contracts. Existing accepted generated fixtures supply their recorded joins.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "Pinning versions does not prove a new exhaustive every-row-to-generated-fixture join. Unretained rows and legacy draft headings remain deferred under S1-CLOSE-2026-09-28; the historical dynamic-call.v0 and debug-frame documents are not promoted to current implementation layouts."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL15-c",
+      "variant": "acode-coverage",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "compiled-files",
+        "runtime-bundles",
+        "load-order",
+        "execution",
+        "execution-entries",
+        "corpus-operators",
+        "phase1-193"
+      ],
+      "scope": "82/82 selected runtime files compiled; 5,028/5,028 observed logical function identities joined to installed code. The retained corpus operator census is separately enumerated; READY and corpus execution are already reviewed.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "No complete READY acode operand/flag/nested-function census or per-operator moving-root/unwind join is retained in this binding. Its numerator/denominator remain unknown and that extension is deferred by S1-CLOSE-2026-09-28; file/function counts are not operator coverage."
+        }
+      ]
+    },
+    {
+      "id": "S1-LL15-d",
+      "variant": "source-coverage",
+      "disposition": "ACCEPTED_AT_RETAINED_SCOPE",
+      "evidence": [
+        "compiled-files",
+        "runtime-bundles",
+        "load-order",
+        "execution",
+        "execution-entries",
+        "source-branches",
+        "acceptance-188"
+      ],
+      "scope": "82/82 selected runtime files compiled and 5,028 executed logical functions with 5,028 installed-identity joins; sources, target branches and primitive candidates remain explicit. The accepted native-matched original-body floor stays 575 executed / 535 non-NIL witnesses.",
+      "deferred": [
+        {
+          "decision": "S1-CLOSE-2026-09-28",
+          "scope": "The 5,028 census confers no additional unchanged-original credit. All-callable/native-matched original execution denominator and form-level replacement attribution beyond retained records are deferred by S1-CLOSE-2026-09-28. Broader source admission remains 2,050/2,231 at its historical scope; no 100-percent claim."
+        }
+      ]
+    }
+  ],
+  "stage2": {
+    "status": "OPEN",
+    "ordered_work": [
+      "CAP-ffi-wasm foreign-function lower layer: typed entries, separate memory, explicit copy/ownership, FOREIGN transitions, callbacks, moving GC, traps and retirement; HOSTFM FMT-1–FMT-9 under browser and Node providers.",
+      "Weak hash tables: production weak-key/weak-value semantics and moving-GC qualification, continuing the implementations already reviewed in audits 185/186."
+    ],
+    "basis": "User reiterates the 26 September order; HOSTFM P2 and outline Stage 2.",
+    "carry_forward": [
+      "Existing A2 exclusions and per-slot deferred assertions above.",
+      "O-136 cache-clear witness, O-139 dcode marker hazard and O-149 ratio-literal loading retain their previously recorded scopes; none is relabeled fixed."
+    ],
+    "implementation_in_this_commit": false
+  }
+}

@@ -1,28 +1,20 @@
 {
-  "version": 2,
-  "assessment": "AUTHORIZED_CRITERION_EXTENSION_NO_EXECUTION",
-  "date": "2026-09-21",
-  "basis": "User: \"I accept BT-0\". Add two required coverage variants; all 21 accepted results and all 31 prior criteria unchanged.",
+  "version": 3,
+  "assessment": "AUTHORIZED_STAGE_CLOSURE_NO_EXECUTION",
+  "date": "2026-09-28",
+  "decision": "decisions.md#28-september-2026--stage-1-closure",
   "result": {
-    "status": "BLOCKED",
-    "reasons": [
-      "missing S1-LL15-a [closure]",
-      "missing S1-LL14-a [cross-dump]",
-      "missing S1-NAMESPACE-a [read-only]",
-      "missing S1-LOADER-a [one-worker]",
-      "missing S1-LL01-a [production-gate]",
-      "missing S1-LL02-a [production-gate]",
-      "missing S1-LL03-a [control]",
-      "missing S1-LL22-a [control]",
-      "missing S1-LL24-a [control]",
-      "missing S1-CONTRACTS-a [complete-report]",
-      "missing S1-LL15-c [acode-coverage]",
-      "missing S1-LL15-d [source-coverage]"
-    ]
+    "status": "CLOSED_WITH_EXPLICIT_DEFERRALS",
+    "reasons": [],
+    "scope": "User-authorized closure at retained scopes; not a new full-contract v2 gate PASS."
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "a63a4d6170a813ae8182f183691b4fca91bb0d74bb83c5b8d856e159c4516d22"
+    "sha256": "4b1d1aeed6e8dccda8179398cb73f705dbae2a7e5e8754915f6b705fb719a051"
+  },
+  "closure": {
+    "locator": "stage1/closure.json",
+    "sha256": "6aebd8e805503afe2ef98a4ed0b849e60ae75a8e12f32282ec0a24bdd4f794d7"
   },
   "active_results": [
     {
@@ -33,9 +25,22 @@
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-20-stage1-through-ll13a-accepted-results.json",
   "combined_results_sha256": "ce90c85bf222b92cc393a8d552bff1d17754c45156aabfabb4cbe584e223ca79",
   "counts": {
-    "accepted": 21,
-    "missing": 12,
+    "accepted": 33,
+    "missing": 0,
     "unreviewed": 0,
     "required": 33
-  }
+  },
+  "count_scope": "21 unchanged historical acceptances plus 12 accepted at retained scopes in closure.json; unsupported assertion portions are explicitly deferred there.",
+  "prior_gate": {
+    "commit": "45682a833d680eef4912053e92176ae8b6c9845e",
+    "locator": "doc/WASM/evidence/current-stage1-gate-result.json",
+    "sha256": "ff530f36aff5f5ab761487958f5ec9d1c7c9e37c07fc860db182e0ec8aea0f5c",
+    "counts": {
+      "accepted": 21,
+      "missing": 12,
+      "unreviewed": 0,
+      "required": 33
+    }
+  },
+  "stage2": "OPEN: foreign-function lower layer and weak hash tables"
 }

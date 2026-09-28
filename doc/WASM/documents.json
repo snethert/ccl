@@ -4,9 +4,9 @@
   "documents": [
     {
       "source": "outline.md",
-      "source_sha256": "4a1fc01ac137c114ead0624239212a16b563fdda2d587de9aa6482143060475a",
+      "source_sha256": "25c8a7fed5c9d50bdea1fe01157070ad016b27a7781ee5436a3507c0fb172172",
       "output": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
-      "output_sha256": "4c79ebf039ba4ecd87823e4ccd7c29066d5e1f138bcb15042336aec61da5edcb"
+      "output_sha256": "ee0da4b8c87e554335022586238242ffdb87ca6431fd734b81950185a82936f9"
     },
     {
       "source": "acceptance.md",
@@ -16,9 +16,9 @@
     },
     {
       "source": "decisions.md",
-      "source_sha256": "91fe5338e640381ade6319271593eeb0d90393c1faf3d3b1715b3bc47b07ec0d",
+      "source_sha256": "86af89863650ce93484286f5292d248a8d9d91d90618ed3d50af20ae8b7d0d72",
       "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
-      "output_sha256": "379187a5aa289000a57562f74baf3f1647a54010b600e8f4f09b2a3cd5c3b94b"
+      "output_sha256": "3e161cdfa6c8e1284475b7d4ac46928309c77da3ea10fe1b96ca960fb9a6a6ce"
     }
   ]
 }

@@ -1,3 +1,25 @@
+## 2026-09-28 — Close Stage 1 from retained evidence; open Stage 2
+
+The user directed “just close it. we dont need a review.”
+[S1-CLOSE-2026-09-28](../decisions.md#28-september-2026--stage-1-closure)
+binds the twelve previously missing slots to existing records and preserves
+the original 21 accepted results unchanged. Inventory, STATUS, exit checklist
+and Stage 1 map now account for 33 accepted slots at retained scopes, zero
+missing and zero unreviewed. Unretained assertion portions are explicitly
+deferred; the old assertions and evidence scopes are not relabeled as PASS.
+
+The loader records give 82/82 selected runtime files compiled and 5,028
+executed logical functions, all joined to installed identities. Original-body
+credit stays 575/535; READY operator and broader original-body denominators
+remain unknown. The production refusal controls and current contract versions
+are pinned in [closure.json](../stage1/closure.json). Audits 188/190/193 are
+reused. Verification is limited to record identities, counts and document
+consistency; no product execution or additional review. Artifact retention
+was already committed as `45682a83`, before closure.
+
+Stage 2 opens on the foreign-function lower layer and weak hash tables under
+the user's reiterated 26 September order. No Stage 2 implementation is claimed.
+
 ## 2026-09-28 — Accept calling-convention Phase 1 after audit 193
 
 At the user's direction, imported [Claude audit 193](../stage0/claude-review.md)

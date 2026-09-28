@@ -1,13 +1,21 @@
 # Stage 1 work plan — adopted 16 September 2026
 
-Status: ADOPTED. The [inventory](inventory.json) of 33 tests is the
+Status: CLOSED at retained evidence scopes, with explicit deferrals, by
+[S1-CLOSE-2026-09-28](../decisions.md#28-september-2026--stage-1-closure).
+The [exit checklist and Stage 1 map](exit-criteria-review.md) account for all
+33 slots; [closure.json](closure.json) pins the twelve final bindings.
+Stage 2 is open on the foreign-function lower layer and weak hash tables.
+The implementation chronology below preserves its dated evidence scopes.
+
+The [inventory](inventory.json) of 33 tests is the
 criterion of the [Stage 1 ledger](../evidence/current-stage1-gate-result.json)
 by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
-[acceptance](acceptance-1a.json); the current ledger has 21 accepted records, 12 missing and
-zero unreviewed records, including the two BT-0 coverage requirements accepted on 21 September. [LL04 generated representation](representation.md)
+[acceptance](acceptance-1a.json); the current ledger has 33 accepted slots at retained scope, zero missing and
+zero unreviewed. This includes the two BT-0 coverage slots with their explicit
+operator/original-attribution deferrals; the original 21 result records are unchanged. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
 [LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
 The [generated B call core](b-call-core.md) now executes required-argument
@@ -202,11 +210,15 @@ runtime; finalized object, allocation, root and TCR contracts; the selected
 B ABI confirmed through generated code; a one-Worker image loader; the
 read-only file namespace; a precise single-thread collector; measured and
 chosen bootstrap module granularity; and D2's materialization confirmed on
-the production path. The adopted inventory has 31 tests, one variant each,
-derived from the register's Stage 1 metadata, D7's scheme and the outline's
-exit criteria, plus two entries proposed from Stage 0 findings.
+the production path. The adopted inventory has 33 tests, one variant each:
+31 original slots (including the two Stage 0 findings), extended by the two
+BT-0 coverage slots on 21 September. Closure at retained scopes and the
+remaining assertion deferrals are recorded in the [exit checklist](exit-criteria-review.md).
 
 ## Subgates and order
+
+All six subgates are closed at the scopes in the [current map](exit-criteria-review.md).
+The sequence below is the adopted implementation plan, retained for provenance.
 
 1. **1A: R6-safe shared-compiler edit.** Backend registration, the wasm32
    arch file generated from [the layout schema](../contracts/wasm32-layout.v1.md),
@@ -318,7 +330,7 @@ S1-LL09-a is executed as a [generated symbol/package qualification](../../../tes
 
 S1-LL13-a is accepted and integrated as [generated initialization](../../../tests/wasm/stage1/initialization/README.md), following audits 122/123. The trusted owner validates region/write metadata and raw TCR ownership before initializing process or Worker state, and refuses implicit Wasm initializers. Two late Workers preserve the mutated image and registry; the original Worker calls its published code again. This bounded synchronous owner has terminal failure semantics, not rollback or a production scheduler. Final bootstrap membership under LL15 and image construction under LL14 remain next.
 
-Audit-122 follow-up: [initialization admission](../../../tests/wasm/stage1/initialization-review/README.md) checks actual Worker-local tables before a claim and rejects dirty fresh/reserved control storage without writes. This sibling fixture preserves R1 replay pins and freezes its own source list. Busy bootstrap/Worker claims still refuse; waiting and retry belong to the scheduler. Accepted after audit 123 and integrated as initialization-owner.mjs, with actual tables supplied to admission. The owner still permits aliased table roles; callers must supply distinct tables because the loader refuses aliases after a claim. Stage 1 now has 21 accepted slots.
+Audit-122 follow-up: [initialization admission](../../../tests/wasm/stage1/initialization-review/README.md) checks actual Worker-local tables before a claim and rejects dirty fresh/reserved control storage without writes. This sibling fixture preserves R1 replay pins and freezes its own source list. Busy bootstrap/Worker claims still refuse; waiting and retry belong to the scheduler. Accepted after audit 123 and integrated as initialization-owner.mjs, with actual tables supplied to admission. The owner still permits aliased table roles; callers must supply distinct tables because the loader refuses aliases after a claim. At that checkpoint Stage 1 had 21 accepted slots; the current closure is above.
 
 LL15 execution prerequisite: the [generated initializer schedule](../../../tests/wasm/stage1/bootstrap-schedule/README.md) validates module identities and prerequisite order before installation, checks generated physical completion and effects, and rejects omitted loads and forged completion. It is accepted after Claude audit 124 and integrated as bootstrap-schedule.mjs, with no LL15 slot credit. Production startup must bind the actual installed digest to the plan and preserve the owner write boundaries; the accepted trusted-callback protocol does not enforce those itself. Its protocol marker functions are not native initializer implementations. Next, bind the actual selected startup entries, required effects and concrete census witnesses to their implementation/replacement records, then execute that selection through this path before claiming LL15 or proceeding to LL14.
 

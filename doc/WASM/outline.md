@@ -313,11 +313,22 @@ Scheduled LL tests: LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19, LL20, 
 
 #### Stage 1: target contract and generated bootstrap
 
+Closed on 28 September 2026 at retained evidence scopes, with explicit
+deferrals under [S1-CLOSE-2026-09-28](decisions.md#28-september-2026--stage-1-closure).
+The [exit checklist](stage1/exit-criteria-review.md) maps every slot; the
+[ledger](evidence/current-stage1-gate-result.json) accounts for all 33.
+The original exit obligations below remain the continuing contract.
+
 Execute coordinated cross-loaded heap and code artifacts using the real Wasm pass 2, vinsns, primitives and runtime. Finalize the object, allocation, root and TCR contracts, the selected call ABI, a one-Worker image loader, the read-only file namespace and a precise single-thread collector; measure and choose bootstrap module granularity and confirm D2’s selected module materialization. Exit requires independent layout fixtures and generated access and mutation tests, argument and temporary preservation, target-width arithmetic boundaries, canonical NIL/symbol/hash behavior, specialized constants, escaping mutable closures, keyword metadata where required, small-heap forced collection with visible reclamation, completion of every initializer in the selected closure, fresh-instance loading without builder caches or binding repair, and the Stage 0 rejection tests repeated through the real build path.
 
 Scheduled LL tests: LL01, LL02, LL04, LL05, LL06, LL07, LL08, LL09, LL10, LL11, LL12, LL13, LL14, LL15, LL16, LL17, LL18, LL19, LL21.
 
 #### Stage 2: runtime correctness
+
+Open following Stage 1 closure, with the foreign-function lower layer and weak
+hash tables first, as ordered by the user on 26 September and reiterated at
+closure. Carry the [named Stage 1 deferrals](stage1/exit-criteria-review.md)
+into their relevant runtime or later-stage work.
 
 After successful NSL-4 boot1, qualify CAP-ffi-wasm's lower layer before Stage 3:
 typed exports, separate foreign memory, explicit copies and ownership, FOREIGN
