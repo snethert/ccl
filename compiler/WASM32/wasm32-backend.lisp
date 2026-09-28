@@ -808,11 +808,16 @@
     (b-wat "(if ~a (then (throw $call_error (i32.const ~d))))" test kind)))
 (defun b-reserve (bytes)
   (concatenate 'string
-    (b-wat "(call $stack_guard (i64.add (i64.extend_i32_u (local.get $top)) (i64.const ~d)) (local.get $top) (i32.const 18))" bytes)
+    (b-reservation-guard (b-wat "(i64.add (i64.extend_i32_u (local.get $top)) (i64.const ~d))" bytes))
     (b-wat "(local.set $top (i32.add (local.get $top) (i32.const ~d)))" bytes)))
-(defun b-initialize-roots (frame count)
+(defun b-reservation-guard (end)
+  ;; The public wrapper validates the stack layout before publishing a frame.
+  ;; TOP grows from that admitted extent; retain wide arithmetic until guarded.
+  (b-wat "(if (i64.gt_u ~a (i64.extend_i32_u (i32.sub ~a ~a))) (then (call $stack_guard ~a (local.get $top) (i32.const 18))))"
+    end (b-load wasm32::tcr.vsp_limit) (b-load wasm32::tcr.stack_reserve_bytes) end))
+(defun b-initialize-roots (frame count &optional (previous (b-load wasm32::tcr.root_head)))
   (with-output-to-string (s)
-    (format s "(i32.store ~a ~a) (i32.store offset=4 ~a (i32.const ~d))" frame (b-load wasm32::tcr.root_head) frame count)
+    (format s "(i32.store ~a ~a) (i32.store offset=4 ~a (i32.const ~d))" frame previous frame count)
     (dotimes (i count) (format s "(i32.store offset=~d ~a (i32.const ~d))" (+ 8 (* 4 i)) frame wasm32::canonical-nil-value))
     (write-string (b-store wasm32::tcr.root_head frame) s)))
 (defun b-frame (count body-function)
@@ -825,11 +830,11 @@
 (defun b-reserve-runtime (bytes)
   ;; All extent arithmetic precedes narrowing and any frame write.
   (b-wat "(local.set $wide ~a) ~a (local.set $top (i32.wrap_i64 (i64.add (i64.extend_i32_u (local.get $top)) (local.get $wide))))"
-    bytes (b-wat "(call $stack_guard (i64.add (i64.extend_i32_u (local.get $top)) (local.get $wide)) (local.get $top) (i32.const 18))")))
-(defun b-runtime-roots (frame count)
+    bytes (b-reservation-guard "(i64.add (i64.extend_i32_u (local.get $top)) (local.get $wide))")))
+(defun b-runtime-roots (frame count &optional (previous (b-load wasm32::tcr.root_head)))
   (let ((i (temporary)))
     (b-wat "(i32.store ~a ~a) (i32.store offset=4 ~a ~a) (local.set ~a (i32.const 0)) (block $roots_done (loop $roots_fill (br_if $roots_done (i32.ge_u (local.get ~a) ~a)) (i32.store (i32.add ~a (i32.add (i32.const 8) (i32.mul (local.get ~a) (i32.const 4)))) (i32.const 77825)) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $roots_fill))) ~a"
-      frame (b-load wasm32::tcr.root_head) frame count i i count frame i i i (b-store wasm32::tcr.root_head frame))))
+      frame previous frame count i i count frame i i i (b-store wasm32::tcr.root_head frame))))
 (defun b-retained-frame (count body-function)
   (let* ((base (temporary)) (root (temporary)) (body (funcall body-function (b-local base))))
     (b-wat "(local.set ~a (local.get $top)) (local.set ~a ~a) ~a ~a ~a ~a (local.set $top (local.get ~a))"
@@ -892,21 +897,20 @@
 ;;; Compiled ordinary calls own their continuation directly. The result
 ;;; reservation precedes it, so a later tail transfer can reuse/resize arguments.
 ;;; The caller keeps its restoration state in Wasm locals across the body call.
-(defun b-prepare-context (context output previous-root argument-slots)
+(defun b-prepare-context (context output previous-root argument-slots &optional filled)
   (with-output-to-string (s)
     (format s "(i32.store offset=20 ~a (local.get $dynamic_results)) (i32.store offset=28 ~a (local.get $result_descriptor))" context context)
     (format s "(i32.store ~a ~a) (i32.store offset=4 ~a ~a) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) (i32.store offset=16 ~a ~a) (i32.store offset=24 ~a (i32.const 0))"
       context (b-load wasm32::tcr.vsp) context output context context
       context previous-root context (b-load wasm32::tcr.mv_count) context)
-    (write-string (b-runtime-roots (b-at context 32) (b-wat "(i32.add (i32.const 2) ~a)" argument-slots)) s)
-    ;; b-runtime-roots publishes the current chain; an APPLY may retire its
-    ;; evaluation roots once their values are copied, immediately before entry.
-    (format s "(i32.store offset=32 ~a ~a)" context previous-root)))
+    ;; APPLY retains its evaluation frame until the spread copy is complete.
+    (unless filled
+      (write-string (if (integerp argument-slots)
+                      (b-initialize-roots (b-at context 32) (+ 2 argument-slots) previous-root)
+                      (b-runtime-roots (b-at context 32) (b-wat "(i32.add (i32.const 2) ~a)" argument-slots) previous-root)) s))))
 (defun b-internal-dispatch (context count)
-  (concatenate 'string
-    (b-condition "(i32.ge_u (local.get $dispatch_slot) (table.size $tail_slots))" 4)
-    (b-condition "(ref.is_null (table.get $tail_slots (local.get $dispatch_slot)))" 4)
-    (b-wat "(call_indirect $tail_slots (type $tail_entry) (local.get $dispatch_self) ~a ~a (local.get $dispatch_slot))" count context)))
+  ;; RESOLVE and the paired-table publisher own dispatch admission.
+  (b-wat "(call_indirect $tail_slots (type $tail_entry) (local.get $dispatch_self) ~a ~a (local.get $dispatch_slot))" count context))
 (defun b-internal-call (callee argument-list local-self)
   ;; U1 splits positional arguments into stack and reversed register lists.
   ;; Wasm has one argument vector, but retains U1's source evaluation order.
@@ -921,7 +925,9 @@
          (direct (and (eq op 'ccl::immediate) (symbolp name)
                       (or *bootstrap-front-end* (assoc name *b-call-links* :test #'eq))))
          (self (or local-self (if direct (b-symbol name) (b-scalar callee))))
-         (codes (mapcar #'b-scalar args)))
+         (codes (mapcar #'b-scalar args))
+         (simple (and (or local-self direct (b-simple-node-p callee))
+                      (every #'b-simple-node-p args))))
     (when (and name (not direct)) (refuse :b-unlinked-function))
     (with-output-to-string (s)
       (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
@@ -929,9 +935,16 @@
         owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
       (write-string (b-reserve-runtime (b-wat "(i64.add (i64.const ~d) (i64.extend_i32_u (local.get $result_bytes)))" (+ 48 (* 4 arg-slots)))) s)
       (format s "(local.set ~a (i32.add (local.get ~a) (local.get $result_bytes)))" context base)
-      (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) (b-wat "(i32.const ~d)" n)) s)
+      (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) n simple) s)
+      ;; Arguments in this arm are safepoint-free. SELF is evaluated first:
+      ;; a local-self helper may signal before any new node slot is live.
+      ;; Store directly into the final slots and publish only after the fill.
+      (when simple
+        (format s "(i32.store offset=32 (local.get ~a) (local.get ~a)) (i32.store offset=36 (local.get ~a) (i32.const ~d)) (i32.store offset=44 (local.get ~a) (i32.const 77825))"
+          context root context (+ 2 n) context))
       (format s "(i32.store offset=40 (local.get ~a) ~a)" context self)
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 48 (* 4 i)) context code))
+      (when simple (write-string (b-store wasm32::tcr.root_head (b-at (b-local context) 32)) s))
       (format s "(call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local base)) s)
@@ -1516,11 +1529,12 @@
              (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
              (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a) (local.set $top (i32.add (local.get $context) (i32.add (i32.const 48) (i32.and (i32.add (i32.mul (local.get $nargs) (i32.const 4)) (i32.const 15)) (i32.const -16))))) (local.set $top (i32.add (local.get $top) (i32.load offset=24 (local.get $context))))"
                (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
-             (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if (or keys rest) #xffffffff maximum)) 1) s)
-             (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
-             (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
-             (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
-             (write-string (b-condition "(i32.or (i32.ne (local.get $incoming) (i32.add (local.get $context) (i32.const 48))) (i32.ne (local.get $root) (i32.add (local.get $context) (i32.const 32))))" 2) s)
+             (write-string (b-condition
+               (if (and (not (or keys rest)) (= arity maximum))
+                 (b-wat "(i32.ne (local.get $nargs) (i32.const ~d))" arity)
+                 (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if (or keys rest) #xffffffff maximum))) 1) s)
+             ;; Only generated callers and the admitted public wrapper enter
+             ;; BODY. Their reservations establish the frame invariants.
              (write-string "(block $caught (result exnref) (try_table (catch_all_ref $caught) (local.set $frame (local.get $top))" s)
              (write-string (if small-result-scratch "(local.set $dynamic_results (i32.const 0))" "(local.set $dynamic_results (i32.load offset=20 (local.get $context)))") s)
              ;; At least four scratch words permit scalar evaluation even with an
@@ -1540,14 +1554,14 @@
              (write-string "))" s)
              (format s "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz ~a) (then (if (i32.eq (local.get $count) (i32.const 1)) (then (i32.store (local.get $output) (local.get $value))) (else (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))))" delivery-mode)
              (write-string "(if (local.get $dynamic_results) (then (call $rv_release (local.get $frame))))" s)
-             (write-string restore s)
              (write-string (b-store wasm32::tcr.mv_count "(local.get $count)") s)
              (write-string "(return (local.get $value) (local.get $count))) unreachable) (local.set $exception)" s)
              (write-string "(if (local.get $dynamic_results) (then (call $rv_release (local.get $frame))))" s)
              (write-string restore s)
              (write-string (b-store wasm32::tcr.mv_count "(local.get $old_count)") s)
              (write-string "(throw_ref (local.get $exception)))" s)
-             (write-string (b-entry-wrapper arity maximum (or keys rest) (length *b-bound-vars*)) s)
+             (write-string (b-entry-wrapper arity maximum (or keys rest) (length *b-bound-vars*)
+                             (and *bootstrap-front-end* *b-callable-metadata* afunc)) s)
              (write-char #\) s))))
       (list :symbols (copy-list *bootstrap-symbols*)
             :callees (copy-list *bootstrap-callees*)
@@ -1768,17 +1782,13 @@
     (local.set $id (i32.shr_u (local.get $id) (i32.const 2)))
     (local.set $version (i32.load offset=12 (local.get $p)))
     (if (i32.or (i32.and (local.get $version) (i32.const 3)) (i32.le_s (local.get $version) (i32.const 0))) (then (throw $call_error (i32.const 4))))
-    (if (i32.and (global.get $code_registry) (i32.const 7)) (then (throw $call_error (i32.const 4))))
-    (if (i64.gt_u (i64.add (i64.extend_i32_u (global.get $code_registry)) (i64.extend_i32_u (i32.const 8))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
     (local.set $cap (i32.load (global.get $code_registry)))
-    (if (i32.or (i32.ge_u (local.get $id) (local.get $cap)) (i32.ne (i32.load offset=4 (global.get $code_registry)) (i32.const 1))) (then (throw $call_error (i32.const 4))))
+    (if (i32.ge_u (local.get $id) (local.get $cap)) (then (throw $call_error (i32.const 4))))
     (local.set $wide (i64.add (i64.extend_i32_u (global.get $code_registry)) (i64.add (i64.const 8) (i64.mul (i64.extend_i32_u (local.get $id)) (i64.const 16)))))
-    (if (i64.gt_u (i64.add (local.get $wide) (i64.const 16)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 4))))
     (local.set $row (i32.wrap_i64 (local.get $wide)))
-    (if (i32.or (i32.ne (i32.load offset=12 (local.get $p)) (i32.load offset=4 (local.get $row))) (i32.or (i32.ne (i32.load offset=8 (local.get $row)) (i32.const 17)) (i32.ne (i32.load offset=12 (local.get $row)) (i32.const 23)))) (then (throw $call_error (i32.const 4))))
+    (if (i32.ne (local.get $version) (i32.load offset=4 (local.get $row))) (then (throw $call_error (i32.const 4))))
     (local.set $slot (i32.load (local.get $row)))
-    (if (i32.or (i32.eqz (local.get $slot)) (i32.ge_u (local.get $slot) (table.size))) (then (throw $call_error (i32.const 4))))
-    (if (ref.is_null (table.get (local.get $slot))) (then (throw $call_error (i32.const 4))))
+    (if (i32.eqz (local.get $slot)) (then (throw $call_error (i32.const 4))))
     (local.get $node) (local.get $slot))"
     (if *bootstrap-front-end*
       "(if (i32.and (i32.eq (local.get $header) (i32.const 1578))
@@ -2141,12 +2151,25 @@
 ;;; One continuation context per ordinary B call. Tail entries reuse its
 ;;; argument/root area; the public B entry alone restores the caller's state.
 ;;; Raw saved words 0..31, root header 32..39, SELF/padding 40..47, args 48+.
-(defun b-entry-wrapper (arity maximum open bound-words)
-  (with-output-to-string (s)
+(defun b-entry-wrapper (arity maximum open bound-words &optional afunc)
+  (let* ((first-temporary *temporary-count*)
+         (metadata (and afunc (metadata-entry afunc "(local.get $self)"))))
+   (with-output-to-string (s)
     (write-string "(func (export \"entry\") (type $b_entry) (param $self i32) (param $nargs i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $bytes i32) (local $i i32) (local $value i32) (local $count i32) (local $exception exnref) (local $old_handler i32) (local $old_unwind i32)" s)
+    (loop for i from first-temporary below *temporary-count* do
+      (format s "(local $tmp~d i32)" i))
+    ;; A host can supply SELF directly, without the compiled resolver and
+    ;; publication chain. Keep its full validation before any frame write.
+    (when metadata (write-string metadata s))
     (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
       (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
     (write-string (b-wat "(local.set $old_handler ~a) (local.set $old_unwind ~a)" (b-load wasm32::tcr.handler_checkpoint) (b-load wasm32::tcr.unwind_state)) s)
+    ;; The owner may choose another admitted stack between public calls.
+    ;; Validate once here, before any frame write, rather than per reservation.
+    (write-string (b-condition (b-wat "(i32.or (i32.and (i32.or ~a (i32.or ~a ~a)) (i32.const 15)) (i32.or (i32.gt_u ~a ~a) (i32.gt_u ~a (i32.sub ~a ~a))))"
+      (b-load wasm32::tcr.vsp_base) (b-load wasm32::tcr.vsp_limit) (b-load wasm32::tcr.stack_reserve_bytes)
+      (b-load wasm32::tcr.vsp_base) (b-load wasm32::tcr.vsp_limit) (b-load wasm32::tcr.stack_reserve_bytes)
+      (b-load wasm32::tcr.vsp_limit) (b-load wasm32::tcr.vsp_base)) 2) s)
     (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
     (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
     (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
@@ -2161,7 +2184,7 @@
     (write-string (b-wrapper-restore nil) s)
     (write-string "(return (local.get $value) (local.get $count))) unreachable) (local.set $exception)" s)
     (write-string (b-wrapper-restore t) s)
-    (write-string "(throw_ref (local.get $exception)))" s)))
+    (write-string "(throw_ref (local.get $exception)))" s))))
 (defun b-wrapper-restore (exceptional)
   (concatenate 'string
     (b-store wasm32::tcr.handler_checkpoint "(local.get $old_handler)")
@@ -2175,8 +2198,6 @@
   (let ((n (temporary)) (bytes (temporary)) (i (temporary)))
     (with-output-to-string (s)
       (format s "(local.set ~a ~a)" n count)
-      (write-string (b-condition "(i32.ge_u (local.get $dispatch_slot) (table.size $tail_slots))" 4) s)
-      (write-string (b-condition "(ref.is_null (table.get $tail_slots (local.get $dispatch_slot)))" 4) s)
       (format s "(local.set ~a (i32.and (i32.add (i32.mul (local.get ~a) (i32.const 4)) (i32.const 15)) (i32.const -16)))" bytes n)
       ;; The staged argument area already bounds N. Recheck the reusable
       ;; destination extent in i64 before overwriting any retired frame.
@@ -2724,13 +2745,19 @@
       (dolist (child children)
         (let ((pool (cdr (assoc child *pool-layouts* :test #'eq))))
           (when pool (setq values (append values (list pool))))))
-      (push (cons (first entry) (and values (coerce values 'simple-vector))) *pool-layouts*))))
+      (let ((pool (and values (coerce values 'simple-vector))))
+        (when *b-callable-metadata* (metadata-check-pool (first entry) pool))
+        (push (cons (first entry) pool) *pool-layouts*)))))
 (defun pool-load (value)
   (let* ((pool (cdr (assoc *pool-current* *pool-layouts* :test #'eq)))
          (index (position value pool :test #'eq)) (tmp (temporary)))
     (unless index (refuse :constant-pool-identity))
-    (b-wat "(block (result i32) (local.set ~a (call $object_base (i32.load offset=24 (call $object_base (i32.load offset=40 (local.get $context)) (i32.const 32) (i32.const 1578))) (i32.const ~d) (i32.const ~d))) (i32.load offset=~d (local.get ~a)))"
-      tmp (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool))) (+ 4 (* 4 index)) tmp)))
+    (if (and *bootstrap-front-end* *b-callable-metadata*)
+      ;; Context slot 1 is already a traced root. Cache the tagged pool there,
+      ;; so collection relocates it; an untagged Wasm local would become stale.
+      (b-wat "(i32.load offset=~d (i32.sub (i32.load offset=44 (local.get $context)) (i32.const 6)))" (+ 4 (* 4 index)))
+      (b-wat "(block (result i32) (local.set ~a (call $object_base (i32.load offset=24 (call $object_base (i32.load offset=40 (local.get $context)) (i32.const 32) (i32.const 1578))) (i32.const ~d) (i32.const ~d))) (i32.load offset=~d (local.get ~a)))"
+        tmp (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool))) (+ 4 (* 4 index)) tmp))))
 (defun pool-child-load (afunc)
   (let ((pool (cdr (assoc afunc *pool-layouts* :test #'eq))))
     (if pool (pool-load pool) "(i32.const 77825)")))
@@ -3413,19 +3440,41 @@
       (b-wat "(i32.load offset=~d (call $object_base ~a (i32.const ~d) (i32.const ~d)))"
         (+ 4 (* 4 index)) (pool-child-load afunc)
         (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool)))))))
-(defun metadata-entry (afunc)
+(defun metadata-check-pool (afunc pool)
+  ;; Check the exact entry predicates before authenticating/serializing the
+  ;; compiler-owned pool. Constructors copy these same two metadata words.
+  (let ((args (ccl::acode-operands (ccl::afunc-acode afunc))))
+    (unless (and (typep pool 'simple-vector) (>= (length pool) 2)
+                 (typep (svref pool 0) 'simple-vector) (= (length (svref pool 0)) 7)
+                 (typep (svref pool 1) 'simple-vector) (= (length (svref pool 1)) 3))
+      (refuse :callable-metadata-pool))
+    (let ((arity (svref pool 0)) (debug (svref pool 1)))
+      (unless (and (eql (svref arity 0) 1) (eql (svref debug 0) 1)
+                   (eql (svref arity 1) (length (first args)))
+                   (eql (svref arity 2) (length (first (second args)))))
+        (refuse :callable-metadata-arity)))))
+(defun metadata-entry (afunc &optional self-value)
+  ;; Product pools and their metadata are compiler-owned, authenticated with
+  ;; the FASL/image before code publication. The loader and closure constructor
+  ;; copy the first two pool words into the function's metadata fields.
+  ;; FUNCALLABLE-INSTANCE mutation touches its separate immediates vector.
+  (when (and *bootstrap-front-end* *b-callable-metadata* (not self-value))
+    (return-from metadata-entry
+      (if (cdr (assoc afunc *pool-layouts* :test #'eq))
+        "(i32.store offset=44 (local.get $context) (i32.load offset=18 (i32.load offset=40 (local.get $context))))"
+        "")))
   (if (not *b-callable-metadata*) ""
     (let* ((pool (cdr (assoc afunc *pool-layouts* :test #'eq)))
            (self (temporary)) (p (temporary)) (arity (temporary)) (debug (temporary))
            (a (metadata-arity afunc)))
-      (b-wat "(local.set ~a (call $object_base (i32.load offset=40 (local.get $context)) (i32.const 32) (i32.const 1578)))
+      (b-wat "(local.set ~a (call $object_base ~a (i32.const 32) (i32.const 1578)))
         (local.set ~a (call $object_base (i32.load offset=24 (local.get ~a)) (i32.const ~d) (i32.const ~d)))
         (if (i32.or (i32.ne (i32.load offset=16 (local.get ~a)) (i32.load offset=4 (local.get ~a))) (i32.ne (i32.load offset=20 (local.get ~a)) (i32.load offset=8 (local.get ~a)))) (then (throw $call_error (i32.const 4))))
         (local.set ~a (call $object_base (i32.load offset=16 (local.get ~a)) (i32.const 32) (i32.const 2042)))
         (local.set ~a (call $object_base (i32.load offset=20 (local.get ~a)) (i32.const 16) (i32.const 1018)))
         (if (i32.or (i32.ne (i32.load offset=4 (local.get ~a)) (i32.const 4)) (i32.ne (i32.load offset=4 (local.get ~a)) (i32.const 4))) (then (throw $call_error (i32.const 4))))
         (if (i32.or (i32.ne (i32.load offset=8 (local.get ~a)) (i32.const ~d)) (i32.ne (i32.load offset=12 (local.get ~a)) (i32.const ~d))) (then (throw $call_error (i32.const 4))))"
-        self p self (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool)))
+        self (or self-value "(i32.load offset=40 (local.get $context))") p self (* 8 (ceiling (+ 4 (* 4 (length pool))) 8)) (+ 250 (* 256 (length pool)))
         self p self p arity self debug self arity debug arity (* 4 (aref a 1)) arity (* 4 (aref a 2))))))
 (defun compile-metadata-call-form (form name links)
   (let ((*b-callable-metadata* t)) (compile-call-form form name links)))

@@ -1,3 +1,33 @@
+## 2026-09-28 — Subtract redundant calling-convention work; reject Phase 2
+
+The [retained Phase 1](../stage1/call-convention-results.md) removes dead normal
+callee restores, duplicate dispatch/root writes, constant argument fill loops,
+repeated metadata validation and internal frame checks. Stack reservations
+inline the successful check; the resolver retains dynamic checks. Tagged pools
+use an existing traced slot. Public validation, TCR publication, frame sizes,
+result budgets and ABI version 1 remain unchanged. Product Lisp 91 added /
+42 removed; no shared compiler or upstream kernel changes.
+
+Default call-minus-loop falls 50.614 to 28.777 ns. The corrected core's three
+READY runs have a 19.696 s median and the runtime archive is 63,561,129 bytes.
+The retained full corpus has 26,204 fresh comparisons. After restoring Phase 1,
+all 29 benchmark code records match its qualified build, and the expanded
+69-row/nine-collection fixture, 45 boundary assertions and named controls pass.
+Native R6 and reader evidence are reused by source identity. Existing timing
+and corpus evidence are retained without repeating them solely for rollback.
+
+[Phase 2](../stage1/call-convention-phase2-rejected.md) was implemented after
+the measured threshold and reader inventory, then rejected following the user's
+direction. It saved another 1.771 ns per call, did not measurably improve READY,
+and worsened inline numeric loops. Its context-only delivery, adapter changes
+and ABI version 2 are removed. Exact sources, all measurements and failures
+remain in the single deliverable's rejection evidence.
+
+One integrated producer change, awaiting user-supplied independent review.
+Whole-file counts, originals 575/535 and ledger 21/12 remain unchanged; no
+criterion credit. The result records disclose inline-loop regressions and that
+the rebuilt cores include prior accepted optimizations as well.
+
 ## 2026-09-28 — Accept both numeric parents and complete stack acceptance
 
 The user supplied [Claude audit 192](../stage0/claude-review.md) and explicitly

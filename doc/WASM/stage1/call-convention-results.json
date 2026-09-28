@@ -1,0 +1,1005 @@
+{
+  "version": 1,
+  "date": "2026-09-28",
+  "status": "PRODUCER_VERIFIED_AWAITING_INDEPENDENT_REVIEW",
+  "parentCommit": "485559e3476a7e957f3be7afe483150c262c8af4",
+  "retainedPhase": 1,
+  "rejectedPhase2": "call-convention-phase2-rejected.json",
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-call-convention-r1",
+  "abiVersion": 1,
+  "productLispLinesChanged": {
+    "added": 91,
+    "removed": 42
+  },
+  "sourceIdentity": {
+    "compiler/WASM32/wasm32-backend.lisp": "d0a0103310d3d53d414edba651d1caacf9d6c2150b6c23028ffb742d0c0c9b19",
+    "tests/wasm/stage1/call-convention/README.md": "aa6623366820ee394a4bbd24eb8f4dd5cb72ae54e72a5c57c81195748f9bebd9",
+    "tests/wasm/stage1/call-convention/boundaries.mjs": "9bd14a1ea5e25160e1e091896b76d272e899af3afd6985a6315921b7ab6795c0",
+    "tests/wasm/stage1/call-convention/boundaries.py": "0ea81570dee7e20114473f204cd78ba04883c5db35741815480b061b67d87508",
+    "tests/wasm/stage1/call-convention/check.py": "3899fa74551ef7e2054686c9cb879f334625cc22102e03a6ff77d7fd886c758f",
+    "tests/wasm/stage1/call-convention/checks.lisp": "37dcc1ca81d84d846779e1ebb60b1dc0b81b6236c0ff51646e1a974a51729675",
+    "tests/wasm/stage1/call-convention/controls.py": "f6d2d3238f22a344fd666da4366167741c2be5f8371f0a94054d9a23ec411a00",
+    "tests/wasm/stage1/call-convention/mutate.py": "e74370f03af5630d21cd2e1aebfa9c8ad2871156854341f51acd5efc159db677",
+    "tests/wasm/stage1/call-convention/publication.py": "15c1b39d3b8911239d126e5d9956eaadcea650ed7db9383f4c23872570f175cc"
+  },
+  "callMinusLoopNs": {
+    "baseline": {
+      "native": 0.22912025451660156,
+      "default": 50.614356994628906,
+      "liftoff": 162.03927993774414,
+      "turbofan": 60.81557273864746
+    },
+    "retained": {
+      "native": 0.2486705780029297,
+      "default": 28.77664566040039,
+      "liftoff": 97.6724624633789,
+      "turbofan": 30.970096588134766
+    }
+  },
+  "workloads": [
+    {
+      "name": "EB-CALL",
+      "baselineDefaultNs": 53.60698699951172,
+      "retained": {
+        "native": {
+          "medianNs": 2.485036849975586,
+          "minNs": 2.4640560150146484,
+          "maxNs": 2.496480941772461,
+          "processMediansNs": [
+            2.4640560150146484,
+            2.485036849975586,
+            2.496480941772461
+          ]
+        },
+        "default": {
+          "medianNs": 32.843589782714844,
+          "minNs": 32.776832580566406,
+          "maxNs": 32.95421600341797,
+          "processMediansNs": [
+            32.95421600341797,
+            32.843589782714844,
+            32.776832580566406
+          ]
+        },
+        "liftoff": {
+          "medianNs": 104.98046875,
+          "minNs": 104.96902465820312,
+          "maxNs": 106.11152648925781,
+          "processMediansNs": [
+            104.96902465820312,
+            104.98046875,
+            106.11152648925781
+          ]
+        },
+        "turbofan": {
+          "medianNs": 34.445762634277344,
+          "minNs": 34.32178497314453,
+          "maxNs": 34.806251525878906,
+          "processMediansNs": [
+            34.445762634277344,
+            34.806251525878906,
+            34.32178497314453
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-CAR",
+      "baselineDefaultNs": 17.74120330810547,
+      "retained": {
+        "native": {
+          "medianNs": 2.7344226837158203,
+          "minNs": 2.691030502319336,
+          "maxNs": 2.744436264038086,
+          "processMediansNs": [
+            2.691030502319336,
+            2.7344226837158203,
+            2.744436264038086
+          ]
+        },
+        "default": {
+          "medianNs": 11.941671371459961,
+          "minNs": 11.906862258911133,
+          "maxNs": 11.966466903686523,
+          "processMediansNs": [
+            11.941671371459961,
+            11.966466903686523,
+            11.906862258911133
+          ]
+        },
+        "liftoff": {
+          "medianNs": 24.11031723022461,
+          "minNs": 23.85234832763672,
+          "maxNs": 24.80459213256836,
+          "processMediansNs": [
+            24.11031723022461,
+            24.80459213256836,
+            23.85234832763672
+          ]
+        },
+        "turbofan": {
+          "medianNs": 16.481399536132812,
+          "minNs": 16.48116111755371,
+          "maxNs": 16.550540924072266,
+          "processMediansNs": [
+            16.481399536132812,
+            16.550540924072266,
+            16.48116111755371
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-CAR-TYPED",
+      "baselineDefaultNs": 8.687973022460938,
+      "retained": {
+        "native": {
+          "medianNs": 2.3772716522216797,
+          "minNs": 2.3729801177978516,
+          "maxNs": 2.3889541625976562,
+          "processMediansNs": [
+            2.3729801177978516,
+            2.3772716522216797,
+            2.3889541625976562
+          ]
+        },
+        "default": {
+          "medianNs": 7.068157196044922,
+          "minNs": 7.038116455078125,
+          "maxNs": 7.080078125,
+          "processMediansNs": [
+            7.068157196044922,
+            7.080078125,
+            7.038116455078125
+          ]
+        },
+        "liftoff": {
+          "medianNs": 13.72838020324707,
+          "minNs": 13.682365417480469,
+          "maxNs": 13.906478881835938,
+          "processMediansNs": [
+            13.906478881835938,
+            13.72838020324707,
+            13.682365417480469
+          ]
+        },
+        "turbofan": {
+          "medianNs": 6.801605224609375,
+          "minNs": 6.742954254150391,
+          "maxNs": 6.820917129516602,
+          "processMediansNs": [
+            6.742954254150391,
+            6.801605224609375,
+            6.820917129516602
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-DOUBLE-GENERIC",
+      "baselineDefaultNs": 1657.65380859375,
+      "retained": {
+        "native": {
+          "medianNs": 15.85078239440918,
+          "minNs": 15.666961669921875,
+          "maxNs": 15.86771011352539,
+          "processMediansNs": [
+            15.666961669921875,
+            15.85078239440918,
+            15.86771011352539
+          ]
+        },
+        "default": {
+          "medianNs": 1672.05810546875,
+          "minNs": 1641.387939453125,
+          "maxNs": 1673.583984375,
+          "processMediansNs": [
+            1673.583984375,
+            1641.387939453125,
+            1672.05810546875
+          ]
+        },
+        "liftoff": {
+          "medianNs": 1847.16796875,
+          "minNs": 1761.3525390625,
+          "maxNs": 1964.17236328125,
+          "processMediansNs": [
+            1761.3525390625,
+            1964.17236328125,
+            1847.16796875
+          ]
+        },
+        "turbofan": {
+          "medianNs": 1665.863037109375,
+          "minNs": 1633.453369140625,
+          "maxNs": 1942.87109375,
+          "processMediansNs": [
+            1665.863037109375,
+            1942.87109375,
+            1633.453369140625
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-DOUBLE-TYPED",
+      "baselineDefaultNs": 2.762317657470703,
+      "retained": {
+        "native": {
+          "medianNs": 2.5463104248046875,
+          "minNs": 2.5222301483154297,
+          "maxNs": 2.5544166564941406,
+          "processMediansNs": [
+            2.5222301483154297,
+            2.5544166564941406,
+            2.5463104248046875
+          ]
+        },
+        "default": {
+          "medianNs": 3.034353256225586,
+          "minNs": 3.0219554901123047,
+          "maxNs": 3.0548572540283203,
+          "processMediansNs": [
+            3.034353256225586,
+            3.0219554901123047,
+            3.0548572540283203
+          ]
+        },
+        "liftoff": {
+          "medianNs": 5.8803558349609375,
+          "minNs": 5.86390495300293,
+          "maxNs": 5.930185317993164,
+          "processMediansNs": [
+            5.930185317993164,
+            5.8803558349609375,
+            5.86390495300293
+          ]
+        },
+        "turbofan": {
+          "medianNs": 3.7300586700439453,
+          "minNs": 3.727436065673828,
+          "maxNs": 3.7467479705810547,
+          "processMediansNs": [
+            3.727436065673828,
+            3.7467479705810547,
+            3.7300586700439453
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-EQ",
+      "baselineDefaultNs": 22.248029708862305,
+      "retained": {
+        "native": {
+          "medianNs": 1.3513565063476562,
+          "minNs": 1.3489723205566406,
+          "maxNs": 1.3709068298339844,
+          "processMediansNs": [
+            1.3489723205566406,
+            1.3709068298339844,
+            1.3513565063476562
+          ]
+        },
+        "default": {
+          "medianNs": 12.800455093383789,
+          "minNs": 12.739419937133789,
+          "maxNs": 12.813091278076172,
+          "processMediansNs": [
+            12.739419937133789,
+            12.813091278076172,
+            12.800455093383789
+          ]
+        },
+        "liftoff": {
+          "medianNs": 35.19010543823242,
+          "minNs": 33.94460678100586,
+          "maxNs": 35.245418548583984,
+          "processMediansNs": [
+            35.19010543823242,
+            33.94460678100586,
+            35.245418548583984
+          ]
+        },
+        "turbofan": {
+          "medianNs": 19.624948501586914,
+          "minNs": 19.595623016357422,
+          "maxNs": 19.69432830810547,
+          "processMediansNs": [
+            19.624948501586914,
+            19.69432830810547,
+            19.595623016357422
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-FIXNUM-GENERIC",
+      "baselineDefaultNs": 5.318164825439453,
+      "retained": {
+        "native": {
+          "medianNs": 2.1219253540039062,
+          "minNs": 2.057313919067383,
+          "maxNs": 2.124309539794922,
+          "processMediansNs": [
+            2.057313919067383,
+            2.124309539794922,
+            2.1219253540039062
+          ]
+        },
+        "default": {
+          "medianNs": 5.051136016845703,
+          "minNs": 5.016326904296875,
+          "maxNs": 5.099058151245117,
+          "processMediansNs": [
+            5.016326904296875,
+            5.051136016845703,
+            5.099058151245117
+          ]
+        },
+        "liftoff": {
+          "medianNs": 6.484746932983398,
+          "minNs": 6.478786468505859,
+          "maxNs": 6.487846374511719,
+          "processMediansNs": [
+            6.487846374511719,
+            6.484746932983398,
+            6.478786468505859
+          ]
+        },
+        "turbofan": {
+          "medianNs": 5.001544952392578,
+          "minNs": 4.974365234375,
+          "maxNs": 5.026578903198242,
+          "processMediansNs": [
+            5.026578903198242,
+            5.001544952392578,
+            4.974365234375
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-KEYWORD-LOOP",
+      "baselineDefaultNs": 82.54241943359375,
+      "retained": {
+        "native": {
+          "medianNs": 12.181758880615234,
+          "minNs": 12.139558792114258,
+          "maxNs": 12.21609115600586,
+          "processMediansNs": [
+            12.139558792114258,
+            12.21609115600586,
+            12.181758880615234
+          ]
+        },
+        "default": {
+          "medianNs": 47.158241271972656,
+          "minNs": 47.026634216308594,
+          "maxNs": 47.4858283996582,
+          "processMediansNs": [
+            47.4858283996582,
+            47.158241271972656,
+            47.026634216308594
+          ]
+        },
+        "liftoff": {
+          "medianNs": 127.685546875,
+          "minNs": 125.5950927734375,
+          "maxNs": 129.11224365234375,
+          "processMediansNs": [
+            129.11224365234375,
+            125.5950927734375,
+            127.685546875
+          ]
+        },
+        "turbofan": {
+          "medianNs": 49.907684326171875,
+          "minNs": 49.668312072753906,
+          "maxNs": 50.17280578613281,
+          "processMediansNs": [
+            49.907684326171875,
+            50.17280578613281,
+            49.668312072753906
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-LIVE-REFERENCE",
+      "baselineDefaultNs": 53.49922180175781,
+      "retained": {
+        "native": {
+          "medianNs": 2.431154251098633,
+          "minNs": 2.4292469024658203,
+          "maxNs": 2.4437904357910156,
+          "processMediansNs": [
+            2.431154251098633,
+            2.4292469024658203,
+            2.4437904357910156
+          ]
+        },
+        "default": {
+          "medianNs": 32.21750259399414,
+          "minNs": 32.14693069458008,
+          "maxNs": 32.236576080322266,
+          "processMediansNs": [
+            32.14693069458008,
+            32.21750259399414,
+            32.236576080322266
+          ]
+        },
+        "liftoff": {
+          "medianNs": 106.62841796875,
+          "minNs": 106.47773742675781,
+          "maxNs": 107.87200927734375,
+          "processMediansNs": [
+            107.87200927734375,
+            106.47773742675781,
+            106.62841796875
+          ]
+        },
+        "turbofan": {
+          "medianNs": 34.35468673706055,
+          "minNs": 34.101009368896484,
+          "maxNs": 35.101890563964844,
+          "processMediansNs": [
+            34.101009368896484,
+            35.101890563964844,
+            34.35468673706055
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-LOOP",
+      "baselineDefaultNs": 2.9926300048828125,
+      "retained": {
+        "native": {
+          "medianNs": 2.2363662719726562,
+          "minNs": 2.2115707397460938,
+          "maxNs": 2.299070358276367,
+          "processMediansNs": [
+            2.299070358276367,
+            2.2115707397460938,
+            2.2363662719726562
+          ]
+        },
+        "default": {
+          "medianNs": 4.066944122314453,
+          "minNs": 4.005193710327148,
+          "maxNs": 4.083156585693359,
+          "processMediansNs": [
+            4.083156585693359,
+            4.005193710327148,
+            4.066944122314453
+          ]
+        },
+        "liftoff": {
+          "medianNs": 7.308006286621094,
+          "minNs": 7.303476333618164,
+          "maxNs": 7.329225540161133,
+          "processMediansNs": [
+            7.329225540161133,
+            7.303476333618164,
+            7.308006286621094
+          ]
+        },
+        "turbofan": {
+          "medianNs": 3.475666046142578,
+          "minNs": 3.4706592559814453,
+          "maxNs": 3.4940242767333984,
+          "processMediansNs": [
+            3.475666046142578,
+            3.4940242767333984,
+            3.4706592559814453
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-OPTIONAL-LOOP",
+      "baselineDefaultNs": 95.85380554199219,
+      "retained": {
+        "native": {
+          "medianNs": 5.973339080810547,
+          "minNs": 5.937814712524414,
+          "maxNs": 6.023406982421875,
+          "processMediansNs": [
+            5.937814712524414,
+            6.023406982421875,
+            5.973339080810547
+          ]
+        },
+        "default": {
+          "medianNs": 55.846214294433594,
+          "minNs": 55.75847625732422,
+          "maxNs": 57.595252990722656,
+          "processMediansNs": [
+            55.846214294433594,
+            55.75847625732422,
+            57.595252990722656
+          ]
+        },
+        "liftoff": {
+          "medianNs": 138.17405700683594,
+          "minNs": 136.83319091796875,
+          "maxNs": 138.24081420898438,
+          "processMediansNs": [
+            138.24081420898438,
+            136.83319091796875,
+            138.17405700683594
+          ]
+        },
+        "turbofan": {
+          "medianNs": 58.300018310546875,
+          "minNs": 57.80220031738281,
+          "maxNs": 58.722496032714844,
+          "processMediansNs": [
+            57.80220031738281,
+            58.722496032714844,
+            58.300018310546875
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-REFERENCE-CALL",
+      "baselineDefaultNs": 51.53846740722656,
+      "retained": {
+        "native": {
+          "medianNs": 2.139568328857422,
+          "minNs": 2.1295547485351562,
+          "maxNs": 2.1719932556152344,
+          "processMediansNs": [
+            2.1295547485351562,
+            2.139568328857422,
+            2.1719932556152344
+          ]
+        },
+        "default": {
+          "medianNs": 31.91518783569336,
+          "minNs": 31.778812408447266,
+          "maxNs": 31.95810317993164,
+          "processMediansNs": [
+            31.91518783569336,
+            31.95810317993164,
+            31.778812408447266
+          ]
+        },
+        "liftoff": {
+          "medianNs": 96.75788879394531,
+          "minNs": 96.61674499511719,
+          "maxNs": 101.24778747558594,
+          "processMediansNs": [
+            101.24778747558594,
+            96.61674499511719,
+            96.75788879394531
+          ]
+        },
+        "turbofan": {
+          "medianNs": 33.34522247314453,
+          "minNs": 33.24556350708008,
+          "maxNs": 33.61701965332031,
+          "processMediansNs": [
+            33.34522247314453,
+            33.61701965332031,
+            33.24556350708008
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-REST-LOOP",
+      "baselineDefaultNs": 319.6449279785156,
+      "retained": {
+        "native": {
+          "medianNs": 41.91732406616211,
+          "minNs": 41.887760162353516,
+          "maxNs": 42.13762283325195,
+          "processMediansNs": [
+            41.887760162353516,
+            42.13762283325195,
+            41.91732406616211
+          ]
+        },
+        "default": {
+          "medianNs": 111.38725280761719,
+          "minNs": 109.66682434082031,
+          "maxNs": 113.98124694824219,
+          "processMediansNs": [
+            109.66682434082031,
+            113.98124694824219,
+            111.38725280761719
+          ]
+        },
+        "liftoff": {
+          "medianNs": 281.1470031738281,
+          "minNs": 276.91650390625,
+          "maxNs": 281.4216613769531,
+          "processMediansNs": [
+            281.4216613769531,
+            276.91650390625,
+            281.1470031738281
+          ]
+        },
+        "turbofan": {
+          "medianNs": 127.38037109375,
+          "minNs": 127.1820068359375,
+          "maxNs": 128.12042236328125,
+          "processMediansNs": [
+            127.1820068359375,
+            128.12042236328125,
+            127.38037109375
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-SINGLE-TYPED",
+      "baselineDefaultNs": 2.754688262939453,
+      "retained": {
+        "native": {
+          "medianNs": 2.7451515197753906,
+          "minNs": 2.7222633361816406,
+          "maxNs": 2.7692317962646484,
+          "processMediansNs": [
+            2.7222633361816406,
+            2.7692317962646484,
+            2.7451515197753906
+          ]
+        },
+        "default": {
+          "medianNs": 3.0167102813720703,
+          "minNs": 3.0150413513183594,
+          "maxNs": 3.046751022338867,
+          "processMediansNs": [
+            3.046751022338867,
+            3.0150413513183594,
+            3.0167102813720703
+          ]
+        },
+        "liftoff": {
+          "medianNs": 5.737543106079102,
+          "minNs": 5.68842887878418,
+          "maxNs": 5.893230438232422,
+          "processMediansNs": [
+            5.68842887878418,
+            5.737543106079102,
+            5.893230438232422
+          ]
+        },
+        "turbofan": {
+          "medianNs": 3.021240234375,
+          "minNs": 3.018617630004883,
+          "maxNs": 3.034830093383789,
+          "processMediansNs": [
+            3.018617630004883,
+            3.021240234375,
+            3.034830093383789
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-SVREF",
+      "baselineDefaultNs": 21.810293197631836,
+      "retained": {
+        "native": {
+          "medianNs": 3.0112266540527344,
+          "minNs": 2.982616424560547,
+          "maxNs": 3.0143260955810547,
+          "processMediansNs": [
+            2.982616424560547,
+            3.0112266540527344,
+            3.0143260955810547
+          ]
+        },
+        "default": {
+          "medianNs": 16.500473022460938,
+          "minNs": 16.497135162353516,
+          "maxNs": 16.530275344848633,
+          "processMediansNs": [
+            16.500473022460938,
+            16.530275344848633,
+            16.497135162353516
+          ]
+        },
+        "liftoff": {
+          "medianNs": 35.295963287353516,
+          "minNs": 35.264015197753906,
+          "maxNs": 35.45188903808594,
+          "processMediansNs": [
+            35.45188903808594,
+            35.295963287353516,
+            35.264015197753906
+          ]
+        },
+        "turbofan": {
+          "medianNs": 21.3472843170166,
+          "minNs": 21.271705627441406,
+          "maxNs": 21.392345428466797,
+          "processMediansNs": [
+            21.3472843170166,
+            21.392345428466797,
+            21.271705627441406
+          ]
+        }
+      }
+    },
+    {
+      "name": "EB-SVREF-TYPED",
+      "baselineDefaultNs": 15.539884567260742,
+      "retained": {
+        "native": {
+          "medianNs": 2.73895263671875,
+          "minNs": 2.7174949645996094,
+          "maxNs": 2.747774124145508,
+          "processMediansNs": [
+            2.7174949645996094,
+            2.73895263671875,
+            2.747774124145508
+          ]
+        },
+        "default": {
+          "medianNs": 11.274099349975586,
+          "minNs": 11.243581771850586,
+          "maxNs": 11.362314224243164,
+          "processMediansNs": [
+            11.362314224243164,
+            11.243581771850586,
+            11.274099349975586
+          ]
+        },
+        "liftoff": {
+          "medianNs": 20.981788635253906,
+          "minNs": 20.978212356567383,
+          "maxNs": 21.051406860351562,
+          "processMediansNs": [
+            21.051406860351562,
+            20.978212356567383,
+            20.981788635253906
+          ]
+        },
+        "turbofan": {
+          "medianNs": 10.56814193725586,
+          "minNs": 10.54692268371582,
+          "maxNs": 10.638952255249023,
+          "processMediansNs": [
+            10.54692268371582,
+            10.638952255249023,
+            10.56814193725586
+          ]
+        }
+      }
+    }
+  ],
+  "ready": {
+    "runs": [
+      {
+        "run": 1,
+        "seconds": 19.623092041015624,
+        "rssBytes": 1629036544,
+        "peakRssBytes": 1633452032
+      },
+      {
+        "run": 2,
+        "seconds": 19.696305908203126,
+        "rssBytes": 1602023424,
+        "peakRssBytes": 1610993664
+      },
+      {
+        "run": 3,
+        "seconds": 20.372087646484374,
+        "rssBytes": 1669877760,
+        "peakRssBytes": 1672474624
+      }
+    ],
+    "medianSeconds": 19.696305908203126,
+    "medianRssBytes": 1629036544,
+    "medianPeakRssBytes": 1633452032,
+    "loaded": 81,
+    "compiledBundles": 82,
+    "productModules": 7,
+    "productInstances": 11
+  },
+  "runtimeArchive": {
+    "bytes": 63561129,
+    "ceilingBytes": 68972499
+  },
+  "corpus": {
+    "execution_seconds": 203.4676592469914,
+    "fresh_comparisons": 26204,
+    "inherited_comparisons": 0,
+    "native_skips": {
+      "CCL::%MAP-AREAS": "Target requires collector-owner enumeration; native heap walk has no matching target operation.",
+      "CCL::%MAP-LFUNS": "Target requires collector-owner enumeration; native heap walk has no matching target operation."
+    },
+    "runtime": {
+      "binary": "8fdaad1e676aaeaf13f6539eed9d5b281cae1d432046649cf4f96f03c4d63413",
+      "gc_count": {
+        "contract": "6952eb6e4afa25f121124557da8f9f87d5d736ede0ecd686fc49559106d5c815",
+        "maximum": 536870911,
+        "offset": 204,
+        "schema": "61af72548036fbfc70b197a9e262c5ee5c86378e4fda34ef339612b9ca06b2f4"
+      },
+      "owner": "e70ff55ede9b1eb82378c95ceb498cfa4b4cc413d02baa6a89d7f2d33cf612a2",
+      "source": "062a015e26718338d77db7034bd7b1eb27fc31b6fea0239799679cc581469a30"
+    },
+    "sampled_comparisons": 0,
+    "status": "PASS",
+    "tier": "full"
+  },
+  "corpusReuse": "Fresh Phase 1 run retained, not rerun after rollback. Current source differs from the qualified public-boundary correction only by two prototype-scope guards and a proof comment; product compilation binds callable metadata true. See kept-equivalence.json. No rejected Phase 2 corpus result is credited to Phase 1.",
+  "focused": {
+    "status": "PASS",
+    "nativeMatchedRows": 69,
+    "movingCollections": 9,
+    "record": "kept-observations/kept-focused.json",
+    "execution": "Rerun on restored Phase 1 after rollback; unchanged native source/oracle reused."
+  },
+  "boundaries": {
+    "status": "PASS",
+    "checks": 45,
+    "stack": {
+      "base": 16384,
+      "limit": 32768,
+      "reserve": 512,
+      "lastAcceptedEnd": 32256,
+      "firstSignalledEnd": 32272,
+      "reentrancy": true,
+      "overflowDepth": 11,
+      "tailSteps": 100000,
+      "tailStackBytes": 2048
+    },
+    "resultRows": [
+      {
+        "count": 0,
+        "budget": 64,
+        "status": "PASS"
+      },
+      {
+        "count": 1,
+        "budget": 64,
+        "status": "PASS"
+      },
+      {
+        "count": 4,
+        "budget": 64,
+        "status": "PASS"
+      },
+      {
+        "count": 5,
+        "budget": 64,
+        "status": "PASS"
+      },
+      {
+        "count": 5,
+        "budget": 4,
+        "status": "CHECKED_3"
+      },
+      {
+        "count": 64,
+        "budget": 64,
+        "status": "PASS"
+      },
+      {
+        "count": 64,
+        "budget": 4,
+        "status": "CHECKED_3"
+      }
+    ]
+  },
+  "controls": {
+    "status": "PASS",
+    "controls": [
+      {
+        "kind": "wrong-answer",
+        "status": "KILLED"
+      },
+      {
+        "kind": "missing-collection",
+        "status": "KILLED"
+      },
+      {
+        "kind": "missing-row",
+        "status": "KILLED"
+      },
+      {
+        "kind": "public-entry",
+        "status": "PASS",
+        "witness": "all fixture public entries trap; compiled calls complete"
+      },
+      {
+        "kind": "argument-roots",
+        "status": "KILLED",
+        "reason": "Error: Lisp startup completed",
+        "differences": [
+          {
+            "native": "CC-ROW :ARGUMENT T",
+            "target": "CC-ROW :ARGUMENT NIL"
+          }
+        ]
+      },
+      {
+        "kind": "pool-root",
+        "status": "KILLED",
+        "reason": "Error: Lisp startup completed",
+        "differences": [
+          {
+            "native": "CC-ROW :POOL (T 303)",
+            "target": "CC-ROW :POOL (NIL 303)"
+          }
+        ]
+      }
+    ]
+  },
+  "metadataPublication": {
+    "status": "PASS",
+    "controls": [
+      {
+        "kind": "arity-shape",
+        "status": "CHECKED_REFUSAL",
+        "predicate": "CALLABLE-METADATA-POOL"
+      },
+      {
+        "kind": "arity-version",
+        "status": "CHECKED_REFUSAL",
+        "predicate": "CALLABLE-METADATA-ARITY"
+      },
+      {
+        "kind": "required-count",
+        "status": "CHECKED_REFUSAL",
+        "predicate": "CALLABLE-METADATA-ARITY"
+      },
+      {
+        "kind": "debug-version",
+        "status": "CHECKED_REFUSAL",
+        "predicate": "CALLABLE-METADATA-ARITY"
+      }
+    ]
+  },
+  "publication": {
+    "status": "PASS",
+    "synchronousChecks": 81,
+    "asynchronousChecks": 11,
+    "execution": "Unchanged publisher qualification retained in phase1-artifacts.tar.gz."
+  },
+  "native": {
+    "status": "REUSED_BY_IDENTITY",
+    "passed": 21843,
+    "failed": 0,
+    "unchangedSourceHashes": 65,
+    "record": "kept-observations/native-reuse.json"
+  },
+  "readers": {
+    "status": "REUSED_BY_IDENTITY",
+    "comparisons": 782,
+    "record": "readers-reuse.json"
+  },
+  "census": {
+    "calls": 44724264,
+    "status": "INHERITED_NOT_RERUN"
+  },
+  "counts": {
+    "originals": [
+      575,
+      535
+    ],
+    "ledger": [
+      21,
+      12
+    ],
+    "criterionCredit": false
+  },
+  "limitations": [
+    "Independent review remains pending.",
+    "Phase 2 was rejected by user direction after measurement. Its ABI/context/static-publication changes and adapter changes are absent.",
+    "Tiny inline loop regresses from 2.993 to 4.067 ns; typed double/single from 2.762/2.755 to 3.034/3.017 ns. Cause not isolated.",
+    "READY baseline uses older core archives; the restored rebuilt Phase 1 core also includes prior accepted numeric/accessor work. Do not attribute the full startup gain solely to this change.",
+    "Static WAT counts include cold branches. Process ranges are not confidence intervals.",
+    "Fast benchmark rows reach the unchanged iteration cap before 50 ms.",
+    "Compiler-owned function metadata is immutable after publication under the admitted contract. Arbitrary raw post-publication corruption is outside that contract.",
+    "The archive and corrected-wrapper READY qualification are retained exactly; all 29 rebuilt benchmark code records equal that qualified build. No repeat timing series was run just for rollback."
+  ]
+}

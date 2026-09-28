@@ -1,0 +1,10 @@
+{
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-call-convention-r1",
+  "inventory": "inventory.json",
+  "inventorySha256": "4c5819e2abf9e9c2d36172e41707dce33d9ecc2cbd530faf3f7ec62a0197db99",
+  "files": 128,
+  "retainedPhase": 1,
+  "rejectedPhase": 2,
+  "status": "PRODUCER_VERIFIED_AWAITING_INDEPENDENT_REVIEW",
+  "storage": "Local persistent evidence; no remote-backup claim."
+}

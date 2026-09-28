@@ -100,8 +100,21 @@ source-level mutants were killed; removing the LIST NIL branch was equivalent
 under this layout (O-148). The ratio-literal loader failure remains a pre-existing
 issue (O-149); O-150 records the existing trusted-declaration contract. None gates
 accessor acceptance. Audit 192 supplies the parent review excluded by audit 191;
-the full declaration/loop stack is now reviewed and accepted. The call convention
-remains the next benchmark-guided optimization, outside this acceptance.
+the full declaration/loop stack is now reviewed and accepted.
+
+The [calling-convention subtraction](stage1/call-convention-results.md) is
+**producer-verified, awaiting independent review**. Retained Phase 1 removes
+redundant protocol work while preserving ABI version 1 and TCR publication.
+Default `eb-call − eb-loop` falls **50.614 → 28.777 ns**. Rebuilt core READY
+has a **19.696 s** median; the runtime archive is **63,561,129 bytes**.
+The Phase 1 corpus passes 26,204 fresh comparisons; the restored implementation
+passes 69 focused rows, nine moving collections and 45 boundary assertions.
+Native R6 and reader evidence are reused by identity. Tiny inline numeric
+loops regress modestly; the complete table and attribution limits are recorded.
+[Phase 2](stage1/call-convention-phase2-rejected.md) was measured and rejected
+following the user's direction: marginal call savings, no measurable READY
+gain and larger inline-loop regressions. Its code and contract are removed.
+Product Lisp 91 added / 42 removed; counts and criterion credit unchanged.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their
