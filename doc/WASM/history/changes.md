@@ -1,3 +1,15 @@
+## 2026-09-28 — Accept audit 195 and continue the foreign boundary
+
+Imported the user-supplied [audit 195](../stage0/claude-review.md) from
+`a33254e6` as `ec1f2532`. Accept `a61fab68` at its executed single-Worker
+scope; `51fc2d03` is consistent. The independent replay reproduces all owner,
+scalar and Lisp results and confirms unchanged flag-free READY behavior.
+No defect, no FMT/LL credit, no unchanged-test replay for acceptance.
+O-165's directed-test gaps carry into the next substantive unit; O-167's
+publication ordering must be addressed before multi-Worker admission.
+Other notes remain non-blocking. Compiler corpus stays deferred until the
+whole FFI layer is complete. Product Lisp lines changed: zero.
+
 ## 2026-09-28 — Connect generated roots to the single-Worker foreign owner
 
 [Stage 2's second unit](../stage2/README.md) adds synchronous FOREIGN entry and

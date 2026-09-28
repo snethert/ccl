@@ -1,7 +1,8 @@
 # Single-Worker foreign owner
 
 This Stage 2 unit connects the scalar foreign library to `CollectorOwner` and
-ordinary generated Lisp. Implementation and execution await independent review.
+ordinary generated Lisp. Accepted at its retained scope after user-supplied
+[Claude audit 195](../../../../doc/WASM/stage0/claude-review.md).
 It completes no FMT or LL slot. Product Lisp, shared compiler and upstream
 kernel sources are unchanged.
 
@@ -35,7 +36,9 @@ The portable owner suite uses the real collector with synthetic B frames to
 isolate admission. It covers two stack/heap placements, view refresh after
 memory growth, moving roots, initialization, exception/trap/host failures,
 retirement, cross-library reentry and refusal without memory writes. Each
-independent clause has a directed case. The preliminary 16-byte root-head span
+independent clause needs a directed case or a recorded equivalence argument.
+Audit 195 identifies missing directed cases for the entry/exit live-heap
+validation calls and 17 checkpoint words (O-165), carried into the next unit. The preliminary 16-byte root-head span
 check is redundant for admission with the complete root extent and count >= 2;
 it ensures the header read is safe. Its removal can change the refusal reason,
 which is explicitly excluded from the semantic mutation count. The private

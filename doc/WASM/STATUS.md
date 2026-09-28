@@ -28,7 +28,8 @@ then replays once, per user direction. Runtime-created weak tables reuse
 their reviewed implementation; image-built tables and broader GC work remain.
 
 The [second Stage 2 unit](stage2/README.md#second-delivery-single-worker-roots-across-foreign)
-is **implemented and executed; independent review pending**. The one-Worker
+is **accepted at its retained scope after [Claude audit 195](stage0/claude-review.md)**
+(`ec1f2532`), with no defect and no acceptance replay. The one-Worker
 collector owner brackets real generated roots across FOREIGN. Its focused suite
 passes 33 checks in all four engines with 19 killed mutants. An ordinary
 post-READY `%FASLOAD` runs 12 native-matched Lisp observations, 20 foreign entries

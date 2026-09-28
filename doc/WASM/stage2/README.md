@@ -52,8 +52,15 @@ tag to ordinary Lisp ERROR; the final Lisp foreign API remains owed.
 The scalar regression now passes **126 checks per engine and 16 killed
 mutants**, including O-159/O-160. O-162's fatal asynchronous-owner rule is
 explicit, and O-164's refusal row names are stable. The result binding is
-[foreign-runtime-results.json](foreign-runtime-results.json). **Executed;
-independent review pending. No FMT or LL credit.**
+[foreign-runtime-results.json](foreign-runtime-results.json). **Accepted after user-supplied [Claude audit 195](../stage0/claude-review.md)**
+(`a33254e6`, imported as `ec1f2532`). No FMT or LL credit.
+
+Audit 195 reproduces the owner, scalar and Lisp results byte for byte and finds
+no defect. Acceptance reruns no unchanged tests. O-165 adds directed entry/exit
+heap validation and checkpoint tests to the next substantive unit. O-167
+requires atomic descriptor publication and safe exit ordering before any
+multi-Worker qualification; the current single-Worker scope is unchanged.
+O-166/O-168/O-169 remain non-blocking observations.
 
 The first direct public `%WASM-FIND-SYMBOL` probe after READY signalled checked 4
 before the fixture; it is retained and unresolved. The qualified path uses the
