@@ -27,6 +27,7 @@
 (defvar *b-float-locals* nil)
 (defvar *b-float-temporaries* nil)
 (defvar *b-fixnum-locals* nil)
+(defvar *b-trust-declarations* nil)
 (defvar *b-call-mode* nil)
 (defvar *wasm32-fasl-publication* nil)
 (defvar *wasm32-fasl-functions* nil)
@@ -1205,7 +1206,8 @@
       ((ccl::builtin-call ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::or ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::local-tagbody ccl::local-go ccl::multiple-value-call ccl::multiple-value-list ccl::multiple-value-bind ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr rplaca rplacd ccl::%rplaca ccl::%rplacd ccl::set-car ccl::set-cdr)
-       (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" (b-checked-cons-operation op args)))
+       (or (b-declared-cons-read op args)
+           (b-wat "(block (result i32) ~a (i32.load (local.get $results)))" (b-checked-cons-operation op args))))
       (t (emit-expression ir)))))
 ;;; Multiple-value arguments grow directly in a rooted continuation. Each
 ;;; producer finishes before its values are appended; no Lisp call or poll
@@ -1287,7 +1289,8 @@
   (when (b-raw-code-p ir)
     (return-from b-multiple (b-wat "(local.set $value ~a) ~a (i32.store (local.get $results) (local.get $value)) (local.set $count (i32.const 1))" (b-raw-code-text ir) (b-ensure-results "(i32.const 1)"))))
   (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir))
-         (*b-direct-float-safety* (b-float-policy ir)))
+         (*b-direct-float-safety* (b-float-policy ir))
+         (*b-trust-declarations* (b-declaration-policy ir)))
     (case op
       (ccl::typed-form
        (if *bootstrap-front-end*
@@ -1451,6 +1454,7 @@
     (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-condition-used* nil) (*b-restart-used* nil) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
            (*b-float-temporaries* nil)
            (*b-direct-float-safety* (b-float-policy ir))
+           (*b-trust-declarations* (b-declaration-policy ir))
            (*b-float-locals* (b-plan-float-locals ir))
            (*b-fixnum-locals* (b-plan-fixnum-locals ir))
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
@@ -2775,6 +2779,70 @@
               exception depth exception depth)))))))
 
 (in-package :wasm32-compiler)
+(defun b-declared-type-p (form type)
+  (and *bootstrap-front-end* *b-trust-declarations* (ccl::acode-p form)
+       (ccl::acode-form-typep form type t)))
+
+(defun b-declared-cons-read (op forms)
+  (when (and (member op '(car cdr ccl::%car ccl::%cdr))
+             (b-declared-type-p (first forms) 'list))
+    (let* ((form (first forms)) (node (temporary))
+           (load (b-wat "(i32.load (i32.add (local.get ~a) (i32.const ~d)))"
+                   node (if (member op '(car ccl::%car)) wasm32::cons.car wasm32::cons.cdr))))
+      ;; No safepoint between producing the object and reading its field.
+      ;; LIST includes NIL; CONS alone permits the unconditional load.
+      (b-wat "(block (result i32) (local.set ~a ~a) ~a)"
+        node (b-scalar form)
+        (if (b-declared-type-p form 'cons) load
+          (b-wat "(if (result i32) (i32.eq (local.get ~a) (i32.const 77825)) (then (i32.const 77825)) (else ~a))"
+            node load))))))
+
+(defun b-stable-accessor-reference-p (form)
+  ;; An immutable, uncaptured lexical has an existing root. Its read has no
+  ;; effects and can be delayed until after the index, reloading after GC.
+  (when (ccl::acode-p form)
+    (let ((args (ccl::acode-operands form)))
+      (case (ccl::acode-operator-name (ccl::acode-operator form))
+        (ccl::typed-form
+         (and (not (third args)) (b-stable-accessor-reference-p (second args))))
+        (ccl::lexical-reference
+         (let ((var (ccl::nx-root-var (first args))))
+           (and (not (b-special-p var)) (not (b-captured-p var))
+                (not (logbitp ccl::$vbitsetq (ccl::nx-var-bits var)))
+                (not (b-float-local var)))))))))
+
+(defun b-accessor-operands (forms function)
+  (cond ((every #'b-simple-node-p (cdr forms))
+         (b-local-operands forms function))
+        ((b-stable-accessor-reference-p (first forms))
+         (let ((index (temporary)))
+           (b-wat "(block (result i32) (local.set ~a ~a) ~a)"
+             index (b-scalar (second forms))
+             (funcall function (list (b-scalar (first forms)) (b-local index))))))
+        (t (bootstrap-operands forms function))))
+
+(defun b-declared-svref (forms)
+  (when (and (= (length forms) 2)
+             (b-declared-type-p (first forms) 'simple-vector)
+             (b-declared-type-p (second forms) 'fixnum))
+    (let* ((type (ccl::specifier-type (ccl::acode-form-type (first forms) t)))
+           (dimensions (and (typep type 'ccl::array-ctype) (ccl::array-ctype-dimensions type)))
+           (length (and (consp dimensions) (null (cdr dimensions)) (integerp (car dimensions))
+                        (car dimensions)))
+           (bounded (and length (plusp length)
+                         (b-declared-type-p (second forms) `(integer 0 ,(1- length))))))
+      (b-accessor-operands forms
+        (lambda (values)
+          (destructuring-bind (object index) values
+            (b-wat "~a (i32.load (i32.add (i32.sub ~a (i32.const 2)) ~a))"
+              (if bounded ""
+                ;; The unsigned comparison also rejects negative indices.
+                ;; Operands are dead on this nonreturning error branch.
+                (b-wat "(if (i32.ge_u (i32.shr_u ~a (i32.const 2)) ~a) (then (call $implicit_error (i32.const 17) (local.get $top)) unreachable))"
+                  index (if length (b-wat "(i32.const ~d)" length)
+                          (b-wat "(i32.shr_u (i32.load (i32.sub ~a (i32.const 6))) (i32.const 8))" object))))
+              object index)))))))
+
 (defun b-checked-cons-operation (op forms)
   (let* ((readp (member op '(car cdr ccl::%car ccl::%cdr)))
          (carp (member op '(car rplaca ccl::%car ccl::%rplaca ccl::set-car)))
@@ -2798,6 +2866,8 @@
  (local.get $value))")
 (defun b-svref (forms)
   (unless (= (length forms) 2) (refuse :b-svref-arity))
+  (let ((code (b-declared-svref forms)))
+    (when code (return-from b-svref (b-multiple (make-b-raw-code :text code)))))
   (b-frame 2 (lambda (root)
     (let* ((v (b-wat "(i32.load offset=8 ~a)" root)) (i (b-wat "(i32.load offset=12 ~a)" root)))
       (with-output-to-string (s)
@@ -3631,14 +3701,23 @@
                    (t t))))
     (walk ir)))
 
-(defun b-float-policy (ir)
+(defun b-acode-declarations (ir)
   (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
-         (args (ccl::acode-operands ir))
-         (decls (case op
-                  ((ccl::lambda-list ccl::lambda-bind) (seventh args))
-                  ((ccl::let ccl::let* ccl::flet ccl::labels ccl::multiple-value-bind)
-                   (fourth args))
-                  (ccl::%decls-body (second args)))))
+         (args (ccl::acode-operands ir)))
+    (case op
+      ((ccl::lambda-list ccl::lambda-bind) (seventh args))
+      ((ccl::let ccl::let* ccl::flet ccl::labels ccl::multiple-value-bind)
+       (fourth args))
+      (ccl::%decls-body (second args)))))
+
+(defun b-declaration-policy (ir)
+  (let ((decls (b-acode-declarations ir)))
+    (if (integerp decls)
+      (logtest ccl::$decl_trustdecls decls)
+      *b-trust-declarations*)))
+
+(defun b-float-policy (ir)
+  (let ((decls (b-acode-declarations ir)))
     (if (integerp decls)
       (logtest (logior ccl::$decl_float_safety ccl::$decl_full_safety) decls)
       *b-direct-float-safety*)))
@@ -3711,7 +3790,8 @@
     (setf (gethash ir *bootstrap-emitted*) t)
     (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
            (args (ccl::acode-operands ir))
-           (*b-direct-float-safety* (b-float-policy ir)))
+           (*b-direct-float-safety* (b-float-policy ir))
+           (*b-trust-declarations* (b-declaration-policy ir)))
       (case op
         (ccl::setq-lexical
          (let ((float (b-float-local (first args))))
@@ -3990,6 +4070,9 @@
            x value x x x x)))
 
 (defun bootstrap-node-access (op args)
+  (when (member op '(ccl::svref ccl::%svref))
+    (let ((code (b-declared-svref args)))
+      (when code (return-from bootstrap-node-access code))))
   (bootstrap-operands
    args
    (lambda (values)
@@ -5700,6 +5783,10 @@
                             (assoc type *bootstrap-type-predicates*)))
         ((consp type)
          (case (car type)
+           (simple-vector
+            (and (<= 1 (length type) 2)
+                 (or (null (cdr type)) (eq (second type) '*)
+                     (typep (second type) '(integer 0 16777215)))))
            ((or and) (every #'bootstrap-type-supported-p (cdr type)))
            (not (and (= (length type) 2) (bootstrap-type-supported-p (second type))))
            (eql (and (= (length type) 2) (bootstrap-small-literal-p (second type))))
@@ -5731,6 +5818,15 @@
              (case name
                (null (b-wat "(i32.eq ~a (i32.const 77825))" value))
                (t (predicate name)))))
+          ((eq (car type) 'simple-vector)
+           ;; Check the representation before reading the length. VALUE is
+           ;; supplied by the caller's root and is reloaded after predicates.
+           (b-wat "(if (result i32) ~a (then ~a) (else (i32.const 0)))"
+             (bootstrap-require-test value 'simple-vector)
+             (if (integerp (second type))
+               (b-wat "(i32.eq (i32.shr_u (i32.load (i32.sub ~a (i32.const 6))) (i32.const 8)) (i32.const ~d))"
+                 value (second type))
+               "(i32.const 1)")))
           ((member (car type) '(or and))
            (reduce (lambda (part tail)
                      (if (eq (car type) 'or)

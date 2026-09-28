@@ -1,0 +1,1501 @@
+{
+  "version": 1,
+  "date": "2026-09-28",
+  "status": "EXECUTED_PENDING_INDEPENDENT_REVIEW",
+  "parentCommit": "f38261de",
+  "productLispLinesChanged": {
+    "added": 106,
+    "removed": 10
+  },
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-declared-accessors-r1",
+  "sourceIdentity": {
+    "compiler/WASM32/wasm32-arch.lisp": "f3522b3556cbc2bbeea5a9696e84c9491a6e4cc79672bb22fea27fd91f9adf77",
+    "compiler/WASM32/wasm32-backend.lisp": "faabd2c7007843d2b30cfdc2f2cc9ca4ebdfbae2be2155581aca4ebd03a2baf6",
+    "compiler/WASM32/wasm32-bundle.lisp": "f7dcbee1022d4b0a0098bb8782e04d0a310a616e3acddb0bdbed996e0bf5a733",
+    "compiler/lambda-list.lisp": "13263f46fec00c28af2de57173ff9bbf6ea20a76f68bc4d1493d20b0af207c2f",
+    "level-0/WASM32/w32-lap.lisp": "e884ab60a26af6c71027cd9f500ed8076bc09aac899faa82610fd4730492cab1",
+    "level-0/WASM32/w32-prims.lisp": "3b92cf3f68c33337faa54a96166ca7e9b6bf51af23ffb0ba4a9c094b83769f63",
+    "level-0/l0-aprims.lisp": "b428b150b3a19a62df9fd715c42fb6d14627992462e82fdcb0a814f657819561",
+    "level-0/l0-array.lisp": "c77510e0bb984d2bf11259ad8144ce1beefaf9ffa3cf0359b12ad46de1c70e43",
+    "level-0/l0-bignum32.lisp": "7a4fe8acf9462030680e2bf8614ef74508f1819708f754273d4558250a408a00",
+    "level-0/l0-cfm-support.lisp": "8eee94e83805c6bd009ceafbe6594b5c2adb7e36628ded11aab0fec0cf25058b",
+    "level-0/l0-def.lisp": "4ceb9c1d3edda4825e8a2b9e2a4daa252e7e44ea0c438bca7f1852168c1ce95b",
+    "level-0/l0-float.lisp": "d2b1b5c73fa791538b9df10b8e51aabddc7b8850addfb5fa2e6447f54f2547e4",
+    "level-0/l0-hash.lisp": "84e283eb5c3855c29fc2bfda774f771127eb3d614e790021dee70f50cdef7bbb",
+    "level-0/l0-io.lisp": "aac3503fce6261f3a24763d0cf648fe8c7ae0fe7adf958a7b8e16df812388bdd",
+    "level-0/l0-misc.lisp": "0a96a0df1e24332188bb1f0bfabf2d3811c5393e03060987194f30d4c2997dde",
+    "level-0/l0-numbers.lisp": "eb65d25a35e1665df78ca63054ae19b80299345d86faddd700770a88a3303081",
+    "level-0/l0-pred.lisp": "cd7097c9a1aae0e115836e5bed62e7c4fa81fb40ae4f765d41252850b1760bcf",
+    "level-0/l0-symbol.lisp": "e75054495a424a3dbfe823d35fb9942dbf9ad31cbe72d36c9776f660abb15e1f",
+    "level-0/l0-utils.lisp": "2ff15f834ff98bcb1f1db606c94450bb76a10ca2f0429d8cc6af4a1ae0ce6a56",
+    "level-0/nfasload.lisp": "45a9a663ef610249d1f45e0398526fab9c6fd2ff1f32fede649094172226c6c7",
+    "level-1/WASM32/w32-files.lisp": "c7e8f4893f2ca2333ef67f803f42c03b29621e402de9cdf82079b975604f9c01",
+    "level-1/WASM32/w32-streams.lisp": "b0574dfb5d675f51d21b678dfb5086c5ec8a7f20c258f2d5dcc84ef1894ff7c1",
+    "level-1/l1-application.lisp": "170258bd69508d9b9144087273cdda2b12a86d04f8756eb26b3fea2c5c9c4e3b",
+    "level-1/l1-aprims.lisp": "71f984b8ec09e465b7deb4195054a89058058cc33758179790f82b77c13c6e45",
+    "level-1/l1-boot-1.lisp": "790147e3a202e7096cfcb6c764728fa64a76b748dea87c6b94ec77d97fc08d2a",
+    "level-1/l1-boot-2.lisp": "9da5916c738ec594c5ef4d080be038224fd186f585701eab3f1fc70521b69580",
+    "level-1/l1-boot-3.lisp": "c7c6f0948ccaa47baa2f3457a1b83f0665d11ec294f30b2404316e38734577f9",
+    "level-1/l1-callbacks.lisp": "c13fab904b32d1e25614b952e2e96f65476d0a85608781b603fc595ac6286385",
+    "level-1/l1-clos-boot.lisp": "6712a032509670cc8c093d61cfd52419d77ae8d6e33f28aa9f8f7dff57431878",
+    "level-1/l1-clos.lisp": "d03f7f154f1f76098951a932774be51a1e6dbcc49c6d737980622db4393d7464",
+    "level-1/l1-dcode.lisp": "539147e6adf1a97f7acce7fde3b07da75e10b55d55773ed58f85d71ac7ff4434",
+    "level-1/l1-error-signal.lisp": "3177964de153cb8996bb0b22bfba53a7d814831a6be7b29ff413f305bccdfa75",
+    "level-1/l1-error-system.lisp": "4f0a11a1588cbaa02b23a69ba09763146c5a0e18a3cf63a153d945871e104a59",
+    "level-1/l1-events.lisp": "0ad4c51389a72b98f1d14c244a626ad1df9a5bb281153cd1dd24c77f49371bed",
+    "level-1/l1-files.lisp": "4ab7503f9079f511ef5291018185e801b73e9c0f2b98d739c7d7cadb4b1df4d3",
+    "level-1/l1-init.lisp": "624dfec0c611d56fde38db935efccb96e5198b75869bd9b7f716f4de7de8fb22",
+    "level-1/l1-io.lisp": "0c22f6c7bbded86b57d1078c6a42760091e9a7040a6c7c605f8a5130f38a7036",
+    "level-1/l1-lisp-threads.lisp": "b64a0de9a56994d60c1cc42fb4d5b162b1fc455d297cba884bc7e536fc8c8708",
+    "level-1/l1-numbers.lisp": "2e0f019b21c401dda8d47404806a8ee688a068388d2ac4b2ebd36bf5f8ab2f33",
+    "level-1/l1-pathnames.lisp": "3114d9e2bf98b36c045f2eca20c1b7f53a4aac116319af05c4e66f15157b7ad1",
+    "level-1/l1-processes.lisp": "ed7d5905d01338caa7947d713cf55669cf66a218a504f15e38711678eea828ca",
+    "level-1/l1-readloop-lds.lisp": "a42e0e3ae91e1d8e2cb0b23ac81b6fa5c95cf26f90e51245598d23cba60f7e3c",
+    "level-1/l1-readloop.lisp": "b3d54151c64e87e0717f2f7d2b2f275fca5732e6b9e0fb5c74b77cef42906b87",
+    "level-1/l1-streams.lisp": "1ce11a3ef83597a94496fcfe23f3109ff5eb2928892f90f307f01899a017f075",
+    "level-1/l1-sysio.lisp": "839e962e83f61f82677dd654be702de30475cd258f1c14a5a2869f6f351cea78",
+    "level-1/l1-typesys.lisp": "980df30720543e9b293a80af7898cc3ab21eb82190e19458ac38661af0e35820",
+    "level-1/l1-unicode.lisp": "f881079fba7afa0571b28a547c54a9fa4b20db2cc5dc212ba421d8e8dcc08a8e",
+    "level-1/l1-utils.lisp": "ae4c492beceac9694da0ddf362b1158b8af7b4684e0bc478feadb15938e8a041",
+    "level-1/level-1.lisp": "d7bcf743f9ca10bb00074a2fd02c1591737a28232a31fe61c56bf319709ff585",
+    "level-1/linux-files.lisp": "adb637861aad8c50dd5bed283adb02661f736e6c351b691c1990f842b13e4e21",
+    "lib/arglist.lisp": "75a8baf563bc456bd8127eae5ecb220ebfd8e0526dbc2cd3626fad6afc18d809",
+    "lib/compile-ccl.lisp": "d22bde615981bc447b4c68196ce6297e4319c75ee06be6864f1888bb11879138",
+    "lib/foreign-types.lisp": "9be0443be4747c985866e6500604f980d5463da728d1a584a19ebc093dbe59d5",
+    "lib/level-2.lisp": "70f8dc9980192a8f47dddafb1a46caa78cb4ea1394dd6b88e5a5b0ff5de81de2",
+    "lib/macros.lisp": "93f465d6634dac087e899308f51d74732dd7f953a44a51b24d3710b3bfc4c8ba",
+    "lib/misc.lisp": "d3f0d63677b9db15e0b23fb72318f7702f5e12c344a3d27e6c873c20625fe73b",
+    "lib/nfcomp.lisp": "fd2c20e18a1c5e10f7f9bbb938961f5a8c3734aafb5c806c5fb70a13f7025c4e",
+    "lib/pathnames.lisp": "1a80829b35ccf84b1609ba45d347273464d86751c16bb9a10e52942784cb5d2e",
+    "lib/prepare-mcl-environment.lisp": "c2284d5391e0292b28d23c619ba8ff1c7ae0fd27c0a3f0ce8f66d0a0f3b7fade",
+    "lib/systems.lisp": "941446c99acb923b618927ae1077b645b0b45fcfb989a2d0d884d63f41f05825",
+    "lib/time.lisp": "5d2ae150df58b46478a75a7c278bacf170d5dd820528a573ff52c4cd7433656b",
+    "library/cover.lisp": "13d6a0a49aa6b634914665fe6f47038ab3fadeb65daf8a61ee0c028bc68646e2",
+    "library/leaks.lisp": "d754b90aeb6f7a3ed799df4e55381806eb944d0eac5768a3c63122e404e047a5",
+    "library/loop.lisp": "3cb3cedd469a259a13d998999db1151152cf473fd7fbd5ecc5f3436831d950ea",
+    "tests/wasm/stage1/loader/architecture/extensions.lisp": "b8ddaa450a970d2e4c2f18a6368b2b627d4e0543f47ca62888fa59380f0e64f6",
+    "xdump/faslenv.lisp": "e53f8c667c0c3ab1992e45fffa9f4c33b63cda0511d5065eaaaaa26de747dbbc",
+    "xdump/xfasload.lisp": "47c04c4df61dedad93c5a919ef2ab3f0217cc563bdf4b73d8b99f63dfe9b862a",
+    "xdump/xwasm32-fasload.lisp": "7337592a82afabb75f898860b73226e471e9ca6f8a07bd62424fd019c818e969"
+  },
+  "previous": {
+    "record": "fixnum-loops-results.json",
+    "sha256": "5b2fc4c9b28ce9bc3f12dd69efb5330df01ed0b665609cef6fd9dbaf0c915b8c",
+    "status": "EXECUTED_PENDING_INDEPENDENT_REVIEW",
+    "evidenceInventorySha256": "81cd13cb8f1c1f63f1bb1b7acb1db08ee352ba717aa99d586e36c31273579500"
+  },
+  "changedBenchmarkBodies": [
+    "EB-CAR-TYPED",
+    "EB-SVREF-TYPED",
+    "EB-MOVING-REFERENCES",
+    "EB-RUN"
+  ],
+  "lisp": [
+    {
+      "mode": "default",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        53.05767059326172,
+        56.735992431640625,
+        53.60698699951172
+      ],
+      "medianNs": 53.60698699951172,
+      "minNs": 53.05767059326172,
+      "maxNs": 56.735992431640625
+    },
+    {
+      "mode": "default",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        18.160343170166016,
+        17.712831497192383,
+        17.74120330810547
+      ],
+      "medianNs": 17.74120330810547,
+      "minNs": 17.712831497192383,
+      "maxNs": 18.160343170166016
+    },
+    {
+      "mode": "default",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        8.668899536132812,
+        8.740425109863281,
+        8.687973022460938
+      ],
+      "medianNs": 8.687973022460938,
+      "minNs": 8.668899536132812,
+      "maxNs": 8.740425109863281
+    },
+    {
+      "mode": "default",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        1662.29248046875,
+        1657.65380859375,
+        1637.786865234375
+      ],
+      "medianNs": 1657.65380859375,
+      "minNs": 1637.786865234375,
+      "maxNs": 1662.29248046875
+    },
+    {
+      "mode": "default",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        2.7418136596679688,
+        2.762317657470703,
+        2.7704238891601562
+      ],
+      "medianNs": 2.762317657470703,
+      "minNs": 2.7418136596679688,
+      "maxNs": 2.7704238891601562
+    },
+    {
+      "mode": "default",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        22.198915481567383,
+        22.248029708862305,
+        22.31740951538086
+      ],
+      "medianNs": 22.248029708862305,
+      "minNs": 22.198915481567383,
+      "maxNs": 22.31740951538086
+    },
+    {
+      "mode": "default",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        5.274057388305664,
+        5.336523056030273,
+        5.318164825439453
+      ],
+      "medianNs": 5.318164825439453,
+      "minNs": 5.274057388305664,
+      "maxNs": 5.336523056030273
+    },
+    {
+      "mode": "default",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        82.1380615234375,
+        83.00399780273438,
+        82.54241943359375
+      ],
+      "medianNs": 82.54241943359375,
+      "minNs": 82.1380615234375,
+      "maxNs": 83.00399780273438
+    },
+    {
+      "mode": "default",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        53.32374572753906,
+        55.998802185058594,
+        53.49922180175781
+      ],
+      "medianNs": 53.49922180175781,
+      "minNs": 53.32374572753906,
+      "maxNs": 55.998802185058594
+    },
+    {
+      "mode": "default",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        2.9926300048828125,
+        2.9709339141845703,
+        3.013134002685547
+      ],
+      "medianNs": 2.9926300048828125,
+      "minNs": 2.9709339141845703,
+      "maxNs": 3.013134002685547
+    },
+    {
+      "mode": "default",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        95.11661529541016,
+        96.75216674804688,
+        95.85380554199219
+      ],
+      "medianNs": 95.85380554199219,
+      "minNs": 95.11661529541016,
+      "maxNs": 96.75216674804688
+    },
+    {
+      "mode": "default",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        50.37689208984375,
+        51.53846740722656,
+        51.53942108154297
+      ],
+      "medianNs": 51.53846740722656,
+      "minNs": 50.37689208984375,
+      "maxNs": 51.53942108154297
+    },
+    {
+      "mode": "default",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        317.95501708984375,
+        319.6449279785156,
+        325.3955841064453
+      ],
+      "medianNs": 319.6449279785156,
+      "minNs": 317.95501708984375,
+      "maxNs": 325.3955841064453
+    },
+    {
+      "mode": "default",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        2.7081966400146484,
+        2.754688262939453,
+        2.7844905853271484
+      ],
+      "medianNs": 2.754688262939453,
+      "minNs": 2.7081966400146484,
+      "maxNs": 2.7844905853271484
+    },
+    {
+      "mode": "default",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        21.78788185119629,
+        21.810293197631836,
+        21.856069564819336
+      ],
+      "medianNs": 21.810293197631836,
+      "minNs": 21.78788185119629,
+      "maxNs": 21.856069564819336
+    },
+    {
+      "mode": "default",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        15.503168106079102,
+        15.539884567260742,
+        15.544652938842773
+      ],
+      "medianNs": 15.539884567260742,
+      "minNs": 15.503168106079102,
+      "maxNs": 15.544652938842773
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        170.30906677246094,
+        169.8741912841797,
+        168.03550720214844
+      ],
+      "medianNs": 169.8741912841797,
+      "minNs": 168.03550720214844,
+      "maxNs": 170.30906677246094
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        34.86824035644531,
+        34.698486328125,
+        34.46245193481445
+      ],
+      "medianNs": 34.698486328125,
+      "minNs": 34.46245193481445,
+      "maxNs": 34.86824035644531
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        19.274473190307617,
+        19.246578216552734,
+        19.14048194885254
+      ],
+      "medianNs": 19.246578216552734,
+      "minNs": 19.14048194885254,
+      "maxNs": 19.274473190307617
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        2118.7744140625,
+        1788.116455078125,
+        1926.055908203125
+      ],
+      "medianNs": 1926.055908203125,
+      "minNs": 1788.116455078125,
+      "maxNs": 2118.7744140625
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        5.109310150146484,
+        5.1059722900390625,
+        5.059242248535156
+      ],
+      "medianNs": 5.1059722900390625,
+      "minNs": 5.059242248535156,
+      "maxNs": 5.109310150146484
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        50.73833465576172,
+        50.154685974121094,
+        49.61681365966797
+      ],
+      "medianNs": 50.154685974121094,
+      "minNs": 49.61681365966797,
+      "maxNs": 50.73833465576172
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        6.279230117797852,
+        6.2389373779296875,
+        6.213188171386719
+      ],
+      "medianNs": 6.2389373779296875,
+      "minNs": 6.213188171386719,
+      "maxNs": 6.279230117797852
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        216.51458740234375,
+        217.96035766601562,
+        219.81048583984375
+      ],
+      "medianNs": 217.96035766601562,
+      "minNs": 216.51458740234375,
+      "maxNs": 219.81048583984375
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        169.38400268554688,
+        171.56410217285156,
+        167.74749755859375
+      ],
+      "medianNs": 169.38400268554688,
+      "minNs": 167.74749755859375,
+      "maxNs": 171.56410217285156
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        7.834911346435547,
+        7.899999618530273,
+        7.778406143188477
+      ],
+      "medianNs": 7.834911346435547,
+      "minNs": 7.778406143188477,
+      "maxNs": 7.899999618530273
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        222.99957275390625,
+        225.7843017578125,
+        224.23934936523438
+      ],
+      "medianNs": 224.23934936523438,
+      "minNs": 222.99957275390625,
+      "maxNs": 225.7843017578125
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        163.4368896484375,
+        163.71726989746094,
+        160.9821319580078
+      ],
+      "medianNs": 163.4368896484375,
+      "minNs": 160.9821319580078,
+      "maxNs": 163.71726989746094
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        433.18939208984375,
+        435.50872802734375,
+        433.50982666015625
+      ],
+      "medianNs": 433.50982666015625,
+      "minNs": 433.18939208984375,
+      "maxNs": 435.50872802734375
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        5.072832107543945,
+        5.068778991699219,
+        5.056142807006836
+      ],
+      "medianNs": 5.068778991699219,
+      "minNs": 5.056142807006836,
+      "maxNs": 5.072832107543945
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        49.269676208496094,
+        49.38793182373047,
+        49.065589904785156
+      ],
+      "medianNs": 49.269676208496094,
+      "minNs": 49.065589904785156,
+      "maxNs": 49.38793182373047
+    },
+    {
+      "mode": "liftoff",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        31.48937225341797,
+        31.53705596923828,
+        31.435489654541016
+      ],
+      "medianNs": 31.48937225341797,
+      "minNs": 31.435489654541016,
+      "maxNs": 31.53705596923828
+    },
+    {
+      "mode": "native",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        2.495288848876953,
+        2.4743080139160156,
+        2.4871826171875
+      ],
+      "medianNs": 2.4871826171875,
+      "minNs": 2.4743080139160156,
+      "maxNs": 2.495288848876953
+    },
+    {
+      "mode": "native",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        2.6977062225341797,
+        2.730131149291992,
+        2.7091503143310547
+      ],
+      "medianNs": 2.7091503143310547,
+      "minNs": 2.6977062225341797,
+      "maxNs": 2.730131149291992
+    },
+    {
+      "mode": "native",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        2.3686885833740234,
+        2.3741722106933594,
+        2.3767948150634766
+      ],
+      "medianNs": 2.3741722106933594,
+      "minNs": 2.3686885833740234,
+      "maxNs": 2.3767948150634766
+    },
+    {
+      "mode": "native",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        16.52812957763672,
+        16.64900779724121,
+        16.440629959106445
+      ],
+      "medianNs": 16.52812957763672,
+      "minNs": 16.440629959106445,
+      "maxNs": 16.64900779724121
+    },
+    {
+      "mode": "native",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        2.530336380004883,
+        2.526998519897461,
+        2.5272369384765625
+      ],
+      "medianNs": 2.5272369384765625,
+      "minNs": 2.526998519897461,
+      "maxNs": 2.530336380004883
+    },
+    {
+      "mode": "native",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        2.245187759399414,
+        2.2461414337158203,
+        2.2449493408203125
+      ],
+      "medianNs": 2.245187759399414,
+      "minNs": 2.2449493408203125,
+      "maxNs": 2.2461414337158203
+    },
+    {
+      "mode": "native",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        2.0995140075683594,
+        2.125978469848633,
+        2.0999908447265625
+      ],
+      "medianNs": 2.0999908447265625,
+      "minNs": 2.0995140075683594,
+      "maxNs": 2.125978469848633
+    },
+    {
+      "mode": "native",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        10.935068130493164,
+        10.863780975341797,
+        10.94961166381836
+      ],
+      "medianNs": 10.935068130493164,
+      "minNs": 10.863780975341797,
+      "maxNs": 10.94961166381836
+    },
+    {
+      "mode": "native",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        2.414226531982422,
+        2.4182796478271484,
+        2.397775650024414
+      ],
+      "medianNs": 2.414226531982422,
+      "minNs": 2.397775650024414,
+      "maxNs": 2.4182796478271484
+    },
+    {
+      "mode": "native",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        2.2537708282470703,
+        2.2749900817871094,
+        2.2580623626708984
+      ],
+      "medianNs": 2.2580623626708984,
+      "minNs": 2.2537708282470703,
+      "maxNs": 2.2749900817871094
+    },
+    {
+      "mode": "native",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        5.127906799316406,
+        5.103111267089844,
+        5.135774612426758
+      ],
+      "medianNs": 5.127906799316406,
+      "minNs": 5.103111267089844,
+      "maxNs": 5.135774612426758
+    },
+    {
+      "mode": "native",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        2.1207332611083984,
+        2.144336700439453,
+        2.1529197692871094
+      ],
+      "medianNs": 2.144336700439453,
+      "minNs": 2.1207332611083984,
+      "maxNs": 2.1529197692871094
+    },
+    {
+      "mode": "native",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        41.90778732299805,
+        42.1900749206543,
+        41.67747497558594
+      ],
+      "medianNs": 41.90778732299805,
+      "minNs": 41.67747497558594,
+      "maxNs": 42.1900749206543
+    },
+    {
+      "mode": "native",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        2.7494430541992188,
+        2.7456283569335938,
+        2.753734588623047
+      ],
+      "medianNs": 2.7494430541992188,
+      "minNs": 2.7456283569335938,
+      "maxNs": 2.753734588623047
+    },
+    {
+      "mode": "native",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        3.006458282470703,
+        2.9730796813964844,
+        3.002166748046875
+      ],
+      "medianNs": 3.002166748046875,
+      "minNs": 2.9730796813964844,
+      "maxNs": 3.006458282470703
+    },
+    {
+      "mode": "native",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        2.9976367950439453,
+        3.0188560485839844,
+        2.9833316802978516
+      ],
+      "medianNs": 2.9976367950439453,
+      "minNs": 2.9833316802978516,
+      "maxNs": 3.0188560485839844
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CALL",
+      "processMediansNs": [
+        63.84468078613281,
+        62.816619873046875,
+        64.34249877929688
+      ],
+      "medianNs": 63.84468078613281,
+      "minNs": 62.816619873046875,
+      "maxNs": 64.34249877929688
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CAR",
+      "processMediansNs": [
+        21.241426467895508,
+        21.0721492767334,
+        21.13032341003418
+      ],
+      "medianNs": 21.13032341003418,
+      "minNs": 21.0721492767334,
+      "maxNs": 21.241426467895508
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-CAR-TYPED",
+      "processMediansNs": [
+        11.702299118041992,
+        11.665105819702148,
+        11.680126190185547
+      ],
+      "medianNs": 11.680126190185547,
+      "minNs": 11.665105819702148,
+      "maxNs": 11.702299118041992
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-DOUBLE-GENERIC",
+      "processMediansNs": [
+        1645.904541015625,
+        1654.60205078125,
+        1656.06689453125
+      ],
+      "medianNs": 1654.60205078125,
+      "minNs": 1645.904541015625,
+      "maxNs": 1656.06689453125
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-DOUBLE-TYPED",
+      "processMediansNs": [
+        3.771066665649414,
+        3.742218017578125,
+        3.7505626678466797
+      ],
+      "medianNs": 3.7505626678466797,
+      "minNs": 3.742218017578125,
+      "maxNs": 3.771066665649414
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-EQ",
+      "processMediansNs": [
+        27.266502380371094,
+        28.50341796875,
+        27.111530303955078
+      ],
+      "medianNs": 27.266502380371094,
+      "minNs": 27.111530303955078,
+      "maxNs": 28.50341796875
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-FIXNUM-GENERIC",
+      "processMediansNs": [
+        4.749059677124023,
+        4.762887954711914,
+        4.734992980957031
+      ],
+      "medianNs": 4.749059677124023,
+      "minNs": 4.734992980957031,
+      "maxNs": 4.762887954711914
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-KEYWORD-LOOP",
+      "processMediansNs": [
+        88.93108367919922,
+        90.23475646972656,
+        89.72358703613281
+      ],
+      "medianNs": 89.72358703613281,
+      "minNs": 88.93108367919922,
+      "maxNs": 90.23475646972656
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-LIVE-REFERENCE",
+      "processMediansNs": [
+        62.77179718017578,
+        61.67411804199219,
+        61.97071075439453
+      ],
+      "medianNs": 61.97071075439453,
+      "minNs": 61.67411804199219,
+      "maxNs": 62.77179718017578
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-LOOP",
+      "processMediansNs": [
+        3.036975860595703,
+        3.0198097229003906,
+        3.0291080474853516
+      ],
+      "medianNs": 3.0291080474853516,
+      "minNs": 3.0198097229003906,
+      "maxNs": 3.036975860595703
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-OPTIONAL-LOOP",
+      "processMediansNs": [
+        96.69876098632812,
+        93.42670440673828,
+        94.1314697265625
+      ],
+      "medianNs": 94.1314697265625,
+      "minNs": 93.42670440673828,
+      "maxNs": 96.69876098632812
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-REFERENCE-CALL",
+      "processMediansNs": [
+        61.969757080078125,
+        61.28501892089844,
+        61.46240234375
+      ],
+      "medianNs": 61.46240234375,
+      "minNs": 61.28501892089844,
+      "maxNs": 61.969757080078125
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-REST-LOOP",
+      "processMediansNs": [
+        207.77511596679688,
+        206.52389526367188,
+        207.01217651367188
+      ],
+      "medianNs": 207.01217651367188,
+      "minNs": 206.52389526367188,
+      "maxNs": 207.77511596679688
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SINGLE-TYPED",
+      "processMediansNs": [
+        3.7589073181152344,
+        3.7527084350585938,
+        3.745555877685547
+      ],
+      "medianNs": 3.7527084350585938,
+      "minNs": 3.745555877685547,
+      "maxNs": 3.7589073181152344
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SVREF",
+      "processMediansNs": [
+        30.428409576416016,
+        30.19857406616211,
+        30.200958251953125
+      ],
+      "medianNs": 30.200958251953125,
+      "minNs": 30.19857406616211,
+      "maxNs": 30.428409576416016
+    },
+    {
+      "mode": "turbofan",
+      "name": "EB-SVREF-TYPED",
+      "processMediansNs": [
+        18.7222957611084,
+        19.083738327026367,
+        19.19412612915039
+      ],
+      "medianNs": 19.083738327026367,
+      "minNs": 18.7222957611084,
+      "maxNs": 19.19412612915039
+    }
+  ],
+  "timerIntervals": {
+    "native": {
+      "minimumMs": 8.255,
+      "unitsPerSecond": [
+        1000000
+      ]
+    },
+    "default": {
+      "minimumMs": 11.131,
+      "unitsPerSecond": [
+        1000000
+      ]
+    },
+    "liftoff": {
+      "minimumMs": 20.471,
+      "unitsPerSecond": [
+        1000000
+      ]
+    },
+    "turbofan": {
+      "minimumMs": 12.408,
+      "unitsPerSecond": [
+        1000000
+      ]
+    }
+  },
+  "phaseSeparation": {
+    "qualificationCompleteEpoch": 1790605008.233423,
+    "measurementStartEpoch": 1790605010.948779
+  },
+  "reference": [
+    {
+      "mode": "default",
+      "name": "call",
+      "processMediansNs": [
+        0.3705038807608865,
+        0.37274558842182204,
+        0.3713850252556083
+      ],
+      "medianNs": 0.3713850252556083
+    },
+    {
+      "mode": "default",
+      "name": "f32",
+      "processMediansNs": [
+        0.9892399861262418,
+        0.996832807858778,
+        0.9895565693195044
+      ],
+      "medianNs": 0.9895565693195044
+    },
+    {
+      "mode": "default",
+      "name": "f64",
+      "processMediansNs": [
+        0.9910283455481886,
+        1.0011045734087605,
+        0.9938845084263769
+      ],
+      "medianNs": 0.9938845084263769
+    },
+    {
+      "mode": "default",
+      "name": "i32",
+      "processMediansNs": [
+        0.2904629082906816,
+        0.2944123744964593,
+        0.29282645481388786
+      ],
+      "medianNs": 0.29282645481388786
+    },
+    {
+      "mode": "default",
+      "name": "svref",
+      "processMediansNs": [
+        0.4898552227020265,
+        0.49195405960082966,
+        0.48824347496033077
+      ],
+      "medianNs": 0.4898552227020265
+    },
+    {
+      "mode": "liftoff",
+      "name": "call",
+      "processMediansNs": [
+        7.421795248985284,
+        7.396712541580218,
+        7.5978568792343175
+      ],
+      "medianNs": 7.421795248985284
+    },
+    {
+      "mode": "liftoff",
+      "name": "f32",
+      "processMediansNs": [
+        2.2787990172704053,
+        2.257424592971805,
+        2.2715826034545894
+      ],
+      "medianNs": 2.2715826034545894
+    },
+    {
+      "mode": "liftoff",
+      "name": "f64",
+      "processMediansNs": [
+        2.293583035469061,
+        2.283086379369103,
+        2.299807826677951
+      ],
+      "medianNs": 2.293583035469061
+    },
+    {
+      "mode": "liftoff",
+      "name": "i32",
+      "processMediansNs": [
+        1.5593111217022027,
+        1.5700609683990443,
+        1.575208544731144
+      ],
+      "medianNs": 1.5700609683990443
+    },
+    {
+      "mode": "liftoff",
+      "name": "svref",
+      "processMediansNs": [
+        1.8202283382415771,
+        1.8275865486689986,
+        1.8273794991629395
+      ],
+      "medianNs": 1.8273794991629395
+    },
+    {
+      "mode": "turbofan",
+      "name": "call",
+      "processMediansNs": [
+        2.3554317156473714,
+        2.360382159550991,
+        2.3774797519048096
+      ],
+      "medianNs": 2.360382159550991
+    },
+    {
+      "mode": "turbofan",
+      "name": "f32",
+      "processMediansNs": [
+        0.9957001010576839,
+        0.9980073372522992,
+        1.0014954408009829
+      ],
+      "medianNs": 0.9980073372522992
+    },
+    {
+      "mode": "turbofan",
+      "name": "f64",
+      "processMediansNs": [
+        0.9981937408447304,
+        0.9960799813270511,
+        1.0000842610994967
+      ],
+      "medianNs": 0.9981937408447304
+    },
+    {
+      "mode": "turbofan",
+      "name": "i32",
+      "processMediansNs": [
+        0.29552117208155215,
+        0.2927245919297399,
+        0.29479974072153814
+      ],
+      "medianNs": 0.29479974072153814
+    },
+    {
+      "mode": "turbofan",
+      "name": "svref",
+      "processMediansNs": [
+        0.4920135116577139,
+        0.49000719070434484,
+        0.49478435516357505
+      ],
+      "medianNs": 0.4920135116577139
+    }
+  ],
+  "defaultBracketAllocationBytesPerIteration": {
+    "EB-LOOP": 0.002532958984375,
+    "EB-CALL": 0.010009765625,
+    "EB-REFERENCE-CALL": 0.0104827880859375,
+    "EB-LIVE-REFERENCE": 0.01119232177734375,
+    "EB-OPTIONAL-LOOP": 0.0219268798828125,
+    "EB-REST-LOOP": 24.021224975585938,
+    "EB-KEYWORD-LOOP": 0.011077880859375,
+    "EB-CAR": 0.0025043487548828125,
+    "EB-CAR-TYPED": 0.002681732177734375,
+    "EB-SVREF": 0.002532958984375,
+    "EB-SVREF-TYPED": 0.0027103424072265625,
+    "EB-EQ": 0.0024433135986328125,
+    "EB-FIXNUM-GENERIC": 0.0028285980224609375,
+    "EB-DOUBLE-GENERIC": 16.344482421875,
+    "EB-DOUBLE-TYPED": 0.00275421142578125,
+    "EB-SINGLE-TYPED": 0.00274658203125
+  },
+  "correctness": {
+    "nativeProcesses": 3,
+    "targetProcesses": 9,
+    "timedLispSamples": 1728,
+    "handWrittenWasmSamples": 405,
+    "forcedTargetCollections": 36,
+    "ordinaryReadyProcesses": 3
+  },
+  "ready": [
+    {
+      "launchMs": 26462.834228515625,
+      "lispMs": 23106.926025390625,
+      "rssBytes": 2211127296,
+      "collections": 4
+    },
+    {
+      "launchMs": 26509.668701171875,
+      "lispMs": 23135.6728515625,
+      "rssBytes": 2199674880,
+      "collections": 4
+    },
+    {
+      "launchMs": 26640.977294921875,
+      "lispMs": 23333.863525390625,
+      "rssBytes": 2212823040,
+      "collections": 4
+    }
+  ],
+  "focused": {
+    "status": "PASS",
+    "nativeMatchedRows": 71,
+    "forcedMovingCollections": 8,
+    "codeShapes": "direct cons/list loads; bounded SVREF; retained dynamic bounds and checked lexical policies"
+  },
+  "dependencies": {
+    "floats": {
+      "status": "PASS",
+      "nativeMatchedRows": 83,
+      "forcedMovingCollections": 4,
+      "checkedConditions": [
+        "invalid",
+        "division-by-zero",
+        "overflow",
+        "type-error"
+      ],
+      "codeShapes": "eight direct arithmetic bodies, two checked scopes, one unchecked inner scope",
+      "nativeReuse": {
+        "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-float-unboxing-r1/focused/native.log",
+        "sha256": "dc2dcef6721a200d8fb2b6b80f455e51196ac441c3540d4689ba3a1c4aedf1ac",
+        "source": "/Users/buildsomething/Source/ccl/tests/wasm/stage1/float-unboxing/checks.lisp",
+        "sourceSha256": "cb76fb5c6e7d06f606900ffcc9b2fd37dd325a6caff48ada9576c58065ecaadc"
+      }
+    },
+    "fixnums": {
+      "status": "PASS",
+      "nativeMatchedRows": 125,
+      "forcedMovingCollections": 6,
+      "checkedConditions": [
+        "argument type",
+        "result range",
+        "generic operand type",
+        "recovery"
+      ],
+      "codeShapes": "direct declared addition; signed comparison; widened add/sub/mul with bignum fallback; generic float fallback",
+      "nativeReuse": {
+        "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-fixnum-loops-r1/focused/native.log",
+        "sha256": "84831a7efaa796e6164f9c6b8dc0e5cd58c7834c8dbe02e2b0c9534c255487fa",
+        "source": "/Users/buildsomething/Source/ccl/tests/wasm/stage1/fixnum-loops/checks.lisp",
+        "sourceSha256": "0d5b3ed2c12e67e4c52397400b960e97a944d197b6794f8f061556bdab62ba09"
+      }
+    }
+  },
+  "controls": {
+    "status": "PASS",
+    "mutations": [
+      {
+        "mutation": "car",
+        "status": "KILLED",
+        "reason": "native/target accessor mismatch",
+        "differences": [
+          {
+            "native": "DA-ROW DA-CAR 17",
+            "target": "DA-ROW DA-CAR 23"
+          }
+        ]
+      },
+      {
+        "mutation": "nil",
+        "status": "KILLED",
+        "reason": "native/target accessor mismatch",
+        "differences": [
+          {
+            "native": "DA-ROW NIL-CAR NIL",
+            "target": "DA-ROW NIL-CAR 0"
+          }
+        ]
+      },
+      {
+        "mutation": "index",
+        "status": "KILLED",
+        "reason": "native/target accessor mismatch",
+        "differences": [
+          {
+            "native": "DA-ROW DA-BOUNDED 10",
+            "target": "DA-ROW DA-BOUNDED 20"
+          },
+          {
+            "native": "DA-ROW DA-BOUNDED 20",
+            "target": "DA-ROW DA-BOUNDED 10"
+          },
+          {
+            "native": "DA-ROW DA-BOUNDED 30",
+            "target": "DA-ROW DA-BOUNDED 40"
+          },
+          {
+            "native": "DA-ROW DA-BOUNDED 40",
+            "target": "DA-ROW DA-BOUNDED 30"
+          },
+          {
+            "native": "DA-ROW RECOVERY 4",
+            "target": "DA-ROW RECOVERY 3"
+          }
+        ]
+      },
+      {
+        "mutation": "bounds",
+        "status": "KILLED",
+        "reason": "native/target accessor mismatch",
+        "differences": [
+          {
+            "native": "DA-ROW BOUNDS T",
+            "target": "DA-ROW BOUNDS NIL"
+          }
+        ]
+      },
+      {
+        "mutation": "length",
+        "status": "KILLED",
+        "reason": "native/target accessor mismatch",
+        "differences": [
+          {
+            "native": "DA-ROW SAFE-ERROR T",
+            "target": "DA-ROW SAFE-ERROR NIL"
+          }
+        ]
+      }
+    ]
+  },
+  "benchmarkControls": {
+    "status": "REUSED_BY_EXACT_SOURCE_IDENTITY",
+    "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-execution-bench-r1/results.json",
+    "recordSha256": "4fb43945ae759486ec2449f80097fd1d0ac1f8c3780cce9f3c86c6ae33728b56",
+    "controls": {
+      "status": "PASS",
+      "rejected": [
+        "wrong-answer",
+        "missing-sample",
+        "duplicate-sample",
+        "missing-completion",
+        "missing-gc-witness",
+        "zero-duration"
+      ]
+    },
+    "observerControls": {
+      "status": "PASS",
+      "checks": [
+        "split-output",
+        "allocation-excludes-copy",
+        "collection-count",
+        "missing-collection-refused",
+        "orphan-end-refused"
+      ]
+    },
+    "sources": {
+      "tests/wasm/stage1/execution-bench/controls.py": "56e042bb0f0bbca987bc10cee18818fb4d070fad3be08efe5d87454535b1d4c3",
+      "tests/wasm/stage1/execution-bench/run.py": "3104b4c7358af757ebefeda200c99350d50ff19b9d77d7f3315cb844a0c2f37f",
+      "tests/wasm/stage1/execution-bench/benchmarks.lisp": "6cef1578355a044dbd1ded7cb53b7e722d382c49019dd038e16aded762b4a3cf",
+      "tests/wasm/stage1/execution-bench/observe-check.mjs": "25e756a61f075d3cefc24df6362de2391b9b957c03315616bf8f0a2d040f506d",
+      "tests/wasm/stage1/execution-bench/observe.mjs": "7fbc855cf3adf1a7808c58ea22be9001f54965c5763fc4a753c22fa410358ac2",
+      "tests/wasm/stage1/execution-bench/reference.mjs": "b4901f77dfff5fdcd719a377e4e74f93ae980272fda01ca6e476f887ae12f97a",
+      "tests/wasm/stage1/execution-bench/reference.wat": "8f4d82c7639d8b21cdaa90455cdf6f2418a47215a80cb6dd80aa4d6368ed759c"
+    },
+    "inspector": "The separately disclosed post-baseline inspector correction was accepted in c7ac1376 and remains unchanged in this deliverable.",
+    "priorReuseRecord": {
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-fixnum-loops-r1/benchmark-controls-reuse.json",
+      "sha256": "6a87fdf2dccd43c395324cc39efe7bf57870ac78a5579fac9d3336c3e622a0c5"
+    }
+  },
+  "native": {
+    "status": "PASS",
+    "tests": {
+      "eligible": 21843,
+      "failed": 0,
+      "missing": 0,
+      "passed": 21843,
+      "registered": 21918,
+      "success": true,
+      "unexpected": 0,
+      "upstream_disabled": 75
+    },
+    "r6": {
+      "changed_code_functions": [
+        "CCL::TARGET-XLOAD-MODULES",
+        "CCL::TARGET-COMPILER-MODULES",
+        "CCL::TARGET-LEVEL-1-MODULES",
+        "CCL::TARGET-COMPILE-MODULES"
+      ],
+      "existing_architectures": 5,
+      "existing_target_module_profiles": 17,
+      "identical": 42,
+      "intentional_artifacts": [
+        "bin/apropos.dx64fsl",
+        "bin/arglist.dx64fsl",
+        "bin/arrays-fry.dx64fsl",
+        "bin/backquote.dx64fsl",
+        "bin/backtrace-lds.dx64fsl",
+        "bin/backtrace.dx64fsl",
+        "bin/case-error.dx64fsl",
+        "bin/chars.dx64fsl",
+        "bin/cn-encode.dx64fsl",
+        "bin/compile-ccl.dx64fsl",
+        "bin/cover.dx64fsl",
+        "bin/db-io.dx64fsl",
+        "bin/defstruct-lds.dx64fsl",
+        "bin/defstruct-macros.dx64fsl",
+        "bin/defstruct.dx64fsl",
+        "bin/describe.dx64fsl",
+        "bin/dumplisp.dx64fsl",
+        "bin/edit-callers.dx64fsl",
+        "bin/encapsulate.dx64fsl",
+        "bin/foreign-types.dx64fsl",
+        "bin/format.dx64fsl",
+        "bin/hash.dx64fsl",
+        "bin/hashenv.dx64fsl",
+        "bin/jp-encode.dx64fsl",
+        "bin/leaks.dx64fsl",
+        "bin/level-2.dx64fsl",
+        "bin/lists.dx64fsl",
+        "bin/macros.dx64fsl",
+        "bin/mcl-compat.dx64fsl",
+        "bin/method-combination.dx64fsl",
+        "bin/misc.dx64fsl",
+        "bin/nfcomp.dx64fsl",
+        "bin/number-case-macro.dx64fsl",
+        "bin/number-macros.dx64fsl",
+        "bin/numbers.dx64fsl",
+        "bin/pathnames.dx64fsl",
+        "bin/pprint.dx64fsl",
+        "bin/prefixed-stream.dx64fsl",
+        "bin/prepare-mcl-environment.dx64fsl",
+        "bin/read.dx64fsl",
+        "bin/remote-lisp.dx64fsl",
+        "bin/sequences.dx64fsl",
+        "bin/setf-runtime.dx64fsl",
+        "bin/setf.dx64fsl",
+        "bin/sort.dx64fsl",
+        "bin/source-files.dx64fsl",
+        "bin/streams.dx64fsl",
+        "bin/swank-loader.dx64fsl",
+        "bin/swink.dx64fsl",
+        "bin/systems.dx64fsl",
+        "bin/time.dx64fsl",
+        "bin/timestamped-stream.dx64fsl",
+        "bin/x86-backtrace.dx64fsl",
+        "bin/x86-disassemble.dx64fsl",
+        "bin/x86-watch.dx64fsl",
+        "l1-fasls/l1-application.dx64fsl",
+        "l1-fasls/l1-aprims.dx64fsl",
+        "l1-fasls/l1-boot-1.dx64fsl",
+        "l1-fasls/l1-boot-2.dx64fsl",
+        "l1-fasls/l1-boot-3.dx64fsl",
+        "l1-fasls/l1-boot-lds.dx64fsl",
+        "l1-fasls/l1-callbacks.dx64fsl",
+        "l1-fasls/l1-cl-package.dx64fsl",
+        "l1-fasls/l1-clos-boot.dx64fsl",
+        "l1-fasls/l1-clos.dx64fsl",
+        "l1-fasls/l1-dcode.dx64fsl",
+        "l1-fasls/l1-error-signal.dx64fsl",
+        "l1-fasls/l1-error-system.dx64fsl",
+        "l1-fasls/l1-events.dx64fsl",
+        "l1-fasls/l1-files.dx64fsl",
+        "l1-fasls/l1-format.dx64fsl",
+        "l1-fasls/l1-init.dx64fsl",
+        "l1-fasls/l1-io.dx64fsl",
+        "l1-fasls/l1-lisp-threads.dx64fsl",
+        "l1-fasls/l1-numbers.dx64fsl",
+        "l1-fasls/l1-pathnames.dx64fsl",
+        "l1-fasls/l1-processes.dx64fsl",
+        "l1-fasls/l1-reader.dx64fsl",
+        "l1-fasls/l1-readloop-lds.dx64fsl",
+        "l1-fasls/l1-readloop.dx64fsl",
+        "l1-fasls/l1-sockets.dx64fsl",
+        "l1-fasls/l1-sort.dx64fsl",
+        "l1-fasls/l1-streams.dx64fsl",
+        "l1-fasls/l1-symhash.dx64fsl",
+        "l1-fasls/l1-sysio.dx64fsl",
+        "l1-fasls/l1-typesys.dx64fsl",
+        "l1-fasls/l1-unicode.dx64fsl",
+        "l1-fasls/l1-utils.dx64fsl",
+        "l1-fasls/linux-files.dx64fsl",
+        "l1-fasls/nx.dx64fsl",
+        "l1-fasls/sysutils.dx64fsl",
+        "l1-fasls/version.dx64fsl",
+        "l1-fasls/x86-error-signal.dx64fsl",
+        "l1-fasls/x86-trap-support.dx64fsl",
+        "level-0/X86/x86-def.dx64fsl",
+        "level-0/X86/x86-float.dx64fsl",
+        "level-0/l0-aprims.dx64fsl",
+        "level-0/l0-array.dx64fsl",
+        "level-0/l0-bignum64.dx64fsl",
+        "level-0/l0-cfm-support.dx64fsl",
+        "level-0/l0-complex.dx64fsl",
+        "level-0/l0-def.dx64fsl",
+        "level-0/l0-float.dx64fsl",
+        "level-0/l0-hash.dx64fsl",
+        "level-0/l0-init.dx64fsl",
+        "level-0/l0-int.dx64fsl",
+        "level-0/l0-io.dx64fsl",
+        "level-0/l0-misc.dx64fsl",
+        "level-0/l0-numbers.dx64fsl",
+        "level-0/l0-pred.dx64fsl",
+        "level-0/l0-symbol.dx64fsl",
+        "level-0/l0-utils.dx64fsl",
+        "level-0/nfasload.dx64fsl",
+        "level-1.dx64fsl",
+        "library/lispequ.dx64fsl",
+        "library/loop.dx64fsl",
+        "library/sockets.dx64fsl",
+        "runtime.dx64fsl",
+        "tools/asdf.dx64fsl",
+        "tools/defsystem.dx64fsl",
+        "xdump/heap-image.dx64fsl",
+        "xdump/xfasload.dx64fsl"
+      ],
+      "native_fasls": 164,
+      "native_state_equal": true,
+      "unchanged_code_functions": 33
+    },
+    "baselineReuse": {
+      "directory": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2/native",
+      "executed_here": false,
+      "reason": "Same pristine U1 baseline recipe, inputs and kernel. Only the registered-build loading order changed.",
+      "run_sha256": "69bb70af742fc26f19d925e04ad2ab0c4089360f39e4de383b9470d746446188"
+    },
+    "restoredFasls": 164
+  },
+  "corpus": {
+    "execution_seconds": 218.3654578620044,
+    "fresh_comparisons": 26204,
+    "inherited_comparisons": 0,
+    "native_skips": {
+      "CCL::%MAP-AREAS": "Target requires collector-owner enumeration; native heap walk has no matching target operation.",
+      "CCL::%MAP-LFUNS": "Target requires collector-owner enumeration; native heap walk has no matching target operation."
+    },
+    "runtime": {
+      "binary": "8fdaad1e676aaeaf13f6539eed9d5b281cae1d432046649cf4f96f03c4d63413",
+      "gc_count": {
+        "contract": "6952eb6e4afa25f121124557da8f9f87d5d736ede0ecd686fc49559106d5c815",
+        "maximum": 536870911,
+        "offset": 204,
+        "schema": "61af72548036fbfc70b197a9e262c5ee5c86378e4fda34ef339612b9ca06b2f4"
+      },
+      "owner": "e70ff55ede9b1eb82378c95ceb498cfa4b4cc413d02baa6a89d7f2d33cf612a2",
+      "source": "062a015e26718338d77db7034bd7b1eb27fc31b6fea0239799679cc581469a30"
+    },
+    "sampled_comparisons": 0,
+    "status": "PASS",
+    "tier": "full"
+  },
+  "readers": {
+    "status": "REUSED_BY_EXACT_SOURCE_IDENTITY",
+    "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-audit189-errors-r1/readers/summary.json",
+    "sha256": "93f1c6293249b9b3a605dcb700f8b3c8ad2c9bf49983be5c677929b2e0e4af69",
+    "comparisons": 782,
+    "profiles": 17,
+    "files": 46,
+    "sources": {
+      "compiler/lambda-list.lisp": "13263f46fec00c28af2de57173ff9bbf6ea20a76f68bc4d1493d20b0af207c2f",
+      "level-0/l0-def.lisp": "4ceb9c1d3edda4825e8a2b9e2a4daa252e7e44ea0c438bca7f1852168c1ce95b",
+      "level-0/l0-hash.lisp": "84e283eb5c3855c29fc2bfda774f771127eb3d614e790021dee70f50cdef7bbb",
+      "level-0/l0-io.lisp": "aac3503fce6261f3a24763d0cf648fe8c7ae0fe7adf958a7b8e16df812388bdd",
+      "level-0/l0-misc.lisp": "0a96a0df1e24332188bb1f0bfabf2d3811c5393e03060987194f30d4c2997dde",
+      "level-0/l0-numbers.lisp": "eb65d25a35e1665df78ca63054ae19b80299345d86faddd700770a88a3303081",
+      "level-0/l0-pred.lisp": "cd7097c9a1aae0e115836e5bed62e7c4fa81fb40ae4f765d41252850b1760bcf",
+      "level-0/l0-symbol.lisp": "e75054495a424a3dbfe823d35fb9942dbf9ad31cbe72d36c9776f660abb15e1f",
+      "level-0/l0-utils.lisp": "2ff15f834ff98bcb1f1db606c94450bb76a10ca2f0429d8cc6af4a1ae0ce6a56",
+      "level-0/nfasload.lisp": "45a9a663ef610249d1f45e0398526fab9c6fd2ff1f32fede649094172226c6c7",
+      "level-1/l1-application.lisp": "170258bd69508d9b9144087273cdda2b12a86d04f8756eb26b3fea2c5c9c4e3b",
+      "level-1/l1-aprims.lisp": "71f984b8ec09e465b7deb4195054a89058058cc33758179790f82b77c13c6e45",
+      "level-1/l1-boot-1.lisp": "790147e3a202e7096cfcb6c764728fa64a76b748dea87c6b94ec77d97fc08d2a",
+      "level-1/l1-boot-2.lisp": "9da5916c738ec594c5ef4d080be038224fd186f585701eab3f1fc70521b69580",
+      "level-1/l1-boot-3.lisp": "c7c6f0948ccaa47baa2f3457a1b83f0665d11ec294f30b2404316e38734577f9",
+      "level-1/l1-clos-boot.lisp": "6712a032509670cc8c093d61cfd52419d77ae8d6e33f28aa9f8f7dff57431878",
+      "level-1/l1-clos.lisp": "d03f7f154f1f76098951a932774be51a1e6dbcc49c6d737980622db4393d7464",
+      "level-1/l1-dcode.lisp": "539147e6adf1a97f7acce7fde3b07da75e10b55d55773ed58f85d71ac7ff4434",
+      "level-1/l1-error-signal.lisp": "3177964de153cb8996bb0b22bfba53a7d814831a6be7b29ff413f305bccdfa75",
+      "level-1/l1-error-system.lisp": "4f0a11a1588cbaa02b23a69ba09763146c5a0e18a3cf63a153d945871e104a59",
+      "level-1/l1-events.lisp": "0ad4c51389a72b98f1d14c244a626ad1df9a5bb281153cd1dd24c77f49371bed",
+      "level-1/l1-files.lisp": "4ab7503f9079f511ef5291018185e801b73e9c0f2b98d739c7d7cadb4b1df4d3",
+      "level-1/l1-init.lisp": "624dfec0c611d56fde38db935efccb96e5198b75869bd9b7f716f4de7de8fb22",
+      "level-1/l1-io.lisp": "0c22f6c7bbded86b57d1078c6a42760091e9a7040a6c7c605f8a5130f38a7036",
+      "level-1/l1-lisp-threads.lisp": "b64a0de9a56994d60c1cc42fb4d5b162b1fc455d297cba884bc7e536fc8c8708",
+      "level-1/l1-numbers.lisp": "2e0f019b21c401dda8d47404806a8ee688a068388d2ac4b2ebd36bf5f8ab2f33",
+      "level-1/l1-pathnames.lisp": "3114d9e2bf98b36c045f2eca20c1b7f53a4aac116319af05c4e66f15157b7ad1",
+      "level-1/l1-processes.lisp": "ed7d5905d01338caa7947d713cf55669cf66a218a504f15e38711678eea828ca",
+      "level-1/l1-readloop-lds.lisp": "a42e0e3ae91e1d8e2cb0b23ac81b6fa5c95cf26f90e51245598d23cba60f7e3c",
+      "level-1/l1-readloop.lisp": "b3d54151c64e87e0717f2f7d2b2f275fca5732e6b9e0fb5c74b77cef42906b87",
+      "level-1/l1-streams.lisp": "1ce11a3ef83597a94496fcfe23f3109ff5eb2928892f90f307f01899a017f075",
+      "level-1/l1-sysio.lisp": "839e962e83f61f82677dd654be702de30475cd258f1c14a5a2869f6f351cea78",
+      "level-1/l1-typesys.lisp": "980df30720543e9b293a80af7898cc3ab21eb82190e19458ac38661af0e35820",
+      "level-1/l1-utils.lisp": "ae4c492beceac9694da0ddf362b1158b8af7b4684e0bc478feadb15938e8a041",
+      "level-1/level-1.lisp": "d7bcf743f9ca10bb00074a2fd02c1591737a28232a31fe61c56bf319709ff585",
+      "lib/arglist.lisp": "75a8baf563bc456bd8127eae5ecb220ebfd8e0526dbc2cd3626fad6afc18d809",
+      "lib/foreign-types.lisp": "9be0443be4747c985866e6500604f980d5463da728d1a584a19ebc093dbe59d5",
+      "lib/level-2.lisp": "70f8dc9980192a8f47dddafb1a46caa78cb4ea1394dd6b88e5a5b0ff5de81de2",
+      "lib/macros.lisp": "93f465d6634dac087e899308f51d74732dd7f953a44a51b24d3710b3bfc4c8ba",
+      "lib/misc.lisp": "d3f0d63677b9db15e0b23fb72318f7702f5e12c344a3d27e6c873c20625fe73b",
+      "lib/pathnames.lisp": "1a80829b35ccf84b1609ba45d347273464d86751c16bb9a10e52942784cb5d2e",
+      "lib/prepare-mcl-environment.lisp": "c2284d5391e0292b28d23c619ba8ff1c7ae0fd27c0a3f0ce8f66d0a0f3b7fade",
+      "lib/time.lisp": "5d2ae150df58b46478a75a7c278bacf170d5dd820528a573ff52c4cd7433656b",
+      "library/cover.lisp": "13d6a0a49aa6b634914665fe6f47038ab3fadeb65daf8a61ee0c028bc68646e2",
+      "library/leaks.lisp": "d754b90aeb6f7a3ed799df4e55381806eb944d0eac5768a3c63122e404e047a5",
+      "library/loop.lisp": "3cb3cedd469a259a13d998999db1151152cf473fd7fbd5ecc5f3436831d950ea"
+    },
+    "priorReuseRecord": {
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage1-fixnum-loops-r1/readers-reuse.json",
+      "sha256": "f7c10c069e0d9a6b8ff0d3101eb9065a9eeaa22bd8b809b5346af33c61dc1990"
+    }
+  },
+  "limitations": [
+    "Independent review pending for this change and the two arithmetic parents; no criterion credit.",
+    "Only reads are specialized; stores and the call convention are unchanged.",
+    "Unproved vector bounds remain checked. False declarations under trusted policy have no added validation contract.",
+    "The initial ratio literal fails in the unchanged core $FASL-RATIO; retained trace, no ratio-index execution claim.",
+    "Ordinary READY uses unchanged audit-190 core archives; new bundles and the fresh compiler corpus exercise this backend.",
+    "Static instruction counts include cold branches; timing process ranges are not confidence intervals.",
+    "Fast workloads reach the unchanged iteration cap before 50 ms; allocation brackets include untimed harness work."
+  ]
+}

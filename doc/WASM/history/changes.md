@@ -1,3 +1,33 @@
+## 2026-09-28 — Trust declarations for cons and simple-vector reads
+
+At the user's direction, continue from the float/fixnum work into declared
+accessors. The Wasm backend consumes NX1's lexical trust policy: CONS CAR/CDR
+become direct loads, LIST retains NIL handling, and declared SVREF omits
+representation/span checks while retaining unproved bounds. Immutable lexical
+vectors reload from existing roots after index evaluation; other operands keep
+their roots where needed. Checked scopes and THE assertions retain validation.
+The fixture exposed a missing checked `(simple-vector 4)` type test, now added
+with representation and length witnesses. Product Lisp **106 added / 10 removed**.
+
+The [producer record](../stage1/declared-accessors-results.md) reruns all sixteen
+unchanged workloads in three native processes and three per V8 tier. Default
+typed CAR falls **15.65 → 8.69 ns (1.8×)** and typed SVREF falls **23.77 →
+15.54 ns (1.5×)**. Three ordinary READY controls have a 26.510 s median using
+the unchanged core archives; no startup optimization is claimed.
+
+All 26,204 fresh compiler comparisons, 21,843 native tests with R6/R6a, 71
+focused observations, rebuilt 83-row float and 125-row fixnum fixtures, and
+five independent corruption controls pass. The fixtures and final benchmark
+pass 54 forced moving collections. Reader/observer evidence is reused by exact
+source identity. The initial checked-type compilation refusal is retained.
+The initial `1/2` index literal stopped in the unchanged core's `$FASL-RATIO`;
+its trace is retained, ratio loading remains unresolved, and the non-fixnum
+index refusal uses a boxed double as an equivalent witness.
+
+This change and both arithmetic parents await independent review. No reviewer
+was invoked. Whole-file counts, originals 575/535 and ledger 21/12 remain
+unchanged; no criterion credit.
+
 ## 2026-09-28 — Keep fixnums in locals and simplify scalar loop arithmetic
 
 At the user's direction, move fixnum/loop work ahead of declared accessors.

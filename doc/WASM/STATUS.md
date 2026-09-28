@@ -66,7 +66,24 @@ moving collections across the two fixtures and final benchmark pass. Ordinary
 READY is 26.738 s using the unchanged core archives. Product Lisp **114 added /
 9 removed**; counts and criterion credit unchanged. The record retains the shorter
 fast-loop sample intervals and scalar-call process variation.
-Next: supplied independent review of this stack, then declared accessor specialization.
+
+The [declared accessor optimization](stage1/declared-accessors-results.md) is
+**producer-verified, awaiting independent review** with the arithmetic stack.
+CCL's lexical trust-declarations policy now selects direct CAR/CDR and SVREF
+loads. LIST keeps NIL handling; vector bounds remain checked unless the length
+and index type prove the access. Checked policies and THE assertions remain
+active. Operand roots are omitted only where evaluation and GC permit it.
+The backend also supports checked fixed-length SIMPLE-VECTOR declarations.
+Default typed CAR falls **15.65 → 8.69 ns (1.8×)** and typed SVREF falls
+**23.77 → 15.54 ns (1.5×)** in the unchanged sixteen-workload benchmark.
+All 26,204 fresh corpus comparisons, 21,843 native tests with R6/R6a, 71 focused
+rows and five corruption controls pass. Rebuilt arithmetic fixtures pass their
+208 rows; the focused/dependency fixtures and benchmark pass 54 moving
+collections. Ordinary READY is 26.510 s using unchanged core archives.
+The retained ratio-literal loader failure is outside this accessor result;
+the same non-fixnum index clause is tested with a boxed double.
+Product Lisp **106 added / 10 removed**; counts and criterion credit unchanged.
+Next: supplied independent review of the declaration/loop stack.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their
