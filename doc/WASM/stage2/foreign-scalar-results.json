@@ -1,0 +1,96 @@
+{
+  "criterion_credit": false,
+  "engines": [
+    {
+      "checks": 124,
+      "engine": "node",
+      "version": "v25.6.1"
+    },
+    {
+      "checks": 124,
+      "engine": "chromium",
+      "version": "145.0.7632.6"
+    },
+    {
+      "checks": 124,
+      "engine": "firefox",
+      "version": "146.0.1"
+    },
+    {
+      "checks": 124,
+      "engine": "webkit",
+      "version": "26.0"
+    }
+  ],
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-scalar-r1",
+  "next": "Connect ordinary post-READY generated-Lisp calls to production root publication and admission, then copy/handle/callback and moving-GC obligations.",
+  "packet_sha256": "20f902edc977f025e4d8b95b6767842f84783daf37d1f4a42795b75dff699ab8",
+  "results": {
+    "artifacts.json": {
+      "path": "final/artifacts.json",
+      "sha256": "a79d745d0bfbf8a02356f02deddf8ef6993893674e90cbdda228b107ec59ac52"
+    },
+    "browser.json": {
+      "path": "final/browser.json",
+      "sha256": "836da3e296a45fa0fd5fab8c75aee5240f973962ebbfffcc82438873329d4967"
+    },
+    "engine-provenance.json": {
+      "path": "final/engine-provenance.json",
+      "sha256": "5375b1bf9bc1d8fc17175e16552b2ae82c00e809625da69f8cbed77d4d5550ab"
+    },
+    "mutants.json": {
+      "path": "final/mutants.json",
+      "sha256": "4e0110c47df3a7380627e68e3c8f424a33ce1ee238617aac1786fbe951c1979f"
+    },
+    "node.json": {
+      "path": "final/node.json",
+      "sha256": "b0b12cd6d05a75c0731310f6b332f74d4e106d45e2a3031b50b798f369becc0e"
+    },
+    "sources.json": {
+      "path": "final/sources.json",
+      "sha256": "a3702d8803e79a777446671253f3e6ac43bf833901990e912f502907e9486aac"
+    },
+    "summary.json": {
+      "path": "final/summary.json",
+      "sha256": "8b63fa1feb5d20e56202cde2d4fdb7d4eda742852005143e7af9f8235ebbfc8e"
+    },
+    "tools.json": {
+      "path": "final/tools.json",
+      "sha256": "d2d59918f6d1333db314f396b91c5520e9f700078adf55ba4b9d1b897eaaa9c4"
+    }
+  },
+  "retained_bytes": 265067,
+  "review": "NOT_REVIEWED",
+  "scope": "Opaque scalar library owner API. Hand-written Wasm caller/cleanup; no production D5/TCR, generated Lisp, copies, ownership, callbacks, GC, finalization or complete FMT credit.",
+  "source_files": {
+    "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
+    "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
+    "runtime/wasm32/foreign-module.mjs": "e6b6773d8409d01ecd2659ecd43c634da64225b19e01fb6db81c7b7b415c38c4",
+    "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907",
+    "tests/wasm/stage1/bootstrap-validation/common.py": "b162605e2af93d4b7972c1d04cc66984154ccee8926db9a645a75fed02049786",
+    "tests/wasm/stage1/bootstrap-validation/storage.py": "c071fa1aee15d5dcc3b6922ca2258f51c3a713feff01b19a58fa0d3e8b467ebc",
+    "tests/wasm/stage2/foreign-scalar/browser.mjs": "ef9b7af19ed61e63ce1e5403d8844140a0c0feeaedc822ec80dd9bd9189edc1f",
+    "tests/wasm/stage2/foreign-scalar/caller.wat": "2f2c6e482050ce9535282ee6423eb6681c95f9d40a74ff8a9866d136c69a6a38",
+    "tests/wasm/stage2/foreign-scalar/check.mjs": "fbdbe5d65b05a176bf57d80385421d2f9d7ca84ca8aae8f5c0228f00c165cc59",
+    "tests/wasm/stage2/foreign-scalar/library.wat": "4656785ca11346bbd08acab60493e7699c5b66589c9e7eda637f25e9e320540f",
+    "tests/wasm/stage2/foreign-scalar/node.mjs": "b64d5f36c5ee3371715a1b72a58c8d7bba2a0c72f7642d8042f492e51d95e87e",
+    "tests/wasm/stage2/foreign-scalar/run.py": "2c96124ee6a51c2478c69419b7986044d7731ee56d9c6ad06cb0fa058ea6bc2d",
+    "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147"
+  },
+  "status": "EXECUTED_REVIEW_PENDING",
+  "summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 124,
+    "criterion_credit": false,
+    "mutants": 14,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [],
+    "status": "PASS"
+  },
+  "version": 1
+}

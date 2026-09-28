@@ -1,3 +1,23 @@
+## 2026-09-28 — Begin Stage 2 with scalar foreign-module admission
+
+User direction: “begin stage 2.” The first [runtime unit](../stage2/README.md)
+admits digest-bound foreign Wasm with declared scalar imports/exports, private
+bounded memory/tables and explicit initialization. Owner hooks bracket every
+entry, including instantiation/start and initialization. Exceptions become
+catchable caller-tag failures; traps retire instances before admission, and
+failed admission remains fatal. Initialization aliases, re-entry, async hooks,
+argument mutation and malformed interfaces are checked.
+
+The [fixture](../../../tests/wasm/stage2/foreign-scalar/README.md) passes 124 checks
+in Node and each Chromium/Firefox/WebKit Worker, with 14 killed source mutants.
+Original browser-discovery, driver-version and WebKit admission-order failures
+are retained in `ccl-evidence/2026-09-28-stage2-foreign-scalar-r1`. The portable
+admission-order correction checks the declared interface before engine compile.
+Independent review is pending. No production D5/TCR, generated-Lisp cleanup,
+copy/handle, callback, finalization or complete FMT claim; no criterion credit.
+Whole-file/original-body counts and Stage 1 closure are unchanged. Product Lisp
+lines: zero; shared compiler and upstream kernel are unchanged.
+
 ## 2026-09-28 — Close Stage 1 from retained evidence; open Stage 2
 
 The user directed “just close it. we dont need a review.”

@@ -11,6 +11,19 @@ review or product test run. [Closure and exit checklist](stage1/exit-criteria-re
 Artifact retention landed first in `45682a83`. The dated implementation and
 review records below retain their historical counts and evidence limits.
 
+The first [Stage 2 delivery](stage2/README.md), the
+[scalar foreign-module boundary](../../tests/wasm/stage2/foreign-scalar/README.md),
+is **implemented and executed; independent review pending**. It validates
+digest, binary signatures, private memory/table limits and initialization before
+foreign execution, brackets entries through owner hooks, converts foreign
+exceptions/traps to the caller's tag and retires trapped instances. All **124
+checks pass in Node and Chromium/Firefox/WebKit Workers**, and all **14 mutation
+controls are killed**. This is the owner API, with a hand-written Wasm cleanup
+witness; production D5/TCR and generated-Lisp integration, copies/ownership,
+callbacks and finalization remain. No FMT/LL credit, whole-file count movement,
+shared compiler change or product Lisp lines. Runtime-created weak tables reuse
+their reviewed implementation; image-built tables and broader GC work remain.
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two
