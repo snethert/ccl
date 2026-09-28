@@ -1,3 +1,26 @@
+## 2026-09-28 — Lower declared float arithmetic and preserve unboxed loop values
+
+Following the accepted execution benchmark's priority order, the Wasm backend
+emits direct single/double arithmetic under unchecked lexical policy and keeps
+eligible declared variables in float locals. Checked scopes retain the service;
+captured/special variables and candidates that escape retain boxed storage.
+READY now initializes the adopted default floating-point exception mask to 7.
+Product Lisp **194 added / 6 removed**; no native ABI or upstream kernel change.
+
+The [producer record](../stage1/float-unboxing-results.md) retains the unchanged
+sixteen-workload benchmark rerun, emitted code and allocation observations.
+Typed double falls from 1,725.56 to 32.93 ns (52.4×); typed single falls from
+1,716.09 to 33.14 ns (51.8×). Ordinary READY remains at 26.203 s versus 26.164 s.
+Final qualification passes 26,204 fresh compiler corpus comparisons, 21,843
+registered native tests with R6/R6a, 83 focused float rows, four forced moving
+collections and four killed mutants. The 782 reader comparisons are reused by
+exact shared-source hashes. Original destructive-float, disabled-exception and
+fixture-construction failures remain in the single evidence pack.
+
+Independent review is pending; the producer did not invoke a reviewer. Whole-file
+counts, historical originals 575/535 and ledger 21/12 remain unchanged. No criterion
+credit. Declared accessors follow acceptance of this arithmetic change.
+
 ## 2026-09-28 — Accept the execution benchmark baseline
 
 The [user-supplied Claude review](../stage1/execution-bench-review.md) finds no

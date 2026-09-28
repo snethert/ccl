@@ -23,6 +23,9 @@
 (defvar *b-integer-service* nil)
 (defvar *b-float-service* nil)
 (defvar *b-float-safety* 1)
+(defvar *b-direct-float-safety* t)
+(defvar *b-float-locals* nil)
+(defvar *b-float-temporaries* nil)
 (defvar *b-call-mode* nil)
 (defvar *wasm32-fasl-publication* nil)
 (defvar *wasm32-fasl-functions* nil)
@@ -724,6 +727,10 @@
     (unless n (refuse :b-bound-variable))
     (b-wat "(i32.add (local.get $bindings) (i32.const ~d))" (+ 0 (* 4 n)))))
 (defun b-bind-value (var value)
+  (let ((float (and var (b-float-local var))))
+    (when float
+      (return-from b-bind-value
+        (b-wat "(local.set ~a ~a)" (third float) (b-unbox-float value (second float))))))
   (cond ((b-special-p var) (b-special-bind var value)) (var (if (b-captured-p var)
     (let ((staged (temporary)))
       ;; Evaluation may collect. The cell address must be read afterwards.
@@ -1150,6 +1157,13 @@
          (b-wat "(block (result i32) (local.set ~a ~a) (i32.store (call $special_location ~a) (local.get ~a)) (local.get ~a))" value (b-scalar (second args)) (b-special-symbol (first args)) value value)))
       (ccl::lexical-reference (b-read-variable (first args)))
       (ccl::setq-lexical
+       (let ((float (b-float-local (first args))))
+         (when float
+           (return-from b-scalar-inner
+             (b-box-float
+              (b-wat "(local.tee ~a ~a)" (third float)
+                     (b-float-value (second args) (second float)))
+              (second float)))))
        (let ((value (temporary)))
          (b-wat "(block (result i32) (local.set ~a ~a) ~a (local.get ~a))"
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
@@ -1267,7 +1281,8 @@
   (when (and *bootstrap-front-end* (ccl::acode-p ir)) (setf (gethash ir *bootstrap-emitted*) t))
   (when (b-raw-code-p ir)
     (return-from b-multiple (b-wat "(local.set $value ~a) ~a (i32.store (local.get $results) (local.get $value)) (local.set $count (i32.const 1))" (b-raw-code-text ir) (b-ensure-results "(i32.const 1)"))))
-  (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
+  (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir))
+         (*b-direct-float-safety* (b-float-policy ir)))
     (case op
       (ccl::typed-form
        (if *bootstrap-front-end*
@@ -1385,7 +1400,7 @@
       (ccl::progn
        (with-output-to-string (s)
          (loop for rest on (first args) do
-           (write-string (if (cdr rest) (b-wat "(drop ~a)" (b-scalar (car rest))) (b-multiple (car rest))) s))))
+           (write-string (if (cdr rest) (b-discard (car rest)) (b-multiple (car rest))) s))))
       (ccl::if
        (b-wat "(if (i32.ne ~a (i32.const ~d)) (then ~a) (else ~a))" (b-scalar (first args)) wasm32::canonical-nil-value (b-multiple (second args)) (b-multiple (third args))))
       ((ccl::multiple-value-prog1 ccl::prog1)
@@ -1429,6 +1444,9 @@
     (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
                  (or *bootstrap-front-end* (not (consp (third args)))) (or *bootstrap-front-end* (equal (fifth args) '(nil nil)))) (refuse :b-lambda))
     (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-condition-used* nil) (*b-restart-used* nil) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
+           (*b-float-temporaries* nil)
+           (*b-direct-float-safety* (b-float-policy ir))
+           (*b-float-locals* (b-plan-float-locals ir))
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
            (opt (second args)) (keys (fourth args)) (lexpr (consp (third args))) (rest (if lexpr (car (third args)) (third args))) (aux (fifth args))
            (*b-bound-vars* (remove-duplicates
@@ -1444,7 +1462,7 @@
                                       (logbitp ccl::$fbitmethodp (ccl::afunc-bits afunc))) "")))
                    (flet ((emit-body () (concatenate 'string
                       (with-output-to-string (s)
-                        (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (member v *b-bound-vars* :test #'eq)) do
+                        (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (b-float-local v) (member v *b-bound-vars* :test #'eq)) do
                           (write-string (b-bind-value v (b-wat "(i32.load offset=~d (local.get $incoming))" (* 4 i))) s)))
                       (b-binding-code arity opt keys (unless lexpr rest))
                       (with-output-to-string (s)
@@ -1481,6 +1499,10 @@
              (write-string (b-result-runtime) s)
              (write-string "(func $body (export \"tail_entry\") (type $tail_entry) (param $self i32) (param $nargs i32) (param $context i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32) (local $dynamic_results i32) (local $result_descriptor i32) (local $result_scope i32)" s)
              (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
+             (dolist (float *b-float-locals*)
+               (format s "(local ~a f~d)" (third float) (second float)))
+             (dolist (float (reverse *b-float-temporaries*))
+               (format s "(local ~a f~d)" (car float) (cdr float)))
              (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
              (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a) (local.set $top (i32.add (local.get $context) (i32.add (i32.const 48) (i32.and (i32.add (i32.mul (local.get $nargs) (i32.const 4)) (i32.const 15)) (i32.const -16))))) (local.set $top (i32.add (local.get $top) (i32.load offset=24 (local.get $context))))"
                (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
@@ -1787,7 +1809,10 @@
           ((member root *b-bound-vars* :test #'eq) (b-bound-address root))
           (n (b-at "(local.get $incoming)" (* 4 n)))
           (t (refuse :b-variable-identity)))))
-(defun b-read-variable (var) (b-wat "(i32.load ~a)" (b-variable-address var)))
+(defun b-read-variable (var)
+  (let ((float (b-float-local var)))
+    (if float (b-box-float (b-local (third float)) (second float))
+      (b-wat "(i32.load ~a)" (b-variable-address var)))))
 (defun b-heap-block (bytes emit)
   (let* ((p (temporary)) (body (funcall emit (b-local p))))
     (b-wat "(block (result i32) ~a(local.set ~a ~a) ~a ~a ~a ~a ~a (local.get ~a))"
@@ -3212,7 +3237,7 @@
                  (with-output-to-string (s)
                    (loop for segment in segments for n from 0 do
                      (format s "(if (i32.le_u (local.get ~a) (i32.const ~d)) (then " pc n)
-                     (dolist (form segment) (format s "(drop ~a)" (b-scalar form)))
+                     (dolist (form segment) (write-string (b-discard form) s))
                      (write-string "))" s))
                    (format s "(local.set ~a (i32.const -1))" pc)
                    (write-string (b-multiple (make-b-raw-code :text "(i32.const 77825)")) s)))))))
@@ -3279,7 +3304,7 @@
            (body (with-output-to-string (s)
              (loop for segment in segments for n from 0 do
                (format s "(if (i32.le_u (local.get ~a) (i32.const ~d)) (then " pc n)
-               (dolist (form segment) (format s "(drop ~a)" (b-scalar form)))
+               (dolist (form segment) (write-string (b-discard form) s))
                (write-string "))" s)))))
       (b-wat "(local.set ~a (i32.const 0)) (loop ~a ~a) ~a"
         pc label body (b-multiple (make-b-raw-code :text "(i32.const 77825)"))))))
@@ -3491,6 +3516,165 @@
      (if (result i32) (i32.eq (local.get $kind) (i32.const 36)) (then (i32.const 589852)) (else
      (if (result i32) (i32.eq (local.get $kind) (i32.const 37)) (then (i32.const 1114140)) (else
      (if (result i32) (i32.eq (local.get $kind) (i32.const 38)) (then (i32.const 2162716)) (else (i32.const 156))))))))))") s)))
+;;; Uncaptured declared floats can live in Wasm locals across calls and moving
+;;; collections: their bits are not heap references. Box only at a Lisp value
+;;; boundary. Captured and special variables retain the ordinary node storage.
+;;; The checked arithmetic path remains the qualified floating service; direct
+;;; Wasm arithmetic follows NX1's lexical floating-point safety declarations.
+(defun b-float-local (var)
+  (assoc (ccl::nx-root-var var) *b-float-locals* :test #'eq))
+
+(defun b-plan-float-locals (ir)
+  (when (and *bootstrap-front-end* *b-float-service*)
+    (let ((vars (remove-if-not
+                 (lambda (var)
+                   (and (member (ccl::var-declared-type var) '(single-float double-float))
+                        (not (b-special-p var)) (not (b-captured-p var))))
+                 (remove-duplicates (append *required-vars* (b-local-variables ir)) :test #'eq))))
+      (when (b-float-locals-safe-p ir vars)
+        (loop for var in vars
+              collect (list var (if (eq (ccl::var-declared-type var) 'single-float) 32 64)
+                            (format nil "$float_var~d" (incf *temporary-count*))))))))
+
+(defun b-float-locals-safe-p (ir vars)
+  ;; CCL's destructive float primitives require the original boxed identity.
+  ;; Keep this first register pass conservative: if a candidate can escape to
+  ;; an unknown operation, a non-register binding or a store, keep the whole
+  ;; function's float variables boxed. Arithmetic can still lower directly.
+  (labels ((references (x)
+             (cond ((ccl::acode-p x)
+                    (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
+                          (args (ccl::acode-operands x)))
+                      (case op
+                        (ccl::immediate nil)
+                        (ccl::lexical-reference
+                         (member (ccl::nx-root-var (first args)) vars :test #'eq))
+                        (t (some #'references args)))))
+                   ((consp x) (some #'references x))))
+           (walk (x)
+             (cond ((ccl::acode-p x)
+                    (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
+                          (args (ccl::acode-operands x)))
+                      (case op
+                        (ccl::immediate t)
+                        ((ccl::let ccl::let*)
+                         (and (loop for var in (first args) for init in (second args)
+                                    always (or (member var vars :test #'eq) (not (references init))))
+                              (every #'walk args)))
+                        (ccl::setq-lexical
+                         (and (or (member (ccl::nx-root-var (first args)) vars :test #'eq)
+                                  (not (references (second args))))
+                              (walk (second args))))
+                        ((ccl::lambda-list ccl::lexical-reference ccl::typed-form
+                          ccl::%decls-body ccl::values ccl::progn ccl::if
+                          ccl::local-block ccl::local-return-from ccl::local-tagbody
+                          ccl::tag-label ccl::local-go)
+                         (every #'walk args))
+                        (t (if (b-float-operation x) (every #'walk args)
+                             (not (references x)))))))
+                   ((consp x) (every #'walk x))
+                   (t t))))
+    (walk ir)))
+
+(defun b-float-policy (ir)
+  (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
+         (args (ccl::acode-operands ir))
+         (decls (case op
+                  ((ccl::lambda-list ccl::lambda-bind) (seventh args))
+                  ((ccl::let ccl::let* ccl::flet ccl::labels ccl::multiple-value-bind)
+                   (fourth args))
+                  (ccl::%decls-body (second args)))))
+    (if (integerp decls)
+      (logtest (logior ccl::$decl_float_safety ccl::$decl_full_safety) decls)
+      *b-direct-float-safety*)))
+
+(defun b-float-temporary (width)
+  (let ((name (format nil "$float_tmp~d" (length *b-float-temporaries*))))
+    (push (cons name width) *b-float-temporaries*)
+    name))
+
+(defun b-unbox-float (value width)
+  (let ((node (temporary)))
+    (b-wat "(block (result f~d) (local.set ~a ~a) (if (i32.ne (call $real_operand (local.get ~a)) (i32.const ~d)) (then ~a)) (f~d.load ~a))"
+      width node value node width
+      (b-type-failure (b-local node) (if (= width 32) 'single-float 'double-float))
+      width (b-at (b-local node) (if (= width 32) -2 2)))))
+
+(defun b-box-float (value width)
+  (let ((raw (b-float-temporary width)))
+    (b-wat "(block (result i32) (local.set ~a ~a) ~a)"
+      raw value
+      (b-at
+       (b-heap-block (if (= width 32) 8 16)
+         (lambda (base)
+           (b-wat "(i32.store ~a (i32.const ~d)) ~a (f~d.store offset=~d ~a (local.get ~a))"
+             base (if (= width 32) 271 791)
+             (if (= width 32) "" (b-wat "(i32.store offset=4 ~a (i32.const 0))" base))
+             width (if (= width 32) 4 8) base raw)))
+       6))))
+
+(defun b-float-operation (ir)
+  (and (ccl::acode-p ir)
+       (assoc (ccl::acode-operator-name (ccl::acode-operator ir))
+              '((ccl::%double-float+-2 64 "add") (ccl::%double-float--2 64 "sub")
+                (ccl::%double-float*-2 64 "mul") (ccl::%double-float/-2 64 "div")
+                (ccl::%short-float+-2 32 "add") (ccl::%short-float--2 32 "sub")
+                (ccl::%short-float*-2 32 "mul") (ccl::%short-float/-2 32 "div")))))
+
+(defun b-float-value (ir width)
+  (when (ccl::acode-p ir)
+    (setf (gethash ir *bootstrap-emitted*) t)
+    (let ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
+          (args (ccl::acode-operands ir)) (operation (b-float-operation ir)))
+      (case op
+        (ccl::lexical-reference
+         (let ((float (b-float-local (first args))))
+           (when (and float (= width (second float)))
+             (return-from b-float-value (b-local (third float))))))
+        (ccl::typed-form
+         (when (and (not (third args))
+                    (eq (first args) (if (= width 32) 'single-float 'double-float)))
+           (return-from b-float-value (b-float-value (second args) width))))
+        (ccl::setq-lexical
+         (let ((float (b-float-local (first args))))
+           (when (and float (= width (second float)))
+             (return-from b-float-value
+               (b-wat "(local.tee ~a ~a)" (third float)
+                      (b-float-value (second args) width)))))))
+      (when (and operation (= width (second operation)) (not *b-direct-float-safety*))
+        ;; Wasm evaluates operands left to right. Unboxed left operands remain
+        ;; valid if evaluation of the right operand calls Lisp or collects.
+        (return-from b-float-value
+          (b-wat "(f~d.~a ~a ~a)" width (third operation)
+            (b-float-value (first args) width) (b-float-value (second args) width))))))
+  (b-unbox-float (b-scalar ir) width))
+
+(defun b-discard (ir)
+  ;; A SETQ used for effect must not box its otherwise unused result each trip
+  ;; through a numeric loop. Preserve lexical policy in statement subforms.
+  (when (and *bootstrap-front-end* *b-float-locals* (ccl::acode-p ir))
+    (setf (gethash ir *bootstrap-emitted*) t)
+    (let* ((op (ccl::acode-operator-name (ccl::acode-operator ir)))
+           (args (ccl::acode-operands ir))
+           (*b-direct-float-safety* (b-float-policy ir)))
+      (case op
+        (ccl::setq-lexical
+         (let ((float (b-float-local (first args))))
+           (when float
+             (return-from b-discard
+               (b-wat "(local.set ~a ~a)" (third float)
+                      (b-float-value (second args) (second float)))))))
+        (ccl::%decls-body (return-from b-discard (b-discard (first args))))
+        (ccl::progn
+         (return-from b-discard
+           (with-output-to-string (s)
+             (dolist (form (first args)) (write-string (b-discard form) s)))))
+        (ccl::if
+         (return-from b-discard
+           (b-wat "(if (i32.ne ~a (i32.const 77825)) (then ~a) (else ~a))"
+             (b-scalar (first args)) (b-discard (second args)) (b-discard (third args))))))))
+  (b-wat "(drop ~a)" (b-scalar ir)))
+
 (defun b-float-call (name forms)
  (let* ((names '(%float-add %float-sub %float-mul %float-div %float-lt %float-le %float-eq %float-ne %float-ge %float-gt %float-single %float-double %libm-expt64 %libm-expt32 %libm-sin64 %libm-sin32 %libm-cos64 %libm-cos32 %libm-acos64 %libm-acos32 %libm-asin64 %libm-asin32 %libm-cosh64 %libm-cosh32 %libm-log64 %libm-log32 %libm-tan64 %libm-tan32 %libm-atan64 %libm-atan32 %libm-atan264 %libm-atan232 %libm-exp64 %libm-exp32 %libm-sinh64 %libm-sinh32 %libm-tanh64 %libm-tanh32 %libm-asinh64 %libm-asinh32 %libm-acosh64 %libm-acosh32 %libm-atanh64 %libm-atanh32 %libm-sqrt64 %libm-sqrt32))
         (op (position name names)) (operation (nth op '(+ - * / < <= = /= >= > float float expt expt sin sin cos cos acos acos asin asin cosh cosh log log tan tan atan atan atan atan exp exp sinh sinh tanh tanh asinh asinh acosh acosh atanh atanh sqrt sqrt))) (unary (and (>= op 10) (not (member op '(12 13 30 31))))))
@@ -4855,6 +5039,10 @@
         ccl::%double-float*-2 ccl::%double-float/-2
         ccl::%short-float+-2 ccl::%short-float--2
         ccl::%short-float*-2 ccl::%short-float/-2)
+       (unless *b-direct-float-safety*
+         (return-from bootstrap-operator
+           (b-box-float (b-float-value ir (second (b-float-operation ir)))
+                        (second (b-float-operation ir)))))
        (bootstrap-primary
         (b-float-call
          (ecase op

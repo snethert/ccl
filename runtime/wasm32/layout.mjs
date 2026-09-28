@@ -40,6 +40,6 @@ export function deriveLayout(config,{bootFunctions,bootRootCells=0,runtimeFuncti
   root:vstack.start,bindings:bindings.start,runtimeGlobals:globals.start,freeTarget:c.freeTarget,
   tcrWords:{48:spaces[0].start,52:spaces[0].end,56:spaces[0].start,64:vstack.start+8,68:vstack.start+8,72:vstack.end,
    76:temp.start,80:temp.start,84:temp.end,88:control.start,92:control.start,96:control.end,104:bindings.start,
-   120:vstack.start+8200,124:vstack.start+8264,128:vstack.start},
+   120:vstack.start+8200,124:vstack.start+8264,128:vstack.start,200:7},
   stackDefaults:[c.valueStack,c.controlStack,c.tempStack],initialPages,configuration:c};
 }

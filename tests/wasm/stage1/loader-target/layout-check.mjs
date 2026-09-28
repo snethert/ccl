@@ -9,6 +9,7 @@ for(const space of [16,32,64]){
  const l=deriveLayout({spaceBytes:space*1048576},input);
  assert.equal(l.stackDefaults[0],1048576);assert.equal(l.stackDefaults[1],1048576);assert.equal(l.stackDefaults[2],524288);
  assert.equal(l.tcrWords[64]%16,0);assert.equal(l.rows,16+3+2*10+8192);
+ assert.equal(l.tcrWords[200],7,'default FP mask: invalid, division by zero, overflow');
  assert.equal(l.spaces[0].end-l.spaces[0].start,space*1048576);
  assert(l.regions.every(r=>r.end<=l.initialPages*PAGE));
  for(const [i,a] of [...l.regions,...l.spaces].entries())for(const b of [...l.regions,...l.spaces].slice(0,i))assert(a.start>=b.end||b.start>=a.end);

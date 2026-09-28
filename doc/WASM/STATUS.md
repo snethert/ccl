@@ -39,6 +39,20 @@ changes only, zero product Lisp lines, no criterion credit. The review recommend
 unboxed declared numerics, then declared accessors, then the call convention,
 with this set rerun for each substantive change.
 
+The first [declared float optimization](stage1/float-unboxing-results.md) is
+**producer-verified, awaiting independent review**. Typed single/double arithmetic
+uses Wasm float instructions under unchecked lexical policy; eligible variables
+stay unboxed across loop iterations. Checked scopes retain the float service,
+and conservative escape checks preserve destructive float operations. READY's
+default FP exception mask is corrected to 7. All 26,204 fresh corpus comparisons,
+21,843 registered native tests, 83 focused rows and four corruption controls pass;
+782 reader comparisons are reused by unchanged source hashes. The accepted
+benchmark rerun puts typed double at **32.93 ns (52.4× faster)** and typed single
+at **33.14 ns (51.8× faster)**; ordinary READY is 26.203 s. Exact results and
+limits are in the linked record.
+Product Lisp **194 added / 6 removed**; counts and criterion credit unchanged.
+Next: supplied independent review, then declared accessor specialization.
+
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their
 counts remain actual events under BT-20, but level-1 cross-loading and the
