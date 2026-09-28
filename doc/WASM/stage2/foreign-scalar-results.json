@@ -1,4 +1,13 @@
 {
+  "acceptance": {
+    "audit": 194,
+    "criterion_credit": false,
+    "implementation": "0bfbab7d",
+    "review_commit": "8d2aee38",
+    "review_original_commit": "949ae5d8",
+    "test_reruns_for_acceptance": 0,
+    "user_direction": "accept review commits and proceed with CCL Stage 2"
+  },
   "criterion_credit": false,
   "engines": [
     {
@@ -60,7 +69,7 @@
     }
   },
   "retained_bytes": 265067,
-  "review": "NOT_REVIEWED",
+  "review": "ACCEPTED_AUDIT_194",
   "scope": "Opaque scalar library owner API. Hand-written Wasm caller/cleanup; no production D5/TCR, generated Lisp, copies, ownership, callbacks, GC, finalization or complete FMT credit.",
   "source_files": {
     "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
@@ -77,7 +86,7 @@
     "tests/wasm/stage2/foreign-scalar/run.py": "2c96124ee6a51c2478c69419b7986044d7731ee56d9c6ad06cb0fa058ea6bc2d",
     "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147"
   },
-  "status": "EXECUTED_REVIEW_PENDING",
+  "status": "ACCEPTED_AT_RETAINED_SCOPE",
   "summary": {
     "browsers": [
       "chromium",

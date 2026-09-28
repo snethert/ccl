@@ -13,7 +13,9 @@ review records below retain their historical counts and evidence limits.
 
 The first [Stage 2 delivery](stage2/README.md), the
 [scalar foreign-module boundary](../../tests/wasm/stage2/foreign-scalar/README.md),
-is **implemented and executed; independent review pending**. It validates
+is **accepted at its retained scope after [Claude audit 194](stage0/claude-review.md)**
+(`8d2aee38`). Artifact retention `45682a83` is accepted too; the records-only
+Stage 1 closure `5d123b45` stands. The scalar unit validates
 digest, binary signatures, private memory/table limits and initialization before
 foreign execution, brackets entries through owner hooks, converts foreign
 exceptions/traps to the caller's tag and retires trapped instances. All **124
@@ -21,7 +23,8 @@ checks pass in Node and Chromium/Firefox/WebKit Workers**, and all **14 mutation
 controls are killed**. This is the owner API, with a hand-written Wasm cleanup
 witness; production D5/TCR and generated-Lisp integration, copies/ownership,
 callbacks and finalization remain. No FMT/LL credit, whole-file count movement,
-shared compiler change or product Lisp lines. Runtime-created weak tables reuse
+shared compiler change or product Lisp lines. The compiler corpus waits until the entire foreign-function layer is complete,
+then replays once, per user direction. Runtime-created weak tables reuse
 their reviewed implementation; image-built tables and broader GC work remain.
 
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;

@@ -20,12 +20,18 @@ The [bound result](foreign-scalar-results.json) records **124 checks in each of
 Node, Chromium, Firefox and WebKit**, plus **14 killed source mutants**. The
 compact evidence pack is `ccl-evidence/2026-09-28-stage2-foreign-scalar-r1`.
 
-This is an executed lower-layer unit awaiting user-supplied independent review.
+This lower-layer unit is **accepted after user-supplied [Claude audit 194](../stage0/claude-review.md)** (`949ae5d8`, imported as `8d2aee38`).
 It grants no FMT or LL acceptance. The owner hooks are checked by the fixture,
 not yet connected to the production TCR/collector or generated Lisp. The Wasm
 cleanup witness is hand-written. Node and browser Workers execute the same
 implementation; namespace-provider loading is still owed. No shared compiler,
 product Lisp or upstream kernel source changes are part of this unit.
+
+The compiler corpus is deferred by user direction until the whole foreign-function
+layer is complete, then replayed once. Focused verification continues for each
+changed unit. O-159/O-160 directed refusals accompany the next substantive unit;
+O-162 requires documenting that an asynchronous owner hook is a fatal contract
+violation for the owner too.
 
 ## Next foreign work
 

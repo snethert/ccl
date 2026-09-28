@@ -1,3 +1,17 @@
+## 2026-09-28 — Accept audit 194 and continue Stage 2
+
+Imported the supplied [audit 194](../stage0/claude-review.md) from `949ae5d8`
+as `8d2aee38`. At the user's direction, accept scalar admission `0bfbab7d`
+and retention drivers `45682a83`; records-only Stage 1 closure `5d123b45`
+stands with its review waiver. The reviewer reproduced all 124 checks on four
+engines and all 14 producer mutants, and passed the focused retention checks.
+No defect; O-159/O-160 directed refusals and O-162 owner-fatal wording carry
+into the next substantive foreign unit. Acceptance reruns no unchanged test.
+
+The user directs no compiler corpus replay until the whole foreign-function
+layer is complete, then one replay. Stage 1 remains 33/33 at retained scopes;
+Stage 2 grants no FMT or LL credit. Product Lisp lines changed: zero.
+
 ## 2026-09-28 — Begin Stage 2 with scalar foreign-module admission
 
 User direction: “begin stage 2.” The first [runtime unit](../stage2/README.md)

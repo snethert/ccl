@@ -1,8 +1,8 @@
 # Scalar foreign-module boundary
 
 First Stage 2 implementation unit for HOSTFM FM-1–FM-5, FM-7, FM-9 and FM-11.
-Execution is distinct from acceptance; user-supplied independent review is
-pending. This does not complete any FMT or LL slot.
+Accepted at its retained scope after user-supplied Claude audit 194, imported
+as `8d2aee38`. This does not complete any FMT or LL slot.
 
 Final qualification: **124 checks per engine** (Node, Chromium, Firefox and
 WebKit), **14 killed source mutants**, no skips. The
