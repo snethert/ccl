@@ -469,6 +469,30 @@ A text document's paragraph ruler (LibreOffice Writer: margins, indents, tab sto
 
 The text backend renders a ruler for a stated viewport, since the ruler is meaningless without one: `RULER x 0–1440 px step 100 (zoom 1.0)`. Golden tests of canvases therefore fix the viewport in the test, which they already had to do for anything zoom-dependent.
 
+### 19.5 Lanes, palettes and context pads
+
+A swim-lane diagram (BPMN editors, Miro, draw.io's pools) is a canvas with three things Part II already has and one it names here.
+
+**Lanes** are a partition of the space, orthogonal to `:space`: `canvas :lanes ((:key "sales" :label "Sales") (:key "ops" :label "Operations" :lanes (…)))` with `:lane-axis (:x|:y)`; nesting one level gives BPMN pools. §28's timeline lanes are the same attribute on a time space. An `item` carries `:lane`; a `move` across lanes reports the new lane and position; lane headers are `:sortable` (reorder) and `:resizable` (width or height); dropping an item on a lane header is a `drop` on the lane, not the point. A lane is a container region, not an item, so the text backend renders items grouped under their lane.
+
+**Dropping nodes** is §17 unchanged: a palette is a `list` of `:drag (task)`, `:drag (gateway)` sources; the canvas `:accepts ((task create-task) (gateway create-gateway))`; placement is `(lane point)`; Lisp answers with the new `item`. Renaming in place is a `label :editable t` inside the item, committing as one `change` event on Enter or blur.
+
+**Connecting** is a port drag (§17, §19.2), or — because BPMN and Miro users expect it — a drag from the pad (below) to another item, which is the same `connect {from to}` event; a drag from the pad onto empty space is a `drop` with a point, which Lisp answers by creating the target and the edge in one patch. Edges take `:label` (inline children, so labels can hold presentations) and `:waypoints`; dragging a waypoint or a segment midpoint is a `move` on the edge key with a waypoint index.
+
+**Context pads** — the small icons that appear around a node on hover or selection — are `item :pad name`, where `name` refers to a pad defined once against the command registry:
+
+```lisp
+(define-pad task-pad
+  (:east  connect-to :icon :arrow)
+  (:south add-annotation :icon :note)
+  (:north change-type :icon :wrench)
+  (:west  delete-item :icon :trash))
+```
+
+The tree carries only the pad's name per item, not its buttons, so a diagram with five hundred nodes costs five hundred symbols. The client draws the pad from the definition when the item is hovered or selected (both client-local), positions it around the item's box, and a tap on an icon is the ordinary `{command, handle}` event. Applicability follows §5.1: when a pad button is not applicable to this item, Lisp sets it in the item's `:pad-state`, a keyed patch like `oref`'s `state`, never a hover round trip. The pad renders in the text backend as the item's command list, which is also how §10 says every command surface should render, since a pad is one more view over the registry. Edges take `:pad` too.
+
+Nothing here is a new mechanism: lanes are a partition attribute, palettes and connections are §17, pads are menus with a placement. The one runtime addition is the `:around` placement for a pad, which belongs with `toolbar :placement` in §22.
+
 ## 20. Media, images and links
 
 - `image :src :alt :fit (:cover|:contain) :shape (:rect|:circle)`. Avatars, album art, thumbnails.
@@ -488,7 +512,7 @@ Column sort, filter, pin, resize and reorder are ordinary events carrying the co
 | addition                                   | seen in                       |
 |--------------------------------------------|-------------------------------|
 | `menubar` — a row of `menu`s                | Photopea, draw.io, three.js   |
-| `toolbar :placement (:top :bottom :floating)` | every editor, mobile bars  |
+| `toolbar :placement (:top :bottom :floating :around)` | every editor, mobile bars, context pads (§19.5) |
 | `radio-group :appearance (:list :segmented :toolbar :rating)` | Handsontable, tool palettes |
 | `color` control                            | Method Draw, draw.io          |
 | `dialog :placement (:center :sheet :side)` | mobile                        |
@@ -551,7 +575,7 @@ Every professional tool has a status bar of values that change with the pointer:
 
 ## 28. Timelines and live meters
 
-Kdenlive, DaVinci Resolve, Audacity, Ardour, LMMS, Ableton and Blender's timeline all put clips on lanes against a time axis. `canvas :space (:time start end :lanes n)` is the §19 time space with rows; an `item` on it has a lane and a time extent, clip trimming is `:resizable :x` (both edges), moving between lanes is `move`, and snapping is a canvas attribute. Waveforms and thumbnails inside clips are `image` or `record` children.
+Kdenlive, DaVinci Resolve, Audacity, Ardour, LMMS, Ableton and Blender's timeline all put clips on lanes against a time axis. `canvas :space (:time start end) :lanes (…)` is the §19 time space with rows (§19.5); an `item` on it has a lane and a time extent, clip trimming is `:resizable :x` (both edges), moving between lanes is `move`, and snapping is a canvas attribute. Waveforms and thumbnails inside clips are `image` or `record` children.
 
 The playhead is `canvas :cursor :media-position` — the same client-local value a `readout` shows, drawn as a line, so scrubbing never round-trips. Transport buttons are commands; `media :state`/`:position` (§20) drive playback.
 
