@@ -10,6 +10,8 @@ Written for the fact that the author of the implementation is a code generator t
 
 Everything else follows from that plus one constraint: **the entire UI must be visible as text, in a REPL, with no browser.**
 
+Deployment assumption: the client and Lisp run on the same machine and usually in the same process. The protocol is still a protocol — its messages are plain data even when they cross a function-call boundary, because the log (§12) and the text backend depend on that — but nothing in the design is there to make a remote client fast or safe.
+
 The target UI (the CLIM-style IDE mockups: source pane, transcript, examiner, debugger, files, settings, compare, ring, layouts) was checked against this design screen by screen. About 80% of it falls out of the vocabulary in §4 directly. The remainder motivates §5 (inline presentations), §6 (editor decorations), §7 (windows), and §9 (roles). Those four sections are the additions that make the plan sufficient; without them the JS would not stay frozen.
 
 ## 2. Wire protocol
@@ -639,11 +641,11 @@ Nothing above names a browser except by example, and the text backend (§11) is 
 | a `media` element (§20)                     | HTML media                             | the platform player                      |
 | `:geo` tiles (§19)                          | a tile layer                           | a tile layer                             |
 | windows (§7) and `hello`                    | tabs/`window.open`, shared socket      | real windows                             |
-| the transport                               | WebSocket                              | socket, pipe, or in-process              |
+| the transport                               | in-process (Lisp hosted alongside the client) or a local socket | in-process or a local socket |
 
 Everything else — the protocol, the vocabulary, keys and patches, commands, the translator tables, the log format, replay, the text backend and its golden tests — is shared, and a Lisp view function does not know which backend is drawing it.
 
-Two consequences. First, the freeze rule applies to each backend, and the §12.3 invariant is what makes a second backend safe: if no unlogged client state can affect a Lisp-visible result, a log recorded against the web client replays identically against the native one, which is the cross-backend conformance test. Second, the transport is not part of the design; with Lisp and a native client in one process, the wire becomes a function-call boundary and the protocol still pays for itself, because the tree is still a value, the events are still data, and the log is still replayable.
+Two consequences. First, the freeze rule applies to each backend, and the §12.3 invariant is what makes a second backend safe: if no unlogged client state can affect a Lisp-visible result, a log recorded against the web client replays identically against the native one, which is the cross-backend conformance test. Second, the transport is not part of the design, and the expected one is in-process: the wire is a function-call boundary, messages are still plain data (never live objects — the log and the text backend depend on that), and the protocol still pays for itself because the tree is a value, the events are data, and the log is replayable.
 
 What was web-specific in earlier drafts and has been removed: the raw `svg` node (hand-authored markup) and the `download` act (now `save-file`). `record` keeps SVG as its drawing payload because every toolkit rasterizes SVG; what it does not assume is element hit-testing, which is why it ships its own region list (§6.4). What remains web-flavoured is vocabulary, not design: "CSS" in §4.1 and §9 should be read as "the generated theme", and `link` opens the platform browser through `open-url`.
 
@@ -698,7 +700,7 @@ Replay is unaffected: user edits are events and proposals are patches, both logg
 
 - **A mechanism registry.** The mechanisms are enumerated in the spec file, each with a conformance test, a text-backend rendering and an entry for every backend. Adding one requires all four and an amendment to this document; the cost is the brake.
 - **Sanctioned fallbacks that are not code.** When the vocabulary lacks something, the answers are, in order: compose it from existing nodes; draw it as a `record`; declare it out. Never a mechanism for one feature.
-- **Versioned vocabulary.** The client states its vocabulary version in `hello`; the Lisp-side validator checks views against the client's version, so a newer Lisp degrades to what an older client renders rather than sending it something it will refuse.
+- **Versioned vocabulary.** The client states its vocabulary version in `hello` and the validator checks views against it. While client and Lisp ship together this is a consistency assertion rather than a compatibility mechanism; it earns its keep the first time an image outlives the client it was built with.
 - **Product before toolkit.** The IDE ships on the web backend before any native backend starts; steps 1–5 are time-boxed to the IDE's first milestone and the freeze happens at the end of it, whatever the mechanism count is. The count is currently sixteen (fifteen plus the box oracle).
 
 ## 38. Queries and events instead of subscriptions
@@ -724,13 +726,13 @@ Displays that must follow client state continuously use `readout` (§27), which 
 
 ## 40. Latency policy
 
-**Weakness.** Every semantic interaction is a round trip; over a network it shows, and each time it bites the temptation is another client-local exception.
+**Weakness.** Every semantic interaction is a round trip, and each time one felt slow the temptation would be another client-local exception.
 
-**Resolution.** Say the policy once and make the client enforce the feedback half.
+**Resolution.** With client and Lisp on one machine and usually in one process, a round trip costs a function call or a local socket write — microseconds to well under a millisecond — so the split between client-owned and Lisp-owned interaction in §8 is not a performance measure at all. It is there for ownership and determinism: hover, drag feedback, scroll, typing, scrubbing and pan/zoom are client-owned because they are the client's business and because keeping them out of the log keeps the log small, not because Lisp would be too slow to answer. This removes the pressure that would otherwise create exceptions.
 
-- **Three interaction classes.** *Local, always*: hover, drag feedback, scroll, typing, scrubbing, pan and zoom — client-owned by §8, never a round trip. *Round trip, budgeted*: activate, select, commit, open a menu — the design accepts one RTT, and the target transports (local socket, in-process) make it invisible. *Commands*: arbitrary duration.
-- **Pending feedback is client mechanism.** When an event is sent and no patch has arrived after 150 ms, the originating node shows a pending state (a spinner or a dimmed button) until the next patch or an `error`. No optimistic updates — the client never guesses — but nobody ever waits without a sign.
-- **Remote is a supported degradation, not a target.** `hello` carries a measured RTT; above a threshold the client lengthens its throttles and shows pending state sooner. Nothing else changes, and no mechanism is added for it.
+What remains is commands of arbitrary duration. Pending feedback is client mechanism: when an event has been sent and no patch has arrived after 150 ms, the originating node shows a pending state until the next patch or an `error`. No optimistic updates — the client never guesses — but nobody waits without a sign.
+
+Remote clients are not a target. If one is ever wanted, the protocol already works over a socket and nothing needs adding to the vocabulary; the only cost is that per-keystroke completion (§39) and selection round trips become visible, which is a product decision for that day, not this design's.
 
 ## 41. Focus, undo, accessibility, security
 
@@ -739,7 +741,7 @@ Four things the earlier drafts did not address at all.
 - **Focus and keyboard navigation.** Focus is client-owned. Every container type defines its traversal in the spec file — `tabs` and `radio-group` by arrows, `list`/`tree`/`table` by arrows with type-ahead, `menu` by arrows and mnemonics, `split` by a fixed chord between regions, `dialog` trapping focus until dismissed. The `focus` act moves it; `focus-changed` is raised only for nodes marked `:track-focus t` (§38). The text backend marks the focused node.
 - **Undo.** Two stacks with a rule. Uncommitted client state (the focused buffer's text, an uncommitted `field`) is undone by the client (§33). Everything else is a Lisp command's effect and is undone by the registry's `undo` command, which requires commands that change image state to declare an `:undo` method; a command without one is not undoable and the palette says so. The two stacks never interleave because a commit is the boundary between them.
 - **Accessibility.** Roles come from types for free — every backend maps `button`, `tabs`, `table`, `dialog` to its accessibility tree — and names come from content. Two attributes are added to every node for the cases where content is not enough: `:label` (an accessible name) and `:description`. `banner` is a live region. The useful equivalence: the text backend's output is very close to what a screen reader receives, so "does it read well as text?" (§11) answers "is it accessible?" for most views.
-- **Security.** A handle plus a command from the socket is a Lisp shell. The transport binds to a Unix socket or localhost by default, `hello` carries a session token, remote use requires TLS, and Lisp validates every `{command handle}` against the type's translator table server-side rather than trusting the client's claim of applicability. This is an IDE for its owner; the design does not attempt multi-tenant isolation and says so.
+- **Security.** A handle plus a command is a Lisp shell, which is the point of an IDE. In-process there is no boundary to defend; when the transport is a socket it binds to localhost or a Unix socket and nothing else. Lisp still validates every `{command handle}` against the type's translator table rather than trusting the client's claim of applicability, because that check is what makes a malformed or replayed event harmless. Multi-user or remote isolation is out of scope.
 
 ## 42. The theme
 
