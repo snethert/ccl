@@ -1,4 +1,13 @@
 {
+  "acceptance": {
+    "audit": 197,
+    "criterion_credit": false,
+    "implementation": "db0f5cb1",
+    "review_commit": "d58ffe14",
+    "review_original_commit": "d58ffe14",
+    "test_reruns_for_acceptance": 0,
+    "user_direction": "accept reviewer's commit and proceed with CCL Stage 2"
+  },
   "buffer_summary": {
     "browsers": [
       "chromium",
@@ -212,7 +221,7 @@
       "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907"
     }
   },
-  "review": "NOT_REVIEWED",
+  "review": "ACCEPTED_AUDIT_197",
   "source_files": {
     "runtime/wasm32/README.md": "e087daa79fa90e092138fa11170133a927bad320d58999902a284a36da224fc4",
     "runtime/wasm32/foreign-api.lisp": "10ff245deb7b7f71cb69bc6a378d46b3302ff7f4b3082743a7aa9f3cd5e65c1d",
@@ -232,7 +241,7 @@
     "tests/wasm/stage2/foreign-buffers/check.mjs": "4a63c20f98debe4b8a47a7b9b6a98491938ddfa604ee27898c5f3a6e11c085a2",
     "tests/wasm/stage2/foreign-buffers/run.py": "1574ed2f51ac216bc69a1f14322ce24fde05e94ffac34738e9fc598811b7f908"
   },
-  "status": "EXECUTED_REVIEW_PENDING",
+  "status": "ACCEPTED_AT_RETAINED_SCOPE",
   "summary": {
     "browsers": [
       "chromium",

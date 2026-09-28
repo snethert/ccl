@@ -57,7 +57,8 @@ into the next substantive unit. Product Lisp service, namespace loading,
 callbacks and finalization remain next.
 
 The [fourth Stage 2 unit](stage2/README.md#fourth-delivery-named-libraries-and-the-lisp-api)
-is **executed; independent review pending**. It adds resident namespace loading
+is **accepted after [Claude audit 197](stage0/claude-review.md)** (`d58ffe14`),
+with no defect and no acceptance replay. It adds resident namespace loading
 and a 50-line product Lisp API for typed calls, copies and explicit lifetime,
 with product condition transport and cleanup preserving a primary failure.
 63 API checks per engine / 21 mutants pass; 20 native-matched post-READY Lisp

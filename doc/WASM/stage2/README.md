@@ -118,8 +118,8 @@ original seven Lisp rows. O-170/O-173 are documented and O-171/O-172 now have
 directed lifetime tests and killed controls. The older scalar/owner suites
 reuse audit 196 by exact implementation identity. Process-service checks and
 the boot driver are qualified at their changed seams. Results are bound in
-[foreign-api-results.json](foreign-api-results.json). **Executed; independent
-review pending. No FMT or LL credit.**
+[foreign-api-results.json](foreign-api-results.json). **Accepted after user-supplied
+[Claude audit 197](../stage0/claude-review.md) (`d58ffe14`). No FMT or LL credit.**
 
 Browser Workers exercise the product namespace, service and collector with
 synthetic generated-B roots; ordinary generated Lisp executes under Node.
@@ -128,6 +128,11 @@ An independent literal-only probe reproduces checked 4 while printing `1.25d0`
 without the foreign API; its minimal reproduction is retained as an unresolved
 runtime frontier. The foreign scalar tests compare the value and representation
 without claiming printer qualification.
+
+Audit 197 reproduces the API, buffer and Lisp results and finds no defect.
+Acceptance reruns no unchanged tests. O-174 carries directed service admission
+tests into the next substantive unit; O-175 requires a persistent Playwright
+version recipe. O-176 remains the separate literal-double printer frontier.
 
 ## Next foreign work
 

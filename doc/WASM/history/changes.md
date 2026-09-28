@@ -1,3 +1,13 @@
+## 2026-09-28 — Accept audit 197 named libraries and Lisp API
+
+Imported the user-supplied [audit 197](../stage0/claude-review.md) by fast-forward
+to `d58ffe14`. Accept `db0f5cb1` at its executed single-Worker scope; `0fca03de`
+is consistent. No defect, no FMT/LL credit, and no unchanged-test replay for
+acceptance. Carry O-174 admission cases and O-175 persistent Playwright recipe
+into the next substantive unit. O-176 remains a separate printer frontier.
+The compiler corpus waits until FFI completion. Product Lisp lines changed:
+zero. Stage 1 stays closed at 33/33; Stage 2 has no adopted slots.
+
 ## 2026-09-28 — Deliver named libraries and a Lisp-facing foreign API
 
 Whole-file movement: zero. Product Lisp lines added: 50. No FMT/LL credit.

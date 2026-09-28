@@ -1,7 +1,8 @@
 # Named libraries and the Lisp foreign API
 
 This Stage 2 delivery adds a product Lisp API, its process-service transport and
-resident namespace loading. It is executed, awaiting independent review; no
+resident namespace loading. Accepted after user-supplied [Claude audit 197](../../../../doc/WASM/stage0/claude-review.md)
+(`d58ffe14`); no
 FMT/LL acceptance or Stage 1 count movement is claimed. Product Lisp adds 50
 lines; shared compiler and upstream kernel source are unchanged.
 
