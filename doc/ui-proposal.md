@@ -85,19 +85,19 @@ A closed set, defined in **one machine-readable spec file** that generates: Lisp
 
 | group     | types                                                            |
 |-----------|------------------------------------------------------------------|
-| layout    | `stack row grid split scroll spacer toolbar`                     |
+| layout    | `stack row grid split scroll spacer toolbar panel` (§24)         |
 | text      | `text heading code label` — these take **inline children** (§5) |
 | inline    | `span oref kbd link` — legal only inside a text-group node       |
 | media     | `image icon media` (§20)                                         |
-| controls  | `button toggle field number select checkbox radio-group slider color` |
-| structure | `table tree list tabs disclosure`                                |
+| controls  | `button toggle field number vector select checkbox radio-group slider color` (§25) |
+| structure | `table tree list tabs disclosure properties` (§25); `table :tree t` (§26) |
 | spatial   | `canvas item edge` (§19)                                         |
 | overlay   | `dialog menu popover tooltip menubar`                            |
-| menu      | `section item` — legal only inside a `menu` (§10.1)              |
-| feedback  | `spinner progress badge banner`                                  |
+| menu      | `section item` — inside a `menu` (§10.1); `section prop` inside `properties` (§25) |
+| feedback  | `spinner progress badge banner readout` (§27)                    |
 | opaque    | `editor` (§6), `record` (§6.4), `svg`                            |
 
-Drag-and-drop (§17), gestures (§18), and virtualization (§21) are attributes and events on these nodes, not further node types.
+Drag-and-drop (§17), gestures (§18), virtualization (§21), hover groups (§29) and content colour (§30) are attributes and events on these nodes, not further node types.
 
 Attributes are enumerated per type. Unknown attribute or unknown type → a Lisp condition at construction time, printing the offending node. The JS side never guesses, never falls back, never "does its best": silent visual degradation is the failure mode the author cannot detect and the human has to catch by eye.
 
@@ -176,7 +176,7 @@ The target UI detaches a pane into its own OS-level window sharing the same imag
 
 ## 8. Client-local state
 
-Enumerated, and client-side unless subscribed: hover, focus ring, text selection, scroll offset, in-flight keystrokes, drag-in-progress (§17), gesture-in-progress (§18), canvas viewport transform (§19), media playback position (§20), visible range of a virtualized collection (§21), table range selection, window size, **split-divider positions**. The last is in the list because "layouts are objects" and ⌘⇧L saves the current arrangement, so Lisp must be able to subscribe to divider geometry with `local`. Every `local` subscription is throttled by the client and carries the value, never the input that produced it. Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
+Enumerated, and client-side unless subscribed: hover, focus ring, text selection, scroll offset, in-flight keystrokes, drag-in-progress (§17), gesture-in-progress (§18), canvas viewport transform (§19), force-layout positions (§28), media playback position (§20), visible range of a virtualized collection (§21), table range selection, window size, **split-divider positions**. The last is in the list because "layouts are objects" and ⌘⇧L saves the current arrangement, so Lisp must be able to subscribe to divider geometry with `local`. Every `local` subscription is throttled by the client and carries the value, never the input that produced it. Solving latency is the lesser benefit; the greater one is deleting the whole category of round-trip interaction logic that the author writes badly.
 
 ## 9. Roles, not colors
 
@@ -305,34 +305,30 @@ Open:
 
 # Part II — Coverage beyond the IDE
 
-The IDE mockups are one application. To check that the vocabulary is not secretly IDE-shaped, 24 screenshots of other application types were taken in headless Chromium (desktop at 1440×900, mobile as iPhone 13 with touch) and each was read against Part I. The contact sheet is `ui-proposal-survey.png`. Four things were missing: drag and drop, gestures and touch, a spatial canvas, and media. Each gets a section below. Nothing in Part I had to change shape; the additions are attributes and events on existing nodes plus one node family.
+The IDE mockups are one application. To check that the vocabulary is not secretly IDE-shaped, the design was read against screenshots of other applications **in active use, captured by other people**: developer-submitted appstream screenshots on Flathub (desktop, 42 apps) and F-Droid (Android, 5 apps), Wikimedia Commons uploads (3), and vendor documentation and blog screenshots (Magit, KiCad, Wireshark, Blender, Excel, Trello, DaVinci Resolve, Ableton). Fifty of them are in `ui-proposal-survey.jpg`. A first pass over headless-browser captures of web apps was discarded as uninformative: it mostly saw splash and sign-in screens.
+
+Four things were missing from Part I and are added in §17–§21: drag and drop, gestures and touch, a spatial canvas, and media. The in-use screenshots then forced the further, smaller additions in Part III (§24–§30), mostly about the density and panel structure of professional desktop tools. Nothing in Part I changed shape.
 
 ## 16. What was surveyed and what it needs
 
-| application type            | seen in                              | needs beyond Part I                                                      |
-|-----------------------------|--------------------------------------|--------------------------------------------------------------------------|
-| spreadsheet / data grid     | Handsontable, AG Grid                | virtualized rows (§21), cells holding any node, column resize/reorder/pin, range selection, "drag here to group" drop zone (§17) |
-| calendar                    | FullCalendar                         | drag events between cells, resize duration, drag from a palette (§17)    |
-| kanban / sortable lists     | (demo sites unreachable; same class as calendar) | reorder within and across containers (§17)                    |
-| diagram / whiteboard        | draw.io, Excalidraw                  | free-position canvas, shape palette drag-in, connectors, marquee select, pinch-zoom, drawing tools (§19, §18) |
-| node editor                 | Rete.js                              | ports and edges (§19)                                                    |
-| gantt / timeline            | DHTMLX                               | canvas with a time axis, bar resize, dependency edges (§19)              |
-| dashboard                   | Grafana                              | panel grid with drag-rearrange and resize (§19 `:grid` space)            |
-| map                         | Leaflet, desktop and mobile          | tiled geographic canvas, markers, popups anchored to items, pan/pinch (§19 `:geo`, §18) |
-| vector / photo editor       | Method Draw, Photopea                | tool palette, rulers, color picker, OS file drop, menubar (§19, §22, §17) |
-| 3D editor                   | three.js editor                      | not covered; declared out (§13)                                          |
-| media                       | Spotify web, m.youtube               | images, horizontal carousels, sticky player, playback state (§20)        |
-| slides                      | reveal.js, desktop and mobile        | swipe navigation, keyboard navigation (§18)                              |
-| PDF / document viewer       | pdf.js                               | paged scroll, pinch-zoom, thumbnail sidebar (§18, §21)                    |
-| rich text editing           | tiptap toolbar                       | `editor :mode :rich` with a Lisp-owned document (§6, one line added)      |
-| terminal                    | xterm.js                             | not covered; declared out (§13)                                          |
-| IDE chrome                  | vscode.dev                           | activity bar, tab strip with drag-reorder, docking (§17 on `tabs`/`split`) |
-| forms / auth                | GitHub sign-in                       | nothing new                                                              |
-| game board                  | 2048, mobile                         | swipe gestures, tile animation as keyed moves (§18, §2.2)                |
-| article reading             | Wikipedia mobile                     | reflowing inline text with images, drawer navigation (§5, §22)           |
-| mobile chrome generally     | YouTube, Excalidraw, 2048 on mobile  | bottom tab bar, floating toolbar, sheets and drawers, no hover (§18, §22) |
+| application type            | seen in                                                              | needs beyond Part I                                                   |
+|-----------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------|
+| spreadsheet                 | LibreOffice Calc (Commons), Excel (Computerworld)                    | virtual rows (§21), formula bar, cell-authored colour and merged cells (§30), charts floating over the grid (§19), range selection |
+| CAD / EDA                   | KiCad PCB and schematic, FreeCAD, LibreCAD, Cura                     | dense docked panels (§24), property inspectors (§25), layer lists as tree-tables (§26), coordinate readouts (§27), net hover-highlight (§29), canvas with orthogonal edges (§19) |
+| 3D content creation         | Blender (sculpt and layout), Godot, Cura, three.js                   | 3D viewport itself is out (§13); everything around it — outliner, properties with scrubbed numbers, workspace tabs, timeline — is §24–§28 |
+| raster / vector / photo     | GIMP, Krita, Inkscape, darktable, Photopea, Method Draw              | tool palettes, layer stacks with visibility toggles (§26), colour pickers (§22), thumbnail grids with rating and colour labels (§21), brush cursor on canvas (§19) |
+| audio / video / DAW         | Audacity, Ardour, LMMS, Ableton, Kdenlive, DaVinci Resolve, OBS      | timeline space with lanes, clip trimming, playhead, live meters (§28), transport controls (§20), mixer strips (§25) |
+| calendar / kanban / planning| GNOME Calendar, FullCalendar, Trello, Jira                           | drag between cells and columns, resize duration (§17); labels, avatars, badges on cards |
+| mail / chat / messaging     | Thunderbird, Evolution, K-9, Slack, Discord, Telegram, Signal, Element | threaded lists, reactions as chips (§25), reply quotes, composer with rich toolbar (§6), unread badges, presence dots |
+| libraries / browsers        | Calibre, Zotero, darktable, Dolphin, Steam, Spotify, DaVinci projects | tree-table (§26), thumbnail grids with zoom slider (§21), hero + horizontal carousels (§20), sidebar trees |
+| maps / sky                  | GNOME Maps, Organic Maps, Leaflet, KStars                            | `:geo` canvas, place cards as bottom sheets (§18), route polyline and elevation profile (§19, `svg`), object markers |
+| analysis / diagnostics      | Wireshark, JupyterLab, Grafana                                       | three-pane linked selection, hex dump as `code` with spans and hover-group (§29), notebook cells as `list` of `editor`+output |
+| code / text editing         | VS Code, Kate, Magit, Obsidian, LibreOffice Writer, xterm             | Part I covers editors; Magit-style transient menus need toggles in menus (§25); force-directed graph (§19); paged documents (§6); terminal out (§13) |
+| block programming / games   | Scratch, Luanti                                                      | Scratch blocks are a canvas with snap-to-port drops (§17, §19); the in-game 3D view is out |
+| mobile                      | Organic Maps, Loop Habits, Termux, Element, K-9, 2048, Wikipedia     | bottom sheets with drag handle, FAB, segmented transport picker, extra-keys toolbar above the keyboard, swipe navigation (§18, §22) |
+| forms / setup dialogs       | KiCad Board Setup, GitHub sign-in, Cura print settings               | property lists with mixed controls and a tree nav (§25); nothing else new |
 
-Everything in the third column resolves to §17–§22. Nothing required a new opaque node or a JS change per feature.
+Every entry in the third column resolves to §17–§30. No application required a new opaque node beyond those already declared out.
 
 ## 17. Drag and drop
 
@@ -480,8 +476,86 @@ Column sort, filter, pin, resize and reorder are ordinary events carrying the co
 
 All are attributes on existing nodes except `menubar`, `toolbar` and `color`, which are in the §4 table. None of them is styling: each is a semantic choice the text backend renders differently.
 
-## 23. Still open after the survey
+---
+
+# Part III — What applications in use added
+
+Professional desktop tools (Blender, KiCad, Kdenlive, GIMP, Inkscape, FreeCAD, Godot, OBS, Ardour) share a shape that neither the IDE mockups nor the web apps have: a dense workspace of dockable panels, each with its own header toolbar, wrapped around one large canvas, with an inspector of label/value rows on one side and a status bar of live readouts along the bottom. Part I and Part II already contain the pieces; what follows makes the shape expressible without inventing it per application.
+
+## 24. Panels and workspaces
+
+`panel` is a layout node: a `stack` with a title, an optional header `toolbar`, and a closed set of states (`:expanded :collapsed :floating`). `split` and `tabs` compose panels; a **workspace** is a named layout object (§8 already makes layouts objects) holding that tree. Blender's Layout/Modeling/Sculpting tabs, Kdenlive's Logging/Editing/Audio, Cura's Prepare/Preview/Monitor and Godot's 2D/3D/Script are all `tabs` over workspaces, and switching one is a `view` of a different layout, not a rebuild.
+
+Docking is §17: a panel's title is a `:drag (panel)` source and every `split` region `:accepts ((panel dock-panel))`; Lisp answers a `drop` with a patched layout. Float and re-dock are the same drop onto a window (§7). Collapsing is a `disclosure` gesture on the panel header. None of this is new mechanism, which is the point of having built §17 first.
+
+## 25. Property inspectors and dense controls
+
+Blender's properties, FreeCAD's data table, Godot's inspector, Inkscape's fill and stroke, Cura's print settings and KiCad's board setup are the same widget: collapsible sections of label/control rows. `properties` is a structure node whose children are `section`s (the same `section` as in `menu`) of `prop` rows:
+
+```lisp
+(properties :key "transform"
+  (section "Transform" :collapsed nil
+    (prop "Location" (vector :unit :m :scrub t :live t :keys (x y z)))
+    (prop "Rotation Mode" (select :options *rotation-modes*))
+    (prop "Suppressed" (toggle))))
+```
+
+Controls that the survey forced, all attributes on existing nodes:
+
+| addition                                | seen in                                             |
+|-----------------------------------------|-----------------------------------------------------|
+| `number :scrub t` — horizontal drag adjusts the value; click still types | Blender, Godot, Inkscape, Kdenlive |
+| `number :live t` — while scrubbing, throttled `change` events stream so the viewport follows; without it, one `change` on release | Blender radius/strength |
+| `number :unit :min :max :step`          | everywhere                                          |
+| `vector :keys (x y z)` — grouped numbers with per-component lock/keyframe slots | Blender, Godot, FreeCAD |
+| `select :editable t` — a combo box      | KiCad track width, Blender brush size units          |
+| `button :menu (menu …)` — a split button| LibreOffice, Kdenlive, GIMP toolbars                 |
+| `toggle :appearance :chip` — reactions, filter chips, tags | Discord, Slack, Thunderbird tags, darktable colour labels |
+| `item :kind :toggle` inside `menu`      | Magit transients: switches shown with their keys     |
+| `slider :track (:gradient from to)`     | Inkscape RGBA sliders, Krita                          |
+
+Per-row icon slots (Blender's lock and keyframe dots, KiCad's layer colour swatch and visibility eye) are `prop :leading` / `:trailing` children holding `icon`, `toggle` or `color`; nothing per-application.
+
+## 26. Tree-tables
+
+An outliner (Blender), an accounts ledger (GnuCash), a layer list (KiCad, GIMP), a reference library (Zotero) and a threaded inbox (Thunderbird) are all a tree whose rows have columns. `table` rows may nest: a `trow` may contain `trow` children and carries `:expanded`. That makes `table :tree t` the tree-table, keyed like any table, virtualized like any table (§21), and rendered by the text backend as an indented table. `tree` remains for the column-less case.
+
+## 27. Readouts
+
+Every professional tool has a status bar of values that change with the pointer: cursor position in canvas coordinates (KiCad's X/Y/dx/dy, Blender, Inkscape, QGIS), zoom percentage, timecode under the playhead, selection counts, RA/Dec under the cursor in KStars. A round trip per pointer move is not acceptable and never was. These are pure functions of client-local state that §8 already enumerates.
+
+`readout` is a feedback node bound to **one enumerated client-local value**: `:pointer` (in the coordinate space of a named canvas), `:zoom`, `:scroll`, `:selection-range`, `:media-position`, `:drag-delta`. It takes a `:format` from a closed set (units, precision). This is a one-way display of a value the client already owns; it is not the two-way binding §13 prohibits, and it cannot reach Lisp state. The text backend renders it as `⟨pointer canvas-1⟩`. Anything not on that list goes through `local` subscription and an ordinary patched `label`, which is fine for values that change on the order of once a second.
+
+## 28. Timelines and live meters
+
+Kdenlive, DaVinci Resolve, Audacity, Ardour, LMMS, Ableton and Blender's timeline all put clips on lanes against a time axis. `canvas :space (:time start end :lanes n)` is the §19 time space with rows; an `item` on it has a lane and a time extent, clip trimming is `:resizable :x` (both edges), moving between lanes is `move`, and snapping is a canvas attribute. Waveforms and thumbnails inside clips are `image` or `record` children.
+
+The playhead is `canvas :cursor :media-position` — the same client-local value a `readout` shows, drawn as a line, so scrubbing never round-trips. Transport buttons are commands; `media :state`/`:position` (§20) drive playback.
+
+Audio meters (OBS, Kdenlive, Ardour) update at frame rate. `progress :role :meter` is the node; its value arrives as ordinary `set-attr` patches. The protocol has to tolerate a few dozen small patches per second on a handful of keys, and the reconciler should coalesce patches to the same attribute within a frame. That is a runtime requirement, stated here so it is in the frozen JS from step 4 of §14, not a vocabulary change.
+
+Obsidian's graph view is a `canvas :layout :force`: the client runs the layout, positions are `local` (subscribable, pinnable by a `move`), and Lisp owns only the nodes and edges. It is the one case where item positions are not Lisp-owned, and it is opt-in per canvas.
+
+## 29. Hover groups
+
+Wireshark highlights the hex bytes of the field under the pointer; KiCad highlights every segment of the net under the pointer; Blender's outliner and viewport highlight together. Hover is client-local by rule (§8), so linked hover cannot round-trip. `:hover-group id` on any node makes all nodes sharing the id highlight together, locally. Selection (a click) remains a Lisp event and patches the other panes, which is the right cost for selection and the wrong one for hover.
+
+## 30. Content colour, spans and density
+
+Three things the "no styling" rule (§4, §9) has to be precise about after seeing real documents:
+
+- **Content colour is data.** A spreadsheet cell's fill, a calendar event's colour, a darktable colour label, a Trello label, a Blender collection colour are chosen by the user and stored with the document. They are not theme decisions. `cell`, `item`, `span` and `trow` take `:color` holding a colour *value* (the same datum a `color` control produces), rendered as-is; the theme still owns everything else. The validator allows `:color` only on content nodes, never on chrome.
+- **Spans.** `cell :span (rows cols)` for merged cells; nothing else is needed for the Calc screenshot.
+- **Density is a window setting.** Blender and KiCad are roughly twice as dense as the IDE mockups. The theme table (§9) is generated for two densities, `:comfortable` and `:dense`, and the choice is per window in `hello`/`local`, never per node. Combined with `pointer :coarse` (§18) that gives four generated tables and no per-node sizing.
+
+One observation rather than an addition: five of the surveyed desktop tools are built around a 3D viewport. It stays out of the vocabulary (§13), but it is the single largest class the design declines, and if CAD or 3D ever becomes a target it will need an opaque node with its own decoration protocol, designed the way `editor` was.
+
+## 31. Still open after the survey
 
 - Spreadsheet fill-handle drag (extend a selection by dragging its corner): probably `:resizable` on the selection rectangle producing a `fill` event, but unproven.
 - Whether `select` in a `canvas` needs a lasso variant or marquee is enough.
 - Whether `:geo` earns its place in the initial vocabulary or waits, as `plot` does, for a real requirement. It is cheap only if the tile layer is a fixed dependency of the frozen runtime; that is a size decision for step 4.
+- Spreadsheet formula bar and name box: a `field` bound to the selected cell is a round trip per selection change, which is acceptable; whether formula *entry* with cell-reference picking (click a cell while typing) is a gesture or a command mode.
+- Whether `readout` (§27) should accept a Lisp-supplied pure formatter compiled to the client, or only the closed `:format` set. The closed set is the thesis; the survey shows KStars and QGIS wanting domain formats (RA/Dec, mm at page scale).
+- Whether Scratch-style block snapping is `:port` drops (§17) or a canvas `:snap` policy; the former keeps it data.
+
