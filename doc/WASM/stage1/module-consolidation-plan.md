@@ -25,6 +25,13 @@ are implemented and author-verified. See the [results and evidence](module-conso
 Independent review remains pending. P-5/P-6 remain future work; optional P-7
 is explicitly deferred on the measured collector-preparation cost.
 
+Subsequent P-6 disposition, 27 September: the user rejected the combined-core
+and direct-call experiment after the measured regressions and supplied Claude
+review. Keep the accepted split archives and indirect calls. The
+[rejection record](direct-call-results.md) supersedes A-13/P-6's future-work
+language below; the complete-pass instruction was cancelled by the selective
+rollback direction. The earlier implementation paragraph is historical.
+
 ## 0. How to read this
 
 Every item carries an ID; IDs from P1 are kept, amended items are marked with
@@ -482,7 +489,8 @@ proposed implementation and did not execute Lisp.
   a capacity refusal at generation creation.
   P8: A-15 specifies host-side direct unit slices now, and a possible C range
   interface later; both preserve every reservation and rollback condition here.
-- A-13 (P5). Guarded direct calls, a recorded future direction (U-5 b), not
+- A-13 (P5; historical, rejected by the subsequent P-6 decision above).
+  Guarded direct calls, a recorded future direction (U-5 b), not
   part of P-0..P-5. Today a named call loads the symbol's function cell, takes
   the function object's code word, resolves it through the code registry to a
   slot and dispatches with `call_indirect`/`return_call_indirect` on the tail
@@ -752,9 +760,11 @@ proposed implementation and did not execute Lisp.
   `compileStreaming` so the browser's implicit code cache applies; split only
   if measured fetch latency requires it.
 
-- P-6 (P5). Guarded direct calls per A-13, after P-4, as its own proposal
-  with the compiler change, the one-module-or-two decision and the
-  measurement; not scheduled by this plan.
+- P-6 (P5; closed by rejection, 27 September). The combined core is
+  indistinguishable in time and uses more memory; guarded dispatch and
+  specialized entries regress. The user directed selective rollback of the
+  whole experiment. Retain the measured record and analysis scripts; no
+  direct-call implementation or remaining ablation is scheduled by this plan.
 - P-7 (P8). Optional collector root-range interface, distinct from document
   revision MCP-P7. Decide from A-14's measured preparation/C-call costs after
   P-1b; it is not a consolidation or sizing prerequisite. If justified, change

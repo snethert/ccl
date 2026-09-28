@@ -226,6 +226,16 @@ workload at READY.
 
 The [startup execution result](../../../../doc/WASM/stage1/startup-execution-results.md)
 records the SEP-1 changes, measurements, sample decisions and verification.
+The subsequent [direct-call experiment](../../../../doc/WASM/stage1/direct-call-results.md)
+is rejected: combined core had no demonstrated speedup; guarded dispatch and
+specialized entries regressed. The product keeps separate boot/runtime archives
+and ordinary indirect calls. `direct-call-census.py TRACE RAW_BOOT_CODE_SET
+RUNTIME_ARCHIVE OUTPUT` classifies a complete indirect invocation census.
+`direct-call-profile.py PROFILE BOOT_CODE_SET RUNTIME_ARCHIVE OUTPUT` attributes
+V8 self samples using exact admitted function ranges. Supply the inventories
+from the recorded run, never a newer build. Rejected prototype tooling and raw
+timing evidence live in the persistent evidence pack linked from that record.
+
 For a compiler change, `archive-equivalence.mjs KIND SOURCE ARCHIVE - OUTPUT`
 assembles each fresh unlinked compiler module as its own comparison baseline.
 For packaging-only changes, pass the retained v1 directory in place of `-`.

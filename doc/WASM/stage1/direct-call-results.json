@@ -1,0 +1,198 @@
+{
+  "version": 2,
+  "status": "REJECTED_BY_USER",
+  "workClosed": true,
+  "passComplete": false,
+  "closure": "User cancelled remaining implementation/ablations and ordered selective rollback after supplied Claude review.",
+  "base": "824f060d310ff634e4cae0fafaa13849858aa07b",
+  "evidenceRoot": "/Users/buildsomething/Source/ccl-evidence/2026-09-27-direct-call-r1",
+  "measurements": [
+    {
+      "name": "Combined core",
+      "file": "m2-pairs.json",
+      "pairs": 5,
+      "control": "split",
+      "candidate": "core",
+      "arms": {
+        "split": {
+          "runs": [
+            26537.45703125,
+            26429.8525390625,
+            25954.49853515625,
+            26289.866943359375,
+            26107.115234375
+          ],
+          "medianMs": 26289.866943359375,
+          "spreadMs": 582.95849609375,
+          "lispMedianMs": 22957.48193359375,
+          "peakRssMedianBytes": 2235121664,
+          "readyRssMedianBytes": 2232598528
+        },
+        "core": {
+          "runs": [
+            26687.382568359375,
+            26188.88916015625,
+            26246.343017578125,
+            26116.1201171875,
+            26186.044921875
+          ],
+          "medianMs": 26188.88916015625,
+          "spreadMs": 571.262451171875,
+          "lispMedianMs": 22670.199462890625,
+          "peakRssMedianBytes": 2307379200,
+          "readyRssMedianBytes": 2305622016
+        }
+      },
+      "deltaMs": -100.977783203125,
+      "percent": -0.38409393026095645,
+      "indistinguishable": true,
+      "disposition": "REJECTED: no demonstrated speedup; retain simpler split archives",
+      "sha256": "3bee2359898559f127ec906f33bb08be7a1f9790cd026539a1d4e267ee6e33ef",
+      "readyRssDeltaBytes": 73023488
+    },
+    {
+      "name": "Guarded dispatch",
+      "file": "rejection/m1-timing/result.json",
+      "pairs": 3,
+      "control": "indirect",
+      "candidate": "guarded",
+      "arms": {
+        "indirect": {
+          "runs": [
+            26401.064453125,
+            26083.076171875,
+            26383.591796875
+          ],
+          "medianMs": 26383.591796875,
+          "spreadMs": 317.98828125,
+          "lispMedianMs": 22561.242431640625,
+          "peakRssMedianBytes": 2309705728,
+          "readyRssMedianBytes": 2309648384
+        },
+        "guarded": {
+          "runs": [
+            27204.921630859375,
+            26730.771240234375,
+            27265.13525390625
+          ],
+          "medianMs": 27204.921630859375,
+          "spreadMs": 534.364013671875,
+          "deltaMs": 821.329833984375,
+          "percent": 3.113032676929368,
+          "indistinguishable": false,
+          "lispMedianMs": 22937.831787109375,
+          "peakRssMedianBytes": 2545545216,
+          "readyRssMedianBytes": 2545487872
+        }
+      },
+      "deltaMs": 821.329833984375,
+      "percent": 3.113032676929368,
+      "indistinguishable": false,
+      "disposition": "REJECTED: end-to-end regression exceeds either observed arm spread",
+      "sha256": "84a1e1358059b74efcd1f012d343030ea4eaf3d85c3c6c2b8455d2c3dee791b1",
+      "readyRssDeltaBytes": 235839488
+    },
+    {
+      "name": "Compiler-owned specialized entries",
+      "file": "rejection/first-specialized-timing/result.json",
+      "pairs": 3,
+      "control": "indirect",
+      "candidate": "specialized",
+      "arms": {
+        "indirect": {
+          "runs": [
+            26534.93359375,
+            26663.04736328125,
+            26384.044677734375
+          ],
+          "medianMs": 26534.93359375,
+          "spreadMs": 279.002685546875,
+          "lispMedianMs": 22974.760009765625,
+          "peakRssMedianBytes": 2349928448,
+          "readyRssMedianBytes": 2349875200
+        },
+        "specialized": {
+          "runs": [
+            29438.53271484375,
+            29492.9931640625,
+            29310.3623046875
+          ],
+          "medianMs": 29438.53271484375,
+          "spreadMs": 182.630859375,
+          "deltaMs": 2903.59912109375,
+          "percent": 10.942552808112772,
+          "indistinguishable": false,
+          "lispMedianMs": 24627.111572265625,
+          "peakRssMedianBytes": 2846978048,
+          "readyRssMedianBytes": 2833375232
+        }
+      },
+      "deltaMs": 2903.59912109375,
+      "percent": 10.942552808112772,
+      "indistinguishable": false,
+      "disposition": "REJECTED: end-to-end regression exceeds either observed arm spread",
+      "sha256": "c7c543a55476a01a8d550c0b2579cb00ed398233c555824d4201e7aaa8292ede",
+      "readyRssDeltaBytes": 483500032
+    }
+  ],
+  "measuredBinaries": [
+    {
+      "path": "combined/boot/artifacts/boot.archive.wasm",
+      "bytes": 79351275,
+      "sha256": "9735aafe047ec6a5a9b44689f0fe702bbe01a02ea02c84b62bad2118c635cf2e"
+    },
+    {
+      "path": "m1-guarded2/boot/artifacts/boot.archive.wasm",
+      "bytes": 85152168,
+      "sha256": "9d58500723ab0aee2a82f7d93009cb763cd6d5ae4035e00b2b53ded6b62249ae"
+    },
+    {
+      "path": "measure-control/boot/artifacts/boot.archive.wasm",
+      "bytes": 79364401,
+      "sha256": "09ae18b84251d856e377a3863de3f8c408530b6167a660e8ec10eaac052698f6"
+    },
+    {
+      "path": "measure-specialized/boot/artifacts/boot.archive.wasm",
+      "bytes": 117000916,
+      "sha256": "be2de7878930050198ace50175951fa0bca98dd55d1ec19b997311631632c847"
+    }
+  ],
+  "selectedConfiguration": {
+    "core": "separate boot and runtime archives",
+    "dispatch": "indirect",
+    "entries": "accepted full ABI",
+    "fixedCore": false,
+    "productModules": 7,
+    "productInstances": 11
+  },
+  "rollback": {
+    "status": "PENDING_AFTER_RECORD_COMMIT",
+    "sourceSnapshot": "rejection/source-snapshot.json"
+  },
+  "retainedScripts": [
+    "tests/wasm/stage1/loader-target/direct-call-census.py",
+    "tests/wasm/stage1/loader-target/direct-call-profile.py"
+  ],
+  "cancelled": [
+    "Remaining P-6 correctness qualifications and entry ablations",
+    "Fixed-core indirect/guarded/unguarded timing comparison",
+    "Root-slot reuse prototype qualification and timing"
+  ],
+  "review": {
+    "source": "User-supplied Claude recommendation in this conversation",
+    "decision": "Back out selectively as Claude advises",
+    "acceptance": "Rejection of experiment; no acceptance of prototype implementation"
+  },
+  "independentCandidates": {
+    "copyFunction": "Preserved separately for review; excluded from selected product",
+    "hostResultDescriptor": "Preserved with failure evidence; excluded from selected product"
+  },
+  "retention": {
+    "file": "rejection/retention.json",
+    "sha256": "dff098470eb5ff6fc6223dc409019489c95c0c682f27ac607ffb19fe5a442820"
+  },
+  "evidenceIndex": {
+    "file": "rejection/index.json",
+    "sha256": "355cef9b27aa51af42831c95b4ce740d2d2b63c50d61d0a9b28d25141a46290f"
+  }
+}

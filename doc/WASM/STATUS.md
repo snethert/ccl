@@ -19,6 +19,14 @@ Direct calls remain outside this change. Historical cross-loaded count remains
 36; that retired prefix fixture does not reproduce from current HEAD (O-129).
 The boot image contains level-0 only.**
 
+The subsequent [direct-call startup experiment](stage1/direct-call-results.md)
+is **rejected by user direction**: combined core 26.290 → 26.189 s (wash),
+guarded dispatch 26.384 → 27.205 s (+3.1%), specialized entries
+26.535 → 29.439 s (+10.9%); each candidate uses more READY memory.
+Keep the accepted split/indirect implementation. Raw timings, failure evidence
+and the census/profile scripts are retained; incomplete P-6 qualifications
+are cancelled, not counted as completed or accepted.
+
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their
 counts remain actual events under BT-20, but level-1 cross-loading and the
