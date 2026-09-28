@@ -1,4 +1,13 @@
 {
+  "acceptance": {
+    "audit": 196,
+    "criterion_credit": false,
+    "implementation": "4316cfa5",
+    "review_commit": "7392a92c",
+    "review_original_commit": "fe2db2bb",
+    "test_reruns_for_acceptance": 0,
+    "user_direction": "accept reviewer's commit and proceed with CCL Stage 2"
+  },
   "criterion_credit": false,
   "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-buffers-r1",
   "inventory_sha256": "ad8f64362573d2d94b4e7d06e354259cd7052a7ec034c8d17ba26a81c1d653b4",
@@ -182,7 +191,7 @@
     }
   },
   "retained_bytes": 669764,
-  "review": "NOT_REVIEWED",
+  "review": "ACCEPTED_AUDIT_196",
   "scalar_summary": {
     "browsers": [
       "chromium",
@@ -230,7 +239,7 @@
     "tests/wasm/stage2/foreign-scalar/run.py": "076c2bf8221300c5ff307ebc92a0655f2270b1d8d7008a2bebb0fc21f464c735",
     "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147"
   },
-  "status": "EXECUTED_REVIEW_PENDING",
+  "status": "ACCEPTED_AT_RETAINED_SCOPE",
   "summary": {
     "browsers": [
       "chromium",

@@ -2,8 +2,8 @@
 
 This Stage 2 unit extends `openForeignModule` with declared copies and explicit
 allocation ownership. It uses the accepted single-Worker owner. Product Lisp,
-shared compiler and upstream kernel sources are unchanged. Independent review
-is required before acceptance; no FMT or LL slot is completed.
+shared compiler and upstream kernel sources are unchanged. Accepted at this scope after user-supplied [Claude audit 196](../../../../doc/WASM/stage0/claude-review.md)
+(`fe2db2bb`, imported as `7392a92c`); no FMT or LL slot is completed.
 
 A declaration may add:
 

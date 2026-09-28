@@ -1,3 +1,14 @@
+## 2026-09-28 — Accept audit 196 owned foreign buffers
+
+Imported the user-supplied [audit 196](../stage0/claude-review.md) from
+`fe2db2bb` as `7392a92c`. Accept `4316cfa5` at its retained scope; `ab920d62`
+is consistent. Buffer, owner, scalar and Lisp results reproduce independently.
+No defect, no FMT/LL credit and no unchanged-test replay for acceptance.
+O-165 is closed. Carry O-170/O-173 documentation and O-171/O-172 directed
+lifetime tests into the next substantive unit. O-167 must precede multi-Worker
+admission. The compiler corpus waits until FFI completion. Product Lisp lines
+changed: zero. Stage 1 stays closed at 33/33; Stage 2 has no adopted slots.
+
 ## 2026-09-28 — Add owned foreign byte ranges and explicit release
 
 Whole-file movement: zero. Product Lisp lines changed: zero. The next stop is

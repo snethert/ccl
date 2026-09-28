@@ -40,7 +40,8 @@ and finalization remain. A direct public symbol-lookup probe after READY remains
 an explicit checked-4 failure; the qualified load uses `%FASLOAD` directly.
 
 The [third Stage 2 unit](stage2/README.md#third-delivery-owned-byte-ranges)
-is **executed; independent review pending**. Declared byte ranges, strict UTF-8,
+is **accepted at its retained scope after [Claude audit 196](stage0/claude-review.md)**
+(`7392a92c`), with no defect and no acceptance replay. Declared byte ranges, strict UTF-8,
 explicit allocation identities and release now use the FOREIGN owner. Copies
 survive foreign memory growth; offset reuse cannot revive released handles;
 a trap retires all allocations before later cleanup. Qualification passes
@@ -51,7 +52,9 @@ Lisp witness and 126 scalar checks per engine / 16 mutants. O-165 is covered,
 O-168 is exercised; O-167 stays open for multi-Worker admission. The 670 KB
 pack has minimal failure reproductions, no failed-run snapshots or successful
 compiled artifacts. No corpus replay, product Lisp changes or FMT/LL credit.
-Product Lisp service, namespace loading, callbacks and finalization remain next.
+O-165 is closed. O-170/O-173 documentation and O-171/O-172 lifetime tests carry
+into the next substantive unit. Product Lisp service, namespace loading,
+callbacks and finalization remain next.
 
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83

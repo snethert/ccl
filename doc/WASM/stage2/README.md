@@ -83,8 +83,8 @@ The ordinary post-READY Lisp witness matches **seven native rows**, with
 **38 foreign entries / 26 moving collections**. The owner passes **53 checks
 per engine / 38 mutants** and its existing 12-row Lisp witness; the scalar
 regression passes **126 checks per engine / 16 mutants**. Results are bound in
-[foreign-buffer-results.json](foreign-buffer-results.json). **Executed;
-independent review pending. No FMT or LL credit.** This adds explicit release;
+[foreign-buffer-results.json](foreign-buffer-results.json). **Accepted after user-supplied [Claude audit 196](../stage0/claude-review.md)**
+(`fe2db2bb`, imported as `7392a92c`). No FMT or LL credit. This adds explicit release;
 collector-triggered finalization, callbacks and the public Lisp API remain owed.
 The fixture transport preserves a primary exception if a release later traps.
 
@@ -93,6 +93,12 @@ live-heap validation calls and all remaining checkpoint words (O-165), plus
 O-168's inhibited collection. O-167 remains a prerequisite for multi-Worker D5.
 The initial Lisp copy witness used the signed-byte subtag for an unsigned-byte
 vector; that fixture failure is retained with its correction.
+
+Audit 196 reproduces the buffer, owner, scalar and Lisp results and finds no
+defect. Acceptance reruns no unchanged tests. O-165 is closed. O-170/O-173
+carry release-refusal and output-encoding documentation into the next unit;
+O-171/O-172 carry directed live-handle refusal tests. O-167 remains required
+before multi-Worker admission.
 
 ## Next foreign work
 
