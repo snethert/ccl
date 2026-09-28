@@ -1,0 +1,270 @@
+{
+  "criterion_credit": false,
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-buffers-r1",
+  "inventory_sha256": "ad8f64362573d2d94b4e7d06e354259cd7052a7ec034c8d17ba26a81c1d653b4",
+  "next": "Product Lisp service, named namespace loading, callbacks and owner-queued finalization; browser Lisp and multi-Worker D5 remain separate qualifications.",
+  "owner_regression_checks": 59,
+  "owner_summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "criterion_credit": false,
+    "lisp": {
+      "foreign_entries": 20,
+      "moving_collections": 13,
+      "native_matched_rows": 12,
+      "rows": [
+        "FR-ROW INITIALIZATION-AND-SCALAR (42 T T T (35 19) (71 72))",
+        "FR-ROW MOVING-LIVE-FOREIGN-CALL (42 T T T (35 19) (71 72))",
+        "FR-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+        "FR-ROW BINDING-AFTER-SUCCESS :OUTSIDE",
+        "FR-ROW 2 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW 3 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW RETIRED :REFUSED",
+        "FR-ROW 4 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW RETIRED :REFUSED",
+        "FR-ROW 5 (:CAUGHT 1 T :OUTSIDE)",
+        "FR-ROW REOPENED (42 T T T (35 19) (71 72))",
+        "FR-ROW BINDING-AFTER-FAILURES :OUTSIDE"
+      ],
+      "scope": "Lisp semantics against native reference; foreign answers/failure policy from fixture declaration",
+      "status": "PASS"
+    },
+    "owner_checks": 53,
+    "owner_mutants": 38,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "compiler corpus deferred until whole FFI layer is complete",
+      "generated Lisp execution in browser providers",
+      "multi-Worker D5 admission and callback reentry"
+    ],
+    "status": "PASS"
+  },
+  "packet_sha256": "c6c2e6cfd0b145858d19b3fe88a93ca35bd8bf1d28949e514a4afb2ea7dc2f77",
+  "product_lisp_lines_changed": 0,
+  "results": {
+    "buffers": {
+      "artifacts.json": {
+        "path": "final/buffers/artifacts.json",
+        "sha256": "73ff22f335b542b3a0a96cfa9d8a0b0f1fb3dd015728d03a4792aa911bbad776"
+      },
+      "browser.json": {
+        "path": "final/buffers/browser.json",
+        "sha256": "7d052f9fe437645a5b1e6323c3e92059c47f89e609367ee6137dd329b2c9090b"
+      },
+      "inputs.json": {
+        "path": "final/buffers/inputs.json",
+        "sha256": "ffe6c45822e4a00a1c91f411ad8273bdc78a6076e9da9912f9ec76255133d69b"
+      },
+      "lisp-check.json": {
+        "path": "final/buffers/lisp-check.json",
+        "sha256": "0be0f6461be1e5af2c96a81fbef0506648058576bda937b2665a0ecf1ec71fcf"
+      },
+      "lisp-report.json": {
+        "path": "final/buffers/lisp-report.json",
+        "sha256": "ac5343b9bc16a54ad94ce2e552c46faa309d8e50765cbe1bb03d9ef7efc3b2e8"
+      },
+      "lisp.json.gz": {
+        "path": "final/buffers/lisp.json.gz",
+        "sha256": "49fcb20113eb620cccbd574f01d7e99f1585ecfa20ac90f52bcda2eec107bc8c"
+      },
+      "mutants.json": {
+        "path": "final/buffers/mutants.json",
+        "sha256": "5fb4b12e4bfd41941d22274afee57133439bb93b26543a81fa878c3ddeb57e4c"
+      },
+      "native-reference.json": {
+        "path": "final/buffers/native-reference.json",
+        "sha256": "cbf929d0bdf70b01446ce599c923aca39d8891f2ac2611bcc78ea57e6c653cc4"
+      },
+      "node.json": {
+        "path": "final/buffers/node.json",
+        "sha256": "b932cff86a485413fd528d43d7ca9d8c491a387af7fee6b7034290a3c24673c2"
+      },
+      "sources.json": {
+        "path": "final/buffers/sources.json",
+        "sha256": "1395665c6bd13fd00144f0f0d88a633931233fc801924d936710c24e65e34399"
+      },
+      "summary.json": {
+        "path": "final/buffers/summary.json",
+        "sha256": "eaa46424b89a4875d03941a0b7b6e4b7ed34ff691444d925619d46e10ec9bfc8"
+      },
+      "tools.json": {
+        "path": "final/buffers/tools.json",
+        "sha256": "8063a7ac395bd904b8c5eabbc77924c2f7a88471891c508300b97b7c5d9612e4"
+      }
+    },
+    "owner": {
+      "artifacts.json": {
+        "path": "final/owner/artifacts.json",
+        "sha256": "93b4e7dd1ea0a315be93ba86a9ef1e335a9399939667de6f3181a98c04b28dba"
+      },
+      "browser.json": {
+        "path": "final/owner/browser.json",
+        "sha256": "664184bb78a452404fa822af3dd5d0201d0b1b5f485909e04e1b689779a41891"
+      },
+      "inputs.json": {
+        "path": "final/owner/inputs.json",
+        "sha256": "5c00335a53f77ee0517f883e8d63ea30d123e9046fd6c4a1d6336e20a945a811"
+      },
+      "lisp-check.json": {
+        "path": "final/owner/lisp-check.json",
+        "sha256": "2ad3cbd89a5cd372fcfe56a7f85917a873b4036f1ed038d4e104b9c90fb3107a"
+      },
+      "lisp-report.json": {
+        "path": "final/owner/lisp-report.json",
+        "sha256": "8fb0a4ea660931e574336f6cc60d3b27bcaa3ed00866e42aded59c72d31204fc"
+      },
+      "lisp.json.gz": {
+        "path": "final/owner/lisp.json.gz",
+        "sha256": "d3d45c5ed7b716c2f1ad131d756399866ae72e1991fed87e1c4f3ca02c97b1f7"
+      },
+      "mutants.json": {
+        "path": "final/owner/mutants.json",
+        "sha256": "6f0894f385ec3c3b8e05e299bb3e50ce4b3c0f56dda6b7cee83e6cdcf62726f5"
+      },
+      "native-reference.json": {
+        "path": "final/owner/native-reference.json",
+        "sha256": "c71bd35b6ab38310dbcc28cbbd73101c52d319b5a3e76844c3e6c7614438e40d"
+      },
+      "node.json": {
+        "path": "final/owner/node.json",
+        "sha256": "ced6436c3b486bb579a58e28e48a1f271913586a9eb988024e3721fa4315463c"
+      },
+      "owner-regression.json": {
+        "path": "final/owner/owner-regression.json",
+        "sha256": "e8a2bdb55a5d8e6108d9c35c56b7ad1853c5493f6f5ec3d32d284b94d0d80ae8"
+      },
+      "sources.json": {
+        "path": "final/owner/sources.json",
+        "sha256": "0072ed064a11ea4fa3d89c9dd1947d88513224148e3be8c64bd33fb4145643ea"
+      },
+      "summary.json": {
+        "path": "final/owner/summary.json",
+        "sha256": "445059fe565eb79501585574053be8c2579ba0a3a1bd9a58edad63add1c5c961"
+      },
+      "tools.json": {
+        "path": "final/owner/tools.json",
+        "sha256": "8063a7ac395bd904b8c5eabbc77924c2f7a88471891c508300b97b7c5d9612e4"
+      }
+    },
+    "scalar": {
+      "artifacts.json": {
+        "path": "final/scalar/artifacts.json",
+        "sha256": "a79d745d0bfbf8a02356f02deddf8ef6993893674e90cbdda228b107ec59ac52"
+      },
+      "browser.json": {
+        "path": "final/scalar/browser.json",
+        "sha256": "14d540be65155fe64cfcec2da0175a1a91aa9d32d6dc9990eb80d179e8f481f2"
+      },
+      "mutants.json": {
+        "path": "final/scalar/mutants.json",
+        "sha256": "8ae8924be512f56130b81b67d56506717ba619db9a7ac63656515cafaaabc410"
+      },
+      "node.json": {
+        "path": "final/scalar/node.json",
+        "sha256": "2f3f54a38115da85ccd786c42409c47289ee6054fb5124c629915f54e239fdae"
+      },
+      "sources.json": {
+        "path": "final/scalar/sources.json",
+        "sha256": "d65b3507ceda9400e24bc65de113917307c5951efa971c49f604e4a95b3efde5"
+      },
+      "summary.json": {
+        "path": "final/scalar/summary.json",
+        "sha256": "ecbbcaf656a7f16dae78742c3919f68abde010c3b76d342ad64407c345206880"
+      },
+      "tools.json": {
+        "path": "final/scalar/tools.json",
+        "sha256": "d2d59918f6d1333db314f396b91c5520e9f700078adf55ba4b9d1b897eaaa9c4"
+      }
+    }
+  },
+  "retained_bytes": 669764,
+  "review": "NOT_REVIEWED",
+  "scalar_summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 126,
+    "criterion_credit": false,
+    "mutants": 16,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [],
+    "status": "PASS"
+  },
+  "source_files": {
+    "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
+    "runtime/wasm32/collector-owner.mjs": "7272a96fc9a5ceb8de4982d5d347ba56332e53f5e801d0b7c22345b479d4af19",
+    "runtime/wasm32/collector.c": "062a015e26718338d77db7034bd7b1eb27fc31b6fea0239799679cc581469a30",
+    "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
+    "runtime/wasm32/foreign-module.mjs": "318fdf82082b81d9a1c93aef570e4db8c270227017cb741f84e890d83d37171c",
+    "runtime/wasm32/host-call-adapter.wat": "c4b64dfc15055eecb438a1e9774f72bbe62291f3a38bcfd314e4cc0d9f844009",
+    "runtime/wasm32/layout.mjs": "a177be94f14bbd52b04b6ed9a3e07ac2236a11140f49e5fe7549f553dc6e3065",
+    "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907",
+    "tests/wasm/stage1/bootstrap-validation/common.py": "b162605e2af93d4b7972c1d04cc66984154ccee8926db9a645a75fed02049786",
+    "tests/wasm/stage1/bootstrap-validation/storage.py": "c071fa1aee15d5dcc3b6922ca2258f51c3a713feff01b19a58fa0d3e8b467ebc",
+    "tests/wasm/stage1/loader-target/boot0.mjs": "ed7e14d94af5bfedc4b5fc90d9e5095769504a747224871b84b0c7e982e28e30",
+    "tests/wasm/stage1/loader-target/build.py": "632daaf0523bceddce349cf86ecbaa424e85e37191a73c6120bb4ab59c3b1dc2",
+    "tests/wasm/stage1/loader-target/source-compile.lisp": "f27dfedff6c721b30245e0e4ac0f376df19e76a635c71d882c6610b2a3972624",
+    "tests/wasm/stage2/foreign-buffers/check.mjs": "ec2a37f6255ca866a4b86859307b2e35000ffb552d7ee91aca91af52f9cfa17d",
+    "tests/wasm/stage2/foreign-buffers/checks.lisp": "5e1c722fa69fac93a40d5e97e286fdf20c6380f5a2435066fc80d2412feb3a6f",
+    "tests/wasm/stage2/foreign-buffers/declaration.mjs": "67daf6bedcec2ddccb408b2158728f2f0514cd46aa1173e16847735aece00811",
+    "tests/wasm/stage2/foreign-buffers/extension.mjs": "2cc74bdfec37d347d3c17e02738f7a53d0fd6d7c2fefdaef1a8f0160ebe456d5",
+    "tests/wasm/stage2/foreign-buffers/library.wat": "2b38e5f14167c90e0c07808bea9457b32bbebb506f2cc8fdb349fb9ecc00a2d1",
+    "tests/wasm/stage2/foreign-buffers/run.py": "bf48e2ffee8f7c3413843a3de7ecdbdb5ade24836d030ccd165afa346235931f",
+    "tests/wasm/stage2/foreign-runtime/checks.lisp": "9a5dc04264af3eef4dcd12361e4ec2e401659c5d58c2ba6e5c0261ba90c73120",
+    "tests/wasm/stage2/foreign-runtime/extension.mjs": "78ca7cac0e804d1be689751496d919b2d09fb774efb1d0bd6de3781e1bd4b7f8",
+    "tests/wasm/stage2/foreign-runtime/library.wat": "b05ade674b4a14c8c3abbf6670c61f4ce154b34b3cf09a71ffac8eb17b84b4b9",
+    "tests/wasm/stage2/foreign-runtime/owner-check.mjs": "0acb6eb90494e0c4a3a9180bd5439515bb44d7b61167ce073df09072eb431046",
+    "tests/wasm/stage2/foreign-runtime/run.py": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",
+    "tests/wasm/stage2/foreign-scalar/browser.mjs": "23d7214cfe79bf6e581ae5d2cf20670311c391caeb7b501023f7d4bcc10189e8",
+    "tests/wasm/stage2/foreign-scalar/caller.wat": "2f2c6e482050ce9535282ee6423eb6681c95f9d40a74ff8a9866d136c69a6a38",
+    "tests/wasm/stage2/foreign-scalar/check.mjs": "85be34371a94180769cd52a002cccdb1ff9fbf7ff1eacc447d643dd04b1661c9",
+    "tests/wasm/stage2/foreign-scalar/library.wat": "4656785ca11346bbd08acab60493e7699c5b66589c9e7eda637f25e9e320540f",
+    "tests/wasm/stage2/foreign-scalar/node.mjs": "b64d5f36c5ee3371715a1b72a58c8d7bba2a0c72f7642d8042f492e51d95e87e",
+    "tests/wasm/stage2/foreign-scalar/run.py": "076c2bf8221300c5ff307ebc92a0655f2270b1d8d7008a2bebb0fc21f464c735",
+    "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147"
+  },
+  "status": "EXECUTED_REVIEW_PENDING",
+  "summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 64,
+    "criterion_credit": false,
+    "lisp": {
+      "foreign_entries": 38,
+      "moving_collections": 26,
+      "native_matched_rows": 7,
+      "rows": [
+        "FB-ROW COPIED-MOVING-BYTES (1110 T T T T (66 195 169 240 159 140 141 0))",
+        "FB-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+        "FB-ROW 1 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 2 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 3 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 4 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW BINDING-AFTER-CLEANUP :OUTSIDE"
+      ],
+      "scope": "Lisp octets/root/binding/value/cleanup semantics; declared fixture supplies foreign answers and failure policy",
+      "status": "PASS"
+    },
+    "mutants": 26,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "compiler corpus deferred until whole FFI layer is complete",
+      "generated Lisp in browser providers",
+      "multi-Worker D5, callbacks, queued finalization and product Lisp API"
+    ],
+    "status": "PASS"
+  },
+  "version": 1,
+  "whole_file_count_movement": 0
+}

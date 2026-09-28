@@ -33,6 +33,9 @@ that existing writers or packs already conform.
    tarballs, complete successful build trees, or duplicate `development/`
    and `rejected/` copies. Record a rejected experiment's source hash and
    results file, plus any unique failing input needed for reproduction.
+   Failure retention means a minimal reproduction: the original failure result,
+   necessary source delta or unique failing input, and references to shared
+   inputs. Do not retain snapshots of entire failed runs.
    Required shared bootstrap inputs and native baselines have one persistent
    home referenced by identity; do not duplicate them into deliverables.
 6. **Compact existing packs.** Apply the same policy to the existing evidence

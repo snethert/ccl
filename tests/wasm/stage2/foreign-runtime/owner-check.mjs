@@ -61,6 +61,24 @@ export function check(binaries,{only}={}) {
  for(const [name,edit,pattern] of entryRefusals)test('owner-refusal-'+name,()=>{
   const f=setup();edit(f);const before=f.snapshot();throws(()=>f.boundary.enter('call'),pattern);f.unchanged(before);
  });
+ for(const phase of ['entry','return'])test('owner-refusal-live-'+phase,()=>{
+  const f=setup(),token=phase==='return'?f.boundary.enter('call'):null;
+  f.put(f.tcr+48,f.get(f.tcr+52)+8);const before=f.snapshot();
+  throws(()=>phase==='entry'?f.boundary.enter('call'):f.boundary.leave(token),/allocation ownership/);f.unchanged(before);
+ });
+ for(const offset of [8,12,16,64,76,88,116,120,124,128,132,140,148,152,156,160,164])
+  test('owner-refusal-checkpoint-'+offset,()=>{
+   const f=setup(),token=f.boundary.enter('call');f.put(f.tcr+offset,f.get(f.tcr+offset)+8);
+   const before=f.snapshot();throws(()=>f.boundary.leave(token),/foreign checkpoint/);f.unchanged(before);
+  });
+ test('owner-collection-inhibited',()=>{
+  const f=setup();f.owner.atSafepoint(o=>o.inhibitCollection(1));
+  const count=f.owner.collectionCount,token=f.boundary.enter('call');
+  equal(f.owner.collectForeign().deferred,true,'deferred collection');equal(f.owner.collectionCount,count,'not collected');
+  equal(f.get(f.tcr+32),3,'still FOREIGN');equal(f.owner.collectionPending,true,'pending collection');
+  f.boundary.leave(token);f.owner.atSafepoint(o=>o.inhibitCollection(-1));
+  equal(f.owner.collectionCount,count+1,'collection on unlock');equal(f.owner.collectionPending,false,'pending cleared');
+ });
  test('owner-refusal-operation',()=>{const f=setup(),before=f.snapshot();throws(()=>f.boundary.enter(null),/foreign operation/);f.unchanged(before);});
  test('owner-refusal-collect-outside',()=>{const f=setup(),before=f.snapshot();throws(()=>f.owner.collectForeign(),/foreign collection/);f.unchanged(before);});
  test('owner-refusal-nested-safepoint',()=>{const f=setup(),before=f.snapshot();f.owner.atSafepoint(()=>throws(()=>f.boundary.enter('call'),/foreign reentry/));f.unchanged(before);});

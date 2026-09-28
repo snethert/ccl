@@ -37,8 +37,11 @@ isolate admission. It covers two stack/heap placements, view refresh after
 memory growth, moving roots, initialization, exception/trap/host failures,
 retirement, cross-library reentry and refusal without memory writes. Each
 independent clause needs a directed case or a recorded equivalence argument.
-Audit 195 identifies missing directed cases for the entry/exit live-heap
-validation calls and 17 checkpoint words (O-165), carried into the next unit. The preliminary 16-byte root-head span
+Audit 195 identified missing directed cases for the entry/exit live-heap
+validation calls and 17 checkpoint words (O-165). The
+[owned-buffer successor](../foreign-buffers/README.md) adds those 19 cases and
+mutants plus O-168's deferred-collection case: 53 owner checks / 38 mutants.
+The acceptance counts above describe the original reviewed unit. The preliminary 16-byte root-head span
 check is redundant for admission with the complete root extent and count >= 2;
 it ensures the header read is safe. Its removal can change the refusal reason,
 which is explicitly excluded from the semantic mutation count. The private

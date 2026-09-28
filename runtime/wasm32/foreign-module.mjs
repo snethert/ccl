@@ -67,7 +67,53 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
   const initializerIndex=init.kind==='start'?m.start:init.kind==='export'?m.exports.find(e=>e.name===init.name).index:null;
   const initializerNames=new Set(m.exports.filter(e=>e.kind===0&&e.index===initializerIndex).map(e=>e.name));
 
+  // Owned ranges are an optional extension of the scalar declaration. An
+  // allocation identity never exposes its offset or the foreign Memory.
+  const buffers=d.buffers,managedNames=new Set(),ranges=new Map();
+  const uint=n=>Number.isSafeInteger(n)&&n>=0&&n<=0x7fffffff;
+  if(buffers!==undefined){
+    need(buffers&&uint(buffers.maximumBytes)&&buffers.maximumBytes>0,'BUFFER_LIMIT');
+    need(declared.has(buffers.allocate)&&signature(declared.get(buffers.allocate))==='[["i32"],["i32"]]'&&
+         declared.has(buffers.release)&&signature(declared.get(buffers.release))==='[["i32"],[]]','BUFFER_ABI');
+    for(const name of [buffers.allocate,buffers.release]){
+      const index=m.exports.find(e=>e.kind===0&&e.name===name).index;
+      for(const e of m.exports)if(e.kind===0&&e.index===index)managedNames.add(e.name);
+    }
+  }
+  for(const e of d.exports){
+    const rows=e.ranges??[],used=new Set();need(Array.isArray(rows),'RANGES');
+    for(const r of rows){
+      need(buffers&&!managedNames.has(e.name),'RANGE_EXPORT');
+      need(r&&uint(r.pointer)&&uint(r.length)&&r.pointer!==r.length&&
+           e.params[r.pointer]==='i32'&&e.params[r.length]==='i32'&&
+           !used.has(r.pointer)&&!used.has(r.length),'RANGE_SIGNATURE');
+      need(['read','write','readwrite'].includes(r.access)&&['bytes','utf-8'].includes(r.encoding),'RANGE_FORMAT');
+      used.add(r.pointer);used.add(r.length);
+    }
+    ranges.set(e.name,rows);
+  }
+  // An alias must not erase the range contract of the same Wasm function.
+  for(const a of m.exports.filter(e=>e.kind===0))for(const b of m.exports.filter(e=>e.kind===0&&e.index===a.index))
+    need(JSON.stringify(ranges.get(a.name))===JSON.stringify(ranges.get(b.name)),'RANGE_ALIAS');
+
   let state='initializing',busy=false,instance;
+  const handles=new WeakMap(),slices=new WeakMap(),live=new Set();
+  function retire(){state='retired';instance=null;for(const h of live)h.active=false;live.clear();}
+  const idle=()=>{need(!busy,'REENTRY');need(state==='ready','RETIRED');};
+  const memory=()=>instance.exports[d.memory.export];
+  const owned=handle=>{const h=handles.get(handle);need(h?.active,'HANDLE');return h;};
+  const extent=(h,offset,length)=>{
+    need(uint(offset)&&uint(length)&&length<=h.size-offset,'BUFFER_RANGE');
+    need(h.pointer+offset+length<=memory().buffer.byteLength,'MEMORY_RANGE');
+    return h.pointer+offset;
+  };
+  const view=(h,offset,length)=>new Uint8Array(memory().buffer,extent(h,offset,length),length);
+  const textRange=(h,offset,length,encoding)=>{
+    if(encoding==='utf-8'){
+      try{new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(view(h,offset,length));}
+      catch{need(false,'UTF8');}
+    }
+  };
   const importObject=Object.create(null),importNames=new Set();
   need(m.imports.length===d.imports.length,'IMPORT_SET');
   for(const actual of m.imports){
@@ -91,7 +137,7 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
     busy=true;let token,result,cause,failed=false;
     try{token=enter(operation);
       if(token&&typeof token.then==='function'){state='retired';need(false,'ASYNC_BOUNDARY');}
-    }catch(error){busy=false;if(state==='retired')instance=null;throw error;}
+    }catch(error){busy=false;if(state==='retired')retire();throw error;}
     try{result=run();}catch(error){
       failed=true;cause=error;
       if(error instanceof WebAssembly.RuntimeError||state==='initializing')state='retired';
@@ -101,7 +147,7 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
     try{const admitted=leave(token);need(!admitted||typeof admitted.then!=='function','ASYNC_BOUNDARY');}catch(error){
       state='retired';throw new AggregateError(failed?[cause,error]:[error],
         'foreign-module: ADMISSION_FAILED',{cause:failed?cause:error});
-    }finally{busy=false;if(state==='retired')instance=null;}
+    }finally{busy=false;if(state==='retired')retire();}
     if(failed){
       const kind=cause instanceof WebAssembly.RuntimeError?'trap':cause instanceof WebAssembly.Exception?'exception':'host';
       const error=new WebAssembly.Exception(errorTag,[codes[kind]]);
@@ -119,12 +165,53 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
     declaration:d,
     get state(){return state;},
     call(name,args=[]){
-      need(state==='ready','RETIRED');
+      idle();
       const entry=declared.get(name);need(entry,'UNDECLARED_EXPORT');
       need(!initializerNames.has(name),'INITIALIZER_ONCE');
-      const values=argumentsFor(args,entry.params);
-      return invoke('call:'+name,()=>instance.exports[name](...values));
+      need(!managedNames.has(name),'MANAGED_EXPORT');
+      need(Array.isArray(args)&&args.length===entry.params.length,'ARITY');
+      const values=[...args],checked=[];
+      for(const r of ranges.get(name)){
+        const slice=slices.get(values[r.pointer]);need(slice,'RANGE_HANDLE');
+        const h=owned(slice.handle),length=values[r.length];
+        values[r.pointer]=extent(h,slice.offset,length)|0;
+        if(r.access!=='write')textRange(h,slice.offset,length,r.encoding);
+        checked.push({r,h,offset:slice.offset,length});
+      }
+      argumentsFor(values,entry.params);
+      const result=invoke('call:'+name,()=>instance.exports[name](...values));
+      for(const {r,h,offset,length} of checked)if(r.access!=='read')textRange(h,offset,length,r.encoding);
+      return result;
     },
-    close(){need(!busy,'REENTRY');state='retired';instance=null;}
+    allocate(size){
+      idle();need(buffers,'BUFFERS');need(uint(size)&&size>0&&size<=buffers.maximumBytes,'ALLOCATION_SIZE');
+      const pointer=invoke('allocate:'+buffers.allocate,()=>instance.exports[buffers.allocate](size))>>>0;
+      // A broken allocator cannot leave an admitted live offset, including an
+      // overlap with another allocation. Retirement never calls that allocator.
+      if(pointer===0||pointer+size>memory().buffer.byteLength||
+         [...live].some(h=>pointer<h.pointer+h.size&&h.pointer<pointer+size)){
+        retire();need(false,'ALLOCATION_RESULT');
+      }
+      const handle=Object.freeze({}),h={pointer,size,active:true};handles.set(handle,h);live.add(h);return handle;
+    },
+    range(handle,offset=0){
+      idle();const h=owned(handle);extent(h,offset,0);
+      const slice=Object.freeze({});slices.set(slice,{handle,offset});return slice;
+    },
+    write(handle,offset,bytes){
+      idle();const h=owned(handle),copy=snapshotBytes(bytes);
+      view(h,offset,copy.length).set(copy);
+    },
+    read(handle,offset,length){idle();return view(owned(handle),offset,length).slice();},
+    release(handle){
+      need(!busy,'REENTRY');const h=handles.get(handle);need(h,'HANDLE');
+      if(!h.active)return false;
+      // Invalidate before a destructor can fail. Even a recoverable failure
+      // leaves its allocation retired; an uncertain free is never retried.
+      h.active=false;live.delete(h);
+      if(state==='ready')invoke('release:'+buffers.release,()=>instance.exports[buffers.release](h.pointer|0));
+      return true;
+    },
+    close(){need(!busy,'REENTRY');retire();}
   });
 }

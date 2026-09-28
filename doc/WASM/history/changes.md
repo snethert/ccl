@@ -1,3 +1,31 @@
+## 2026-09-28 — Add owned foreign byte ranges and explicit release
+
+Whole-file movement: zero. Product Lisp lines changed: zero. The next stop is
+the product Lisp service, namespace loading, callbacks and owner-queued
+finalization; multi-Worker D5 and browser Lisp remain separately qualified.
+
+The [third Stage 2 unit](../stage2/README.md) extends scalar admission with
+allocator/release declarations, bounded opaque ranges and strict UTF-8 or raw
+octets. Allocation, principal calls and release all use FOREIGN. Copies reload
+current memory views, allocation identities detect offset reuse, and retirement
+invalidates all remaining handles before later cleanup. The post-READY fixture
+reloads a moved Lisp byte-vector source, copies results back, preserves aliases,
+bindings and values, and keeps the primary exception if release later traps.
+
+Validation: 64 buffer checks on all four engines, 26 killed mutants, seven
+native-matched Lisp rows, 38 entries and 26 moving collections. The owner adds
+O-165's directed heap-validation/checkpoint cases and O-168's inhibition witness:
+53 checks / 38 mutants, plus 59 existing regressions and the original 12-row
+Lisp witness. Scalar regression remains 126 checks per engine / 16 mutants.
+All pass; review pending, no FMT/LL credit. Compiler corpus stays deferred.
+
+The redundant offset control and the fixture's incorrect signed-byte subtag
+are recorded as minimal failure reproductions. At the user's reminder, the
+failed-run snapshots were deleted and the retention policy clarified. The
+final 669,764-byte pack retains 22,705 bytes of failure notes/source deltas,
+source identities and results; successful compiled artifacts are discarded.
+No shared compiler or upstream kernel edits.
+
 ## 2026-09-28 — Accept audit 195 and continue the foreign boundary
 
 Imported the user-supplied [audit 195](../stage0/claude-review.md) from

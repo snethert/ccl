@@ -34,8 +34,17 @@ MUTANTS = [
  ('return-state', 'Atomics.load(words,(this.tcr+32)/4)===3', 'true', 'owner-refusal-return-state'),
  ('return-descriptor', 'this.#t(144)===frame.head', 'true', 'owner-refusal-return-descriptor'),
  ('checkpoint', 'frame.offsets.every((o,i)=>this.#t(o)===frame.values[i])', 'true', 'owner-refusal-return-checkpoint'),
+ ('live-entry', "this.#validateLive();\n   // B publishes", ";\n   // B publishes", 'owner-refusal-live-entry'),
+ ('live-return', "this.#validateLive();\n   // Allocation bounds", ";\n   // Allocation bounds", 'owner-refusal-live-return'),
  ('collection-state', 'Atomics.load(new Int32Array(this.#memory.buffer),(this.tcr+32)/4)===3', 'true', 'owner-refusal-collection-state'),
 ]
+# Each checkpoint word has its own semantic refusal, including O-165's 17 gaps.
+for offset in [8,12,16,64,76,88,116,120,124,128,132,140,148,152,156,160,164]:
+    MUTANTS.append(('checkpoint-'+str(offset),
+        'frame.offsets.every((o,i)=>this.#t(o)===frame.values[i])',
+        'frame.offsets.every((o,i)=>o=='+str(offset)+'||this.#t(o)===frame.values[i])',
+        'owner-refusal-checkpoint-'+str(offset)))
+
 
 
 def command(args, out, log, check=True, timeout=180, env=None):
