@@ -4,7 +4,9 @@ Implemented against `485559e3`. The user explicitly requested one integrated
 implementation and final qualification, superseding the advisory's separate
 commits and repeated timing cycles. No direct calls, alternate entries, call-site
 caches, result-budget changes, image saving or upstream kernel edits are included.
-Independent review has not been supplied; this record does not claim acceptance.
+**Accepted after user-supplied [Claude audit 193](../stage0/claude-review.md)**
+(`a2b70622`), at the user's direction on 28 September 2026. The review finds no
+defect in `243761e4`; Phase 2 remains rejected.
 
 ## Admission equivalences
 
@@ -158,4 +160,12 @@ as slow paths. Their successful reservation path bypasses the helper.
 Product Lisp: **91 added / 42 removed**. Frame sizes and result budgets are
 unchanged. Census **44,724,264** is inherited, not freshly measured. Originals
 575/535 and ledger 21/12 are unchanged; no criterion credit is claimed.
-The retained Phase 1 is producer-verified and awaits independent review.
+The retained Phase 1 is reviewed and accepted. Audit 193 rebuilt the cores
+from the committed backend and reproduced their bytes apart from identity
+records, reran 26,204 fresh corpus comparisons, 69 rows / nine moving
+collections and 45 boundary assertions, and confirmed the publication refusals
+and controls. Its default call increment is 28.709 ns, READY median 19.703 s,
+and archive 63,561,129 bytes. O-154 through O-158 are informational; no
+producer round is required. Acceptance reuses these completed checks without
+rerunning unchanged tests. The producer measurements and persistent pack
+remain historical records.

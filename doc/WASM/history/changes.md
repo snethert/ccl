@@ -1,3 +1,24 @@
+## 2026-09-28 — Accept calling-convention Phase 1 after audit 193
+
+At the user's direction, imported [Claude audit 193](../stage0/claude-review.md)
+(`a2b70622`) unchanged and accepted `243761e4`. The review finds no defect;
+Phase 2 remains rejected and absent from product code. The result and evidence
+records now bind acceptance to the implementation and independent review.
+
+The reviewer rebuilt the committed cores (byte-identical apart from identity
+records), reran 26,204 fresh corpus comparisons, 69 rows / nine moving
+collections, 45 boundary assertions, publication refusals and controls.
+The independent default call increment is 28.709 ns, three-run READY median
+19.703 s, and archive 63,561,129 bytes. O-154–O-158 are informational;
+unsafe attribution variants authorize no additional implementation work.
+
+Documentation-only acceptance reuses completed verification without rerunning
+unchanged tests. Producer measurements and the finalized persistent evidence
+pack are preserved. Both RAM volumes are cleared at the user's request after
+retaining residual logs; mounted volumes remain available for future builds.
+READY 81/82, seven modules / eleven instances, originals 575/535 and ledger
+21/12 remain unchanged; no criterion credit.
+
 ## 2026-09-28 — Subtract redundant calling-convention work; reject Phase 2
 
 The [retained Phase 1](../stage1/call-convention-results.md) removes dead normal

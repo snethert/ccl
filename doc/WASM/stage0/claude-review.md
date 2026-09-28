@@ -5183,3 +5183,88 @@ Codex's own eight emitted-code controls (float: arithmetic, rounding, safety, ty
 ### Disposition
 
 **No defect. Accept 047df094 and f38261de.** With audit 191, the three-commit declaration/loop stack is reviewed. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances**; originals 575/535; ledger 21/12; no criterion credit. STATUS rows and history entries owed at merge.
+
+## Hundred-and-ninety-third Claude audit — calling-convention subtraction 243761e4 (retained Phase 1, rejected Phase 2) replayed in full from a Git-free tree — 28 September 2026
+
+One Codex commit sits above the accepted declaration/loop stack: 243761e4, "Reduce ordinary Wasm call overhead; retain Phase 1". It changes only `compiler/WASM32/wasm32-backend.lisp` (+91/−42 product Lisp by Codex's count; +133/−44 in the numstat) plus a new fixture under `tests/wasm/stage1/call-convention/` and records. Replayed from `git archive 243761e4` under `/private/tmp/ccl-work/claude/audit193` (deleted after the audit) with the `ccl-evidence` symlink beside it, on the verified RAM mounts. Because this is a compiler change, the full tier applies: boot and level-1 cores rebuilt, fixture, boundaries, publication refusals, controls, corpus and the benchmark all rerun from the tree; native R6 and readers reused by identity because no shared compiler or kernel source changed.
+
+### Tier 0 — identity
+
+`2026-09-28-call-convention-r1` (ccl-evidence): `inventory.json` 4c5819e2… equals the commit's `call-convention-evidence.json` pin; 128 files. The pack's `kept-observations/kept-equivalence.json` records that Codex's qualified core (`boot-public`/`bundles-public`) was built from the pre-rollback backend a83b3a97… whose only delta from the committed backend d0a01033… is two `*b-callable-metadata*` guards and a comment. My rebuild from the committed source confirms that: the boot image is byte-identical in 38 of 40 files (only `build-identity.json` paths and the backend hash in `sources.json` differ), and the level-1 core is byte-identical in 258 of 260 files (`compile.log` and the same `sources.json` hash). The checks fixture and the benchmark build are byte-identical to the pack's kept artifacts in every file (`benchmark.records.json` 06ca1ff4… and 5aefc43d…, both bundles, both FASLs, names, versions, policy, `d2.mjs`).
+
+### What the commit does, and what I checked in the code
+
+The change is subtract-only against the advisory's phase 1 list; no new path or entry is added. For each removed check I looked for the producer that now owns it:
+
+- **Callee normal-path TCR restore (vsp, mv_base, mv_owner_top, root_head)** removed from `$body`'s normal exit. Every entry into a body is an internal `call_indirect $tail_slots` from `b-internal-dispatch`, a `return_call_indirect` from `b-tail-transfer` (which returns to the original caller), or the public `entry` wrapper; the generated caller restores all four from its Wasm locals after the result copy, and the wrapper keeps both restoration paths. Dynamic delivery publishes the descriptor's root record inside `$rv_deliver` itself (`i32.store offset=128`), so the dropped store of `$root` there was a duplicate. The public wrapper in `boot0.mjs` is also the only host entry (`.entry(`), and the fixture's public-entry control (all wrappers trap, compiled calls complete) shows the compiled path never uses it.
+- **Dispatch re-checks** (`table.size`, `ref.is_null`) removed from `b-internal-dispatch` and `b-tail-transfer`; `$resolve` keeps id < cap and slot ≠ 0. A nonzero registry slot is always a set table entry: `installer.mjs` writes rows and installs both tables inside one synchronous journaled transaction that nulls both tables and restores the rows on failure; `bundle.mjs` `publish` nulls both tables on failure; the service adapters in `boot0.mjs` write row then both tables with no Lisp between; `layout.mjs` sizes the tables at `rows + slotOffset` so every admitted slot is in range. The only behavioural change is under publisher corruption, where a Wasm trap would replace the checked kind-4 refusal (O-154).
+- **Registry header/span, row signature/role, ABI word** removed from `$resolve`: `installer.mjs` `REGISTRY_HEADER`/`CODE_ROLE`/`SLOT_EMPTY` and `bundle.mjs` `MODULE_VERSIONS` admit them. Node tag, span, symbol indirection, function header, id/version representation, capacity, version equality and zero slot remain, and the boundary fixture kills removing the version or zero-slot checks.
+- **Constant root fill and simple-operand prefill**: `b-initialize-roots` unrolls constant counts; when the callee expression and every argument satisfy `b-simple-node-p` (fixnum literal, non-float lexical reference, unchecked TYPED-FORM of those), the context's root record is written in place (prev, count 2+n, NIL at +44, SELF first, then arguments) and `root_head` is published only after the fill. SELF may be a `local-self` helper that signals, but at that point no new slot is live. My mutant m-a (treat every argument as simple) is killed by exactly the moving-argument row.
+- **Metadata validation moved to the producer**: `metadata-check-pool` refuses at `pool-plan` time unless the arity vector is length 7 with version 1 and the required/optional counts match, and the debug vector is length 3 with version 1 — this matches what `metadata-arity`/`metadata-debug` build and what `installer.mjs` `METADATA_IDENTITY`/`ARITY_IDENTITY` re-check at load. The product body now only caches the tagged pool in the traced root slot `context+44` (`offset=18` of the function node = raw+24), after the caller/wrapper/tail transfer wrote NIL there; `pool-load` reads through that slot so a moving collection relocates it (Codex's pool-root control kills an untraced local). The public wrapper still runs the full `metadata-entry` on the supplied SELF before any frame write.
+- **Internal entry frame checks** (incoming ≥ base, alignment, output ≤ owner ≤ limit, limit ≤ memory, incoming = context+48, root = context+32) dropped from `$body`; the wrapper keeps them and adds a once-per-entry stack-layout check (alignment of base/limit/reserve, base ≤ limit, reserve ≤ limit − base). My mutant m-g (drop that wrapper check) fails the boundary suite's refusal-before-write assertion.
+- **Inline reservation**: `b-reservation-guard` compares the wide end against `vsp_limit − stack_reserve_bytes` read live from the TCR and calls the unchanged `$stack_guard` only when that fails, so overflow, hard limit and the reentrancy bit are still owned by the helper. Codex's always-guard control shows the identical overflow depth; my mutant m-f (compare against `limit` instead of `limit − reserve`) is killed by the depth probe seeing kind 2 instead of the soft kind 18.
+- Fixed-arity callees check `nargs ≠ arity` instead of `lt ∨ gt`; equivalent.
+
+### Tier 2 — replay from the tree
+
+| Stage | Codex | Claude |
+|---|---|---|
+| Boot / level-1 cores | boot-public, bundles-public | rebuilt; byte-identical apart from identity records (above) |
+| Native oracle | 69 rows | 69 rows, `CC-PASS` |
+| Focused fixture | 69 / 9 | `check.py` PASS 69 native-matched rows, 9 forced moving collections, READY 82 loads |
+| Boundaries | 45 assertions | PASS 45; overflow depth 11, first signalled end 32272, 100,000 tail steps in 2 KiB; zero-slot, version, stack-signal, public-metadata KILLED |
+| Publication | 4 refusals | arity-shape, arity-version, required-count, debug-version CHECKED_REFUSAL before serialization |
+| Controls | 3 checker + public-entry + 2 emitted | wrong-answer, missing-collection, missing-row KILLED; public-entry PASS; argument-roots KILLED (`:ARGUMENT`), pool-root KILLED (`:POOL`) |
+| Corpus | 26,204 fresh | `qualify.py corpus` PASS: 26,204 fresh / 0 sampled / 0 inherited (198.8 s target execution); `regression.json` equal to the pack's apart from execution seconds (runtime binary 8fdaad1e…, collector contract, both native skips) |
+| Benchmark | default `eb-call − eb-loop` 28.777 ns; READY median 19.696 s; archive 63,561,129 | `run.py measure`, three fresh processes per tier, all 36 benchmark moving collections passed: default `eb-call − eb-loop` **28.709 ns** (32.659 − 3.950; Codex 28.777), native 0.219, liftoff 100.745 (Codex 97.672), turbofan 30.577 (Codex 30.970); inline-loop rows reproduce Codex's regressions (EB-LOOP 3.950, double/single typed 2.979/2.996); three READY runs 19.701 / 19.706 / 19.703 s, median **19.703 s** (Codex 19.696), peak RSS median 1,660,420,096 bytes, 81 loads / 7 modules / 11 instances, and every run's `heapDigest` f0af67d4… and `codeDigest` 6a36a700… equal Codex's corrected-core READY; `runtime.archive.wasm` **63,561,129 bytes**, equal to Codex's figure and 5,411,370 under the ceiling |
+| Native R6 / readers | reused by identity | reused by identity: the only changed source is the wasm32 backend, which no existing target loads |
+
+### Source-level mutants (patched copies of the tree, rebuilt as the checks fixture)
+
+| Mutant | Clause removed | Result |
+|---|---|---|
+| m-a | `every #'b-simple-node-p args` in `b-internal-call` (prefill any argument) | KILLED: `:ARGUMENT` row NIL and two `:UNWIND` rows print `#<BOGUS object>` — a cons argument left unrooted across the collecting second argument |
+| m-b | the NIL store at `context+44` in the simple prefill | SURVIVED (69 / 9 equal). Between the caller's publication and the callee's pool store no collection can occur except through the stack-overflow signal path, so the stale word is unobserved here; the store is right to keep (O-155) |
+| m-d | the callee's exceptional-path restore of the four TCR fields | SURVIVED (69 / 9 equal, including `:unwind`, `:cleanup`, `:recovery`). Every catcher (`b-control-frame`, the wrapper) restores its own saved state before resuming Lisp, so this restore is also unwitnessed; it costs nothing on the normal path (O-156) |
+| m-f | reserve subtraction in the inline guard threshold | KILLED: boundary probe expects checked kind 18 at the overflow depth and sees the hard-limit kind 2 |
+| m-g | the wrapper's new stack-layout condition | KILLED: a corrupted `stack_reserve_bytes` word is no longer refused before publication ("Missing expected exception") |
+
+Both mutations that survived are confirmed present in the emitted records (m-b has 23 fewer NIL stores, m-d 32 fewer restore sequences).
+
+### Where the remaining 29 ns go (standalone attribution)
+
+To answer whether this is the floor, I timed the retained `EB-CALL`/`EB-ADD`/`EB-LOOP` records standalone in Node (synthetic TCR and registry exactly as `boundaries.mjs` builds them, 16-word result budget as the product layout sets at TCR words 120/124, 2,000,000 iterations, median of 7). The baseline reproduces Codex's product measurement (29.15 ns call-minus-loop versus 28.777), and each variant removes one piece of the protocol by editing the WAT; the variants are for attribution only and are not semantically safe.
+
+| Variant | Removed | call − loop (ns) | Δ vs baseline |
+|---|---|---:|---:|
+| baseline | retained Phase 1 records as emitted | 29.15 | +0.00 |
+| no-guard | inline stack-reservation checks (caller and callee) | 27.48 | -1.67 |
+| no-fill | callee's NIL fill of its result-scratch root record (16 words) | 24.42 | -4.73 |
+| no-resolve | `$resolve_lisp` (constant slot and SELF instead) | 21.12 | -8.04 |
+| no-try | callee's `try_table` exception scaffold | 28.37 | -0.79 |
+| direct | `call_indirect` through `$tail_slots` (direct `call` to the same body instead) | 25.71 | -3.44 |
+| no-tcr | TCR publication/restoration (caller stores, callee snapshot loads) | 27.67 | -1.48 |
+| all | all of the above | 10.27 | -18.88 |
+
+The single-removal deltas sum to 20.2 ns against 18.9 ns for removing everything at once, so they are close to additive (all-removed floor ≈ 10.3 ns). So the honest answer to "as good as it gets" is no, but what is left is not protocol bookkeeping: the resolver (symbol → function → id → registry row → version → slot, wrapped in `$resolve_lisp`'s try_table, two `memory.size` spans and an `$object_base` call) and the callee's runtime NIL fill of its result-scratch root record (capacity + bound words, 16 iterations at the product budget) are the two subtractable items still on the table without a contract change; the indirect call itself and the ~10 ns of context stores, local zero-initialisation and result copy are the shape of the protocol.
+
+### Observations
+
+- **O-154** (informational): with the dispatch and resolver table checks removed, a registry row that names an unset or out-of-range slot now traps instead of refusing with kind 4. Only a publisher fault can produce that state; the three product publishers are transactional and synchronous.
+- **O-155** (informational): mutant m-b shows the NIL store at `+44` in the simple prefill is unwitnessed by the fixture; keep it — its only window is the stack-overflow signal path between publication and the callee's pool store.
+- **O-156** (informational): mutant m-d shows the callee's exceptional-path TCR restore is redundant with the catchers' own restoration under every fixture row; Codex's record already says it is retained for dynamic-delivery and cleanup obligations, and it costs nothing on the normal path.
+- **O-157** (informational): the callee still NIL-fills `capacity + bound-words` root slots at every entry (`entry-roots` via `b-runtime-roots`); with the product's 16-word budget this is about 4.5 ns of the 29 ns increment, the largest remaining subtractable item after the resolver.
+- **O-158** (informational): Codex's READY and archive figures were taken on cores built from the pre-rollback backend; my byte-identical rebuild from the committed backend means they stand for the commit.
+
+### Disposition
+
+**No defect. Accept 243761e4.** Every removed check has a producer or an equivalence record that I could confirm in the code, every replayed stage reproduces Codex's figures or bytes, and my two surviving mutants remove work that is unobservable rather than a check that is needed. Phase 2's rejection needs no review: its code is absent from the tree and its evidence is retained only as a record. Measure unchanged: **READY reached — 81 runtime loads, 82 files compiled, 7 product modules and 11 instances, 19.7 s**; originals 575/535; ledger 21/12; no criterion credit. STATUS row and history entry owed at merge.
+
+### Possible future improvements (noted at the user's direction; not scheduled)
+
+The user has closed work on the call path for now. These remain available if it is reopened, each subtract-only and inside ABI version 1:
+
+1. **Slim the resolver (about 8 ns).** The dependent chain symbol → function → id → registry row → version → slot runs on every call, inside `$resolve_lisp`'s try_table, with two `memory.size` span checks and an `$object_base` call. Candidates: move the span and header checks to the slow path taken only on a failed fast check, and keep the try_table only around the slow path.
+2. **Root only the result-scratch slots the body writes (about 4.7 ns).** `entry-roots` NIL-fills capacity + bound words at every entry, 16 words at the product budget. A statically small result count could fill a constant, unrolled prefix instead of the inherited capacity.
+
+Together these reach roughly 17 ns call-minus-loop from 28.7. The remaining 10 ns floor (context header stores, local zero-initialisation, result copy, the indirect call) needs a protocol redesign rather than subtraction; the rejected Phase 2 and direct-call experiments show that path costs more complexity than it returns.

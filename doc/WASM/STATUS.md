@@ -103,7 +103,8 @@ accessor acceptance. Audit 192 supplies the parent review excluded by audit 191;
 the full declaration/loop stack is now reviewed and accepted.
 
 The [calling-convention subtraction](stage1/call-convention-results.md) is
-**producer-verified, awaiting independent review**. Retained Phase 1 removes
+**accepted after [Claude audit 193](stage0/claude-review.md)** (`a2b70622`),
+at the user's direction. Retained Phase 1 removes
 redundant protocol work while preserving ABI version 1 and TCR publication.
 Default `eb-call − eb-loop` falls **50.614 → 28.777 ns**. Rebuilt core READY
 has a **19.696 s** median; the runtime archive is **63,561,129 bytes**.
@@ -115,6 +116,10 @@ loops regress modestly; the complete table and attribution limits are recorded.
 following the user's direction: marginal call savings, no measurable READY
 gain and larger inline-loop regressions. Its code and contract are removed.
 Product Lisp 91 added / 42 removed; counts and criterion credit unchanged.
+The independent replay reproduces the committed cores apart from identity
+records, all corpus/focused/boundary checks, and a 28.709 ns call increment,
+19.703 s READY median and identical archive size. O-154–O-158 are informational;
+no defect or further producer round. Acceptance reruns no unchanged tests.
 
 [User's loader course correction, 26 September](stage1/loader-course-correction.md):
 the 36 cross-loaded files comprise 21 level-0 and 15 level-1 files. Their

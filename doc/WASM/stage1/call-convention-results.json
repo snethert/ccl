@@ -1,7 +1,7 @@
 {
   "version": 1,
   "date": "2026-09-28",
-  "status": "PRODUCER_VERIFIED_AWAITING_INDEPENDENT_REVIEW",
+  "status": "ACCEPTED",
   "parentCommit": "485559e3476a7e957f3be7afe483150c262c8af4",
   "retainedPhase": 1,
   "rejectedPhase2": "call-convention-phase2-rejected.json",
@@ -993,7 +993,7 @@
     "criterionCredit": false
   },
   "limitations": [
-    "Independent review remains pending.",
+    "Independent review completed: audit 193, no defect; Phase 1 accepted.",
     "Phase 2 was rejected by user direction after measurement. Its ABI/context/static-publication changes and adapter changes are absent.",
     "Tiny inline loop regresses from 2.993 to 4.067 ns; typed double/single from 2.762/2.755 to 3.034/3.017 ns. Cause not isolated.",
     "READY baseline uses older core archives; the restored rebuilt Phase 1 core also includes prior accepted numeric/accessor work. Do not attribute the full startup gain solely to this change.",
@@ -1001,5 +1001,26 @@
     "Fast benchmark rows reach the unchanged iteration cap before 50 ms.",
     "Compiler-owned function metadata is immutable after publication under the admitted contract. Arbitrary raw post-publication corruption is outside that contract.",
     "The archive and corrected-wrapper READY qualification are retained exactly; all 29 rebuilt benchmark code records equal that qualified build. No repeat timing series was run just for rollback."
-  ]
+  ],
+  "acceptance": {
+    "date": "2026-09-28",
+    "authorization": "User: accept the commited review. clean the ram disk completely.",
+    "reviewer": "Claude",
+    "reviewSource": "User-supplied audit 193 on claude-audit-193",
+    "review": "doc/WASM/stage0/claude-review.md",
+    "reviewCommit": "a2b70622a081b9eab88c1ea211b6f85ff9183c11",
+    "implementationCommit": "243761e4e3a710aec9ad0cf07bda94d6e7b1740e",
+    "disposition": "No defect. Accept 243761e4.",
+    "scope": "Retained Phase 1 only; Phase 2 remains rejected and absent from product code.",
+    "verification": "Independent core, focused, boundaries, publication, controls, corpus, benchmark and READY replay passed. Native R6/readers reused by identity. Unchanged tests not rerun for acceptance.",
+    "evidenceInventorySha256": "4c5819e2abf9e9c2d36172e41707dce33d9ecc2cbd530faf3f7ec62a0197db99",
+    "observations": {
+      "O-154": "Publisher corruption is outside the admitted dispatch contract.",
+      "O-155": "Keep the pool-slot NIL store for the stack-overflow signal window; fixture mutant survives.",
+      "O-156": "Exceptional restore mutant survives; retained restoration costs nothing on the normal path.",
+      "O-157": "Runtime result-scratch NIL fill remains a possible future optimization, not part of this acceptance.",
+      "O-158": "Independent rebuild from committed backend reproduces qualified cores apart from identity records."
+    },
+    "criterionCredit": false
+  }
 }

@@ -5,6 +5,8 @@
   "files": 128,
   "retainedPhase": 1,
   "rejectedPhase": 2,
-  "status": "PRODUCER_VERIFIED_AWAITING_INDEPENDENT_REVIEW",
-  "storage": "Local persistent evidence; no remote-backup claim."
+  "status": "ACCEPTED",
+  "storage": "Local persistent evidence; no remote-backup claim.",
+  "reviewCommit": "a2b70622a081b9eab88c1ea211b6f85ff9183c11",
+  "implementationCommit": "243761e4e3a710aec9ad0cf07bda94d6e7b1740e"
 }
