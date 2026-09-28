@@ -56,6 +56,17 @@ O-165 is closed. O-170/O-173 documentation and O-171/O-172 lifetime tests carry
 into the next substantive unit. Product Lisp service, namespace loading,
 callbacks and finalization remain next.
 
+The [fourth Stage 2 unit](stage2/README.md#fourth-delivery-named-libraries-and-the-lisp-api)
+is **executed; independent review pending**. It adds resident namespace loading
+and a 50-line product Lisp API for typed calls, copies and explicit lifetime,
+with product condition transport and cleanup preserving a primary failure.
+63 API checks per engine / 21 mutants pass; 20 native-matched post-READY Lisp
+rows include 46 foreign entries and 36 moving collections. The buffer regression
+passes 66 checks / 28 mutants per engine and its seven Lisp rows. O-170–O-173
+are addressed. No corpus replay or new FMT/LL credit. Callbacks, finalization,
+string encoding, browser Lisp and full D5 remain. A literal-only double-printing
+checked-4 failure is retained separately; value/representation checks pass.
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

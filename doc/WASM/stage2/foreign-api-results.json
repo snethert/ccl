@@ -1,0 +1,288 @@
+{
+  "buffer_summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 66,
+    "criterion_credit": false,
+    "lisp": {
+      "foreign_entries": 38,
+      "moving_collections": 26,
+      "native_matched_rows": 7,
+      "rows": [
+        "FB-ROW COPIED-MOVING-BYTES (1110 T T T T (66 195 169 240 159 140 141 0))",
+        "FB-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+        "FB-ROW 1 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 2 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 3 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW 4 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+        "FB-ROW BINDING-AFTER-CLEANUP :OUTSIDE"
+      ],
+      "scope": "Lisp octets/root/binding/value/cleanup semantics; declared fixture supplies foreign answers and failure policy",
+      "status": "PASS"
+    },
+    "mutants": 28,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "compiler corpus deferred until whole FFI layer is complete",
+      "generated Lisp in browser providers",
+      "multi-Worker D5, callbacks, queued finalization and product Lisp API"
+    ],
+    "status": "PASS"
+  },
+  "criterion_credit": false,
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-api-r1",
+  "inventory_sha256": "334e9e1fad7a58fb81b11cae80bc903c2b03e326b29dfc129ae7c1dbda0decd9",
+  "next": "Lisp callbacks and owner-queued finalization; string encoding, browser Lisp/provider integration and multi-Worker D5 remain.",
+  "plain_boot": {
+    "abandonedSessions": [],
+    "openFiles": [],
+    "ready": true,
+    "scripts": null,
+    "status": "READY",
+    "targetLoadedFiles": 81
+  },
+  "process": {
+    "calendarCpuRefusals": 31,
+    "checkedExceptionIdentity": true,
+    "foreignCalls": 1,
+    "inhibitionRefusals": 7,
+    "inhibitionSignedResults": 5,
+    "inputs": {
+      "../../../../runtime/wasm32/config.mjs": "2188a5e74425ae3e311a452a6987097420dd8f32dedf2b66d4e69bd8fa369e36",
+      "../../../../runtime/wasm32/process-service.mjs": "c6d7dc614d8de11d09357bcbb82bdf31e861b9ff2a5d4dda1d809019e79579d7",
+      "./process-check.mjs": "c0f479dadd047a424688f872ab1e0001cc0d21e4a7668a2b32518fdf94910b44"
+    },
+    "originalRefusals": 13,
+    "services": [
+      "process",
+      "output",
+      "wall-clock",
+      "CPU",
+      "timezone/DST",
+      "object-validity"
+    ],
+    "status": "PASS",
+    "validityRefusals": 6
+  },
+  "product_lisp_lines_changed": 50,
+  "results": {
+    "final/api/artifacts.json": {
+      "bytes": 244,
+      "sha256": "95e03b320bf3188b8013795c364793acc5968a850d1b11ebf2c9d40f496d2dbb"
+    },
+    "final/api/browser.json": {
+      "bytes": 8142,
+      "sha256": "caf9f98b90ee6463be6f9ef184d4285263f71420e0862d7f9fe45d75032d3839"
+    },
+    "final/api/browser.log": {
+      "bytes": 147,
+      "sha256": "c0a5af963e3c98d5435c7aaafc85fc97e1300ccca66e9b63dbd3b752f3956caa"
+    },
+    "final/api/inputs.json": {
+      "bytes": 2650,
+      "sha256": "de734e53b81d6393e69f474afadb59096cd2d6a5e9e05229f670890545d6c8b9"
+    },
+    "final/api/lisp-check.json": {
+      "bytes": 1145,
+      "sha256": "29b1b335945d52affaf2200ca2f93729455241646cc6f6419d271fcd8a4cb11f"
+    },
+    "final/api/lisp.json": {
+      "bytes": 81851,
+      "sha256": "3e34baa03913a55dd3b7509f0cff55be045b43e8311a36e40eaf71cbba8f12e2"
+    },
+    "final/api/lisp.log": {
+      "bytes": 57672,
+      "sha256": "164955481f62cd3202252025a1a6d772b75b199b7802c899222d84caae7e671d"
+    },
+    "final/api/mutants.json": {
+      "bytes": 5542,
+      "sha256": "2eff0a560fc34f08d0b2901402b95f35c82cfe18f124958903cc98b9da5a534a"
+    },
+    "final/api/native-reference.json": {
+      "bytes": 1098,
+      "sha256": "80d53f62fdfe3e1d6977a8ed394bc8b91e487e150d0fbf1925c65822e6887bf2"
+    },
+    "final/api/node.json": {
+      "bytes": 2661,
+      "sha256": "8123ab96efaa78fd9dc5b2f8e6553788e0b1091559c2dc8737d7c54fa748e3d0"
+    },
+    "final/api/node.log": {
+      "bytes": 30,
+      "sha256": "4003004d60f00ff8cafc24028a3787865e945025a31c0ca64e4f099b5729cb08"
+    },
+    "final/api/sources.json": {
+      "bytes": 3006,
+      "sha256": "30978c88cbd9c8eddc9c87c6e2a50329132628c0f87765997985cd427457e25b"
+    },
+    "final/api/summary.json": {
+      "bytes": 1633,
+      "sha256": "9983a2081b20856ea8496b1e8a45e1b0062cef8d84d5e8b9bc935d571a32f9ef"
+    },
+    "final/api/tools.json": {
+      "bytes": 650,
+      "sha256": "8063a7ac395bd904b8c5eabbc77924c2f7a88471891c508300b97b7c5d9612e4"
+    },
+    "final/buffers/artifacts.json": {
+      "bytes": 244,
+      "sha256": "73ff22f335b542b3a0a96cfa9d8a0b0f1fb3dd015728d03a4792aa911bbad776"
+    },
+    "final/buffers/browser.json": {
+      "bytes": 7830,
+      "sha256": "0291e203a8eaf22de9a4548ff18f0c230c9dc255ff1daf01444658852a704c28"
+    },
+    "final/buffers/browser.log": {
+      "bytes": 147,
+      "sha256": "cc6a88ac4ab95afe6ef2d2405d86b09ff18288faca58b484cc92cd21e54fa839"
+    },
+    "final/buffers/inputs.json": {
+      "bytes": 2852,
+      "sha256": "f83d0a5b44b4da1838aa2ec7e82f8a365299d155ce032c230c10f33c6b8766d5"
+    },
+    "final/buffers/lisp-check.json": {
+      "bytes": 661,
+      "sha256": "0be0f6461be1e5af2c96a81fbef0506648058576bda937b2665a0ecf1ec71fcf"
+    },
+    "final/buffers/lisp.json": {
+      "bytes": 76821,
+      "sha256": "8246600ff78161bb2c97cf5f28371baa5c91d7ae54c0459451c2a52fb35b6b54"
+    },
+    "final/buffers/lisp.log": {
+      "bytes": 54285,
+      "sha256": "bd3b4354a8938c8b13453e846cf410505413968ecb1cbcce96e8ae37a46740f4"
+    },
+    "final/buffers/mutants.json": {
+      "bytes": 7378,
+      "sha256": "2e35eb25bef6d9a8ad9ec1b2366f75af61666f82d039f244d24dfb0f9a4240c9"
+    },
+    "final/buffers/native-reference.json": {
+      "bytes": 657,
+      "sha256": "b415c843bb9cd14df493298ba8b95680830abdf8af33961edb4357b96a805639"
+    },
+    "final/buffers/node.json": {
+      "bytes": 2545,
+      "sha256": "98e092ad958e6d74ed9879fe7f52005bf6bf9bdddbbc40648afea11400057711"
+    },
+    "final/buffers/node.log": {
+      "bytes": 30,
+      "sha256": "1b887edc53f3b7c0bba633b6a2a2085794ac458b6cac4217e0dbedcc05ab1816"
+    },
+    "final/buffers/sources.json": {
+      "bytes": 2143,
+      "sha256": "a672e2e296db1c3d9922bce0019c0f37df0bb520c53710c6c4b3eaaa3d37291d"
+    },
+    "final/buffers/summary.json": {
+      "bytes": 1117,
+      "sha256": "85f4cba33f5cea0a3a4dc4d4083322d964c16fc865597ed514bcd447248edd0c"
+    },
+    "final/buffers/tools.json": {
+      "bytes": 650,
+      "sha256": "8063a7ac395bd904b8c5eabbc77924c2f7a88471891c508300b97b7c5d9612e4"
+    },
+    "plain-boot-summary.json": {
+      "bytes": 133,
+      "sha256": "08cfb86637c5300198129725a52273fc6142a3309bd123193405ef065e7343e0"
+    },
+    "process-check.json": {
+      "bytes": 593,
+      "sha256": "2f33b2fb278a58ca3162a3eb6a2b46ff40e452d225a58ddca579719d5e098586"
+    },
+    "source-identity.json": {
+      "bytes": 2081,
+      "sha256": "62be78fd80906133db56a0362d2e838bcf78aaa24ab47ee4a35dd1cbb8969b3f"
+    }
+  },
+  "retained_bytes": 679355,
+  "reused_evidence": {
+    "audit": 196,
+    "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-buffers-r1",
+    "implementation": "4316cfa5",
+    "owner": "53 checks per engine / 38 mutants; 59 regression checks and 12 native-matched Lisp rows",
+    "reason": "Implementation unchanged; new library/service layer and changed buffer tests are executed separately.",
+    "scalar": "126 checks per engine / 16 mutants",
+    "source_files": {
+      "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
+      "runtime/wasm32/collector-owner.mjs": "7272a96fc9a5ceb8de4982d5d347ba56332e53f5e801d0b7c22345b479d4af19",
+      "runtime/wasm32/collector.c": "062a015e26718338d77db7034bd7b1eb27fc31b6fea0239799679cc581469a30",
+      "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
+      "runtime/wasm32/foreign-module.mjs": "318fdf82082b81d9a1c93aef570e4db8c270227017cb741f84e890d83d37171c",
+      "runtime/wasm32/sha256.mjs": "8b174360ff1a2eea502e689e6faa813c16c2a9fb8522a586c0076ca907c6f907"
+    }
+  },
+  "review": "NOT_REVIEWED",
+  "source_files": {
+    "runtime/wasm32/README.md": "e087daa79fa90e092138fa11170133a927bad320d58999902a284a36da224fc4",
+    "runtime/wasm32/foreign-api.lisp": "10ff245deb7b7f71cb69bc6a378d46b3302ff7f4b3082743a7aa9f3cd5e65c1d",
+    "runtime/wasm32/foreign-libraries.mjs": "466f6704b6881beac1462f3f8f24069080bcb4276cb99d3361ca72a8296a3305",
+    "runtime/wasm32/foreign-service.mjs": "e91339e80d052eb32081e352693c5006409ab6fc9f51b5a12816d1a94e3fb088",
+    "runtime/wasm32/process-service.mjs": "c6d7dc614d8de11d09357bcbb82bdf31e861b9ff2a5d4dda1d809019e79579d7",
+    "tests/wasm/stage1/loader-target/boot0.mjs": "6523371c9e8c079dd4789d20b799621872243ecba7ff406ce61ab893f1b59bd2",
+    "tests/wasm/stage1/loader-target/process-check.mjs": "c0f479dadd047a424688f872ab1e0001cc0d21e4a7668a2b32518fdf94910b44",
+    "tests/wasm/stage2/foreign-api/README.md": "9d3580d8fd448b8593ff8746eea4a5701a87f6a1702313923a8abb4b397d5e7c",
+    "tests/wasm/stage2/foreign-api/check.mjs": "be5d65c86775fdabc74535f731bf339aa6791eb2590eebce747a942c1e247cba",
+    "tests/wasm/stage2/foreign-api/checks.lisp": "356cf59aae33153598e03e087069d40b145b4a4cf77a2038b8a524ee1c2fe4bc",
+    "tests/wasm/stage2/foreign-api/declaration.mjs": "90d0dbe61b385ba2dc3d7ebb5c467f89a8c4b41302fe7055b796e0ea5eae6c14",
+    "tests/wasm/stage2/foreign-api/extension.mjs": "ce515c71eb3c711b429e9d609ac47044b869f12d767c987ff64354a04cf595a4",
+    "tests/wasm/stage2/foreign-api/library.wat": "0ac2ba5628e91b5bd384da24e93c0ac6ea2b35bfe2de013d4e63fa28473b0860",
+    "tests/wasm/stage2/foreign-api/run.py": "af7d5443262db012125c30ac82018b72e30225595c02d69138bd0fcc103e5e41",
+    "tests/wasm/stage2/foreign-buffers/README.md": "20c9fd205b22de53685990b42cf5d2b3c1417dcb5acf1cda3716092fd8ef6429",
+    "tests/wasm/stage2/foreign-buffers/check.mjs": "4a63c20f98debe4b8a47a7b9b6a98491938ddfa604ee27898c5f3a6e11c085a2",
+    "tests/wasm/stage2/foreign-buffers/run.py": "1574ed2f51ac216bc69a1f14322ce24fde05e94ffac34738e9fc598811b7f908"
+  },
+  "status": "EXECUTED_REVIEW_PENDING",
+  "summary": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 63,
+    "criterion_credit": false,
+    "lisp": {
+      "foreign_entries": 46,
+      "initializations": 5,
+      "moving_collections": 36,
+      "native_matched_rows": 20,
+      "releases": 9,
+      "rows": [
+        "FA-ROW OPEN-ONCE T",
+        "FA-ROW SCALARS (-2147483648 -9223372036854775808 1.5 -0.0D0)",
+        "FA-ROW SCALAR-MAX (2147483647 9223372036854775807 T T)",
+        "FA-ROW COPY-MOVING (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+        "FA-ROW VALUES (11 12 NIL)",
+        "FA-ROW NONLOCAL :ESCAPED",
+        "FA-ROW RECOVERABLE ((:CAUGHT -3) 1 T)",
+        "FA-ROW AFTER-EXCEPTION (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+        "FA-ROW RELEASE (T NIL)",
+        "FA-ROW STALE-RANGE :CAUGHT",
+        "FA-ROW BAD-SIZE :CAUGHT",
+        "FA-ROW MISSING-EXPORT :CAUGHT",
+        "FA-ROW RELEASES 7",
+        "FA-ROW TRAP ((:CAUGHT -2) 1 T)",
+        "FA-ROW DESTRUCTOR ((:CAUGHT -2) 1 T)",
+        "FA-ROW PRIMARY ((:CAUGHT -3) 1 T)",
+        "FA-ROW CLOSE-RELEASE NIL",
+        "FA-ROW CLOSED-CALL :CAUGHT",
+        "FA-ROW MISSING-LIBRARY :CAUGHT",
+        "FA-ROW BINDING :OUTSIDE"
+      ],
+      "scope": "Product Lisp API and service; native oracle models fixture library operations",
+      "status": "PASS"
+    },
+    "mutants": 21,
+    "product_lisp_lines_changed": 50,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "compiler corpus deferred until whole FFI layer is complete",
+      "generated Lisp in browser providers",
+      "multi-Worker D5, callbacks, queued finalization, Lisp string encoding"
+    ],
+    "status": "PASS"
+  },
+  "unresolved": [
+    "Literal-only nonzero double printing fails with checked 4; failure retained, value/representation checks pass."
+  ]
+}

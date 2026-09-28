@@ -253,7 +253,9 @@ if (isMainThread) {
   workerData.archives=null;workerData.bootArchive=null;
   const adapter = new WebAssembly.Module(fs.readFileSync(out + '/host-call-adapter.wasm'));
   const waitCell = new Int32Array(new SharedArrayBuffer(4));
-  const baseProcessRequest = processService({memory,
+  const extension=workerData.hostExtension?await (await import(pathToFileURL(workerData.hostExtension))).create(
+    {memory,tcr,owner,env,layout,config:workerData.extensionConfig}):null;
+  const baseProcessRequest = processService({memory, foreign:extension?.foreignRequest,
     objectValidity: objectValidityService(owner, env.call_error),
     collectionInhibition: collectionInhibitionService(owner, env.call_error),
     // macOS supplies timezone history/DST; it is an embedding capability,
@@ -268,9 +270,7 @@ if (isMainThread) {
     configuration: {pageSize: 65536, clockTicks: 1000, cpuCount: 1, stackSize: -1,
       defaults: layout.stackDefaults},
     wait: milliseconds => Atomics.wait(waitCell, 0, 0, milliseconds)});
-  const extension=workerData.hostExtension?await (await import(pathToFileURL(workerData.hostExtension))).create(
-    {memory,tcr,owner,env,layout,config:workerData.extensionConfig}):null;
-  const processRequest=extension?args=>extension.processRequest(args,baseProcessRequest):baseProcessRequest;
+  const processRequest=extension?.processRequest?args=>extension.processRequest(args,baseProcessRequest):baseProcessRequest;
   const heapSnapshot = heapSnapshotService(owner, env.call_error);
   const services = [
     ['%WASM-HOST-FILE-REQUEST', 4, loader.file],

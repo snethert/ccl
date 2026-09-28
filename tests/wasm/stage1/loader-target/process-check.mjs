@@ -41,7 +41,7 @@ assert.equal(output.length, 2);
 words.set([2 * 256 + 250, 0, 0], vector / 4);
 assert.throws(() => call(28, 4, vector + 6), /OUTPUT_STRING/);
 for (const [values, reason] of [
-  [[60, 0, 0], 'OPERATION'], [[8, 16, 0], 'CONFIG_KEY'],
+  [[64, 0, 0], 'OPERATION'], [[60, 0, 0], 'FOREIGN_CAPABILITY'], [[8, 16, 0], 'CONFIG_KEY'],
   [[4, -4, 0], 'WAIT_RANGE'], [[4, 0, 4000004], 'WAIT_RANGE'],
   [[0, vector + 5, 0], 'TIME_VECTOR'], [[2, 0, 0], 'FIXNUM'],
   [[20, 16, 77825], 'STARTUP_KEY'], [[20, 12, vector + 6], 'STARTUP_BUFFER']
@@ -166,9 +166,16 @@ for (const [capabilities, last, reason] of [[{}, 77825, 'OBJECT_CAPABILITY'],
 words.set([56, 77825, 77825], args / 4);
 assert.throws(() => processService({memory, configuration, now: () => 0, wait: () => {},
   objectValidity: () => { throw checkedFailure; }})(args), error => error === checkedFailure);
-console.log(JSON.stringify({status: 'PASS', services: ['process', 'output', 'wall-clock', 'CPU', 'timezone/DST', 'object-validity'],
+words.set([60, 8, 77825], args / 4);
+let foreignCalls = 0;
+const foreignRequest = processService({memory, configuration, now: () => 0, wait: () => {},
+  foreign: pointer => { assert.equal(pointer, args); foreignCalls++; return -12; }});
+assert.equal(foreignRequest(args), -12); assert.equal(foreignCalls, 1);
+assert.throws(() => processService({memory, configuration, now: () => 0, wait: () => {},
+  foreign: () => { throw checkedFailure; }})(args), error => error === checkedFailure);
+console.log(JSON.stringify({foreignCalls, status: 'PASS', services: ['process', 'output', 'wall-clock', 'CPU', 'timezone/DST', 'object-validity'],
   validityRefusals,
-  originalRefusals: 12, inhibitionRefusals, inhibitionSignedResults: 5, checkedExceptionIdentity: true,
+  originalRefusals: 13, inhibitionRefusals, inhibitionSignedResults: 5, checkedExceptionIdentity: true,
   calendarCpuRefusals: 3 + calendarControls.length + shapeControls,
   inputs: Object.fromEntries(['./process-check.mjs', '../../../../runtime/wasm32/process-service.mjs',
     '../../../../runtime/wasm32/config.mjs'].map(path => [path, sha256(fs.readFileSync(new URL(path, import.meta.url)))]))}));

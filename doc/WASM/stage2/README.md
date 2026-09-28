@@ -100,6 +100,35 @@ carry release-refusal and output-encoding documentation into the next unit;
 O-171/O-172 carry directed live-handle refusal tests. O-167 remains required
 before multi-Worker admission.
 
+## Fourth delivery: named libraries and the Lisp API
+
+[Implementation and reproduction](../../../tests/wasm/stage2/foreign-api/README.md).
+`foreign-libraries.mjs` loads digest-bound resident namespace blobs once per
+Worker-local registry entry. `foreign-service.mjs` marshals i32/i64/f32/f64,
+multiple values, byte vectors and allocation/range tokens through process
+operation 15. The 50-line product Lisp API supplies open, call, copy, close and
+explicit release, with `with-wasm-buffer` preserving primary errors and nonlocal
+exits across cleanup. The source is target-loaded after READY; names currently
+remain internal CCL symbols. No shared compiler or upstream kernel changes.
+
+Qualification passes **63 API checks per engine / 21 killed mutants** and
+**20 native-matched Lisp rows / 46 foreign entries / 36 moving collections**.
+The buffer regression passes **66 checks per engine / 28 mutants** and its
+original seven Lisp rows. O-170/O-173 are documented and O-171/O-172 now have
+directed lifetime tests and killed controls. The older scalar/owner suites
+reuse audit 196 by exact implementation identity. Process-service checks and
+the boot driver are qualified at their changed seams. Results are bound in
+[foreign-api-results.json](foreign-api-results.json). **Executed; independent
+review pending. No FMT or LL credit.**
+
+Browser Workers exercise the product namespace, service and collector with
+synthetic generated-B roots; ordinary generated Lisp executes under Node.
+Automatic string encoding, Lisp callbacks, finalization and full D5 remain.
+An independent literal-only probe reproduces checked 4 while printing `1.25d0`
+without the foreign API; its minimal reproduction is retained as an unresolved
+runtime frontier. The foreign scalar tests compare the value and representation
+without claiming printer qualification.
+
 ## Next foreign work
 
 [HOSTFM P2](../host-and-foreign-modules.md#6-foreign-wasm-modules-cap-ffi-wasm)
@@ -107,19 +136,19 @@ remains the architecture; FMT-1–FMT-9 remain its proof obligations.
 
 | Obligation | Current position / next implementation |
 | --- | --- |
-| FMT-1, scalar calls | Four scalar types, multiple results, signed zero and numeric boundaries execute in the owner unit. A generated fixnum call now executes through the owner; full generated scalar coverage and both Lisp-memory placements remain. |
+| FMT-1, scalar calls | Four scalar types, multiple results, signed zero and numeric boundaries execute in the owner unit. All four scalar types now execute through the product service in both portable placements and through generated Lisp under Node; browser generated Lisp remains. |
 | FMT-2, bytes and encoding | Declared ranges, explicit copies and UTF-8 octets execute with fresh views after growth. Lisp string encoding and full browser/provider integration remain. No Lisp memory or addresses enter the foreign module. |
 | FMT-3, moving collection | One-Worker owner roots and reloads execute with collection in an active foreign import and retired-space poisoning. Copied Lisp source ranges now execute across allocator/call/release collection. Lisp callbacks and other-Worker collection remain. |
-| FMT-4, failures and releases | Generated Lisp conditions/cleanups execute through the fixture transport; 64 TCR words are checked, with six collector-owned words retaining updated values. Explicit allocation releases and destructor-trap ordering execute in the owned-buffer unit. Product condition transport and callback retirement remain. |
+| FMT-4, failures and releases | Generated Lisp conditions/cleanups execute through the fixture transport; 64 TCR words are checked, with six collector-owned words retaining updated values. Explicit allocation releases and destructor-trap ordering execute in the owned-buffer unit. The product service now signals ordinary Lisp errors after admission and preserves primary cleanup failures; callback retirement remains. |
 | FMT-5/6, callbacks | Add typed table trampolines, collector-visible callback roots, callback admission during pending GC, and containment of Lisp nonlocal exits. The first unit refuses re-entry. |
-| FMT-7, admission | Binary/declaration/digest controls execute, including start/initializer failure and source mutation. Add named-namespace loading and the larger pointer/ownership declaration contract. |
+| FMT-7, admission | Binary/declaration/digest controls execute, including start/initializer failure and source mutation. Resident named-namespace loading now executes; mounted providers and the larger pointer/ownership declaration contract remain. |
 | FMT-8, Workers | The scalar profile chooses per-Worker instances. Production thread ownership, two-Worker schedules and interruptible funnelled calls remain. |
 | FMT-9, lifetime | Whole-instance retirement executes. Opaque allocation identities and explicit free detect offset reuse and instance retirement. Collector-triggered release, finalizer suppression, callback deregistration and owner-queued finalization remain. |
 
 The Node integration now uses ordinary post-READY `%FASLOAD` with the accepted
 level-0 image and target-loaded runtime. The owned scalar/copy service now has declared byte ranges, encoding and
-explicit allocation lifetime. Next work is the product Lisp-facing service,
-namespace-provider loading and callback/finalization obligations. Browser
+explicit allocation lifetime. A product Lisp API and resident namespace loading now
+execute. Next work is callbacks, finalization, string encoding and broader providers. Browser
 provider integration and full D5 must be qualified at their actual scope.
 Native R6/R6a applies if a later step changes shared compiler source.
 

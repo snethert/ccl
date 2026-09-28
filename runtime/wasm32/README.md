@@ -265,3 +265,13 @@ therefore returns NIL, and `%last-fn-on-stack` reports no native function.
 Condition signalling, handlers, restarts and `*debugger-hook*` do not require
 a native frame. Native stack walking and an interactive debugger remain outside
 this profile. See the [audit 189 follow-up](../../tests/wasm/stage1/loader-target/load-error-followup.md).
+
+
+Stage 2 foreign libraries: `foreign-libraries.mjs` admits resident named namespace
+blobs through `foreign-module.mjs`, one instance per declared Worker-local entry.
+`foreign-service.mjs` supplies `processService`'s optional `foreign` capability
+(operation 15). Target-load `foreign-api.lisp` to use the internal CCL Lisp API
+for typed scalar calls, byte vectors, ranges and explicit release. See the
+[API contract and verification boundary](../../tests/wasm/stage2/foreign-api/README.md).
+This unit is executed, awaiting independent review; callbacks, automatic
+finalization, string encoding and multi-Worker qualification remain open.

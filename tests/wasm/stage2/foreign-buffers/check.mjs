@@ -10,7 +10,7 @@ export function check(binaries,{only}={}) {
  const test=(name,run)=>{if(only&&name!==only)return;try{run();rows.push(name);}catch(e){throw Error(name+': '+e,{cause:e});}};
  const throws=(run,pattern)=>{try{run();}catch(e){assert(pattern.test(String(e)),'wrong refusal: '+e);return e;}throw Error('missing refusal '+pattern);};
  const data=new TextEncoder().encode('Aé🌍\0'),sum=data.reduce((a,b)=>a+b,0);
- function setup({placement=0,encoding='bytes',access='readwrite',edit=()=>{},onCollect=()=>{}}={}){
+ function setup({placement=0,encoding='bytes',access='readwrite',edit=()=>{},onCollect=()=>{},beforeEnter=()=>{}}={}){
   const layout=deriveLayout({spaceBytes:65536,freeTarget:0,valueStack:1048576+placement},{bootFunctions:0,runtimeFunctions:0,runtimeRootCells:0,image:[{start:77824,end:77864}]}),tcr=layout.tcr;
   const memory=new WebAssembly.Memory({initial:layout.initialPages,maximum:32769,shared:true});
   const get=p=>new DataView(memory.buffer).getUint32(p,true),put=(p,v)=>new DataView(memory.buffer).setUint32(p,v,true);
@@ -23,7 +23,7 @@ export function check(binaries,{only}={}) {
   put(args,0);put(args+4,0);put(args+8,base+6);put(tcr+64,args);put(tcr+128,head);
   const owner=CollectorOwner.create(memory,binaries.collector,sha256(binaries.collector),layout),raw=owner.foreignBoundary;
   const entries=[],events=[],moves=[];let active=false;
-  const boundary={enter(op){equal(active,false);equal(get(tcr+32),2);const token=raw.enter(op);active=true;entries.push(op);return token;},
+  const boundary={enter(op){const refusal=beforeEnter(op);if(refusal)return refusal;equal(active,false);equal(get(tcr+32),2);const token=raw.enter(op);active=true;entries.push(op);return token;},
    leave(token){equal(active,true);raw.leave(token);equal(get(tcr+32),2);active=false;}};
   const imports={host:{collect(){equal(active,true);const before=get(args+8),r=owner.collectForeign();
    assert(get(args+8)!==before,'source moved');new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);
@@ -139,6 +139,16 @@ export function check(binaries,{only}={}) {
    for(const action of [()=>l.allocate(1),()=>l.range(h),()=>l.write(h,0,data),()=>l.read(h,0,1),()=>l.release(h),()=>l.close(),()=>l.call('run',[range,1,0])]){
     throws(action,/REENTRY/);calls++;
    }}});l=f.open();h=l.allocate(16);range=l.range(h);l.call('run',[range,0,0]);equal(calls,7);
+  equal(l.read(h,0,1).length,1,'handle survives refused release');equal(l.release(h),true);equal(l.call('releases'),1);
+ });
+ test('async-entry-live-handles',()=>{
+  let refuse=false;const f=setup({beforeEnter(){if(refuse)return Promise.resolve();}}),l=f.open(),a=l.allocate(16),b=l.allocate(16),range=l.range(a);
+  const count=f.entries.length;refuse=true;throws(()=>l.call('run',[range,0,0]),/ASYNC_BOUNDARY/);
+  equal(l.state,'retired');equal(l.release(a),false);equal(l.release(b),false);equal(f.entries.length,count,'no destructor after async owner');
+ });
+ test('release-entry-refusal',()=>{
+  let refuse=false;const f=setup({beforeEnter(op){if(refuse&&op==='release:release')throw Error('entry denied');}}),l=f.open(),h=l.allocate(16);
+  refuse=true;throws(()=>l.release(h),/entry denied/);equal(l.state,'ready');equal(l.release(h),false);equal(l.call('releases'),0);throws(()=>l.range(h),/HANDLE/);
  });
  assert(rows.length>0,'no selected checks');return {status:'PASS',checks:rows.length,rows};
 }

@@ -15,7 +15,7 @@ export class ProcessReady extends Error {
 }
 
 export function processService({memory, configuration, startup, output, now = () => performance.now(), wait,
-  wallTime = () => Date.now(), calendar, cpuTime, collectionInhibition, objectValidity}) {
+  wallTime = () => Date.now(), calendar, cpuTime, collectionInhibition, objectValidity, foreign}) {
   const config = processConfiguration(configuration), origin = now();
   const need = (ok, why) => { if (!ok) throw Error('process service: ' + why); };
   need(Number.isFinite(origin) && typeof wait === 'function', 'CAPABILITIES');
@@ -139,6 +139,9 @@ export function processService({memory, configuration, startup, output, now = ()
         values.forEach((n, i) => put(p + 4 + 4 * i, n * 4));
         return 77825;
       }
+      case 15:
+        need(typeof foreign === 'function', 'FOREIGN_CAPABILITY');
+        return foreign(args);
       default: throw Error('process service: OPERATION');
     }
   };

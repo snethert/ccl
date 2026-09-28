@@ -44,12 +44,17 @@ Handles and range tokens are opaque objects private to one library instance.
 Explicit release invalidates the handle before the destructor runs. Repeated
 release returns false; using a released range refuses even if the allocator
 reuses the same offset. If release throws a recoverable exception, its handle
-still stays retired: retrying an uncertain destructor could free twice. Such
-an allocation may remain unreclaimed until instance retirement. A trap,
+still stays retired: retrying an uncertain destructor could free twice. This also applies when the owner refuses the destructor entry before it runs
+(O-170): the handle stays retired and the allocation may remain unreclaimed
+until instance retirement. A trap,
 failed admission, invalid allocator result or explicit close invalidates all
 remaining handles and drops the instance. Later releases do no foreign work.
 A null, out-of-memory or overlapping allocator result retires the instance;
 this profile does not expose a separate recoverable malloc-failure result.
+
+A successful call with invalid UTF-8 output signals `UTF8` after readmission
+and discards its scalar return value (O-173). Foreign side effects and the bytes
+remain; the library and its handles stay live for inspection or release.
 
 Allocator, principal export and release all use the same FOREIGN bracket.
 Foreign failures retain the existing caller-tag conversion. Declaration,

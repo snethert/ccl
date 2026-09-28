@@ -1,3 +1,29 @@
+## 2026-09-28 — Deliver named libraries and a Lisp-facing foreign API
+
+Whole-file movement: zero. Product Lisp lines added: 50. No FMT/LL credit.
+The next stop is callbacks and owner-queued finalization, with string encoding,
+browser Lisp/provider integration and multi-Worker D5 still owed.
+
+The [fourth Stage 2 delivery](../stage2/README.md) adds a resident namespace
+registry, product process-service transport and Lisp calls over all four scalar
+types, multiple results, copied octets and lifetime tokens. Ordinary target load
+after READY installs the API. Buffer cleanup preserves values and nonlocal
+exits; an existing foreign exception remains primary if its destructor traps.
+
+63 focused checks pass in Node and three browser engines; all 21 directed
+mutants are killed. Twenty native-matched Lisp rows include 46 entries and 36
+moving collections. Buffer regression: 66 checks / 28 mutants per engine and
+seven native-matched Lisp rows. Audit 196 O-170/O-173 are documented and
+O-171/O-172 have directed lifetime tests and mutation controls. The process
+service and boot-extension seams are checked; unchanged scalar and owner code
+reuse audit 196 by source identity. Compiler corpus remains deferred.
+
+Retained development evidence includes oracle corrections, a redundant scalar
+range mutant, and a checked-4 nonzero-double printing failure independently
+reproduced by a literal-only probe without the foreign API. Scalar comparison
+and representation checks pass; the printer frontier remains unresolved.
+Independent review is pending. No shared compiler or upstream kernel changes.
+
 ## 2026-09-28 — Accept audit 196 owned foreign buffers
 
 Imported the user-supplied [audit 196](../stage0/claude-review.md) from
