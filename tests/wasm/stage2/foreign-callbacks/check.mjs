@@ -61,6 +61,7 @@ export function check(binaries,{only}={}) {
   if(kind==='async'){
    assert(error instanceof AggregateError,'fatal asynchronous callback');equal(f.library.state,'retired','async retires');
    equal(f.owner.storage.registeredRootCells,count,'async releases roots');
+   equal(f.get(f.tcr+32),3,'fatal leaves foreign publication');throws(()=>f.boundary.enter('after-fatal'),/foreign reentry/);
   }else{
    equal(f.library.call('after'),1,'foreign continuation ran');equal(f.get(f.tcr+32),2,'admitted before error');
    equal(foreignFailure(error)?.kind,kind==='exception'?'exception':'host','failure kind');
@@ -73,6 +74,7 @@ export function check(binaries,{only}={}) {
   const h=f.library.registerCallback('integer',f.owner,f.pair,()=>{throw new WebAssembly.RuntimeError('callback trap');});
   const error=throws(()=>f.library.call('twice',[h,0]),/.*/);
   assert(error instanceof AggregateError,'callback trap must be fatal');assert(error.cause instanceof WebAssembly.RuntimeError,'original trap');
+  equal(f.get(f.tcr+32),3,'fatal trap state');throws(()=>f.boundary.enter('after-fatal'),/foreign reentry/);
   equal(f.library.state,'retired','callback trap retires');equal(f.owner.storage.registeredRootCells,count,'roots released');
  });
  test('trap-primary',()=>{
@@ -240,6 +242,7 @@ export function check(binaries,{only}={}) {
   const f=fixture(),h=f.library.registerCallback('integer',f.owner,f.pair,()=>{f.put(f.tcr+offset,value);return 2;});
   const error=throws(()=>f.library.call('twice',[h,0]),/.*/);assert(error instanceof AggregateError,'fatal owner failure');
   equal(f.get(f.tcr+32),name==='state'?3:2,'refusal must not publish FOREIGN');
+  throws(()=>f.boundary.enter('after-fatal'),/foreign reentry/);
   assert(pattern.test(String(error.cause)),'owner cause');equal(f.library.state,'retired','fatal retirement');
  });
  for(const offset of [8,12,16,64,76,88,116,120,124,128,132,140,148,152,156,160,164,168])test('owner-callback-checkpoint-'+offset,()=>{

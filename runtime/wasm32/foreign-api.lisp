@@ -72,3 +72,28 @@ Keep LIFETIME reachable until the buffer's last use. Registration is once only."
   (let ((request (vector handle offset size 0 nil)))
     (%wasm-foreign-request 11 request)
     (svref request 4)))
+
+(defun %wasm-callback-invoke (function arguments)
+  ;; Intercept every escaping Lisp transfer before returning to foreign frames.
+  ;; The private catch also contains THROW/RETURN-FROM from captured closures.
+  (let ((tag (cons nil nil)) (completed nil))
+    (catch tag
+      (unwind-protect
+           (multiple-value-prog1
+               (handler-case
+                   (coerce (multiple-value-list
+                            (apply function (coerce arguments 'list))) 'vector)
+                 (error () nil))
+             (setq completed t))
+        (unless completed (throw tag nil))))))
+
+(defun register-wasm-callback (library type function)
+  "Register FUNCTION until explicit deregistration or library retirement.
+Errors and escaping nonlocal exits become a foreign-call error after return."
+  (unless (functionp function) (error "Not a callback function: ~S" function))
+  (%wasm-foreign-request
+   12 (vector library type
+              (lambda (arguments) (%wasm-callback-invoke function arguments)))))
+
+(defun deregister-wasm-callback (callback)
+  (not (zerop (%wasm-foreign-request 13 callback))))

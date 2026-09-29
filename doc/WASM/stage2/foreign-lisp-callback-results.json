@@ -1,38 +1,56 @@
 {
-  "acceptance": {
-    "producer_commit": "9c4a58db",
-    "review_commit": "0244319d",
-    "review_original_commit": "94b410d0",
-    "scope": "executed single-Worker unit; no FMT or LL credit",
-    "test_reruns_for_acceptance": 0,
-    "user_direction": "accept reviewer's commit and proceed with CCL Stage 2",
-    "verdict": "no defect"
-  },
+  "base_commit": "8df9d12b3d8174df8ebe8fde42258a96d2ed98cc",
   "browsers": [
     "chromium",
     "firefox",
     "webkit"
   ],
-  "checks": 148,
+  "checks": 187,
   "criterion_credit": false,
   "dependency_reuse": {
-    "commit": "767ca876",
+    "commit": "2e49ee14",
     "identities": {
-      "runtime/wasm32/collector-owner.mjs": "dc90592662c77fec28a5093d2f477a88b9d8d8e4b243b1337e0b8245f9579be6",
+      "runtime/wasm32/collector-owner.mjs": "0379e87d7b831ce767481136891733a3be8b1c249c95bbe8a75e26a436e52ecd",
       "runtime/wasm32/collector.c": "642b5239a639f8709d7725ba361464199af5c8264d89839971e7c4ccdeb212c1",
       "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
       "runtime/wasm32/foreign-libraries.mjs": "466f6704b6881beac1462f3f8f24069080bcb4276cb99d3361ca72a8296a3305",
-      "runtime/wasm32/foreign-module.mjs": "03e3b2d332733c07639189c6f7f0158f173cf7713c164eca73ea09feb8b30cd8",
+      "runtime/wasm32/foreign-module.mjs": "ec06195cd8bd21dd3d19a4bbc39fa9c8e37497d20c1ab4a1b8ca599f4a951219",
       "runtime/wasm32/namespace.mjs": "46c45bf47d8fd08d889a37fb54bda839576317fc1720fe74eff0204bb8c82a89",
       "runtime/wasm32/process-service.mjs": "c6d7dc614d8de11d09357bcbb82bdf31e861b9ff2a5d4dda1d809019e79579d7"
     },
-    "results": "doc/WASM/stage2/foreign-finalizer-results.json",
-    "results_sha256": "5f565cb766be308942e7e1570959d6d946eb63a32b5de6157997c2a97a2e5086",
-    "review": "finalizer changes pending independent review; earlier scalar/buffer scopes accepted as recorded"
+    "review": "ACCEPTED_AUDIT_198",
+    "review_commit": "0244319d",
+    "source_binding": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-callbacks-r1/results/api/sources.json",
+    "source_binding_sha256": "b05c59b5f2e687c993aa9de77cee892fd593e201ca96413f8568af2e4413c8c8"
   },
-  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-strings-r1",
-  "inventory_sha256": "c0072867a7a870324744958000e10ad5cd80483974c77d9e886f1a3d3dbc9db1",
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-lisp-callbacks-r1",
+  "failures": [
+    "unsaved-index fixture",
+    "duplicate native oracle definition",
+    "callback allocation frontier fixture assertion",
+    "forced collection count assertion"
+  ],
+  "inventory_sha256": "56bf1111dd209f99d582dd67a426af0519b0e9f033ed82a24b9b1d1c9474983b",
   "lisp": {
+    "callback_collections": 9,
+    "callback_rows": [
+      "FC-ROW CLOSURE 42",
+      "FC-ROW MOVED 44",
+      "FC-ROW TWICE 45",
+      "FC-ROW DEREGISTER (T NIL)",
+      "FC-ROW STALE :CAUGHT",
+      "FC-ROW SAVED -1",
+      "FC-ROW SCALARS (-2147483648 -9223372036854775808 T T)",
+      "FC-ROW ERROR :CAUGHT",
+      "FC-ROW ERROR-CLEANUP (1 1 :OUTSIDE)",
+      "FC-ROW AFTER-ERROR 4",
+      "FC-ROW THROW :CONTAINED",
+      "FC-ROW THROW-CLEANUP 1",
+      "FC-ROW RETURN-FROM :CONTAINED",
+      "FC-ROW VOID (NIL 1)",
+      "FC-ROW NOT-FUNCTION :CAUGHT",
+      "FC-ROW REGISTRATION-ONLY-ROOT 307"
+    ],
     "finalizer_rows": [
       "FF-ROW HELD (0 41 43 0)",
       "FF-ROW MOVED-TWICE (0 41)",
@@ -45,10 +63,10 @@
       "FF-ROW CLOSED (0 NIL)",
       "FF-ROW DESTRUCTOR-TRAP (-2 NIL NIL 0)"
     ],
-    "foreign_entries": 88,
+    "foreign_entries": 99,
     "initializations": 7,
-    "moving_collections": 67,
-    "native_matched_rows": 45,
+    "moving_collections": 74,
+    "native_matched_rows": 61,
     "releases": 18,
     "rows": [
       "FA-ROW OPEN-ONCE T",
@@ -92,25 +110,44 @@
       "FS-ROW RELEASED :CAUGHT"
     ]
   },
-  "mutants": 69,
-  "product_lisp_lines_changed": 14,
-  "product_lisp_lines_total": 74,
-  "retained_bytes": 490108,
-  "review": "ACCEPTED_AUDIT_198",
+  "lower_callback_regression": {
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "checks": 80,
+    "criterion_credit": false,
+    "mutants": 63,
+    "product_lisp_lines_changed": 0,
+    "review": "NOT_REVIEWED",
+    "skips": [
+      "generated Lisp callback invocation and Lisp API",
+      "multi-Worker D5 admission",
+      "nested foreign calls from callbacks",
+      "compiler corpus deferred until whole FFI layer is complete"
+    ],
+    "status": "PASS"
+  },
+  "mutants": 80,
+  "product_lisp_lines_changed": 25,
+  "product_lisp_lines_total": 99,
+  "retained_bytes": 1291193,
+  "review": "NOT_REVIEWED",
   "skips": [
     "compiler corpus deferred until whole FFI layer is complete",
     "generated Lisp in browser providers",
-    "multi-Worker D5, callbacks, non-simple strings and other encodings"
+    "multi-Worker D5, nested foreign calls, non-simple strings and other encodings"
   ],
   "source_identity": {
     "runtime/wasm32/bytes.mjs": "e3b0e5136064058ff91a1b80fd012c0deba9d74522bb98bcf19a8475cbd972b7",
-    "runtime/wasm32/collector-owner.mjs": "dc90592662c77fec28a5093d2f477a88b9d8d8e4b243b1337e0b8245f9579be6",
+    "runtime/wasm32/collector-owner.mjs": "0379e87d7b831ce767481136891733a3be8b1c249c95bbe8a75e26a436e52ecd",
     "runtime/wasm32/collector.c": "642b5239a639f8709d7725ba361464199af5c8264d89839971e7c4ccdeb212c1",
-    "runtime/wasm32/foreign-api.lisp": "dec5bd5f65542ce4b2c5f8889406688374d7a9c3e6042e7701d1f05a6a3bb792",
+    "runtime/wasm32/foreign-api.lisp": "5a10bdb7b29032402fe650376caa0cf76a229a4155abc844c4de57019fdfec2b",
     "runtime/wasm32/foreign-binary.mjs": "c7308ef89aab2b8290e7bd22661ca09bd9205f5912e514082174621438c5cdc3",
     "runtime/wasm32/foreign-libraries.mjs": "466f6704b6881beac1462f3f8f24069080bcb4276cb99d3361ca72a8296a3305",
-    "runtime/wasm32/foreign-module.mjs": "03e3b2d332733c07639189c6f7f0158f173cf7713c164eca73ea09feb8b30cd8",
-    "runtime/wasm32/foreign-service.mjs": "5dcf7411499d82f1e5bb6ac94408a292ef4c64e04aa98391287c5cc146720bca",
+    "runtime/wasm32/foreign-module.mjs": "ec06195cd8bd21dd3d19a4bbc39fa9c8e37497d20c1ab4a1b8ca599f4a951219",
+    "runtime/wasm32/foreign-service.mjs": "954e5855d0a4aeec4db76aca39fdc94bf82ef218cd6683a5f573e70c7f0f41db",
     "runtime/wasm32/layout.mjs": "a177be94f14bbd52b04b6ed9a3e07ac2236a11140f49e5fe7549f553dc6e3065",
     "runtime/wasm32/namespace.mjs": "46c45bf47d8fd08d889a37fb54bda839576317fc1720fe74eff0204bb8c82a89",
     "runtime/wasm32/process-service.mjs": "c6d7dc614d8de11d09357bcbb82bdf31e861b9ff2a5d4dda1d809019e79579d7",
@@ -120,16 +157,20 @@
     "tests/wasm/stage1/loader-target/boot0.mjs": "6523371c9e8c079dd4789d20b799621872243ecba7ff406ce61ab893f1b59bd2",
     "tests/wasm/stage1/loader-target/build.py": "632daaf0523bceddce349cf86ecbaa424e85e37191a73c6120bb4ab59c3b1dc2",
     "tests/wasm/stage1/loader-target/source-compile.lisp": "f27dfedff6c721b30245e0e4ac0f376df19e76a635c71d882c6610b2a3972624",
-    "tests/wasm/stage2/foreign-api/check.mjs": "519f1d96ecdc145fe0d4b11d0cb3159f582ada11e1770a0e8daa202878934c10",
+    "tests/wasm/stage2/foreign-api/check.mjs": "1c9cd17a41f1af606b9cfab35fb8dd8ed42e0690305ff5ff3f2abf041613b991",
     "tests/wasm/stage2/foreign-api/checks.lisp": "fa7857cb01f90cf3f40650f5232420b9bbe900f35ae59e7cb9179b19e59f8ba4",
-    "tests/wasm/stage2/foreign-api/declaration.mjs": "90d0dbe61b385ba2dc3d7ebb5c467f89a8c4b41302fe7055b796e0ea5eae6c14",
-    "tests/wasm/stage2/foreign-api/extension.mjs": "2fc65ce8e82477b001500705b611c4aa44fde7bc07ac423771ff55e55ff2116f",
-    "tests/wasm/stage2/foreign-api/library.wat": "c3e221e8e7822a362a26bdcfdfda2b65610dda1b72908813edaec5308414b716",
-    "tests/wasm/stage2/foreign-api/run.py": "c32df40d8964a9224735bf133ae34d7c5bdfdf443fd1502e57cd2e23665815a8",
-    "tests/wasm/stage2/foreign-finalizers/check.mjs": "39df1ee6f885c0d920c046ca0ae11cebc624da6067a65572259df5b97e294b14",
+    "tests/wasm/stage2/foreign-api/declaration.mjs": "60553a10221211df8aee09b4a555e1c9aea760f54192e33f474cdfd289f42133",
+    "tests/wasm/stage2/foreign-api/extension.mjs": "7f9502e57426142a3b8be6ac99ed9e0676811d7e9233ec981a7df767176c7915",
+    "tests/wasm/stage2/foreign-api/library.wat": "7b5d15cf33c412840f9f2fc957cde0faadf6ab8175254d28fc2fceeedc40ec0b",
+    "tests/wasm/stage2/foreign-api/run.py": "584c9a291038a79a125467eaed5c956799580df7f89726218cc64531660f995e",
+    "tests/wasm/stage2/foreign-finalizers/check.mjs": "3d4dfc72a9354dcf91ab30fbb5a3060636efb50b209526f86b7957a28416834c",
     "tests/wasm/stage2/foreign-finalizers/checks.lisp": "afa8943943b29e765877b22dd0b63709bdda76ac690abd08f7981b9286ccc82e",
-    "tests/wasm/stage2/foreign-finalizers/mutants.py": "06aade89ad9e9e787f7315c06423f5604e0d12d2b88cc641e0aa05a54de0af80",
-    "tests/wasm/stage2/foreign-runtime/run.py": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",
+    "tests/wasm/stage2/foreign-finalizers/mutants.py": "02adff3edb752feeadcff881ca524d0c2a33a5a328e292ac2c3e067f57725344",
+    "tests/wasm/stage2/foreign-lisp-callbacks/bridge.wat": "7d1784358e8883340b6c89338f7949aae668254862a8d664c6612c4c3e0b1a5a",
+    "tests/wasm/stage2/foreign-lisp-callbacks/check.mjs": "ae270e8bff208b3ff77fdcc3fa126fe4455ba6ffae598a324aafa8d9ffaa6580",
+    "tests/wasm/stage2/foreign-lisp-callbacks/checks.lisp": "9dfebcd22d76ddf9e2c3cf79829217b7a10c37401ecd774dc216be2396780274",
+    "tests/wasm/stage2/foreign-lisp-callbacks/mutants.py": "6982ce82cbd9d18e1fc1b1467d25b97e3a2bac940d86ba6354433cbc8ef74729",
+    "tests/wasm/stage2/foreign-runtime/run.py": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185",
     "tests/wasm/stage2/foreign-scalar/browser.mjs": "23d7214cfe79bf6e581ae5d2cf20670311c391caeb7b501023f7d4bcc10189e8",
     "tests/wasm/stage2/foreign-scalar/node.mjs": "b64d5f36c5ee3371715a1b72a58c8d7bba2a0c72f7642d8042f492e51d95e87e",
     "tests/wasm/stage2/foreign-scalar/worker.mjs": "cf72189b9cb6e6e42fb319773a04a2c8bc17642eb8425665900dd66b02f24147",
@@ -137,5 +178,6 @@
     "tests/wasm/stage2/foreign-strings/checks.lisp": "7da46c4caa2b9eab56d928f0a1996e3ec3ae55483b5dc5c8d64728109a3b1d91",
     "tests/wasm/stage2/foreign-strings/mutants.py": "4c3624e48934d7f4323744b65e21cf1d9c67300d2fd0e9db8e64fed1a95e6652"
   },
-  "status": "ACCEPTED_AT_RETAINED_SCOPE"
+  "status": "EXECUTED_REVIEW_PENDING",
+  "whole_file_count_movement": 0
 }

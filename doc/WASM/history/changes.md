@@ -1,3 +1,25 @@
+## 2026-09-28 — Invoke generated Lisp callbacks across the foreign boundary
+
+Whole-file movement: zero. Product Lisp lines changed: +25 (99 API lines total).
+Next stop: broader namespace providers and browser generated-Lisp integration;
+nested foreign calls and multi-Worker D5 remain. Registration roots a generated
+wrapper and its captured function. The service boxes scalars, reloads the moving
+callable and invokes its public B entry with a separate linked root frame. Lisp
+errors and escaping THROW/RETURN-FROM are contained, with inner cleanup once,
+and become a foreign-call error after foreign frames return. Original Lisp
+failure payloads are not deferred in host exceptions.
+
+Qualification: 187 API checks per engine / 80 mutants, 61 native-matched
+post-READY rows (16 new), 99 foreign entries, 74 FOREIGN collections and nine
+explicit RUNNING collections. The lower callback regression passes 80/63 in
+all four engines, adding O-177 state/refusal assertions. O-179 drain/live-heap
+and registration-retry gaps now have directed tests. Four fixture failures and
+their diagnoses remain in `ccl-evidence/2026-09-28-stage2-foreign-lisp-callbacks-r1`.
+Unchanged lower product sources reuse audit 198 by identity. Executed, review
+pending; no FMT/LL credit, shared compiler/kernel change or corpus replay.
+Audit 198's three result status fields are normalized to accepted-at-retained-scope;
+their earlier execution snapshots keep their historical review provenance.
+
 ## 2026-09-28 — Accept audit 198 finalizers, strings and callback boundary
 
 Imported user-supplied audit `94b410d0` as `0244319d`. Accept `767ca876`,

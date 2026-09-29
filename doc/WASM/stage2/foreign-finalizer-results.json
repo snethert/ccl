@@ -1023,5 +1023,5 @@
     "tests/wasm/stage2/foreign-runtime/README.md": "503b6237a8dda2f9ee49a8029b7c2918b2a1be224e7de55c0c573f4a23be0014",
     "tests/wasm/stage2/foreign-scalar/README.md": "a60b41493277b2ebf92f09f65bac1269f6606f62ccd2c00110a26ec5f90f23a6"
   },
-  "status": "EXECUTED_REVIEW_PENDING"
+  "status": "ACCEPTED_AT_RETAINED_SCOPE"
 }

@@ -4,7 +4,7 @@ import {foreignFailure} from './foreign-module.mjs';
 const NIL=77825;
 class Refusal extends Error {}
 const need=(ok,why)=>{if(!ok)throw new Refusal(why);};
-export function foreignService({memory,tcr,owner,libraries,maximumTokens=536870911}) {
+export function foreignService({memory,tcr,owner,libraries,callbackEnv,maximumTokens=536870911}) {
  need(Number.isInteger(maximumTokens)&&maximumTokens>0&&maximumTokens<=536870911,'TOKEN_LIMIT');
  const tokens=new Map(),names=new Map();let next=1,busy=false;
  const view=()=>new DataView(memory.buffer),get=p=>view().getUint32(p,true),put=(p,v)=>view().setUint32(p,v,true);
@@ -41,6 +41,51 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
   v.setUint32(0,type==='f32'?271:791,true);
   if(type==='f32')v.setFloat32(4,value,true);else v.setFloat64(8,value,true);return {bytes};
  }
+ function boxVector(items){
+  const vectorSize=8*Math.ceil((4+4*items.length)/8),size=vectorSize+items.reduce((n,r)=>n+(r.bytes?.length??0),0);
+  owner.atSafepoint(o=>o.ensure(size));
+  const base=get(tcr+48);let cursor=base+vectorSize;
+  new Uint8Array(memory.buffer,base,size).fill(0);put(base,items.length*256+250);
+  for(let i=0;i<items.length;i++){const r=items[i];let word=r.word;
+   if(r.bytes){new Uint8Array(memory.buffer,cursor,r.bytes.length).set(r.bytes);word=cursor+6;cursor+=r.bytes.length;}
+   put(base+4+i*4,word);
+  }
+  put(tcr+48,base+size);return base+6;
+ }
+ function callable(word){
+  need(callbackEnv&&callbackEnv.table instanceof WebAssembly.Table,'CALLBACK_ENV');
+  need(owner.atSafepoint(o=>o.validObject(word))&&word%8===6&&get(word-6)===1578,'CALLBACK_FUNCTION');
+  const id=fix(get(word-2)),generation=get(word+6),registry=callbackEnv.code_registry;
+  need(Number.isInteger(registry)&&registry>=0&&registry+8<=memory.buffer.byteLength,'CALLBACK_REGISTRY');
+  need(id>0&&id<get(registry)&&registry+8+16*(id+1)<=memory.buffer.byteLength,'CALLBACK_CODE');
+  const row=registry+8+16*id,slot=get(row);
+  need(get(row+4)===generation&&get(row+8)===17&&get(row+12)===23&&slot<callbackEnv.table.length,'CALLBACK_CODE');
+  const entry=callbackEnv.table.get(slot);need(typeof entry==='function','CALLBACK_ENTRY');return entry;
+ }
+ function invokeCallback(readRoot,values,spec){
+  // Box only host scalars before reading the movable callable again.
+  const argument=boxVector(values.map((v,i)=>encoded(v,spec.params[i])));
+  const fn=readRoot(),entry=callable(fn);
+  const offsets=[64,116,120,124,128],saved=offsets.map(o=>get(tcr+o));
+  const head=get(tcr+128),base=16*Math.ceil(Math.max(head+8+4*get(head+4),get(tcr+124))/16);
+  need(base+128<=get(tcr+72),'CALLBACK_STACK');
+  // A separate B argument/result area retains the suspended outer chain.
+  put(base,head);put(base+4,2);put(base+8,argument);put(base+12,NIL);
+  put(tcr+64,base+16);put(base+16,argument);
+  put(tcr+128,base);put(tcr+116,0);put(tcr+120,base+32);put(tcr+124,base+48);
+  try{
+   let result;
+   try{result=entry(fn,1);}catch(error){
+    // The Lisp wrapper contains ordinary errors and nonlocal transfers. An
+    // escaped engine exception is fatal; never defer an unrooted Lisp payload.
+    throw new AggregateError([], 'foreign-service: CALLBACK_ESCAPE');
+   }
+   need(result[1]===1&&result[0]!==NIL,'CALLBACK_FAILED');
+   const out=vector(result[0]>>>0,spec.results.length);
+   const scalars=spec.results.map((type,i)=>number(get(out.p+4+i*4),type));
+   return scalars.length===0?undefined:scalars.length===1?scalars[0]:scalars;
+  }finally{offsets.forEach((o,i)=>put(tcr+o,saved[i]));}
+ }
  return args=>{
   if(busy) return -4;
   busy=true;
@@ -56,19 +101,13 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
     request(4);const {library}=token(field(0),'library'),name=string(field(1));
     const entry=library.declaration.exports.find(e=>e.name===name);need(entry,'EXPORT');
     const a=vector(field(2),entry.params.length),rangeSlots=new Set((entry.ranges??[]).map(r=>r.pointer));
-    const values=entry.params.map((type,i)=>{const word=get(a.p+4+i*4);if(!rangeSlots.has(i))return number(word,type);
+    const callbackSlots=new Set((entry.callbacks??[]).map(c=>c.parameter));
+    const values=entry.params.map((type,i)=>{const word=get(a.p+4+i*4);
+     if(callbackSlots.has(i)){const t=token(word,'callback');need(t.library===library,'AFFINITY');return t.handle;}
+     if(!rangeSlots.has(i))return number(word,type);
      const t=token(word,'range');need(t.library===library,'AFFINITY');return t.range;});
     const result=library.call(name,values),items=(entry.results.length===0?[]:entry.results.length===1?[result]:result).map((v,i)=>encoded(v,entry.results[i]));
-    const vectorSize=8*Math.ceil((4+4*items.length)/8),size=vectorSize+items.reduce((n,r)=>n+(r.bytes?.length??0),0);
-    // This may collect. Only JS scalars/private byte snapshots cross it.
-    owner.atSafepoint(o=>o.ensure(size));
-    const base=get(tcr+48);let cursor=base+vectorSize;
-    new Uint8Array(memory.buffer,base,size).fill(0);put(base,items.length*256+250);
-    for(let i=0;i<items.length;i++){const r=items[i];let word=r.word;
-     if(r.bytes){new Uint8Array(memory.buffer,cursor,r.bytes.length).set(r.bytes);word=cursor+6;cursor+=r.bytes.length;}
-     put(base+4+i*4,word);
-    }
-    put(tcr+48,base+size);put(request(4).p+16,base+6);return 0;
+    const resultWord=boxVector(items);put(request(4).p+16,resultWord);return 0;
    }
    if(op===3){request(2);const {library}=token(field(0),'library'),size=fix(field(1));capacity();
     return publish({kind:'buffer',library,handle:library.allocate(size)});}
@@ -96,6 +135,12 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
     const base=get(tcr+48);new Uint8Array(memory.buffer,base,size).fill(0);
     put(base,chars.length*256+191);chars.forEach((ch,i)=>put(base+4+i*4,ch));
     put(tcr+48,base+size);put(request(5).p+20,base+6);return 0;}
+   if(op===12){request(3);const {library}=token(field(0),'library'),type=string(field(1));capacity();
+    const spec=library.declaration.callbacks?.find(c=>c.name===type);need(spec,'CALLBACK_TYPE');
+    callable(field(2));
+    return publish({kind:'callback',library,handle:library.registerCallback(type,owner,field(2),
+     (readRoot,values)=>invokeCallback(readRoot,values,spec))});}
+   if(op===13){const t=token(payload(),'callback');return t.library.deregisterCallback(t.handle)?4:0;}
    need(false,'OPERATION');
   }catch(error){
    if(error instanceof Refusal||error.message==='collector-owner: finalizer object')return -4;

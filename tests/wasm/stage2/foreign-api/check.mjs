@@ -1,3 +1,4 @@
+import {callbackChecks} from './lisp-callbacks.mjs';
 import {stringChecks} from './strings.mjs';
 import {finalizerChecks} from './finalizers.mjs';
 import {createNamespace} from './runtime/namespace.mjs';
@@ -53,7 +54,7 @@ export function check(binaries,{only}={}) {
   throws(()=>r.open('example'),/WebAssembly.Exception/);const count=f.entries.length;throws(()=>r.open('example'),/./);equal(f.entries.length,count,'failed initialization never retried');});
  test('namespace-initialization-reentry',()=>{let r;const f=registry({imports:{host:{collect(){throws(()=>r.open('example'),/REENTRY/);throws(()=>r.close('example'),/REENTRY/);},observe(){}}}});r=f.open();equal(r.open('example').state,'ready');});
 
- function setup({placement=0,maximumTokens=536870911,boxCollect=false,onCollect=()=>{},measure,name='example',maximumNames=1}={}){
+ function setup({placement=0,maximumTokens=536870911,boxCollect=false,onCollect=()=>{},measure,name='example',maximumNames=1,callback=false,callbackRun}={}){
   const layout=deriveLayout({spaceBytes:65536,freeTarget:0,valueStack:1048576+placement},{bootFunctions:0,runtimeFunctions:0,runtimeRootCells:0,image:[{start:77824,end:77864}]}),tcr=layout.tcr;
   const memory=new WebAssembly.Memory({initial:layout.initialPages,maximum:32769,shared:true}),v=()=>new DataView(memory.buffer);
   const get=p=>v().getUint32(p,true),put=(p,n)=>v().setUint32(p,n,true);
@@ -66,7 +67,13 @@ export function check(binaries,{only}={}) {
   const imports={host:{collect(){const r=owner.collectForeign();new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);moves.push(r);onCollect();},observe(n){events.push(n);}}};
   const libraries=registry({imports,boundary:owner.foreignBoundary,edit:c=>{c.libraries[0].declaration.name=name;if(maximumNames===2){const row=c.libraries[0];c.libraries.push({...row,path:'second.wasm',declaration:{...row.declaration,name:'second'}});}} ,ns:maximumNames===2?createNamespace({version:1,cwd:'/lib',cclRoot:'/',entries:[{path:'/',kind:'directory'},{path:'/lib',kind:'directory'},...['example','second'].map(n=>({path:'/lib/'+n+'.wasm',kind:'file',bytes:binaries.library,sha256:sha256(binaries.library)}))]}):namespace()}).open();
   const wrapper=boxCollect?{atSafepoint(fn){return owner.atSafepoint(o=>{const r=o.collect();new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);return fn(o);});}}:owner;
-  const service=foreignService({memory,tcr,owner:wrapper,libraries,maximumTokens});
+  const callbackEnv=callback?{table:new WebAssembly.Table({element:'anyfunc',initial:2}),code_registry:layout.registry}:undefined;
+  if(callback){
+   put(layout.registry,2);put(layout.registry+24,1);put(layout.registry+28,4);put(layout.registry+32,17);put(layout.registry+36,23);
+   const entry=new WebAssembly.Instance(new WebAssembly.Module(binaries.bridge),{host:{run:(...a)=>callbackRun(f,...a)}}).exports.entry;
+   callbackEnv.table.set(1,entry);
+  }
+  const service=foreignService({memory,tcr,owner:wrapper,libraries,maximumTokens,callbackEnv});
   const alloc=(header,length)=>{const p=get(tcr+48),size=8*Math.ceil((4+length)/8);assert(p+size<=get(tcr+52),'test heap');new Uint8Array(memory.buffer,p,size).fill(0);put(p,header);put(tcr+48,p+size);return p+6;};
   const str=s=>{const chars=Array.from(s,c=>c.codePointAt(0)),w=alloc(chars.length*256+191,chars.length*4);chars.forEach((c,i)=>put(w-2+i*4,c));return w;};
   const vec=values=>{const w=alloc(values.length*256+250,values.length*4);values.forEach((x,i)=>put(w-2+i*4,x));return w;};
@@ -78,11 +85,13 @@ export function check(binaries,{only}={}) {
   const call=(lib,name,values=[])=>request(2,vec([lib,str(name),vec(values),NIL]));
   const output=()=>{const w=get(get(args+8)-2+12),n=get(w-6)>>>8;return Array.from({length:n},(_,i)=>get(w-2+4*i));};
   const rawCollector=()=>new WebAssembly.Instance(new WebAssembly.Module(binaries.collector),{env:{memory}}).exports;
-  return {owner,memory,tcr,layout,rawCollector,request,call,output,str,vec,bytes,integer,float,get,v,args,events,moves,service,put,library:()=>request(0,str('example'))};
+  const fn=()=>{const w=alloc(1578,28);[4,NIL,4,NIL,NIL,NIL,0].forEach((v,i)=>put(w-2+i*4,v));return w;};
+  const f={owner,memory,tcr,layout,rawCollector,request,call,output,str,vec,bytes,integer,float,get,v,args,events,moves,service,put,fn,callbackEnv,library:()=>request(0,str('example'))};return f;
  }
  const NIL=77825;
  finalizerChecks({test,setup,equal,assert,throws});
  stringChecks({test,setup,equal,assert});
+ callbackChecks({test,setup,equal,assert,throws});
  test('service-fixnum-size',()=>{const f=setup(),l=f.library();equal(f.request(3,f.vec([l,NIL])),-4);equal(f.moves.length,1);});
  test('service-fixnum-offset',()=>{const f=setup(),h=f.request(3,f.vec([f.library(),80000]));equal(f.request(5,f.vec([h,NIL])),-4);equal(f.request(4,h),4);});
  test('service-object-tag',()=>{const f=setup(),l=f.library();equal(f.call(l,'echo',[f.vec([4]),0,f.float(1,'f32'),f.float(2,'f64')]),-4);equal(f.moves.length,1);});

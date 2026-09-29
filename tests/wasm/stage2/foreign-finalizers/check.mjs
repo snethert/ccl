@@ -47,6 +47,12 @@ export function finalizerChecks({test,setup,equal,assert,throws}) {
   equal(f.owner.pendingFinalizers,1);f.owner.foreignBoundary.leave(token);equal(f.request(9,N),4);});
  test('finalizer-drain-safepoint',()=>{const f=setup();throws(()=>f.owner.atSafepoint(o=>o.drainFinalizers()),/finalizer boundary/);});
  test('finalizer-drain-state',()=>{const f=setup();f.put(f.tcr+32,3);throws(()=>f.owner.drainFinalizers(),/finalizer thread/);equal(f.get(f.tcr+32),3);});
+ test('finalizer-drain-live-heap',()=>{const f=setup(),h=buffer(f);equal(watch(f,h,f.vec([N])),0);forget(f);collect(f);
+  const frontier=f.get(f.tcr+48);f.put(f.tcr+48,0);
+  throws(()=>f.owner.drainFinalizers(),/allocation ownership/);equal(f.owner.pendingFinalizers,1);equal(releaseCount(f),0);
+  f.put(f.tcr+48,frontier);equal(f.request(9,N),4);equal(releaseCount(f),1);});
+ test('finalizer-registration-retry',()=>{const f=setup(),h=buffer(f);equal(watch(f,h,N),-4);
+  equal(watch(f,h,f.vec([N])),0);forget(f);collect(f);equal(f.request(9,N),4);equal(releaseCount(f),1);});
  test('finalizer-reentry',()=>{const f=setup();let calls=0;f.owner.atSafepoint(o=>o.registerFinalizer(f.vec([N]),()=>{calls++;throws(()=>o.drainFinalizers(),/finalizer boundary/);}));
   forget(f);collect(f);equal(f.owner.drainFinalizers(),1);equal(calls,1);});
  test('finalizer-batch',()=>{const f=setup();let calls=0;

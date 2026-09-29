@@ -31,4 +31,29 @@
    local.get $sum local.get $p local.get $i i32.add i32.load8_u i32.add local.set $sum
    local.get $i i32.const 1 i32.add local.set $i br $again
   end end local.get $sum)
+  (type $integer (func (param i32) (result i32)))
+  (type $scalars (func (param i32 i64 f32 f64) (result i32 i64 f32 f64)))
+  (type $void (func))
+  (table (export "callbacks") 1 128 funcref)
+  (global $saved (mut i32) (i32.const 0))
+  (global $after (mut i32) (i32.const 0))
+  (func $call (export "cb-call") (param i32 i32) (result i32)
+    local.get 0 global.set $saved
+    local.get 1 local.get 0 call_indirect (type $integer)
+    call $collect
+    global.get $after i32.const 1 i32.add global.set $after)
+  (func (export "cb-twice") (param i32 i32) (result i32)
+    local.get 1 local.get 0 call_indirect (type $integer) drop
+    local.get 1 local.get 0 call_indirect (type $integer)
+    call $collect
+    global.get $after i32.const 1 i32.add global.set $after)
+  (func (export "cb-saved") (param i32) (result i32)
+    local.get 0 global.get $saved call_indirect (type $integer))
+  (func (export "cb-trap") (param i32 i32) (result i32)
+    local.get 1 local.get 0 call_indirect (type $integer) drop unreachable)
+  (func (export "cb-scalars") (param i32 i32 i64 f32 f64) (result i32 i64 f32 f64)
+    local.get 1 local.get 2 local.get 3 local.get 4 local.get 0 call_indirect (type $scalars))
+  (func (export "cb-void") (param i32)
+    local.get 0 call_indirect (type $void))
+  (func (export "cb-after") (result i32) global.get $after)
 )

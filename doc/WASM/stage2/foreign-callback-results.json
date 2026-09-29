@@ -81,7 +81,8 @@
   },
   "mutants": 63,
   "native_R6_R6a": "Not applicable: no shared compiler or upstream kernel source changed",
-  "prior_pending_reviews": [
+  "prior_pending_reviews": [],
+  "prior_pending_reviews_at_execution": [
     "collector-queued buffer finalization",
     "explicit UTF-8 strings"
   ],
@@ -148,7 +149,7 @@
     "tests/wasm/stage2/foreign-finalizers/mutants.py": "02adff3edb752feeadcff881ca524d0c2a33a5a328e292ac2c3e067f57725344",
     "tests/wasm/stage2/foreign-runtime/run.py": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185"
   },
-  "status": "EXECUTED_REVIEW_PENDING",
+  "status": "ACCEPTED_AT_RETAINED_SCOPE",
   "tooling_identity_notes": [
     {
       "executed_sha256": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",

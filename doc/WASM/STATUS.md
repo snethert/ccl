@@ -99,6 +99,19 @@ B roots; generated Lisp callback invocation/API and full D5 remain next.
 [Bound results](stage2/foreign-callback-results.json). **Accepted after audit 198 (`0244319d`); no FMT/LL credit.** Product Lisp and whole-file count movement are zero.
 
 
+The [eighth Stage 2 unit](stage2/README.md#eighth-delivery-generated-lisp-callbacks)
+is **executed; independent review pending**. Lisp callback registration now roots
+captured functions and invokes ordinary generated B entries. Errors and escaping
+Lisp transfers are contained before foreign frames resume, preserving one-time
+cleanup. **187 API checks per engine / 80 mutants** and **61 native-matched Lisp
+rows** pass, including 16 new callback rows, 99 foreign entries, 74 FOREIGN
+collections and nine explicit RUNNING collections. The lower callback regression
+passes 80/63 in all engines; O-177/O-179 have directed checks. Product Lisp adds
+25 lines, whole-file movement zero. No FMT/LL credit or corpus replay. Next:
+broader providers and browser generated Lisp; nested foreign calls and full D5
+remain. [Bound results](stage2/foreign-lisp-callback-results.json).
+
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

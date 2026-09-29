@@ -51,6 +51,11 @@ strings = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(strings)
 MUTANTS += strings.MUTANTS
 
+spec = importlib.util.spec_from_file_location('lisp_callback_mutants', HERE.parent/'foreign-lisp-callbacks/mutants.py')
+callbacks = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(callbacks)
+MUTANTS += callbacks.MUTANTS
+
 def compile_collector(path, out):
     command(['/usr/local/opt/llvm/bin/clang', '--target=wasm32', '-O2', '-nostdlib', '-fno-builtin',
         '-matomics', '-mbulk-memory', '-Wl,--no-entry', '-Wl,--import-memory', '-Wl,--shared-memory',
@@ -78,7 +83,19 @@ def compare(native, report):
     string_rows=lambda s:[line for line in s.splitlines() if line.startswith('FS-ROW ')]
     assert string_rows(text)==string_rows(reference) and len(string_rows(text))==15, (string_rows(text),string_rows(reference))
     assert text.count('FS-PASS')==reference.count('FS-PASS')==1
-    return dict(status='PASS',string_rows=string_rows(text),native_matched_rows=len(rows(text))+len(final_rows(text))+len(string_rows(text)),finalizer_rows=final_rows(text),foreign_entries=len(r['entries']),
+    callback_rows=lambda s:[line for line in s.splitlines() if line.startswith('FC-ROW ')]
+    expected_callbacks = [
+        'FC-ROW CLOSURE 42', 'FC-ROW MOVED 44', 'FC-ROW TWICE 45',
+        'FC-ROW DEREGISTER (T NIL)', 'FC-ROW STALE :CAUGHT', 'FC-ROW SAVED -1',
+        'FC-ROW SCALARS (-2147483648 -9223372036854775808 T T)',
+        'FC-ROW ERROR :CAUGHT', 'FC-ROW ERROR-CLEANUP (1 1 :OUTSIDE)',
+        'FC-ROW AFTER-ERROR 4', 'FC-ROW THROW :CONTAINED', 'FC-ROW THROW-CLEANUP 1',
+        'FC-ROW RETURN-FROM :CONTAINED', 'FC-ROW VOID (NIL 1)',
+        'FC-ROW NOT-FUNCTION :CAUGHT', 'FC-ROW REGISTRATION-ONLY-ROOT 307']
+    assert callback_rows(text)==callback_rows(reference)==expected_callbacks, (callback_rows(text),callback_rows(reference))
+    assert text.count('FC-PASS')==reference.count('FC-PASS')==1
+    assert len(r['callbackCollections'])==9 and all(c['source']!=c['destination'] for c in r['callbackCollections'])
+    return dict(status='PASS',callback_rows=callback_rows(text),string_rows=string_rows(text),native_matched_rows=len(rows(text))+len(final_rows(text))+len(string_rows(text))+len(callback_rows(text)),finalizer_rows=final_rows(text),foreign_entries=len(r['entries']),callback_collections=len(r['callbackCollections']),
                 moving_collections=len(r['collections']),initializations=r['events'].count(1),releases=r['events'].count(2),rows=rows(text),
                 scope='Product Lisp API and service; native oracle models fixture library operations')
 
@@ -91,6 +108,7 @@ def run(args):
         sources=([ROOT/'runtime/wasm32'/name for name in RUNTIME+['foreign-api.lisp','process-service.mjs','collector.c']]+
                  sorted(p for p in HERE.iterdir() if p.suffix in ('.mjs','.py','.wat','.lisp'))+
                  [SCALAR/name for name in ('node.mjs','worker.mjs','browser.mjs')]+
+                 [HERE.parent/'foreign-lisp-callbacks'/name for name in ('checks.lisp','check.mjs','bridge.wat','mutants.py')]+
                  [HERE.parent/'foreign-strings'/name for name in ('check.mjs','checks.lisp','mutants.py')]+
                  [HERE.parent/'foreign-runtime/run.py',HERE.parent/'foreign-finalizers/check.mjs',HERE.parent/'foreign-finalizers/checks.lisp',HERE.parent/'foreign-finalizers/mutants.py']+
                  [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('build.py','source-compile.lisp','boot0.mjs')]+
@@ -101,13 +119,15 @@ def run(args):
         for name in ('check.mjs','declaration.mjs'):shutil.copy2(HERE/name,out/name)
         shutil.copy2(HERE.parent/'foreign-finalizers/check.mjs',out/'finalizers.mjs')
         shutil.copy2(HERE.parent/'foreign-strings/check.mjs',out/'strings.mjs')
+        shutil.copy2(HERE.parent/'foreign-lisp-callbacks/check.mjs',out/'lisp-callbacks.mjs')
         for name in ('node.mjs','worker.mjs'):shutil.copy2(SCALAR/name,out/name)
         shutil.copy2(args.boot/'runtime-binaries/collector.wasm',out/'collector.wasm')
         try:
             command([c.WABT,HERE/'library.wat','--enable-all','-o',out/'library.wasm'],out,'assembly.log')
-            c.save(out/'binaries.json',['collector','library'])
+            command([c.WABT,HERE.parent/'foreign-lisp-callbacks/bridge.wat','--enable-all','-o',out/'bridge.wasm'],out,'bridge-assembly.log')
+            c.save(out/'binaries.json',['collector','library','bridge'])
             c.save(out/'artifacts.json',{name:dict(sha256=c.sha(out/(name+'.wasm')),bytes=(out/(name+'.wasm')).stat().st_size)
-                                       for name in ('collector','library')})
+                                       for name in ('collector','library','bridge')})
             c.save(out/'tools.json',{name:dict(path=str(p),sha256=c.sha(p)) for name,p in
                                     [('clang',Path('/usr/local/opt/llvm/bin/clang')),('node',c.NODE),('wat2wasm',c.WABT),('python',Path(sys.executable)),('native-kernel',c.KERNEL)]})
             command([c.NODE,out/'node.mjs',out/'node.json'],out,'node.log')
@@ -131,7 +151,7 @@ def run(args):
                 for row in c.read(out/'browser.json')['results']:assert row['rows']==c.read(out/'node.json')['rows'],row['engine']
             lisp=None
             if args.checks:
-                combined=(ROOT/'runtime/wasm32/foreign-api.lisp').read_text()+'\n'+(HERE/'checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-finalizers/checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-strings/checks.lisp').read_text()
+                combined=(ROOT/'runtime/wasm32/foreign-api.lisp').read_text()+'\n'+(HERE/'checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-finalizers/checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-strings/checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-lisp-callbacks/checks.lisp').read_text()
                 parent=c.read(args.checks/'postimage-parent.json')
                 assert parent['source_sha256']==hashlib.sha256(combined.encode()).hexdigest()
                 assert parent['manifest']==c.sha(args.boot/'boot/artifacts/manifest.json')
@@ -150,9 +170,9 @@ def run(args):
             summary=dict(status='PASS',checks=c.read(out/'node.json')['checks'],mutants=len(controls),lisp=lisp,
                 browsers=[r['engine'] for r in c.read(out/'browser.json')['results']] if args.playwright else [],
                 skips=['compiler corpus deferred until whole FFI layer is complete','generated Lisp in browser providers',
-                       'multi-Worker D5, callbacks, non-simple strings and other encodings']+
+                       'multi-Worker D5, nested foreign calls, non-simple strings and other encodings']+
                       ([] if args.playwright else ['browser engines not requested'])+([] if args.checks else ['generated Lisp not requested']),
-                review='NOT_REVIEWED',criterion_credit=False,product_lisp_lines_changed=14,product_lisp_lines_total=len((ROOT/'runtime/wasm32/foreign-api.lisp').read_text().splitlines()))
+                review='NOT_REVIEWED',criterion_credit=False,product_lisp_lines_changed=25,product_lisp_lines_total=len((ROOT/'runtime/wasm32/foreign-api.lisp').read_text().splitlines()))
             c.save(out/'summary.json',summary)
             for p in out.glob('*.wasm'):p.unlink()
             for name in ('mutant.json','mutant.log','assembly.log'):(out/name).unlink(missing_ok=True)
