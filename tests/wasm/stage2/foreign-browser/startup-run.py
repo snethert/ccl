@@ -1,4 +1,4 @@
-"""Comparable sequential Chromium/Firefox timings on the same compiled inputs."""
+"""Comparable sequential browser timings on the same compiled inputs."""
 from pathlib import Path
 import argparse
 import importlib.util
@@ -27,13 +27,13 @@ def run(args):
             [('boot', args.boot), ('level1', args.level1), ('checks', args.checks)]})
         api.command([c.WABT, HERE.parent/'foreign-api/library.wat', '--enable-all', '-o', out/'library.wasm'], out, 'assembly.log')
         api.command([c.NODE, HERE/'browser.mjs', args.boot, args.level1, args.checks, out/'library.wasm',
-            out/'browsers', args.playwright, args.browser_config, '--startup-timing'], out, 'browser.log', timeout=1500)
+            out/'browsers', args.playwright, args.browser_config, '--startup-timing', '--engines='+','.join(args.engines)], out, 'browser.log', timeout=650*len(args.engines))
         previous = c.STORE/'2026-09-28-stage2-foreign-lisp-callbacks-r1'
         native = previous/'final/native.log'
         assert c.sha(native) == c.read(previous/'inventory.json')['final/native.log']
         c.save(out/'native-reference.json', dict(path=str(native), sha256=c.sha(native)))
         rows = {}
-        for engine in ['chromium', 'firefox']:
+        for engine in args.engines:
             report = c.read(out/'browsers'/f'{engine}.json')
             assert api.compare(native, report) == c.read(previous/'final/lisp-check.json')
             timing = report['startupTiming']
@@ -59,7 +59,7 @@ def run(args):
                 runtime_archive_materialization_compile='subset of preparation; includes archive checks, hashes and Wasm compilation; excludes boot archive',
                 excluded='Lisp source builds, browser process launch, initial page navigation and directed input-refusal checks'),
             caveats=['single run per engine, not a statistical benchmark',
-                     'local HTTP inputs from verified RAM disk; sparse timing hooks enabled in both engines',
+                     'local HTTP inputs from verified RAM disk; same sparse timing hooks enabled in every measured engine',
                      'no concurrent project build, browser test or diagnostic probe during measurement'])
         c.save(out/'summary.json', summary)
         (out/'library.wasm').unlink()
@@ -71,5 +71,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     for name in ['boot', 'level1', 'checks', 'playwright', 'browser-config']:
         parser.add_argument('--'+name, type=Path, required=True)
+    parser.add_argument('--engines', nargs='+', choices=['chromium', 'firefox', 'webkit'], default=['chromium', 'firefox', 'webkit'])
     parser.add_argument('--output', type=Path, default=Path('/private/tmp/ccl-work/codex/browser-startup/run'))
     run(parser.parse_args())

@@ -31,17 +31,18 @@ holds after later compiler changes.
 
 The user correctly rejected comparing Chromium startup against Firefox's full
 startup-plus-test duration. A fresh sequential run now measures the same phases
-in both engines, on identical compiled inputs, without overlapping builds,
+in Chromium and Firefox, then WebKit separately with identical binary inputs
+and unchanged Worker/runtime/timing sources, without overlapping builds,
 browser tests or diagnostic probes. [Bound results](startup-comparison-results.json).
 
-| Phase | Chromium 145.0.7632.6 | Firefox 146.0.1 |
-| --- | ---: | ---: |
-| Preparation before Lisp entry | 8.249 s | 13.718 s |
-| Lisp initialization to READY | 14.676 s | 468.115 s |
-| **Total startup to READY** | **22.925 s** | **481.833 s** |
-| Post-READY FFI witness and cleanup | 6.010 s | 32.061 s |
-| Startup plus FFI witness | 28.935 s | 513.894 s |
-| Runtime archive materialization/compilation (within preparation) | 1.823 s | 5.567 s |
+| Phase | Chromium 145.0.7632.6 | Firefox 146.0.1 | WebKit 26.0 |
+| --- | ---: | ---: | ---: |
+| Preparation before Lisp entry | 8.249 s | 13.718 s | 14.922 s |
+| Lisp initialization to READY | 14.676 s | 468.115 s | 392.311 s |
+| **Total startup to READY** | **22.925 s** | **481.833 s** | **407.233 s** |
+| Post-READY FFI witness and cleanup | 6.010 s | 32.061 s | 16.450 s |
+| Startup plus FFI witness | 28.935 s | 513.894 s | 423.683 s |
+| Runtime archive materialization/compilation (within preparation) | 1.823 s | 5.567 s | 0.731 s |
 
 Startup begins at the host launch request, before input preload and Worker
 creation, and ends when Lisp signals ProcessReady. It excludes building Lisp
@@ -49,7 +50,7 @@ sources, launching the browser application, initial page navigation and directed
 input-refusal tests. Preparation plus Lisp initialization equals total startup;
 the FFI witness begins after READY. The archive subphase includes hashing and
 validation and excludes boot archive compilation; it is not a pure or complete
-Wasm compiler timer. Both runs return the same 81 runtime loads and pass the
+Wasm compiler timer. All three runs return the same 81 runtime loads and pass the
 61-row FFI witness. These are one observation per engine, not medians.
 
 Firefox startup is 21.0 times Chromium's in these observations. Most of the
@@ -57,6 +58,13 @@ Firefox delay occurs in Lisp initialization, after the preparation phase.
 The timing isolates that phase; it does not yet establish the underlying cause.
 This supersedes the earlier mismatched browser comparison. Startup remains
 unresolved; no performance acceptance follows from successful correctness checks.
+
+The native Lisp reference takes **0.118 s median** for LOAD plus the same 61
+result checks, excluding startup (three fresh-process runs: 0.133195, 0.116676,
+0.117975 s). It models the foreign-library operations in Lisp, so this is **not**
+an equivalent native FFI/foreign-boundary GC benchmark and must not be used to
+claim a native-versus-Wasm FFI slowdown ratio.
+[Native reference timing](native-reference-timing.json).
 
 ## Earlier diagnostic measurements
 

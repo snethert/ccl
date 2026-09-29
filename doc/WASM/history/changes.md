@@ -1,3 +1,17 @@
+## 2026-09-29 — Add WebKit and distinguish native reference timing
+
+Whole-file movement: zero. Product Lisp lines changed: zero. Next stop remains
+startup latency. WebKit 26.0 reaches READY in 407.233 s and executes the post-READY
+FFI witness in 16.450 s, on the identical binary inputs and unchanged timing hooks
+used for Chromium/Firefox. All 61 result rows match. Browser selection now permits
+adding one engine without rerunning the others.
+
+Three fresh native processes load and execute the compiled 61-row reference in
+0.133195, 0.116676 and 0.117975 s, excluding startup. This is a Lisp model of the
+foreign operations, not an equivalent native FFI/forced-GC performance baseline.
+[Comparable timings and scope](../stage2/startup-blocker.md#comparable-complete-runs).
+Executed, review pending; startup remains unresolved.
+
 ## 2026-09-28 — Measure identical browser startup and test intervals
 
 Whole-file movement: zero. Product Lisp lines changed: zero. Next stop remains

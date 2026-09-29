@@ -92,12 +92,12 @@ compiler corpus remains deferred until the whole FFI layer is complete.
 
 After the same three builds above, run `startup-run.py` with the same `--boot`,
 `--level1`, `--checks`, `--playwright` and `--browser-config` arguments. It launches
-Chromium and Firefox sequentially in fresh browser processes, with the same
+Chromium, Firefox and WebKit sequentially in fresh browser processes, with the same
 compiled inputs and sparse timing hooks. Do not run a build, another browser
 test or diagnostic probe concurrently. Results are written to
 `/private/tmp/ccl-work/codex/browser-startup/run`.
 
-Both engines report identical boundaries: host launch request (before input
+Every engine reports identical boundaries: host launch request (before input
 preload and Worker creation) to READY, Lisp top-level entry to READY, and READY
 to completion of the post-READY FFI witness and runner cleanup. Preparation is
 the launch-request-to-Lisp-entry interval. These intervals exclude Lisp source
@@ -107,5 +107,6 @@ that existing hook includes archive validation and hashing and excludes boot
 archive compilation, so it is not a pure or complete Wasm compiler timer.
 
 The completed reports must still match all 61 native rows and the existing
-foreign/collection counts. One run per engine provides directly comparable
+foreign/collection counts. Use `--engines webkit` (or another explicit subset) to add a missing engine
+without rerunning unchanged measurements. One run per engine provides directly comparable
 observations, not a median or a claim of acceptable startup performance.

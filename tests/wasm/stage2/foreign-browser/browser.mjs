@@ -8,6 +8,8 @@ import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
 import {archiveSource} from '../../stage1/loader-target/archive-source.mjs';
 const [boot,level1,checks,library,out,playwright,browserConfig]=process.argv.slice(2);
 const measureStartup=process.argv.includes('--startup-timing');
+const selectedEngines=process.argv.find(arg=>arg.startsWith('--engines='))?.slice(10).split(',')??['chromium','firefox','webkit'];
+assert(selectedEngines.length&&new Set(selectedEngines).size===selectedEngines.length&&selectedEngines.every(name=>['chromium','firefox','webkit'].includes(name)),'browser engine selection');
 const root=fileURLToPath(new URL('../../../../',import.meta.url));
 const engines=await import(pathToFileURL(playwright)),executables=JSON.parse(fs.readFileSync(browserConfig));
 const routes=new Map(),preload=[],sources={};
@@ -68,7 +70,7 @@ const server=http.createServer((req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const results=[];
 try{
- for(const name of (measureStartup?['chromium','firefox']:['chromium','firefox','webkit'])){
+ for(const name of selectedEngines){
   let browser;
   try{
    const executable=executables[name];assert(executable,'explicit executable required');

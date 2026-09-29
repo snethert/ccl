@@ -125,8 +125,8 @@ pending; no FMT/LL credit.** [Bound results](stage2/foreign-browser-results.json
 minutes-long launch as an acceptable runtime. The current driver replays 81
 runtime files per launch; an initialized-runtime launch artifact is missing.
 Comparable sequential runs now measure **22.925 s startup to READY in Chromium
-and 481.833 s in Firefox**; the same post-READY FFI witness takes **6.010 s and
-32.061 s**, respectively. [Identical timing boundaries and inputs](stage2/startup-comparison-results.json). The longer diagnostic
+481.833 s in Firefox and 407.233 s in WebKit**; the same post-READY FFI witness
+takes **6.010 s, 32.061 s and 16.450 s**, respectively. [Identical timing boundaries and inputs](stage2/startup-comparison-results.json). The longer diagnostic
 timeout is not a fix. [Measurements and the required next delivery](stage2/startup-blocker.md)
 take priority over further foreign-layer breadth. No startup or Stage 2 completion
 acceptance is claimed.

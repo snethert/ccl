@@ -1,0 +1,32 @@
+{
+  "criterion_credit": false,
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-29-browser-startup-webkit-native-timing-r1",
+  "expression": "(let ((start (get-internal-real-time))) (load \"/private/tmp/ccl-work/codex/foreign-browser/checks/benchmark.dx64fsl\") (format t \"~&NATIVE-WITNESS-SECONDS ~,6F~%\" (/ (- (get-internal-real-time) start) (float internal-time-units-per-second 1d0))))",
+  "inputs": {
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2/native/baseline.image": "415e027cf3fb4fb55989adcb219602376dc25cf7e05d8608f576fed5e802a48e",
+    "/private/tmp/ccl-work/codex/foreign-browser/checks/benchmark.dx64fsl": "0073c6ed788f58bb5383353a4f942bf80f08cf7a6bff1dd5e7ba3f3a8311aafd",
+    "/private/tmp/ccl-work/codex/foreign-browser/checks/dx86cl64": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"
+  },
+  "inventory_sha256": "18bfa18c7990707cf7ec48e4c71b234037d22652d418a2a69914f1603c720add",
+  "median_witness_seconds": 0.117975,
+  "native_matched_rows": 61,
+  "product_lisp_lines_changed": 0,
+  "retained_bytes": 216997,
+  "review": "NOT_REVIEWED",
+  "runs": [
+    {
+      "process_seconds": 0.2140085909923073,
+      "witness_seconds": 0.133195
+    },
+    {
+      "process_seconds": 0.13301686799968593,
+      "witness_seconds": 0.116676
+    },
+    {
+      "process_seconds": 0.13424576300894842,
+      "witness_seconds": 0.117975
+    }
+  ],
+  "scope": "LOAD plus execution of compiled Lisp reference model; startup excluded; not equivalent native FFI or foreign-boundary GC stress",
+  "status": "PASS"
+}
