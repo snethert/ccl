@@ -20,7 +20,7 @@ MUTANTS = [
  ('lifetime', 'this.#t(8)>0', 'true', 'owner-refusal-lifetime'),
  ('next-worker', 'this.#t(12)===0', 'true', 'owner-refusal-next-worker'),
  ('previous-worker', 'this.#t(16)===0', 'true', 'owner-refusal-previous-worker'),
- ('descriptor-admission', 'this.#t(144)===0', 'true', 'owner-refusal-descriptor'),
+ ('descriptor-admission', 'this.#t(144)===0&&Atomics.load', 'true&&Atomics.load', 'owner-refusal-descriptor'),
  ('active-request', 'Atomics.load(words,(this.tcr+152)/4)===0', 'true', 'owner-refusal-active-request'),
  ('root-alignment', 'head%8===0', 'true', 'owner-refusal-root-alignment'),
  ('argument-root', 'head+16===this.#t(64)', 'true', 'owner-refusal-argument-head'),

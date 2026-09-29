@@ -1,0 +1,19 @@
+export const declaration=sha256=>({
+ version:1,name:'callbacks-unit',sha256,policy:'per-worker',
+ memory:{export:'memory',minimum:1,maximum:2},tables:[{export:'callbacks',minimum:1,maximum:8}],
+ initialization:{kind:'none'},imports:[],
+ callbacks:[
+  {name:'integer',table:'callbacks',params:['i32'],results:['i32'],error:[-1]},
+  {name:'scalars',table:'callbacks',params:['i32','i64','f32','f64'],results:['i32','i64','f32','f64'],error:[-1,-2n,-3,-4]},
+  {name:'void',table:'callbacks',params:[],results:[],error:[]}
+ ],
+ exports:[
+  {name:'allocate',params:['i32'],results:['i32']},
+  {name:'release',params:['i32'],results:[]},
+  ...['call','alias','twice','trap'].map(name=>({name,params:['i32','i32'],results:['i32'],callbacks:[{parameter:0,type:'integer'}]})),
+  {name:'saved',params:['i32'],results:['i32']},
+  {name:'scalars',params:['i32','i32','i64','f32','f64'],results:['i32','i64','f32','f64'],callbacks:[{parameter:0,type:'scalars'}]},
+  {name:'void',params:['i32'],results:[],callbacks:[{parameter:0,type:'void'}]},
+  {name:'after',params:[],results:['i32']}
+ ]
+});

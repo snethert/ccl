@@ -90,6 +90,17 @@ results. No compiler corpus replay or FMT/LL credit. Callbacks, non-simple strin
 other encodings, broader providers and full D5 remain; the fifth unit's review
 is still pending. [Bound results](stage2/foreign-string-results.json).
 
+The [seventh Stage 2 unit](stage2/README.md#seventh-delivery-typed-callback-boundary-and-rooted-lifetime)
+adds typed callback table registration, collector-visible roots, one-Worker
+callback admission and deferred failures. Deregistration never aliases a later
+registration; fatal callbacks retire the library after foreign frames unwind.
+The **80 checks per engine / 63 killed mutants** include the corrected WebKit
+grow-then-set sequence and retain its original failures. The fixture invoker is JavaScript with synthetic
+B roots; generated Lisp callback invocation/API and full D5 remain next.
+[Bound results](stage2/foreign-callback-results.json). **Executed; review pending.
+No FMT/LL credit.** Product Lisp and whole-file count movement are zero.
+
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

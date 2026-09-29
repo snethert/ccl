@@ -179,6 +179,31 @@ Non-simple strings, other encodings, callbacks, browser generated Lisp/provider
 integration and full D5 remain. This execution does not accept the preceding
 finalizer unit. O-167 and O-176 remain open.
 
+## Seventh delivery: typed callback boundary and rooted lifetime
+
+[Implementation and reproduction](../../../tests/wasm/stage2/foreign-callbacks/README.md).
+The lower layer now registers typed table trampolines with collector-visible,
+reloadable roots. The one-Worker owner admits callbacks from FOREIGN and checks
+return state before resuming foreign execution. Deregistration drops roots and
+leaves typed fallback slots; slots never alias later registrations. Callback
+errors are deferred until foreign frames return, and traps or failed admission
+retire the appropriate boundary. Finalizer draining inside callbacks refuses
+without consuming queued work.
+
+The fixture uses real Wasm indirect calls and the production collector with a
+trusted JavaScript invoker and synthetic B roots. Generated Lisp callback
+invocation and the Lisp registration API remain next. The retained WebKit
+failure and four-way probe establish the required grow-then-set table sequence.
+Qualification passes **80 checks per engine / 63 killed mutants** in Node,
+Chromium, Firefox and WebKit. Existing API/string/finalizer execution retains
+**45 native-matched Lisp rows / 88 foreign entries / 67 moving collections**;
+its four-engine suite passes 148 checks / 69 mutants. Owner, scalar and buffer
+regressions also pass. Detailed counts are bound in
+[foreign-callback-results.json](foreign-callback-results.json). **Executed;
+independent review pending. No FMT or LL credit.** Product Lisp and whole-file
+count movement are zero. The preceding finalizer and string units remain pending
+review; this delivery does not accept them.
+
 ## Next foreign work
 
 [HOSTFM P2](../host-and-foreign-modules.md#6-foreign-wasm-modules-cap-ffi-wasm)
@@ -190,17 +215,18 @@ remains the architecture; FMT-1–FMT-9 remain its proof obligations.
 | FMT-2, bytes and encoding | Declared ranges, explicit copies and UTF-8 octets execute with fresh views after growth. Explicit UTF-8 simple-string copies now execute through the product API; other string representations/encodings and full browser/provider integration remain. No Lisp memory or addresses enter the foreign module. |
 | FMT-3, moving collection | One-Worker owner roots and reloads execute with collection in an active foreign import and retired-space poisoning. Copied Lisp source ranges now execute across allocator/call/release collection. Lisp callbacks and other-Worker collection remain. |
 | FMT-4, failures and releases | Generated Lisp conditions/cleanups execute through the fixture transport; 64 TCR words are checked, with six collector-owned words retaining updated values. Explicit allocation releases and destructor-trap ordering execute in the owned-buffer unit. The product service now signals ordinary Lisp errors after admission and preserves primary cleanup failures; callback retirement remains. |
-| FMT-5/6, callbacks | Add typed table trampolines, collector-visible callback roots, callback admission during pending GC, and containment of Lisp nonlocal exits. The first unit refuses re-entry. |
+| FMT-5/6, callbacks | Typed table trampolines, rooted lifetime, one-Worker callback admission, inhibited pending collection and deferred callback failures execute. Generated Lisp invocation/API and actual Lisp nonlocal exits remain; nested foreign calls and full D5 are not admitted. |
 | FMT-7, admission | Binary/declaration/digest controls execute, including start/initializer failure and source mutation. Resident named-namespace loading now executes; mounted providers and the larger pointer/ownership declaration contract remain. |
 | FMT-8, Workers | The scalar profile chooses per-Worker instances. Production thread ownership, two-Worker schedules and interruptible funnelled calls remain. |
-| FMT-9, lifetime | Whole-instance retirement executes. Opaque allocation identities and explicit free detect offset reuse and instance retirement. Weak-anchor collection now queues releases on the owner, and explicit release/retirement cancel them. Automatic queue pumping, token reclamation, callback deregistration and multi-Worker qualification remain. |
+| FMT-9, lifetime | Whole-instance retirement executes. Opaque allocation identities and explicit free detect offset reuse and instance retirement. Weak-anchor collection now queues releases on the owner, and explicit release/retirement cancel them. Explicit callback deregistration and retirement now drop roots without slot reuse. Automatic queue pumping, token/slot reclamation and multi-Worker qualification remain. |
 
 The Node integration now uses ordinary post-READY `%FASLOAD` with the accepted
 level-0 image and target-loaded runtime. The owned scalar/copy service now has declared byte ranges, encoding and
 explicit allocation lifetime. A product Lisp API and resident namespace loading now
 execute. Weak-anchor buffer finalization now queues on the owner with an explicit drain.
 Explicit UTF-8 simple-string copies now execute as well.
-Next work is Lisp callbacks and broader providers. Browser
+Typed callback ownership now executes through the trusted fixture invoker.
+Next work is generated Lisp callback invocation/API and broader providers. Browser
 provider integration and full D5 must be qualified at their actual scope.
 Native R6/R6a applies if a later step changes shared compiler source.
 

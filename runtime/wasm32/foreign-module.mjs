@@ -28,6 +28,20 @@ const argumentsFor=(args,types)=>{
   for(let i=0;i<values.length;i++)scalar(values[i],types[i]);
   return values;
 };
+// A defined Wasm forwarding body supplies the exact table signature in all
+// qualified engines (including WebKit). No memory or start function is needed.
+const trampoline=(params,results,run)=>{
+  const leb=n=>{const b=[];do{const x=n&127;n>>>=7;b.push(x|(n?128:0));}while(n);return b;};
+  const types={i32:127,i64:126,f32:125,f64:124};
+  const section=(id,data)=>[id,...leb(data.length),...data];
+  const type=[1,96,...leb(params.length),...params.map(t=>types[t]),...leb(results.length),...results.map(t=>types[t])];
+  const body=[0,...params.flatMap((_,i)=>[32,...leb(i)]),16,0,11];
+  return new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([
+    0,97,115,109,1,0,0,0,...section(1,type),
+    ...section(2,[1,1,101,1,102,0,0]),...section(3,[1,0]),
+    ...section(7,[1,1,102,0,1]),...section(10,[1,...leb(body.length),...body])
+  ])),{e:{f:run}}).exports.f;
+};
 
 // Metadata retains the original foreign exception/trap without exposing it
 // across the live Wasm caller. Weak keys do not keep old failures alive.
@@ -51,7 +65,10 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
     table.minimum===d.tables[i]?.minimum&&table.maximum===d.tables[i]?.maximum),'TABLE_LIMITS');
   const memoryExports=m.exports.filter(e=>e.kind===2);
   need(memoryExports.length===1&&memoryExports[0].index===0&&memoryExports[0].name===d.memory.export,'MEMORY_EXPORT');
-  need(m.exports.every(e=>e.kind===0||e.kind===2),'EXPORT_KIND');
+  need(m.exports.every(e=>e.kind===0||e.kind===2||
+       (e.kind===1&&d.tables[e.index]?.export===e.name)),'EXPORT_KIND');
+  for(const [i,t] of d.tables.entries())if(t.export!==undefined)
+    need(typeof t.export==='string'&&m.exports.some(e=>e.kind===1&&e.index===i&&e.name===t.export),'TABLE_EXPORT');
   const declared=new Map();
   for(const e of d.exports){
     need(typeof e.name==='string'&&!declared.has(e.name),'EXPORT_DECLARATION');
@@ -96,9 +113,38 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
   for(const a of m.exports.filter(e=>e.kind===0))for(const b of m.exports.filter(e=>e.kind===0&&e.index===a.index))
     need(JSON.stringify(ranges.get(a.name))===JSON.stringify(ranges.get(b.name)),'RANGE_ALIAS');
 
-  let state='initializing',busy=false,instance;
+  const callbackTypes=new Map(),callbackSlots=new Map();
+  need(d.callbacks===undefined||Array.isArray(d.callbacks),'CALLBACKS');
+  for(const c of d.callbacks??[]){
+    need(c&&typeof c.name==='string'&&c.name.length>0&&!callbackTypes.has(c.name),'CALLBACK_NAME');
+    need(d.tables.some(t=>t.export===c.table)&&typeof c.table==='string','CALLBACK_TABLE');
+    need(Array.isArray(c.params)&&Array.isArray(c.results)&&
+         [...c.params,...c.results].every(t=>['i32','i64','f32','f64'].includes(t)),'CALLBACK_SIGNATURE');
+    argumentsFor(c.error,c.results);callbackTypes.set(c.name,c);
+  }
+  for(const e of d.exports){
+    const slots=e.callbacks??[],used=new Set((ranges.get(e.name)??[]).flatMap(r=>[r.pointer,r.length]));
+    need(Array.isArray(slots),'CALLBACK_SLOTS');
+    for(const s of slots){
+      need(s&&uint(s.parameter)&&e.params[s.parameter]==='i32'&&!used.has(s.parameter)&&
+           callbackTypes.has(s.type)&&!managedNames.has(e.name)&&!initializerNames.has(e.name),'CALLBACK_SLOT');
+      used.add(s.parameter);
+    }
+    callbackSlots.set(e.name,slots);
+  }
+  for(const a of m.exports.filter(e=>e.kind===0))for(const b of m.exports.filter(e=>e.kind===0&&e.index===a.index))
+    need(JSON.stringify(callbackSlots.get(a.name))===JSON.stringify(callbackSlots.get(b.name)),'CALLBACK_ALIAS');
+
+  let state='initializing',busy=false,instance,pendingCallback=null;
   const handles=new WeakMap(),slices=new WeakMap(),live=new Set();
-  function retire(){state='retired';instance=null;for(const h of live){h.active=false;h.finalizer?.cancel();}live.clear();}
+  const callbacks=new WeakMap(),liveCallbacks=new Set();
+  const dropCallback=c=>{
+    c.active=false;c.run=null;
+    if(c.roots){c.safepoint(()=>c.roots.release());c.roots=null;}
+    liveCallbacks.delete(c);
+  };
+  function retire(){state='retired';instance=null;for(const h of live){h.active=false;h.finalizer?.cancel();}live.clear();
+    for(const c of liveCallbacks)dropCallback(c);}
   const idle=()=>{need(!busy,'REENTRY');need(state==='ready','RETIRED');};
   const memory=()=>instance.exports[d.memory.export];
   const owned=handle=>{const h=handles.get(handle);need(h?.active,'HANDLE');return h;};
@@ -134,7 +180,7 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
   freeze(d);
   function invoke(operation,run){
     need(!busy,'REENTRY');need(state!=='retired','RETIRED');
-    busy=true;let token,result,cause,failed=false;
+    busy=true;pendingCallback=null;let token,result,cause,failed=false;
     try{token=enter(operation);
       if(token&&typeof token.then==='function'){state='retired';need(false,'ASYNC_BOUNDARY');}
     }catch(error){busy=false;if(state==='retired')retire();throw error;}
@@ -142,6 +188,12 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
       failed=true;cause=error;
       if(error instanceof WebAssembly.RuntimeError||state==='initializing')state='retired';
     }
+    // Callback failures return their declared scalar sentinel through foreign
+    // frames. Only here, after those frames unwind, may a failure escape.
+    if(pendingCallback?.error instanceof AggregateError){
+      busy=false;retire();throw pendingCallback.error;
+    }
+    if(pendingCallback&&!failed){failed=true;cause=pendingCallback.error;}
     // Admission errors belong to the owner. Returning a catchable Lisp error
     // after failed admission would grant heap access before it was authorized.
     try{const admitted=leave(token);need(!admitted||typeof admitted.then!=='function','ASYNC_BOUNDARY');}catch(error){
@@ -171,6 +223,10 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
       need(!managedNames.has(name),'MANAGED_EXPORT');
       need(Array.isArray(args)&&args.length===entry.params.length,'ARITY');
       const values=[...args],checked=[];
+      for(const s of callbackSlots.get(name)){
+        const c=callbacks.get(values[s.parameter]);
+        need(c?.active&&c.type===s.type,'CALLBACK_HANDLE');values[s.parameter]=c.index;
+      }
       for(const r of ranges.get(name)){
         const slice=slices.get(values[r.pointer]);need(slice,'RANGE_HANDLE');
         const h=owned(slice.handle),length=values[r.length];
@@ -203,6 +259,45 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
       view(h,offset,copy.length).set(copy);
     },
     read(handle,offset,length){idle();return view(owned(handle),offset,length).slice();},
+    registerCallback(type,owner,root,run){
+      idle();const spec=callbackTypes.get(type);need(spec,'CALLBACK_TYPE');
+      need(owner&&typeof owner.atSafepoint==='function'&&typeof owner.callForeignCallback==='function'&&
+           typeof run==='function','CALLBACK_OWNER');
+      const table=instance.exports[spec.table],limit=d.tables.find(t=>t.export===spec.table).maximum;
+      need(table.length<limit,'CALLBACK_CAPACITY');
+      const c={type,run,active:true,roots:null,index:null,
+        safepoint:owner.atSafepoint.bind(owner),admit:owner.callForeignCallback.bind(owner)};
+      const fallback=()=>spec.results.length===0?undefined:spec.results.length===1?spec.error[0]:[...spec.error];
+      const fn=trampoline(spec.params,spec.results,(...args)=>{
+        // Tombstones never alias a later registration. Suppress repeated
+        // callbacks after the first failure in this foreign entry.
+        if(!busy||state!=='ready'||!c.active||pendingCallback)return fallback();
+        try{
+          const result=c.admit(()=>{
+            let reading=true;
+            try{
+              const result=c.run(()=>{need(reading,'CALLBACK_ROOT_SCOPE');return c.roots.values()[0];},args);
+              if(result&&typeof result.then==='function')throw new AggregateError([], 'foreign-module: ASYNC_CALLBACK');
+              const values=argumentsFor(spec.results.length===0?[]:spec.results.length===1?[result]:result,spec.results);
+              return spec.results.length===0?undefined:spec.results.length===1?values[0]:values;
+            }finally{reading=false;}
+          });
+          if(result&&typeof result.then==='function')throw new AggregateError([], 'foreign-module: ASYNC_CALLBACK_OWNER');
+          return result;
+        }catch(error){
+          if(error instanceof WebAssembly.RuntimeError)error=new AggregateError([error],'foreign-module: CALLBACK_TRAP',{cause:error});
+          pendingCallback={error};return fallback();
+        }
+      });
+      c.roots=c.safepoint(o=>o.rootCells([root]));
+      // Grow with a null slot, then install: WebKit 26 mis-types grow(fill).
+      try{c.index=table.grow(1);table.set(c.index,fn);}catch(error){dropCallback(c);throw error;}
+      const handle=Object.freeze({});callbacks.set(handle,c);liveCallbacks.add(c);return handle;
+    },
+    deregisterCallback(handle){
+      need(!busy,'REENTRY');const c=callbacks.get(handle);need(c,'CALLBACK_HANDLE');
+      if(!c.active)return false;dropCallback(c);return true;
+    },
     finalize(handle,owner,anchor){
       idle();const h=owned(handle);need(!h.finalizer,'FINALIZER_ONCE');
       h.finalizer=owner.atSafepoint(o=>o.registerFinalizer(anchor,()=>api.release(handle)));

@@ -1,0 +1,167 @@
+{
+  "base_commit": "9c4a58db80d56f38d630cf0e298d5f9eace1689d",
+  "browsers": [
+    "chromium",
+    "firefox",
+    "webkit"
+  ],
+  "checks": 80,
+  "collector_owner_checks": 59,
+  "criterion_credit": false,
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-callbacks-r1",
+  "inventory_sha256": "c4fc603f05275b346b2b82f53b2d9ca28ead32b5bae6318cc8caed8d13a6de06",
+  "lisp": {
+    "finalizer_rows": [
+      "FF-ROW HELD (0 41 43 0)",
+      "FF-ROW MOVED-TWICE (0 41)",
+      "FF-ROW QUEUED 0",
+      "FF-ROW RELEASED (1 1 NIL 0)",
+      "FF-ROW EXPLICIT-FIRST (0 1)",
+      "FF-ROW EXPLICIT-QUEUED (0 1)",
+      "FF-ROW DUPLICATE :CAUGHT",
+      "FF-ROW BAD-ANCHOR :CAUGHT",
+      "FF-ROW CLOSED (0 NIL)",
+      "FF-ROW DESTRUCTOR-TRAP (-2 NIL NIL 0)"
+    ],
+    "foreign_entries": 88,
+    "initializations": 7,
+    "moving_collections": 67,
+    "native_matched_rows": 45,
+    "releases": 18,
+    "rows": [
+      "FA-ROW OPEN-ONCE T",
+      "FA-ROW SCALARS (-2147483648 -9223372036854775808 1.5 -0.0D0)",
+      "FA-ROW SCALAR-MAX (2147483647 9223372036854775807 T T)",
+      "FA-ROW COPY-MOVING (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+      "FA-ROW VALUES (11 12 NIL)",
+      "FA-ROW NONLOCAL :ESCAPED",
+      "FA-ROW RECOVERABLE ((:CAUGHT -3) 1 T)",
+      "FA-ROW AFTER-EXCEPTION (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+      "FA-ROW RELEASE (T NIL)",
+      "FA-ROW STALE-RANGE :CAUGHT",
+      "FA-ROW BAD-SIZE :CAUGHT",
+      "FA-ROW MISSING-EXPORT :CAUGHT",
+      "FA-ROW RELEASES 7",
+      "FA-ROW TRAP ((:CAUGHT -2) 1 T)",
+      "FA-ROW DESTRUCTOR ((:CAUGHT -2) 1 T)",
+      "FA-ROW PRIMARY ((:CAUGHT -3) 1 T)",
+      "FA-ROW CLOSE-RELEASE NIL",
+      "FA-ROW CLOSED-CALL :CAUGHT",
+      "FA-ROW MISSING-LIBRARY :CAUGHT",
+      "FA-ROW BINDING :OUTSIDE"
+    ],
+    "scope": "Product Lisp API and service; native oracle models fixture library operations",
+    "status": "PASS",
+    "string_rows": [
+      "FS-ROW BYTES 18",
+      "FS-ROW OCTETS (65 0 195 169 226 130 172 240 159 140 141 239 187 191 244 143 191 191)",
+      "FS-ROW UNICODE (65 0 233 8364 127757 65279 1114111)",
+      "FS-ROW ROOTS (T T T T (65 0 233 8364 127757 65279 1114111))",
+      "FS-ROW EMPTY (0 0)",
+      "FS-ROW BOM (65279 65)",
+      "FS-ROW MISSING-ENCODING :CAUGHT",
+      "FS-ROW WRONG-ENCODING :CAUGHT",
+      "FS-ROW WRITE-BOUNDS :CAUGHT",
+      "FS-ROW READ-BOUNDS :CAUGHT",
+      "FS-ROW PRESERVED (65279 65)",
+      "FS-ROW MALFORMED :CAUGHT",
+      "FS-ROW RECOVERED (2 (111 107))",
+      "FS-ROW LONG (4097 4097)",
+      "FS-ROW RELEASED :CAUGHT"
+    ]
+  },
+  "mutants": 63,
+  "native_R6_R6a": "Not applicable: no shared compiler or upstream kernel source changed",
+  "prior_pending_reviews": [
+    "collector-queued buffer finalization",
+    "explicit UTF-8 strings"
+  ],
+  "product_lisp_lines_changed": 0,
+  "regressions": {
+    "api": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checks": 148,
+      "mutants": 69,
+      "status": "PASS"
+    },
+    "buffers": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checks": 66,
+      "mutants": 28,
+      "status": "PASS"
+    },
+    "owner": {
+      "checks": 53,
+      "mutants": 38,
+      "status": "PASS"
+    },
+    "scalar": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checks": 126,
+      "mutants": 16,
+      "status": "PASS"
+    }
+  },
+  "retained_bytes": 553649,
+  "review": "NOT_REVIEWED",
+  "skips": [
+    "generated Lisp callback invocation and Lisp API",
+    "multi-Worker D5 admission",
+    "nested foreign calls from callbacks",
+    "compiler corpus deferred until whole FFI layer is complete"
+  ],
+  "source_identity": {
+    "doc/WASM/README.md": "a67569eb66f4009ff79d40b1d358b8d9cee21da5457021f0d76b4e818f1ae20e",
+    "doc/WASM/STATUS.md": "cf4e42ec1b1ed60e855c623edd3a311bc519c425e063ffbec6c469bfeb1ca794",
+    "doc/WASM/stage2/README.md": "0539b97ea0a20b741796a0017e3fef94ae03d8aeb030fff9086dcb9fc29e407b",
+    "runtime/wasm32/collector-owner.mjs": "0379e87d7b831ce767481136891733a3be8b1c249c95bbe8a75e26a436e52ecd",
+    "runtime/wasm32/foreign-module.mjs": "ec06195cd8bd21dd3d19a4bbc39fa9c8e37497d20c1ab4a1b8ca599f4a951219",
+    "tests/wasm/stage2/foreign-callbacks/README.md": "4f35c64cee00ab17634f2afa473ec4cb9f312d39bb9bb9b48cba402f9981d7e4",
+    "tests/wasm/stage2/foreign-callbacks/check.mjs": "4bb9f6779cb8d593273d91a80e3edcafb405f3db5aa51130fa015f8de51d05de",
+    "tests/wasm/stage2/foreign-callbacks/declaration.mjs": "06dea6a39a1aab721aeef0a2f4085594cc2763de407357a82b59f5dee1c0b256",
+    "tests/wasm/stage2/foreign-callbacks/library.wat": "2a62a4c74d7e6f2388f9b5075a4541880cc84d97bf14b72f59869c66b99abeba",
+    "tests/wasm/stage2/foreign-callbacks/mutants.py": "5c48b0019fbd18b512f903a11f3a44bdaff7bc83f1ff2836d6e0ad6adf077aaf",
+    "tests/wasm/stage2/foreign-callbacks/owner-regression.py": "0a5dbda5f140879ab85f663383b0118101b402ac89c4decde43eea65a16a151b",
+    "tests/wasm/stage2/foreign-callbacks/run.py": "541beafe78cbe4d0f262b67c2b4ec0417931dda409a8892a20e4f3ee22aa2c5f",
+    "tests/wasm/stage2/foreign-callbacks/setup.mjs": "106246006bf5ae0a6ea7de2d7aab3f00838a06ec6f2d0754f260b0f6af3d7b0c",
+    "tests/wasm/stage2/foreign-finalizers/mutants.py": "02adff3edb752feeadcff881ca524d0c2a33a5a328e292ac2c3e067f57725344",
+    "tests/wasm/stage2/foreign-runtime/run.py": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185"
+  },
+  "status": "EXECUTED_REVIEW_PENDING",
+  "tooling_identity_notes": [
+    {
+      "executed_sha256": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",
+      "final_sha256": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185",
+      "path": "tests/wasm/stage2/foreign-runtime/run.py",
+      "reason": "Only the existing descriptor-admission mutation anchor was made site-specific. The corrected owner controls passed; execution helper and product code unchanged.",
+      "suite": "callbacks"
+    },
+    {
+      "executed_sha256": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",
+      "final_sha256": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185",
+      "path": "tests/wasm/stage2/foreign-runtime/run.py",
+      "reason": "Only the existing descriptor-admission mutation anchor was made site-specific. The corrected owner controls passed; execution helper and product code unchanged.",
+      "suite": "api"
+    },
+    {
+      "executed_sha256": "f66675c190ff7ef259b444cdd0f05946af51f80ec979afe063f2831bb3d99832",
+      "final_sha256": "816c72029014885d2ab4d3f51da7c05d0a17d79564c2ad923e2cd4740d1fd185",
+      "path": "tests/wasm/stage2/foreign-runtime/run.py",
+      "reason": "Only the existing descriptor-admission mutation anchor was made site-specific. The corrected owner controls passed; execution helper and product code unchanged.",
+      "suite": "buffers"
+    }
+  ],
+  "whole_file_count_movement": 0
+}

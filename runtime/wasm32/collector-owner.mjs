@@ -11,6 +11,7 @@ export class CollectorOwner {
  #blocks=[];
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
  #foreign=null;
+ #callback=false;
  #finalizers=new Set();#finalizerQueue=new Set();#drainingFinalizers=false;
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;#measure;
  static create(memory,bytes,digest,layout,{measure}={}){
@@ -37,7 +38,7 @@ export class CollectorOwner {
  // Worker. This is not the multi-Worker gc_gen admission protocol.
  get foreignBoundary(){return Object.freeze({
   enter:operation=>{
-   need(!this.#foreign&&!this.#boundary&&!this.#busy,'foreign reentry');
+   need(!this.#foreign&&!this.#callback&&!this.#boundary&&!this.#busy,'foreign reentry');
    need(typeof operation==='string','foreign operation');
    const words=new Int32Array(this.#memory.buffer),state=(this.tcr+32)/4;
    need(Atomics.load(words,state)===2&&this.#t(8)>0&&this.#t(12)===0&&this.#t(16)===0,'foreign thread');
@@ -75,6 +76,33 @@ export class CollectorOwner {
   need(this.#foreign&&Atomics.load(new Int32Array(this.#memory.buffer),(this.tcr+32)/4)===3,
        'foreign collection');
   return this.atSafepoint(o=>o.collect());
+ }
+ // Synchronous one-Worker callback admission. The trusted invoker must unwind
+ // its B frames before returning (or throwing). No nested foreign entry yet.
+ callForeignCallback(action){
+  let frame;
+  try{
+   need(typeof action==='function'&&!this.#callback,'callback action');
+   frame=this.#foreign;need(frame,'callback foreign');
+   this.foreignBoundary.leave(frame.token);
+  }catch(error){throw new AggregateError([error],'collector-owner: callback admission',{cause:error});}
+  this.#callback=true;
+  try{
+   const result=action();
+   if(result&&typeof result.then==='function')throw new AggregateError([], 'collector-owner: asynchronous callback');
+   return result;
+  }finally{
+   try{
+    need(!this.#boundary&&!this.#busy&&!this.#foreign,'callback boundary');
+    need(this.#t(32)===2&&this.#t(144)===0,'callback publication');
+    need(frame.offsets.every((offset,index)=>this.#t(offset)===frame.values[index]),'callback checkpoint');
+    this.#validateLive();
+    this.#foreign=frame;
+    this.#set(this.tcr+144,frame.head);
+    Atomics.store(new Int32Array(this.#memory.buffer),(this.tcr+32)/4,3);
+    this.#callback=false;
+   }catch(error){throw new AggregateError([error],'collector-owner: callback return',{cause:error});}
+  }
  }
  #inhibitionState(){
   const region=this.#layout.regions.find(r=>r.role==='runtime-globals');
@@ -273,7 +301,7 @@ export class CollectorOwner {
  }
  get pendingFinalizers(){return this.#finalizerQueue.size;}
  drainFinalizers(){
-  need(!this.#foreign&&!this.#boundary&&!this.#busy&&!this.#drainingFinalizers,'finalizer boundary');
+  need(!this.#foreign&&!this.#callback&&!this.#boundary&&!this.#busy&&!this.#drainingFinalizers,'finalizer boundary');
   need(Atomics.load(new Int32Array(this.#memory.buffer),(this.tcr+32)/4)===2,'finalizer thread');
   this.#validateLive();
   this.#drainingFinalizers=true;let count=0;
