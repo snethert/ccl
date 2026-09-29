@@ -273,5 +273,8 @@ blobs through `foreign-module.mjs`, one instance per declared Worker-local entry
 (operation 15). Target-load `foreign-api.lisp` to use the internal CCL Lisp API
 for typed scalar calls, byte vectors, ranges and explicit release. See the
 [API contract and verification boundary](../../tests/wasm/stage2/foreign-api/README.md).
-This unit is executed, awaiting independent review; callbacks, automatic
-finalization, string encoding and multi-Worker qualification remain open.
+The original API unit is accepted after audit 197. The subsequent
+[buffer-finalizer unit](../../tests/wasm/stage2/foreign-finalizers/README.md) adds
+weak lifetime anchors and owner-queued releases, with an explicit drain point;
+it is executed, awaiting review. Callbacks, general Lisp finalizers, automatic
+queue pumping, string encoding and multi-Worker qualification remain open.

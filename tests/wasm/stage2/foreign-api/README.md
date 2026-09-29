@@ -3,7 +3,7 @@
 This Stage 2 delivery adds a product Lisp API, its process-service transport and
 resident namespace loading. Accepted after user-supplied [Claude audit 197](../../../../doc/WASM/stage0/claude-review.md)
 (`d58ffe14`); no
-FMT/LL acceptance or Stage 1 count movement is claimed. Product Lisp adds 50
+FMT/LL acceptance or Stage 1 count movement is claimed. The original unit added 50 product Lisp
 lines; shared compiler and upstream kernel source are unchanged.
 
 Load `runtime/wasm32/foreign-api.lisp` as an ordinary target bundle after READY.
@@ -54,8 +54,9 @@ Libraries, allocations and ranges use positive Worker-local fixnum tokens of
 distinct kinds. Tokens expose no address, never reuse an ID, and have an explicit
 per-service limit (default 536870911). Exhaustion refuses before allocation or
 range publication. Released/closed tokens remain as lifetime tombstones until
-the service is discarded; collector-triggered release and token reclamation are
-not implemented. A token belongs to its creating Worker/service and must not be
+the service is discarded; token reclamation is not implemented. The subsequent
+[finalizer unit](../foreign-finalizers/README.md) adds opt-in lifetime anchors and
+collector-queued release; dropping an integer token alone does not release it. A token belongs to its creating Worker/service and must not be
 transferred. These are opaque-by-contract identities, not unforgeable capabilities
 or a sandbox against Lisp code with unsafe memory access.
 
@@ -100,7 +101,7 @@ objects check spans, headers and sizes; the service trusts the port's generated
 root discipline, not arbitrary host-provided pointers.
 
 The target loads the API and witness through ordinary post-READY `%FASLOAD`.
-Twenty rows compare with native CCL using a native model of the fixture library:
+The original twenty rows compare with native CCL using a native model of the fixture library:
 full signed integer bounds, floats, copies, aliases, closures, dynamic bindings,
 multiple values, nonlocal exits, recoverable failures, traps, destructor traps,
 primary error preservation, close and stale handles. The fixture forces moving
@@ -132,6 +133,8 @@ python3 -B tests/wasm/stage1/loader-target/build.py "$work/level1" --level1
 cat runtime/wasm32/foreign-api.lisp > "$work/source.lisp"
 printf '\n' >> "$work/source.lisp"
 cat tests/wasm/stage2/foreign-api/checks.lisp >> "$work/source.lisp"
+printf '\n' >> "$work/source.lisp"
+cat tests/wasm/stage2/foreign-finalizers/checks.lisp >> "$work/source.lisp"
 python3 -B tests/wasm/stage1/loader-target/build.py "$work/checks" \
   --postimage="$work/boot" --source="$work/source.lisp"
 python3 -B tests/wasm/stage2/foreign-api/run.py \
@@ -148,7 +151,11 @@ boot/level-1 products. Retain hashes, results and minimal original failures,
 then discard successful compilation products. The finalized evidence pack is
 `ccl-evidence/2026-09-28-stage2-foreign-api-r1`.
 
-Next: Lisp callbacks and owner-queued finalization, Lisp string encoding,
-browser Lisp/provider integration and multi-Worker D5. O-167 must land before
-any multi-Worker admission. No callbacks or automatic finalizers are supplied
-by this API.
+The subsequent [finalizer unit](../foreign-finalizers/README.md) extends this
+driver to 106 portable checks / 55 mutants and 30 native-matched Lisp rows. Its
+result binding and review status are separate from audit 197. Next: Lisp
+callbacks, string encoding, browser Lisp/provider integration and multi-Worker
+D5. O-167 must land before any multi-Worker admission.
+
+Browser reproduction uses the persistent [Playwright 1.58.0 pin and browser
+revision recipe](../browser-tools/README.md) (audit 197 O-175).

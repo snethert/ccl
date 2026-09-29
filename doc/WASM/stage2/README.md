@@ -134,6 +134,28 @@ Acceptance reruns no unchanged tests. O-174 carries directed service admission
 tests into the next substantive unit; O-175 requires a persistent Playwright
 version recipe. O-176 remains the separate literal-double printer frontier.
 
+## Fifth delivery: collector-queued buffer finalization
+
+[Implementation and reproduction](../../../tests/wasm/stage2/foreign-finalizers/README.md).
+A buffer can now register a weak moving-heap lifetime anchor. The owner reads the
+collector's completed forwarding map after each successful copy and queues dead
+anchors without running foreign code. An explicit Lisp drain executes one batch
+on the owning Worker outside collection. Explicit release cancels pending work;
+close and traps cancel the library's remaining registrations. Recoverable
+finalizer failures never retry the uncertain release and preserve later work.
+This prepares lifetime machinery for callbacks; it does not implement callbacks,
+general Lisp finalizers, automatic queue pumping or multi-Worker ownership.
+
+Qualification passes **106 checks per engine / 55 killed mutants**, with
+**30 native-matched post-READY Lisp rows / 81 foreign entries / 60 moving
+collections**. Collector regression passes **128 checks / 11 controls**; owner,
+buffer and scalar regressions pass at their recorded scopes. Product Lisp adds
+10 lines. O-174 now has directed service refusals and float-header checks;
+O-175 has a committed Playwright 1.58.0 lockfile and browser-revision recipe.
+O-176 remains open. Results are bound in
+[foreign-finalizer-results.json](foreign-finalizer-results.json). **Executed;
+independent review pending. No FMT or LL credit.**
+
 ## Next foreign work
 
 [HOSTFM P2](../host-and-foreign-modules.md#6-foreign-wasm-modules-cap-ffi-wasm)
@@ -148,12 +170,13 @@ remains the architecture; FMT-1–FMT-9 remain its proof obligations.
 | FMT-5/6, callbacks | Add typed table trampolines, collector-visible callback roots, callback admission during pending GC, and containment of Lisp nonlocal exits. The first unit refuses re-entry. |
 | FMT-7, admission | Binary/declaration/digest controls execute, including start/initializer failure and source mutation. Resident named-namespace loading now executes; mounted providers and the larger pointer/ownership declaration contract remain. |
 | FMT-8, Workers | The scalar profile chooses per-Worker instances. Production thread ownership, two-Worker schedules and interruptible funnelled calls remain. |
-| FMT-9, lifetime | Whole-instance retirement executes. Opaque allocation identities and explicit free detect offset reuse and instance retirement. Collector-triggered release, finalizer suppression, callback deregistration and owner-queued finalization remain. |
+| FMT-9, lifetime | Whole-instance retirement executes. Opaque allocation identities and explicit free detect offset reuse and instance retirement. Weak-anchor collection now queues releases on the owner, and explicit release/retirement cancel them. Automatic queue pumping, token reclamation, callback deregistration and multi-Worker qualification remain. |
 
 The Node integration now uses ordinary post-READY `%FASLOAD` with the accepted
 level-0 image and target-loaded runtime. The owned scalar/copy service now has declared byte ranges, encoding and
 explicit allocation lifetime. A product Lisp API and resident namespace loading now
-execute. Next work is callbacks, finalization, string encoding and broader providers. Browser
+execute. Weak-anchor buffer finalization now queues on the owner with an explicit drain.
+Next work is Lisp callbacks, string encoding and broader providers. Browser
 provider integration and full D5 must be qualified at their actual scope.
 Native R6/R6a applies if a later step changes shared compiler source.
 
@@ -166,7 +189,7 @@ native-matched witnesses are reused at their recorded scope. It is not a new
 Stage 2 implementation or acceptance.
 
 Continue with image-builder metadata tables (still owner-created strong tables),
-weak populations and finalization, then multi-Worker roots/lifecycle races.
+weak populations and general Lisp finalization, then multi-Worker roots/lifecycle races.
 Retain the audit-133 size census and the existing weak-table regression cases.
 Finalization must compose with foreign allocation/callback retirement; explicit
 release followed by collection must never invoke a destructor twice.

@@ -98,7 +98,7 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
 
   let state='initializing',busy=false,instance;
   const handles=new WeakMap(),slices=new WeakMap(),live=new Set();
-  function retire(){state='retired';instance=null;for(const h of live)h.active=false;live.clear();}
+  function retire(){state='retired';instance=null;for(const h of live){h.active=false;h.finalizer?.cancel();}live.clear();}
   const idle=()=>{need(!busy,'REENTRY');need(state==='ready','RETIRED');};
   const memory=()=>instance.exports[d.memory.export];
   const owned=handle=>{const h=handles.get(handle);need(h?.active,'HANDLE');return h;};
@@ -161,7 +161,7 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
   instance=invoke('instantiate',()=>new WebAssembly.Instance(module,importObject));
   if(init.kind==='export')invoke('initialize:'+init.name,()=>instance.exports[init.name]());
   state='ready';
-  return Object.freeze({
+  const api=Object.freeze({
     declaration:d,
     get state(){return state;},
     call(name,args=[]){
@@ -203,15 +203,20 @@ export function openForeignModule({bytes,declaration,imports={},boundary,errorTa
       view(h,offset,copy.length).set(copy);
     },
     read(handle,offset,length){idle();return view(owned(handle),offset,length).slice();},
+    finalize(handle,owner,anchor){
+      idle();const h=owned(handle);need(!h.finalizer,'FINALIZER_ONCE');
+      h.finalizer=owner.atSafepoint(o=>o.registerFinalizer(anchor,()=>api.release(handle)));
+    },
     release(handle){
       need(!busy,'REENTRY');const h=handles.get(handle);need(h,'HANDLE');
       if(!h.active)return false;
       // Invalidate before a destructor can fail. Even a recoverable failure
       // leaves its allocation retired; an uncertain free is never retried.
-      h.active=false;live.delete(h);
+      h.active=false;live.delete(h);h.finalizer?.cancel();
       if(state==='ready')invoke('release:'+buffers.release,()=>instance.exports[buffers.release](h.pointer|0));
       return true;
     },
     close(){need(!busy,'REENTRY');retire();}
   });
+  return api;
 }

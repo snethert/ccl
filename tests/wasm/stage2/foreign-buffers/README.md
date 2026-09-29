@@ -134,3 +134,6 @@ results and original failures. Successful generated Wasm and build products
 are disposable. The compiler corpus remains deferred until the entire FFI
 layer is complete. Browser Lisp/provider execution, callbacks, owner-queued
 finalization, namespace loading and multi-Worker D5 remain open.
+
+Browser reproduction uses the persistent [Playwright 1.58.0 pin and browser
+revision recipe](../browser-tools/README.md) (audit 197 O-175).

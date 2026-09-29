@@ -23,7 +23,7 @@ def inputs():
 def runtime(out):
     out.mkdir(exist_ok=True)
     c.command([CLANG,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-matomics','-mbulk-memory','-Wl,--no-entry','-Wl,--import-memory',
-      '-Wl,--max-memory=2147549184','-Wl,--shared-memory','-Wl,--global-base=1048576','-Wl,-z,stack-size=65536','-Wl,--export=collect','-Wl,--export=__stack_pointer',
+      '-Wl,--max-memory=2147549184','-Wl,--shared-memory','-Wl,--global-base=1048576','-Wl,-z,stack-size=65536','-Wl,--export=collect','-Wl,--export=weak_forward','-Wl,--export=__stack_pointer',
       c.ROOT/'runtime/wasm32/collector.c','-o',out/'collector.wasm'],out/'collector-build.log')
     c.command([CLANG,'--target=wasm32','-O2','-nostdlib','-fno-builtin','-Wl,--no-entry','-Wl,--import-memory','-Wl,--max-memory=2147549184',
       '-Wl,--global-base=65536','-Wl,-z,stack-size=65536','-Wl,--export=integer_calculate','-Wl,--export=integer_workspace_bytes',

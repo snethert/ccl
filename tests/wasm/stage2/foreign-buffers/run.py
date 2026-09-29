@@ -38,7 +38,7 @@ MUTANTS = [
  ('allocation-overlap','[...live].some(h=>pointer<h.pointer+h.size&&h.pointer<pointer+size)','false','allocator-result-3'),
  ('handle-active',"need(h?.active,'HANDLE')","need(h,'HANDLE')",'offset-reuse'),
  ('release-once',"if(!h.active)return false;",';','offset-reuse'),
- ('retire-allocations','for(const h of live)h.active=false;',';', 'call-failure-trap'),
+ ('retire-allocations','for(const h of live){h.active=false;h.finalizer?.cancel();}','for(const h of live){h.finalizer?.cancel();}', 'call-failure-trap'),
  ('growth-view','const view=(h,offset,length)=>new Uint8Array(memory().buffer,',
   'let cachedBuffer;const view=(h,offset,length)=>new Uint8Array(cachedBuffer??=memory().buffer,','copy-moving-growth-0'),
  ('read-copy','view(owned(handle),offset,length).slice()','view(owned(handle),offset,length)','copy-moving-growth-0'),

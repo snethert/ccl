@@ -16,7 +16,7 @@ export function create({memory,tcr,owner,config}) {
   entries.push(active.operation);active=null;}};
  const imports={host:{collect(){assert(active);assert.equal(get(tcr+32),3);const r=owner.collectForeign();
   new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);collections.push({...r,state:get(tcr+32)});},observe(kind){assert(active);events.push(kind);}}};
- const names=['example','trap','destructor','primary','close'];
+ const names=['example','trap','destructor','primary','close','final-close','final-trap'];
  const namespace=createNamespace({version:1,cwd:'/lib',cclRoot:'/',entries:[{path:'/',kind:'directory'},
   {path:'/lib',kind:'directory'},...names.map(name=>({path:'/lib/'+name+'.wasm',kind:'file',bytes,sha256:digest}))]});
  const libraries=foreignLibraries({namespace,libraries:names.map(name=>({path:name+'.wasm',declaration:{...declaration(digest),name},imports})),boundary,errorTag:new WebAssembly.Tag({parameters:['i32']})});

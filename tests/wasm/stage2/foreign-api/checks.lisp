@@ -14,7 +14,7 @@
    (flet ((token (id) (gethash id *fa-tokens*)))
     (case operation
       (0 (or (gethash payload *fa-names*)
-             (if (member payload '("example" "trap" "destructor" "primary" "close") :test #'equal)
+             (if (member payload '("example" "trap" "destructor" "primary" "close" "final-close" "final-trap") :test #'equal)
                (setf (gethash payload *fa-names*) (fa-native-token (vector :library t 0 0))) -1)))
       (1 (setf (svref (token payload) 1) nil) 0)
       (2 (let* ((lib (token (svref payload 0))) (name (svref payload 1)) (a (svref payload 2)) (status 0) result)

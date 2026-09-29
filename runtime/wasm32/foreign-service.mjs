@@ -78,9 +78,11 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
    if(op===6||op===7){request(3);const t=token(field(0),'buffer'),offset=fix(field(1)),{p,n}=object(field(2),199);
     const bytes=new Uint8Array(memory.buffer,p+4,n);
     if(op===6)t.library.write(t.handle,offset,bytes);else bytes.set(t.library.read(t.handle,offset,n));return 0;}
+   if(op===8){request(2);const t=token(field(0),'buffer');t.library.finalize(t.handle,owner,field(1));return 0;}
+   if(op===9){need(payload()===NIL,'PAYLOAD');return owner.drainFinalizers()*4;}
    need(false,'OPERATION');
   }catch(error){
-   if(error instanceof Refusal)return -4;
+   if(error instanceof Refusal||error.message==='collector-owner: finalizer object')return -4;
    const failure=foreignFailure(error);if(failure)return -4*({trap:2,exception:3,host:4}[failure.kind]);
    // Owner admission failures must never become catchable Lisp conditions.
    if(error instanceof AggregateError||/ASYNC_BOUNDARY/.test(String(error)))throw error;

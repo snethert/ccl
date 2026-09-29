@@ -316,3 +316,15 @@ EXPORT U collect(U config) {
  STORE(s->tcr+204,LOAD(s->tcr+204)+1);
  return 0;
 }
+
+/* Trusted owner query, immediately after a successful collect and before scratch
+ * reuse. This never forwards a new root: weak anchors cannot keep objects alive.
+ * Zero means dead; all-ones is an owner protocol error. */
+EXPORT U weak_forward(U config,U value) {
+ State *s=(State *)(unsigned long)config;
+ U tag=value&7,base=value-tag,index;
+ if(s->error||(tag!=1&&tag!=6)||!inside(base,s->from,s->used))return 0xffffffffu;
+ index=find(s,base);
+ if(index==0xffffffffu||(tag==1)!=(objects(s)[index].scan==0xffffffffu))return 0xffffffffu;
+ return objects(s)[index].moved?objects(s)[index].moved+tag:0;
+}

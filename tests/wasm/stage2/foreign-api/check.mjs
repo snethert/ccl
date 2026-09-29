@@ -1,3 +1,4 @@
+import {finalizerChecks} from './finalizers.mjs';
 import {createNamespace} from './runtime/namespace.mjs';
 import {foreignLibraries} from './runtime/foreign-libraries.mjs';
 import {foreignService} from './runtime/foreign-service.mjs';
@@ -51,7 +52,7 @@ export function check(binaries,{only}={}) {
   throws(()=>r.open('example'),/WebAssembly.Exception/);const count=f.entries.length;throws(()=>r.open('example'),/./);equal(f.entries.length,count,'failed initialization never retried');});
  test('namespace-initialization-reentry',()=>{let r;const f=registry({imports:{host:{collect(){throws(()=>r.open('example'),/REENTRY/);throws(()=>r.close('example'),/REENTRY/);},observe(){}}}});r=f.open();equal(r.open('example').state,'ready');});
 
- function setup({placement=0,maximumTokens=536870911,boxCollect=false,onCollect=()=>{},name='example'}={}){
+ function setup({placement=0,maximumTokens=536870911,boxCollect=false,onCollect=()=>{},measure,name='example',maximumNames=1}={}){
   const layout=deriveLayout({spaceBytes:65536,freeTarget:0,valueStack:1048576+placement},{bootFunctions:0,runtimeFunctions:0,runtimeRootCells:0,image:[{start:77824,end:77864}]}),tcr=layout.tcr;
   const memory=new WebAssembly.Memory({initial:layout.initialPages,maximum:32769,shared:true}),v=()=>new DataView(memory.buffer);
   const get=p=>v().getUint32(p,true),put=(p,n)=>v().setUint32(p,n,true);
@@ -60,9 +61,9 @@ export function check(binaries,{only}={}) {
   put(layout.runtimeGlobals,1);for(const group of layout.groups)put(group.slots[0],77825);
   const head=layout.root+40,args=head+16;put(head,layout.root);put(head+4,5);put(head+8,77825);put(head+12,77825);
   put(args,60);put(args+4,0);put(args+8,77825);put(tcr+64,args);put(tcr+128,head);
-  const owner=CollectorOwner.create(memory,binaries.collector,sha256(binaries.collector),layout),events=[],moves=[];
+  const owner=CollectorOwner.create(memory,binaries.collector,sha256(binaries.collector),layout,{measure}),events=[],moves=[];
   const imports={host:{collect(){const r=owner.collectForeign();new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);moves.push(r);onCollect();},observe(n){events.push(n);}}};
-  const libraries=registry({imports,boundary:owner.foreignBoundary,edit:c=>c.libraries[0].declaration.name=name}).open();
+  const libraries=registry({imports,boundary:owner.foreignBoundary,edit:c=>{c.libraries[0].declaration.name=name;if(maximumNames===2){const row=c.libraries[0];c.libraries.push({...row,path:'second.wasm',declaration:{...row.declaration,name:'second'}});}} ,ns:maximumNames===2?createNamespace({version:1,cwd:'/lib',cclRoot:'/',entries:[{path:'/',kind:'directory'},{path:'/lib',kind:'directory'},...['example','second'].map(n=>({path:'/lib/'+n+'.wasm',kind:'file',bytes:binaries.library,sha256:sha256(binaries.library)}))]}):namespace()}).open();
   const wrapper=boxCollect?{atSafepoint(fn){return owner.atSafepoint(o=>{o.collect();return fn(o);});}}:owner;
   const service=foreignService({memory,tcr,owner:wrapper,libraries,maximumTokens});
   const alloc=(header,length)=>{const p=get(tcr+48),size=8*Math.ceil((4+length)/8);assert(p+size<=get(tcr+52),'test heap');new Uint8Array(memory.buffer,p,size).fill(0);put(p,header);put(tcr+48,p+size);return p+6;};
@@ -75,14 +76,24 @@ export function check(binaries,{only}={}) {
   const request=(op,payload)=>{put(args+4,op*4);put(args+8,payload);return service(args);};
   const call=(lib,name,values=[])=>request(2,vec([lib,str(name),vec(values),NIL]));
   const output=()=>{const w=get(get(args+8)-2+12),n=get(w-6)>>>8;return Array.from({length:n},(_,i)=>get(w-2+4*i));};
-  return {request,call,output,str,vec,bytes,integer,float,get,v,args,events,moves,service,put,library:()=>request(0,str('example'))};
+  const rawCollector=()=>new WebAssembly.Instance(new WebAssembly.Module(binaries.collector),{env:{memory}}).exports;
+  return {owner,memory,tcr,layout,rawCollector,request,call,output,str,vec,bytes,integer,float,get,v,args,events,moves,service,put,library:()=>request(0,str('example'))};
  }
  const NIL=77825;
+ finalizerChecks({test,setup,equal,assert,throws});
+ test('service-fixnum-size',()=>{const f=setup(),l=f.library();equal(f.request(3,f.vec([l,NIL])),-4);equal(f.moves.length,1);});
+ test('service-fixnum-offset',()=>{const f=setup(),h=f.request(3,f.vec([f.library(),80000]));equal(f.request(5,f.vec([h,NIL])),-4);equal(f.request(4,h),4);});
+ test('service-object-tag',()=>{const f=setup(),l=f.library();equal(f.call(l,'echo',[f.vec([4]),0,f.float(1,'f32'),f.float(2,'f64')]),-4);equal(f.moves.length,1);});
+ test('service-body-span',()=>{const f=setup(),h=f.request(3,f.vec([f.library(),16])),b=f.bytes([1]);f.put(b-6,0xffffffc7);
+  equal(f.request(6,f.vec([h,0,b])),-4);f.put(b-6,455);equal(f.request(4,h),4);});
+ test('service-buffer-as-library',()=>{const f=setup(),h=f.request(3,f.vec([f.library(),16]));equal(f.call(h,'releases'),-4);equal(f.request(3,f.vec([h,16])),-4);equal(f.moves.length,2);equal(f.request(4,h),4);});
+ test('service-open-capacity',()=>{const f=setup({maximumTokens:1,maximumNames:2});assert(f.library()>0,'first open');equal(f.request(0,f.str('second')),-4);equal(f.events.length,1);});
+
  for(const placement of [0,65536])test('service-scalars-moving-'+placement,()=>{
   const f=setup({placement,boxCollect:true}),l=f.library();assert(l>0,'open');equal(f.library(),l,'once');
   equal(f.call(l,'echo',[f.integer(-2147483648n),f.integer(-9223372036854775808n),f.float(-0,'f32'),f.float(1.25,'f64')]),0);
   const [a,b,c,d]=f.output();equal(f.get(a-6),263);equal(f.get(a-2)|0,-2147483648);equal(f.get(b-6),519);equal(f.v().getBigInt64(b-2,true),-9223372036854775808n);
-  equal(f.v().getFloat32(c-2,true),-0);equal(f.v().getFloat64(d+2,true),1.25);assert(f.moves.length===2,'init and call collected');
+  equal(f.get(c-6),271,'f32 header');equal(f.get(d-6),791,'f64 header');equal(f.v().getFloat32(c-2,true),-0);equal(f.v().getFloat64(d+2,true),1.25);assert(f.moves.length===2,'init and call collected');
   equal(f.call(l,'echo',[f.integer(2147483647n),f.integer(9223372036854775807n),f.float(Infinity,'f32'),f.float(NaN,'f64')]),0);
   const [e,g,h,i]=f.output();equal(f.get(e-2),2147483647);equal(f.v().getBigInt64(g-2,true),9223372036854775807n);equal(f.v().getFloat32(h-2,true),Infinity);assert(Number.isNaN(f.v().getFloat64(i+2,true)),'NaN');
  });

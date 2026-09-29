@@ -1,0 +1,6 @@
+{
+  "name": "ccl-wasm-stage2-browser-tools",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {"playwright-core": "1.58.0"}
+}

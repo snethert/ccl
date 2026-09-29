@@ -1,3 +1,23 @@
+## 2026-09-28 — Add collector-queued foreign buffer finalization
+
+Whole-file movement: zero. Product Lisp lines changed: +10 (60 API lines total).
+Next stop: Lisp callbacks and callback lifetime/admission. The owner now watches
+weak moving-heap anchors using a read-only query of the completed collector map.
+Dead anchors queue buffer releases; an explicit owner drain runs one batch
+outside collection. Release/close/traps cancel registrations; a failed destructor
+is never retried, and other libraries' work remains queued.
+
+The four-engine API/finalizer matrix passes 106 checks with 55 killed controls.
+Thirty post-READY Lisp rows match native CCL (81 foreign entries, 60 moving
+collections). Collector regression passes 128 checks / 11 controls. Owner,
+buffer and scalar suites pass 53/38, 66/28 and 126/16, plus their Lisp witnesses.
+O-174 gains directed admission tests and float-header controls; O-175 gains a
+persistent Playwright 1.58.0 lockfile and browser recipe. O-176 stays separate.
+Five minimal development failures and qualified results are retained in
+`ccl-evidence/2026-09-28-stage2-foreign-finalizers-r1`. Executed, review pending;
+no FMT/LL credit, shared compiler changes or corpus replay. General Lisp
+finalizers, automatic pumping, callbacks and multi-Worker admission remain.
+
 ## 2026-09-28 — Accept audit 197 named libraries and Lisp API
 
 Imported the user-supplied [audit 197](../stage0/claude-review.md) by fast-forward

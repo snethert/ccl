@@ -16,6 +16,7 @@
  (func (export "release") (param i32)
   call $collect i32.const 2 call $observe
   global.get $releases i32.const 1 i32.add global.set $releases
+  global.get $mode i32.const 2 i32.eq if i32.const 7 throw $error end
   global.get $mode if unreachable end)
  (func (export "releases") (result i32) global.get $releases)
  (func (export "run") (param $p i32) (param $n i32) (param $mode i32) (result i32)

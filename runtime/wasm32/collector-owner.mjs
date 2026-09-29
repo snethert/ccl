@@ -11,6 +11,7 @@ export class CollectorOwner {
  #blocks=[];
  #scalarBoundary=new WebAssembly.Global({value:"i32",mutable:true},0);
  #foreign=null;
+ #finalizers=new Set();#finalizerQueue=new Set();#drainingFinalizers=false;
  #memory;#collector;#layout;#view;#spaces;#boundary=false;#busy=false;#epoch=0;#measure;
  static create(memory,bytes,digest,layout,{measure}={}){
   need(sha256(bytes)===digest,'collector digest');
@@ -254,6 +255,38 @@ export class CollectorOwner {
     slots.forEach(p=>this.#set(p,NIL));active=false;}
   });
  }
+ // Weak anchors are owned heap objects, never tagged values retained as roots.
+ // A registered action must contain only host capabilities, not Lisp pointers.
+ registerFinalizer(word,action){
+  this.#requireBoundary();
+  need(typeof action==='function','finalizer action');
+  const active=this.#validateLive(),tag=word%8;
+  need(integer(word)&&(tag===1||tag===6)&&word-tag>=active.start&&
+       word-tag<this.#t(48)&&this.validObject(word),'finalizer object');
+  const row={word,action,state:'watching'};this.#finalizers.add(row);
+  return Object.freeze({cancel:()=>{
+   need(!this.#busy,'finalizer collecting');
+   if(row.state==='done'||row.state==='cancelled')return false;
+   this.#finalizers.delete(row);this.#finalizerQueue.delete(row);
+   row.state='cancelled';row.word=0;row.action=null;return true;
+  }});
+ }
+ get pendingFinalizers(){return this.#finalizerQueue.size;}
+ drainFinalizers(){
+  need(!this.#foreign&&!this.#boundary&&!this.#busy&&!this.#drainingFinalizers,'finalizer boundary');
+  need(Atomics.load(new Int32Array(this.#memory.buffer),(this.tcr+32)/4)===2,'finalizer thread');
+  this.#validateLive();
+  this.#drainingFinalizers=true;let count=0;
+  try{
+   // One batch only. A destructor may collect and queue the next batch.
+   for(const row of [...this.#finalizerQueue]){
+    if(!this.#finalizerQueue.delete(row))continue;
+    const action=row.action;row.action=null;row.state='done';count++;
+    const value=action();need(!(value&&typeof value.then==='function'),'finalizer synchronous');
+   }
+   return count;
+  }finally{this.#drainingFinalizers=false;}
+ }
  #reservedUnregistered(){return this.#blocks.reduce((n,b)=>n+(b.end-b.start)/4-b.registered.size,0);}
  reserveRootBlock(count){
   this.#requireBoundary();need(integer(count)&&count>0,'root block count');
@@ -384,6 +417,13 @@ export class CollectorOwner {
    const {active,slots,scratch,count,usedBytes}=prepared;
    const status=measure('collector.c',()=>this.#collector.collect(scratch.start));
    need(status===0,'collection refused '+status);need(this.collectionCount===count+1,'collection count publication');
+   // Query the successful collector's forwarding map before scratch reuse.
+   // Publication only: no foreign or Lisp code runs inside the critical section.
+   for(const row of this.#finalizers){
+    const word=this.#collector.weak_forward(scratch.start,row.word)>>>0;
+    need(word!==0xffffffff,'finalizer forwarding');row.word=word;
+    if(word===0){row.state='queued';this.#finalizers.delete(row);this.#finalizerQueue.add(row);}
+   }
    return {source:active.start,destination:destination.start,objects:this.#get(scratch.start+84),
     reclaimed:this.#get(scratch.start+92),rootSlots:slots.length,usedBytes,liveBytes:this.#t(48)-this.#t(56)};
   }finally{this.#busy=false;}

@@ -1,0 +1,1018 @@
+{
+  "browsers": [
+    "chromium",
+    "firefox",
+    "webkit"
+  ],
+  "checks": 106,
+  "collector": {
+    "checks": {
+      "checks": 128,
+      "rows": [
+        {
+          "destination": 2162688,
+          "liveBytes": 72,
+          "name": "all-root-families",
+          "objects": 9,
+          "reclaimed": 8,
+          "rootSlots": 20,
+          "source": 2097152,
+          "status": "PASS",
+          "usedBytes": 80
+        },
+        {
+          "destination": 2097152,
+          "liveBytes": 72,
+          "name": "second-collection",
+          "objects": 9,
+          "reclaimed": 0,
+          "rootSlots": 20,
+          "source": 2162688,
+          "status": "PASS",
+          "usedBytes": 72
+        },
+        {
+          "name": "manifest-is-copied",
+          "status": "PASS"
+        },
+        {
+          "collected": true,
+          "collection": {
+            "destination": 2162688,
+            "liveBytes": 0,
+            "objects": 0,
+            "reclaimed": 32,
+            "rootSlots": 20,
+            "source": 2097152,
+            "usedBytes": 32
+          },
+          "grown": false,
+          "name": "allocation-retry-after-reclaim",
+          "status": "PASS"
+        },
+        {
+          "collected": true,
+          "collection": {
+            "destination": 2162688,
+            "grown": true,
+            "liveBytes": 32,
+            "moved": {
+              "destination": 3145728,
+              "liveBytes": 32,
+              "objects": 4,
+              "reclaimed": 0,
+              "rootSlots": 20,
+              "source": 2162688,
+              "usedBytes": 32
+            },
+            "objects": 4,
+            "reclaimed": 0,
+            "rootSlots": 20,
+            "source": 2097152,
+            "usedBytes": 32
+          },
+          "grown": true,
+          "moved": {
+            "destination": 3145728,
+            "liveBytes": 32,
+            "objects": 4,
+            "reclaimed": 0,
+            "rootSlots": 20,
+            "source": 2162688,
+            "usedBytes": 32
+          },
+          "name": "live-growth-and-view-refresh",
+          "status": "PASS"
+        },
+        {
+          "name": "actual-memory-maximum",
+          "pages": 32769,
+          "previous": 50,
+          "status": "PASS",
+          "viewEpoch": 3
+        },
+        {
+          "name": "unsigned-high-heap",
+          "status": "PASS"
+        },
+        {
+          "name": "outside-boundary",
+          "refusal": "legal owner boundary",
+          "status": "PASS"
+        },
+        {
+          "name": "nested-boundary",
+          "refusal": "nested boundary",
+          "status": "PASS"
+        },
+        {
+          "name": "async-boundary",
+          "refusal": "synchronous boundary",
+          "status": "PASS"
+        },
+        {
+          "name": "zero-allocation",
+          "refusal": "allocation request",
+          "status": "PASS"
+        },
+        {
+          "name": "unaligned-allocation",
+          "refusal": "allocation request",
+          "status": "PASS"
+        },
+        {
+          "name": "past-memory-maximum",
+          "refusal": "growth maximum",
+          "status": "PASS"
+        },
+        {
+          "name": "recover-after-refusal",
+          "status": "PASS"
+        },
+        {
+          "name": "EGC-request",
+          "refusal": "collector profile",
+          "status": "PASS"
+        },
+        {
+          "name": "multiple-workers",
+          "refusal": "collector profile",
+          "status": "PASS"
+        },
+        {
+          "name": "missing-group",
+          "refusal": "root groups",
+          "status": "PASS"
+        },
+        {
+          "name": "duplicate-group",
+          "refusal": "root groups",
+          "status": "PASS"
+        },
+        {
+          "name": "unknown-group",
+          "refusal": "root groups",
+          "status": "PASS"
+        },
+        {
+          "name": "duplicate-slot",
+          "refusal": "external root slot",
+          "status": "PASS"
+        },
+        {
+          "name": "scratch-slot",
+          "refusal": "external root slot",
+          "status": "PASS"
+        },
+        {
+          "name": "unaligned-slot",
+          "refusal": "external root slot",
+          "status": "PASS"
+        },
+        {
+          "name": "canonical-stack-overlap",
+          "refusal": "regions overlap",
+          "status": "PASS"
+        },
+        {
+          "name": "missing-canonical-image",
+          "refusal": "canonical object ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "scratch-stack-overlap",
+          "refusal": "regions overlap",
+          "status": "PASS"
+        },
+        {
+          "name": "heaps-overlap",
+          "refusal": "regions overlap",
+          "status": "PASS"
+        },
+        {
+          "name": "C-stack-mismatch",
+          "refusal": "compiled C stack",
+          "status": "PASS"
+        },
+        {
+          "name": "truncated-image",
+          "refusal": "image object extent",
+          "status": "PASS"
+        },
+        {
+          "name": "oversized-TCR",
+          "refusal": "TCR extent",
+          "status": "PASS"
+        },
+        {
+          "name": "small-root-list",
+          "refusal": "root-list capacity",
+          "status": "PASS"
+        },
+        {
+          "name": "wrong-digest",
+          "refusal": "collector digest",
+          "status": "PASS"
+        },
+        {
+          "name": "allocation-limit",
+          "refusal": "allocation ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "stack-base",
+          "refusal": "value-stack ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "result-into-C-stack",
+          "refusal": "result ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "binding-into-C-stack",
+          "refusal": "binding-vector ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "T-header",
+          "refusal": "canonical objects",
+          "status": "PASS"
+        },
+        {
+          "name": "unknown-image-kind",
+          "refusal": "image kind",
+          "status": "PASS"
+        },
+        {
+          "name": "interior-heap-root",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "heap-growth-exhaustion-preserves-live",
+          "status": "PASS"
+        },
+        {
+          "name": "engine-growth-refusal",
+          "refusal": "engine growth refusal",
+          "status": "PASS"
+        },
+        {
+          "destination": 2162688,
+          "liveBytes": 64,
+          "name": "array-header-movement-234",
+          "objects": 3,
+          "reclaimed": 0,
+          "rootSlots": 20,
+          "source": 2097152,
+          "status": "PASS",
+          "usedBytes": 64
+        },
+        {
+          "destination": 2162688,
+          "liveBytes": 56,
+          "name": "array-header-movement-242",
+          "objects": 3,
+          "reclaimed": 0,
+          "rootSlots": 20,
+          "source": 2097152,
+          "status": "PASS",
+          "usedBytes": 56
+        },
+        {
+          "name": "array-minimum-width",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "array-rank-width",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "vector-header-width",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "array-truncated-extent",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "uninitialized-native-hash",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-key-movement",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-untracked-key-movement",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-finalizeable",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-weak-value-without-weak",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-size",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-count",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-free-list",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-unaligned-flags",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-finalization-list",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-cache-index-limit",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-cache-index-type",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-gc-count-type",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-deleted-count",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-deleted-count-type",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-count-type",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-mark",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-deleted-plus-count",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-odd-cell-count",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-capacity",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-maximum-capacity",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-cache-and-negative-stamp",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-minimum-cells",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-hash-truncated-extent",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "mixed-uninitialized-hash",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "uninitialized-native-hash-minimum",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "uninitialized-native-hash-odd",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "uninitialized-native-hash-maximum",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "uninitialized-native-hash-extent",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-success-only",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-is-not-a-root",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-refusal",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-refusal-recovery",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-two-copy-growth",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-exhaustion",
+          "refusal": "collection count exhausted",
+          "status": "PASS"
+        },
+        {
+          "name": "collection-count-invalid",
+          "refusal": "collection count",
+          "status": "PASS"
+        },
+        {
+          "name": "raw-collection-count-exhaustion",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-key-unfrozen-reaped",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-key-unfrozen-retained",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-key-frozen-reaped",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-key-frozen-retained",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-value-unfrozen-reaped",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-value-unfrozen-retained",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-value-frozen-reaped",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-value-frozen-retained",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-chain-forward",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-chain-reverse",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-self-support-cycle",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-mutual-support-cycle",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-newly-discovered-vector",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-untracked-key-movement",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-tracked-key-movement",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-native-signed-track-mask",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-sign-bit-without-tracking",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-strong-cache-10",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-strong-cache-11",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-unreachable-vector",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-capacity-1",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-capacity-16384",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-immediates-markers-false",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-immediates-markers-true",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-immediate-keeps-partner-false",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-immediate-keeps-partner-true",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-minimum-cells",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-odd-cells",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-late-no-space-atomic",
+          "status": "PASS"
+        },
+        {
+          "name": "owner-hash-flags-16384",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "owner-hash-flags-24576",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "owner-hash-flags-4096",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-14-interior",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-14-unused",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-14-wrong-tag",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-14-destination",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-15-interior",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-15-unused",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-15-wrong-tag",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "weak-reference-15-destination",
+          "refusal": "collection refused 3",
+          "status": "PASS"
+        },
+        {
+          "name": "package-eight-fields-move",
+          "status": "PASS"
+        },
+        {
+          "name": "package-wrong-count-0",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "package-wrong-count-7",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "package-wrong-count-9",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        },
+        {
+          "name": "package-truncated",
+          "refusal": "collection refused 2",
+          "status": "PASS"
+        }
+      ],
+      "status": "PASS"
+    },
+    "mutants": [
+      {
+        "binary": "7fa534bc1724a49315c14d5aa06520566deb5b4e810fe7e104e778614bcba76a",
+        "control": "native-hash-finalization-list",
+        "name": "MC1",
+        "source": "127c9f1c90bef434b03dcf9965121f53e8690f7167981928fa889df8f176a9ea",
+        "status": "KILLED"
+      },
+      {
+        "binary": "ac476107cb0e0e923e4e2c0d6770b9b5e93d72de8dc9c3c06a161b96790f9f42",
+        "control": "native-hash-cache-index-limit",
+        "name": "MC2",
+        "source": "199b50b7951fa7d1e559a4856e7e1ef09531f4c47cb4414a2fc8ad9281ed1244",
+        "status": "KILLED"
+      },
+      {
+        "binary": "6a7f102410da13704eadb1814a609e48f080ce6b88213c6be33276e9a7e7e22e",
+        "control": "native-hash-odd-cell-count",
+        "name": "MC3",
+        "source": "6c5050c90333749fb7f6dda572b42c843a48e87f25681a083e48175a19cdd03e",
+        "status": "KILLED"
+      },
+      {
+        "binary": "fd943cacbe59615489a407048469db7fb219029f9f71c98b7c87ad337817b35d",
+        "control": "native-hash-capacity",
+        "name": "MC4",
+        "source": "377c1106cd4b13fabe3f4c16b268b913e3864167c2653ab61bd7bcb1ab4efca7",
+        "status": "KILLED"
+      },
+      {
+        "binary": "a6b847594a559fcaf9b8d1e5058fdf26e2c32af754b0e7797772454f849c0294",
+        "control": "native-hash-gc-count-type",
+        "name": "MC5",
+        "source": "00cd04f4cc47fb22a4dfe72b354994c53ef85cba8fd421220bfd81aa3222961b",
+        "status": "KILLED"
+      },
+      {
+        "binary": "def0caa6d95f8ab644cdce3dfefd9a52fc22ed70928fcbbaed1de50dec5a285f",
+        "control": "mixed-uninitialized-hash",
+        "name": "MC7",
+        "source": "72f38344ca1871edad269fa62a27b28ffaaa371915903ab9dc8c928749def747",
+        "status": "KILLED"
+      },
+      {
+        "binary": "a3c5d12ee32d93be53f023fbda2f236871de56397f5ec0ab1fb9f72c0a20e978",
+        "control": "native-hash-size",
+        "name": "MC8",
+        "source": "35544e8de4ca99886c17d4bf3c152d9cb2b829d39ec993af75d0cc7fe0b768b4",
+        "status": "KILLED"
+      },
+      {
+        "binary": "1bf9fbf44369e64d7e5e2250eff19c1b69b00d79c9b8cd732c859234e6c9874f",
+        "control": "native-hash-deleted-count",
+        "name": "MC9",
+        "source": "22489197f9280b5a547b0e96cc665fa272efef22bed99023fe3d28a52e6b5314",
+        "status": "KILLED"
+      },
+      {
+        "binary": "d522b4c62626e2fb99747a36edad040b7490d1f8c39fabdbe4ef2e9fe0baba2c",
+        "control": "native-hash-untracked-key-movement",
+        "name": "MC6",
+        "source": "58e05d96b66c5ada25b8946bd0631fb25664253fcc273012dc4434cef32b015a",
+        "status": "KILLED"
+      },
+      {
+        "binary": "b012a7a61cd9ca62c173bc29b20217ab8e93353089f38fcc65cccf5cc3cefbdb",
+        "control": "raw-collection-count-exhaustion",
+        "name": "COUNT-BOUND",
+        "source": "20c96073f2fc5ed151b449e99a2efd7485179390c59934f112fcc99346ef24ca",
+        "status": "KILLED"
+      },
+      {
+        "binary": "d4aa735dfa8b7e3e7bd5e88e78f3cb035265d56aefe951eb877d3381d6d91945",
+        "control": "package-wrong-count-9",
+        "name": "PACKAGE-COUNT",
+        "source": "cff8ad69952da7cba1f622f2756756cef583a4367eb406210b33fe5f15419e33",
+        "status": "KILLED"
+      }
+    ],
+    "runtime": {
+      "binary": "b863b6e6a4a3b6c03a21520f43970af2ef870a5de7af1ee1e3b8f93ef1201145",
+      "gc_count": {
+        "contract": "6952eb6e4afa25f121124557da8f9f87d5d736ede0ecd686fc49559106d5c815",
+        "maximum": 536870911,
+        "offset": 204,
+        "schema": "61af72548036fbfc70b197a9e262c5ee5c86378e4fda34ef339612b9ca06b2f4"
+      },
+      "owner": "dc90592662c77fec28a5093d2f477a88b9d8d8e4b243b1337e0b8245f9579be6",
+      "source": "642b5239a639f8709d7725ba361464199af5c8264d89839971e7c4ccdeb212c1"
+    },
+    "status": "PASS"
+  },
+  "criterion_credit": false,
+  "dependencies": {
+    "foreign-buffers": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checks": 66,
+      "criterion_credit": false,
+      "lisp": {
+        "foreign_entries": 38,
+        "moving_collections": 26,
+        "native_matched_rows": 7,
+        "rows": [
+          "FB-ROW COPIED-MOVING-BYTES (1110 T T T T (66 195 169 240 159 140 141 0))",
+          "FB-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+          "FB-ROW 1 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+          "FB-ROW 2 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+          "FB-ROW 3 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+          "FB-ROW 4 (:CAUGHT 1 T (65 195 169 240 159 140 141 0))",
+          "FB-ROW BINDING-AFTER-CLEANUP :OUTSIDE"
+        ],
+        "scope": "Lisp octets/root/binding/value/cleanup semantics; declared fixture supplies foreign answers and failure policy",
+        "status": "PASS"
+      },
+      "mutants": 28,
+      "product_lisp_lines_changed": 0,
+      "review": "NOT_REVIEWED",
+      "skips": [
+        "compiler corpus deferred until whole FFI layer is complete",
+        "generated Lisp in browser providers",
+        "multi-Worker D5, callbacks, queued finalization and product Lisp API"
+      ],
+      "status": "PASS"
+    },
+    "foreign-runtime": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "criterion_credit": false,
+      "lisp": {
+        "foreign_entries": 20,
+        "moving_collections": 13,
+        "native_matched_rows": 12,
+        "rows": [
+          "FR-ROW INITIALIZATION-AND-SCALAR (42 T T T (35 19) (71 72))",
+          "FR-ROW MOVING-LIVE-FOREIGN-CALL (42 T T T (35 19) (71 72))",
+          "FR-ROW MULTIPLE-VALUES ((11 12) 13 NIL)",
+          "FR-ROW BINDING-AFTER-SUCCESS :OUTSIDE",
+          "FR-ROW 2 (:CAUGHT 1 T :OUTSIDE)",
+          "FR-ROW 3 (:CAUGHT 1 T :OUTSIDE)",
+          "FR-ROW RETIRED :REFUSED",
+          "FR-ROW 4 (:CAUGHT 1 T :OUTSIDE)",
+          "FR-ROW RETIRED :REFUSED",
+          "FR-ROW 5 (:CAUGHT 1 T :OUTSIDE)",
+          "FR-ROW REOPENED (42 T T T (35 19) (71 72))",
+          "FR-ROW BINDING-AFTER-FAILURES :OUTSIDE"
+        ],
+        "scope": "Lisp semantics against native reference; foreign answers/failure policy from fixture declaration",
+        "status": "PASS"
+      },
+      "owner_checks": 53,
+      "owner_mutants": 38,
+      "product_lisp_lines_changed": 0,
+      "review": "NOT_REVIEWED",
+      "skips": [
+        "compiler corpus deferred until whole FFI layer is complete",
+        "generated Lisp execution in browser providers",
+        "multi-Worker D5 admission and callback reentry"
+      ],
+      "status": "PASS"
+    },
+    "foreign-scalar": {
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checks": 126,
+      "criterion_credit": false,
+      "mutants": 16,
+      "product_lisp_lines_changed": 0,
+      "review": "NOT_REVIEWED",
+      "skips": [],
+      "status": "PASS"
+    }
+  },
+  "evidence": "/Users/buildsomething/Source/ccl-evidence/2026-09-28-stage2-foreign-finalizers-r1",
+  "inventory_sha256": "6fcf59b99112f1d7ea2c8477276232851664a3ea473d0608c864f382b93eddae",
+  "lisp": {
+    "finalizer_rows": [
+      "FF-ROW HELD (0 41 43 0)",
+      "FF-ROW MOVED-TWICE (0 41)",
+      "FF-ROW QUEUED 0",
+      "FF-ROW RELEASED (1 1 NIL 0)",
+      "FF-ROW EXPLICIT-FIRST (0 1)",
+      "FF-ROW EXPLICIT-QUEUED (0 1)",
+      "FF-ROW DUPLICATE :CAUGHT",
+      "FF-ROW BAD-ANCHOR :CAUGHT",
+      "FF-ROW CLOSED (0 NIL)",
+      "FF-ROW DESTRUCTOR-TRAP (-2 NIL NIL 0)"
+    ],
+    "foreign_entries": 81,
+    "initializations": 7,
+    "moving_collections": 60,
+    "native_matched_rows": 30,
+    "releases": 15,
+    "rows": [
+      "FA-ROW OPEN-ONCE T",
+      "FA-ROW SCALARS (-2147483648 -9223372036854775808 1.5 -0.0D0)",
+      "FA-ROW SCALAR-MAX (2147483647 9223372036854775807 T T)",
+      "FA-ROW COPY-MOVING (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+      "FA-ROW VALUES (11 12 NIL)",
+      "FA-ROW NONLOCAL :ESCAPED",
+      "FA-ROW RECOVERABLE ((:CAUGHT -3) 1 T)",
+      "FA-ROW AFTER-EXCEPTION (1110 (66 195 169 240 159 140 141 0) T T T T (65 195 169 240 159 140 141 0))",
+      "FA-ROW RELEASE (T NIL)",
+      "FA-ROW STALE-RANGE :CAUGHT",
+      "FA-ROW BAD-SIZE :CAUGHT",
+      "FA-ROW MISSING-EXPORT :CAUGHT",
+      "FA-ROW RELEASES 7",
+      "FA-ROW TRAP ((:CAUGHT -2) 1 T)",
+      "FA-ROW DESTRUCTOR ((:CAUGHT -2) 1 T)",
+      "FA-ROW PRIMARY ((:CAUGHT -3) 1 T)",
+      "FA-ROW CLOSE-RELEASE NIL",
+      "FA-ROW CLOSED-CALL :CAUGHT",
+      "FA-ROW MISSING-LIBRARY :CAUGHT",
+      "FA-ROW BINDING :OUTSIDE"
+    ],
+    "scope": "Product Lisp API and service; native oracle models fixture library operations",
+    "status": "PASS"
+  },
+  "mutants": 55,
+  "owner_regression": {
+    "checks": 59,
+    "inputs": {
+      "collector": "b863b6e6a4a3b6c03a21520f43970af2ef870a5de7af1ee1e3b8f93ef1201145",
+      "owner": "dc90592662c77fec28a5093d2f477a88b9d8d8e4b243b1337e0b8245f9579be6",
+      "runner": "b2c44a26e96eab2ab56afdff47f35cebad2465d51808547a210331e428ec591d",
+      "services": "b1b9b170ba5f7d4a76129cff3b613e64ed916fc15b4ad06e388eaad414d279b4"
+    },
+    "rows": [
+      "roots outside boundary",
+      "invalid root values null",
+      "invalid root values {}",
+      "invalid root values [-1]",
+      "invalid root values [4294967296]",
+      "invalid root values [null]",
+      "invalid root values [1.5]",
+      "external root capacity",
+      "released root read",
+      "double release",
+      "moving imports, alias identity, release and slot reuse",
+      "root list capacity",
+      "snapshot outside boundary",
+      "snapshot mask -1",
+      "snapshot mask 4",
+      "snapshot mask 1.5",
+      "snapshot roots otherwise unreachable objects and selects areas",
+      "collector workspace grows before collection",
+      "inhibition outside boundary",
+      "inhibition operation",
+      "unmatched inhibition release",
+      "inhibited allocation grows without movement; final release performs deferred collection",
+      "inhibition overflow",
+      "inhibition metadata 0",
+      "inhibition metadata 4",
+      "inhibition metadata 8",
+      "inhibition metadata 12",
+      "pending collection requires an active inhibitor",
+      "first lock cannot relocate beyond budget",
+      "inhibited growth cannot exceed budget",
+      "inhibition service capabilities",
+      "Lisp inhibition metadata refusal is checked 11",
+      "Lisp inhibition allocation refusal is checked 6",
+      "engine growth refusal is checked 6 before inhibition publication",
+      "first-lock budget refusal may reserve scratch but preserves Lisp state",
+      "layouts without runtime globals collect normally and refuse inhibition with checked 11",
+      "external growth loses inhibited heap ownership",
+      "failed deferred collection releases inhibition and preserves the uncollected Lisp heap",
+      "heap snapshot grows without movement under inhibition and roots its objects after release",
+      "heap snapshot growth refusal is checked 6",
+      "allocation inhibition corruption is checked 11",
+      "dynamic unknown header",
+      "dynamic node extent",
+      "dynamic byte extent",
+      "image unknown header",
+      "image node extent",
+      "unowned allocation metadata",
+      "validity outside boundary",
+      "invalid object word -1",
+      "invalid object word 4294967296",
+      "invalid object word 1.5",
+      "invalid object word NaN",
+      "validity checks immediate tags, owner areas, object boundaries and movement without writes",
+      "validity covers every admitted node and raw object family",
+      "validity rejects unsupported shapes and truncated extents without writes",
+      "validity recognizes only complete live stack callables",
+      "validity owner corruption is checked 11",
+      "validity excludes image root storage from object ownership",
+      "validity refuses both invalid stack frontiers without writes"
+    ],
+    "status": "PASS"
+  },
+  "product_lisp_lines_changed": 10,
+  "product_lisp_lines_total": 60,
+  "retained_bytes": 868655,
+  "review": "NOT_REVIEWED",
+  "skips": [
+    "compiler corpus deferred until whole FFI layer is complete",
+    "generated Lisp in browser providers",
+    "multi-Worker D5, callbacks, Lisp string encoding"
+  ],
+  "source_identity": {
+    "doc/WASM/README.md": "43b4a6508bdc47d26c11bf3ee30d5d0641dcfd0d40975fce076a25b9ede4c32b",
+    "doc/WASM/STATUS.md": "a76abd40dcdf590f6c765af1f4ec52ed92b035f8077e1f24c1dc0bd3a104a164",
+    "doc/WASM/history/changes.md": "ed8dc41a070f88fec75a78aef9e4d28e6012221b70bb5e8e2da62033881e4e08",
+    "doc/WASM/stage2/README.md": "2ca280013b626591c97dca82d727acb741fecf7e6561118062e4ad4c570b7c21",
+    "runtime/wasm32/README.md": "858041bc6ded454826e2866a7d89a274ada8798c832f852fe793a176544f8c64",
+    "runtime/wasm32/collector-owner.mjs": "dc90592662c77fec28a5093d2f477a88b9d8d8e4b243b1337e0b8245f9579be6",
+    "runtime/wasm32/collector.c": "642b5239a639f8709d7725ba361464199af5c8264d89839971e7c4ccdeb212c1",
+    "runtime/wasm32/foreign-api.lisp": "99f1322aa6ca48b133db8b165badc1aa2c58b2e1adc5f6d66e71d0dff89c70a1",
+    "runtime/wasm32/foreign-module.mjs": "03e3b2d332733c07639189c6f7f0158f173cf7713c164eca73ea09feb8b30cd8",
+    "runtime/wasm32/foreign-service.mjs": "319b8a007a119ef13a203f2ed78eb7296cf2180a3783bcc99dedcf12a739e863",
+    "tests/wasm/stage1/loader/run.py": "081307981858155ff74dd3ef2b3e3cdb74037ab2db3b5ac8270536ab5ce1b7be",
+    "tests/wasm/stage2/browser-tools/README.md": "8c19f9a7a7987dc11400ac2cd1e6f482a4b2b9cb949469a535d96bc2f83f4c49",
+    "tests/wasm/stage2/browser-tools/package-lock.json": "6041e9fd29a6b7c122e4b9c545b6b17c410972dfc212e2bd4f43af6802bf3946",
+    "tests/wasm/stage2/browser-tools/package.json": "4671fe804fba09d1767d853291d3038d9e57709acbe3bad895fb686cc20034b8",
+    "tests/wasm/stage2/foreign-api/README.md": "142d5e8558eba7bc81ac7cd53df0793b6640afb4ab6dec039f38e9b377234958",
+    "tests/wasm/stage2/foreign-api/check.mjs": "f4af2c5ffd9a4214495620da3dd57677668a983ef6fa7b00d9b4b27f68f75a2c",
+    "tests/wasm/stage2/foreign-api/checks.lisp": "fa7857cb01f90cf3f40650f5232420b9bbe900f35ae59e7cb9179b19e59f8ba4",
+    "tests/wasm/stage2/foreign-api/extension.mjs": "2fc65ce8e82477b001500705b611c4aa44fde7bc07ac423771ff55e55ff2116f",
+    "tests/wasm/stage2/foreign-api/library.wat": "c3e221e8e7822a362a26bdcfdfda2b65610dda1b72908813edaec5308414b716",
+    "tests/wasm/stage2/foreign-api/run.py": "81f4731135021a12206cbf42cbd7d8bde523cb92657e894d6321e65a4a096a2f",
+    "tests/wasm/stage2/foreign-buffers/README.md": "9c8791eb06684c22b40638505c2de85b7edec7b787cf6c8f77e28ccc07f9c741",
+    "tests/wasm/stage2/foreign-buffers/run.py": "a676f486fd2bbd94520bae789486295472c0e5ee68a8100b4b0a208c68d4c982",
+    "tests/wasm/stage2/foreign-finalizers/README.md": "5007c88008ce6e10c92ecbf45ce99ea3ce0cc9cbac1187af52a899d1f704ffe3",
+    "tests/wasm/stage2/foreign-finalizers/check.mjs": "39df1ee6f885c0d920c046ca0ae11cebc624da6067a65572259df5b97e294b14",
+    "tests/wasm/stage2/foreign-finalizers/checks.lisp": "afa8943943b29e765877b22dd0b63709bdda76ac690abd08f7981b9286ccc82e",
+    "tests/wasm/stage2/foreign-finalizers/mutants.py": "06aade89ad9e9e787f7315c06423f5604e0d12d2b88cc641e0aa05a54de0af80",
+    "tests/wasm/stage2/foreign-runtime/README.md": "503b6237a8dda2f9ee49a8029b7c2918b2a1be224e7de55c0c573f4a23be0014",
+    "tests/wasm/stage2/foreign-scalar/README.md": "a60b41493277b2ebf92f09f65bac1269f6606f62ccd2c00110a26ec5f90f23a6"
+  },
+  "status": "EXECUTED_REVIEW_PENDING"
+}

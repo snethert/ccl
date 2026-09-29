@@ -68,6 +68,17 @@ are addressed. No corpus replay or new FMT/LL credit. Callbacks, finalization,
 string encoding, browser Lisp and full D5 remain. A literal-only double-printing
 checked-4 failure is retained separately; value/representation checks pass.
 
+The [fifth Stage 2 unit](stage2/README.md#fifth-delivery-collector-queued-buffer-finalization)
+is **executed; independent review pending**. Weak Lisp lifetime anchors now queue
+buffer releases after collection; one explicit drain runs a batch on the owning
+Worker outside collection. Explicit release, close and trap retirement cancel
+pending work. **106 checks per engine / 55 mutants**, **30 native-matched Lisp
+rows / 81 foreign entries / 60 moving collections**, plus collector (128/11),
+owner (53/38), buffer (66/28) and scalar (126/16) regressions pass. Product Lisp
+adds 10 lines. O-174/O-175 are addressed; O-176 remains open. No corpus replay or
+FMT/LL credit. Next: Lisp callbacks; automatic pumping, general Lisp finalizers,
+string encoding, browser Lisp/providers and full D5 remain unqualified.
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

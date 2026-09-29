@@ -113,3 +113,6 @@ ordinary target FASL loading after READY, not general post-READY symbol lookup
 or the COMMON-LISP:LOAD pathname frontend. Initial fixture-layout, shared-memory
 profile, native-kernel permission, missing regression-output argument and
 `%FASLOAD` result-count failures are retained as well.
+
+Browser reproduction uses the persistent [Playwright 1.58.0 pin and browser
+revision recipe](../browser-tools/README.md) (audit 197 O-175).

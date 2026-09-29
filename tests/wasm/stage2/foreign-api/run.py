@@ -42,6 +42,19 @@ MUTANTS = [
  ('foreign-service.mjs','close-library',"libraries.close(t.name);",';','service-close'),
 ]
 
+spec = importlib.util.spec_from_file_location('finalizer_mutants', HERE.parent/'foreign-finalizers/mutants.py')
+finalizers = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(finalizers)
+MUTANTS += finalizers.MUTANTS
+
+def compile_collector(path, out):
+    command(['/usr/local/opt/llvm/bin/clang', '--target=wasm32', '-O2', '-nostdlib', '-fno-builtin',
+        '-matomics', '-mbulk-memory', '-Wl,--no-entry', '-Wl,--import-memory', '-Wl,--shared-memory',
+        '-Wl,--max-memory=2147549184', '-Wl,--global-base=1048576', '-Wl,-z,stack-size=65536',
+        '-Wl,--export=collect', '-Wl,--export=weak_forward', '-Wl,--export=__stack_pointer',
+        path, '-o', out/'collector.wasm'],out,'collector-build.log')
+
+
 def compare(native, report):
     text=''.join(r['text'] for r in report['outputEvents'] if r['channel']==1)
     rows=lambda s:[line for line in s.splitlines() if line.startswith('FA-ROW ')]
@@ -52,10 +65,13 @@ def compare(native, report):
     assert text.count('FA-PASS')==reference.count('FA-PASS')==1
     assert rows(text)==rows(reference) and len(rows(text))==20, (rows(text),rows(reference))
     r=report['hostExtension']['result']
-    assert r['events'].count(1)==5, r['events']
+    assert r['events'].count(1)==7, r['events']
     assert all(c['source']!=c['destination'] and c['state']==3 for c in r['collections'])
     assert len(r['collections'])>=25
-    return dict(status='PASS',native_matched_rows=len(rows(text)),foreign_entries=len(r['entries']),
+    final_rows=lambda s:[line for line in s.splitlines() if line.startswith('FF-ROW ')]
+    assert final_rows(text)==final_rows(reference) and len(final_rows(text))==10, (final_rows(text),final_rows(reference))
+    assert text.count('FF-PASS')==reference.count('FF-PASS')==1
+    return dict(status='PASS',native_matched_rows=len(rows(text))+len(final_rows(text)),finalizer_rows=final_rows(text),foreign_entries=len(r['entries']),
                 moving_collections=len(r['collections']),initializations=r['events'].count(1),releases=r['events'].count(2),rows=rows(text),
                 scope='Product Lisp API and service; native oracle models fixture library operations')
 
@@ -68,13 +84,14 @@ def run(args):
         sources=([ROOT/'runtime/wasm32'/name for name in RUNTIME+['foreign-api.lisp','process-service.mjs','collector.c']]+
                  sorted(p for p in HERE.iterdir() if p.suffix in ('.mjs','.py','.wat','.lisp'))+
                  [SCALAR/name for name in ('node.mjs','worker.mjs','browser.mjs')]+
-                 [HERE.parent/'foreign-runtime/run.py']+
+                 [HERE.parent/'foreign-runtime/run.py',HERE.parent/'foreign-finalizers/check.mjs',HERE.parent/'foreign-finalizers/checks.lisp',HERE.parent/'foreign-finalizers/mutants.py']+
                  [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('build.py','source-compile.lisp','boot0.mjs')]+
                  [ROOT/'tests/wasm/stage1/bootstrap-validation'/name for name in ('common.py','storage.py')])
         hashes={str(p.relative_to(ROOT)):c.sha(p) for p in sources}
         c.save(out/'sources.json',hashes)
-        for name in RUNTIME:shutil.copy2(ROOT/'runtime/wasm32'/name,out/'runtime'/name)
+        for name in RUNTIME+['collector.c']:shutil.copy2(ROOT/'runtime/wasm32'/name,out/'runtime'/name)
         for name in ('check.mjs','declaration.mjs'):shutil.copy2(HERE/name,out/name)
+        shutil.copy2(HERE.parent/'foreign-finalizers/check.mjs',out/'finalizers.mjs')
         for name in ('node.mjs','worker.mjs'):shutil.copy2(SCALAR/name,out/name)
         shutil.copy2(args.boot/'runtime-binaries/collector.wasm',out/'collector.wasm')
         try:
@@ -83,7 +100,7 @@ def run(args):
             c.save(out/'artifacts.json',{name:dict(sha256=c.sha(out/(name+'.wasm')),bytes=(out/(name+'.wasm')).stat().st_size)
                                        for name in ('collector','library')})
             c.save(out/'tools.json',{name:dict(path=str(p),sha256=c.sha(p)) for name,p in
-                                    [('node',c.NODE),('wat2wasm',c.WABT),('python',Path(sys.executable)),('native-kernel',c.KERNEL)]})
+                                    [('clang',Path('/usr/local/opt/llvm/bin/clang')),('node',c.NODE),('wat2wasm',c.WABT),('python',Path(sys.executable)),('native-kernel',c.KERNEL)]})
             command([c.NODE,out/'node.mjs',out/'node.json'],out,'node.log')
             controls=[]
             for file,name,before,after,case in MUTANTS:
@@ -91,18 +108,21 @@ def run(args):
                 try:
                     assert original.count(before)==1,name
                     path.write_text(original.replace(before,after))
+                    if file=='collector.c':compile_collector(path,out)
                     status=command([c.NODE,out/'node.mjs',out/'mutant.json',case],out,'mutant.log',check=False)
                     result=c.read(out/'mutant.json')
                     assert status!=0 and result['status']=='FAIL' and result['error'].startswith('Error: '+case+':'),name
                     assert 'wrong refusal' not in result['error'], 'reason-only or late refusal: '+name
                     controls.append(dict(name=name,case=case,status='KILLED',error=result['error'],source_sha256=c.sha(path)))
-                finally:path.write_text(original);c.save(out/'mutants.json',controls)
+                finally:
+                    path.write_text(original);c.save(out/'mutants.json',controls)
+                    if file=='collector.c':shutil.copy2(args.boot/'runtime-binaries/collector.wasm',out/'collector.wasm')
             if args.playwright:
                 command([c.NODE,SCALAR/'browser.mjs',out,args.playwright]+([args.browser_config] if args.browser_config else []),out,'browser.log')
                 for row in c.read(out/'browser.json')['results']:assert row['rows']==c.read(out/'node.json')['rows'],row['engine']
             lisp=None
             if args.checks:
-                combined=(ROOT/'runtime/wasm32/foreign-api.lisp').read_text()+'\n'+(HERE/'checks.lisp').read_text()
+                combined=(ROOT/'runtime/wasm32/foreign-api.lisp').read_text()+'\n'+(HERE/'checks.lisp').read_text()+'\n'+(HERE.parent/'foreign-finalizers/checks.lisp').read_text()
                 parent=c.read(args.checks/'postimage-parent.json')
                 assert parent['source_sha256']==hashlib.sha256(combined.encode()).hexdigest()
                 assert parent['manifest']==c.sha(args.boot/'boot/artifacts/manifest.json')
@@ -121,9 +141,9 @@ def run(args):
             summary=dict(status='PASS',checks=c.read(out/'node.json')['checks'],mutants=len(controls),lisp=lisp,
                 browsers=[r['engine'] for r in c.read(out/'browser.json')['results']] if args.playwright else [],
                 skips=['compiler corpus deferred until whole FFI layer is complete','generated Lisp in browser providers',
-                       'multi-Worker D5, callbacks, queued finalization, Lisp string encoding']+
+                       'multi-Worker D5, callbacks, Lisp string encoding']+
                       ([] if args.playwright else ['browser engines not requested'])+([] if args.checks else ['generated Lisp not requested']),
-                review='NOT_REVIEWED',criterion_credit=False,product_lisp_lines_changed=len((ROOT/'runtime/wasm32/foreign-api.lisp').read_text().splitlines()))
+                review='NOT_REVIEWED',criterion_credit=False,product_lisp_lines_changed=10,product_lisp_lines_total=len((ROOT/'runtime/wasm32/foreign-api.lisp').read_text().splitlines()))
             c.save(out/'summary.json',summary)
             for p in out.glob('*.wasm'):p.unlink()
             for name in ('mutant.json','mutant.log','assembly.log'):(out/name).unlink(missing_ok=True)

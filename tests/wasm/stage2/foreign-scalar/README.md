@@ -129,3 +129,6 @@ skip. Results bind source files, generated binary hashes, tools, check names and
 each mutation. Successful generated WAT is removed after assembly and Wasm
 after execution. An unfinished run cannot be overwritten before its failure
 evidence is retained. No compiler image, native oracle or large build is needed.
+
+Browser reproduction uses the persistent [Playwright 1.58.0 pin and browser
+revision recipe](../browser-tools/README.md) (audit 197 O-175).

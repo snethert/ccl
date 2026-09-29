@@ -48,3 +48,13 @@
          (if ,completed
            (release-wasm-buffer ,handle)
            (ignore-errors (release-wasm-buffer ,handle)))))))
+
+(defun finalize-wasm-buffer (handle lifetime)
+  "Queue HANDLE for release when heap object LIFETIME becomes unreachable.
+Keep LIFETIME reachable until the buffer's last use. Registration is once only."
+  (%wasm-foreign-request 8 (vector handle lifetime))
+  handle)
+
+(defun drain-wasm-finalizers ()
+  "Run one batch of queued releases on this Worker, outside collection."
+  (%wasm-foreign-request 9 nil))
