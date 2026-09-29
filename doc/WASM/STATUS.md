@@ -79,6 +79,17 @@ adds 10 lines. O-174/O-175 are addressed; O-176 remains open. No corpus replay o
 FMT/LL credit. Next: Lisp callbacks; automatic pumping, general Lisp finalizers,
 string encoding, browser Lisp/providers and full D5 remain unqualified.
 
+The [sixth Stage 2 unit](stage2/README.md#sixth-delivery-explicit-utf-8-string-copies)
+is **executed; independent review pending**. Explicit UTF-8 simple-string copies
+preserve NUL/BOM characters, refuse malformed data and publish results after
+reloading moving roots. **148 checks per engine / 69 mutants** pass in Node and
+Chromium/Firefox/WebKit; **45 native-matched Lisp rows / 88 foreign entries /
+67 moving collections** pass after READY. This adds 42 checks, 14 controls,
+15 Lisp rows and 14 product Lisp lines. Unchanged dependencies reuse pinned
+results. No compiler corpus replay or FMT/LL credit. Callbacks, non-simple strings,
+other encodings, broader providers and full D5 remain; the fifth unit's review
+is still pending. [Bound results](stage2/foreign-string-results.json).
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

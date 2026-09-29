@@ -277,4 +277,7 @@ The original API unit is accepted after audit 197. The subsequent
 [buffer-finalizer unit](../../tests/wasm/stage2/foreign-finalizers/README.md) adds
 weak lifetime anchors and owner-queued releases, with an explicit drain point;
 it is executed, awaiting review. Callbacks, general Lisp finalizers, automatic
-queue pumping, string encoding and multi-Worker qualification remain open.
+queue pumping and multi-Worker qualification remain open. The subsequent
+[string-copy unit](../../tests/wasm/stage2/foreign-strings/README.md) adds explicit
+UTF-8 simple-string copies with strict decoding and moving-result allocation;
+it is executed, awaiting review. Other encodings/string representations remain.

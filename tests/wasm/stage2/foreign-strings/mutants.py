@@ -1,0 +1,18 @@
+MUTANTS = [
+ ('foreign-service.mjs','string-size-upper','length<=0xffffff','true','string-size-admission-16777216'),
+ ('foreign-service.mjs','string-size-lower','length>=0&&','', 'string-size-admission--1'),
+ ('foreign-service.mjs','string-terminator','new TextEncoder().encode(string(field(2),true))',"new TextEncoder().encode(string(field(2),true)+'\\0')",'string-moving-0'),
+ ('foreign-service.mjs','string-encode','new TextEncoder().encode(string(field(2),true))','Uint8Array.from(string(field(2),true),c=>c.charCodeAt(0))','string-moving-0'),
+ ('foreign-service.mjs','string-write','t.library.write(t.handle,offset,bytes);return bytes.length*4;','return bytes.length*4;','string-moving-0'),
+ ('foreign-service.mjs','string-byte-count','return bytes.length*4;','return bytes.length;','string-moving-0'),
+ ('foreign-service.mjs','string-write-encoding',"if(op===10){request(4);const t=token(field(0),'buffer'),offset=fix(field(1));\n    need(field(3)===0,'ENCODING');","if(op===10){request(4);const t=token(field(0),'buffer'),offset=fix(field(1));",'string-encoding-10'),
+ ('foreign-service.mjs','string-read-encoding',"length=fix(field(2));\n    need(field(3)===0,'ENCODING');","length=fix(field(2));",'string-encoding-11'),
+ ('foreign-service.mjs','string-decode-strict','fatal:true,ignoreBOM:true','fatal:false,ignoreBOM:true','string-malformed-0'),
+ ('foreign-service.mjs','string-bom','fatal:true,ignoreBOM:true','fatal:true,ignoreBOM:false','string-bom'),
+ ('foreign-service.mjs','string-scalar-width','Array.from(text,c=>c.codePointAt(0))',"text.split('').map(c=>c.charCodeAt(0))",'string-moving-0'),
+ ('foreign-service.mjs','string-result-header','chars.length*256+191','chars.length*256+199','string-moving-0'),
+ ('foreign-service.mjs','string-result-codepoints','put(base+4+i*4,ch)','put(base+4+i*4,0)','string-moving-0'),
+ ('foreign-service.mjs','string-result-reload',
+ "owner.atSafepoint(o=>o.ensure(size));\n    const base=get(tcr+48);new Uint8Array(memory.buffer,base,size).fill(0);\n    put(base,chars.length*256+191);chars.forEach((ch,i)=>put(base+4+i*4,ch));\n    put(tcr+48,base+size);put(request(5).p+20,base+6);",
+ "const stale=request(5).p;owner.atSafepoint(o=>o.ensure(size));\n    const base=get(tcr+48);new Uint8Array(memory.buffer,base,size).fill(0);\n    put(base,chars.length*256+191);chars.forEach((ch,i)=>put(base+4+i*4,ch));\n    put(tcr+48,base+size);put(stale+20,base+6);",'string-moving-0'),
+]

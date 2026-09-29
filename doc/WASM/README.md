@@ -12,7 +12,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [IDE design goals](ui-overview.md): the CLIM-based IDE and its reference screens, stated as checkable goals against the port's constraints, with the [reference screens](ui-screens/README.md) and the [prototype specification](ui-prototype-spec.md). Draft; not a Stage 1 obligation.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
 - [Stage 1 closure and exit map](stage1/exit-criteria-review.md): closed at retained scopes with explicit deferrals; Stage 2 opens on the foreign-function lower layer and weak hash tables.
-- [Stage 2 work and deliveries](stage2/README.md): accepted scalar admission, single-Worker FOREIGN ownership, owned byte ranges and named Lisp API; collector-queued buffer finalization awaits review. Remaining foreign proofs and the reviewed weak-table starting point are explicit.
+- [Stage 2 work and deliveries](stage2/README.md): accepted scalar admission, single-Worker FOREIGN ownership, owned byte ranges and named Lisp API; collector-queued buffer finalization and explicit UTF-8 string copies await review. Remaining foreign proofs and the reviewed weak-table starting point are explicit.
 - [Attempt-1 reference survey](history/attempt1-reference.md): what the archived first port established and got wrong, mapped to Stage 0 and Stage 1 obligations. Reference only.
 - [Bootstrap design review](stage0/bootstrap-design-review.md): dated implications for initialization phases, provisional packaging, image identity and reuse assumptions; existing architecture decisions remain in force.
 

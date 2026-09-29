@@ -112,6 +112,8 @@ printf '\n' >> "$work/source.lisp"
 cat tests/wasm/stage2/foreign-api/checks.lisp >> "$work/source.lisp"
 printf '\n' >> "$work/source.lisp"
 cat tests/wasm/stage2/foreign-finalizers/checks.lisp >> "$work/source.lisp"
+printf '\n' >> "$work/source.lisp"
+cat tests/wasm/stage2/foreign-strings/checks.lisp >> "$work/source.lisp"
 python3 -B tests/wasm/stage1/loader-target/build.py "$work/checks" \
   --postimage="$work/boot" --source="$work/source.lisp"
 python3 -B tests/wasm/stage2/foreign-api/run.py \
@@ -128,3 +130,7 @@ results, build identities and the five minimal failures are retained in
 `ccl-evidence/2026-09-28-stage2-foreign-finalizers-r1`. Successful generated
 WAT/Wasm and full compiler records are disposable. No compiler image or compiled
 artifact archive is retained in the pack.
+
+The current shared driver also composes the subsequent [UTF-8 string unit](../foreign-strings/README.md):
+148 checks / 69 controls and 45 native-matched Lisp rows. Its review status
+is separate; use the pinned historical commit to reproduce this unit alone.

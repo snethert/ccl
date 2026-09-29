@@ -156,6 +156,29 @@ O-176 remains open. Results are bound in
 [foreign-finalizer-results.json](foreign-finalizer-results.json). **Executed;
 independent review pending. No FMT or LL credit.**
 
+## Sixth delivery: explicit UTF-8 string copies
+
+[Implementation and reproduction](../../../tests/wasm/stage2/foreign-strings/README.md).
+The product Lisp API now copies simple strings to and from owned foreign buffers
+with explicit `:utf-8`. Byte counts and offsets are explicit; BOMs and embedded
+NULs survive without added terminators. Invalid Unicode, malformed UTF-8, bad
+ranges and retired handles refuse before publication. Result allocation reloads
+the rooted request after moving collection.
+
+The combined API suite passes **148 checks in each of Node, Chromium, Firefox
+and WebKit / 69 killed mutants**, adding **42 string checks / 14 controls**.
+Ordinary post-READY Lisp matches **45 native rows**, including 15 new string
+observations, with **88 foreign entries / 67 moving collections**. Native CCL's
+own UTF-8 codec supplies the string oracle. Product Lisp adds 14 lines (74 total).
+Unchanged lower-layer dependencies reuse the preceding unit by exact source
+identity; the compiler corpus stays deferred. Results are bound in
+[foreign-string-results.json](foreign-string-results.json). **Executed;
+independent review pending. No FMT or LL credit.**
+
+Non-simple strings, other encodings, callbacks, browser generated Lisp/provider
+integration and full D5 remain. This execution does not accept the preceding
+finalizer unit. O-167 and O-176 remain open.
+
 ## Next foreign work
 
 [HOSTFM P2](../host-and-foreign-modules.md#6-foreign-wasm-modules-cap-ffi-wasm)
@@ -164,7 +187,7 @@ remains the architecture; FMT-1–FMT-9 remain its proof obligations.
 | Obligation | Current position / next implementation |
 | --- | --- |
 | FMT-1, scalar calls | Four scalar types, multiple results, signed zero and numeric boundaries execute in the owner unit. All four scalar types now execute through the product service in both portable placements and through generated Lisp under Node; browser generated Lisp remains. |
-| FMT-2, bytes and encoding | Declared ranges, explicit copies and UTF-8 octets execute with fresh views after growth. Lisp string encoding and full browser/provider integration remain. No Lisp memory or addresses enter the foreign module. |
+| FMT-2, bytes and encoding | Declared ranges, explicit copies and UTF-8 octets execute with fresh views after growth. Explicit UTF-8 simple-string copies now execute through the product API; other string representations/encodings and full browser/provider integration remain. No Lisp memory or addresses enter the foreign module. |
 | FMT-3, moving collection | One-Worker owner roots and reloads execute with collection in an active foreign import and retired-space poisoning. Copied Lisp source ranges now execute across allocator/call/release collection. Lisp callbacks and other-Worker collection remain. |
 | FMT-4, failures and releases | Generated Lisp conditions/cleanups execute through the fixture transport; 64 TCR words are checked, with six collector-owned words retaining updated values. Explicit allocation releases and destructor-trap ordering execute in the owned-buffer unit. The product service now signals ordinary Lisp errors after admission and preserves primary cleanup failures; callback retirement remains. |
 | FMT-5/6, callbacks | Add typed table trampolines, collector-visible callback roots, callback admission during pending GC, and containment of Lisp nonlocal exits. The first unit refuses re-entry. |
@@ -176,7 +199,8 @@ The Node integration now uses ordinary post-READY `%FASLOAD` with the accepted
 level-0 image and target-loaded runtime. The owned scalar/copy service now has declared byte ranges, encoding and
 explicit allocation lifetime. A product Lisp API and resident namespace loading now
 execute. Weak-anchor buffer finalization now queues on the owner with an explicit drain.
-Next work is Lisp callbacks, string encoding and broader providers. Browser
+Explicit UTF-8 simple-string copies now execute as well.
+Next work is Lisp callbacks and broader providers. Browser
 provider integration and full D5 must be qualified at their actual scope.
 Native R6/R6a applies if a later step changes shared compiler source.
 

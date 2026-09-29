@@ -1,3 +1,25 @@
+## 2026-09-28 — Add explicit UTF-8 foreign string copies
+
+Whole-file movement: zero. Product Lisp lines changed: +14 (74 API lines total).
+Next stop: Lisp callbacks and callback lifetime/admission; broader providers
+and multi-Worker D5 remain. Explicit UTF-8 simple-string copies now use owned
+foreign allocations. The service preserves BOMs/NULs, adds no terminator,
+rejects malformed Unicode/UTF-8 and reloads the rooted result request after
+allocation can move the heap. Encoding is required at the Lisp API boundary.
+
+The combined four-engine API suite passes 148 checks / 69 killed mutants,
+including 42 new string cases and 14 new controls. Forty-five post-READY Lisp
+rows match native CCL, with 88 foreign entries and 67 moving collections; the
+15 new rows use native CCL's UTF-8 codec as their oracle. Qualification passed
+on its first executed run. An earlier Node-only invocation was cancelled while
+waiting for its workspace lease, before any tests or outputs were created.
+
+Evidence: `ccl-evidence/2026-09-28-stage2-foreign-strings-r1`. Unchanged lower
+layers reuse the finalizer unit's pinned results by exact implementation
+identity. Both this unit and the preceding finalizer unit await independent
+review; no acceptance or FMT/LL credit. Shared compiler/kernel/collector source
+is unchanged. The compiler corpus waits until the whole FFI layer is complete.
+
 ## 2026-09-28 — Add collector-queued foreign buffer finalization
 
 Whole-file movement: zero. Product Lisp lines changed: +10 (60 API lines total).

@@ -15,7 +15,7 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
   return {p,n};
  };
  const vector=(word,n)=>{const o=object(word,250);if(n!==undefined)need(o.n===n,'ARITY');return o;};
- const string=word=>{const {p,n}=object(word,191);need(n<=4096,'STRING');let s='';
+ const string=(word,data=false)=>{const {p,n}=object(word,191);need(data||n<=4096,'STRING');let s='';
   for(let i=0;i<n;i++){const ch=get(p+4+i*4);need(ch<=0x10ffff&&(ch<0xd800||ch>0xdfff),'CHARACTER');s+=String.fromCodePoint(ch);}return s;};
  const token=(word,kind)=>{const value=tokens.get(fix(word));need(value?.kind===kind,'TOKEN');return value;};
  const capacity=()=>need(next<=maximumTokens,'TOKENS_EXHAUSTED');
@@ -80,6 +80,22 @@ export function foreignService({memory,tcr,owner,libraries,maximumTokens=5368709
     if(op===6)t.library.write(t.handle,offset,bytes);else bytes.set(t.library.read(t.handle,offset,n));return 0;}
    if(op===8){request(2);const t=token(field(0),'buffer');t.library.finalize(t.handle,owner,field(1));return 0;}
    if(op===9){need(payload()===NIL,'PAYLOAD');return owner.drainFinalizers()*4;}
+   if(op===10){request(4);const t=token(field(0),'buffer'),offset=fix(field(1));
+    need(field(3)===0,'ENCODING');
+    const bytes=new TextEncoder().encode(string(field(2),true));
+    t.library.write(t.handle,offset,bytes);return bytes.length*4;}
+   if(op===11){request(5);const t=token(field(0),'buffer'),offset=fix(field(1)),length=fix(field(2));
+    need(field(3)===0,'ENCODING');
+    need(length>=0&&length<=0xffffff,'STRING_SIZE');
+    const bytes=t.library.read(t.handle,offset,length);let text;
+    try{text=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}
+    catch(error){if(error instanceof TypeError)throw new Refusal('UTF8');throw error;}
+    const chars=Array.from(text,c=>c.codePointAt(0)),size=8*Math.ceil((4+4*chars.length)/8);
+    // Only decoded scalar values survive a possible move of the request.
+    owner.atSafepoint(o=>o.ensure(size));
+    const base=get(tcr+48);new Uint8Array(memory.buffer,base,size).fill(0);
+    put(base,chars.length*256+191);chars.forEach((ch,i)=>put(base+4+i*4,ch));
+    put(tcr+48,base+size);put(request(5).p+20,base+6);return 0;}
    need(false,'OPERATION');
   }catch(error){
    if(error instanceof Refusal||error.message==='collector-owner: finalizer object')return -4;

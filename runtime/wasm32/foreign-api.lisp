@@ -58,3 +58,17 @@ Keep LIFETIME reachable until the buffer's last use. Registration is once only."
 (defun drain-wasm-finalizers ()
   "Run one batch of queued releases on this Worker, outside collection."
   (%wasm-foreign-request 9 nil))
+
+(defun write-wasm-string (handle string &key encoding (offset 0))
+  "Copy a simple string as explicit UTF-8. Return the byte count; add no NUL."
+  (unless (eq encoding :utf-8)
+    (error "Foreign string encoding must be :UTF-8."))
+  (%wasm-foreign-request 10 (vector handle offset string 0)))
+
+(defun read-wasm-string (handle size &key encoding (offset 0))
+  "Decode exactly SIZE UTF-8 bytes, refusing malformed sequences."
+  (unless (eq encoding :utf-8)
+    (error "Foreign string encoding must be :UTF-8."))
+  (let ((request (vector handle offset size 0 nil)))
+    (%wasm-foreign-request 11 request)
+    (svref request 4)))

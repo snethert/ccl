@@ -1,3 +1,4 @@
+import {stringChecks} from './strings.mjs';
 import {finalizerChecks} from './finalizers.mjs';
 import {createNamespace} from './runtime/namespace.mjs';
 import {foreignLibraries} from './runtime/foreign-libraries.mjs';
@@ -64,7 +65,7 @@ export function check(binaries,{only}={}) {
   const owner=CollectorOwner.create(memory,binaries.collector,sha256(binaries.collector),layout,{measure}),events=[],moves=[];
   const imports={host:{collect(){const r=owner.collectForeign();new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);moves.push(r);onCollect();},observe(n){events.push(n);}}};
   const libraries=registry({imports,boundary:owner.foreignBoundary,edit:c=>{c.libraries[0].declaration.name=name;if(maximumNames===2){const row=c.libraries[0];c.libraries.push({...row,path:'second.wasm',declaration:{...row.declaration,name:'second'}});}} ,ns:maximumNames===2?createNamespace({version:1,cwd:'/lib',cclRoot:'/',entries:[{path:'/',kind:'directory'},{path:'/lib',kind:'directory'},...['example','second'].map(n=>({path:'/lib/'+n+'.wasm',kind:'file',bytes:binaries.library,sha256:sha256(binaries.library)}))]}):namespace()}).open();
-  const wrapper=boxCollect?{atSafepoint(fn){return owner.atSafepoint(o=>{o.collect();return fn(o);});}}:owner;
+  const wrapper=boxCollect?{atSafepoint(fn){return owner.atSafepoint(o=>{const r=o.collect();new Uint8Array(memory.buffer,r.source,r.usedBytes).fill(0xa5);return fn(o);});}}:owner;
   const service=foreignService({memory,tcr,owner:wrapper,libraries,maximumTokens});
   const alloc=(header,length)=>{const p=get(tcr+48),size=8*Math.ceil((4+length)/8);assert(p+size<=get(tcr+52),'test heap');new Uint8Array(memory.buffer,p,size).fill(0);put(p,header);put(tcr+48,p+size);return p+6;};
   const str=s=>{const chars=Array.from(s,c=>c.codePointAt(0)),w=alloc(chars.length*256+191,chars.length*4);chars.forEach((c,i)=>put(w-2+i*4,c));return w;};
@@ -81,6 +82,7 @@ export function check(binaries,{only}={}) {
  }
  const NIL=77825;
  finalizerChecks({test,setup,equal,assert,throws});
+ stringChecks({test,setup,equal,assert});
  test('service-fixnum-size',()=>{const f=setup(),l=f.library();equal(f.request(3,f.vec([l,NIL])),-4);equal(f.moves.length,1);});
  test('service-fixnum-offset',()=>{const f=setup(),h=f.request(3,f.vec([f.library(),80000]));equal(f.request(5,f.vec([h,NIL])),-4);equal(f.request(4,h),4);});
  test('service-object-tag',()=>{const f=setup(),l=f.library();equal(f.call(l,'echo',[f.vec([4]),0,f.float(1,'f32'),f.float(2,'f64')]),-4);equal(f.moves.length,1);});
