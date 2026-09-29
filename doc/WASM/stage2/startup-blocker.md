@@ -27,7 +27,38 @@ run. The current browser diagnostics execute the same bootstrap architecture.
 They are not a new full census and do not imply the exact old call count still
 holds after later compiler changes.
 
-## Current measurements
+## Comparable complete runs
+
+The user correctly rejected comparing Chromium startup against Firefox's full
+startup-plus-test duration. A fresh sequential run now measures the same phases
+in both engines, on identical compiled inputs, without overlapping builds,
+browser tests or diagnostic probes. [Bound results](startup-comparison-results.json).
+
+| Phase | Chromium 145.0.7632.6 | Firefox 146.0.1 |
+| --- | ---: | ---: |
+| Preparation before Lisp entry | 8.249 s | 13.718 s |
+| Lisp initialization to READY | 14.676 s | 468.115 s |
+| **Total startup to READY** | **22.925 s** | **481.833 s** |
+| Post-READY FFI witness and cleanup | 6.010 s | 32.061 s |
+| Startup plus FFI witness | 28.935 s | 513.894 s |
+| Runtime archive materialization/compilation (within preparation) | 1.823 s | 5.567 s |
+
+Startup begins at the host launch request, before input preload and Worker
+creation, and ends when Lisp signals ProcessReady. It excludes building Lisp
+sources, launching the browser application, initial page navigation and directed
+input-refusal tests. Preparation plus Lisp initialization equals total startup;
+the FFI witness begins after READY. The archive subphase includes hashing and
+validation and excludes boot archive compilation; it is not a pure or complete
+Wasm compiler timer. Both runs return the same 81 runtime loads and pass the
+61-row FFI witness. These are one observation per engine, not medians.
+
+Firefox startup is 21.0 times Chromium's in these observations. Most of the
+Firefox delay occurs in Lisp initialization, after the preparation phase.
+The timing isolates that phase; it does not yet establish the underlying cause.
+This supersedes the earlier mismatched browser comparison. Startup remains
+unresolved; no performance acceptance follows from successful correctness checks.
+
+## Earlier diagnostic measurements
 
 The ordinary browser FFI run completes in all four engines with 61 equal Lisp
 rows, 99 foreign entries, 74 FOREIGN collections and nine RUNNING collections.

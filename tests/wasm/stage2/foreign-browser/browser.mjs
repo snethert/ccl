@@ -7,6 +7,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {sha256} from '../../../../runtime/wasm32/sha256.mjs';
 import {archiveSource} from '../../stage1/loader-target/archive-source.mjs';
 const [boot,level1,checks,library,out,playwright,browserConfig]=process.argv.slice(2);
+const measureStartup=process.argv.includes('--startup-timing');
 const root=fileURLToPath(new URL('../../../../',import.meta.url));
 const engines=await import(pathToFileURL(playwright)),executables=JSON.parse(fs.readFileSync(browserConfig));
 const routes=new Map(),preload=[],sources={};
@@ -41,7 +42,7 @@ for(const dir of [level1,checks])for(const row of json(dir+'/bundle-manifest.jso
  files.push({...source,path:row.path});
 }
 const config={preload,files,archives,library:input(library),workerData:{
- out:'/boot',runtime:'/runtime',archives:runtimeArchives.map(descriptor),bootArchive:descriptor(bootArchive),
+ measureStartup,out:'/boot',runtime:'/runtime',archives:runtimeArchives.map(descriptor),bootArchive:descriptor(bootArchive),
  layoutConfig:{freeTarget:0},startupLoads:[],postReadyLoads:['/ccl/bin/loader-benchmark.w32fsl'],omittedBundles:[],
  callbackSelection:json(root+'tests/wasm/stage1/startup-resets/selection.json'),scripts:sources,
  hostExtension:'foreign-api/fixture.mjs',extensionConfig:{provider:'digest-checked HTTP preload'}}};
@@ -67,12 +68,12 @@ const server=http.createServer((req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const results=[];
 try{
- for(const name of ['chromium','firefox','webkit']){
+ for(const name of (measureStartup?['chromium','firefox']:['chromium','firefox','webkit'])){
   let browser;
   try{
    const executable=executables[name];assert(executable,'explicit executable required');
    browser=await engines[name].launch({headless:true,executablePath:executable,timeout:30000,env:{...process.env,TMPDIR:out}});
-   const page=await browser.newPage();page.on('console',message=>{if(message.text().startsWith('Lisp: '))console.log(name+' '+message.text().trim());});await page.goto('http://127.0.0.1:'+server.address().port+'/');
+   const page=await browser.newPage();page.on('console',message=>{if(message.text().startsWith('Lisp: ')||message.text().startsWith('TIMING '))console.log(name+' '+message.text().trim());});await page.goto('http://127.0.0.1:'+server.address().port+'/');
    const report=await page.evaluate(async()=>{
     const {run,readInput}=await import('/source/tests/wasm/stage2/foreign-browser/host.mjs');
     const config=await (await fetch('/config.json')).json(),refusals=[];

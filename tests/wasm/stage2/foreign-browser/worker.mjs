@@ -1,5 +1,6 @@
 // Browser embedding for the same boot Worker used by the Node driver.
 import {numericChecks} from './numeric-check.mjs';
+import {startupTiming} from './timing.mjs';
 import {runBoot} from '../../stage1/loader-target/boot-worker.mjs';
 import {createForeignFixture} from '../foreign-api/fixture.mjs';
 export function assert(ok, message='assertion') { if(!ok)throw Error(message); }
@@ -15,6 +16,7 @@ self.onmessage=async ({data})=>{
  try{
   numeric=numericChecks(Object.fromEntries(['collector','integer','float','detector'].map(name=>[name,files.get('/runtime/'+name+'.wasm')])));
   await runBoot({workerData,parentPort,assert,
+   timing:workerData.measureStartup?startupTiming(message=>self.postMessage(message)):undefined,
    readFile:name=>{const path=name instanceof URL?name.pathname:name;assert(files.has(path),'missing input '+path);return files.get(path);},
    writeFile:()=>{throw Error('browser diagnostic file capability unavailable');},
    output:(channel,text)=>self.postMessage({type:'output',channel,text}),

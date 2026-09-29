@@ -87,3 +87,25 @@ The runner leases its inputs and output, writes evidence under
 assembled foreign module. Retain compact results, source/tool/input identities
 and original failures before clearing successful generated build inputs. The
 compiler corpus remains deferred until the whole FFI layer is complete.
+
+## Comparable startup timings
+
+After the same three builds above, run `startup-run.py` with the same `--boot`,
+`--level1`, `--checks`, `--playwright` and `--browser-config` arguments. It launches
+Chromium and Firefox sequentially in fresh browser processes, with the same
+compiled inputs and sparse timing hooks. Do not run a build, another browser
+test or diagnostic probe concurrently. Results are written to
+`/private/tmp/ccl-work/codex/browser-startup/run`.
+
+Both engines report identical boundaries: host launch request (before input
+preload and Worker creation) to READY, Lisp top-level entry to READY, and READY
+to completion of the post-READY FFI witness and runner cleanup. Preparation is
+the launch-request-to-Lisp-entry interval. These intervals exclude Lisp source
+builds, browser application launch, initial page navigation and directed input
+refusal tests. Archive materialization/compilation is a subset of preparation;
+that existing hook includes archive validation and hashing and excludes boot
+archive compilation, so it is not a pure or complete Wasm compiler timer.
+
+The completed reports must still match all 61 native rows and the existing
+foreign/collection counts. One run per engine provides directly comparable
+observations, not a median or a claim of acceptable startup performance.

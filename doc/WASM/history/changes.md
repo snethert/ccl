@@ -1,3 +1,15 @@
+## 2026-09-28 — Measure identical browser startup and test intervals
+
+Whole-file movement: zero. Product Lisp lines changed: zero. Next stop remains
+startup latency. Correct the mismatched Chromium-startup/Firefox-full-test report:
+one sequential run per engine, identical binary inputs and timing boundaries,
+no concurrent project builds or tests. Chromium reaches READY in 22.925 s and
+Firefox in 481.833 s. The subsequent identical FFI witness takes 6.010 s and
+32.061 s. Both pass all 61 rows and the existing foreign/collection counts.
+Sparse opt-in timers use the shared driver's existing timing capability.
+[Measurements, boundaries and limitations](../stage2/startup-blocker.md#comparable-complete-runs).
+Executed, review pending; startup remains unresolved.
+
 ## 2026-09-28 — Execute the Lisp foreign API in browser Workers; block on startup
 
 Whole-file movement: zero. Product Lisp lines changed: zero. Next stop: the

@@ -11,6 +11,8 @@ export async function readInput(input) {
  return bytes;
 }
 export async function run(config) {
+ const startedAt=performance.timeOrigin+performance.now(),timing=[];
+ if(config.workerData.measureStartup)console.log('TIMING '+JSON.stringify({event:'launch-request',at:startedAt}));
  need(crossOriginIsolated,'ISOLATION');
  const inputs=new Map();
  for(const input of config.preload)inputs.set(input.path,await readInput(input));
@@ -28,6 +30,7 @@ export async function run(config) {
   worker.onerror=e=>fail(Error(e.message));
   worker.onmessage=async ({data})=>{
    try{
+    if(data.type==='startup-timing'){timing.push(data);console.log('TIMING '+JSON.stringify(data));return;}
     if(data.type==='output'){lastOutput=data.text;console.log('Lisp: '+data.text);return;}
     if(data.type==='memory'){memory=data.memory;return;}
     if(data.type==='request'){
@@ -40,7 +43,7 @@ export async function run(config) {
      need(bytes.byteLength===0&&metadata.byteLength===0,'TRANSFER');archives++;return;
     }
     if(['stderr','progress'].includes(data.type))return;
-    clearTimeout(timer);resolve({...data,browserProvider:{requests,archives}});
+    clearTimeout(timer);resolve({...data,browserProvider:{requests,archives},...(config.workerData.measureStartup?{startupTiming:{startedAt,receivedAt:performance.timeOrigin+performance.now(),events:timing}}:{})});
    }catch(error){fail(error);}
   };
   worker.postMessage({type:'start',workerData:{...config.workerData,files:workerFiles},files:inputs,library});
