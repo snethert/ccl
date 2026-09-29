@@ -1,3 +1,28 @@
+## 2026-09-28 — Execute the Lisp foreign API in browser Workers; block on startup
+
+Whole-file movement: zero. Product Lisp lines changed: zero. Next stop: the
+[initialized-runtime startup blocker](../stage2/startup-blocker.md), ahead of
+further foreign breadth. The user's “either startup is instant or a huge problem”
+correction makes the minutes-long browser launch a blocker, despite functional
+correctness. No startup acceptance follows from increasing a diagnostic timeout.
+
+The shared boot Worker and resident HTTP preload embedding execute the unchanged
+61-row Lisp foreign witness in Node, Chromium, Firefox and WebKit, with identical
+99 foreign entries, 74 FOREIGN collections and nine RUNNING collections. The
+WebKit failure exposed whole-object JSON import comparison: that engine adds a
+`type` field. Two numeric-service guards now compare required fields explicitly.
+Fourteen admission checks per engine and two restoring mutants pass; three
+HTTP/size/digest refusals run per browser. No compiler corpus replay.
+
+The first Firefox attempt times out at three minutes; the ordinary run completes
+with the ten-minute diagnostic ceiling. Phase and call probes locate substantial
+cost in the repeated runtime initialization, beyond archive admission. The
+current path reloads 81 runtime files and lacks an initialized-runtime launch
+artifact. Original timeout, WebKit refusal, control-fixture missing dependency
+and diagnostic limits are retained in the compact browser evidence pack.
+[Bound results](../stage2/foreign-browser-results.json). Executed, independent
+review pending; no FMT/LL credit, shared compiler or upstream kernel changes.
+
 ## 2026-09-28 — Invoke generated Lisp callbacks across the foreign boundary
 
 Whole-file movement: zero. Product Lisp lines changed: +25 (99 API lines total).

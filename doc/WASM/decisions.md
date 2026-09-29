@@ -1,5 +1,16 @@
 DECISION RECORD  /  VERSION 1.8  •  11 SEPTEMBER 2026
 
+## 28 September 2026 — Startup latency is a blocker
+
+User correction during Stage 2 browser execution: “this is absurd. either startup
+is instant or a huge problem.” Functional FFI success does not qualify launch
+latency. The current level-0 launch repeats 81 runtime loads; the initialized
+runtime launch artifact is missing. Resolve [the startup blocker](stage2/startup-blocker.md)
+before expanding foreign-layer breadth. The retained longer timeout is diagnostic,
+not a performance remedy. General Stage 5 application-image obligations are not
+claimed complete or silently waived by this prioritization.
+
+
 # Stage 0 Desk Decisions
 
 Companion to Port Outline v0.17 and Acceptance Policy and Regression Register v1.7

@@ -111,7 +111,7 @@ def run(args):
                  [HERE.parent/'foreign-lisp-callbacks'/name for name in ('checks.lisp','check.mjs','bridge.wat','mutants.py')]+
                  [HERE.parent/'foreign-strings'/name for name in ('check.mjs','checks.lisp','mutants.py')]+
                  [HERE.parent/'foreign-runtime/run.py',HERE.parent/'foreign-finalizers/check.mjs',HERE.parent/'foreign-finalizers/checks.lisp',HERE.parent/'foreign-finalizers/mutants.py']+
-                 [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('build.py','source-compile.lisp','boot0.mjs')]+
+                 [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('build.py','source-compile.lisp','boot0.mjs','boot-worker.mjs')]+
                  [ROOT/'tests/wasm/stage1/bootstrap-validation'/name for name in ('common.py','storage.py')])
         hashes={str(p.relative_to(ROOT)):c.sha(p) for p in sources}
         c.save(out/'sources.json',hashes)

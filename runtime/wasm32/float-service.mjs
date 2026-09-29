@@ -10,7 +10,7 @@ export function floatService({memory,tcr,owner,callError,bytes,digest,detectorBy
  const mod=new WebAssembly.Module(bytes),detector=new WebAssembly.Module(detectorBytes);
  const imports=WebAssembly.Module.imports(mod).map(x=>[x.module,x.name,x.kind].join('/')).sort();
  if(JSON.stringify(imports)!==JSON.stringify(['detector/add/function','detector/div/function','detector/mul/function','detector/sub/function','env/memory/memory'])||
-    JSON.stringify(WebAssembly.Module.imports(detector))!==JSON.stringify([{module:'env',name:'memory',kind:'memory'}]))throw Error('FLOAT_IMPORTS');
+    JSON.stringify(WebAssembly.Module.imports(detector).map(i=>[i.module,i.name,i.kind]))!==JSON.stringify([['env','memory','memory']]))throw Error('FLOAT_IMPORTS');
  const privateMemory=new WebAssembly.Memory({initial:4,maximum:32769});
  const checks=new WebAssembly.Instance(detector,{env:{memory:privateMemory}}).exports;
  const wasm=new WebAssembly.Instance(mod,{env:{memory:privateMemory},detector:checks}).exports;

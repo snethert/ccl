@@ -112,6 +112,24 @@ broader providers and browser generated Lisp; nested foreign calls and full D5
 remain. [Bound results](stage2/foreign-lisp-callback-results.json).
 
 
+The [ninth Stage 2 unit](stage2/README.md#ninth-delivery-generated-lisp-in-browser-workers)
+extends the 61-row generated Lisp witness to Chromium, Firefox and WebKit through
+the same boot Worker as Node. All four engines match 99 foreign entries, 74
+FOREIGN collections and nine RUNNING collections. Two numeric-service guards now
+accept WebKit's extra import-type metadata while retaining exact required fields;
+14 checks per engine and two regression controls pass. Three input refusals run
+per browser. Product Lisp and file-count movement are zero. **Executed, review
+pending; no FMT/LL credit.** [Bound results](stage2/foreign-browser-results.json).
+
+**Startup performance is blocking.** The user's correction rejects treating
+minutes-long launch as an acceptable runtime. The current driver replays 81
+runtime files per launch; an initialized-runtime launch artifact is missing.
+Firefox's complete run takes roughly nine minutes, and WebKit also takes minutes;
+Chromium's phase probe spends 16 seconds in Lisp startup. The longer diagnostic
+timeout is not a fix. [Measurements and the required next delivery](stage2/startup-blocker.md)
+take priority over further foreign-layer breadth. No startup or Stage 2 completion
+acceptance is claimed.
+
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;
 82 runtime files compile to bundles. Both fresh post-image instances pass 83
 loads. [Module consolidation](stage1/module-consolidation-results.md) uses two

@@ -5,7 +5,7 @@ import {CollectorOwner} from './collector-owner.mjs';
 export function integerService({memory,tcr,owner,callError,bytes,digest,pinned=[]}){
  if(!(owner instanceof CollectorOwner)||!(memory instanceof WebAssembly.Memory)||!(callError instanceof WebAssembly.Tag)||sha256(bytes)!==digest)throw Error('integer owner capability');
  if(owner.view.buffer!==memory.buffer)throw Error('integer memory capability');
- const mod=new WebAssembly.Module(bytes);if(JSON.stringify(WebAssembly.Module.imports(mod))!==JSON.stringify([{module:'env',name:'memory',kind:'memory'}]))throw Error('integer imports');
+ const mod=new WebAssembly.Module(bytes);if(JSON.stringify(WebAssembly.Module.imports(mod).map(i=>[i.module,i.name,i.kind]))!==JSON.stringify([['env','memory','memory']]))throw Error('integer imports');
  const privateMemory=new WebAssembly.Memory({initial:4,maximum:32769});
  const wasm=new WebAssembly.Instance(mod,{env:{memory:privateMemory}}).exports;
  const input=131072,inputEnd=147456,output=147456,outputEnd=163840,scratch=163840,scratchEnd=180256,result=180272;

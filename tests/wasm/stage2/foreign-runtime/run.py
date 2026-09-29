@@ -85,7 +85,7 @@ def run(args):
                    [ROOT/'runtime/wasm32/collector.c',ROOT/'runtime/wasm32/host-call-adapter.wat']+
                    sorted(p for p in HERE.iterdir() if p.suffix in ('.mjs','.py','.wat','.lisp'))+
                    [SCALAR/name for name in ('node.mjs','worker.mjs','browser.mjs')]+
-                   [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('boot0.mjs','build.py','source-compile.lisp')]+
+                   [ROOT/'tests/wasm/stage1/loader-target'/name for name in ('boot0.mjs','boot-worker.mjs','build.py','source-compile.lisp')]+
                    [ROOT/'tests/wasm/stage1/bootstrap-validation'/name for name in ('common.py','storage.py')])
         hashes={str(p.relative_to(ROOT)):c.sha(p) for p in sources}
         c.save(out/'sources.json',hashes)
