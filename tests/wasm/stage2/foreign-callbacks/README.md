@@ -155,3 +155,10 @@ Lisp regression and existing scalar/buffer drivers for their direct regressions.
 Exact commands, input hashes, tool versions, results, and minimal original
 failures are in `ccl-evidence/2026-09-28-stage2-foreign-callbacks-r1`. Successful
 WAT/Wasm are discarded; no compiler image or compiled archive is retained.
+
+## Review acceptance
+
+User-supplied Claude audit 198 (`94b410d0`, imported as `0244319d`) finds no
+defect and accepts the finalizer, string and callback-boundary stack at the
+executed single-Worker scopes above. This supersedes the historical pending
+review statements. No FMT/LL credit and no unchanged-test replay.

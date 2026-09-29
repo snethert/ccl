@@ -69,7 +69,7 @@ string encoding, browser Lisp and full D5 remain. A literal-only double-printing
 checked-4 failure is retained separately; value/representation checks pass.
 
 The [fifth Stage 2 unit](stage2/README.md#fifth-delivery-collector-queued-buffer-finalization)
-is **executed; independent review pending**. Weak Lisp lifetime anchors now queue
+is **accepted after [Claude audit 198](stage0/claude-review.md)** (`0244319d`). Weak Lisp lifetime anchors now queue
 buffer releases after collection; one explicit drain runs a batch on the owning
 Worker outside collection. Explicit release, close and trap retirement cancel
 pending work. **106 checks per engine / 55 mutants**, **30 native-matched Lisp
@@ -80,15 +80,14 @@ FMT/LL credit. Next: Lisp callbacks; automatic pumping, general Lisp finalizers,
 string encoding, browser Lisp/providers and full D5 remain unqualified.
 
 The [sixth Stage 2 unit](stage2/README.md#sixth-delivery-explicit-utf-8-string-copies)
-is **executed; independent review pending**. Explicit UTF-8 simple-string copies
+is **accepted after [Claude audit 198](stage0/claude-review.md)** (`0244319d`). Explicit UTF-8 simple-string copies
 preserve NUL/BOM characters, refuse malformed data and publish results after
 reloading moving roots. **148 checks per engine / 69 mutants** pass in Node and
 Chromium/Firefox/WebKit; **45 native-matched Lisp rows / 88 foreign entries /
 67 moving collections** pass after READY. This adds 42 checks, 14 controls,
 15 Lisp rows and 14 product Lisp lines. Unchanged dependencies reuse pinned
 results. No compiler corpus replay or FMT/LL credit. Callbacks, non-simple strings,
-other encodings, broader providers and full D5 remain; the fifth unit's review
-is still pending. [Bound results](stage2/foreign-string-results.json).
+other encodings, broader providers and full D5 remain. [Bound results](stage2/foreign-string-results.json).
 
 The [seventh Stage 2 unit](stage2/README.md#seventh-delivery-typed-callback-boundary-and-rooted-lifetime)
 adds typed callback table registration, collector-visible roots, one-Worker
@@ -97,8 +96,7 @@ registration; fatal callbacks retire the library after foreign frames unwind.
 The **80 checks per engine / 63 killed mutants** include the corrected WebKit
 grow-then-set sequence and retain its original failures. The fixture invoker is JavaScript with synthetic
 B roots; generated Lisp callback invocation/API and full D5 remain next.
-[Bound results](stage2/foreign-callback-results.json). **Executed; review pending.
-No FMT/LL credit.** Product Lisp and whole-file count movement are zero.
+[Bound results](stage2/foreign-callback-results.json). **Accepted after audit 198 (`0244319d`); no FMT/LL credit.** Product Lisp and whole-file count movement are zero.
 
 
 **The level-0-only boot reaches READY after 81 ordinary target runtime loads;

@@ -1,4 +1,13 @@
 {
+  "acceptance": {
+    "producer_commit": "767ca876",
+    "review_commit": "0244319d",
+    "review_original_commit": "94b410d0",
+    "scope": "executed single-Worker unit; no FMT or LL credit",
+    "test_reruns_for_acceptance": 0,
+    "user_direction": "accept reviewer's commit and proceed with CCL Stage 2",
+    "verdict": "no defect"
+  },
   "browsers": [
     "chromium",
     "firefox",
@@ -978,7 +987,7 @@
   "product_lisp_lines_changed": 10,
   "product_lisp_lines_total": 60,
   "retained_bytes": 868655,
-  "review": "NOT_REVIEWED",
+  "review": "ACCEPTED_AUDIT_198",
   "skips": [
     "compiler corpus deferred until whole FFI layer is complete",
     "generated Lisp in browser providers",

@@ -1,3 +1,13 @@
+## 2026-09-28 — Accept audit 198 finalizers, strings and callback boundary
+
+Imported user-supplied audit `94b410d0` as `0244319d`. Accept `767ca876`,
+`9c4a58db` and `2e49ee14` at their executed single-Worker scopes: no defect,
+no FMT/LL credit and no unchanged-test replay. O-174/O-175 close; O-177/O-179
+carry directed cases into the next substantive unit. O-178 is reason-only;
+O-180/O-181 preserve the stated scope. Next: generated Lisp callback invocation,
+registration and nonlocal-exit containment. Compiler corpus remains deferred
+until the FFI layer is complete. Product Lisp and whole-file movement: zero.
+
 ## 2026-09-28 — Add explicit UTF-8 foreign string copies
 
 Whole-file movement: zero. Product Lisp lines changed: +14 (74 API lines total).

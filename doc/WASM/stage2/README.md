@@ -153,8 +153,8 @@ buffer and scalar regressions pass at their recorded scopes. Product Lisp adds
 10 lines. O-174 now has directed service refusals and float-header checks;
 O-175 has a committed Playwright 1.58.0 lockfile and browser-revision recipe.
 O-176 remains open. Results are bound in
-[foreign-finalizer-results.json](foreign-finalizer-results.json). **Executed;
-independent review pending. No FMT or LL credit.**
+[foreign-finalizer-results.json](foreign-finalizer-results.json). **Accepted after user-supplied [Claude audit 198](../stage0/claude-review.md)
+(`94b410d0`, imported as `0244319d`). No FMT or LL credit.**
 
 ## Sixth delivery: explicit UTF-8 string copies
 
@@ -172,12 +172,12 @@ observations, with **88 foreign entries / 67 moving collections**. Native CCL's
 own UTF-8 codec supplies the string oracle. Product Lisp adds 14 lines (74 total).
 Unchanged lower-layer dependencies reuse the preceding unit by exact source
 identity; the compiler corpus stays deferred. Results are bound in
-[foreign-string-results.json](foreign-string-results.json). **Executed;
-independent review pending. No FMT or LL credit.**
+[foreign-string-results.json](foreign-string-results.json). **Accepted after user-supplied [Claude audit 198](../stage0/claude-review.md)
+(`94b410d0`, imported as `0244319d`). No FMT or LL credit.**
 
 Non-simple strings, other encodings, callbacks, browser generated Lisp/provider
-integration and full D5 remain. This execution does not accept the preceding
-finalizer unit. O-167 and O-176 remain open.
+integration and full D5 remain. Audit 198 accepts the finalizer and string units at their executed scopes.
+O-167 and O-176 remain open.
 
 ## Seventh delivery: typed callback boundary and rooted lifetime
 
@@ -199,10 +199,14 @@ Chromium, Firefox and WebKit. Existing API/string/finalizer execution retains
 **45 native-matched Lisp rows / 88 foreign entries / 67 moving collections**;
 its four-engine suite passes 148 checks / 69 mutants. Owner, scalar and buffer
 regressions also pass. Detailed counts are bound in
-[foreign-callback-results.json](foreign-callback-results.json). **Executed;
-independent review pending. No FMT or LL credit.** Product Lisp and whole-file
-count movement are zero. The preceding finalizer and string units remain pending
-review; this delivery does not accept them.
+[foreign-callback-results.json](foreign-callback-results.json). **Accepted after user-supplied [Claude audit 198](../stage0/claude-review.md)
+(`94b410d0`, imported as `0244319d`). No FMT or LL credit.** Product Lisp and whole-file
+count movement are zero. Audit 198 accepts all three units as one reviewed stack.
+
+Acceptance reruns no unchanged tests. O-174/O-175 are closed. Carry O-177
+post-fatal owner-state assertions and O-179 drain/live-heap and registration-retry
+cases into the next substantive unit. O-178 is a reason-only admission
+equivalence; O-180/O-181 preserve the documented execution limits.
 
 ## Next foreign work
 

@@ -1,4 +1,13 @@
 {
+  "acceptance": {
+    "producer_commit": "2e49ee14",
+    "review_commit": "0244319d",
+    "review_original_commit": "94b410d0",
+    "scope": "executed single-Worker unit; no FMT or LL credit",
+    "test_reruns_for_acceptance": 0,
+    "user_direction": "accept reviewer's commit and proceed with CCL Stage 2",
+    "verdict": "no defect"
+  },
   "base_commit": "9c4a58db80d56f38d630cf0e298d5f9eace1689d",
   "browsers": [
     "chromium",
@@ -115,7 +124,7 @@
     }
   },
   "retained_bytes": 553649,
-  "review": "NOT_REVIEWED",
+  "review": "ACCEPTED_AUDIT_198",
   "skips": [
     "generated Lisp callback invocation and Lisp API",
     "multi-Worker D5 admission",

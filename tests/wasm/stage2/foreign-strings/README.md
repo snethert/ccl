@@ -110,3 +110,10 @@ python3 -B tests/wasm/stage2/foreign-api/run.py \
 Successful generated WAT/Wasm and compiler records are disposable. Compiler
 images remain in the shared cache; the compact evidence pack retains input and
 tool identities, results, exact source changes and necessary original failures.
+
+## Review acceptance
+
+User-supplied Claude audit 198 (`94b410d0`, imported as `0244319d`) finds no
+defect and accepts the finalizer, string and callback-boundary stack at the
+executed single-Worker scopes above. This supersedes the historical pending
+review statements. No FMT/LL credit and no unchanged-test replay.

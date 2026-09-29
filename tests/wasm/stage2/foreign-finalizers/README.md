@@ -134,3 +134,10 @@ artifact archive is retained in the pack.
 The current shared driver also composes the subsequent [UTF-8 string unit](../foreign-strings/README.md):
 148 checks / 69 controls and 45 native-matched Lisp rows. Its review status
 is separate; use the pinned historical commit to reproduce this unit alone.
+
+## Review acceptance
+
+User-supplied Claude audit 198 (`94b410d0`, imported as `0244319d`) finds no
+defect and accepts the finalizer, string and callback-boundary stack at the
+executed single-Worker scopes above. This supersedes the historical pending
+review statements. No FMT/LL credit and no unchanged-test replay.
